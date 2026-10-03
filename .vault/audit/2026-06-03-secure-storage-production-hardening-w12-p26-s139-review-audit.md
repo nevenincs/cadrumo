@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:552ce4c74fb240ce6cb592b6c86142b8e3629b5735ec51e3cde54ca2e1452392'
+body_hash: 'sha256:0ef8e4fff198cb4de55f6614bedae04acb03f37e90e50ac457f6d18258ea0d5c'
 related: []
 ---
 
@@ -20,10 +20,10 @@ The storage failure message no longer embeds the logical path. The path remains 
 
 Validation:
 
-- the focused test run passed with 3 tests.
-- the focused test run passed with 5 selected tests.
-- the focused test run passed with 81 tests.
-- the focused test run passed.
+- the historical check passed with 3 tests.
+- the historical check passed with 5 selected tests.
+- the historical check passed with 81 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
 - Source scan found no direct `PROJECT_ROOT`, direct `Settings()`, hard-coded `var/llm-usage`, `logical path` failure text, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S139 code/test slice.
@@ -38,8 +38,8 @@ Resolution: `workflow._errors` now explicitly re-exports the relocated core `NoA
 
 Validation:
 
-- the focused test run passed with 81 tests.
-- the focused test run passed as part of the scoped ruff gate.
+- the historical check passed with 81 tests.
+- the historical check passed as part of the scoped ruff gate.
 
 ## S139-003 | LOW | RESOLVED | Workflow package docstring still described NoActiveProfileError as workflow-owned
 

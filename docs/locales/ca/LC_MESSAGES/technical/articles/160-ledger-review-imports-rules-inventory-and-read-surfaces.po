@@ -1,0 +1,335 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:1
+msgid "Ledger review, imports, rules, inventory and read surfaces"
+msgstr ""
+"Revisió del llibre major, importacions, regles, inventari i superfícies "
+"de lectura"
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:7
+msgid ""
+"**Report:** `STAGE-2-160` · **Topic:** [Operator interfaces, part 1: "
+"command graph and principal workflows](../topics/operator-interfaces-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:10
+msgid "Scope and capability"
+msgstr "Abast i capacitat"
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:12
+msgid ""
+"This chunk contains 14 CLI modules, 5,384 source lines and 46,112 "
+"measured proxy tokens. Every assigned range was read across nine bounded "
+"pages; there are no unread portions. This is static inspection only: no "
+"application imports, command execution or behavioral tests were "
+"performed."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:14
+msgid ""
+"The modules turn ledger records into a broad operator workflow. Users can"
+" review purchase-invoice drafts before confirmation; import statements "
+"with a dry-run and optional verification; create inventory ledgers, "
+"append movements and preview valuation; inspect, filter, export and audit"
+" transactions; manage usage-ratio overrides and classification rules; and"
+" request manual, rule-based or LLM-assisted classification."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:16
+msgid ""
+"The evidence-review queue can filter by blocking reason, finding, "
+"advisory or blocking-only status. A single-document view emits every "
+"scalar draft field, value, origin, grounding result, anchor, refused "
+"anchor, candidate and note, plus discrepancies and blockers. The handler "
+"exposes no bulk “confirm all”: a caller must supply one typed resolution "
+"for each blocking finding, choosing a candidate, supplying a value or "
+"attesting with a note (review queue/view "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`), "
+"resolution parser "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`)). Party "
+"attribution and country-code vocabulary findings remain advisory and "
+"distinct from blockers; the surface explains uncertainty rather than "
+"deriving tax residence itself."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:18
+msgid ""
+"Statement import normalizes a closed provider ID, resolves files or a "
+"folder through the source planner, caps the operation at the application-"
+"declared maximum number of files, and passes period/year, dry-run, "
+"verification and optional verification source to the profile operation. "
+"Results report counts, duplicate indicators, source digests and "
+"validation summaries; detailed parser diagnostics are intentionally "
+"bounded or withheld. Refused files are separately listed, and dry-run is "
+"represented in both result and notice channels (import handler "
+"(`src/cadrumo/entrypoints/cli/_ledger_import_cli.py`)). Inventory "
+"commands can create a profile ledger, append a typed movement, preview "
+"canonical valuation, and record a closing-authority DTO. Acquisition-cost"
+" data can be supplied as JSON on stdin; malformed JSON is refused with "
+"localized detail (inventory create/movement "
+"(`src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:20
+msgid ""
+"The read facade includes list/view/status, check and preflight, history, "
+"track, export and diagnostics. Lists expose pagination and truncation "
+"metadata; status reports active lifecycle counts, readiness findings, "
+"stale filings and the count of unconverted-currency rows excluded from "
+"gross EUR totals. Check adds one-sided invoice/transaction links and can "
+"resolve a repair action for a single inconsistency. Export writes a "
+"caller-selected artifact while the JSON envelope excludes raw bytes and "
+"reports the destination and digest (check/preflight "
+"(`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`), export/list "
+"(`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`), status/tracking "
+"(`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`), export schema "
+"(`src/cadrumo/entrypoints/cli/_ledger_payloads.py`)). LLM diagnostics "
+"aggregate usage, estimated cost, tokens and classification-confidence "
+"distributions without returning model response text (diagnostics "
+"(`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:22
+msgid "Decisions, automation and data"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:24
+msgid ""
+"The LLM path separates proposal from decision. Without `--apply`, "
+"classification and saturated-IVA suggestions are previews marked non-"
+"persisted. With explicit apply, the handler uses the registered review "
+"operation, correlates the settled receipt to the same profile, "
+"transaction, suggestion kind, reviewed digest and provenance, and checks "
+"the terminal effect before presenting the mutation. Reject records a "
+"declined audit event while leaving the transaction unclassified. In "
+"saturated mode the model selects classification/category; the system "
+"derives IVA rate, base and amount through the registry. Autosplit "
+"likewise uses model-selected child proportions/categories while the "
+"registry supplies regulated amounts (registered review driver "
+"(`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`), LLM routes "
+"(`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`), LLM payloads "
+"(`src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`)). An operator can"
+" also select an IVA category and request system derivation without "
+"invoking an LLM. Separate Modelo 210 options are confined to direct "
+"classification and delegate incoming-only/completeness checks to the "
+"application resolver (M210 options "
+"(`src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:26
+msgid ""
+"Classification rules are stored per profile, content-addressed and "
+"ordered by priority. Add/list expose those records; ordinary apply writes"
+" to eligible transactions, while `--dry-run` previews the same first-"
+"match result and already-classified transactions are skipped unless the "
+"operator requests reaffirmation (rule command "
+"(`src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`), rule result "
+"contracts (`src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`)). "
+"Usage-ratio commands list eligible categories, set/unset per-category "
+"overrides and validate persisted overrides against current eligibility "
+"and the censo-consistency rule. Omitted year defaults to the Madrid "
+"calendar year, while list/set/eligible accept an explicit historical year"
+" (ratio handlers (`src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`), "
+"ratio schemas "
+"(`src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:28
+msgid ""
+"The payload layer carries typed transaction identities, ISO dates, "
+"currencies, history, import references, removal blockers, filing "
+"participation and lifecycle/evidence/edit lineage. It adds branch "
+"validation to the review result, validates M210 money/rate bounds, and "
+"reasserts required export-row dates and nonnegative decimal fields after "
+"conversion to string. Ledger status and check outputs make readiness and "
+"stale filing facts actionable instead of returning only counts. Data "
+"still includes sensitive amounts, descriptions, tax identifiers, notes, "
+"source filenames and actor identities; this CLI layer displays them to "
+"the active operator. Profile-worker authentication and storage protection"
+" are dependencies, not guarantees established by these presentation "
+"modules."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:30
+msgid "Security and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:32
+msgid ""
+"The strongest controls in this slice are the per-document evidence-review"
+" boundary, explicit LLM apply/reject decision, receipt/digest "
+"correlation, verified distinction between preview and persisted output, "
+"import dry-run, maximum import-file count, and typed output constraints. "
+"Ledger remove/reset result schemas preserve dry-run state, cascaded "
+"evidence/attachment IDs and finalized-modelo blockers; they expose the "
+"consequence surface even though mutation handlers live in adjacent "
+"modules."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:34
+msgid ""
+"One local transport-schema weakness is visible in `RuleApplyResult`: "
+"every dry-run and live-apply branch field is optional and there is no "
+"model validator requiring exactly one complete branch. Its current sole "
+"CLI producer selects fields from a projection outcome, so this alone does"
+" not establish that the product emits a malformed result. It does mean "
+"the DTO itself accepts empty or mixed shapes if constructed elsewhere; "
+"compare the explicit three-branch invariant in `LedgerReviewResult` (rule"
+" apply schema (`src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`), "
+"review branch validator "
+"(`src/cadrumo/entrypoints/cli/_ledger_payloads.py`)). Synthesis should "
+"check whether the registered schema conformance tests exercise producer "
+"branches and whether the application projection enforces the same "
+"distinction."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:36
+msgid ""
+"Several inputs are passed onward to profile workers after this boundary "
+"reads local files or stdin. The inventory cost payload is validated as a "
+"domain DTO, import source planning imposes its file-count bound, and "
+"export omits raw bytes from JSON. This chunk does not show universal "
+"byte-size limits, filesystem containment, path-symlink handling or log "
+"redaction; those controls must be checked in the worker and storage "
+"layers rather than inferred from the CLI. LLM review responses include "
+"free-form reason text, and the operators' confirmation choices may "
+"contain values or notes; the downstream registered operation and audit "
+"trail own their retention."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:38
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:40
+msgid ""
+"The handlers depend on authenticated runtime workers for ledger import, "
+"inventory, list/read, LLM review, rule application and ratio operations. "
+"They also use the registry for category/IVA derivation, the model/review "
+"domain for evidence blockers, and operation receipt types to distinguish "
+"preview, rejection and applied effects. Synthesis should reconcile these "
+"with the application authorization, persistence and operation journal, "
+"confirm that live-write policy matches each runtime route, and review "
+"file limits and output retention. No legal calculation or current-law "
+"claim is certified here."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:44
+msgid "All 14 manifest files are linked below; every assigned line was read."
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:46
+msgid ""
+"_ledger_evidence_review_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:47
+msgid ""
+"_ledger_import_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_import_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:48
+msgid ""
+"_ledger_inventory_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:49
+msgid "_ledger_list.py (`src/cadrumo/entrypoints/cli/_ledger_list.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:50
+msgid "_ledger_llm_cli.py (`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:51
+msgid ""
+"_ledger_llm_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:52
+msgid ""
+"_ledger_m210_classify_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:53
+msgid "_ledger_payloads.py (`src/cadrumo/entrypoints/cli/_ledger_payloads.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:54
+msgid ""
+"_ledger_ratios_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:55
+msgid ""
+"_ledger_ratios_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:56
+msgid "_ledger_read_cli.py (`src/cadrumo/entrypoints/cli/_ledger_read_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:57
+msgid ""
+"_ledger_review_cli.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_review_cli.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:58
+msgid ""
+"_ledger_rule_payloads.py "
+"(`src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`)"
+msgstr ""
+
+#: ../../technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md:59
+msgid "_ledger_rules_cli.py (`src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`)"
+msgstr ""

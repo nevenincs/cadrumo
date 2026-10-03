@@ -4,7 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-07-10'
 modified: '2026-10-03'
-body_hash: 'sha256:9bec6dd21a466f586650411846b9d372a277a58f57f54b8ee203a628a8a91bf3'
+body_hash: 'sha256:8d67fa9594c91aa25560245f9ea2ca0a590de64928304bcedf792be7d21dcfdd'
 related:
   - "[[2026-06-03-iva-exemption-article-adr]]"
 ---
@@ -18,8 +18,6 @@ The current Modelo 303 registry correctly has no casilla 61. The correction is l
 The reference source is the current consolidated Ley 37/1992 at https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740. Article 20.Uno.26 defines the domestic exemption, Article 94 omits it from the right-to-deduct list, and Article 104 consequently places it in the prorrata denominator but outside its numerator. The AEAT record of the Modelo 303 July 2021 change at https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-iva-2021/capitulo-1-novedades-destacar-2021/modelo-303.html confirms casilla 61 was removed.
 
 ## Blueprint
-
-
 
 The accepted 2026-06-03 IVA exemption-article ADR is materially false on this route and must be superseded, not edited in place.
 

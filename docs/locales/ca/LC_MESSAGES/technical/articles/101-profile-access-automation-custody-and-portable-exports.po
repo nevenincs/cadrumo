@@ -1,0 +1,469 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:1
+msgid "Profile access, automation custody, and portable exports"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:7
+msgid ""
+"**Report:** `STAGE-2-101` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:10
+msgid ""
+"**Scope:** 25 files under `src/cadrumo/application/user_profile`, "
+"totaling 5,921 lines, 238,414 bytes, and 47,998 measured `o200k_base` "
+"proxy tokens. All nine bounded-reader pages and assigned ranges were "
+"read. Static inspection only; no profile operation, archive export, "
+"provider handoff, or application test was run."
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacitats i mecanismes"
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:14
+msgid ""
+"Profile-access contracts model authority as exact, owner-issued facts "
+"rather than client assertions. A session is bound to a profile custody "
+"generation, DEK epoch, runtime boot, connection, authenticated client, "
+"origin kind, optional parent/grant/key lineage, explicit scope, and time "
+"limits. Delegated sessions are short leases; human session expiry remains"
+" owned by the login lifecycle. Operation requests carry exact period "
+"coordinates or explicitly period-independent work, and current policy "
+"separately supplies allowed actions, disclosures, periods, backend, "
+"published authority, and provider readiness. Scope intersection narrows "
+"operations, actions, disclosures, calendar periods, period-independent "
+"work, and delegation across profile, session ancestors, and grant. Status"
+" projections report credential authentication, profile binding, storage, "
+"custody, authority and provider readiness independently; effective scope "
+"is empty when session authority refuses. Authority and operation "
+"contracts (`src/cadrumo/application/user_profile/access_contracts.py`), "
+"scope algebra (`src/cadrumo/application/user_profile/access_policy.py`), "
+"allowlisted status projection "
+"(`src/cadrumo/application/user_profile/access_projections.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:16
+msgid ""
+"Administration has a separate policy floor: own-session authority can "
+"lock only that session, human profile authority handles ordinary "
+"administration, selected lifecycle actions require fresh password proof, "
+"and runtime management is reserved to the local OS owner. Fresh proof is "
+"bound to the complete typed request and digest, profile binding and lock "
+"generation, runtime boot, connection, client, originating native login, "
+"and both UTC and monotonic expiry. Current owner facts are rechecked "
+"before policy evaluation; proof does not upgrade an API-key session or "
+"create a reusable login. Administration floors and proof model "
+"(`src/cadrumo/application/user_profile/access_administration.py`), "
+"request-bound administration evaluation "
+"(`src/cadrumo/application/user_profile/access_administration.py`), safe "
+"access refusal (`src/cadrumo/application/user_profile/access_errors.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:18
+msgid ""
+"Automation enrollment supports request, approve, decline, inventory, "
+"rotate, renew, and scope-change flows. A proposal has target consistency "
+"rules and explicit operation/disclosure/period allow sets; scope must "
+"remain within current profile authority and disclosures must target the "
+"requesting destination. Its review digest canonicalizes the allow sets "
+"and binds purpose, request, profile custody binding, requester, proposal,"
+" creation/expiry times, and grant. Reusing a request ID with different "
+"proposal or requester facts conflicts. Only durable `COMPLETE` grants "
+"confer usable authority. Enrollment state and reviewed proposal "
+"(`src/cadrumo/application/user_profile/automation_enrollment.py`), "
+"consent digest and lifecycle validation "
+"(`src/cadrumo/application/user_profile/automation_administration.py`), "
+"canonical request service "
+"(`src/cadrumo/application/user_profile/automation_administration_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:20
+msgid ""
+"Approval deliberately separates proof, local publication, and client "
+"possession. Fresh password proof is obtained before `COMMIT`; the service"
+" rechecks the request digest, owner context, profile state, and current "
+"scope. Recipient inspection and protected delivery occur outside the "
+"publication guard. If needed, the service creates a pending candidate key"
+" and credential reference, publishes that inactive candidate under a "
+"fresh custody guard, sends the secret to the exact runtime/client-bound "
+"recipient, and requires an explicit client possession proof before "
+"activating the key and grant. The candidate is not authority while "
+"pending; existing rotated keys receive only the configured short overlap."
+" Caller-owned approval memory is cleared after the phases settle, and "
+"async adapters join blocking service phases before closing it. Approval "
+"phase state machine "
+"(`src/cadrumo/application/user_profile/automation_approval_session.py`), "
+"recipient delivery and activation "
+"(`src/cadrumo/application/user_profile/automation_approval_session.py`), "
+"threaded phase adapter "
+"(`src/cadrumo/application/user_profile/automation_execution.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:22
+msgid ""
+"Reduction and resume are separate lifecycle paths. Denial rechecks human "
+"authority under the shared guard, advances profile lock generation where "
+"relevant, invalidates live automation sessions, persists the denial, and "
+"records whether cleanup remains pending. Resume requires a fresh password"
+" bound to the selected grant set and current lock generation; it "
+"reactivates only selected grants and still-valid keys, preserves their "
+"original expiries and permissions, and leaves optional automation custody"
+" independent of a human-only profile unlock. A durable denial remains a "
+"fence until reconciliation and explicit resume complete. Durable denial "
+"and cleanup receipt "
+"(`src/cadrumo/application/user_profile/automation_lifecycle.py`), deny "
+"ordering and selected resume "
+"(`src/cadrumo/application/user_profile/automation_lifecycle_service.py`),"
+" resume publication "
+"(`src/cadrumo/application/user_profile/automation_lifecycle_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:24
+msgid ""
+"The registered automation operations consume proposals and passwords "
+"through ephemeral-secret declarations, persist only safe request/receipt "
+"identities, record an unknown effect before irreversible publication, and"
+" settle the terminal receipt after activation. Human inventory, approval,"
+" and decline have explicit human access and typed allowlisted public "
+"projections; ordinary enrollment proposal entry uses the existing "
+"operation access owner. Missing runtime capabilities refuse explicitly. "
+"Executor sequencing and secret consumption "
+"(`src/cadrumo/application/user_profile/automation_operations.py`), "
+"registered operation definitions "
+"(`src/cadrumo/application/user_profile/automation_operations.py`), human-"
+"only inventory projections "
+"(`src/cadrumo/application/user_profile/automation_enrollment.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:26
+msgid ""
+"Two archive families are exposed. The sealed archive operations provide "
+"local export, ciphertext mirroring, and reconciliation of the selected "
+"profile’s archive journals. They require exact profile/subject binding "
+"and human access, keep provider I/O outside the commit fence, record "
+"effect uncertainty before handoff, and validate returned receipts against"
+" the operation’s terminal scope and effect. The portable v3 bundle path "
+"instead reads the profile plus work units, ledger transactions, "
+"calculation revisions, filing records, and structured secure-object "
+"namespaces. It can produce an explicit local cleartext file or a "
+"passphrase-encrypted envelope. Archive operations and projections "
+"(`src/cadrumo/application/user_profile/archive_operation.py`), archive "
+"registration "
+"(`src/cadrumo/application/user_profile/archive_operation.py`), portable "
+"bundle assembly (`src/cadrumo/application/user_profile/bundle.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:28
+msgid ""
+"Portable publication uses a durable journaled sequence. The target is "
+"anchored before publication and held under an exclusive per-target lock. "
+"The service serializes in memory, writes a `PREPARED` journal before "
+"staging cleartext in a restrictive sibling temp, atomically replaces the "
+"destination and fsyncs its parent, marks the journal `COMPLETED`, then "
+"emits the fixed-time profile-export event before clearing the journal. "
+"Reconciliation distinguishes an unpublished orphan from a digest-matching"
+" or completed durable publication, emits the event idempotently, and "
+"removes both the journalled temp and hardened-writer inner temps. It runs"
+" before a new publication to avoid overwriting the only reference to old "
+"staged bytes. Export admission and recovery-before-write "
+"(`src/cadrumo/application/user_profile/bundle_export.py`), journal-"
+"before-staging (`src/cadrumo/application/user_profile/bundle_export.py`),"
+" durable replace and event "
+"(`src/cadrumo/application/user_profile/bundle_export.py`), crash "
+"reconciliation (`src/cadrumo/application/user_profile/bundle_export.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:30
+msgid ""
+"The portable-export contracts derive carried and excluded personal-data "
+"categories from the actual bundle schema and custody coverage manifest, "
+"refusing unclassified fields rather than silently narrowing a subject-"
+"access disclosure. Encryption uses the composed profile-record crypto "
+"policy for Argon2id costs and exact salt length, with canonical base64 "
+"fields and associated data; the bundle envelope carries explicit schema "
+"and KDF markers. Derived carried/excluded categories "
+"(`src/cadrumo/application/user_profile/bundle_export_contracts.py`), "
+"encrypted envelope and KDF window "
+"(`src/cadrumo/application/user_profile/bundle_encryption.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:32
+msgid "Knowledge, security, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:34
+msgid ""
+"Strong protections include exact-profile and boot/connection/client "
+"binding, explicit non-wildcard access sets, period and disclosure limits,"
+" current native login reobservation, monotonic plus UTC expiry, typed "
+"refusals without request operands, secret-free inventory projections, "
+"server-selected native secret stores, and staged approval that withholds "
+"authority until client-side possession is proven. Durable denial is "
+"persisted before acknowledgement and reported independently from native "
+"credential cleanup. Archive and portable-export outcomes preserve effect,"
+" coverage, audit, and omitted-data facts instead of treating a successful"
+" function return as proof that every side effect completed."
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:36
+msgid ""
+"The main remaining boundary is composition. These contracts and services "
+"rely on the trusted lifecycle owner, custody adapter, native OS secret "
+"store, protected client channel, archive storage adapter, journal "
+"repository, and event repository to supply the stated invariants. This "
+"chunk does not prove those implementations’ atomicity, filesystem "
+"permissions, cryptographic key erasure, or containment behavior. In "
+"particular, `ApprovalSession.close` clears references after phases settle"
+" but Python immutable or provider-held copies are outside what these "
+"fields can guarantee."
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:38
+msgid ""
+"One recovery-reporting caveat deserves attention. Ordinary per-journal "
+"failures are returned in `reconcile_failures`, but the pre-publication "
+"sweep’s broad exception handler for an unscoped caller logs the failure "
+"and returns an empty tuple so export proceeds. The result can therefore "
+"look as if recovery found no failures even when the global scan itself "
+"could not complete; test this path and consider preserving a safe "
+"aggregate “reconciliation unavailable” fact. Scoped callers do refuse "
+"unreadable ownership scans. Pre-publication recovery fallback "
+"(`src/cadrumo/application/user_profile/bundle_export.py`), scoped scan "
+"refusal (`src/cadrumo/application/user_profile/bundle_export.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:40
+msgid ""
+"The portable bundle intentionally excludes namespaces under the "
+"structured custody profile, and the excluded category list is what "
+"prevents a subject-access result from implying complete disclosure. A "
+"caller must present both carried and excluded categories. A cleartext-"
+"local transport still places sensitive profile data on the operator-"
+"selected destination; the implementation stages it restrictively and "
+"journals cleanup, but endpoint security and the caller’s destination "
+"choice remain material. The sealed recovery archive is a distinct "
+"confidentiality/restoration surface and should not be conflated with "
+"portable bundle export. Declared exclusions "
+"(`src/cadrumo/application/user_profile/bundle_export_contracts.py`), "
+"cleartext/encrypted transport selection "
+"(`src/cadrumo/application/user_profile/bundle_export.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:42
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:44
+msgid ""
+"Trace access decisions through the production lifecycle owner and "
+"operation guards; confirm every UI and runtime path reobserves native "
+"login and current policy before private reads or effects. Verify the "
+"concrete native custody stores and client-side enrollment protocol, "
+"especially denial cleanup reconciliation and lost acknowledgements after "
+"candidate delivery. For exports, inspect the journal repository, hardened"
+" atomic writer, target locking, encrypted bundle reader/import path, "
+"bucket-event repository, and transport destinations. Test concurrent "
+"same-target export/reconcile, crashes before and after atomic replace, "
+"event failure after durable publication, inner-temp cleanup, scoped "
+"versus unscoped scan failure, omitted namespace reporting, access-scope "
+"narrowing, proof expiry/rollback, and session revocation while approval "
+"phases are in flight. No tests or exports were run."
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:46
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:48
+msgid ""
+"All 25 assigned files were read fully across pages 1–9; no portions "
+"remain unread."
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:50
+msgid ""
+"user_profile/__init__.py "
+"(`src/cadrumo/application/user_profile/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:51
+msgid ""
+"user_profile/access_administration.py "
+"(`src/cadrumo/application/user_profile/access_administration.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:52
+msgid ""
+"user_profile/access_contracts.py "
+"(`src/cadrumo/application/user_profile/access_contracts.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:53
+msgid ""
+"user_profile/access_errors.py "
+"(`src/cadrumo/application/user_profile/access_errors.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:54
+msgid ""
+"user_profile/access_policy.py "
+"(`src/cadrumo/application/user_profile/access_policy.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:55
+msgid ""
+"user_profile/access_projections.py "
+"(`src/cadrumo/application/user_profile/access_projections.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:56
+msgid ""
+"user_profile/acquisition_sources.py "
+"(`src/cadrumo/application/user_profile/acquisition_sources.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:57
+msgid ""
+"user_profile/aggregate.py "
+"(`src/cadrumo/application/user_profile/aggregate.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:58
+msgid ""
+"user_profile/archive_operation.py "
+"(`src/cadrumo/application/user_profile/archive_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:59
+msgid ""
+"user_profile/archive_operation_ports.py "
+"(`src/cadrumo/application/user_profile/archive_operation_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:60
+msgid ""
+"user_profile/authentication.py "
+"(`src/cadrumo/application/user_profile/authentication.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:61
+msgid ""
+"user_profile/automation_administration.py "
+"(`src/cadrumo/application/user_profile/automation_administration.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:62
+msgid ""
+"user_profile/automation_administration_service.py "
+"(`src/cadrumo/application/user_profile/automation_administration_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:63
+msgid ""
+"user_profile/automation_approval_session.py "
+"(`src/cadrumo/application/user_profile/automation_approval_session.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:64
+msgid ""
+"user_profile/automation_custody_port.py "
+"(`src/cadrumo/application/user_profile/automation_custody_port.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:65
+msgid ""
+"user_profile/automation_enrollment.py "
+"(`src/cadrumo/application/user_profile/automation_enrollment.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:66
+msgid ""
+"user_profile/automation_execution.py "
+"(`src/cadrumo/application/user_profile/automation_execution.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:67
+msgid ""
+"user_profile/automation_lifecycle.py "
+"(`src/cadrumo/application/user_profile/automation_lifecycle.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:68
+msgid ""
+"user_profile/automation_lifecycle_service.py "
+"(`src/cadrumo/application/user_profile/automation_lifecycle_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:69
+msgid ""
+"user_profile/automation_operations.py "
+"(`src/cadrumo/application/user_profile/automation_operations.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:70
+msgid ""
+"user_profile/automation_password.py "
+"(`src/cadrumo/application/user_profile/automation_password.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:71
+msgid "user_profile/bundle.py (`src/cadrumo/application/user_profile/bundle.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:72
+msgid ""
+"user_profile/bundle_encryption.py "
+"(`src/cadrumo/application/user_profile/bundle_encryption.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:73
+msgid ""
+"user_profile/bundle_export.py "
+"(`src/cadrumo/application/user_profile/bundle_export.py`)"
+msgstr ""
+
+#: ../../technical/articles/101-profile-access-automation-custody-and-portable-exports.md:74
+msgid ""
+"user_profile/bundle_export_contracts.py "
+"(`src/cadrumo/application/user_profile/bundle_export_contracts.py`)"
+msgstr ""

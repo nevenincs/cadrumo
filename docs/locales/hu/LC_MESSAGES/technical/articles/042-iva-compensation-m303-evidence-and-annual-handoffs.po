@@ -1,0 +1,347 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:1
+msgid "IVA compensation, M303 evidence, and annual handoffs"
+msgstr "IVA-kompenzáció, M303-bizonyítékok és éves átadások"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:7
+msgid ""
+"**Report:** `STAGE-2-042` · **Topic:** [Aggregation and calculation "
+"services](../topics/aggregation-and-calculation-services.md)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:10
+msgid "Scope"
+msgstr "Hatókör"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:12
+msgid ""
+"This chunk covers 14 calculation-application modules (4,494 lines; 40,343"
+" measured o200k_base proxy tokens). All assigned ranges were read over "
+"eight bounded pages. The application modules were inspected statically; "
+"no AEAT access, calculation run, or persistence adapter was exercised. "
+"References to tax rules in code are not independently verified legal "
+"conclusions."
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:14
+msgid "IVA compensation history and decision flow"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:16
+msgid ""
+"The application stores IVA compensation period states alongside "
+"calculation observations and exposes a repository-backed FIFO balance "
+"query. Historical manual seeding refuses to overwrite an existing period;"
+" correction refuses to create a missing period. Both stamp the M303 "
+"revision selected for that period. The module documents that sealed-"
+"filing and taxpayer guards belong in the higher-level modelo facade, so "
+"these primitives should only be reached through that caller. For captured"
+" M303 envelopes, state construction first requires canonical disposition-"
+"aware carry evidence. A combined persistence function checks that "
+"observation and history repositories share one secure-object repository "
+"and commits both prepared writes in one batch, avoiding half-written "
+"observation/history state. Seed and correction "
+"(`src/cadrumo/application/calculations/iva_compensation_history.py`) "
+"Canonical history projection "
+"(`src/cadrumo/application/calculations/iva_compensation_history.py`) "
+"Atomic co-commit "
+"(`src/cadrumo/application/calculations/iva_compensation_history.py`) "
+"Balance query "
+"(`src/cadrumo/application/calculations/iva_wallet_balance.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:18
+msgid ""
+"The annual Modelo 390 partition reconstructs same-year Modelo 303 period "
+"states from filed envelopes. Each envelope is revalidated against the "
+"pinned revision and canonical casilla set. Missing source periods leave "
+"declared partition bindings unresolved; in particular, when the opening "
+"earlier-year balance cannot be established from the first period’s "
+"available/pending evidence, it stays unknown rather than being treated as"
+" zero. The pure FIFO report then supplies the annual boxes with "
+"contributor provenance. Annual source resolver "
+"(`src/cadrumo/application/calculations/iva_compensation_annual_partition.py`)"
+" Period-state validation "
+"(`src/cadrumo/application/calculations/iva_compensation_annual_partition.py`)"
+" Missing opening/period diagnostics "
+"(`src/cadrumo/application/calculations/iva_compensation_annual_partition.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:20
+msgid ""
+"For a current Modelo 303 period, wallet reconciliation compares live AEAT"
+" wallet evidence with the local prior-filing recurrence and any explicit "
+"operator override. It validates wallet identity and target coordinates, "
+"prevents split secure backends when persisting, and stores a typed "
+"decision that the source resolver later requires to match the exact "
+"target period and contain a selected, unblocked amount. The decision "
+"includes authority-source lineage. First-period zero is resolved from a "
+"governed fact rather than hardcoded in the app. The caller also supplies "
+"whether absent recurrence may be treated as first period and whether "
+"unusable local evidence was found; code comments explicitly warn that "
+"confusing “nothing stored” with “stored but unreadable” can turn "
+"uncertainty into a zero. Trace the registered caller to confirm these "
+"booleans are derived from the evidence scan, not an untrusted request. "
+"Decision source resolver "
+"(`src/cadrumo/application/calculations/iva_wallet_reconciliation.py`) "
+"Reconciliation inputs and first-period contract "
+"(`src/cadrumo/application/calculations/iva_wallet_reconciliation.py`) "
+"First-period decision execution "
+"(`src/cadrumo/application/calculations/iva_wallet_reconciliation.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:22
+msgid "M303 carry evidence and observation storage"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:24
+msgid ""
+"M303 carry ingress converts the submitted declaration-type header (or the"
+" typed equivalent from an app filing) into one canonical carry basis. "
+"Official AEAT envelopes require exactly one selected header; app-origin "
+"envelopes require an app-filing disposition. The disposition must be "
+"registry-admitted and agree with the result sign. The available/generated"
+" pair is normalized from supported casilla operands, validated against "
+"any supplied pair, and tied to the formula declared by the pinned "
+"revision. Contradictions attach explicit safety precondition evidence; "
+"incomplete evidence remains a correctable typed refusal. Downstream "
+"history readers validate the canonical envelope rather than independently"
+" choosing a result. Registry mapping and disposition policy "
+"(`src/cadrumo/application/calculations/m303_carry_ingress.py`) Envelope "
+"normalization "
+"(`src/cadrumo/application/calculations/m303_carry_ingress.py`) Sign and "
+"pair checks "
+"(`src/cadrumo/application/calculations/m303_carry_ingress.py`) Formula "
+"match (`src/cadrumo/application/calculations/m303_carry_ingress.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:26
+msgid ""
+"Observation envelopes separate calculation values from provenance: "
+"capture time, source taxonomy, stamped registry revision, member "
+"identity, source metadata, source-header facts, disposition, compensation"
+" basis and prior-domiciliation election. M303 envelopes without "
+"normalized disposition and basis are rejected outside the explicit "
+"ingress-construction path. Official and pending-local layers can coexist;"
+" calculation readers see pending local first, but its source kind remains"
+" non-official for filing readiness. An override records the actor, "
+"reason, time and replaced values without destroying the official layer. "
+"Observation keys validate model/period/year components; member and wallet"
+" keys hash normalized taxpayer identifiers so NIF/NIE values do not "
+"appear in natural keys. Envelope contract "
+"(`src/cadrumo/application/calculations/observations_repository.py`) Layer"
+" selection and coordinate checks "
+"(`src/cadrumo/application/calculations/observations_repository.py`) "
+"Opaque keys "
+"(`src/cadrumo/application/calculations/observations_repository.py`) "
+"Storage ports "
+"(`src/cadrumo/application/calculations/observations_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:28
+msgid ""
+"The APIs are contracts only in this chunk: the secure-object adapter "
+"provides encryption and atomicity. Observation and wallet decisions also "
+"carry revision coordinates which callers re-confirm through the shared "
+"revision-carry gate before propagating values. Coordinate gate "
+"(`src/cadrumo/application/calculations/observations_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:30
+msgid "Additional calculation services"
+msgstr "További számítási szolgáltatások"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:32
+msgid ""
+"The simplified-regime M303 calculation validates filing year, selected "
+"annual Orden and row shape, then calculates module quotas, optional DANA "
+"and Lorca reductions, difficult-justification deductions and minimum "
+"quota with cent rounding and source/legal references. DANA eligibility is"
+" accepted only when the pinned authority says the reduction is authored "
+"for the filing date; Lorca evidence is required when the annual authority"
+" applies, and the code refuses combined Lorca and DANA eligibility "
+"pending reviewed authority. M303 simplified calculation "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado.py`) "
+"Authored DANA check and row validation "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado.py`) "
+"Lorca and DANA rule "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:34
+msgid ""
+"Modelo 390 receives an immutable simplified-regime handoff from exactly "
+"one same-profile M303 4T work unit. The source must be the current filed "
+"calculation revision with a matching VIGENTE filing record and persisted "
+"M303 filing evidence; source/target registry coordinates are re-"
+"confirmed. It maps a fixed set of M303 51–58 values to the annual "
+"section, recomputes the activity result from stored calculated evidence, "
+"checks arithmetic coherence, and re-resolves the handoff again before "
+"target verification/filing/export. Agricultural simplified rows remain "
+"unsupported until their annual Orden authority is resolved. Annual source"
+" resolver "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`)"
+" Exact filed source validation "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`)"
+" Handoff revalidation "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:36
+msgid ""
+"Maritime-worker orchestration independently checks a DA 41 inactive "
+"condition and RETMAR mandatory-filing condition, then emits typed, "
+"grounded Art. 7.p) and REBECA observations only when eligible and "
+"required facts are present. RETMAR completeness is surfaced separately "
+"for the caller to handle; it does not suppress eligible exemption "
+"calculations. M111 and M115 period helpers read explicit profile "
+"attestations; invalid tokens attest nothing. M111 suppression is "
+"additionally limited to a period declared in the selected registry "
+"schedule, while the M115 predicate only checks exact membership and "
+"quarterly token form, so its caller must ensure it is applied only to a "
+"scheduled M115 period. Maritime resolver "
+"(`src/cadrumo/application/calculations/maritime_exemption_service.py`) "
+"M111 schedule check "
+"(`src/cadrumo/application/calculations/m111_no_retenciones.py`) M115 "
+"attestation parsing "
+"(`src/cadrumo/application/calculations/m115_no_relevant_payments.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:38
+msgid "Implementation assessment"
+msgstr "A megvalósítás értékelése"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:40
+msgid ""
+"Strong points include one canonical disposition-aware M303 carry "
+"contract, provenance-bearing observation layers, dual-write atomicity for"
+" observation/history, explicit unknown-vs-zero handling, and exact "
+"source/target checks on the annual handoff. The main conditional follow-"
+"up is the caller’s authority over the first-period and unusable-evidence "
+"flags; the M115 schedule check is another caller invariant. No confirmed "
+"local defect is established here. The assigned modules contain no tests; "
+"storage encryption, backend transaction behavior, and actual wallet "
+"capture/parsing remain outside this static pass."
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:44
+msgid ""
+"iva_compensation_annual_partition.py (457 lines) "
+"(`src/cadrumo/application/calculations/iva_compensation_annual_partition.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:45
+msgid ""
+"iva_compensation_history.py (342 lines) "
+"(`src/cadrumo/application/calculations/iva_compensation_history.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:46
+msgid ""
+"iva_compensation_history_ports.py (51 lines) "
+"(`src/cadrumo/application/calculations/iva_compensation_history_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:47
+msgid ""
+"iva_wallet_balance.py (57 lines) "
+"(`src/cadrumo/application/calculations/iva_wallet_balance.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:48
+msgid ""
+"iva_wallet_reconciliation.py (393 lines) "
+"(`src/cadrumo/application/calculations/iva_wallet_reconciliation.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:49
+msgid ""
+"m111_no_retenciones.py (83 lines) "
+"(`src/cadrumo/application/calculations/m111_no_retenciones.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:50
+msgid ""
+"m115_no_relevant_payments.py (66 lines) "
+"(`src/cadrumo/application/calculations/m115_no_relevant_payments.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:51
+msgid ""
+"m303_carry_ingress.py (730 lines) "
+"(`src/cadrumo/application/calculations/m303_carry_ingress.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:52
+msgid ""
+"m303_regimen_simplificado.py (426 lines) "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:53
+msgid ""
+"m303_regimen_simplificado_annual_summary.py (517 lines) "
+"(`src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:54
+msgid ""
+"maritime_exemption_service.py (222 lines) "
+"(`src/cadrumo/application/calculations/maritime_exemption_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:55
+msgid ""
+"multi_year.py (146 lines) "
+"(`src/cadrumo/application/calculations/multi_year.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:56
+msgid ""
+"observations_repository.py (841 lines) "
+"(`src/cadrumo/application/calculations/observations_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md:57
+msgid "ports.py (163 lines) (`src/cadrumo/application/calculations/ports.py`)"
+msgstr ""

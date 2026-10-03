@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:9ac207a93451db9599d1f7400b2485a2612f2d9b57129ffa10541b97bf3812f3'
+modified: '2026-10-03'
+body_hash: 'sha256:12279d79f443e8579a7a92055d7bbe0e190b7a0b8a9f68ac7e1711dc794cbdfa'
 related: []
 ---
 
@@ -40,8 +40,8 @@ The new duplicate-asset test uses the real isolated runtime profile and reposito
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/profile/test_assets.py src/aeat/adapters/persistence/profile/test_assets_roundtrip.py src/aeat/adapters/persistence/storage/test_namespace_registry.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "assets or secure_object_logical_path or namespace_registry_error"` passed with 25 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/profile/assets.py src/aeat/adapters/persistence/profile/test_assets.py src/aeat/adapters/persistence/profile/test_assets_roundtrip.py src/aeat/adapters/persistence/storage/_namespace_registry.py src/aeat/adapters/persistence/storage/__init__.py src/aeat/adapters/persistence/storage/test_namespace_registry.py` passed.
+- The historical check passed with 25 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed after locale updates through `python -m aeat.locales scaffold` and `python -m aeat.locales set`.
 - The touched-file source scan found no direct settings construction, environment access, print/typer output, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, broad exception catches, raw UTF-8 literals, or local `Path("db://secure_objects")` construction.
 

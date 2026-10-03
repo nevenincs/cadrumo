@@ -33,8 +33,6 @@ from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
 from uuid import UUID
 
-from dev._paths import prepare_temporary_directory
-
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot
@@ -49,6 +47,7 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
 
 __all__ = [
     "CANDIDATE_COMPILER_MODULE",

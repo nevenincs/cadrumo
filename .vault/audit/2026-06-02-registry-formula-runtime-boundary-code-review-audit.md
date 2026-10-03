@@ -4,7 +4,7 @@ tags:
   - '#registry-formula-runtime-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:b6bfee2b35c55aec3d8b7a9c29bee6ca16702f6a5a4e3bb32e637318dde9fab5'
+body_hash: 'sha256:6d3faa27458a742014e9bebc984586b398b2aba3ceb36b52b47cbdbed0850ad7'
 related:
   - "[[2026-06-02-registry-formula-runtime-boundary-audit]]"
 ---
@@ -26,6 +26,6 @@ compatibility re-exports.
 
 ## FORMULA-RUNTIME-S25-003 | PASS | Previous-filing coupling is deferred
 
-No issue found. The recommendation defers initial-value 
+No issue found. The recommendation defers initial-value
 previous-filing guard extraction until `_PreviousModeloSelector`
 ownership is settled by the binding resolver work.

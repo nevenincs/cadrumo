@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a025111b56c977f175c1320b3b5801b6d54016df8fd1290253652059f8e4f356'
+body_hash: 'sha256:7eb6c2508fef9d2238823c03b102a78d8153fca825967ef5c7813471a637bc34'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-research]]'
 ---
@@ -13,8 +13,6 @@ related:
 # `deadline-window-revision-authority` reference: `deadline selection call graph and defect inventory`
 
 ## Summary
-
-
 
 Validation is assembled under `domain/calculations/registry/_validate.py`; ownership,
 semantic uniqueness, and periodic completeness belong there. The deadline coordinate is

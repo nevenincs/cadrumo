@@ -124,7 +124,6 @@ _OBJECT_NAME: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{40}")
 #: The three projects one cohort publishes together, and so the set the index
 #: question is asked about: a version is owned there when every one of them
 #: carries it, and part-way is a release still being delivered.
-PYPI_PROJECTS: Final[tuple[str, ...]] = PRODUCT_IDENTITY.cohort_distributions
 
 #: The release-please manifest, whose recorded version is the monotonic floor.
 MANIFEST_PATH: Final[Path] = REPO_ROOT / ".release-please-manifest.json"
@@ -250,7 +249,7 @@ def version_conflicts(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -319,7 +318,7 @@ def index_convergence_notice(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
 ) -> str | None:
     """Return what a permitted partial index state must say, or ``None``.
 
@@ -350,7 +349,7 @@ def gate_conflicts(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -376,7 +375,7 @@ def gate_conflicts(
 def pypi_projects_owning(
     version: str,
     *,
-    projects: Iterable[str] = PYPI_PROJECTS,
+    projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     index_url: str = _PYPI_JSON_INDEX,
 ) -> tuple[str, ...]:
     """Return the projects whose index already carries ``version``.
@@ -578,7 +577,7 @@ def assert_gate_permits(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,

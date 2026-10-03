@@ -25,13 +25,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..version_identity import (
     GATES,
     PUBLISH,
-    PYPI_PROJECTS,
     SEAL,
     Gate,
     VersionIdentityError,
@@ -68,8 +68,8 @@ def test_a_clean_version_conflicts_with_nothing() -> None:
 
 def test_a_complete_index_set_refuses_and_names_every_project() -> None:
     """Every project carrying the version leaves nothing but an overwrite."""
-    (refusal,) = version_conflicts(_CLEAN, owning_projects=list(PYPI_PROJECTS), floor="0.0.0")
-    for project in PYPI_PROJECTS:
+    (refusal,) = version_conflicts(_CLEAN, owning_projects=list(PRODUCT_IDENTITY.cohort_distributions), floor="0.0.0")
+    for project in PRODUCT_IDENTITY.cohort_distributions:
         assert project in refusal
     assert "cannot be undone" in refusal
 
@@ -84,7 +84,7 @@ def test_a_partial_index_set_is_permitted_so_the_same_tag_can_converge(carried: 
     The remedy is fixing the registration and re-running the same tag, and a
     partial set read as a collision refuses that remedy and spends the version.
     """
-    owning = list(PYPI_PROJECTS[:carried])
+    owning = list(PRODUCT_IDENTITY.cohort_distributions[:carried])
     assert version_conflicts(_CLEAN, owning_projects=owning, floor="0.0.0") == ()
 
 
@@ -96,12 +96,12 @@ def test_a_permitted_partial_says_what_the_index_already_carries(carried: int) -
     pass sees which projects hold the version, which are still missing, and
     that the run completes rather than replaces.
     """
-    owning = list(PYPI_PROJECTS[:carried])
+    owning = list(PRODUCT_IDENTITY.cohort_distributions[:carried])
     notice = index_convergence_notice(_CLEAN, owning_projects=owning)
     assert notice is not None
     for project in owning:
         assert project in notice
-    for missing in PYPI_PROJECTS[carried:]:
+    for missing in PRODUCT_IDENTITY.cohort_distributions[carried:]:
         assert missing in notice
     assert "completes that partial upload" in notice
 
@@ -109,7 +109,7 @@ def test_a_permitted_partial_says_what_the_index_already_carries(carried: int) -
 def test_the_notice_is_silent_when_there_is_nothing_to_converge() -> None:
     """Nothing carried is an ordinary release; everything carried is refused."""
     assert index_convergence_notice(_CLEAN) is None
-    assert index_convergence_notice(_CLEAN, owning_projects=list(PYPI_PROJECTS)) is None
+    assert index_convergence_notice(_CLEAN, owning_projects=list(PRODUCT_IDENTITY.cohort_distributions)) is None
 
 
 def test_the_cohort_the_index_is_asked_about_is_passed_in_not_assumed() -> None:
@@ -120,7 +120,9 @@ def test_the_cohort_the_index_is_asked_about_is_passed_in_not_assumed() -> None:
     told which it is being asked rather than deciding at the call site.
     """
     owning = ["cadrumo"]
-    assert version_conflicts(_CLEAN, owning_projects=owning, target_projects=PYPI_PROJECTS) == ()
+    assert (
+        version_conflicts(_CLEAN, owning_projects=owning, target_projects=PRODUCT_IDENTITY.cohort_distributions) == ()
+    )
     assert version_conflicts(_CLEAN, owning_projects=owning, target_projects=["cadrumo"])
 
 
@@ -142,7 +144,7 @@ def test_every_refusal_tells_the_operator_what_to_do() -> None:
     """A refusal an operator cannot act on sends them to read the source."""
     refusals = version_conflicts(
         _BURNED,
-        owning_projects=list(PYPI_PROJECTS),
+        owning_projects=list(PRODUCT_IDENTITY.cohort_distributions),
         existing_tags=[f"v{_BURNED}"],
         existing_releases=[f"v{_BURNED}"],
     )
@@ -202,7 +204,7 @@ def test_every_conflict_is_reported_not_just_the_first() -> None:
     """An operator fixing one collision should not re-run to find the next."""
     refusals = version_conflicts(
         _BURNED,
-        owning_projects=list(PYPI_PROJECTS),
+        owning_projects=list(PRODUCT_IDENTITY.cohort_distributions),
         existing_tags=[f"v{_BURNED}"],
         existing_releases=[f"v{_BURNED}"],
         floor="0.3.0",
@@ -259,7 +261,7 @@ def test_assert_names_every_owner_in_one_message() -> None:
         assert_gate_permits(
             PUBLISH,
             _BURNED,
-            owning_projects=list(PYPI_PROJECTS),
+            owning_projects=list(PRODUCT_IDENTITY.cohort_distributions),
             existing_tags=[f"v{_BURNED}"],
         )
     message = str(excinfo.value)
@@ -412,7 +414,7 @@ def test_sealing_permits_a_version_every_destination_already_owns() -> None:
         gate_conflicts(
             SEAL,
             _SHIPPED,
-            owning_projects=PYPI_PROJECTS,
+            owning_projects=PRODUCT_IDENTITY.cohort_distributions,
             existing_tags=[f"v{_SHIPPED}"],
             existing_releases=[f"v{_SHIPPED}"],
         )
@@ -430,7 +432,7 @@ def test_publishing_that_same_version_is_still_refused_by_every_destination() ->
     refusals = gate_conflicts(
         PUBLISH,
         _SHIPPED,
-        owning_projects=PYPI_PROJECTS,
+        owning_projects=PRODUCT_IDENTITY.cohort_distributions,
         existing_tags=[f"v{_SHIPPED}"],
         existing_releases=[f"v{_SHIPPED}"],
     )
@@ -442,7 +444,7 @@ def test_publishing_that_same_version_is_still_refused_by_every_destination() ->
 
 def test_publishing_is_refused_by_a_complete_index_alone() -> None:
     """The index is the collision with no remedy, and it refuses on its own."""
-    refusals = gate_conflicts(PUBLISH, _SHIPPED, owning_projects=list(PYPI_PROJECTS))
+    refusals = gate_conflicts(PUBLISH, _SHIPPED, owning_projects=list(PRODUCT_IDENTITY.cohort_distributions))
     assert len(refusals) == 1
     assert "cannot be undone" in refusals[0]
 
@@ -454,7 +456,7 @@ def test_publication_permits_the_partial_the_seal_never_sees() -> None:
     that was never relaxed, which is the whole reason both are asserted from
     one observation.
     """
-    partial = list(PYPI_PROJECTS[:2])
+    partial = list(PRODUCT_IDENTITY.cohort_distributions[:2])
     assert gate_conflicts(PUBLISH, _SHIPPED, owning_projects=partial) == ()
     assert gate_conflicts(SEAL, _SHIPPED, owning_projects=partial) == ()
 
@@ -641,5 +643,5 @@ def test_the_cohort_names_every_distribution_the_repository_publishes() -> None:
     packaging sources, with a floor so an emptied tuple cannot satisfy a
     comparison between two empty sides.
     """
-    assert len(PYPI_PROJECTS) >= _MINIMUM_COHORT_PROJECTS
-    assert set(PYPI_PROJECTS) == _published_distribution_names()
+    assert len(PRODUCT_IDENTITY.cohort_distributions) >= _MINIMUM_COHORT_PROJECTS
+    assert set(PRODUCT_IDENTITY.cohort_distributions) == _published_distribution_names()

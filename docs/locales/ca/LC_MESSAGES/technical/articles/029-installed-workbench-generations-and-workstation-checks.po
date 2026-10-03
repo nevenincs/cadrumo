@@ -1,0 +1,226 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:1
+msgid "Installed workbench generations and workstation checks"
+msgstr ""
+"Generacions del banc de treball instal·lat i comprovacions de l’estació "
+"de treball"
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:7
+msgid ""
+"**Report:** `STAGE-2-029` · **Topic:** [Application orchestration and "
+"diagnostics](../topics/application-orchestration-and-diagnostics.md)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:10
+msgid "Scope"
+msgstr "Àmbit"
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:12
+msgid ""
+"This chunk covers six application files (3,792 lines; 31,272 measured "
+"`o200k_base` proxy tokens): secure-source assembly for the installed "
+"workbench; the operation and public result projection for generation "
+"reads; the canonical workstation health report and its worker operation; "
+"and the local contention row. I read every assigned range across six "
+"bounded pages. Static review only; no authenticated worker, private "
+"storage, external provider, or runtime check was executed. This report "
+"describes application contracts and does not validate the underlying tax "
+"or legal content."
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:14
+msgid "Workbench generation"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:16
+msgid ""
+"The secure read door takes profile-bound repositories and projectors from"
+" composition, reads each authority once, and turns the results into "
+"immutable safe inputs for Home, Ledger, Declarations, AEAT Sync, Modelo, "
+"calendar, and search. Availability is a closed state rather than an "
+"empty-list convention: `AVAILABLE` and `STALE` carry a value and "
+"observation time; `LOCKED`, `NEVER_CAPTURED`, and `UNAVAILABLE` carry a "
+"refusal and no value. A missing reader is therefore distinguishable from "
+"a measured empty store. Search is built only when all of its source "
+"projections exist; otherwise it preserves a refusal derived from the "
+"missing inputs. Input state contract and secure reader "
+"(`src/cadrumo/application/workbench_generation.py`) Generation assembly "
+"and search (`src/cadrumo/application/workbench_generation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:18
+msgid ""
+"The reader composes profile, work-unit, calculation-revision, filing, "
+"verification, event, custody, and ledger facts. It uses revision tokens "
+"where stores provide them and compares decoded catalogues otherwise; "
+"before publishing, it rereads the profile and source revisions and "
+"refuses a generation if the observed inputs changed. That prevents a "
+"Home/search bundle from presenting a stitch across several local writes. "
+"Declarations lifecycle output is drawn from a closed event vocabulary and"
+" joined only to current work units. Unsupported bulk Modelo projection "
+"refuses that source as a whole instead of silently omitting one work "
+"unit. Secure reader and capture checks "
+"(`src/cadrumo/application/workbench_generation.py`) End-of-capture "
+"comparison (`src/cadrumo/application/workbench_generation.py`) Modelo "
+"refusal boundary (`src/cadrumo/application/workbench_generation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:20
+msgid ""
+"Calendar and agenda work can be reused within the authenticated session "
+"using a key containing profile content digest, work-unit and filing "
+"revisions, local date, pinned authority generation, and a digest of AEAT "
+"calendar evidence. The computation uses the Europe/Madrid date derived "
+"from its observation time. No memo means recompute; the session owner "
+"closes the memo at session end. The calendar evidence is included in the "
+"memo key but not reread in `_capture_is_unchanged`; confirm its read "
+"result is pinned for the whole generation, or include its source "
+"generation in the close check. Calendar memo key and use "
+"(`src/cadrumo/application/workbench_generation.py`) Session memo "
+"lifecycle (`src/cadrumo/application/workbench_capture_memory.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:22
+msgid ""
+"Home keeps separate zone states for declarations, ledger, actions, agenda"
+" evidence, and messages. It offers only supported next actions, orders "
+"declaration-specific work ahead of cross-cutting ledger work, and marks a"
+" declaration ready only for the verified-complete revision state. "
+"Unmeasured ledger areas do not become zero-count actions. An AEAT message"
+" store with no captured snapshot is `NEVER_CAPTURED`, not a broken "
+"reader. These distinctions give the renderer enough evidence to explain "
+"what the operator knows and what is simply absent. Home zone and next-"
+"action assembly (`src/cadrumo/application/workbench_generation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:24
+msgid ""
+"The registered `workbench.generation` operation is profile- and subject-"
+"bound, requires human CLI/TUI authority, and discloses profile/tax values"
+" only on the result action. It projects one immutable generation into a "
+"strict public mirror, withholds the private search identity base, "
+"restores that identity from the sibling projections inside the reader "
+"process, and checks that the search state agrees. An exact reviewed-"
+"exclusion inventory fails if canonical fields omitted from the public "
+"projection change; restoration checks UTC timestamps, profile binding, "
+"and projection round-trip equivalence. A serialized result above the "
+"paging document limit is refused. Operation access boundary "
+"(`src/cadrumo/application/workbench_generation_operation.py`) Public "
+"projection and exclusion checks "
+"(`src/cadrumo/application/workbench_generation_projection.py`) Projection"
+" and restore validation "
+"(`src/cadrumo/application/workbench_generation_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:26
+msgid "Workstation health operation"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:28
+msgid ""
+"`run_workstation_check` gathers effective capabilities, dependency "
+"status, preflight rows, and capability/dependency inconsistencies for one"
+" immutable profile. It rechecks the active bucket around each stage. "
+"Hardware is measured once and reused for both the hardware row and the "
+"selected-model contention assessment, avoiding contradictory readings "
+"taken at different moments. The diagnostic treats an unmeasurable "
+"contention input as reportable/unverified, while the acting model-load "
+"path fails closed. Canonical workstation report "
+"(`src/cadrumo/application/workstation_check.py`) Shared hardware reading "
+"(`src/cadrumo/application/workstation_check.py`) Contention row "
+"projection (`src/cadrumo/application/workstation_contention.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:30
+msgid ""
+"The worker operation checks the request, operation identity, and active "
+"profile; builds ports for that exact profile and authority operation; "
+"runs the report in a worker thread; and checks the profile again before "
+"retaining it. The snapshot models round-trip dependency and preflight "
+"facts through the existing canonical validators. The result projector "
+"requires a successful terminal receipt with `NONE` effect, the exact "
+"profile subject, and no refusal/failure references. The report is CLI-"
+"only and request-bound rather than replayed as if a later check were the "
+"same observation. Worker execution and profile checks "
+"(`src/cadrumo/application/workstation_check_operation.py`) Receipt-"
+"checked result projection "
+"(`src/cadrumo/application/workstation_check_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:32
+msgid "Coverage appendix"
+msgstr "Apèndix de cobertura"
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:34
+msgid ""
+"workbench_generation.py (1,803 lines) "
+"(`src/cadrumo/application/workbench_generation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:35
+msgid ""
+"workbench_generation_operation.py (216 lines) "
+"(`src/cadrumo/application/workbench_generation_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:36
+msgid ""
+"workbench_generation_projection.py (1,167 lines) "
+"(`src/cadrumo/application/workbench_generation_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:37
+msgid ""
+"workstation_check.py (160 lines) "
+"(`src/cadrumo/application/workstation_check.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:38
+msgid ""
+"workstation_check_operation.py (363 lines) "
+"(`src/cadrumo/application/workstation_check_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/029-installed-workbench-generations-and-workstation-checks.md:39
+msgid ""
+"workstation_contention.py (83 lines) "
+"(`src/cadrumo/application/workstation_contention.py`)"
+msgstr ""

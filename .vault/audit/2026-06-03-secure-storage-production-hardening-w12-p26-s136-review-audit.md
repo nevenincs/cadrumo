@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:a91f72a63b9bc3ae14209530f37cb1e4847a335d8e53b59728cfb5a51cb4bb94'
+body_hash: 'sha256:78782bc6010e0fa4974c0044121ccac2ff3add698340c757fe0231a81952c40f'
 related: []
 ---
 
@@ -18,7 +18,7 @@ This is a `runtime-default` boundary, not an alternate provider implementation. 
 
 Validation:
 
-- the focused test run passed.
+- the historical check passed.
 - The broader focused Google adapter suite passed with 131 tests.
 - `uv run --no-sync ruff check` over the Google adapter production/test slice passed.
 

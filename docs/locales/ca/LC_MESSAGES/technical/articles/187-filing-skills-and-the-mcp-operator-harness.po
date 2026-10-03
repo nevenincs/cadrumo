@@ -1,0 +1,486 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:1
+msgid "Filing skills and the MCP operator harness"
+msgstr "Habilitats de presentació i entorn d’operador MCP"
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:7
+msgid ""
+"**Report:** `STAGE-2-187` · **Topic:** [Installed runtime, terminal "
+"workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:12
+msgid ""
+"This chunk covers 30 files (3,964 lines; 178,026 bytes): 16 "
+"filing/workflow skills and form-orientation companions, harness resource "
+"and metadata loaders, workspace/plugin materialization, and the MCP "
+"protocol/runtime adapter. I read every assigned range from the chunk "
+"reader, including all eight pages. This is static inspection only; no "
+"application, MCP server, or filing workflow was run. The `SKILL.md` and "
+"companion Markdown files are bundled operator guidance, not executable "
+"tax logic. Their claims about rules, registry content, and workflow "
+"outcomes are not independently validated here."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:14
+msgid "User-facing capabilities"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:16
+msgid ""
+"The model-specific skills present a repeatable filing lifecycle—check "
+"applicability and source records, inspect the registry shape, create a "
+"work unit, calculate, inspect the revision and notices, verify, export a "
+"local artifact, and reconcile only after the taxpayer files. Across the "
+"reviewed files they repeatedly tell the operator to relay CLI values and "
+"legal/source references rather than hand-calculate casillas, and to "
+"distinguish a local export from AEAT acceptance. That makes the skills "
+"useful as interaction policy and sequencing aids, while the calculation "
+"and authority remain in the underlying CLI and registry."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:18
+msgid ""
+"The IVA coverage in this chunk is deliberately differentiated. Modelo 309"
+" is an ad-hoc, non-periodic IVA obligation using `AD-HOC`; the skill "
+"distinguishes its triggering events from a periodic Modelo 303 and "
+"describes two ledger-bound leaves and one computed total. Modelo 322 is "
+"the monthly individual filing of an IVA group member, while Modelo 353 is"
+" the dominant entity's monthly group filing. The 322 guidance warns "
+"against presenting one member's result as the group result; the 353 guide"
+" separates directly calculated dominant-entity ledger casillas from three"
+" evolving cross-member reconciliation casillas and says to inspect "
+"dependency clean-state before treating the latter as a complete group "
+"cross-check. The 353 companion page likewise warns that the "
+"reconciliation values depend on a complete member roster and captured "
+"member observations. See the 309 skill "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-309/SKILL.md`), 322 skill and casilla orientation "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-322/SKILL.md`), and 353 skill and casilla orientation "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-353/SKILL.md`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:20
+msgid ""
+"Modelo 349 is framed correctly as an informational recapitulativa without"
+" a tax-due/refund result. Its guide explains direction-specific "
+"collectible/payable invoice sourcing, operator and rectification rows, "
+"the cadence switch between monthly and quarterly periods, and a separate "
+"comparison with the period's 303. Modelo 369 has three distinct schemas "
+"selected by the period-token family: quarterly Unión, `EXT-` quarterly "
+"Exterior, and monthly Importación/IOSS. It directs operators to prepare "
+"each applicable scheme as an independent work unit. Modelo 390 is an "
+"annual summary that reconciles annual ledger totals against four prior "
+"quarterly 303s, including a blocking equality gate and special carry-"
+"forward casilla treatment. The companion pages repeatedly label their "
+"listed casillas as orientation, directing users to the year/period "
+"registry output as canonical. These are useful guardrails, but the legal "
+"accuracy and agreement with current registry revisions require separate "
+"validation. See the 349 material (`src/cadrumo_harness/_data/agent/skills"
+"/cadrumo-preparar-modelo-349/SKILL.md`), 369 material "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-369/SKILL.md`), and 390 skill "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-390/SKILL.md`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:22
+msgid ""
+"The broader itineraries handle cross-cutting situations rather than "
+"owning calculations. The Sociedad guide derives obligations from "
+"calendar/agenda/explain output and sequences per-modelo skills; the "
+"employer/withholder guide overlays labor, professional-fee, and rental "
+"withholding facts without replacing the taxpayer's primary regime route. "
+"The annual-window guide orders annual summaries before annual returns and"
+" routes missing quarters to the overdue workflow. The arrears guide uses "
+"the CLI backlog and recargo outputs, keeps cases oldest-first, "
+"distinguishes missed filings from amendments, and diverts cases with an "
+"AEAT requerimiento to a human professional. The rectification guide "
+"requires official evidence for the prior filing and source-level "
+"correction before amendment; reconciliation explicitly refuses to equate "
+"a local export with acceptance. These prompts encode conservative "
+"handoffs and keep human filing/reconciliation visible. See Sociedad "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-pyme-"
+"sociedad/SKILL.md`), withholding (`src/cadrumo_harness/_data/agent/skills"
+"/cadrumo-retenedor-empleador/SKILL.md`), annual window "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-resumen-"
+"anual/SKILL.md`), arrears (`src/cadrumo_harness/_data/agent/skills"
+"/cadrumo-regularizar-atrasos/SKILL.md`), amendments "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-rectificar-"
+"declaracion/SKILL.md`), and reconciliation "
+"(`src/cadrumo_harness/_data/agent/skills/cadrumo-reconciliar/SKILL.md`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:24
+msgid "Selection, resources, and materialization"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:26
+msgid ""
+"The harness provides a structured `applies_when` schema over profile "
+"facts, workflow phase, and temporal triggers. Fact names and enum values "
+"are derived from the live `TaxpayerProfile` model, including one nested "
+"level, rather than copied into a separate hand-maintained list. Frozen, "
+"extra-forbidden Pydantic models validate match modes, value shapes, enum "
+"membership, and the exclusive `always=true` form. YAML frontmatter is "
+"parsed with `safe_load`; the resource iterator verifies each parsed skill"
+" name matches its directory. One deliberate boundary remains: "
+"`SkillMetadata.applies_when` is optional at parse time, and the docstring"
+" assigns strict “every skill has a predicate” coverage to a separate "
+"gate. Calling the loader alone therefore does not prove complete "
+"selection metadata. See `_skill_metadata.py` "
+"(`src/cadrumo_harness/_skill_metadata.py`) and `resources.py` "
+"(`src/cadrumo_harness/resources.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:28
+msgid ""
+"Resource access uses `importlib.resources` `Traversable` paths rooted in "
+"the installed package, so the harness can read bundled resources without "
+"assuming a checkout layout. The workspace writer emits Claude-native "
+"rules, persona files, skills, a root `CLAUDE.md` importing the rules, or "
+"a plugin package with MCP configuration. Persona frontmatter carries a "
+"derived description; read-only personas have edit/write tools disallowed,"
+" while mutating personas rely on the runtime-grant model. The plugin path"
+" validates a bundled wheel cohort and its manifest/digests before "
+"producing an offline `uvx` invocation with ambient Python settings "
+"constrained; the required package version is also checked by the MCP "
+"entrypoint when configured. This reduces dependence on an index or an "
+"unrelated installed checkout. Materialization writes into caller-selected"
+" output directories, and plugin regeneration clears the designated "
+"artifact directory; callers must treat that destination as an explicit "
+"filesystem trust boundary. See `_workspace.py` plugin launch and cohort "
+"handling (`src/cadrumo_harness/_workspace.py`), plugin materialization "
+"(`src/cadrumo_harness/_workspace.py`), workspace materialization "
+"(`src/cadrumo_harness/_workspace.py`), and `_resources.py` "
+"(`src/cadrumo_harness/_resources.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:30
+msgid ""
+"One bounded extensibility caveat is visible in `_copy_skill`: its "
+"docstring says “whole subtree,” but the implementation copies direct "
+"files and then files in each immediate child directory; it does not "
+"recursively descend into grandchildren. The reviewed companion references"
+" are one level below their skill directories, so this does not establish "
+"current data loss in this chunk. A future nested resource could be "
+"omitted from a materialized workspace unless the traversal becomes "
+"recursive or the supported layout is explicitly constrained. See "
+"`_copy_skill` (`src/cadrumo_harness/_workspace.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:32
+msgid "MCP protocol and trust boundaries"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:34
+msgid ""
+"The MCP server advertises a stable 15-tool catalogue spanning "
+"unauthenticated status, enrollment/authentication, public authority "
+"queries, and admitted operation "
+"search/description/submission/observation/results/review/control. The "
+"protocol boundary rejects missing, extra, mistyped, and out-of-enum "
+"fields; integer checks explicitly exclude booleans. Tool schemas use "
+"`additionalProperties: false`. The authority tool has conditional "
+"coordinates: a second query-specific validator rejects coordinates that "
+"are not allowed or required for that query and bounds filing year, while "
+"the query executes under one `bundled_indexed_authority().operation()` "
+"and returns its logical generation and reader incarnation. This pins each"
+" response to a publication generation; it does not itself establish the "
+"legal correctness of the bundled authority. See `protocol_contract.py` "
+"catalogue and validation (`src/cadrumo_harness/mcp/protocol_contract.py`)"
+" and `authority_query.py` (`src/cadrumo_harness/mcp/authority_query.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:36
+msgid ""
+"The runtime adapter binds one connection to one immutable profile and an "
+"optional MCP frontend client. Admission checks require the client "
+"profile/frontend to match, a live grant and unexpired session, and a "
+"connected/authenticated/profile-bound status whose profile and session "
+"IDs match the client. Calls are serialized per adapter; blocking runtime "
+"work is sent to a thread with cancellation-complete cleanup. "
+"Authentication opens a protected credential reference, verifies exact "
+"admitted status, then retires the prior client after replacement. "
+"Enrollment is a separate per-connection door: it allows one pending "
+"request/proposal at a time, checks expiry/completion before replacement, "
+"supports rotation reconciliation through a credential reference, and "
+"returns projections rather than raw credential material. See "
+"`runtime_admission.py` (`src/cadrumo_harness/mcp/runtime_admission.py`) "
+"and `runtime_adapter.py` admission/enrollment "
+"(`src/cadrumo_harness/mcp/runtime_adapter.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:38
+msgid ""
+"Admitted operation dispatch delegates to typed runtime requests. "
+"Submission uses a generated request ID, the bound profile/session, "
+"caller-provided subject and payload, and optional idempotency key; JSON "
+"serialization forbids NaN. On a refusal, timeout, or connection close "
+"after submission, the adapter returns an unresolved outcome with the "
+"request ID and definition ID rather than claiming failure erased the "
+"submission. If an automatic start fails after a durable receipt, that "
+"receipt remains in the response. Result and page reads use typed "
+"projection requests; response management binds actor identity to the "
+"admitted session, and cancel/detach require a revision. The public result"
+" classifier recognizes explicit refusal envelopes and only treats a "
+"result page as a refusal when it is a complete, digest-matching canonical"
+" refusal document, avoiding classification of an arbitrary partial page "
+"as one. See `admitted_operations.py` "
+"(`src/cadrumo_harness/mcp/admitted_operations.py`), "
+"`protocol_contract.py` refusal classification "
+"(`src/cadrumo_harness/mcp/protocol_contract.py`), and `server.py` "
+"(`src/cadrumo_harness/mcp/server.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:40
+msgid ""
+"Cleanup ownership is connection-scoped: adapter close retires its "
+"admitted/enrollment clients and retained failed-admission cleanup owners,"
+" while the server docstring states that EOF does not close the shared "
+"runtime. The outer serving wrapper releases the bundled authority after "
+"normal transport return. This separation is appropriate for concurrent "
+"clients; actual retry behavior and transport lifecycle outcomes were not "
+"exercised. The CLI entrypoint accepts a profile UUID and optional "
+"credential-reference UUID, can enforce the installed cohort version, "
+"configures logging, and reports a missing MCP SDK. The source inspected "
+"here does not establish the host OS's protection of process arguments; "
+"deployment should keep the referenced credential protected independently."
+" See `runtime_cleanup.py` (`src/cadrumo_harness/mcp/runtime_cleanup.py`),"
+" `server.py` lifecycle (`src/cadrumo_harness/mcp/server.py`), and "
+"`main.py` (`src/cadrumo_harness/mcp/main.py`)."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:42
+msgid "Assessment and bounded follow-up"
+msgstr "Avaluació i seguiment acotat"
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:44
+msgid ""
+"The strongest implementation contribution is the typed, connection-owned "
+"MCP adapter around existing runtime contracts: exact-profile lease "
+"admission, one publication pin for authority reads, retained submission "
+"receipts for uncertain outcomes, and explicit cleanup ownership. The "
+"prompt layer complements it with careful separation of applicability, "
+"calculation, verification, local export, and official reconciliation. "
+"These boundaries improve explainability and reduce operator "
+"improvisation; they are not a substitute for validating the legal content"
+" or end-to-end authority of the underlying domain layer."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:46
+msgid ""
+"For synthesis, verify three bounded questions against their owning "
+"layers: (1) whether every referenced CLI command and per-modelo workflow "
+"is present and whether the described registry bindings/equality gates "
+"match implementation; (2) how current plugin callers constrain "
+"output/artifact paths before the workspace writer clears them; and (3) "
+"whether cancellation/cleanup ownership is exercised through server "
+"shutdown and uncertain submission paths. The static files establish "
+"interfaces and intended safeguards, not their runtime success. No "
+"vulnerability or legal defect is asserted from the prompt text alone."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:48
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:50
+msgid "All 30 manifest files were read, including the zero-byte typing marker."
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:52
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-309/SKILL.md` — 109 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:53
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-322/reference/casillas.md` — 57 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:54
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-322/SKILL.md` — 105 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:55
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-349/reference/casillas.md` — 82 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:56
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-349/SKILL.md` — 135 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:57
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-353/reference/casillas.md` — 75 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:58
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-353/SKILL.md` — 126 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:59
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-369/reference/casillas.md` — 67 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:60
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-369/SKILL.md` — 113 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:61
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-"
+"modelo-390/SKILL.md` — 94 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:62
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-pyme-sociedad/SKILL.md` —"
+" 80 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:63
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-reconciliar/SKILL.md` — "
+"40 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:64
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-rectificar-"
+"declaracion/SKILL.md` — 90 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:65
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-regularizar-"
+"atrasos/SKILL.md` — 110 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:66
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-resumen-anual/SKILL.md` —"
+" 83 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:67
+msgid ""
+"`src/cadrumo_harness/_data/agent/skills/cadrumo-retenedor-"
+"empleador/SKILL.md` — 90 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:68
+msgid "`src/cadrumo_harness/_resources.py` — 33 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:69
+msgid "`src/cadrumo_harness/_skill_metadata.py` — 328 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:70
+msgid "`src/cadrumo_harness/_workspace.py` — 746 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:71
+msgid "`src/cadrumo_harness/mcp/__init__.py` — 3 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:72
+msgid "`src/cadrumo_harness/mcp/admitted_operations.py` — 298 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:73
+msgid "`src/cadrumo_harness/mcp/authority_query.py` — 106 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:74
+msgid "`src/cadrumo_harness/mcp/main.py` — 39 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:75
+msgid "`src/cadrumo_harness/mcp/protocol_contract.py` — 238 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:76
+msgid "`src/cadrumo_harness/mcp/runtime_adapter.py` — 338 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:77
+msgid "`src/cadrumo_harness/mcp/runtime_admission.py` — 45 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:78
+msgid "`src/cadrumo_harness/mcp/runtime_cleanup.py` — 155 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:79
+msgid "`src/cadrumo_harness/mcp/server.py` — 74 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:80
+msgid "`src/cadrumo_harness/py.typed` — 0 lines"
+msgstr ""
+
+#: ../../technical/articles/187-filing-skills-and-the-mcp-operator-harness.md:81
+msgid "`src/cadrumo_harness/resources.py` — 105 lines"
+msgstr ""

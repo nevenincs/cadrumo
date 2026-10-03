@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:94a8c60c2b5b8dcb5396300e02c374acf99eb28158efac7baa6b780e9ba2b63f'
+body_hash: 'sha256:68449276df7fc9207dc96d603678f599cbede88e8698561768b8818b94921f6e'
 related: []
 ---
 
@@ -138,8 +138,6 @@ operation-kind boundary a grouping would need to cover, itself still
 unverified against RD 1065/2007's consolidated text).
 
 ## Open finding: the row model cannot represent per-quarter transmisiones amounts
-
-
 
 The full finding, its consequence and the open legitimacy question live in
 `2026-08-26-tui-architecture-modelo-347-contraparte-quarterly-transmisiones-representation-gap-audit`.

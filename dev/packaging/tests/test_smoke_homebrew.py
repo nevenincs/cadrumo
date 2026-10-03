@@ -9,12 +9,11 @@ import stat
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from types import SimpleNamespace
-from typing import cast
 
 import pytest
 
 from .. import acquire_homebrew, smoke_homebrew
+from ..homebrew_storage import require_homebrew_installation_prefix
 from ..smoke_homebrew import (
     CLEANUP_STATE_NAME,
     _assert_oracle_evidence,
@@ -29,6 +28,36 @@ from ..smoke_homebrew import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.parametrize("override", [None, "packages/brew", "absolute"])
+def test_homebrew_installation_target_is_controlled(tmp_path: Path, monkeypatch, override) -> None:
+    root = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.delenv("CADRUMO_HOMEBREW_PREFIX", raising=False)
+    expected = root / "development/packages/homebrew"
+    if override == "absolute":
+        expected = tmp_path / "selected-installation"
+        monkeypatch.setenv("CADRUMO_HOMEBREW_PREFIX", str(expected))
+    elif override:
+        expected = root / override
+        monkeypatch.setenv("CADRUMO_HOMEBREW_PREFIX", override)
+    expected.mkdir(parents=True)
+    assert require_homebrew_installation_prefix(str(expected)) == expected.resolve()
+    host_prefix = tmp_path / "unselected-host-installation"
+    host_prefix.mkdir()
+    with pytest.raises(SystemExit, match="CADRUMO_HOMEBREW_PREFIX"):
+        require_homebrew_installation_prefix(str(host_prefix))
+
+
+def test_deferred_cleanup_refuses_an_unselected_installation(tmp_path: Path, monkeypatch) -> None:
+    state_path, state_dir = _seed_cleanup_state(tmp_path)
+    monkeypatch.setenv("CADRUMO_HOMEBREW_PREFIX", str(tmp_path / "other-installation"))
+    with pytest.raises(SystemExit, match="CADRUMO_HOMEBREW_PREFIX"):
+        run_deferred_cleanup(state_path)
+    calls = [json.loads(line) for line in (state_dir / "calls.log").read_text(encoding="utf-8").splitlines()]
+    assert calls == [["--prefix"]]
+    assert (state_dir / "formulae.txt").read_text(encoding="utf-8").split() == ["git", "cadrumo", "libyaml"]
 
 
 @pytest.mark.parametrize(
@@ -75,10 +104,12 @@ def test_homebrew_temp_refuses_a_different_filesystem(
     prefix.mkdir()
     original_stat = Path.stat
 
-    def stat_with_different_prefix_device(path: Path, *args: object, **kwargs: object) -> os.stat_result:
-        result = original_stat(path, *args, **kwargs)  # type: ignore[arg-type]
+    def stat_with_different_prefix_device(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
+        result = original_stat(path, follow_symlinks=follow_symlinks)
         if path == prefix:
-            return cast(os.stat_result, SimpleNamespace(st_dev=result.st_dev + 1))
+            values = list(result)
+            values[2] = result.st_dev + 1
+            return os.stat_result(values)
         return result
 
     monkeypatch.setattr(Path, "stat", stat_with_different_prefix_device)
@@ -132,7 +163,9 @@ def read_lines(path):
     return [line for line in path.read_text(encoding="utf-8").splitlines() if line] if path.is_file() else []
 
 
-if args[:2] == ["list", "--formula"]:
+if args == ["--prefix"]:
+    sys.stdout.write(str(Path(__file__).parent.parent) + "\\n")
+elif args[:2] == ["list", "--formula"]:
     sys.stdout.write("\\n".join(read_lines(formulae_file)) + "\\n")
 elif args[0] == "uninstall":
     name = args[-1]
@@ -199,9 +232,10 @@ def _seed_cleanup_state(tmp_path: Path, *, installed: bool = True) -> tuple[Path
     return state_path, state_dir
 
 
-def test_deferred_cleanup_uninstalls_everything_the_smoke_added(tmp_path: Path) -> None:
+def test_deferred_cleanup_uninstalls_everything_the_smoke_added(tmp_path: Path, monkeypatch) -> None:
     """The recorded state drives uninstall of the formula, new deps, and tap."""
     state_path, state_dir = _seed_cleanup_state(tmp_path)
+    monkeypatch.setenv("CADRUMO_HOMEBREW_PREFIX", str(tmp_path))
     exit_code = main(["--cleanup-state", str(state_path)])
     calls = [json.loads(line) for line in (state_dir / "calls.log").read_text(encoding="utf-8").splitlines()]
     assert ["uninstall", "--force", "cadrumo"] in calls
@@ -216,9 +250,10 @@ def test_deferred_cleanup_uninstalls_everything_the_smoke_added(tmp_path: Path) 
     assert any("retained installed prefix" in error for error in result["errors"])
 
 
-def test_deferred_cleanup_is_clean_when_nothing_is_retained(tmp_path: Path) -> None:
+def test_deferred_cleanup_is_clean_when_nothing_is_retained(tmp_path: Path, monkeypatch) -> None:
     """A fully-reversed install (no keg left) exits zero with no errors."""
     state_path, _state_dir = _seed_cleanup_state(tmp_path, installed=False)
+    monkeypatch.setenv("CADRUMO_HOMEBREW_PREFIX", str(tmp_path))
     exit_code = run_deferred_cleanup(state_path)
     assert exit_code == 0
     result = json.loads((state_path.parent / "homebrew-cleanup-result.json").read_text(encoding="utf-8"))
@@ -227,9 +262,10 @@ def test_deferred_cleanup_is_clean_when_nothing_is_retained(tmp_path: Path) -> N
     assert result["retained_taps"] == []
 
 
-def test_deferred_cleanup_surfaces_a_failed_untap(tmp_path: Path) -> None:
+def test_deferred_cleanup_surfaces_a_failed_untap(tmp_path: Path, monkeypatch) -> None:
     """A cleanup command failure is accumulated and exits non-zero, never silent."""
     state_path, state_dir = _seed_cleanup_state(tmp_path, installed=False)
+    monkeypatch.setenv("CADRUMO_HOMEBREW_PREFIX", str(tmp_path))
     (state_dir / "fail-untap").write_text("", encoding="utf-8")
     exit_code = run_deferred_cleanup(state_path)
     assert exit_code == 1

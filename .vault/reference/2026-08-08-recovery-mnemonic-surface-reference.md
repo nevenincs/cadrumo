@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee9392ddd2407aecae1af9b75d103206963fb67c7dc2bdb4a3ddb177eb90064c'
+body_hash: 'sha256:01acd02e0593f5e22c24082f0e64cf2960eadfa625c8b099daa8a46916b9bf7c'
 related:
   - '[[2026-08-08-recovery-mnemonic-surface-adr]]'
 ---
@@ -19,8 +19,6 @@ on a TUI full-screen surface.
 
 ## The recovery application layer
 
-
-
 The result records carry only a recovery path, a non-secret recovery
 fingerprint, and booleans. The module states that the candidate mnemonic is
 never held on the result record and that the plaintext words are never persisted
@@ -29,8 +27,6 @@ or returned; the `confirm` callback displayed them during enrollment.
 The single point where plaintext words leave the module is the `confirm(candidate.mnemonic)` call; the module records that the mnemonic is never returned, that none of the operations serialize the mnemonic or the master key, and that the confirm call is an unbounded interactive pause after which enrollment preconditions are re-asserted.
 
 ## The CLI verbs
-
-
 
 The display helper is `_confirm_candidate_on_terminal`, which records that the
 words reach only the terminal device — never stdout, the JSON envelope, or a log
@@ -88,9 +84,5 @@ and never a mnemonic; the recovery panel renders enrolled state, the fingerprint
 and the literal CLI command strings for create, rotate and verify.
 
 ## The leak gates and their blind spot
-
-
-
-
 
 Its own docstring records the boundary — it cannot see a secret collected inside a MODAL the base screen pushes only on a button press, because it does not drive navigation into nested screens.

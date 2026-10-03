@@ -152,12 +152,64 @@ Write-Output "DEFAULT=$defaultRoot"
 def test_scoop_storage_environment_controls_cache_and_user_config_paths() -> None:
     """The shared helper owns both Scoop's cache and XDG user-config fallback."""
     source = _STORAGE_PATHS.read_text(encoding="utf-8")
+    assert 'EnvironmentVariable = "CADRUMO_SCOOP_INSTALL_ROOT"' in source
+    assert 'Default = "development/packages/scoop"' in source
+    assert "$env:SCOOP = $installRoot" in source
     assert '"CADRUMO_SCOOP_CACHE_DIR"' in source
     assert '"development/cache/scoop"' in source
     assert "$env:SCOOP_CACHE = $scoopCache" in source
     assert '"CADRUMO_TOOL_CONFIG_DIR"' in source
     assert '"development/config/tools"' in source
     assert "$env:XDG_CONFIG_HOME = $toolConfig" in source
+
+
+def test_scoop_command_root_guard_rejects_mismatch_and_shadowing(tmp_path: Path) -> None:
+    """The actual PowerShell command must be an external under the selected root."""
+    interpreter = _interpreter()
+    source = _STORAGE_PATHS.read_text(encoding="utf-8")
+    assert "Get-Command scoop -ErrorAction SilentlyContinue" in source
+    assert '"Application", "ExternalScript"' in source
+    if interpreter is None:
+        assert "this control does not relocate" in source
+        return
+
+    selected_shims = tmp_path / "selected" / "shims"
+    unexpected_shims = tmp_path / "unexpected" / "shims"
+    selected_shims.mkdir(parents=True)
+    unexpected_shims.mkdir(parents=True)
+    (selected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8")
+    (unexpected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8")
+    helper = str(_STORAGE_PATHS).replace("'", "''")
+    root = str(selected_shims.parent).replace("'", "''")
+    wrong_path = str(unexpected_shims).replace("'", "''")
+    right_path = str(selected_shims).replace("'", "''")
+    driver = f"""
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$env:SCOOP = '{root}'
+. '{helper}'
+$env:PATH = '{wrong_path}' + [System.IO.Path]::PathSeparator + $env:PATH
+$mismatchRejected = $false
+try {{ Assert-CadrumoScoopCommandRoot -ScoopRoot '{root}' }}
+catch {{ $mismatchRejected = $_.Exception.Message.Contains('CADRUMO_SCOOP_INSTALL_ROOT') }}
+if (-not $mismatchRejected) {{ throw 'a Scoop command outside the selected root was accepted' }}
+$env:PATH = '{right_path}' + [System.IO.Path]::PathSeparator + $env:PATH
+function scoop {{ 'shadowing function' }}
+$shadowRejected = $false
+try {{ Assert-CadrumoScoopCommandRoot -ScoopRoot '{root}' }}
+catch {{ $shadowRejected = $_.Exception.Message.Contains('type Function') }}
+if (-not $shadowRejected) {{ throw 'a shadowing PowerShell function was ignored' }}
+Remove-Item Function:scoop -Force
+Assert-CadrumoScoopCommandRoot -ScoopRoot '{root}'
+Write-Output 'GUARD-PASSED'
+"""
+    completed = run_command(
+        [interpreter, "-NoProfile", "-Command", driver],
+        cwd=tmp_path,
+        timeout_seconds=120,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "GUARD-PASSED" in completed.stdout
 
 
 def test_invoke_native_gates_on_exit_code_not_stderr_presence() -> None:

@@ -1,0 +1,957 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:1
+msgid "AEAT practical-manual corpus"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:7
+msgid ""
+"**Report:** `STAGE-2-196` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:10
+msgid "Scope and sampling method"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:12
+msgid ""
+"This chunk inventories 124 files totaling 245,309,915 bytes (about 245.3 "
+"MB): IVA manuals for 2020–2025, IRPF/Renta manuals for 2020–2025 plus "
+"regional-deduction volumes for 2024 and 2025, and Impuesto sobre "
+"Sociedades manuals for 2022–2025. The complete inventory is summarized by"
+" family below and linked from the manifest-generated appendix. I sampled "
+"the 2025 IVA manual, 2024 Renta volumes 1 and 2, and the 2024 Sociedades "
+"manual, inspecting small structural indexes and bounded extracted-page "
+"metadata rather than reading the full PDFs or their several megabytes of "
+"sidecar text."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:14
+msgid "Content and retrieval capabilities"
+msgstr "Tartalom és információ-visszakeresési képességek"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:16
+msgid ""
+"Each manual family pairs official AEAT source PDFs and capture manifests "
+"with some combination of extracted JSON/Markdown, a short `manual.json` "
+"description, a `chapters.json` index, and small structured section "
+"summaries. The manifests carry source URLs, capture dates, byte lengths, "
+"hashes, edition/year, and a `synthetic: false` flag. In the sampled 2025 "
+"IVA, 2024 Renta volume 1, and 2024 Sociedades bundles, the extraction "
+"metadata reports `status: ok` and its source hash matches the archived "
+"PDF. Their extracted page units make it possible to cite a bounded "
+"passage without presenting an entire manual: the sampled files contain "
+"350, 1,558, and 852 page units respectively. Two small Renta 2025 "
+"annotation files map topic anchors to selected page numbers and bind "
+"those selections to a source hash. This is a useful grounding substrate "
+"for manual examples and operator explanations, though no retrieval "
+"consumer was inspected here."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:18
+msgid ""
+"The structured navigation is explicitly curated and sparse in this "
+"snapshot. Across all 18 manual parts, 16 `chapters.json` files contain "
+"one chapter entry and two (Sociedades 2022 and 2023) are empty; there are"
+" 16 small section-summary JSON files. All 18 `structure/manual.json` "
+"files mark the definition reviewer as `operator`. These are helpful "
+"curated entry points, not complete tables of contents or proof that every"
+" chapter/rule in the long source is indexed. The Renta 2024 regional-"
+"deductions PDF is present with a manifest and a short "
+"manual/chapter/section index, but no extracted JSON or Markdown sidecar "
+"in this `corpus/manuals` subtree. A separate normalized-text record "
+"exists in `manual_corpus_text` (source text asset "
+"(`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part2"
+"-deducciones-autonomicas/source.pdf.corpus_text.json`), analyzed in "
+"[STAGE-2-201](201-aeat-manuals-extracted-text.md)); therefore the sidecar"
+" gap here does not establish repository-wide absence of machine-readable "
+"text. See the IVA 2025 source manifest "
+"(`src/cadrumo/_data/corpus/manuals/iva/2025/manifest.json`), IVA 2025 "
+"extracted pages "
+"(`src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf.extracted.md`), "
+"Renta 2024 volume 1 "
+"(`src/cadrumo/_data/corpus/manuals/renta/2024/part1/manifest.json`), "
+"Renta 2024 regional-deductions volume "
+"(`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/manifest.json`), and Sociedades 2024 manual metadata "
+"(`src/cadrumo/_data/corpus/manuals/sociedades/2024/structure/manual.json`)."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:20
+msgid ""
+"The data is historical and edition-scoped. Sample capture dates range "
+"from May to June 2026; the manuals themselves concern declared tax years "
+"2020–2025. The documents can support an answer about the cited edition, "
+"but they should not be treated as a current legal authority without "
+"confirming the relevant filing year, later amendments, and the exact "
+"cited pages. A source URL/hash confirms what the bundle says it captured,"
+" not whether the source remains current or whether text extraction "
+"preserved every table and footnote."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:22
+msgid "Assessment and limitations"
+msgstr "Értékelés és korlátozások"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:24
+msgid ""
+"The strongest property is traceability: the source PDF is retained "
+"alongside extracted text, per-page units, hashes, and a small human-"
+"authored topic index. The distinction between source and curated metadata"
+" matters. The structure summaries can direct a search, while the PDF/page"
+" extraction remains necessary to ground a claim. Sparse chapter indexing "
+"and the missing source-sidecar in this subtree limit this file set for "
+"retrieval. A separate normalized-text record exists as noted above; how "
+"retrieval uses it is outside this chunk."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:26
+msgid ""
+"These are reference documents, not executable filing logic. No personal "
+"case files or credentials were reviewed, though the manuals themselves "
+"include worked examples. PDFs and extracted text are treated as data "
+"only; parser safety, extraction completeness, and legal correctness were "
+"not tested. No application was run and no code was modified."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "Family"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "Files"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "Bytes"
+msgstr "Bájtok"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "Edition coverage"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "IVA manuals"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "42"
+msgstr "42"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "41,819,576"
+msgstr "41,819,576"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "2020–2025"
+msgstr "2020–2025"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "Renta manuals"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "56"
+msgstr "56"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "155,084,171"
+msgstr "155,084,171"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "2020–2025; regional-deduction volumes in 2024–2025"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "Sociedades manuals"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "26"
+msgstr "26"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "48,406,168"
+msgstr "48,406,168"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "2022–2025"
+msgstr "2022–2025"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "**Total**"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "**124**"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md
+msgid "**245,309,915**"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:35
+msgid "Complete assigned-file inventory"
+msgstr "A kijelölt fájlok teljes leltára"
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:37
+msgid ""
+"The 124 source links below cover the chunk manifest. Inventory coverage "
+"is complete; semantic inspection is limited to the samples above."
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:38
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2020/manifest.json` — 407 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:39
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2020/source.pdf` — 4765246 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:40
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2020/source.pdf.extracted.json` — "
+"1893382 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:41
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2020/source.pdf.extracted.md` — "
+"1811541 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:42
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2020/structure/chapters.json` — 343"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:43
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2020/structure/manual.json` — 519 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:44
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2020/structure/sections/cap1/sec1.json`"
+" — 847 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:45
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2021/manifest.json` — 405 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:46
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2021/source.pdf` — 1953133 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:47
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2021/source.pdf.extracted.json` — "
+"804571 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:48
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2021/source.pdf.extracted.md` — "
+"764448 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:49
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2021/structure/chapters.json` — 343"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:50
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2021/structure/manual.json` — 517 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:51
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2021/structure/sections/cap1/sec1.json`"
+" — 845 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:52
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2022/manifest.json` — 407 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:53
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2022/source.pdf` — 5042176 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:54
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2022/source.pdf.extracted.json` — "
+"806203 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:55
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2022/source.pdf.extracted.md` — "
+"766899 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:56
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2022/structure/chapters.json` — 343"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:57
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2022/structure/manual.json` — 519 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:58
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2022/structure/sections/cap1/sec1.json`"
+" — 847 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:59
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2023/manifest.json` — 407 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:60
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2023/source.pdf` — 5421056 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:61
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2023/source.pdf.extracted.json` — "
+"842771 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:62
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2023/source.pdf.extracted.md` — "
+"801251 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:63
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2023/structure/chapters.json` — 343"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:64
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2023/structure/manual.json` — 519 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:65
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2023/structure/sections/cap1/sec1.json`"
+" — 847 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:66
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2024/manifest.json` — 407 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:67
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2024/source.pdf` — 6348800 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:68
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2024/source.pdf.extracted.json` — "
+"899331 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:69
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2024/source.pdf.extracted.md` — "
+"853086 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:70
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2024/structure/chapters.json` — 343"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:71
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2024/structure/manual.json` — 519 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:72
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2024/structure/sections/cap1/sec1.json`"
+" — 847 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:73
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2025/manifest.json` — 407 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:74
+msgid "`src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf` — 6296576 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:75
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf.extracted.json` — "
+"891016 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:76
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf.extracted.md` — "
+"845437 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:77
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2025/structure/chapters.json` — 323"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:78
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2025/structure/manual.json` — 503 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:79
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/iva/2025/structure/sections/cap1/sec1.json`"
+" — 846 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:80
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/manifest.json` — 419 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:81
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/source.pdf` — 32387072"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:82
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/source.pdf.extracted.json`"
+" — 3514036 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:83
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/source.pdf.extracted.md`"
+" — 3326790 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:84
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/structure/chapters.json`"
+" — 312 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:85
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/structure/manual.json`"
+" — 528 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:86
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2020/part1/structure/sections/cap1/sec1.json`"
+" — 758 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:87
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/manifest.json` — 419 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:88
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf` — 26314752"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:89
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf.extracted.json`"
+" — 3967412 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:90
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf.extracted.md`"
+" — 3769377 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:91
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/structure/chapters.json`"
+" — 312 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:92
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/structure/manual.json`"
+" — 528 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:93
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2021/part1/structure/sections/cap1/sec1.json`"
+" — 758 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:94
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/manifest.json` — 418 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:95
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf` — 9706572 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:96
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf.extracted.json`"
+" — 4357498 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:97
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf.extracted.md`"
+" — 4139951 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:98
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/structure/chapters.json`"
+" — 312 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:99
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/structure/manual.json`"
+" — 528 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:100
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2022/part1/structure/sections/cap1/sec1.json`"
+" — 758 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:101
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/manifest.json` — 419 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:102
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/source.pdf` — 11604722"
+" bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:103
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/source.pdf.extracted.json`"
+" — 4768652 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:104
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/source.pdf.extracted.md`"
+" — 4518545 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:105
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/structure/chapters.json`"
+" — 312 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:106
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/structure/manual.json`"
+" — 528 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:107
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2023/part1/structure/sections/cap1/sec1.json`"
+" — 758 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:108
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/manifest.json` — 423 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:109
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf` — 9214502 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:110
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf.extracted.json`"
+" — 3742651 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:111
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf.extracted.md`"
+" — 3539119 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:112
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/structure/chapters.json`"
+" — 312 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:113
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/structure/manual.json`"
+" — 533 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:114
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part1/structure/sections/cap1/sec1.json`"
+" — 763 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:115
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/manifest.json` — 478 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:116
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/source.pdf` — 3404339 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:117
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/structure/chapters.json` — 320 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:118
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/structure/manual.json` — 635 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:119
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-"
+"autonomicas/structure/sections/cap1/sec1.json` — 832 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:120
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/manifest.json` — 432 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:121
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf` — 8554799 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:122
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.annotation.json`"
+" — 609 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:123
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.json`"
+" — 3676254 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:124
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md`"
+" — 3486623 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:125
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/structure/chapters.json`"
+" — 312 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:126
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/structure/manual.json`"
+" — 534 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:127
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part1/structure/sections/cap1/sec1.json`"
+" — 764 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:128
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/manifest.json` — 472 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:129
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/source.pdf` — 3801341 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:130
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/source.pdf.annotation.json` — 267 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:131
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/source.pdf.extracted.json` — 1677252 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:132
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/source.pdf.extracted.md` — 1594333 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:133
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/structure/chapters.json` — 334 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:134
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/structure/manual.json` — 609 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:135
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-"
+"autonomicas/structure/sections/cap1/sec1.json` — 883 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:136
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2022/manifest.json` — 422 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:137
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2022/source.pdf` — 14432256 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:138
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2022/source.pdf.extracted.json`"
+" — 2096284 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:139
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2022/source.pdf.extracted.md`"
+" — 1998173 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:140
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2022/structure/chapters.json`"
+" — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:141
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2022/structure/manual.json` "
+"— 529 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:142
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2023/manifest.json` — 421 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:143
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2023/source.pdf` — 5188800 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:144
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2023/source.pdf.extracted.json`"
+" — 2153112 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:145
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2023/source.pdf.extracted.md`"
+" — 2048897 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:146
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2023/structure/chapters.json`"
+" — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:147
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2023/structure/manual.json` "
+"— 529 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:148
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/manifest.json` — 421 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:149
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf` — 6266062 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:150
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf.extracted.json`"
+" — 2299823 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:151
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf.extracted.md`"
+" — 2188412 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:152
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/structure/chapters.json`"
+" — 336 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:153
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/structure/manual.json` "
+"— 529 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:154
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2024/structure/sections/cap1/sec1.json`"
+" — 808 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:155
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/manifest.json` — 421 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:156
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf` — 5178589 "
+"bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:157
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf.extracted.json`"
+" — 2331546 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:158
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf.extracted.md`"
+" — 2218119 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:159
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/structure/chapters.json`"
+" — 336 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:160
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/structure/manual.json` "
+"— 529 bytes"
+msgstr ""
+
+#: ../../technical/articles/196-aeat-practical-manual-corpus.md:161
+msgid ""
+"`src/cadrumo/_data/corpus/manuals/sociedades/2025/structure/sections/cap1/sec1.json`"
+" — 808 bytes"
+msgstr ""

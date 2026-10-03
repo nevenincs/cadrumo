@@ -13,9 +13,8 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:9e87779181d2c0bfcbcb4ab275c7d793b596b5321a2f6404c9529c98ff203dd4'
+body_hash: 'sha256:cc7e7544a450e8e6315c0cef55d4959441501d75ff478aef5b807e26a7f9a4da'
 ---
-
 # `application-packaging` plan
 
 ## Description
@@ -24,7 +23,7 @@ Approved 2026-10-03
 
 The user explicitly requested contracts, a compiled C host, shared Rust policy, Windows tooling and delivered-artifact verification. This authorizes S01-S04 within that foundation. The packaging ADR stays proposed for unresolved application choices. Its scoped foundation commitments come directly from the user brief; linkage is an evidence-led implementation choice. Existing accepted Python compatibility, exact-version cohort, Settings/taxonomy ownership, authority provisioning and runtime boundaries continue to govern. No storage migration, core default rewrite, Tauri UI, service management or installers are included. The user clarified that existing local storage is to be ignored for this work.
 
-S01 owns native/CONTRACT.md and the package-only declaration. S02 owns the C ABI proof and pinned build. S03 owns the host and package assembler. S04 owns relocated acceptance evidence and final integrated review. Build outputs live beneath .artifacts/native; authored sources never contain generated binaries.
+S01 owns native/CONTRACT.md and the package-only declaration. S02 owns the C ABI proof and pinned build. S03 owns the host and package assembler. S04 owns relocated acceptance evidence and final integrated review. Build outputs now live beneath build/windows-x64 under S05; authored sources never contain generated binaries. The earlier .artifacts/native evidence remains historical.
 
 ## Steps
 
@@ -33,6 +32,8 @@ S01 owns native/CONTRACT.md and the package-only declaration. S02 owns the C ABI
 - [ ] `S03` - Build isolated host and assemble the locked Python product; `native/ and dev/packaging/native/`.
 - [ ] `S04` - Verify relocated artifact, hostile environments, child processes and filesystem writes; `dev/packaging/native/ and native/`.
 - [ ] `S05` - Control Debug Release builds installation and ZIP packaging through CMake and CPack; `CMakeLists.txt, CMakePresets.json, native/ and dev/packaging/native/`.
+
+S05 also covers the user-authorized naming and cleanup contract, optional `_d` host, Python ZIP library, Windows identity resources, locked third-party wheels, CADRUMO wheel builds, package-cohesion checks and platform backend separation. Shared packaging must not embed Windows physical filenames. Installation, extracted ZIP and development-host checks remain required before completion.
 
 ## Parallelization
 

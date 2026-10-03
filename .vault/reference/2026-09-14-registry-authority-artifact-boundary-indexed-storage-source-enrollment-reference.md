@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:49de806308344f7619c80b819ca0a25d0b20734d8ca3b0787672be815489e510'
+body_hash: 'sha256:dc6bed7fbfa1ba0959beceea9db09a64e5e90548320afb87084b3428f15960f9'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]"
   - "[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]"
@@ -48,8 +48,6 @@ The current fixed artifact locator is `src/cadrumo/domain/calculations/registry/
 Lazy loading necessarily changes this timing for unrequested typed payloads if all unsigned digests have been deliberately recomputed. Ordinary raw-byte corruption can still be rejected anywhere in the file at admission by a full-file digest. Full typed traversal before publication remains independently necessary; SQLite structural integrity is not semantic conformance or authentication.
 
 ### Package and resource obligations
-
-
 
 `src/cadrumo/core/resources/bundled_data.py:51` retains an extraction ExitStack for the process. `bundled_path` at line 77 yields filesystem resources, while scoped `as_path` at line 98 has a shorter lease. SQLite connections require an authority-directory resource lifetime covering both the descriptor and referenced database. Normal filesystem wheel installs are the initial supported target; zip-import must not be claimed without a real resource-lifetime test.
 

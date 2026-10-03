@@ -1,0 +1,360 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:1
+msgid "Reconciliation, filing disposition, and accountant review packages"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:7
+msgid ""
+"**Report:** `STAGE-2-081` · **Topic:** [Modelo work and revision "
+"lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:10
+msgid ""
+"**Scope:** 15 implementation files under "
+"`src/cadrumo/application/modelo`, totaling 5,162 lines, 218,497 bytes, "
+"and 46,356 measured proxy tokens. All nine bounded-reader pages were read"
+" in sequence, covering each assigned range. Static inspection only: no "
+"application import or execution and no tests run. The manifest's token "
+"figure is an `o200k_base` proxy."
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacidades y mecanismos"
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:14
+msgid ""
+"Post-filing reconciliation compares a work unit and its persisted "
+"calculation against either a local AEAT justificante PDF or a filed "
+"declaration PDF. Both paths check modelo, period, exercise year, and "
+"active-profile tax identifier. Justificantes also compare the printed "
+"payment/refund total with the registry-declared result casilla and its "
+"tolerance. A missing comparison target, persisted revision, receipt "
+"total, or identity anchor is recorded as an advisory; it does not "
+"silently convert an identity-only match into a claim that the amount was "
+"checked. Parse failures become a typed refusal rather than exposing "
+"parser exception text. File and secure-byte entrypoints "
+"(`src/cadrumo/application/modelo/reconciliation.py`), shared identity "
+"comparison (`src/cadrumo/application/modelo/reconciliation.py`), receipt-"
+"total reconciliation (`src/cadrumo/application/modelo/reconciliation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:16
+msgid ""
+"Declaration-level comparison is currently enrolled for Modelos 100, 111, "
+"130, 190, 303, and 390. Other declaration targets are refused before the "
+"PDF is opened. Enrolled cases compare numeric extracted values against "
+"the persisted revision using the registry's verification policy: required"
+" computed casillas are checked even if absent in the filing, optional "
+"`reconcile_when_present` casillas are compared only when present on both "
+"sides, and export-exempt or non-printing values are excluded. Decimal and"
+" integer observations participate; booleans and text do not. Differences "
+"are typed as mismatched, missing-in-filed, or extra-in-filed, sorted "
+"deterministically, and value-bearing records require registry legal and "
+"source references. Provisional extraction profiles produce a manual-"
+"verification advisory. Enrolled model gate "
+"(`src/cadrumo/application/modelo/reconciliation.py`), registry-scoped "
+"declaration comparison "
+"(`src/cadrumo/application/modelo/reconciliation.py`), numeric casilla "
+"comparison (`src/cadrumo/application/modelo/reconcile_casilla.py`), "
+"grounded persisted diff contract "
+"(`src/cadrumo/application/modelo/reconciliation_records.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:18
+msgid ""
+"The local PDF path never contacts AEAT and reads an already-persisted "
+"calculation revision rather than recalculating. A second path accepts "
+"justificante bytes from a same-profile secure capture and does not write "
+"a plaintext file. Both prepare a report, encrypted reconciliation record,"
+" and compact `MODELO_RECONCILED` bucket event, then persist the record "
+"and event atomically in one unit of work. The detailed record keeps the "
+"registry references in force at comparison time; the event keeps verdict "
+"and counts, with a visibly shortened evidence path to fit its payload "
+"limit. Atomic report/event preparation "
+"(`src/cadrumo/application/modelo/reconciliation.py`), encrypted record "
+"and persistence boundary "
+"(`src/cadrumo/application/modelo/reconciliation_records.py`), secure "
+"justificante pull checks "
+"(`src/cadrumo/application/modelo/reconciliation_pull_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:20
+msgid ""
+"Registered operations let an operator import local evidence, reconcile a "
+"previously captured justificante, and list reconciliation history. Import"
+" and pull resolve the exact profile/work unit, pin the operation "
+"authority, and mark a persistence phase uncertain before attempting the "
+"atomic write; their public result is released only when its terminal "
+"receipt proves a successful update. Pull additionally checks that capture"
+" bucket, modelo, year, and period match the selected work unit. The list "
+"operation returns a whole-profile or per-work-unit history with verdict, "
+"diff count, actor, time, and source path, in canonical order; it does not"
+" return the detailed diff rows through this particular projection. Import"
+" write and receipt boundary "
+"(`src/cadrumo/application/modelo/reconciliation_import_operation.py`), "
+"pull target matching and persistence "
+"(`src/cadrumo/application/modelo/reconciliation_pull_operation.py`), "
+"history result validation "
+"(`src/cadrumo/application/modelo/reconciliation_list_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:22
+msgid ""
+"Registry discovery exposes registry-backed model codes, a support matrix,"
+" model descriptions, period tokens, casilla lists/details, bindings, and "
+"formulas. Queries run through the caller's pinned authority. An `as_of` "
+"value is rejected on an unscoped request instead of being accepted and "
+"ignored; the filing-year-scoped forms are the ones that can honor "
+"historical validity. A shared required-input helper separately defines "
+"which manually typed required casillas verification expects, excluding "
+"casillas supplied by repeated detail rows. Pinned query boundary and "
+"scope guard (`src/cadrumo/application/modelo/registry_discovery.py`), "
+"registry support matrix "
+"(`src/cadrumo/application/modelo/registry_discovery.py`), manual-input "
+"requirement rule (`src/cadrumo/application/modelo/required_inputs.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:24
+msgid ""
+"Result presentation and filing disposition are kept separate. The "
+"headline summary selects result-to-pay/refund totals and key figures from"
+" registry verification expectations, emits only values present in the "
+"persisted revision, and resolves labels in the requested output language."
+" The disposition resolver validates the revision's casilla map against "
+"the work unit's selected registry revision before deriving the fichero "
+"declaration type. It applies Modelo 303 refund rules and positive-payment"
+" choices in one shared result used by export and cross-period carry: "
+"REDEME enrollment resolves eligible negative periods to refund; a non-"
+"REDEME filer must opt in to refund for the year's final period; "
+"unsupported payment choices and ineligible elections refuse. Registry-"
+"derived result summary "
+"(`src/cadrumo/application/modelo/result_summary.py`), validated "
+"disposition entrypoint "
+"(`src/cadrumo/application/modelo/result_disposition_resolution.py`), "
+"payment and refund election gates "
+"(`src/cadrumo/application/modelo/result_disposition_resolution.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:26
+msgid ""
+"Review packages provide an operator-directed accountant handoff. Building"
+" one requires a verified-complete or filed revision and a matching work-"
+"unit identity and registry coordinate. It bundles the already-rendered "
+"fichero bytes, full calculation revision and observations, optional "
+"ledger evidence, and a typed package descriptor into a checksum-manifest "
+"ZIP. Files are staged in a temporary sibling of the chosen output path, "
+"rather than shared OS temp, and the bundle writer performs an atomic "
+"final write. Verification checks member integrity and the descriptor, and"
+" re-confirms the registry revision. The ZIP is a plaintext shareable "
+"export; the checksum says whether members changed, not who created it. "
+"Package build gates and contents "
+"(`src/cadrumo/application/modelo/review_package.py`), staging and "
+"verification (`src/cadrumo/application/modelo/review_package.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:28
+msgid ""
+"The counter-sign layer adds independent Ed25519 acknowledgment: an "
+"accountant signs the operator's original signature-hex bytes plus a NUL "
+"separator and note. Verification rechecks the operator-signed package "
+"first, then verifies the counter-signature against a public key supplied "
+"by the caller; it does not trust the receipt's embedded counter-key as "
+"the trust anchor. Creating a counter-signature does not itself verify the"
+" original package signature, so callers that need pre-sign assurance must"
+" verify first; the combined verifier rejects an invalid original "
+"signature later. Collaboration audit helpers append recipient "
+"registration/removal, package-encrypted/decrypted, counter-sign, and "
+"attached-feedback events. Decryption gets a privacy event; keys and "
+"plaintext bytes are omitted from event payloads. The attached-feedback "
+"event refuses unless the imported counter-sign receipt has already been "
+"verified. Counter-sign message and creation "
+"(`src/cadrumo/application/modelo/review_package_counter_sign.py`), two-"
+"layer verification "
+"(`src/cadrumo/application/modelo/review_package_counter_sign.py`), "
+"collaboration audit events "
+"(`src/cadrumo/application/modelo/review_package_collab_audit.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:30
+msgid "Knowledge, safety, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:32
+msgid ""
+"The sources of truth here are registry-declared casillas, expectations, "
+"tolerances, and legal/source references; persisted work revisions and "
+"filed observations; the active profile; and secure capture snapshots. The"
+" parser and persistence interfaces are ports, so this slice does not "
+"establish PDF extraction accuracy or the concrete encryption/storage "
+"adapter's implementation. The reconciliation comments identify "
+"provisional declaration extraction profiles and the need to manually "
+"compare their values against printed documents. The secure-byte path "
+"handles justificantes only; filed declarations captured through the "
+"separate sweep already have observation values used by the pulled-filing "
+"comparison documented in [STAGE-2-080](080-modelo-projections-queries-"
+"quickfile-and-recipient-encryption.md)."
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:34
+msgid ""
+"Several boundaries merit cross-module verification. "
+"`resolve_modelo_result_disposition` intentionally resolves the registry "
+"snapshot using its caller-supplied `period` while the work unit has its "
+"own period; its comment says the two are expected to agree but that this "
+"boundary does not prove it. Call sites should establish equality before "
+"relying on period-sensitive refund eligibility. Reconciliation records "
+"retain a full source path while the event shortens it; the whole-profile "
+"history projection also publishes that path, so paths containing "
+"usernames or private directory names can be disclosed to an authorized "
+"reader. Finally, record history rechecks revision carry against current "
+"authority; a later registry revision mismatch can make old entries refuse"
+" to list, even though the stored record preserves its original grounding."
+" Caller-period resolution "
+"(`src/cadrumo/application/modelo/result_disposition_resolution.py`), full"
+" source reference storage "
+"(`src/cadrumo/application/modelo/reconciliation_records.py`), history "
+"carry check (`src/cadrumo/application/modelo/reconciliation_records.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:36
+msgid ""
+"The strongest local controls are deterministic registry-scoped "
+"comparison, disclosure of unverified anchors and missing totals, "
+"mandatory grounding on value diffs, atomic record/event co-write, target "
+"checks on secure pulls, and signature verification against independently "
+"supplied trust keys. The package builder trusts its caller to supply the "
+"correct draft bytes and work unit/revision pair beyond its explicit ID "
+"and registry-coordinate checks; export-time eligibility is owned by the "
+"upstream exporter. No tests are included among the assigned files, so "
+"none of the claimed behavior was exercised in this pass."
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:38
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:40
+msgid "All 15 assigned source files were read completely through pages 1–9."
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:42
+msgid ""
+"reconcile_casilla.py "
+"(`src/cadrumo/application/modelo/reconcile_casilla.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:43
+msgid "reconciliation.py (`src/cadrumo/application/modelo/reconciliation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:44
+msgid ""
+"reconciliation_import_operation.py "
+"(`src/cadrumo/application/modelo/reconciliation_import_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:45
+msgid ""
+"reconciliation_list_operation.py "
+"(`src/cadrumo/application/modelo/reconciliation_list_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:46
+msgid ""
+"reconciliation_parsing.py "
+"(`src/cadrumo/application/modelo/reconciliation_parsing.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:47
+msgid ""
+"reconciliation_pull_operation.py "
+"(`src/cadrumo/application/modelo/reconciliation_pull_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:48
+msgid ""
+"reconciliation_records.py "
+"(`src/cadrumo/application/modelo/reconciliation_records.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:49
+msgid ""
+"registry_discovery.py "
+"(`src/cadrumo/application/modelo/registry_discovery.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:50
+msgid "required_inputs.py (`src/cadrumo/application/modelo/required_inputs.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:51
+msgid ""
+"result_disposition_resolution.py "
+"(`src/cadrumo/application/modelo/result_disposition_resolution.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:52
+msgid "result_summary.py (`src/cadrumo/application/modelo/result_summary.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:53
+msgid ""
+"result_summary_payload.py "
+"(`src/cadrumo/application/modelo/result_summary_payload.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:54
+msgid "review_package.py (`src/cadrumo/application/modelo/review_package.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:55
+msgid ""
+"review_package_collab_audit.py "
+"(`src/cadrumo/application/modelo/review_package_collab_audit.py`)"
+msgstr ""
+
+#: ../../technical/articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md:56
+msgid ""
+"review_package_counter_sign.py "
+"(`src/cadrumo/application/modelo/review_package_counter_sign.py`)"
+msgstr ""

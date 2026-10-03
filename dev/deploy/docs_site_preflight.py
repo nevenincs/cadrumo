@@ -7,9 +7,10 @@ from pathlib import Path
 from defusedxml import ElementTree
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 
-from .docs_delivery_contracts import _REQUIRED_ARTIFACTS, _UTF_8
+from .docs_delivery_contracts import _REQUIRED_ARTIFACTS
 from .docs_site_languages import _language_site_url, localized_languages
 
 
@@ -129,7 +130,7 @@ def _validate_language_entry(html_root: Path) -> None:
     entry = html_root / "index.html"
     if not entry.is_file():
         raise SystemExit(f"Language entry missing at {entry}; refusing to publish.")
-    body = entry.read_text(encoding=_UTF_8)
+    body = entry.read_text(encoding=UTF_8)
     unreachable = [language for language in localized_languages() if f'"{language}"' not in body]
     if unreachable:
         raise SystemExit(

@@ -128,8 +128,9 @@ def validate_generated_export_tree(
     """Prove an isolated generated tree selects at its required grade.
 
     An ordinary candidate contains only its target edition. An attested
-    inherited candidate contains exactly the pinned baseline and thin child;
-    both must hydrate to the freshly rendered child layout. Extra revisions,
+    inherited candidate contains exactly its pinned ancestor chain and thin
+    child; every staged edition must preserve its canonical effective meaning,
+    and the child must hydrate to the freshly rendered layout. Extra revisions,
     modelos, or export files remain refusals.
     """
     registry_root = _require_directory(context.registry_root, subject="generated registry root")

@@ -20,7 +20,7 @@ from cadrumo.application.modelo.mcp_query_contracts import (
     ModeloReadinessSummaryProjection,
 )
 from cadrumo.application.modelo.operation_definitions import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.query_read_operation import (
+from cadrumo.application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveRequest,

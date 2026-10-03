@@ -1,0 +1,252 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:1
+msgid "Ephemeral cross-workbench search"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:7
+msgid ""
+"**Report:** `STAGE-2-097` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:10
+msgid ""
+"**Scope:** 3 files under `src/cadrumo/application/search`, totaling 959 "
+"lines, 38,722 bytes, and 8,007 measured `o200k_base` proxy tokens. Both "
+"bounded-reader pages and all assigned ranges were read. Static inspection"
+" only; no application execution or tests were run."
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacidades y mecanismos"
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:14
+msgid ""
+"This package assembles a search snapshot from already-loaded, already-"
+"admitted Ledger, declarations, AEAT-sync, and Modelo workspace "
+"projections. It does not fetch data or determine destination access. The "
+"one-shot assembler requires the supplied admissions to name "
+"`workbench.ledger`, `workbench.declarations`, and `workbench.aeat_sync`; "
+"callers create a fresh snapshot when new workspace projections become "
+"authoritative. Snapshot assembly "
+"(`src/cadrumo/application/search/installed_workbench.py`), input "
+"generation and destination checks "
+"(`src/cadrumo/application/search/installed_workbench.py`), assembly entry"
+" point (`src/cadrumo/application/search/installed_workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:16
+msgid ""
+"The installed projection covers ledger entries and stale evidence; "
+"declarations, calculation revisions, filings, and filing history; AEAT "
+"reconciliation findings and notifications; and each Modelo workspace. It "
+"derives closed status codes from source projection fields and uses "
+"natural Modelo/year/period addresses for case-like records. Ledger rows "
+"are searchable by counterparty, description, date, amount, and currency, "
+"while their transaction IDs remain private identity material. Filing-"
+"evidence, lifecycle, reconciliation, and notification IDs likewise remain"
+" in the private identity basis rather than the matchable terms. Ledger "
+"terms and private IDs "
+"(`src/cadrumo/application/search/installed_workbench.py`), declaration, "
+"revision, filing, and history projections "
+"(`src/cadrumo/application/search/installed_workbench.py`), AEAT-sync "
+"projections (`src/cadrumo/application/search/installed_workbench.py`), "
+"Modelo availability projection "
+"(`src/cadrumo/application/search/installed_workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:18
+msgid ""
+"The query service accepts only closed kinds, sources, statuses, labels, "
+"natural-address variants, destination-admission states, and optional "
+"action-candidate identifiers. Validators require the "
+"kind/source/status/label vocabulary to agree, require exact address "
+"types, bind each address year to its period, and require an opaque "
+"private identity basis only for multi-record families without natural "
+"IDs. Available destinations cannot carry a refusal reason; every non-"
+"available destination must carry one and cannot expose an action "
+"candidate. Projection vocabulary and addresses "
+"(`src/cadrumo/application/search/workbench.py`), cross-field projection "
+"validation (`src/cadrumo/application/search/workbench.py`), private "
+"identity requirements (`src/cadrumo/application/search/workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:20
+msgid ""
+"Queries are transient strings stripped of surrounding whitespace, limited"
+" to 200 characters, rejected if they contain control characters, and "
+"required to contain at least one token after Unicode phrase folding. The "
+"service tokenizes both query and safe document terms; a match occurs when"
+" the normalized phrase is in the label or all query tokens occur among "
+"the document terms. Exact and partial label matches score above non-label"
+" matches, with additional per-token label weight. Results sort by "
+"descending score and then an opaque keyed identity; the caller can "
+"request at most 100 results. The response contains only ranked metadata "
+"and total match count, never the query or its hashed terms. Transient "
+"query validation (`src/cadrumo/application/search/workbench.py`), "
+"matching and ranking (`src/cadrumo/application/search/workbench.py`), "
+"service snapshot and result construction "
+"(`src/cadrumo/application/search/workbench.py`), closed response shape "
+"(`src/cadrumo/application/search/workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:22
+msgid ""
+"Identity derivation joins the kind and source with either the natural "
+"address coordinates or a secret-wrapped identity basis, then HMACs the "
+"canonical UTF-8 coordinate with the module’s private random key. The "
+"service captures validated document objects at construction, refuses "
+"duplicate derived IDs, and sorts that snapshot once; each request only "
+"ranks the captured set. Thus a search call cannot pull in late repository"
+" changes, while rebuilding from a refreshed workspace makes a new search "
+"generation. Identity coordinate and keyed digest "
+"(`src/cadrumo/application/search/workbench.py`), snapshot capture and "
+"duplicate check (`src/cadrumo/application/search/workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:24
+msgid "Knowledge, security, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:26
+msgid ""
+"The search service knows only what the composition root placed into its "
+"immutable document tuple. It has no repository, persistence, network, "
+"localization, or authority dependency. The installed builder carries "
+"already-computed readiness and admission facts forward rather than "
+"inferring them from raw business records. This keeps search as discovery "
+"over a snapshot; opening a result and deciding whether an action is "
+"permitted remain destination responsibilities. Installed snapshot "
+"boundary (`src/cadrumo/application/search/installed_workbench.py`), "
+"destination admission contract "
+"(`src/cadrumo/application/search/workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:28
+msgid ""
+"Useful protections include in-memory-only installed snapshots, non-"
+"serializable ephemeral snapshot wrappers, secret-wrapped and excluded "
+"opaque identity inputs, process-keyed HMAC result IDs, strict closed "
+"projection vocabularies, hidden query representations, bounded query and "
+"result counts, and response fields that omit search terms. Private "
+"identities are derived from either a natural address or an opaque basis; "
+"providers cannot assert the outward result ID. Duplicate derived "
+"identities refuse service construction. Memory-only installed snapshot "
+"(`src/cadrumo/application/search/installed_workbench.py`), identity-keyed"
+" construction (`src/cadrumo/application/search/workbench.py`), private "
+"identity field and document validation "
+"(`src/cadrumo/application/search/workbench.py`), derived result ID "
+"(`src/cadrumo/application/search/workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:30
+msgid ""
+"Two limits matter when interpreting “safe projection.” First, `stable_id`"
+" is stable only under the current module-process key: the key is randomly"
+" generated at import, so IDs are unlinkable across process restarts. That"
+" is compatible with an ephemeral palette but unsuitable as a durable "
+"bookmark or cross-session identifier. Second, `content_terms` holds the "
+"actual counterparty and description strings in the private document. The "
+"response omits them and the installed snapshot wrapper refuses Python "
+"pickling, but `content_terms` is not itself excluded from the Pydantic "
+"document’s ordinary serialization, and this model does not set local "
+"length or tuple-count bounds. Callers should not generically dump or log "
+"private search documents; source projection bounds and any serialization "
+"paths need confirmation. Process-local key "
+"(`src/cadrumo/application/search/workbench.py`), document terms and "
+"identity field (`src/cadrumo/application/search/workbench.py`), response "
+"omission of content terms (`src/cadrumo/application/search/workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:32
+msgid ""
+"This implementation also intentionally does not resolve action candidates"
+" or construct navigation links. Search results report the admitted "
+"destination and optional candidate token, so the frontend still needs to "
+"map the result to a destination and re-check current authority when "
+"opening it. Ranking is deliberately simple: there is no typo tolerance, "
+"stemming, field weighting beyond title matches, or returned match "
+"explanation. No assigned tests were run, so Unicode folding, score "
+"ordering, and privacy behavior are assessed from the static code only."
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:34
+msgid "Dependencies and follow-up"
+msgstr "Dependencias y seguimiento"
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:36
+msgid ""
+"Trace the installed assembler’s inputs to the Ledger, declarations, AEAT-"
+"sync, and Modelo workspace owners to verify they are generation-coherent "
+"and that the admission records correspond to those exact projections. "
+"Confirm every frontend uses the destination admission state and "
+"reauthorizes on navigation. Inspect all logging and serialization "
+"consumers of `WorkbenchSearchDocument`, especially paths that might dump "
+"`content_terms`; consider whether source-owned field limits sufficiently "
+"bound those strings and tuples. Add focused coverage for process-restart "
+"identity behavior, all-token matching, control-character rejection, "
+"empty/oversized query handling, duplicate document identities, and "
+"locked/stale destinations with no action candidate."
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:38
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:40
+msgid ""
+"Both assigned files containing implementation code and the inert package "
+"initializer were read fully across pages 1–2; no portions remain unread."
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:42
+msgid "search/__init__.py (`src/cadrumo/application/search/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:43
+msgid ""
+"search/installed_workbench.py "
+"(`src/cadrumo/application/search/installed_workbench.py`)"
+msgstr ""
+
+#: ../../technical/articles/097-ephemeral-cross-workbench-search.md:44
+msgid "search/workbench.py (`src/cadrumo/application/search/workbench.py`)"
+msgstr ""

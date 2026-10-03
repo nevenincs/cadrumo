@@ -1,0 +1,319 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:1
+msgid "Work inspection, overview, verification and profile authentication"
+msgstr ""
+"Inspección del trabajo, panorámica, verificación y autenticación del "
+"perfil"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:7
+msgid ""
+"**Report:** `STAGE-2-164` · **Topic:** [Operator interfaces, part 1: "
+"command graph and principal workflows](../topics/operator-interfaces-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:10
+msgid "Scope"
+msgstr "Ámbito"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:12
+msgid ""
+"This 18-file slice covers work-report and review reads, revision/workflow"
+" inspection, verify/file transitions, guided calculation, overview "
+"commands and renderers, ledger participation lookup, reconciliation "
+"payloads, and the root profile-authentication gate. I read all 5,377 "
+"assigned lines (45,951 proxy tokens) across the nine planned pages. Most "
+"behavior here is a transport and presentation boundary over registered "
+"application/runtime operations; no commands or external operations were "
+"executed."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:14
+msgid "Work revisions, reports, and filing transitions"
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:16
+msgid ""
+"`work report` resolves the current revision for a work target and exports"
+" CSV or summary PDF. It refuses a missing PDF capability before reading "
+"profile state, and reports output path, size, file and report digests, "
+"source revision, optional verification/filing IDs, software identity "
+"grade, and any signing-key fingerprint. The notice explicitly says the "
+"local calculation report is not official filing evidence, with an "
+"additional warning for development identity. `work report-verify` can "
+"verify the document alone or, by default, bind the report back to the "
+"active profile's encrypted store. It validates an optional trusted public"
+" key, hashes and routes the selected file to the verification operation, "
+"surfaces each check/reason, and exits non-zero for a refused verdict; "
+"later-changed and unpinned outcomes receive distinct warnings. The actual"
+" PDF reader, store comparison, and signing policy live in delegated "
+"modules (report commands "
+"(`src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:18
+msgid ""
+"Revision list/detail/observations are read-only projections. A detail "
+"read can show each computed casilla's formula trace inline and include "
+"full operand lineage with `--verbose`; a separate observation command "
+"presents formula IDs, legal/source refs, and operands without the full "
+"revision. Review emits canonical progress, verification outcome, blockers"
+" and finding data while exposing only a count of row-source fingerprints."
+" Workflow run/list/details/resume commands render authenticated terminal "
+"snapshots and selector resolution; the module states that it does not "
+"reopen the encrypted workflow repository, mutate workflow/modelo state, "
+"or contact AEAT. Resume resolves a natural or exact work/revision target "
+"through the worker rather than reconstructing it in the CLI. Guided "
+"wizard input uses the canonical line flow and calculation request, "
+"carries each answer with the registry legal/source references, and "
+"retries only a completed typed prepublication missing-input outcome, up "
+"to 12 rounds. Transport uncertainty and later calculation errors "
+"propagate instead of prompting again (revision handlers "
+"(`src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py`), review "
+"(`src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`), workflow runs"
+" (`src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`), wizard "
+"(`src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:20
+msgid ""
+"`work verify` persists a report and returns its findings/actions/notices;"
+" when the report does not grant `verificado_completo`, it exits with code"
+" 1. Dependency inspection is a separate read path that can include "
+"upstream filing requirements, required versus alternative source "
+"casillas, registry grounding, and clean-state blockers. `work file` "
+"creates an **internal** filing record only after checking both the "
+"revision state and the presence of its granted verification report; the "
+"result explicitly distinguishes this local record from AEAT submission. "
+"Repeated verify/file operations report an idempotent no-op rather than "
+"pretending a new write occurred. Cross-period source values remain "
+"structured as evidence and blockers rather than being collapsed into a "
+"boolean (verification/dependency/file handlers "
+"(`src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:22
+msgid "Overview and related operator surfaces"
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:24
+msgid ""
+"Overview commands expose workspace status, exact-period drafts, deadline "
+"calendar, agenda, backlog, applicability explanation, preparation "
+"checklist, and pipeline health. Requests bind the active profile and "
+"current output language. Calendar/agenda/backlog refuse incomplete or "
+"undeclared taxpayer profiles unless `--allow-incomplete` is given; all-"
+"profile calendar mode can survey locked/setup-incomplete profiles while "
+"keeping the full filing rows with the active profile. Agenda checks a "
+"positive horizon and defaults its date from the Madrid clock. Prepare and"
+" pipeline payloads state that they are read-only and do not contact AEAT."
+" Pipeline combines ledger status with per-modelo readiness and "
+"blocker/warning counts."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:26
+msgid ""
+"The renderer resolves declared next actions against the live command tree"
+" once and reuses the same action in JSON notices and text output, "
+"avoiding stale prose/verb drift. Calendar evidence models keep local "
+"filing state, observed AEAT submission state, and verified justificante "
+"CSV distinct; payload validators require the CSV exactly when the AEAT "
+"state is verified. The event projection intentionally omits the source "
+"event's authenticated taxpayer identity. Coverage notices separate "
+"confidently excluded obligations from advised/undetermined ones; "
+"actionable post-filing events and notifications in a deemed-served state "
+"receive their own warning and notification-list action. The renderer "
+"requires captured legal provenance before emitting the deemed-served "
+"warning. This pass describes how the CLI projects that source state and "
+"does not independently assess legal accuracy (overview handlers "
+"(`src/cadrumo/entrypoints/cli/_overview.py`), calendar evidence contract "
+"(`src/cadrumo/entrypoints/cli/_overview_payloads.py`), calendar and "
+"notice rendering (`src/cadrumo/entrypoints/cli/_overview_rendering.py`))."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:28
+msgid ""
+"The ledger participation command provides the inverse link from a "
+"transaction to finalized revisions, filing records and justificante "
+"references; a separate rebuild operation regenerates the derived index in"
+" the exact-profile worker. Reconciliation payloads preserve typed "
+"evidence kind, verdict, timestamp, and grounded diff categories. Amount-"
+"bearing total/casilla diffs are expected to carry legal/source grounding "
+"in the canonical reconciliation object, while header identity diffs are "
+"distinct. These contracts keep evidence provenance visible but do not "
+"authenticate arbitrary files by themselves (participation "
+"(`src/cadrumo/entrypoints/cli/_participation_cli.py`), reconciliation "
+"payloads (`src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py`))."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:30
+msgid "Authentication gate and security properties"
+msgstr "Control de autenticación y propiedades de seguridad"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:32
+msgid ""
+"The root gate ties command graph metadata to secret handling. Its root "
+"payload permits exactly one passphrase or API key; the runtime model must"
+" match the command specification's declared secret fields. Profile-free "
+"leaves are limited to `state-free`/`network` capabilities, while other "
+"executable leaves derive a fallback-authentication posture unless they "
+"self-authenticate or are bootstrap-exempt. Root profile secrets and leaf "
+"machine secrets are read through separate stdin/file-descriptor channels;"
+" if both select the same descriptor, preflight refuses before dispatch. "
+"Root credentials without a profile target, incompatible API-key posture, "
+"or inapplicable secret sources also refuse before state provisioning."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:34
+msgid ""
+"Preflight validates special command requirements, configures parsed "
+"logging, resolves explicit target then root override/ambient profile, and"
+" selects a runtime-profile route for a large explicit command-key "
+"allowlist, with conditional branches for profile import and document-only"
+" report verification. It provisions/materializes storage only when "
+"command effect policy says a state tree is needed. The exact target "
+"authentication path verifies the returned bucket ID, binds it to the "
+"invocation, and stages a one-shot notice if no durable session was "
+"persisted. The passphrase reference is cleared in `finally`, though this "
+"is not a guarantee of physical memory erasure for immutable Python "
+"strings. Runtime credential custody and session admission are delegated "
+"to the profile runtime/session gates (authentication contract "
+"(`src/cadrumo/entrypoints/cli/_profile_authentication_contract.py`), "
+"preflight and exact-target fallback "
+"(`src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`), runtime "
+"routes (`src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`), "
+"session notice "
+"(`src/cadrumo/entrypoints/cli/_profile_authentication_notice.py`))."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:36
+msgid ""
+"A maintenance risk is that runtime-profile routing is partly an explicit "
+"string-key allowlist in the authentication gate, while command posture "
+"and effects are declared in the command graph. Adding a runtime-backed "
+"command requires keeping both authorities aligned; the special `work "
+"report-verify` document-only branch demonstrates that a command can have "
+"two auth paths. The current assigned surface includes a broad allowlist, "
+"so this is a bounded synchronization question rather than evidence of a "
+"broken existing command. Other material limits are the delegated profile "
+"cryptography, PDF verification and application projection semantics. No "
+"authentication, export, report verification, browser, or storage behavior"
+" was exercised."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:38
+msgid "Coverage appendix"
+msgstr "Apéndice de cobertura"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:40
+msgid "All 18 assigned files are linked below."
+msgstr ""
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:42
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:43
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:44
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:45
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_revision_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_revision_payloads.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:46
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:47
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:48
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:49
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:50
+msgid "`src/cadrumo/entrypoints/cli/_modelo_work_wizard_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_work_wizard_payloads.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:51
+msgid "`src/cadrumo/entrypoints/cli/_overview.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_overview.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:52
+msgid "`src/cadrumo/entrypoints/cli/_overview_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_overview_command_specs.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:53
+msgid "`src/cadrumo/entrypoints/cli/_overview_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_overview_payloads.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:54
+msgid "`src/cadrumo/entrypoints/cli/_overview_rendering.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_overview_rendering.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:55
+msgid "`src/cadrumo/entrypoints/cli/_participation_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_participation_cli.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:56
+msgid "`src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:57
+msgid "`src/cadrumo/entrypoints/cli/_profile_authentication_contract.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_profile_authentication_contract.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:58
+msgid "`src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`"
+
+#: ../../technical/articles/164-work-inspection-overview-verification-and-profile-authentication.md:59
+msgid "`src/cadrumo/entrypoints/cli/_profile_authentication_notice.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_profile_authentication_notice.py`"

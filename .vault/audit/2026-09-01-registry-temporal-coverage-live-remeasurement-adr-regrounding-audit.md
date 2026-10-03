@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1525a642319e54774a46931b22c4d957155818871cbd55f29da45a183617f810'
+body_hash: 'sha256:7878f8138966dbf8852090377c259573a67d8303e1764d0d33288176f7fbd9ad'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -13535,8 +13535,6 @@ harder to follow rather than easier.
 
 ## The detector was right to be broad, and I was about to narrow it
 
-
-
 It is a false positive, and the reason is exact. The module matches on the word
 `casillas` inside a TOML table header of the form
 `revisions."2024".casillas` in double square brackets - a header in THIS
@@ -14124,8 +14122,6 @@ destructively), and `operator` (it has a `main`, so somebody invokes it).
 Live: **42 unreached, of which 16 write to the tree, 3 declare `--apply`, and 20
 have a `main`.** Three do all of the first two together, and those three are the
 report's whole point:
-
-
 
 Untested code that rewrites source files, with a flag whose purpose is to do it
 for real. Ranking by capability puts them first; a count of forty-two puts them

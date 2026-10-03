@@ -4,7 +4,7 @@ tags:
   - '#registry-record-design-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:f308038316e50ce8b20a300a54872a05cb9f64dade19d5e580fd25477ec2199e'
+body_hash: 'sha256:690f5f749d9022d683b47ba6e56c65d07068841c641f7dc23cb32316fc0bc709'
 related: []
 ---
 
@@ -23,7 +23,7 @@ source parsing with registry completeness and coverage derivation.
 - `_record_design.py` is 1,755 working-tree lines and combines public
   record-design models, file dispatch, workbook extraction, XLS
   extraction, PDF text extraction, PDF visual-chart extraction,
-  calculation-closure derivation, completeness-manifest derivation, 
+  calculation-closure derivation, completeness-manifest derivation,
   Diseño coverage reporting.
 - The current working tree contains formatting-only peer WIP in the
   calculation-closure/completeness region. This slice must not edit
@@ -71,7 +71,7 @@ source parsing with registry completeness and coverage derivation.
    and visual-chart fallback parsing. Do not split visual-chart helpers
    independently in the first pass.
 5. Extract calculation closure, completeness derivation, and coverage
-   reporting into a private derivation module after parser extraction 
+   reporting into a private derivation module after parser extraction
    after the active peer formatting WIP lands.
 6. Preserve the `extract_record_design` dispatcher and cache key behavior
    exactly.

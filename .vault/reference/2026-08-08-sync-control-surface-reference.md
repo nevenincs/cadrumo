@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:01d402916f0fa1c87d665de78b8982be1627cbdfa0ff4b3a48a5e03c03dc75d5'
+body_hash: 'sha256:dcdd199585becf805af6712deb1bff05b6a10c55a87f3b9f4d798e8f12aed762'
 related:
   - '[[2026-08-08-sync-control-surface-adr]]'
 ---
@@ -18,10 +18,6 @@ Codebase grounding for the decision on the shape of sync controls across the
 Google Sheets calculation export and the AEAT filed-history sweep.
 
 ## Google Sheets calculation sync
-
-
-
-
 
 The write mechanics are a batch clear over every managed tab range followed by a batch update — a destructive whole-surface overwrite, not a merge. Protected ranges are deleted and re-created. Foreign content is refused rather than adopted.
 
@@ -37,8 +33,6 @@ Nothing is recorded locally.
 ## AEAT filed-history sweep
 
 The CLI entry is `aeat app live filed pull-all` in `src/cadrumo/entrypoints/cli/_app_live.py`, whose only options are an output root and a result limit. Its siblings are `filed discover`, `filed pull` (which does carry modelo and year scope) and `filed pull-sources`.
-
-
 
 **The sweep is not append-only.** The capture module states that a re-capture is
 an unconditional upsert; observations are keyed on modelo, ejercicio, period and
@@ -59,8 +53,6 @@ record.
 ## The censo cotejo precedent
 
 A preview `Notice` carries the apply command as its suggestion. Three divergence notice classes are rendered: value disagreement, withheld or redacted values, and operator-cleared paths.
-
-
 
 ## Last-sync provenance across the tree
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a75cfca0f7879e1c0032f9048b384f85606fd21519c01285b53bd3ad16e5c5f'
+body_hash: 'sha256:2ce707bcd6840c5843feb1a001e71a1bd2c0812a4fca3249dd83ae11322f87bc'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -239,8 +239,6 @@ A modelo wizard already exists at `src/cadrumo/application/modelo/work_wizard.py
 renders as an ordinary flow screen, so guided creation needs no new entrypoint class. The
 guided-flow substrate is `src/cadrumo/application/flows/`; the wizard package is legacy
 vocabulary bridged one way.
-
-
 
 ## Governance mechanisms in force
 

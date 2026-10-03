@@ -4,7 +4,7 @@ tags:
   - '#registry-load-direct-call'
 date: '2026-06-01'
 modified: '2026-10-03'
-body_hash: 'sha256:7613f97f33aea93af2428dfe2df2f0293bd2f75543b66a1084ba43397fa011b2'
+body_hash: 'sha256:eb67348c69882f2119be9560166441c0e8d94cfb6211113654423c66471af457'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
 ---
@@ -50,7 +50,7 @@ This audit is a precursor to cluster-5 of the test-suite-performance audit: **~2
 
 All 7 CONVENIENCE sites call `.load()` on the immutable bundled registry without mutation. Migrate these to either:
 
-1. **`bundled_authority()` convenience function** (if available in the fixture suite), 
+1. **`bundled_authority()` convenience function** (if available in the fixture suite),
 2. **Session-scoped `registry_authority` fixture** (if session scope is permitted by test structure)
 
 This eliminates 7 redundant snapshot compilations per test session.

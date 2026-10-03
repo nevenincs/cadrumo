@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:b02180910f87c263e1885db36e3e01c0585469730ef7c43f7ec05d8eb87375d4'
+body_hash: 'sha256:21fd35d071e387ccecc3753b9d93e28ac2968c7ef6075986cd87dec9c5d8498c'
 related: []
 ---
 
@@ -32,9 +32,9 @@ The independent review found no critical or high issues, but flagged medium test
 
 Validation:
 
-- the focused test run passed with 8 selected tests.
-- the focused test run passed with 7 tests.
-- the focused test run passed.
+- the historical check passed with 8 selected tests.
+- the historical check passed with 7 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Source scan found no direct `Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, `# noqa`, pragma, `type: ignore`, broad exception catches, monkeypatching, fakes/stubs, skips, or xfails in the S142 files.
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9816589f2a1e52f70df5167fb590f72216a0cb773f7d4d8aded1905db8360496'
+body_hash: 'sha256:54f5a9f3b96721df90627a2898cb78a83edd9dacec7eaa586ae6b9c8163081c7'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"
@@ -169,8 +169,6 @@ Likewise, gzip shrinks transfer/storage substantially but does not avoid whole-c
 ## Validation and reproducibility
 
 Executed:
-
-
 
 **Exit 1: 24 passed, 7 failed, 32.76 seconds reported by pytest.** Six failures occur while staging minimal artifacts because their runtime catalogues are incomplete. They prevent their intended cache/corruption/citation assertions from running; they are fixture failures, not six separately established production failures. The remaining failure is the live temporal-offset immutability defect reproduced above. The committed artifact canonical read/write test passed.
 

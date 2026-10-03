@@ -4,7 +4,7 @@ tags:
   - '#live-iva-compensation-wallet'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:5d840d7c19383d6f84a7a861a7bcdf6d1e6891e53f347f96c64074183e281531'
+body_hash: 'sha256:ac3648c2267daffae2f49cdfa12698bceef225d7cf38b0540631f4cc714d1928'
 related:
   - '[[2026-06-02-live-iva-surface-diagnostics-review-audit]]'
 ---
@@ -32,7 +32,7 @@ state extraction, or calculation reconciliation against AEAT's binding state.
 - Declaration-query consultation: required and not optional. This is one of the
   intended live consultation surfaces for pulling filed Modelo 303 information
   for the declarante without filing anything. The current implementation has
-  reached the route once, but has not proven complete multiyear extraction 
+  reached the route once, but has not proven complete multiyear extraction
   current compensation-state reconstruction from AEAT records.
 - IVA wallet/cartera or Pre303 compensation state: required authority input if
   AEAT exposes the running balance there. The current implementation has not
@@ -100,7 +100,7 @@ evidence supports it.
 
 H5. The current "wallet" naming may be too narrow. The required feature is not a
 specific table name; it is the read-only AEAT consultation pipeline for the
-declarante's binding IVA compensation state. The team should discover 
+declarante's binding IVA compensation state. The team should discover
 implement the actual official surface, even if the final route is declaration
 query plus submitted-file extraction rather than `CarteraCuotas`.
 

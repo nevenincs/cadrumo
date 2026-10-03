@@ -1,0 +1,335 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:1
+msgid "Modelo command support, discovery, amendment and export surfaces"
+msgstr ""
+"Soporte de comandos de modelos, descubrimiento, rectificación y "
+"superficies de exportación"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:7
+msgid ""
+"**Report:** `STAGE-2-161` · **Topic:** [Operator interfaces, part 1: "
+"command graph and principal workflows](../topics/operator-interfaces-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:10
+msgid "Scope and capability"
+msgstr "Alcance y capacidad"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:12
+msgid ""
+"This chunk covers 15 CLI modules that provide cross-cutting ledger "
+"helpers and the Modelo command surface: compare, history, amendments, "
+"guided amendments, audit, aggregate, registry discovery, binding "
+"inspection, calculation-input parsing, and export. Together they turn "
+"typed application/domain projections into operator-facing terminal output"
+" and output-schema envelopes. The command handlers generally delegate the"
+" substantive calculation, audit, lifecycle, or registry query to "
+"application/runtime services; this layer parses operator input, selects a"
+" profile/work revision, shapes results, emits notices, and translates "
+"known errors for Typer. Static command specifications declare invocation,"
+" parameter, result-schema, and effect policy metadata alongside the "
+"behavior handlers."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:14
+msgid ""
+"`_ledger_support.py` centralizes ledger command mechanics: transaction "
+"short-ID resolution, no-recovery wrappers for expected validation "
+"failures, decimal/amount parsing, category lookup, business-use share "
+"bounds, jurisdiction resolution, and invoice-validation rendering. "
+"`resolve_business_pct_with_censo` combines an explicitly supplied "
+"business percentage with category-based, year-specific censo defaults "
+"through a pinned registry operation, while preserving the user override "
+"when supplied. The helpers keep CLI-specific conversion and recovery "
+"behavior in one place rather than duplicating it in ledger handlers. "
+"`_log_levels.py` resolves a single `--quiet` / `--verbose` / `--debug` "
+"choice or the `CADRUMO_LOG_LEVEL` setting, rejects conflicting flags and "
+"invalid environment values as terminal preconditions, and applies the "
+"selected threshold to the root logger."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:16
+msgid ""
+"The Modelo work commands expose several distinct workflows. "
+"`work_compare_taxation` asks the runtime to compare joint and individual "
+"taxation for a selected work unit/revision and emits a result plus "
+"limitations/advisories; its own documentation cautions that individual "
+"taxation is modeled for a single-earner scenario, so callers should not "
+"treat it as a general household comparison. `work_history` projects local"
+" work/revision history. `work_amend` accepts a source filing record, "
+"amendment kind, reason, casilla overrides, and explicit detail-row "
+"semantics, then delegates to the work amendment operation. The CLI "
+"returns the amendment work result; this code does not submit a corrected "
+"return to AEAT. The amendment input resolver distinguishes an absent row "
+"declaration from an explicit `--no-detail-rows`, preventing omission from"
+" silently asserting that no detail rows exist. These behaviors are "
+"visible in the handlers and the core command metadata (work handlers "
+"(`src/cadrumo/entrypoints/cli/_modelo.py`), core command specs "
+"(`src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:18
+msgid ""
+"The guided amendment wizard builds an interactive `LineFlowFrontend` flow"
+" from an AEAT-attested filing context. It selects amendable casillas, "
+"keeps baseline values, prompts for corrected values and amendment "
+"classification/reason, and returns a typed result that includes the "
+"originating filing-record identity. Registry-derived labels/help are "
+"associated with opaque per-run copy references, and the temporary lookup "
+"table is scoped to the run and cleared in `finally`. The flow is an input"
+" aid around the same local amendment operation, not a submission channel."
+" The companion payload models keep corrected casilla results in a typed "
+"envelope (wizard behavior "
+"(`src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`), wizard "
+"payloads "
+"(`src/cadrumo/entrypoints/cli/_modelo_amend_wizard_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:20
+msgid ""
+"Aggregate support parses typed JSON observations and constructs typed "
+"aggregate requests. The handler distinguishes invoice-capture evidence "
+"from ledger payment-withholding evidence, constrains supported "
+"model/evidence combinations, and presents projection rows and notices. "
+"Invoice capture is scoped to the supported quarterly models, while ledger"
+" withholding follows its own model allowlist; the CLI explicitly refuses "
+"misplaced payment-withholding evidence rather than silently treating it "
+"as a form value. It can report when expected calculation rows are absent "
+"and requires a matching aggregate window before it projects a result. The"
+" actual aggregation math remains behind the application operation. This "
+"is a useful boundary, although complete impact analysis depends on "
+"upstream uniqueness/identity guarantees for merged observation sources "
+"that are not established solely by this CLI module (aggregate handler "
+"(`src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`), typed "
+"observation parsing and operation "
+"(`src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:22
+msgid "Discovery and knowledge presented to operators"
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:24
+msgid ""
+"Discovery commands expose model catalogues, model descriptions, casilla "
+"inventories, individual casilla details, formula inputs, support-matrix "
+"summaries, data requirements, and binding readiness/preview information. "
+"They use a pinned authority operation and may resolve an explicit year-"
+"plus-period into registry scope before querying. The CLI refuses a year "
+"without a period and redirects known ceded autonomic tax models toward "
+"the relevant regional route instead of presenting them as absent registry"
+" models. Casilla and formula explanations can include help, section, "
+"legal/source references, binding/formula identifiers, and input "
+"dependencies. `requires` projects a structured checklist separating "
+"required and optional manual input, detail rows, ledger/profile "
+"derivations, prior filing, relation prefill, live observations, and "
+"unbucketed sources. It adds warnings for unresolved profile coefficients "
+"or unbucketed sources, and attempts to name grounded profile requirements"
+" rather than only opaque binding IDs (discovery handlers "
+"(`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`), requirements "
+"and notices (`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`), "
+"rendering "
+"(`src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:26
+msgid ""
+"Bindings list supports optional refinements and a `missing` view. The "
+"missing projection filters operator-required bindings that do not resolve"
+" from profile facts; it also emits relation-input guidance where registry"
+" rows identify relation-fed values. The command emits an explicit "
+"warning/action when a listing lacks year or period scope, since an "
+"unscoped list may span revisions. `bindings resolve` requires model, "
+"year, and period, parses temporary overrides, and produces a preview "
+"without mutating state. If registry validation rejects a key, a second "
+"read against the same pinned authority generation can distinguish unknown"
+" model/key input and render accepted IDs. Payloads preserve binding "
+"source/readiness, typed enum, input channel, legal/source grounding, "
+"relation inputs, and encoded choices. This gives operators useful "
+"provenance for why a value is requested and how to provide it, rather "
+"than only a flat field list (binding handlers "
+"(`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`), binding "
+"rendering and scope notices "
+"(`src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`), binding "
+"payloads (`src/cadrumo/entrypoints/cli/_modelo_bindings_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:28
+msgid "Input boundaries, effects, and quality"
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:30
+msgid ""
+"`_modelo_cli_support.py` is the main parsing boundary for work selectors "
+"and calculation overrides. It validates IDs, parses `KEY=VALUE` options, "
+"validates casilla/relation/binding keys, parses detail-row specifications"
+" with `shlex`, coerces decimal-annotated row fields, validates Pydantic "
+"row models, and applies extra Modelo 349 country-prefix/context checks "
+"against the selected filing year and period. Optional euro amount flags "
+"share a canonical decimal grammar with two fractional digits, disallowing"
+" grouping, commas, exponent notation, non-finite values, and leading "
+"plus. This intentionally makes ambiguous Spanish-formatted `1.000` refuse"
+" rather than silently mean one euro. The wire-row path validates against "
+"the registered mirror, which avoids requiring local registry custody just"
+" to parse a row. Selector errors can include candidate work/revision "
+"rows; actor values are bounded before they become audit-event metadata, "
+"and the default actor is resolved from profile state with a stable "
+"fallback (CLI parsing helpers "
+"(`src/cadrumo/entrypoints/cli/_modelo_cli_support.py`), row parsing "
+"(`src/cadrumo/entrypoints/cli/_modelo_cli_support.py`), amount parsing "
+"and bundle construction "
+"(`src/cadrumo/entrypoints/cli/_modelo_cli_support.py`), actor resolution "
+"(`src/cadrumo/entrypoints/cli/_modelo_cli_support.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:32
+msgid ""
+"Behavior support centralizes address selection, revision selection, "
+"exportability requirements, active-profile checks, and registry-declared "
+"period validation. Audit commands provide local view/check/export "
+"surfaces; their command specs declare reads versus local filing-handoff "
+"state and profile-bound routing. Export resolves a selected revision, "
+"validates an output path, invokes the runtime export operation, requires "
+"the expected public projection and filing receipt, and emits "
+"size/hash/evidence metadata. The output is explicitly labeled a local "
+"file rather than an official receipt; notices also identify development "
+"software identity and unverified completeness when applicable. This is "
+"sound operator-facing framing for a file artifact whose existence and "
+"hash alone do not establish official filing acceptance. Export writes to "
+"a caller-selected local path, so path authorization and replacement "
+"policy remain part of the operator/runtime contract; the handler passes a"
+" `replace_existing` choice onward rather than implementing filesystem "
+"policy itself (behavior support "
+"(`src/cadrumo/entrypoints/cli/_modelo_behavior_support.py`), audit "
+"handlers (`src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`), audit "
+"command policies "
+"(`src/cadrumo/entrypoints/cli/_modelo_audit_command_specs.py`), export "
+"handler and notices "
+"(`src/cadrumo/entrypoints/cli/_modelo_export_cli.py`))."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:34
+msgid ""
+"The main strengths in this slice are clear typed input conversion, scope-"
+"aware selection, profile/authority pinning in registry reads, structured "
+"output schemas, and explicit notices about missing evidence and non-"
+"official local exports. The module boundaries also keep interactive flow,"
+" registry discovery, and result rendering apart. The main review "
+"limitation is architectural: much of the financial/tax behavior and "
+"persistence semantics are delegated to operations outside this chunk. The"
+" handlers show input and output contracts, but do not prove the "
+"underlying computation is correct, that every source combination is "
+"unique, or that a local export is accepted by a portal. The wizard's "
+"registry copy table and output path are limited local surfaces, but "
+"downstream storage, profile isolation, and atomic file behavior require "
+"review in their owning modules. No runtime or end-to-end execution was "
+"performed for this static pass."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:36
+msgid "Coverage appendix"
+msgstr "Apéndice de cobertura"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:38
+msgid ""
+"All 15 assigned files are represented in the analysis above; this "
+"appendix is the complete source inventory for this chunk."
+msgstr ""
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:40
+msgid "`src/cadrumo/entrypoints/cli/_ledger_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_ledger_support.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:41
+msgid "`src/cadrumo/entrypoints/cli/_log_levels.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_log_levels.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:42
+msgid "`src/cadrumo/entrypoints/cli/_modelo.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:43
+msgid "`src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:44
+msgid "`src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:45
+msgid "`src/cadrumo/entrypoints/cli/_modelo_amend_wizard_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_amend_wizard_payloads.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:46
+msgid "`src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:47
+msgid "`src/cadrumo/entrypoints/cli/_modelo_audit_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_audit_command_specs.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:48
+msgid "`src/cadrumo/entrypoints/cli/_modelo_behavior_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_behavior_support.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:49
+msgid "`src/cadrumo/entrypoints/cli/_modelo_bindings_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_bindings_payloads.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:50
+msgid "`src/cadrumo/entrypoints/cli/_modelo_cli_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_cli_support.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:51
+msgid "`src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:52
+msgid "`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:53
+msgid "`src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`"
+
+#: ../../technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md:54
+msgid "`src/cadrumo/entrypoints/cli/_modelo_export_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_modelo_export_cli.py`"

@@ -5,8 +5,7 @@ tags:
 date: '2026-06-03'
 modified: '2026-10-03'
 body_hash: 'sha256:576ceaa832144973a597b7a329e113c52ec21465ed2bff61697e0a0901350a9e'
-related:
-  - '[[2026-06-03-registry-construct-pressure-plan]]'
+related: []
 ---
 
 # `registry-construct-pressure` audit: `Post-split registry fragment headroom`

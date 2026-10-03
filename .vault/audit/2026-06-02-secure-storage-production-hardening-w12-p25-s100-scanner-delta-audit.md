@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:faee8d8b55eab773fa984fab198bd54c99d117134133e227bb27155179c3a776'
+body_hash: 'sha256:74df404d2eec85a56fb94a8f4ce19b85f8fce019093c71ab2d78a442c4fd0711'
 related: []
 ---
 
@@ -72,7 +72,7 @@ Test files are source files named `test_*.py`, `*_test.py`, `conftest.py`, or un
   factory and registry surfaces as well as remaining repository implementations. S101
   and S102 must keep distinguishing approved runtime-owned access from raw competing
   constructors.
-- The production `settings_sql_route`, `master_key_session`, 
+- The production `settings_sql_route`, `master_key_session`,
   `active_profile_resolution` increases show that rollout code now carries more
   explicit route/session/bucket policy. That is acceptable only where owned by runtime,
   bootstrap custody, or manifest discovery dispositions.

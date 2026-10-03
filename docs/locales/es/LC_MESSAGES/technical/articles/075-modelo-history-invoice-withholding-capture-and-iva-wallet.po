@@ -1,0 +1,301 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:1
+msgid "Modelo history, invoice withholding capture, and IVA wallet"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:7
+msgid ""
+"**Report:** `STAGE-2-075` · **Topic:** [Modelo work and revision "
+"lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:10
+msgid ""
+"**Scope:** 14 implementation files in src/cadrumo/application/modelo; "
+"5,292 lines, 228,423 bytes, and 47,093 manifest-measured tokens. All nine"
+" bounded-reader pages were inspected in order. No application execution "
+"or tests were run."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:12
+msgid "Capabilities and mechanism"
+msgstr "Capacidades y mecanismo"
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:14
+msgid ""
+"**Lifecycle history.** The read model offers two distinct timelines: a "
+"work-unit history assembled by following its calculation revisions, "
+"verification reports, filings, and direct lifecycle events; and a modelo-"
+"wide timeline filtered by the subject keys in Modelo event payloads. Both"
+" use the shared event ordering key so same-instant events have "
+"deterministic order. The modelo event allowlist is derived from enum "
+"member names beginning with MODELO_, avoiding a hand-maintained set that "
+"could silently omit new event types. It filters by event payload and "
+"retains a legacy filing-year fallback for older stored rows. The "
+"registered work-history operation retains canonical event projections and"
+" checks bucket ownership, duplicates, and order. A separate MCP timeline "
+"deliberately releases only event id, type, time, generation, and "
+"count—not actor or payload. history.py "
+"(`src/cadrumo/application/modelo/history.py`), history.py "
+"(`src/cadrumo/application/modelo/history.py`), "
+"history_timeline_operation.py "
+"(`src/cadrumo/application/modelo/history_timeline_operation.py`), and "
+"history_operation.py "
+"(`src/cadrumo/application/modelo/history_operation.py`)."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:16
+msgid ""
+"**Received-invoice withholding capture.** The registered capture "
+"operation accepts a closed Modelo 111/115 command and typed invoice-"
+"allocation evidence. The public command rejects caller-authored "
+"observations. Preparation reads the exact profile’s revisioned invoice "
+"catalogue, resolves the named invoice, validates governed facts and "
+"applicable filer cadence, and builds the canonical capture. Commit runs "
+"the withholding producer under irreversible operation custody, checks "
+"replay/effect status, reads the resulting window, then runs canonical "
+"per-modelo aggregation. The public result is an allowlisted aggregate "
+"summary and withholding-window generation facts; refusal outcomes carry "
+"bounded reasons or stable defect codes rather than exception text. The "
+"producer receives the invoice-catalogue revision observed during "
+"preparation, so it can refuse a stale source instead of capturing a "
+"changed invoice. Its projection exposes aggregate counts and source "
+"kinds, not recipient-level withholding data, and must agree with the "
+"terminal receipt and effect. The public evidence DTO explicitly maps "
+"annual-recipient, property, and Modelo 193 facts through ordinary bounded"
+" field types, preserving canonical round-trip to domain models. "
+"invoice_withholding_capture_operation.py "
+"(`src/cadrumo/application/modelo/invoice_withholding_capture_operation.py`),"
+" invoice_withholding_capture_operation.py "
+"(`src/cadrumo/application/modelo/invoice_withholding_capture_operation.py`),"
+" and invoice_withholding_capture_public.py "
+"(`src/cadrumo/application/modelo/invoice_withholding_capture_public.py`)."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:18
+msgid ""
+"**IVA-wallet decision gate.** Modelo 303’s prior-compensation input is "
+"mediated by a persisted reconciliation decision rather than generic "
+"previous-filing prefill. The gate checks taxpayer and target-period "
+"identity, rejects blocked or missing decisions, and requires "
+"caller/backend binding and casilla values to agree with the selected "
+"amount. It then routes the value through the dedicated wallet source "
+"resolver so calculation provenance identifies wallet authority. Before "
+"verification, filing, or export, another gate replays the persisted "
+"decision and compares its amount to the sealed revision."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:20
+msgid ""
+"The local-authority path rechecks local recurrence when relevant evidence"
+" changes. It distinguishes a missing prior observation from a stored "
+"observation that is unreadable, stale, unnormalized, or unusable. Only "
+"genuine absence can proceed to a first-period-zero analysis, and that "
+"zero requires either concrete zero evidence from eligible sources or "
+"profile activity-start facts that suppress every relevant prior Modelo "
+"303 dependency in the registry snapshot. This prevents an unusable stored"
+" carry from being silently converted into zero. iva_wallet_gate.py "
+"(`src/cadrumo/application/modelo/iva_wallet_gate.py`), iva_wallet_gate.py"
+" (`src/cadrumo/application/modelo/iva_wallet_gate.py`), and "
+"iva_wallet_gate.py (`src/cadrumo/application/modelo/iva_wallet_gate.py`)."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:22
+msgid ""
+"**Wallet operations.** The balance operation reads one profile’s complete"
+" carry history through a selected year and returns bounded total, active,"
+" expired, and unallocated amounts, lot count, and next expiry. Seed "
+"records an operator-declared opening period; correction can replace an "
+"existing seed only if no sealed M303 revision at or after that period "
+"consumed it. Override records an explicit nonnegative taxpayer assertion "
+"with a reason and evidence locator; it is refused when fresh nonblocked "
+"AEAT-wallet evidence already resolves the period or when a sealed "
+"revision consumed that basis. All three use exact-profile ports, secure-"
+"reference request custody, a fresh period-scoped COMMIT check, "
+"cancellation completion, and terminal-receipt-bound projections. Seed "
+"results are checked against the exact period, M303 registry reference, "
+"nonnegative amount, and OPERATOR_SEED provenance; correction checks its "
+"prior and new state; override verifies the persisted taxpayer_override "
+"authority and requested amount. The public projections therefore report "
+"persisted facts rather than merely reflecting the request. "
+"iva_wallet_balance_operation.py "
+"(`src/cadrumo/application/modelo/iva_wallet_balance_operation.py`), "
+"iva_wallet_seed.py (`src/cadrumo/application/modelo/iva_wallet_seed.py`),"
+" iva_wallet_seed.py "
+"(`src/cadrumo/application/modelo/iva_wallet_seed.py`), and "
+"iva_wallet_seed.py (`src/cadrumo/application/modelo/iva_wallet_seed.py`)."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:24
+msgid "Knowledge, security, and quality"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:26
+msgid ""
+"The wallet gate makes an important evidence distinction: local seeds, "
+"local filed observations, AEAT wallet facts, and taxpayer overrides have "
+"different authority. A seed alone cannot authorize calculation; a local "
+"balance does not become AEAT evidence; an override remains an asserted "
+"authority rather than a verified locator. The source explicitly documents"
+" that an override currently remains sticky if later evidence arrives, "
+"until it is re-recorded or corrected. This can preserve a stale decision "
+"and is a known follow-up, not a guarantee that override evidence is re-"
+"evaluated automatically."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:28
+msgid ""
+"Profile-scoped operation inputs and public outputs use hidden-input "
+"models and bounded schemas; sensitive monetary and recipient facts stay "
+"in secure request references. Work history and invoice capture verify "
+"profile binding before reads/writes. The balance, seed, correction, and "
+"override access resolvers require exact profile and filing period. Wallet"
+" audit events include taxpayer NIF, amounts, reason, and—in the override "
+"case—the evidence locator, so event-history custody must receive the same"
+" protection as underlying wallet records."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:30
+msgid ""
+"Two consistency edges merit integration review. First, correction and "
+"override writers persist their wallet state/decision and then append a "
+"bucket event in a separate call; these modules show no combined "
+"transaction or recovery if event persistence fails after the authority "
+"write. Second, IVA first-period-zero validation may open a fresh bundled "
+"authority operation when resolving a registry snapshot instead of reusing"
+" the caller’s pinned operation. The same independent authority lookup "
+"occurs when local filed-observation preparation derives M303 history. "
+"These are static observations; concurrency, failure recovery, and "
+"authority-generation drift were not executed."
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:32
+msgid "Full file coverage"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:34
+msgid ""
+"Work-unit and modelo lifecycle timelines: history.py "
+"(`src/cadrumo/application/modelo/history.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:35
+msgid ""
+"Registered exact-profile work history: history_operation.py "
+"(`src/cadrumo/application/modelo/history_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:36
+msgid ""
+"History repository capability bundle: history_ports.py "
+"(`src/cadrumo/application/modelo/history_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:37
+msgid ""
+"Metadata-only MCP timeline projection: history_timeline_operation.py "
+"(`src/cadrumo/application/modelo/history_timeline_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:38
+msgid ""
+"Invoice withholding evidence validation, capture, aggregation, and effect"
+" receipt: invoice_withholding_capture_operation.py "
+"(`src/cadrumo/application/modelo/invoice_withholding_capture_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:39
+msgid ""
+"Public invoice allocation and recipient/property detail contracts: "
+"invoice_withholding_capture_public.py "
+"(`src/cadrumo/application/modelo/invoice_withholding_capture_public.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:40
+msgid ""
+"IVA-wallet aggregate balance read: iva_wallet_balance_operation.py "
+"(`src/cadrumo/application/modelo/iva_wallet_balance_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:41
+msgid ""
+"Period-scoped wallet correction operation: "
+"iva_wallet_correction_operation.py "
+"(`src/cadrumo/application/modelo/iva_wallet_correction_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:42
+msgid ""
+"M303 prior-compensation binding and persisted-decision gates: "
+"iva_wallet_gate.py (`src/cadrumo/application/modelo/iva_wallet_gate.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:43
+msgid ""
+"Period-scoped taxpayer wallet override operation: "
+"iva_wallet_override_operation.py "
+"(`src/cadrumo/application/modelo/iva_wallet_override_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:44
+msgid ""
+"Opening seed, sealed-basis guards, and mutation facades: "
+"iva_wallet_seed.py (`src/cadrumo/application/modelo/iva_wallet_seed.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:45
+msgid ""
+"Registered confidential seed operation: iva_wallet_seed_operation.py "
+"(`src/cadrumo/application/modelo/iva_wallet_seed_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:46
+msgid ""
+"Explicit wallet repository ports: iva_wallet_seed_ports.py "
+"(`src/cadrumo/application/modelo/iva_wallet_seed_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md:47
+msgid ""
+"Explicitly composed justificante repository lifetime: "
+"justificante_repository.py "
+"(`src/cadrumo/application/modelo/justificante_repository.py`)"
+msgstr ""

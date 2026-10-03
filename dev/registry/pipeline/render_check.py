@@ -54,6 +54,7 @@ import rtoml
 
 from cadrumo.core.period import Period, PeriodError, is_administrative_period_token
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
@@ -61,7 +62,6 @@ from cadrumo.domain.calculations.registry.period_selector_match import selector_
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
-from dev._paths import prepare_temporary_directory
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._export_tree import render_complete_export_tree

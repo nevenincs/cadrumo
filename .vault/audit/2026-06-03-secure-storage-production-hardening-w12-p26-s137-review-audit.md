@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:deed558f62c9bffe653b60b0f6a27707752f7aac00b10ccfcff3fb6669158940'
+body_hash: 'sha256:e3c921d22f7366421d5345a221c3771707d7db16558339b04445833c0a85fa7d'
 related: []
 ---
 
@@ -18,9 +18,9 @@ The default now uses `load_settings().aeat_llm_cache_dir`, preserving explicit `
 
 Validation:
 
-- the focused test run passed with 29 tests.
-- the focused test run passed with 5 selected tests.
-- the focused test run passed.
+- the historical check passed with 29 tests.
+- the historical check passed with 5 selected tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
 - Source scan found no direct `PROJECT_ROOT`, direct `Settings()`, hard-coded `var/llm-cache`, `# noqa`, pragma, or `type: ignore` in the S137 code/test slice.
@@ -35,4 +35,4 @@ Resolution: the S135 row now preserves the stale/retired context in prose and te
 
 Validation:
 
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` now reports only `PLAN022`.
+- `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` now reports only `PLAN022`.

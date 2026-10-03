@@ -1,0 +1,374 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:1
+msgid "Revision selection, settlement presentation, and verification"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:7
+msgid ""
+"**Report:** `STAGE-2-083` · **Topic:** [Modelo work and revision "
+"lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:10
+msgid ""
+"**Scope:** 13 files under `src/cadrumo/application/modelo`, totaling "
+"4,959 lines, 217,025 bytes, and 44,676 measured proxy tokens. All eight "
+"bounded-reader pages were read in sequence, including the complete "
+"2,309-line `verification_actions.py`. The analysis is static: the "
+"application was not imported or run, and no tests were executed. The "
+"token count is the manifest's `o200k_base` proxy."
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacitats i mecanismes"
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:14
+msgid ""
+"Revision selection gives an operator or downstream operation a "
+"deterministic way to address a Modelo work revision without exposing "
+"calculation values in the selection receipt. Selectors cover current, "
+"latest draft, latest verified, filed, and explicit revision IDs; "
+"candidates must match the work unit's model/year/period coordinates, and "
+"explicit stale references are rejected. Latest selection orders by "
+"creation time and ID. Export selection first honors a current filed "
+"revision in `PRESENTADO` state, then a current verified revision; an "
+"existing current draft prevents silently substituting an older result, "
+"while fallback is allowed only when exactly one verified revision is "
+"eligible. Selection rules "
+"(`src/cadrumo/application/modelo/selectors.py`), export choice and "
+"ambiguity handling (`src/cadrumo/application/modelo/selectors.py`), "
+"selection operation projection "
+"(`src/cadrumo/application/modelo/revision_selection_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:16
+msgid ""
+"The selection operation also reports whether the chosen revision has "
+"exactly one granting verification report. It recognizes a narrow "
+"exception for externally filed AEAT imports that have no standalone "
+"verification report: the filing record must match the exact work "
+"coordinates, revision, time and actor, carry confirmed AEAT "
+"origin/status, and include external evidence. Other missing or duplicate "
+"granting reports remain visible as inconsistency rather than being "
+"inferred from revision state. External-filing exception "
+"(`src/cadrumo/application/modelo/revision_selection_operation.py`), "
+"selection capture and report check "
+"(`src/cadrumo/application/modelo/revision_selection_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:18
+msgid ""
+"A separate snapshot operation reads an exact-profile revision snapshot "
+"after matching the requested work unit, revision, registry "
+"model/year/period and workflow profile. It provides calculation detail "
+"independently from the metadata-only selector, and includes the Modelo "
+"202 modality only when the selected model is 202. These routes therefore "
+"serve different needs: locating a safe candidate and inspecting that "
+"candidate's stored work. Snapshot request and projection "
+"(`src/cadrumo/application/modelo/revision_snapshot_operation.py`), exact-"
+"profile snapshot execution "
+"(`src/cadrumo/application/modelo/revision_snapshot_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:20
+msgid ""
+"Taxation comparison is a local advisory calculation for one M100 "
+"household case. It runs the same calculation engine twice with the same "
+"resolved profile inputs and source bindings, changing only the "
+"declaration-type binding from individual to joint. It compares semantic "
+"roles for the relevant settlement and taxable-base casillas, returns "
+"individual-minus-joint difference, and applies a one-euro materiality "
+"threshold. The work-unit entry point requires M100, resolves exact-"
+"profile inputs and current registry coordinates, and refuses when "
+"required bindings are incomplete or a relation prefill would need ledger,"
+" manual or prior-filing evidence the comparison cannot safely "
+"reconstruct. The result is ephemeral: the operation is registered as a "
+"read with no state effect. It is not a pair of independent spouse returns"
+" and the output carries that scope limitation. Pure two-mode comparison "
+"(`src/cadrumo/application/modelo/taxation_comparison.py`), profile/work-"
+"unit preconditions "
+"(`src/cadrumo/application/modelo/taxation_comparison.py`), read-only "
+"operation contract "
+"(`src/cadrumo/application/modelo/taxation_comparison_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:22
+msgid ""
+"Semantic-role lookup centralizes registry-driven discovery of casillas. "
+"It returns an ID only for a unique match, returns no value for an absent "
+"role, and raises a structured ambiguity error for duplicates; an "
+"explicitly advisory helper can turn ambiguity into absence where the "
+"caller must not guess. Settlement lookup prefers declared result-"
+"disposition casillas and otherwise relies on unique semantic roles. The "
+"currently grounded terminal IRPF roles are M100 casillas 0595 and 0670, "
+"with 0670 identified as declaration result; models without a rule return "
+"no guessed result. Unique role resolution "
+"(`src/cadrumo/application/modelo/semantic_role_resolution.py`), "
+"settlement casilla choice "
+"(`src/cadrumo/application/modelo/settlement_casilla.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:24
+msgid ""
+"`source_policy` gives every known binding source a family, surface and "
+"override policy using the source-mesh precedence ladder. Manual entry, "
+"fixed design constants and profile editing receive explicit policies; "
+"governance sources absent from the ladder resolve to `UNDECIDED`, "
+"preserving uncertainty instead of inventing an override rule. The mapping"
+" is total for the declared source-kind enum and rejects an unknown kind. "
+"The row-input gate separately prevents verification or amendment from "
+"accepting scalar stored values for casillas declared as per-row template "
+"fields. Source classification "
+"(`src/cadrumo/application/modelo/source_policy.py`), total source policy "
+"(`src/cadrumo/application/modelo/source_policy.py`), row-field input "
+"refusal (`src/cadrumo/application/modelo/stored_row_field_input_gate.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:26
+msgid ""
+"Value presentation converts typed casilla values for ES, CA, EN and HU "
+"output. It applies locale-specific separators and dates, preserves "
+"decimal precision while enforcing two minimum places for money, scales "
+"percentages only when the unit is known, localizes booleans and absence, "
+"masks IBANs to the first and last four characters, and leaves codes and "
+"ordinary text unchanged. Missing translations and unknown data types fail"
+" explicitly; absent values are not rendered as zero. Presentation types "
+"and locale catalogue "
+"(`src/cadrumo/application/modelo/value_presentation.py`), casilla "
+"formatter (`src/cadrumo/application/modelo/value_presentation.py`), "
+"localized absence "
+"(`src/cadrumo/application/modelo/value_presentation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:28
+msgid ""
+"Verification is the main lifecycle boundary in this chunk. It first "
+"checks that the revision is current for its work coordinates, its parent "
+"remains active, required authorities are available, its content and row "
+"inputs are admissible, and calculation/profile readiness preconditions "
+"hold. Re-verifying a locked revision with an existing granting report is "
+"idempotent. It resolves the filing-grade registry snapshot before per-"
+"casilla checks; if that snapshot is unavailable or its declared authority"
+" grade is insufficient, it returns an explicit blocking finding instead "
+"of continuing with invented registry facts. Verification entry and "
+"lifecycle gates "
+"(`src/cadrumo/application/modelo/verification_actions.py`), snapshot "
+"failure findings "
+"(`src/cadrumo/application/modelo/verification_actions.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:30
+msgid ""
+"With a snapshot, verification checks required manual casillas, registry-"
+"authored predicates, unresolved M210 outcomes, IVA selected-scope and "
+"annual compensation evidence, OSS evidence for M369, withholding detail, "
+"model-specific checks and advisory findings. Perceptores may be scoped by"
+" registry clave. Row templates are satisfied from row data rather than "
+"scalar input; M349 operator rows must exist, while an empty rectification"
+" section is accepted only when both declared total casillas explicitly "
+"equal zero. Missing IVA purchase-side document evidence can block; "
+"output-side evidence gaps can be warnings because the CLI cannot complete"
+" them. Unsupported required deduction documents are surfaced individually"
+" with transaction ID, date, amount, currency and required authority. "
+"Finding collection "
+"(`src/cadrumo/application/modelo/verification_actions.py`), model-"
+"specific evidence checks "
+"(`src/cadrumo/application/modelo/verification_actions.py`), required "
+"casillas and row templates "
+"(`src/cadrumo/application/modelo/verification_actions.py`), severity and "
+"outcome classification "
+"(`src/cadrumo/application/modelo/verification_actions.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:32
+msgid ""
+"The workflow gate runs only when findings grant verification. A report is"
+" saved for both granted and refused attempts so failures remain "
+"auditable. On a grant, the revision is stamped verified with a filing-"
+"ledger snapshot and evidence; transaction participation-index writes are "
+"co-emitted atomically with that revision update. The current-revision "
+"pointer is repaired only when absent, with a guarded mutation to avoid "
+"overwriting a concurrent operator's change. A bucket event records "
+"pass/refusal and bounded counts. Report construction and persistence path"
+" (`src/cadrumo/application/modelo/verification_actions.py`), verified "
+"evidence and participation writes "
+"(`src/cadrumo/application/modelo/verification_actions.py`), bucket event "
+"(`src/cadrumo/application/modelo/verification_actions.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:34
+msgid "Knowledge, safety, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:36
+msgid ""
+"The decisions here are grounded in pinned registry revisions, stored "
+"calculation inputs and results, profile state, ledger/catalogue evidence,"
+" and typed provenance. Legal and source references are attached to "
+"findings from registry declarations; this chunk does not independently "
+"validate the underlying law. No LLM or external network behavior appears "
+"in these files. The strongest controls are exact coordinate/profile "
+"matching, unique-role ambiguity refusal, explicit zero versus absent "
+"handling, row-source completeness, lifecycle-clock ordering, guarded "
+"catalogue mutation, and atomic revision/participation-index writes. IBAN "
+"masking is present in value formatting, while verification findings "
+"intentionally carry identified transaction facts for operator "
+"remediation; check how callers authorize and protect those detailed "
+"reports in their composition."
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:38
+msgid ""
+"One cross-store recovery question remains: the grant path saves the "
+"verification report before persisting the verified revision and its "
+"ledger evidence, then emits the bucket event. The revision and "
+"participation-index write is atomic internally, but these separate "
+"repository actions are not shown here as one transaction. A failure "
+"between them could leave a granting report before the state transition, "
+"or a completed transition without its final event; wider composition may "
+"provide recovery. This is a follow-up to verify, not a confirmed defect. "
+"Similarly, snapshot and comparison projections contain sensitive "
+"financial work data, so transport-level authorization and redaction "
+"should be checked at their callers. No assigned test files were present; "
+"runtime behavior, adapter durability, authorization composition and legal"
+" accuracy remain unverified."
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:40
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:42
+msgid ""
+"The operations depend on exact-profile repository bundles and the pinned "
+"registry authority. Verification composes domain predicates, M303 wallet "
+"reconciliation, IVA and OSS source evidence, withholding detail, profile "
+"applicability, workflow gating, ledger snapshots, transaction "
+"participation indexes and bucket history. Synthesis should connect these "
+"checks to the registry definitions, operation authorization, repository "
+"adapters and export/filing paths to determine end-to-end recovery and "
+"privacy boundaries. Also verify that the M100 comparison's single-"
+"household assumption is clearly shown in the operator surface."
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:44
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:46
+msgid "All 13 assigned source files were read completely through pages 1–8."
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:48
+msgid ""
+"revision_selection_operation.py "
+"(`src/cadrumo/application/modelo/revision_selection_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:49
+msgid ""
+"revision_snapshot_operation.py "
+"(`src/cadrumo/application/modelo/revision_snapshot_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:50
+msgid ""
+"row_source_fingerprint.py "
+"(`src/cadrumo/application/modelo/row_source_fingerprint.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:51
+msgid "selectors.py (`src/cadrumo/application/modelo/selectors.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:52
+msgid ""
+"semantic_role_resolution.py "
+"(`src/cadrumo/application/modelo/semantic_role_resolution.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:53
+msgid ""
+"settlement_casilla.py "
+"(`src/cadrumo/application/modelo/settlement_casilla.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:54
+msgid "source_policy.py (`src/cadrumo/application/modelo/source_policy.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:55
+msgid ""
+"stored_row_field_input_gate.py "
+"(`src/cadrumo/application/modelo/stored_row_field_input_gate.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:56
+msgid ""
+"taxation_comparison.py "
+"(`src/cadrumo/application/modelo/taxation_comparison.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:57
+msgid ""
+"taxation_comparison_operation.py "
+"(`src/cadrumo/application/modelo/taxation_comparison_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:58
+msgid ""
+"taxation_comparison_ports.py "
+"(`src/cadrumo/application/modelo/taxation_comparison_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:59
+msgid ""
+"value_presentation.py "
+"(`src/cadrumo/application/modelo/value_presentation.py`)"
+msgstr ""
+
+#: ../../technical/articles/083-revision-selection-settlement-presentation-and-verification.md:60
+msgid ""
+"verification_actions.py "
+"(`src/cadrumo/application/modelo/verification_actions.py`)"
+msgstr ""

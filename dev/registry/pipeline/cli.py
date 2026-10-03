@@ -24,13 +24,13 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
-from dev._paths import prepare_temporary_directory
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition

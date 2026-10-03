@@ -4,7 +4,7 @@ tags:
   - '#registry-bindings-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:be2319c5b32dfab2ac61eb1d81e971573428b466968d0fbdfd19cb0f95a88760'
+body_hash: 'sha256:8efa57f51a3cdbd3b8b212504469b99cf4926bf605b502afa17732861ac42cea'
 related:
   - "[[2026-06-02-registry-bindings-boundary-audit]]"
 ---
@@ -23,7 +23,7 @@ around `per_grupo_member` previous-filing aggregation.
 
 No issue found. The audit identifies row-set families as the safest
 first extraction, defers previous-filing because of peer WIP and the
-`_formula_runtime.py` private selector dependency, and treats invoice 
+`_formula_runtime.py` private selector dependency, and treats invoice
 counterpart as coupled rather than independent split candidates.
 
 ## BINDINGS-S20-003 | PASS | Vault artifact hygiene

@@ -1,0 +1,326 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:1
+msgid "Source resolution contracts and withholding capture"
+msgstr "Contractes de resolució de fonts i captura de retencions"
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:7
+msgid ""
+"**Report:** `STAGE-2-036` · **Topic:** [Aggregation and calculation "
+"services](../topics/aggregation-and-calculation-services.md)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:10
+msgid "Scope"
+msgstr "Àmbit"
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:12
+msgid ""
+"This chunk covers nine application aggregation modules (4,041 lines; "
+"39,040 measured o200k_base proxy tokens): the calculation source envelope"
+" and merge operations, profile-source resolution, terminal-origin audit, "
+"withholding filing cadence, atomic observation mutation, recognition and "
+"capture, and the per-perceptor withholding resolver. I read all assigned "
+"ranges across seven bounded pages. Static review only; no modules were "
+"imported and no mutation, calculation or filing was executed."
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:14
+msgid "Calculation source mesh"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:16
+msgid ""
+"The source mesh gives calculation resolvers a typed, immutable envelope "
+"tied to a bucket, model, period, revision and caller-held authority "
+"operation. Resolvers return a single validated resolution with separate "
+"decimal, enum, date, boolean, row, relation, bound-casilla, detail-row, "
+"source-ID, diagnostic and provenance channels. Mapping channels are "
+"frozen and sorted, row coordinates must be unique and positive, and "
+"direct row-to-casilla materializations must carry matching source values,"
+" identities and provenance. This avoids coercing distinct facts such as a"
+" boolean entitlement and a zero amount into one channel. Caller context "
+"and pinned operation "
+"(`src/cadrumo/application/aggregation/source_mesh.py`) Resolution "
+"channels and invariants "
+"(`src/cadrumo/application/aggregation/source_mesh.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:18
+msgid ""
+"Diagnostics have bounded operator-facing messages and separate fixed "
+"remedies. They can name the relevant binding, relation, casilla, "
+"legal/source references, filing dates and resolver. Casilla-derived "
+"citations are distinguished from legal references asserted by the "
+"advisory itself. Provenance records identify primary versus contributing "
+"sources, parent links, terminal-origin class, fingerprints, relation "
+"coordinates and dependency treatment; relation provenance is rejected "
+"when its source model, year, period, casilla or authority references are "
+"incomplete. Diagnostic contract "
+"(`src/cadrumo/application/aggregation/source_mesh.py`) Provenance "
+"validation (`src/cadrumo/application/aggregation/source_mesh.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:20
+msgid ""
+"Exclusive merging rejects duplicate owners across scalar, row, relation "
+"and casilla channels while accumulating diagnostics and lineage. The "
+"separate precedence merge lets later tiers replace values, retaining "
+"collision checks for identity-bearing rows. Declared non-runtime sources "
+"are not warned about, deferred sources receive a distinct diagnostic, and"
+" other declared sources without an enrolled resolver are surfaced as "
+"unhandled. Storage failures are represented by empty source resolutions "
+"with a stable storage-degraded diagnostic; debug logging records "
+"resolver/source names and exception type. The override ladder "
+"distinguishes deterministic sources that should be locked from carry-"
+"forward sources that can accept operator values; the actual caller-"
+"override guard lives outside this chunk. Exclusive and precedence merges "
+"(`src/cadrumo/application/aggregation/source_resolution_operations.py`) "
+"Unhandled and deferred sources "
+"(`src/cadrumo/application/aggregation/source_resolution_operations.py`) "
+"Storage degradation "
+"(`src/cadrumo/application/aggregation/source_resolution_operations.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:22
+msgid ""
+"The terminal-origin audit compares the binding's registered expectation "
+"with runtime provenance for resolved filing-grade bindings. It reports "
+"disallowed origin classes, missing or excess terminal nodes, and missing "
+"required fingerprints, while leaving the value intact. Empty folds that "
+"resolve to zero are treated specially so a legitimate no-source fold is "
+"not reported as a route mismatch. This is an advisory-producing audit; "
+"the later verification gate must decide which findings block filing. "
+"Terminal-origin audit "
+"(`src/cadrumo/application/aggregation/terminal_origin_audit.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:24
+msgid ""
+"The profile resolver uses a supplied pinned operation to select the "
+"matching registry snapshot and passes the loaded profile record into the "
+"binding resolver. When no record is supplied at construction, it reuses "
+"the calculation context's loaded work profile when available. Profile "
+"source resolver (`src/cadrumo/application/aggregation/source_profile.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:26
+msgid "Withholding recognition and atomic capture"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:28
+msgid ""
+"The cadence module reads the canonical filing schedules for Modelos 111, "
+"115 and 123. Capture refuses when the profile is absent or the recognized"
+" quarter is not scheduled; annual source reads also refuse unless all "
+"four quarterly windows exist, rather than presenting a partial year as "
+"complete. Monthly schedules are recorded but not supported as capture "
+"windows. Cadence selection "
+"(`src/cadrumo/application/aggregation/withholding_filing_cadence.py`) "
+"Quarterly capture and annual-source gate "
+"(`src/cadrumo/application/aggregation/withholding_filing_cadence.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:30
+msgid ""
+"Recognition is derived from typed evidence, not from a caller-authored "
+"recognition date. Work, professional and urban-rent items recognize on "
+"payment/satisfaction; ordinary movable capital uses exigibility or "
+"earlier payment and records a later settlement separately. Investment-"
+"fund formalization is modeled as evidence but refused for the current "
+"123/193 projection. Unknown or nonresident recipients and non-IRPF "
+"regimes are refused by the recognition boundary. The producer maps the "
+"supported income kinds and schemes to 111, 115 or 123, checks required "
+"annual detail against the derived identity/date/amounts, derives the "
+"capture quarter from filer cadence, then submits the projection through "
+"the mutation service. Recognition derivation "
+"(`src/cadrumo/application/aggregation/withholding_recognition.py`) "
+"Producer command and route "
+"(`src/cadrumo/application/aggregation/withholding_producer.py`) Capture "
+"and source baseline handling "
+"(`src/cadrumo/application/aggregation/withholding_producer.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:32
+msgid ""
+"The mutation service makes append, replace and clear explicit. Append "
+"rejects duplicate projection identities and has bounded retries for "
+"concurrent writes; replace and clear require the exact current window "
+"baseline, and clear requires a reason. Idempotency keys replay their "
+"committed result only when the canonical command digest matches. The "
+"repository contract requires an atomic commit of predecessor, successor "
+"and command, while the actual persistence/CAS implementation is an outer "
+"adapter. Projection identity remains stable across settlement changes, so"
+" corrections must use an explicit baseline-guarded replacement. Mutation "
+"envelope and digest "
+"(`src/cadrumo/application/aggregation/withholding_observation_service.py`)"
+" Mutation service "
+"(`src/cadrumo/application/aggregation/withholding_observation_service.py`)"
+" Append/replacement successor "
+"(`src/cadrumo/application/aggregation/withholding_observation_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:34
+msgid ""
+"Two admission invariants need caller or adapter tracing before severity "
+"can be assigned. First, the producer's source-catalogue revision is "
+"optional; when present it is restricted to supported source kinds and "
+"carried as a commit baseline, but the producer itself does not load the "
+"source object. Verify that every externally reachable capture route "
+"supplies a current baseline or enforces equivalent source admission "
+"before mutation. Second, the capture types carry per-source liability "
+"limits and per-allocation amounts, but the assigned projection/service "
+"code visibly checks equality between allocation and emitted projection, "
+"not an upper bound across allocations. Trace whether the trusted caller "
+"or concrete repository enforces those limits; this local interface alone "
+"does not establish a reachable over-allocation path. Optional source "
+"baseline (`src/cadrumo/application/aggregation/withholding_producer.py`) "
+"Liability and allocation models "
+"(`src/cadrumo/application/aggregation/withholding_observation_service.py`)"
+" Projection amount checks "
+"(`src/cadrumo/application/aggregation/withholding_observation_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:36
+msgid "Withholding calculation source and limitations"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:38
+msgid ""
+"The withholding source resolver reads the perceptor/clase/subclase store "
+"for scalar bindings. Modelo 190 composes active Modelo 111 quarterly "
+"observations; Modelo 193 combines its annual window with captured Modelo "
+"123 pending/settled phases, refusing allocation collisions. Empty detail "
+"materializes a distinct-perception count of zero with an advisory, while "
+"the source's stated follow-up gate prevents that absence from being "
+"treated as filing grade. Settled prior-accrual rows also retain an "
+"advisory that no official source resolves the payment-year amounts. The "
+"pull/report row loader and calculate path use the same composition logic."
+" Annual withholding composition "
+"(`src/cadrumo/application/aggregation/withholding_source.py`) Calculation"
+" detail and resolution "
+"(`src/cadrumo/application/aggregation/withholding_source.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:40
+msgid ""
+"There is a generation-pinning inconsistency to verify. The calculation "
+"context explicitly carries the caller's pinned authority operation, but "
+"the withholding resolver opens a fresh bundled operation to resolve work-"
+"profile cadence and another fresh operation for Modelo 193 pending-"
+"disclosure years. If retained or historical generations are reachable, "
+"those decisions can differ from the generation that selected the "
+"calculation revision. Thread the context's operation through these "
+"helpers, or trace callers to establish the reachable generation "
+"invariant. Context operation contract "
+"(`src/cadrumo/application/aggregation/source_mesh.py`) Fresh cadence "
+"operation (`src/cadrumo/application/aggregation/withholding_source.py`) "
+"Fresh pending-year operation "
+"(`src/cadrumo/application/aggregation/withholding_source.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:42
+msgid ""
+"The source boundary keeps financial payloads out of refusal text and safe"
+" mutation results, but perceptor IDs, names, property addresses and "
+"amounts are still handled by the outer storage and access-control layers."
+" The audit and source resolver declare useful typed behavior, but "
+"concrete CAS, source-baseline validation and filing-grade enforcement are"
+" outside this chunk. No tests are included in the assigned files and none"
+" were run; bundled authority material was not independently validated."
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:44
+msgid "Coverage appendix"
+msgstr "Apèndix de cobertura"
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:46
+msgid ""
+"aggregation/source_mesh.py (1,340 lines) "
+"(`src/cadrumo/application/aggregation/source_mesh.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:47
+msgid ""
+"aggregation/source_profile.py (87 lines) "
+"(`src/cadrumo/application/aggregation/source_profile.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:48
+msgid ""
+"aggregation/source_resolution_operations.py (482 lines) "
+"(`src/cadrumo/application/aggregation/source_resolution_operations.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:49
+msgid ""
+"aggregation/terminal_origin_audit.py (239 lines) "
+"(`src/cadrumo/application/aggregation/terminal_origin_audit.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:50
+msgid ""
+"aggregation/withholding_filing_cadence.py (299 lines) "
+"(`src/cadrumo/application/aggregation/withholding_filing_cadence.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:51
+msgid ""
+"aggregation/withholding_observation_service.py (481 lines) "
+"(`src/cadrumo/application/aggregation/withholding_observation_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:52
+msgid ""
+"aggregation/withholding_producer.py (378 lines) "
+"(`src/cadrumo/application/aggregation/withholding_producer.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:53
+msgid ""
+"aggregation/withholding_recognition.py (218 lines) "
+"(`src/cadrumo/application/aggregation/withholding_recognition.py`)"
+msgstr ""
+
+#: ../../technical/articles/036-source-resolution-contracts-and-withholding-capture.md:54
+msgid ""
+"aggregation/withholding_source.py (517 lines) "
+"(`src/cadrumo/application/aggregation/withholding_source.py`)"
+msgstr ""

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3e0cb0c33b2680e3c567e613c30d43112115230ee02d610c8f69be04c50a22b'
+body_hash: 'sha256:ffdff3b4253d4da961a4995586618c2735d56b5169617806fbb3d8691482c6e3'
 related:
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
 ---
@@ -35,8 +35,6 @@ justificante against its own filed observation.
 
 ## Two distinct AEAT identifier namespaces exist on one receipt
 
-
-
 - `csv` — *Código Seguro de Verificación*, the AEAT-assigned verification hash
   printed on the receipt (`JustificanteCsv`, `_schema.py:22-29`).
 - `presentation_id` — AEAT's *"Número de justificante"*, extracted by
@@ -56,8 +54,6 @@ defect is at every call site: all three pass a register-namespace
 receipt-namespace `presentation_id`.
 
 ## Every caller conflates the two namespaces (systemic, not M303-local)
-
-
 
 No caller anywhere in the tree passes a genuinely receipt-namespace value
 (neither `csv` nor a captured "Número de justificante") into

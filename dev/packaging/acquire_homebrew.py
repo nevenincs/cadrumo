@@ -25,6 +25,7 @@ from typing import Any, Final
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import resolve_storage_path, storage_directory, tool_storage_environment
 from dev._paths import UTF_8
+from dev.packaging.homebrew_storage import require_homebrew_installation_prefix
 
 from .acquire_common import (
     AcquisitionError,
@@ -216,7 +217,7 @@ def run_homebrew_acquisition(
     )
     if prefix_result.returncode != 0:
         raise AcquisitionError(f"brew --prefix failed: {prefix_result.stderr.strip()[:200]}")
-    brew_prefix = Path(prefix_result.stdout.strip()).resolve(strict=True)
+    brew_prefix = require_homebrew_installation_prefix(prefix_result.stdout)
     _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
 
     tap_result = _run(brew, ["tap", tap], cwd=run_root, log=logs / "brew-tap.log", timeout=timeout_seconds)

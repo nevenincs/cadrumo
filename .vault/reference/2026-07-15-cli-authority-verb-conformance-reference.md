@@ -4,7 +4,7 @@ tags:
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
 modified: '2026-10-03'
-body_hash: 'sha256:44310985ea552c1b471258a850f1ad91d294b2f62090225f25bfa5c6d1a3a6cf'
+body_hash: 'sha256:559f0267c04544fb6999100f595ab05537f59d7d37f5c2f9eb0cf9f06565f238'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
@@ -84,11 +84,7 @@ config profile logout --------+       +--> _clear_active_profile_pointer
 
 Source locations:
 
-
-
 Pointer writes are split across:
-
-
 
 Selection uses the atomic core `write_pointer`; rollback restoration and clear
 have independent direct filesystem implementations.  The target authority is
@@ -391,8 +387,6 @@ AeatAuthenticator
 
 Sources:
 
-
-
 The sole-backend and durable mutation direction is current: commits
 `f5273bda59`, `27d8bc5404`, and `84c435bb94` deleted the certificate keyring
 alternative, added resumable secret mutation, and proved CLI recovery. The
@@ -486,8 +480,6 @@ replay event only for actual replay.
 
 ### Profile export and subject access
 
-
-
 - near-identical closures: lines `118-148` and `275-305`
 
 Create one application `export_profile_bundle` service with a typed purpose and
@@ -532,8 +524,6 @@ campaign verification.
 Canonical implementation: `src/cadrumo/core/hashing.py:32-40`.
 
 Residual exact implementations:
-
-
 
 Both consumers may import core without violating layer direction.  Delegate the
 telemetry wrapper to `sha256_hex` and replace the recipient fingerprint body

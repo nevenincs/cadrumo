@@ -8,7 +8,7 @@ related:
   - '[[2026-07-04-release-readiness-gate-adr]]'
   - '[[2026-07-06-release-readiness-gate-research]]'
 modified: '2026-10-03'
-body_hash: 'sha256:681dbee4be594d2178166ef15210fa6185582ff21e52628822497f18332c046e'
+body_hash: 'sha256:6cedc31853794a38964051fb54fda943966a56c6c3edc405eaadec7ea16fd42a'
 ---
 
 # `release-readiness-gate` plan
@@ -38,9 +38,9 @@ Single Step; no parallelization applicable.
 
 ## Verification
 
-- `uv run --no-sync pytest dev/release/tests src/aeat/tests/test_release_config.py -q`
+- `uv run --no-sync pytest dev/release/tests src/cadrumo/tests/test_release_config.py -q`
   passes (25 real-behavior tests, no mocks/stubs).
-- `uv run --no-sync ruff check dev/release src/aeat/tests/test_release_config.py`
+- `uv run --no-sync ruff check dev/release src/cadrumo/tests/test_release_config.py`
   and `ruff format --check` pass.
 - `uv run --no-sync ty check dev/release` and
   `uv run --no-sync pyright dev/release` pass with zero diagnostics.

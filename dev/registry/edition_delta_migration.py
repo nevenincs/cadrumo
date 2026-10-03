@@ -160,7 +160,6 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     CASILLAS_FAMILY,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from . import edition_delta_assessment as _edition_delta_assessment

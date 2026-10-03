@@ -4,7 +4,7 @@ tags:
   - '#ci-discipline'
 date: '2026-07-21'
 modified: '2026-10-03'
-body_hash: 'sha256:18d8c4c82d4a448813bb2492a23c69bc0a6d8918009b3e9fea1d9939cd909f0c'
+body_hash: 'sha256:79c73e606bbc5168199584152a12e25764262f5d7c0fd4decb8634f11dda02b2'
 related:
   - "[[2026-07-21-ci-discipline-adr]]"
   - '[[2026-07-20-ci-speed-redesign-adr]]'
@@ -36,8 +36,6 @@ Two verbatim-intent directives drove the campaign:
    push-, PR-, or dispatch-triggered. This supersedes the nightly-schedule
    element of the ci-speed-redesign decision (that record carries a truth-update
    line).
-
-
 
 ### Prior decision substrate
 

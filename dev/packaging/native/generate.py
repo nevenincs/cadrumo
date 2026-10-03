@@ -8,16 +8,18 @@ from pathlib import Path
 
 from cadrumo.core.config import Settings
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS
+from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, configured_storage_root
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
+
+from .layout import load_layout
 
 
 def generate(root: Path, destination: Path) -> None:
     """Write C, Rust and inspection projections from their authored owners."""
-    layout = json.loads((root / "native/package-layout.json").read_text(encoding="utf-8"))
-    version = (root / "dev/packaging/release-python-version").read_text().strip()
-    if not version.startswith((root / ".python-version").read_text().strip() + "."):
+    layout = load_layout(root=root)
+    version = (root / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+    if not version.startswith((root / ".python-version").read_text(encoding="utf-8").strip() + "."):
         raise ValueError("Exact CPython build must belong to the development minor")
     fields = sorted(name.upper() for name in Settings.model_fields)
     tool_cache_env, tool_cache_default = TOOL_STORAGE_LOCATIONS["XDG_CACHE_HOME"]
@@ -43,6 +45,9 @@ def generate(root: Path, destination: Path) -> None:
         "PRODUCT_NAME": PRODUCT_IDENTITY.python_package,
         "STORAGE_ENV": "CADRUMO_LOCAL_STORAGE_ROOT",
         "STORAGE_ROOT_ENV": "CADRUMO_STORAGE_ROOT",
+        "STORAGE_DEFAULT": configured_storage_root(environ={}, repository_root=root)
+        .relative_to(root.resolve())
+        .as_posix(),
         "AUTHORITY_ENV": "cadrumo_authority_root".upper(),
         "TEMPORARY_ENV": temporary.settings_field.upper(),
         "TEMPORARY_DEFAULT": temporary.relative_path().as_posix(),

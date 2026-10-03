@@ -1,0 +1,1505 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:1
+msgid "Localized interface and model-schema labels"
+msgstr "Interfaz localizada y etiquetas de esquemas de modelos"
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:7
+msgid ""
+"**Report:** `STAGE-2-206` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:12
+msgid ""
+"This reference-data chunk contains 332 YAML files totaling 20,987,833 "
+"bytes. It mirrors 83 relative paths in each of four locale trees (`ca`, "
+"`en`, `es`, `hu`): nine general catalogs, one `modelo/general.yml`, and "
+"73 `modelo/schema/*.yml` files per locale. The four path sets match "
+"exactly, although their translated content and sizes differ. All assets "
+"are YAML and occupy three directory shapes: locale root, locale/model, "
+"and locale/model/schema."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:14
+msgid ""
+"I inspected the four complete `modelo/general.yml` files (6,539 bytes "
+"combined), then took bounded structural and text samples from the four "
+"locales’ Modelo 303 and Modelo 100 schema YAMLs. The Modelo 303 sample "
+"covered the form title, revision labels, the latest-revision casilla "
+"count, the continuity namespace, and four selected labels/help values. "
+"The Modelo 100 sample covered the title, revision range, counts for 2020 "
+"and 2025, and a bounded key-presence comparison for 2020. The large model"
+" files were sampled through selected paths; this report does not claim "
+"semantic review of all 332 translations. The group’s full paths and byte "
+"sizes are inventoried below. No application code was run."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:16
+msgid "Capability and content shape"
+msgstr "Capacidad y estructura del contenido"
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:18
+msgid ""
+"The files supply locale-specific interface text and labels for model "
+"forms. The general model catalog includes shared column names such as "
+"taxable base, tax amount, pro-rata, totals, and territory (Catalan "
+"(`src/cadrumo/locales/ca/modelo/general.yml`), English "
+"(`src/cadrumo/locales/en/modelo/general.yml`), Spanish "
+"(`src/cadrumo/locales/es/modelo/general.yml`), Hungarian "
+"(`src/cadrumo/locales/hu/modelo/general.yml`)). For example, the same "
+"`territorio_estado` identifier is rendered as “State (AGE)” in English, "
+"“Estado” in Spanish, and “Állami adóhatóság” in Hungarian. Such catalogs "
+"let shared model data display in the user’s selected language; these "
+"strings are data, not translation-selection logic."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:20
+#, python-format
+msgid ""
+"Each sampled Modelo 303 locale file has revisions 2022, 2023, 2024, 2025,"
+" and `2026-y-siguientes`. The latest revision contains 117 casilla "
+"labels/help entries in each locale, and the continuous record-design "
+"namespace has 229 entries in each. The sampled strings cover VAT rates "
+"and return boxes; e.g. `dr303-01` labels the taxable base at the 4% "
+"super-reduced rate and `dr303-09` labels the 21% amount (Catalan "
+"(`src/cadrumo/locales/ca/modelo/schema/303.yml`), English "
+"(`src/cadrumo/locales/en/modelo/schema/303.yml`), Spanish "
+"(`src/cadrumo/locales/es/modelo/schema/303.yml`), Hungarian "
+"(`src/cadrumo/locales/hu/modelo/schema/303.yml`)). Their 2026-and-later "
+"labels establish a text revision horizon in these files, not by "
+"themselves a supported filing year or an authoritative tax rule."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:22
+msgid ""
+"The sampled Modelo 100 files cover revisions 2020 through 2025. All four "
+"contain 865 casilla entries for 2025. The 2020 counts differ: 711 "
+"Catalan, 711 English, 709 Spanish, and 720 Hungarian. A bounded key "
+"comparison also found different key sets: `0108` is present in English "
+"and absent in the other three, while Catalan and Hungarian contain some "
+"2020 keys not present in the English baseline (Catalan "
+"(`src/cadrumo/locales/ca/modelo/schema/100.yml`), English "
+"(`src/cadrumo/locales/en/modelo/schema/100.yml`), Spanish "
+"(`src/cadrumo/locales/es/modelo/schema/100.yml`), Hungarian "
+"(`src/cadrumo/locales/hu/modelo/schema/100.yml`)). This is an observable "
+"localization-data difference, not proof of a broken screen: a consumer "
+"may intentionally fall back to a base label or omit a field by revision. "
+"Synthesis should inspect the locale resolver and compare these revision-"
+"specific keys with the registry’s intended box set before classifying it "
+"as a defect."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:24
+msgid "Provenance, freshness, and limits"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:26
+msgid ""
+"The sampled YAML structures provide localized `official_name`, `title`, "
+"`label`, and `help` values nested under model, schema, form, and revision"
+" keys. Their sampled rows do not contain per-string citation, translator,"
+" approval, or source-date metadata. The version key records which "
+"displayed text is associated with a model-year revision; it does not "
+"prove the translation was reviewed against a particular official design. "
+"In a regulated filing workflow, registry/year matching and a safe locale "
+"fallback are therefore as important as translation coverage. The "
+"underlying authority and supported-year policy must be established from "
+"the registry and consuming code, not inferred from a translation label."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:28
+msgid ""
+"The data files contain interface wording rather than live taxpayer "
+"records or executable behavior. Static inspection of these catalogs "
+"establishes available text and some structural variation only. It does "
+"not verify string interpolation, escaping, locale selection, formatting "
+"of amounts/dates, accessibility, or whether missing translations can "
+"expose misleading fallback text. No tests are present in this chunk."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:30
+msgid "Dependencies and follow-up"
+msgstr "Dependencias y seguimiento"
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:32
+msgid ""
+"Synthesis should trace locale discovery and fallback, the schema-label "
+"resolver, year/revision selection, and checks that translation key sets "
+"match the registry. The 2020 Modelo 100 differences merit a bounded "
+"comparison against the authoritative key set and the product’s fallback "
+"policy; the displayed labels themselves require source/version review "
+"outside these locale assets."
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:34
+msgid "Complete assigned-file inventory"
+msgstr "Inventario completo de los archivos asignados"
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:36
+msgid "`src/cadrumo/locales/ca/adapters.yml` — 19,238 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:37
+msgid "`src/cadrumo/locales/ca/application.yml` — 140,514 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:38
+msgid "`src/cadrumo/locales/ca/cli.yml` — 256,782 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:39
+msgid "`src/cadrumo/locales/ca/common.yml` — 148,347 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:40
+msgid "`src/cadrumo/locales/ca/docs.yml` — 17,891 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:41
+msgid "`src/cadrumo/locales/ca/errors.yml` — 95,808 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:42
+msgid "`src/cadrumo/locales/ca/flows.yml` — 16,301 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:43
+msgid "`src/cadrumo/locales/ca/modelo/general.yml` — 1,638 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:44
+msgid "`src/cadrumo/locales/ca/modelo/schema/036.yml` — 103,888 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:45
+msgid "`src/cadrumo/locales/ca/modelo/schema/038.yml` — 942 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:46
+msgid "`src/cadrumo/locales/ca/modelo/schema/100.yml` — 985,402 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:47
+msgid "`src/cadrumo/locales/ca/modelo/schema/111.yml` — 4,525 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:48
+msgid "`src/cadrumo/locales/ca/modelo/schema/115.yml` — 1,118 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:49
+msgid "`src/cadrumo/locales/ca/modelo/schema/117.yml` — 2,205 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:50
+msgid "`src/cadrumo/locales/ca/modelo/schema/121.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:51
+msgid "`src/cadrumo/locales/ca/modelo/schema/122.yml` — 7,580 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:52
+msgid "`src/cadrumo/locales/ca/modelo/schema/123.yml` — 2,310 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:53
+msgid "`src/cadrumo/locales/ca/modelo/schema/126.yml` — 1,754 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:54
+msgid "`src/cadrumo/locales/ca/modelo/schema/128.yml` — 1,287 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:55
+msgid "`src/cadrumo/locales/ca/modelo/schema/130.yml` — 5,022 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:56
+msgid "`src/cadrumo/locales/ca/modelo/schema/131.yml` — 29,767 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:57
+msgid "`src/cadrumo/locales/ca/modelo/schema/136.yml` — 3,249 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:58
+msgid "`src/cadrumo/locales/ca/modelo/schema/140.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:59
+msgid "`src/cadrumo/locales/ca/modelo/schema/143.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:60
+msgid "`src/cadrumo/locales/ca/modelo/schema/145.yml` — 8,503 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:61
+msgid "`src/cadrumo/locales/ca/modelo/schema/151.yml` — 138,451 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:62
+msgid "`src/cadrumo/locales/ca/modelo/schema/156.yml` — 3,339 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:63
+msgid "`src/cadrumo/locales/ca/modelo/schema/165.yml` — 2,525 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:64
+msgid "`src/cadrumo/locales/ca/modelo/schema/179.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:65
+msgid "`src/cadrumo/locales/ca/modelo/schema/180.yml` — 3,737 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:66
+msgid "`src/cadrumo/locales/ca/modelo/schema/181.yml` — 4,683 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:67
+msgid "`src/cadrumo/locales/ca/modelo/schema/182.yml` — 1,894 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:68
+msgid "`src/cadrumo/locales/ca/modelo/schema/184.yml` — 28,162 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:69
+msgid "`src/cadrumo/locales/ca/modelo/schema/185.yml` — 5,327 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:70
+msgid "`src/cadrumo/locales/ca/modelo/schema/186.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:71
+msgid "`src/cadrumo/locales/ca/modelo/schema/187.yml` — 1,546 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:72
+msgid "`src/cadrumo/locales/ca/modelo/schema/188.yml` — 2,263 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:73
+msgid "`src/cadrumo/locales/ca/modelo/schema/189.yml` — 2,838 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:74
+msgid "`src/cadrumo/locales/ca/modelo/schema/190.yml` — 30,389 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:75
+msgid "`src/cadrumo/locales/ca/modelo/schema/193.yml` — 20,577 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:76
+msgid "`src/cadrumo/locales/ca/modelo/schema/194.yml` — 2,286 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:77
+msgid "`src/cadrumo/locales/ca/modelo/schema/200.yml` — 986,526 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:78
+msgid "`src/cadrumo/locales/ca/modelo/schema/202.yml` — 13,608 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:79
+msgid "`src/cadrumo/locales/ca/modelo/schema/210.yml` — 7,751 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:80
+msgid "`src/cadrumo/locales/ca/modelo/schema/216.yml` — 3,510 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:81
+msgid "`src/cadrumo/locales/ca/modelo/schema/220.yml` — 535,514 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:82
+msgid "`src/cadrumo/locales/ca/modelo/schema/222.yml` — 26,517 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:83
+msgid "`src/cadrumo/locales/ca/modelo/schema/231.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:84
+msgid "`src/cadrumo/locales/ca/modelo/schema/232.yml` — 44,029 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:85
+msgid "`src/cadrumo/locales/ca/modelo/schema/233.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:86
+msgid "`src/cadrumo/locales/ca/modelo/schema/234.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:87
+msgid "`src/cadrumo/locales/ca/modelo/schema/238.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:88
+msgid "`src/cadrumo/locales/ca/modelo/schema/270.yml` — 8,945 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:89
+msgid "`src/cadrumo/locales/ca/modelo/schema/280.yml` — 2,924 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:90
+msgid "`src/cadrumo/locales/ca/modelo/schema/289.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:91
+msgid "`src/cadrumo/locales/ca/modelo/schema/296.yml` — 1,768 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:92
+msgid "`src/cadrumo/locales/ca/modelo/schema/303.yml` — 64,197 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:93
+msgid "`src/cadrumo/locales/ca/modelo/schema/308.yml` — 9,204 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:94
+msgid "`src/cadrumo/locales/ca/modelo/schema/309.yml` — 34,972 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:95
+msgid "`src/cadrumo/locales/ca/modelo/schema/322.yml` — 79,791 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:96
+msgid "`src/cadrumo/locales/ca/modelo/schema/341.yml` — 2,009 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:97
+msgid "`src/cadrumo/locales/ca/modelo/schema/345.yml` — 4,041 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:98
+msgid "`src/cadrumo/locales/ca/modelo/schema/347.yml` — 12,020 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:99
+msgid "`src/cadrumo/locales/ca/modelo/schema/349.yml` — 4,461 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:100
+msgid "`src/cadrumo/locales/ca/modelo/schema/353.yml` — 19,012 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:101
+msgid "`src/cadrumo/locales/ca/modelo/schema/360.yml` — 44,641 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:102
+msgid "`src/cadrumo/locales/ca/modelo/schema/361.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:103
+msgid "`src/cadrumo/locales/ca/modelo/schema/369.yml` — 406,860 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:104
+msgid "`src/cadrumo/locales/ca/modelo/schema/379.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:105
+msgid "`src/cadrumo/locales/ca/modelo/schema/380.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:106
+msgid "`src/cadrumo/locales/ca/modelo/schema/390.yml` — 324,309 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:107
+msgid "`src/cadrumo/locales/ca/modelo/schema/490.yml` — 72,185 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:108
+msgid "`src/cadrumo/locales/ca/modelo/schema/576.yml` — 5,437 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:109
+msgid "`src/cadrumo/locales/ca/modelo/schema/592.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:110
+msgid "`src/cadrumo/locales/ca/modelo/schema/604.yml` — 12,201 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:111
+msgid "`src/cadrumo/locales/ca/modelo/schema/714.yml` — 254,634 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:112
+msgid "`src/cadrumo/locales/ca/modelo/schema/720.yml` — 3,584 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:113
+msgid "`src/cadrumo/locales/ca/modelo/schema/721.yml` — 1,603 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:114
+msgid "`src/cadrumo/locales/ca/modelo/schema/763.yml` — 1,134 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:115
+msgid "`src/cadrumo/locales/ca/modelo/schema/840.yml` — 16,610 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:116
+msgid "`src/cadrumo/locales/ca/modelo/schema/848.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:117
+msgid "`src/cadrumo/locales/ca/profile.yml` — 35,620 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:118
+msgid "`src/cadrumo/locales/ca/wizard.yml` — 49,757 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:119
+msgid "`src/cadrumo/locales/en/adapters.yml` — 16,915 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:120
+msgid "`src/cadrumo/locales/en/application.yml` — 127,135 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:121
+msgid "`src/cadrumo/locales/en/cli.yml` — 233,746 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:122
+msgid "`src/cadrumo/locales/en/common.yml` — 136,350 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:123
+msgid "`src/cadrumo/locales/en/docs.yml` — 16,329 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:124
+msgid "`src/cadrumo/locales/en/errors.yml` — 85,343 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:125
+msgid "`src/cadrumo/locales/en/flows.yml` — 15,083 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:126
+msgid "`src/cadrumo/locales/en/modelo/general.yml` — 1,540 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:127
+msgid "`src/cadrumo/locales/en/modelo/schema/036.yml` — 103,814 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:128
+msgid "`src/cadrumo/locales/en/modelo/schema/038.yml` — 917 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:129
+msgid "`src/cadrumo/locales/en/modelo/schema/100.yml` — 936,057 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:130
+msgid "`src/cadrumo/locales/en/modelo/schema/111.yml` — 4,069 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:131
+msgid "`src/cadrumo/locales/en/modelo/schema/115.yml` — 1,060 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:132
+msgid "`src/cadrumo/locales/en/modelo/schema/117.yml` — 2,235 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:133
+msgid "`src/cadrumo/locales/en/modelo/schema/121.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:134
+msgid "`src/cadrumo/locales/en/modelo/schema/122.yml` — 7,390 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:135
+msgid "`src/cadrumo/locales/en/modelo/schema/123.yml` — 2,387 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:136
+msgid "`src/cadrumo/locales/en/modelo/schema/126.yml` — 1,793 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:137
+msgid "`src/cadrumo/locales/en/modelo/schema/128.yml` — 1,247 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:138
+msgid "`src/cadrumo/locales/en/modelo/schema/130.yml` — 4,758 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:139
+msgid "`src/cadrumo/locales/en/modelo/schema/131.yml` — 28,620 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:140
+msgid "`src/cadrumo/locales/en/modelo/schema/136.yml` — 3,167 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:141
+msgid "`src/cadrumo/locales/en/modelo/schema/140.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:142
+msgid "`src/cadrumo/locales/en/modelo/schema/143.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:143
+msgid "`src/cadrumo/locales/en/modelo/schema/145.yml` — 8,453 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:144
+msgid "`src/cadrumo/locales/en/modelo/schema/151.yml` — 136,649 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:145
+msgid "`src/cadrumo/locales/en/modelo/schema/156.yml` — 3,091 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:146
+msgid "`src/cadrumo/locales/en/modelo/schema/165.yml` — 2,516 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:147
+msgid "`src/cadrumo/locales/en/modelo/schema/179.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:148
+msgid "`src/cadrumo/locales/en/modelo/schema/180.yml` — 3,774 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:149
+msgid "`src/cadrumo/locales/en/modelo/schema/181.yml` — 4,544 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:150
+msgid "`src/cadrumo/locales/en/modelo/schema/182.yml` — 1,776 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:151
+msgid "`src/cadrumo/locales/en/modelo/schema/184.yml` — 27,171 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:152
+msgid "`src/cadrumo/locales/en/modelo/schema/185.yml` — 5,250 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:153
+msgid "`src/cadrumo/locales/en/modelo/schema/186.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:154
+msgid "`src/cadrumo/locales/en/modelo/schema/187.yml` — 1,573 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:155
+msgid "`src/cadrumo/locales/en/modelo/schema/188.yml` — 2,279 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:156
+msgid "`src/cadrumo/locales/en/modelo/schema/189.yml` — 2,865 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:157
+msgid "`src/cadrumo/locales/en/modelo/schema/190.yml` — 28,916 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:158
+msgid "`src/cadrumo/locales/en/modelo/schema/193.yml` — 20,520 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:159
+msgid "`src/cadrumo/locales/en/modelo/schema/194.yml` — 2,141 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:160
+msgid "`src/cadrumo/locales/en/modelo/schema/200.yml` — 992,755 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:161
+msgid "`src/cadrumo/locales/en/modelo/schema/202.yml` — 13,877 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:162
+msgid "`src/cadrumo/locales/en/modelo/schema/210.yml` — 7,632 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:163
+msgid "`src/cadrumo/locales/en/modelo/schema/216.yml` — 3,519 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:164
+msgid "`src/cadrumo/locales/en/modelo/schema/220.yml` — 536,795 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:165
+msgid "`src/cadrumo/locales/en/modelo/schema/222.yml` — 25,456 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:166
+msgid "`src/cadrumo/locales/en/modelo/schema/231.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:167
+msgid "`src/cadrumo/locales/en/modelo/schema/232.yml` — 43,353 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:168
+msgid "`src/cadrumo/locales/en/modelo/schema/233.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:169
+msgid "`src/cadrumo/locales/en/modelo/schema/234.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:170
+msgid "`src/cadrumo/locales/en/modelo/schema/238.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:171
+msgid "`src/cadrumo/locales/en/modelo/schema/270.yml` — 8,357 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:172
+msgid "`src/cadrumo/locales/en/modelo/schema/280.yml` — 2,919 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:173
+msgid "`src/cadrumo/locales/en/modelo/schema/289.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:174
+msgid "`src/cadrumo/locales/en/modelo/schema/296.yml` — 1,808 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:175
+msgid "`src/cadrumo/locales/en/modelo/schema/303.yml` — 62,022 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:176
+msgid "`src/cadrumo/locales/en/modelo/schema/308.yml` — 8,826 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:177
+msgid "`src/cadrumo/locales/en/modelo/schema/309.yml` — 33,292 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:178
+msgid "`src/cadrumo/locales/en/modelo/schema/322.yml` — 77,890 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:179
+msgid "`src/cadrumo/locales/en/modelo/schema/341.yml` — 1,977 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:180
+msgid "`src/cadrumo/locales/en/modelo/schema/345.yml` — 4,040 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:181
+msgid "`src/cadrumo/locales/en/modelo/schema/347.yml` — 11,853 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:182
+msgid "`src/cadrumo/locales/en/modelo/schema/349.yml` — 4,534 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:183
+msgid "`src/cadrumo/locales/en/modelo/schema/353.yml` — 18,286 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:184
+msgid "`src/cadrumo/locales/en/modelo/schema/360.yml` — 43,461 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:185
+msgid "`src/cadrumo/locales/en/modelo/schema/361.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:186
+msgid "`src/cadrumo/locales/en/modelo/schema/369.yml` — 387,369 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:187
+msgid "`src/cadrumo/locales/en/modelo/schema/379.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:188
+msgid "`src/cadrumo/locales/en/modelo/schema/380.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:189
+msgid "`src/cadrumo/locales/en/modelo/schema/390.yml` — 321,683 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:190
+msgid "`src/cadrumo/locales/en/modelo/schema/490.yml` — 62,581 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:191
+msgid "`src/cadrumo/locales/en/modelo/schema/576.yml` — 5,303 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:192
+msgid "`src/cadrumo/locales/en/modelo/schema/592.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:193
+msgid "`src/cadrumo/locales/en/modelo/schema/604.yml` — 11,540 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:194
+msgid "`src/cadrumo/locales/en/modelo/schema/714.yml` — 251,868 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:195
+msgid "`src/cadrumo/locales/en/modelo/schema/720.yml` — 3,548 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:196
+msgid "`src/cadrumo/locales/en/modelo/schema/721.yml` — 1,518 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:197
+msgid "`src/cadrumo/locales/en/modelo/schema/763.yml` — 1,081 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:198
+msgid "`src/cadrumo/locales/en/modelo/schema/840.yml` — 17,053 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:199
+msgid "`src/cadrumo/locales/en/modelo/schema/848.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:200
+msgid "`src/cadrumo/locales/en/profile.yml` — 33,852 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:201
+msgid "`src/cadrumo/locales/en/wizard.yml` — 47,090 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:202
+msgid "`src/cadrumo/locales/es/adapters.yml` — 19,335 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:203
+msgid "`src/cadrumo/locales/es/application.yml` — 141,106 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:204
+msgid "`src/cadrumo/locales/es/cli.yml` — 259,848 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:205
+msgid "`src/cadrumo/locales/es/common.yml` — 148,447 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:206
+msgid "`src/cadrumo/locales/es/docs.yml` — 18,196 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:207
+msgid "`src/cadrumo/locales/es/errors.yml` — 96,033 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:208
+msgid "`src/cadrumo/locales/es/flows.yml` — 16,496 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:209
+msgid "`src/cadrumo/locales/es/modelo/general.yml` — 1,677 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:210
+msgid "`src/cadrumo/locales/es/modelo/schema/036.yml` — 107,699 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:211
+msgid "`src/cadrumo/locales/es/modelo/schema/038.yml` — 965 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:212
+msgid "`src/cadrumo/locales/es/modelo/schema/100.yml` — 1,012,015 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:213
+msgid "`src/cadrumo/locales/es/modelo/schema/111.yml` — 4,727 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:214
+msgid "`src/cadrumo/locales/es/modelo/schema/115.yml` — 1,153 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:215
+msgid "`src/cadrumo/locales/es/modelo/schema/117.yml` — 2,230 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:216
+msgid "`src/cadrumo/locales/es/modelo/schema/121.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:217
+msgid "`src/cadrumo/locales/es/modelo/schema/122.yml` — 7,794 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:218
+msgid "`src/cadrumo/locales/es/modelo/schema/123.yml` — 2,395 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:219
+msgid "`src/cadrumo/locales/es/modelo/schema/126.yml` — 1,777 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:220
+msgid "`src/cadrumo/locales/es/modelo/schema/128.yml` — 1,281 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:221
+msgid "`src/cadrumo/locales/es/modelo/schema/130.yml` — 5,086 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:222
+msgid "`src/cadrumo/locales/es/modelo/schema/131.yml` — 30,066 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:223
+msgid "`src/cadrumo/locales/es/modelo/schema/136.yml` — 3,325 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:224
+msgid "`src/cadrumo/locales/es/modelo/schema/140.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:225
+msgid "`src/cadrumo/locales/es/modelo/schema/143.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:226
+msgid "`src/cadrumo/locales/es/modelo/schema/145.yml` — 8,775 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:227
+msgid "`src/cadrumo/locales/es/modelo/schema/151.yml` — 141,307 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:228
+msgid "`src/cadrumo/locales/es/modelo/schema/156.yml` — 3,504 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:229
+msgid "`src/cadrumo/locales/es/modelo/schema/165.yml` — 2,592 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:230
+msgid "`src/cadrumo/locales/es/modelo/schema/179.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:231
+msgid "`src/cadrumo/locales/es/modelo/schema/180.yml` — 3,854 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:232
+msgid "`src/cadrumo/locales/es/modelo/schema/181.yml` — 4,827 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:233
+msgid "`src/cadrumo/locales/es/modelo/schema/182.yml` — 1,936 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:234
+msgid "`src/cadrumo/locales/es/modelo/schema/184.yml` — 28,613 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:235
+msgid "`src/cadrumo/locales/es/modelo/schema/185.yml` — 5,334 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:236
+msgid "`src/cadrumo/locales/es/modelo/schema/186.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:237
+msgid "`src/cadrumo/locales/es/modelo/schema/187.yml` — 1,593 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:238
+msgid "`src/cadrumo/locales/es/modelo/schema/188.yml` — 2,253 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:239
+msgid "`src/cadrumo/locales/es/modelo/schema/189.yml` — 2,893 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:240
+msgid "`src/cadrumo/locales/es/modelo/schema/190.yml` — 31,414 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:241
+msgid "`src/cadrumo/locales/es/modelo/schema/193.yml` — 21,296 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:242
+msgid "`src/cadrumo/locales/es/modelo/schema/194.yml` — 2,392 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:243
+msgid "`src/cadrumo/locales/es/modelo/schema/200.yml` — 999,894 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:244
+msgid "`src/cadrumo/locales/es/modelo/schema/202.yml` — 13,064 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:245
+msgid "`src/cadrumo/locales/es/modelo/schema/210.yml` — 7,907 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:246
+msgid "`src/cadrumo/locales/es/modelo/schema/216.yml` — 3,605 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:247
+msgid "`src/cadrumo/locales/es/modelo/schema/220.yml` — 553,741 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:248
+msgid "`src/cadrumo/locales/es/modelo/schema/222.yml` — 27,042 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:249
+msgid "`src/cadrumo/locales/es/modelo/schema/231.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:250
+msgid "`src/cadrumo/locales/es/modelo/schema/232.yml` — 45,534 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:251
+msgid "`src/cadrumo/locales/es/modelo/schema/233.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:252
+msgid "`src/cadrumo/locales/es/modelo/schema/234.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:253
+msgid "`src/cadrumo/locales/es/modelo/schema/238.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:254
+msgid "`src/cadrumo/locales/es/modelo/schema/270.yml` — 9,226 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:255
+msgid "`src/cadrumo/locales/es/modelo/schema/280.yml` — 2,984 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:256
+msgid "`src/cadrumo/locales/es/modelo/schema/289.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:257
+msgid "`src/cadrumo/locales/es/modelo/schema/296.yml` — 1,842 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:258
+msgid "`src/cadrumo/locales/es/modelo/schema/303.yml` — 63,965 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:259
+msgid "`src/cadrumo/locales/es/modelo/schema/308.yml` — 9,290 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:260
+msgid "`src/cadrumo/locales/es/modelo/schema/309.yml` — 35,295 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:261
+msgid "`src/cadrumo/locales/es/modelo/schema/322.yml` — 82,521 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:262
+msgid "`src/cadrumo/locales/es/modelo/schema/341.yml` — 1,965 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:263
+msgid "`src/cadrumo/locales/es/modelo/schema/345.yml` — 4,114 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:264
+msgid "`src/cadrumo/locales/es/modelo/schema/347.yml` — 12,435 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:265
+msgid "`src/cadrumo/locales/es/modelo/schema/349.yml` — 4,532 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:266
+msgid "`src/cadrumo/locales/es/modelo/schema/353.yml` — 19,303 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:267
+msgid "`src/cadrumo/locales/es/modelo/schema/360.yml` — 45,985 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:268
+msgid "`src/cadrumo/locales/es/modelo/schema/361.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:269
+msgid "`src/cadrumo/locales/es/modelo/schema/369.yml` — 406,552 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:270
+msgid "`src/cadrumo/locales/es/modelo/schema/379.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:271
+msgid "`src/cadrumo/locales/es/modelo/schema/380.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:272
+msgid "`src/cadrumo/locales/es/modelo/schema/390.yml` — 328,279 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:273
+msgid "`src/cadrumo/locales/es/modelo/schema/490.yml` — 73,074 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:274
+msgid "`src/cadrumo/locales/es/modelo/schema/576.yml` — 5,565 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:275
+msgid "`src/cadrumo/locales/es/modelo/schema/592.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:276
+msgid "`src/cadrumo/locales/es/modelo/schema/604.yml` — 12,387 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:277
+msgid "`src/cadrumo/locales/es/modelo/schema/714.yml` — 256,034 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:278
+msgid "`src/cadrumo/locales/es/modelo/schema/720.yml` — 3,713 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:279
+msgid "`src/cadrumo/locales/es/modelo/schema/721.yml` — 1,622 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:280
+msgid "`src/cadrumo/locales/es/modelo/schema/763.yml` — 1,179 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:281
+msgid "`src/cadrumo/locales/es/modelo/schema/840.yml` — 17,110 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:282
+msgid "`src/cadrumo/locales/es/modelo/schema/848.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:283
+msgid "`src/cadrumo/locales/es/profile.yml` — 36,149 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:284
+msgid "`src/cadrumo/locales/es/wizard.yml` — 50,653 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:285
+msgid "`src/cadrumo/locales/hu/adapters.yml` — 19,201 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:286
+msgid "`src/cadrumo/locales/hu/application.yml` — 143,875 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:287
+msgid "`src/cadrumo/locales/hu/cli.yml` — 273,255 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:288
+msgid "`src/cadrumo/locales/hu/common.yml` — 155,080 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:289
+msgid "`src/cadrumo/locales/hu/docs.yml` — 18,580 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:290
+msgid "`src/cadrumo/locales/hu/errors.yml` — 95,575 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:291
+msgid "`src/cadrumo/locales/hu/flows.yml` — 16,704 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:292
+msgid "`src/cadrumo/locales/hu/modelo/general.yml` — 1,684 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:293
+msgid "`src/cadrumo/locales/hu/modelo/schema/036.yml` — 109,615 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:294
+msgid "`src/cadrumo/locales/hu/modelo/schema/038.yml` — 998 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:295
+msgid "`src/cadrumo/locales/hu/modelo/schema/100.yml` — 1,053,380 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:296
+msgid "`src/cadrumo/locales/hu/modelo/schema/111.yml` — 5,138 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:297
+msgid "`src/cadrumo/locales/hu/modelo/schema/115.yml` — 1,192 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:298
+msgid "`src/cadrumo/locales/hu/modelo/schema/117.yml` — 2,535 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:299
+msgid "`src/cadrumo/locales/hu/modelo/schema/121.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:300
+msgid "`src/cadrumo/locales/hu/modelo/schema/122.yml` — 7,846 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:301
+msgid "`src/cadrumo/locales/hu/modelo/schema/123.yml` — 2,517 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:302
+msgid "`src/cadrumo/locales/hu/modelo/schema/126.yml` — 1,824 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:303
+msgid "`src/cadrumo/locales/hu/modelo/schema/128.yml` — 1,343 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:304
+msgid "`src/cadrumo/locales/hu/modelo/schema/130.yml` — 5,227 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:305
+msgid "`src/cadrumo/locales/hu/modelo/schema/131.yml` — 31,985 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:306
+msgid "`src/cadrumo/locales/hu/modelo/schema/136.yml` — 3,224 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:307
+msgid "`src/cadrumo/locales/hu/modelo/schema/140.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:308
+msgid "`src/cadrumo/locales/hu/modelo/schema/143.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:309
+msgid "`src/cadrumo/locales/hu/modelo/schema/145.yml` — 9,365 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:310
+msgid "`src/cadrumo/locales/hu/modelo/schema/151.yml` — 142,189 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:311
+msgid "`src/cadrumo/locales/hu/modelo/schema/156.yml` — 3,279 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:312
+msgid "`src/cadrumo/locales/hu/modelo/schema/165.yml` — 2,614 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:313
+msgid "`src/cadrumo/locales/hu/modelo/schema/179.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:314
+msgid "`src/cadrumo/locales/hu/modelo/schema/180.yml` — 4,075 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:315
+msgid "`src/cadrumo/locales/hu/modelo/schema/181.yml` — 4,730 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:316
+msgid "`src/cadrumo/locales/hu/modelo/schema/182.yml` — 2,074 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:317
+msgid "`src/cadrumo/locales/hu/modelo/schema/184.yml` — 30,386 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:318
+msgid "`src/cadrumo/locales/hu/modelo/schema/185.yml` — 5,497 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:319
+msgid "`src/cadrumo/locales/hu/modelo/schema/186.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:320
+msgid "`src/cadrumo/locales/hu/modelo/schema/187.yml` — 1,680 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:321
+msgid "`src/cadrumo/locales/hu/modelo/schema/188.yml` — 2,418 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:322
+msgid "`src/cadrumo/locales/hu/modelo/schema/189.yml` — 3,045 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:323
+msgid "`src/cadrumo/locales/hu/modelo/schema/190.yml` — 33,013 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:324
+msgid "`src/cadrumo/locales/hu/modelo/schema/193.yml` — 22,541 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:325
+msgid "`src/cadrumo/locales/hu/modelo/schema/194.yml` — 2,399 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:326
+msgid "`src/cadrumo/locales/hu/modelo/schema/200.yml` — 1,070,947 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:327
+msgid "`src/cadrumo/locales/hu/modelo/schema/202.yml` — 15,086 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:328
+msgid "`src/cadrumo/locales/hu/modelo/schema/210.yml` — 8,542 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:329
+msgid "`src/cadrumo/locales/hu/modelo/schema/216.yml` — 3,942 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:330
+msgid "`src/cadrumo/locales/hu/modelo/schema/220.yml` — 575,970 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:331
+msgid "`src/cadrumo/locales/hu/modelo/schema/222.yml` — 27,208 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:332
+msgid "`src/cadrumo/locales/hu/modelo/schema/231.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:333
+msgid "`src/cadrumo/locales/hu/modelo/schema/232.yml` — 47,104 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:334
+msgid "`src/cadrumo/locales/hu/modelo/schema/233.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:335
+msgid "`src/cadrumo/locales/hu/modelo/schema/234.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:336
+msgid "`src/cadrumo/locales/hu/modelo/schema/238.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:337
+msgid "`src/cadrumo/locales/hu/modelo/schema/270.yml` — 9,301 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:338
+msgid "`src/cadrumo/locales/hu/modelo/schema/280.yml` — 3,043 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:339
+msgid "`src/cadrumo/locales/hu/modelo/schema/289.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:340
+msgid "`src/cadrumo/locales/hu/modelo/schema/296.yml` — 1,904 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:341
+msgid "`src/cadrumo/locales/hu/modelo/schema/303.yml` — 68,307 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:342
+msgid "`src/cadrumo/locales/hu/modelo/schema/308.yml` — 9,983 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:343
+msgid "`src/cadrumo/locales/hu/modelo/schema/309.yml` — 39,366 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:344
+msgid "`src/cadrumo/locales/hu/modelo/schema/322.yml` — 86,991 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:345
+msgid "`src/cadrumo/locales/hu/modelo/schema/341.yml` — 2,006 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:346
+msgid "`src/cadrumo/locales/hu/modelo/schema/345.yml` — 4,282 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:347
+msgid "`src/cadrumo/locales/hu/modelo/schema/347.yml` — 13,130 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:348
+msgid "`src/cadrumo/locales/hu/modelo/schema/349.yml` — 4,630 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:349
+msgid "`src/cadrumo/locales/hu/modelo/schema/353.yml` — 18,944 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:350
+msgid "`src/cadrumo/locales/hu/modelo/schema/360.yml` — 48,361 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:351
+msgid "`src/cadrumo/locales/hu/modelo/schema/361.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:352
+msgid "`src/cadrumo/locales/hu/modelo/schema/369.yml` — 400,477 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:353
+msgid "`src/cadrumo/locales/hu/modelo/schema/379.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:354
+msgid "`src/cadrumo/locales/hu/modelo/schema/380.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:355
+msgid "`src/cadrumo/locales/hu/modelo/schema/390.yml` — 343,061 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:356
+msgid "`src/cadrumo/locales/hu/modelo/schema/490.yml` — 69,968 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:357
+msgid "`src/cadrumo/locales/hu/modelo/schema/576.yml` — 5,665 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:358
+msgid "`src/cadrumo/locales/hu/modelo/schema/592.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:359
+msgid "`src/cadrumo/locales/hu/modelo/schema/604.yml` — 11,803 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:360
+msgid "`src/cadrumo/locales/hu/modelo/schema/714.yml` — 261,651 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:361
+msgid "`src/cadrumo/locales/hu/modelo/schema/720.yml` — 3,819 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:362
+msgid "`src/cadrumo/locales/hu/modelo/schema/721.yml` — 1,748 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:363
+msgid "`src/cadrumo/locales/hu/modelo/schema/763.yml` — 1,160 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:364
+msgid "`src/cadrumo/locales/hu/modelo/schema/840.yml` — 17,236 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:365
+msgid "`src/cadrumo/locales/hu/modelo/schema/848.yml` — 3 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:366
+msgid "`src/cadrumo/locales/hu/profile.yml` — 37,452 bytes"
+msgstr ""
+
+#: ../../technical/articles/206-localized-interface-and-model-schema-labels.md:367
+msgid "`src/cadrumo/locales/hu/wizard.yml` — 53,615 bytes"
+msgstr ""

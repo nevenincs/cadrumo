@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:c3df6d1048b25185621e8ae4443d592b3c6c1cd67f4ea9c4acc407cc8bb9ccf7'
+body_hash: 'sha256:3286fc52a75ef6e42695fe3cbfae190d17e33ad0e9335ace63b9a35f43bc6ae1'
 related: []
 ---
 
@@ -20,8 +20,8 @@ The user-facing no-active-profile remediation now uses `tr("adapters.google.prof
 
 Validation:
 
-- the focused test run passed with 6 tests.
-- the focused test run passed.
+- the historical check passed with 6 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Source scan found no storage repository constructors, provider selection, SQL route setup, naked environment reads, settings bypass, or direct local file read/write calls in `_profile_binding.py`.
 
@@ -36,4 +36,4 @@ Resolution: the missing `create_profile` leaf now exists under `adapters.google.
 Validation:
 
 - `uv run --no-sync -q python -m aeat.locales audit` now reports `ca.yml: ok`, `en.yml: ok`, `es.yml: ok`, and `hu.yml: ok`.
-- the focused test run passed.
+- the historical check passed.

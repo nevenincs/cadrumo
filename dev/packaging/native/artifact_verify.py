@@ -1,0 +1,87 @@
+"""Verify the ZIP artifact, including relocation, product imports and binary overrides."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import zipfile
+from pathlib import Path
+
+from dev._paths import REPO_ROOT
+
+from ..command_execution import run_command
+from .cmake_build import reset
+from .layout import backend, load_layout
+from .verify import verify
+
+
+def check(build: Path, configuration: str) -> None:
+    """Extract a fresh artifact and test the shipped interpreter, not the development venv."""
+    build = build.resolve(strict=True)
+    artifacts = json.loads((build / f"artifacts-{configuration}.json").read_text(encoding="utf-8"))
+    destination = reset(build, f"verification/{configuration}")
+    extracted = destination / "ZIP espacio á 漢字"
+    extracted.mkdir(parents=True)
+    with zipfile.ZipFile(artifacts["archive"]) as archive:
+        for member in archive.namelist():
+            if not (extracted / member).resolve().is_relative_to(extracted):
+                raise ValueError("Archive path escapes extraction root")
+        archive.extractall(extracted)
+    roots = list(extracted.iterdir())
+    if len(roots) != 1 or not roots[0].is_dir():
+        raise ValueError("ZIP must contain one named application root")
+    package = roots[0]
+    external = destination / "external-bin"
+    external.mkdir()
+    contract = load_layout()
+    probe = backend(contract).external_probe(external)
+    environment = dict(os.environ)
+    environment.update(CADRUMO_LOCAL_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
+    manifest_path = package / contract["files"]["package_manifest"]
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    development = package / manifest["layout"]["files"]["development_executable"]
+    if development.exists() != bool(artifacts["development_binary"]):
+        raise AssertionError("Development binary inclusion does not match configuration")
+    executables = [package / manifest["layout"]["paths"]["executable"]]
+    if development.exists():
+        executables.append(development)
+    for executable in executables:
+        for arguments in (
+            ["--version"],
+            ["--check-package"],
+            [
+                "-c",
+                f"import sys; sys.exit(bool(sys.cadrumo_build['development']) != {executable == development!r})",
+            ],
+            [str(REPO_ROOT / "native/tests/package_smoke.py"), str(package), str(manifest_path)],
+            [
+                "-c",
+                f"import subprocess; subprocess.run({probe!r},check=True,capture_output=True)",
+            ],
+        ):
+            result = run_command(
+                [str(executable), *arguments], cwd=destination, environment=environment, timeout_seconds=120
+            )
+            if result.returncode:
+                raise AssertionError(result.stdout + result.stderr)
+            if arguments == ["--version"]:
+                for key in ("version", "build_number", "build_date"):
+                    if str(manifest["build"][key]) not in result.stdout:
+                        raise AssertionError(f"Missing interpreter banner metadata: {key}")
+    verify(package, destination=Path("acceptance"), product=True, build_root=destination)
+    (destination / "result.json").write_text(
+        json.dumps(
+            {"archive": artifacts["archive"], "interpreters": [p.name for p in executables], "passed": True}, indent=2
+        ),
+        encoding="utf-8",
+    )
+    print(f"Verified ZIP: {artifacts['archive']}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--config", choices=("Debug", "Release"), required=True)
+    args = parser.parse_args()
+    check(args.build, args.config)

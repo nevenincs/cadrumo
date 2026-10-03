@@ -35,11 +35,12 @@ from typing import NamedTuple, override
 
 import pytest
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
 from .. import package_index_probe
-from ..version_identity import PYPI_PROJECTS, VersionIdentityError, pypi_projects_owning
+from ..version_identity import VersionIdentityError, pypi_projects_owning
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -97,7 +98,7 @@ def test_an_answer_that_is_not_404_is_read_as_carried() -> None:
     separates them cannot be inverted with both still passing.
     """
     with _index_answering(200) as origin:
-        assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == PYPI_PROJECTS
+        assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == PRODUCT_IDENTITY.cohort_distributions
 
 
 def test_https_ownership_probe_reads_one_byte_with_its_explicit_transport_policy(

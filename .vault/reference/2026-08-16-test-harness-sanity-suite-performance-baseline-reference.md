@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:04f799555231063fc8268ffc5ebc97622c9f0b1ed78564de17ccaea9b0402ebe'
+body_hash: 'sha256:35396638a60c7802ed967a4818da753bf76ecf964c04e9f929f9040e2cd27672'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
 ---
@@ -50,8 +50,6 @@ Full `src/cadrumo` run, 6 workers, `--dist=loadfile`, quiet box:
                    in-process ~2,097s (the other 71.8%)
 
 Slowest files (the ranking a `--durations` run should reproduce):
-
-
 
 Other roots: `src/cadrumo-harness` ~93s after the descriptor memo (was 143s);
 `dev` ~1,840s; `dev/packaging/tests/test_installed_oracles.py` ~244s.

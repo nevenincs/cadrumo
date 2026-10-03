@@ -11,12 +11,12 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 from dev.docs.build_paths import docs_html_root
 from dev.packaging.command_execution import CommandResult, run_command
 
-from .docs_delivery_contracts import _UTF_8
 from .docs_site_commands import _command_label
 from .docs_site_languages import (
     _language_build_environments,
@@ -63,7 +63,7 @@ def _write_apex_sitemap(html_root: Path) -> Path:
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         f"{sitemaps}</sitemapindex>\n",
-        encoding=_UTF_8,
+        encoding=UTF_8,
         newline="\n",
     )
     return path

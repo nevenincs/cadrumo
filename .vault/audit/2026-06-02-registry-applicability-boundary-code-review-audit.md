@@ -4,7 +4,7 @@ tags:
   - '#registry-applicability-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:c6f760aaa74c07bf6fc4695cac6947f0750353c7fe6211ab50a6fc35278ae2cb'
+body_hash: 'sha256:0be42bed7a1f9f0dfd6c8d757eb5d06de2de5380e42f3ea91c92a09820b2a077'
 related:
   - "[[2026-06-02-registry-applicability-boundary-audit]]"
 ---
@@ -27,6 +27,6 @@ the rule table without an ADR and canonical-test change.
 ## APPLICABILITY-S23-003 | PASS | Public facade compatibility is preserved
 
 No issue found. The recommendation preserves both
-`aeat.domain.calculations.registry` 
-`aeat.domain.calculations.registry.applicability` public surfaces, 
+`aeat.domain.calculations.registry`
+`aeat.domain.calculations.registry.applicability` public surfaces,
 sets focused tests for future extraction commits.

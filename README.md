@@ -84,11 +84,11 @@ The CLI, terminal workbench, and MCP integration use the same local runtime and 
 
 ## Technical documentation
 
-For the internals, start with the [technical overview and architecture](technical/README.md). The collection connects subsystem explanations to detailed source-analysis articles, preserving their findings and review limits. It is separate from the user guides.
+For the internals, start with the [technical overview and architecture](docs/technical/architecture.md). The collection connects subsystem explanations to detailed source-analysis articles, preserving their findings and review limits. It is separate from the user guides.
 
-- [Subsystem topics](technical/README.md#topics) and [detailed articles](technical/articles/README.md)
-- [Security and trust boundaries](technical/assessments/security-and-trust-boundaries.md)
-- [Implementation assessment](technical/assessments/implementation-assessment.md) and [snapshot scope](technical/reading-guide.md)
+- [Subsystem topics](docs/technical/architecture.md#topics) and [detailed articles](docs/technical/articles/catalogue.md)
+- [Security and trust boundaries](docs/technical/assessments/security-and-trust-boundaries.md)
+- [Implementation assessment](docs/technical/assessments/implementation-assessment.md) and [snapshot scope](docs/technical/reading-guide.md)
 - [Contributing guide](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md) and [security policy](SECURITY.md)
 

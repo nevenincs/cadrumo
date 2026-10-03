@@ -1,0 +1,428 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:1
+msgid "Durable operation execution, access and public projections"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:7
+msgid ""
+"**Report:** `STAGE-2-089` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:10
+msgid ""
+"**Scope:** 22 files under `src/cadrumo/application/operations`, totaling "
+"5,692 lines, 241,983 bytes and 46,281 measured `o200k_base` proxy tokens."
+" All nine bounded-reader pages were read sequentially. Static inspection "
+"only; no application execution or tests were run."
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacidades y mecanismos"
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:14
+msgid ""
+"This chunk implements the application-level operation lifecycle from "
+"admission through execution, review, result projection, settlement and "
+"restart recovery. Submission validates the exact registered request type,"
+" resolves the definition contract, checks optional host authority and "
+"binds optional admission provenance to the same invocation. Requests "
+"either go to the secure reference store or are persisted as credential-"
+"free JSON with a content digest. An idempotency claim and conflict-scope "
+"lease prevent duplicate admissions; the operation snapshot is journaled "
+"as `CREATED` before `submit` returns. If journal creation fails, the "
+"exact acquired lease is released. Submission and authorization "
+"(`src/cadrumo/application/operations/_supervisor_submission.py`), request"
+" storage and durable admission "
+"(`src/cadrumo/application/operations/_supervisor_submission.py`), lease "
+"and idempotency behavior "
+"(`src/cadrumo/application/operations/_supervisor_lease.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:16
+msgid ""
+"`start` accepts only a created snapshot whose definition-contract digest "
+"still matches the live registry. It checks execution and cleanup deadline"
+" configuration, enforces any exact live ephemeral-secret requirement, "
+"resolves the stored request, rechecks START authority, and durably moves "
+"the snapshot to RUNNING before scheduling the executor under supervision."
+" Authority is checked again at actual coroutine entry. Executor results "
+"settle as success only when they are valid references; declared refusal "
+"evidence is validated against the public registration; a stopped executor"
+" returning no result fails unless another durable "
+"interaction/cancellation/terminal path will settle it. Start and task "
+"admission "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`), "
+"authority at task entry "
+"(`src/cadrumo/application/operations/authorization.py`), result and "
+"failure settlement "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`), "
+"returned-result classification "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:18
+msgid ""
+"While running, the supervisor renews an exact durable owner lease by "
+"compare-and-swap. A cancellation request is persisted with a cleanup "
+"deadline; the executor can acknowledge only after a request and outside "
+"an irreversible section. `irreversible_section()` serializes concurrent "
+"entry, checks cancellation before entry, takes the optional authority "
+"owner's commit guard, and records cancellation deferral until exit. "
+"Cleanup must finish before a terminal receipt and lease release are "
+"committed together. If cleanup reaches its deadline, the operation "
+"remains unsettled in `SETTLING`; cancellation is not falsely reported as "
+"complete. Irreversible-section controls "
+"(`src/cadrumo/application/operations/_execution_context.py`), durable "
+"cancellation and acknowledgement "
+"(`src/cadrumo/application/operations/_supervisor_settlement.py`), cleanup"
+" and terminal commit "
+"(`src/cadrumo/application/operations/_supervisor_settlement.py`), cleanup"
+" deadline and stop proof "
+"(`src/cadrumo/application/operations/_supervisor_settlement.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:20
+msgid ""
+"On restart, reconciliation observes the conflict lease and either refuses"
+" an active owner, acquires/takes over absent or expired ownership, or "
+"classifies the operation as resumed, recovered, interrupted or orphaned. "
+"A checkpoint resumes only when the declared policy allows it, the "
+"pending/consumed interaction matches the snapshot and definition, and the"
+" executor structurally implements the resumable interface. Where the host"
+" authority is enabled, RESUME is checked before reentry. A path with no "
+"valid checkpoint is interrupted; if it might have produced effects, the "
+"receipt retains `UNKNOWN` effect. Reconciliation and resume "
+"(`src/cadrumo/application/operations/_supervisor_reconciliation.py`), "
+"checkpoint validity and execution "
+"(`src/cadrumo/application/operations/_supervisor_reconciliation.py`), "
+"interruption receipt "
+"(`src/cadrumo/application/operations/_supervisor_reconciliation.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:22
+msgid ""
+"The projection readers separate safe public REVIEW data, workspace-"
+"refresh targets, and terminal results. Each checks request version, "
+"durable lifecycle/revision, current definition digest and exact "
+"registered schema identity. REVIEW additionally checks pending "
+"interaction identity, expiry, response schema and contract, resolves the "
+"private reviewed operand, requires the projector to return the registered"
+" model class, then validates a fresh model before return. Refresh "
+"requires an exact successful terminal receipt and its registered adapter."
+" Result reads permit successful results or declared refusal detail, "
+"resolve private operands, and keep refusal explanation separate from "
+"business result semantics. Failures map to typed public refusals rather "
+"than leaking raw exceptions. Review projection "
+"(`src/cadrumo/application/operations/_projection_read.py`), refresh "
+"target checks (`src/cadrumo/application/operations/_projection_read.py`),"
+" terminal result projection "
+"(`src/cadrumo/application/operations/_projection_read.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:24
+msgid ""
+"Response control uses a process-local broker to reserve an opaque actor-"
+"bound capability, attach the response token only after a digest-bound "
+"REVIEW checkpoint exists, inspect allowed APPLY/REJECT intents, and "
+"transfer a matching unexpired bearer to the secure response authority. "
+"Exact operation, interaction, revision, actor, pending checkpoint, "
+"proposal digest and expiry coordinates are compared. The mutable token "
+"buffer is zeroized on rejected issue, transfer cleanup and shutdown. "
+"Cancellation and detachment similarly verify supported version, current "
+"revision, live contract, cancellation policy and detach policy before "
+"invoking the supervisor. Response bearer binding and transfer "
+"(`src/cadrumo/application/operations/_projection_authority.py`), "
+"versioned response/cancel/detach gates "
+"(`src/cadrumo/application/operations/_projection_control.py`), "
+"cancellation authorization "
+"(`src/cadrumo/application/operations/_projection_control.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:26
+msgid "Knowledge, security, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:28
+msgid ""
+"The public registry contract is a digest over definition identity, schema"
+" identities and declared policy axes. Registration must bind exactly the "
+"schemas named by the manifest, match request/result types, provide the "
+"required result/review/refresh projectors, and reproduce a live fixed "
+"point from the operation definition. Projector and adapter signatures "
+"must be synchronous with exact positional arity. A recursive model-graph "
+"checker rejects lax or mutable Pydantic model shapes, mutable "
+"annotations, custom schema hooks, schema serializers, coercive "
+"validators, private/computed fields and unvalidated defaults. Contract "
+"and registration checks "
+"(`src/cadrumo/application/operations/_registry_contracts.py`), live fixed"
+" point (`src/cadrumo/application/operations/_registry_contracts.py`), "
+"strict immutable model graph "
+"(`src/cadrumo/application/operations/_model_contract.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:30
+msgid ""
+"The access resolver combines host-supplied profile, destination, "
+"frontend, action, contract and authority with a registered operation "
+"resolver. It requires the resolver to return those same coordinates and "
+"contract digest. A replayed operation must come from its original "
+"destination/frontend and satisfy its period scope; otherwise current held"
+" authority is required. OBSERVE/CANCEL/DETACH disclose operation "
+"metadata, RESULT discloses only the registered result schema and declared"
+" categories, and other actions disclose nothing. Named profiles encode "
+"permitted actions, disclosure categories, period scope, schema pinning "
+"and human requirement. The host rechecks authority on submit, start and "
+"resume, and may hold a commit guard across an irreversible effect. "
+"Admission replay and disclosure policy "
+"(`src/cadrumo/application/operations/access_resolution.py`), named access"
+" profiles (`src/cadrumo/application/operations/access_resolution.py`), "
+"live registration and host-coordinate match "
+"(`src/cadrumo/application/operations/access_resolution.py`), execution-"
+"authority contract "
+"(`src/cadrumo/application/operations/authorization.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:32
+msgid ""
+"The operation host treats credentials and operands as separate custody "
+"concerns. Ephemeral secrets are accepted only for the exact durable "
+"requirement, never serialized or digested here, and the caller's mutable "
+"buffer is zeroized on every exception. Transient financial operand "
+"amounts are delivered to a running invocation without journal "
+"serialization. Executor exceptions are not persisted with their messages,"
+" arguments, traceback, URL or path; the receipt carries a registered code"
+" or safe correlation reference, and optional bounded public details are "
+"stored separately through the secure operand store. Secret submission "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`), safe "
+"failure receipt "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`), "
+"transient financial input "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:34
+msgid ""
+"Public mirrors convert canonical models and dataclasses to an explicit "
+"scalar/tuple form, check the field inventory and allowed omissions, and "
+"restore typed values with strict decimal canonicalization. Contract "
+"registration and response/result projection validate models again at the "
+"release boundary. Drain stops new admissions, closes ephemeral-secret "
+"custody, gives tracked settlement and cleanup tasks one finite monotonic "
+"window, cancels remaining local tasks, and reports unresolved operations "
+"and those needing recovery. Its own documentation correctly assigns "
+"process/descendant containment to the caller. Public projection and "
+"inventory "
+"(`src/cadrumo/application/operations/_public_mirror_projection.py`), "
+"restoration and decimal checks "
+"(`src/cadrumo/application/operations/_public_mirror_restoration.py`), "
+"bounded shutdown accounting "
+"(`src/cadrumo/application/operations/_supervisor_drain.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:36
+msgid ""
+"The main strengths are explicit lifecycle durability, stale-revision "
+"refusal, contract pinning, exact lease CAS, encrypted-reference "
+"boundaries, typed public refusal, and cleanup-before-terminal ordering. "
+"One important operational limitation is local: the drain can report and "
+"cancel tracked tasks but cannot prove that subprocesses or external side "
+"effects stopped. Storage encryption, cross-process lease correctness, "
+"idempotency durability, authority implementation and real executor "
+"recovery depend on modules outside this chunk. The code catches broad "
+"`Exception` at public projection boundaries and turns it into a stable "
+"refusal, which contains detail but makes diagnosis dependent on the "
+"separate diagnostic/error-detail channels. No tests are included in the "
+"assigned files, so none of these behaviors are runtime-verified here."
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:38
+msgid "Dependencies and follow-up"
+msgstr "Dependencias y seguimiento"
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:40
+msgid ""
+"Synthesis should trace the journal, lease store, encrypted reference "
+"store, response-authority service, profile policy evaluator and concrete "
+"operation resolvers. Confirm that `commit_guard` and owner checks cover "
+"every effectful operation, that status changes after timeouts remain "
+"discoverable, and that process restarts zeroize or invalidate in-memory "
+"bearer state. Review the frontend/controller layer for exact use of the "
+"public mirror and typed refusals. This chunk contains no direct external "
+"network submission; domain operations may depend on separate "
+"integrations."
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:44
+msgid ""
+"All 22 assigned files were read completely through pages 1–9; no portions"
+" were unread."
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:46
+msgid "__init__.py (`src/cadrumo/application/operations/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:47
+msgid ""
+"_dataclass_fields.py "
+"(`src/cadrumo/application/operations/_dataclass_fields.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:48
+msgid ""
+"_execution_context.py "
+"(`src/cadrumo/application/operations/_execution_context.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:49
+msgid ""
+"_model_contract.py "
+"(`src/cadrumo/application/operations/_model_contract.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:50
+msgid ""
+"_projection_authority.py "
+"(`src/cadrumo/application/operations/_projection_authority.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:51
+msgid ""
+"_projection_control.py "
+"(`src/cadrumo/application/operations/_projection_control.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:52
+msgid ""
+"_projection_read.py "
+"(`src/cadrumo/application/operations/_projection_read.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:53
+msgid ""
+"_public_mirror_projection.py "
+"(`src/cadrumo/application/operations/_public_mirror_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:54
+msgid ""
+"_public_mirror_restoration.py "
+"(`src/cadrumo/application/operations/_public_mirror_restoration.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:55
+msgid ""
+"_registry_contracts.py "
+"(`src/cadrumo/application/operations/_registry_contracts.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:56
+msgid ""
+"_supervisor_drain.py "
+"(`src/cadrumo/application/operations/_supervisor_drain.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:57
+msgid ""
+"_supervisor_execution.py "
+"(`src/cadrumo/application/operations/_supervisor_execution.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:58
+msgid ""
+"_supervisor_host.py "
+"(`src/cadrumo/application/operations/_supervisor_host.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:59
+msgid ""
+"_supervisor_lease.py "
+"(`src/cadrumo/application/operations/_supervisor_lease.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:60
+msgid ""
+"_supervisor_reconciliation.py "
+"(`src/cadrumo/application/operations/_supervisor_reconciliation.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:61
+msgid ""
+"_supervisor_refusal.py "
+"(`src/cadrumo/application/operations/_supervisor_refusal.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:62
+msgid ""
+"_supervisor_settlement.py "
+"(`src/cadrumo/application/operations/_supervisor_settlement.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:63
+msgid ""
+"_supervisor_snapshot.py "
+"(`src/cadrumo/application/operations/_supervisor_snapshot.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:64
+msgid ""
+"_supervisor_submission.py "
+"(`src/cadrumo/application/operations/_supervisor_submission.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:65
+msgid "access_port.py (`src/cadrumo/application/operations/access_port.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:66
+msgid ""
+"access_resolution.py "
+"(`src/cadrumo/application/operations/access_resolution.py`)"
+msgstr ""
+
+#: ../../technical/articles/089-durable-operation-execution-access-and-public-projections.md:67
+msgid "authorization.py (`src/cadrumo/application/operations/authorization.py`)"
+msgstr ""

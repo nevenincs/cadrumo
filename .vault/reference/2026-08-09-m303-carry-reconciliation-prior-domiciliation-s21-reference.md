@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f3810f136c2173fa416d93083617bb1b30e943ac91748b60e875c35aa2a760e'
+body_hash: 'sha256:22c40a4a5b56f8b9a1dba5acae672878d898c1228d26cd4ac3df5e8777853690'
 related:
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
 ---
@@ -23,8 +23,6 @@ S21 models the page-three marker as the distinct `PriorDomiciliationElection` ax
 The S21 surface deliberately exposes the typed election needed by S19 but does not implement the S19 Nota-3 DID predicate. No election carries an IBAN, rendered header, or other account material.
 
 ## Baseline-U evidence chain
-
-
 
 1. Read `CalculationRevision.amends_filing_record_id` as the explicit baseline link.
 2. Require an accepted, externally evidenced baseline `ModeloRecord` with the same bucket, modelo, year, and period as the rectificativa. The baseline may already be superseded.

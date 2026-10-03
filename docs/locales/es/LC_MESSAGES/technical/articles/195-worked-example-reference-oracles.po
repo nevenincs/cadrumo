@@ -1,0 +1,341 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:1
+msgid "Worked-example reference oracles"
+msgstr "Oráculos de referencia de ejemplos resueltos"
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:7
+msgid ""
+"**Report:** `STAGE-2-195` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:10
+msgid "Scope and inventory"
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:12
+msgid ""
+"This chunk contains 22 small JSON files totaling 56,425 bytes. I parsed "
+"every file's structure for inventory counts and sampled scenario notes, "
+"input locators, and expected outputs across the main model families. The "
+"inventory is strongly IRPF-weighted: 13 Modelo 100 cases across 2020, "
+"2021, 2022, and 2024; two Modelo 303 cases; two Modelo 322 cases; and one"
+" each for IVA place-of-supply, Modelo 200, Modelo 202, Modelo 353, and "
+"Modelo 390. In total, the files describe 85 expected values keyed to "
+"casillas or categorical outcomes. Twelve cases include declared input "
+"maps; most expected values are string-encoded decimal amounts."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:14
+msgid ""
+"The corpus is a reference-oracle layer: entries identify a worked AEAT "
+"manual or other source, often with page/line locators, scenario notes, "
+"declared inputs, and expected casilla values. It can support "
+"regression/evaluation comparisons and make the evidence behind a case "
+"inspectable. It does not itself calculate a return, validate a case, or "
+"establish that a locator, interpretation, or output is correct. The notes"
+" in some fixtures describe linked tests and formula chains, but those "
+"claims were not executed or independently checked in this static pass."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:16
+msgid "Sampled scenario coverage"
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:18
+msgid ""
+"The sampled IVA place-of-supply example is deliberately not a casilla "
+"fixture: it records a categorical Spanish mainland-to-France B2B goods "
+"scenario, a location conclusion, an intra-community supply category, and "
+"two legal-reference fields. The filename and note explicitly separate it "
+"from the model/casilla oracle loader. This distinction is useful because "
+"it separates transaction classification evidence from calculated return "
+"amounts. See the place-of-supply example "
+"(`src/cadrumo/_data/corpus/manual_oracles/iva-2025-lugar-realizacion-"
+"entrega-intracomunitaria.json`)."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:20
+msgid ""
+"The Modelo 100 cases cover income from professional activity, employment-"
+"dismissal treatment, regional and family-minimum examples, property "
+"income, and capital gains. In one sampled 2024 simplified-direct-"
+"estimation case, `declared_inputs.by_casilla_id` and per-casilla evidence"
+" locators are mapped separately from the expected totals (casillas 0180 "
+"and 0226). A separate Asturias descendant-minimum example expects "
+"0513/0514 at 4,550 each and its note explicitly excludes an unrelated "
+"extracted-table discrepancy. These are helpful controls for source-"
+"grounded test data, but the scenario coverage is not a complete "
+"representation of IRPF fact patterns or regions. See the 2024 activity "
+"example (`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024"
+"-estimacion-directa-simplificada.json`) and descendant-minimum example "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-minimo-"
+"descendientes-prorrateo-asturias.json`)."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:22
+msgid ""
+"The sampled corporate-tax case links its source to a 2024 Sociedad manual"
+" and names the minimum-taxation example; the 2025 Modelo 202 question is "
+"sourced to the manual's installment-payment example. On IVA, the 2024 "
+"Modelo 303 oracle covers a combination of general regime, equivalence "
+"surcharge, intra-community acquisition and importation, while the 2025 "
+"prorrata case separates supplied annual-volume inputs from a computed "
+"percentage expectation. Those distinctions help a test harness avoid "
+"grading manual inputs as though they were outputs. See Modelo 200 "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-200-2024-ejemplo1"
+"-tributacion-minima-empresa-grande.json`), Modelo 202 "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-202-2025-primer-pago-"
+"modalidad-40-2.json`), Modelo 303 general regime "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-303-2024-regimen-"
+"general-recargo-intracomunitaria-importacion.json`), and Modelo 303 "
+"prorrata (`src/cadrumo/_data/corpus/manual_oracles/modelo-303-2025"
+"-prorrata-general-regularizacion.json`)."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:24
+msgid ""
+"The group and annual IVA samples form a connected story: one Modelo 322 "
+"example is for the dominant entity, another is the dependent entity; the "
+"353 fixture records a group aggregate; and the 390 fixture grounds annual"
+" totals in four 2024 quarterly totals. This is a useful but narrow slice "
+"of the cross-model relationships. It should not be generalized to all "
+"member roster configurations, periods, or registry revisions. See Modelo "
+"322 dominant entity "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-322-2024-grupo-"
+"entidades-omega.json`), Modelo 322 dependent entity "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-322-2024-grupo-"
+"entidades-delta.json`), Modelo 353 aggregate "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-353-2024-grupo-"
+"entidades-agregado.json`), and Modelo 390 annual summary "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-390-2024-resumen-anual-"
+"cuatro-trimestres.json`)."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:26
+msgid "Quality, trust, and limitations"
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:28
+msgid ""
+"The explicit distinction between source locators, declared inputs, and "
+"expected outputs is a good test-data design choice. Verbose notes "
+"sometimes describe what was intentionally excluded or how an example was "
+"chosen; those notes are themselves data and are not an independent legal "
+"review. The strongest coverage gap is distribution: Modelo 100 has 13 "
+"scenarios while every other model has one or two. Most fixtures represent"
+" historical years, and the group examples use one illustrative group. "
+"Treat them as regression anchors for those cited worked examples, not as "
+"current filing instructions or a broad legal oracle."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:30
+msgid ""
+"The JSON is declarative and contains no execution logic. No credentials "
+"or taxpayer records are evident; some worked examples use illustrative "
+"persons/entities and amounts. Security risk is low for static "
+"consumption, though consumers should still validate untrusted/modified "
+"JSON against a schema before using expected values in automated gates. No"
+" application was run and no code was changed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:32
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:34
+msgid ""
+"iva-2025-lugar-realizacion-entrega-intracomunitaria.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/iva-2025-lugar-realizacion-"
+"entrega-intracomunitaria.json`) — 2,287 bytes; parsed and sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:35
+msgid ""
+"modelo-100-2020-estimacion-directa-simplificada.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2020-estimacion-"
+"directa-simplificada.json`) — 3,291 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:36
+msgid ""
+"modelo-100-2020-rendimientos-trabajo-despido-improcedente.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2020-rendimientos-"
+"trabajo-despido-improcedente.json`) — 1,936 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:37
+msgid ""
+"modelo-100-2021-cuotas-integras-escala-aragon.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2021-cuotas-"
+"integras-escala-aragon.json`) — 2,532 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:38
+msgid ""
+"modelo-100-2022-cuotas-integras-escala-aragon.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2022-cuotas-"
+"integras-escala-aragon.json`) — 2,041 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:39
+msgid ""
+"modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-"
+"tensionada.json (`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024"
+"-capital-inmobiliario-arrendamiento-vivienda-tensionada.json`) — 1,984 "
+"bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:40
+msgid ""
+"modelo-100-2024-cuotas-integras-escala-aragon.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-cuotas-"
+"integras-escala-aragon.json`) — 2,552 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:41
+msgid ""
+"modelo-100-2024-estimacion-directa-simplificada.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-estimacion-"
+"directa-simplificada.json`) — 4,383 bytes; sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:42
+msgid ""
+"modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-ganancias-"
+"patrimoniales-transmision-inmueble.json`) — 2,311 bytes; inventory-"
+"parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:43
+msgid ""
+"modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-integracion-"
+"compensacion-ganancias-patrimoniales.json`) — 2,492 bytes; inventory-"
+"parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:44
+msgid ""
+"modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-minimo-"
+"descendientes-adopcion-mayor-de-tres-rioja.json`) — 2,150 bytes; "
+"inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:45
+msgid ""
+"modelo-100-2024-minimo-descendientes-declaracion-propia-valenciana.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-minimo-"
+"descendientes-declaracion-propia-valenciana.json`) — 2,905 bytes; "
+"inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:46
+msgid ""
+"modelo-100-2024-minimo-descendientes-prorrateo-asturias.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-minimo-"
+"descendientes-prorrateo-asturias.json`) — 2,965 bytes; sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:47
+msgid ""
+"modelo-100-2024-rendimientos-trabajo-despido-improcedente.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-100-2024-rendimientos-"
+"trabajo-despido-improcedente.json`) — 1,811 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:48
+msgid ""
+"modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-200-2024-ejemplo1"
+"-tributacion-minima-empresa-grande.json`) — 3,412 bytes; sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:49
+msgid ""
+"modelo-202-2025-primer-pago-modalidad-40-2.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-202-2025-primer-pago-"
+"modalidad-40-2.json`) — 2,493 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:50
+msgid ""
+"modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json"
+" (`src/cadrumo/_data/corpus/manual_oracles/modelo-303-2024-regimen-"
+"general-recargo-intracomunitaria-importacion.json`) — 4,355 bytes; "
+"sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:51
+msgid ""
+"modelo-303-2025-prorrata-general-regularizacion.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-303-2025-prorrata-"
+"general-regularizacion.json`) — 3,486 bytes; sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:52
+msgid ""
+"modelo-322-2024-grupo-entidades-delta.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-322-2024-grupo-"
+"entidades-delta.json`) — 1,458 bytes; inventory-parsed."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:53
+msgid ""
+"modelo-322-2024-grupo-entidades-omega.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-322-2024-grupo-"
+"entidades-omega.json`) — 1,612 bytes; sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:54
+msgid ""
+"modelo-353-2024-grupo-entidades-agregado.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-353-2024-grupo-"
+"entidades-agregado.json`) — 1,638 bytes; sampled."
+msgstr ""
+
+#: ../../technical/articles/195-worked-example-reference-oracles.md:55
+msgid ""
+"modelo-390-2024-resumen-anual-cuatro-trimestres.json "
+"(`src/cadrumo/_data/corpus/manual_oracles/modelo-390-2024-resumen-anual-"
+"cuatro-trimestres.json`) — 2,331 bytes; sampled."
+msgstr ""

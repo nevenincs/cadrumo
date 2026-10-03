@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:891208d130721e2c4cb0deb65b9c53801ef32c5b5bf75b51f1ca4472bf03594d'
+body_hash: 'sha256:b3d18d1113463ab8107f7e8ee72d95285845457f98296f00553d9bee97f7bd03'
 related:
   - "[[2026-10-02-registry-health-repair-plan]]"
 ---
@@ -349,6 +349,8 @@ related:
 - `S24` `A` `dev/registry/pipeline/generated_export_inheritance_model.py`
 - `S24` `A` `dev/registry/pipeline/tests/test_generated_export_inheritance.py`
 - `S10` `verify:` `read-only canonical unreferenced_binding_advisories and informational_binding_ids census against compiled_bundled_authority` -> `pass`
+- `S10` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S10` `verify:` `vaultspec-core vault check all --feature registry-health-repair --limit 8 --json` -> `pass`
 
 ## Notes
 
@@ -408,3 +410,6 @@ related:
 - `S28` Original scoped receipts s28-locale-tests59PASS, s28-locale-final-tests16PASS after270/303 and s28-m151-final-test1PASS prove declared binding provenance, unknown-binding refusal, both collapse passes, shared131 title and actual151 multilingual resolution. Final-after-M151 audit exit0 has empty purity families and0 unresolved Spanish. Remaining fallback occurrences ca135/en18/hu9 are recorded per source key as valid identical spellings or identifiers, not fabricated zero-count coverage. Exactly8 M270 leaves removed without resolution changes;8 M303 case-only values changed22 inherited occurrences per locale;131 sharedtitle authored all4;151 displayedlabel authored en/hu one occurrence each. Independent extended S28 reviewer PASS; no binding-source or authority writes. Runtime adoption against retained-owner final authority remains separate S10. The earlier shell ledger command failed its local-settings Git-protection probe before append; actual read-only Git checks confirm .vaultspec/.env is ignored and untracked. This canonical ledger-owner call retains the original check evidence without changing settings.
 - `S24` Independent S24 review HIGH: attested-pair staging deleted all continuity-evolution declarations and checked layouts only. M1892025 has no such directory; no live189 write occurred. Owner removed deletion, refuses evolution-bearing pairs and now compares whole hydrated baseline+child source facts; corrected detectors/review pending. Initial3PASS was before that guard and does not close S24. Final root whole58/equivalence/minimality/secondnoop/currentness remain required.
 - `S10` Current diagnostic binding-owner-current-census.json observed2026-10-03T16:21:58Z with equal registry SHA before/after and interpreting inputs stable. Actual152 unreferenced bindings:232140,3474,3693,7205; earlier179 is superseded as a count. Informational non-calculation rows remain separately visible:1301,2023,2104,7207. Authority currency is stale: recorded75ba33ce100ba17333211a397963a1a627bdade002168114dacf89d8dec8714c versus candidate7c0078417c8be66888e37e30dd07e30d8f0d377c0943d70eaa06fbda01853da0. This is read-only current scope, not final publication or whole-run acceptance. Retained binding owner still owns binding declarations/consumers and final authority despite absent prior live plan/ledger;33tui-bb findings remain excluded. No source or authority writes by root.
+- `S24` Fresh post-2025 canonical assessment locates the five residual generated export repetitions in M189/2024, superseding earlier interim attribution to 2025. Exact recursively pinned ancestor-chain staging is within accepted keyed-delta criteria; pair-only staging is not a minimality waiver. Pushed live/current/form results are pending original receipt ingestion; final chain and whole-inventory acceptance remain open.
+- `S10` Actual normal-host static runtime-boundary suite: 8 passed in 15.97s, exit 0. Original receipt var/storage/development/.logs/test-runs/2026-10-03/20261003T163623.314792Z-pytest-65836-c96e63c2/run.json and run.log. This checks artifact-only consumption, reader census and shared year policy; it does not prove final published authority currency or installed runtime adoption. No source or publication mutation.
+- `S10` The preceding MCP invocation timed out after its 60-second verb budget. The real owning CLI then completed exit 0 with no errors and seven informational open-Step ledger notices. This is the actual console/tool receipt; no receipt file is invented. Final source/publication proofs and subsequent final metadata checks remain pending.

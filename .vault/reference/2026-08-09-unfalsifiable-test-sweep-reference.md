@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5f127a297907179a0e187eb7492cda32d7b25d5f6774004d759f2b2d5917378e'
+body_hash: 'sha256:27be89b3b8dd37d6bfc4c1799304dac5b28b8fdf14632fd30b6a0d3478ce229e'
 related: []
 ---
 
@@ -48,8 +48,6 @@ control. Four do not.**
 That is the useful reduction: the screen's own over-reporting is confirmed as
 over-reporting, and the worklist that actually needs reading is four modules
 rather than one hundred and sixty-nine.
-
-
 
 ## The finding that survived reading
 

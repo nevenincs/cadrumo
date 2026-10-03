@@ -1,0 +1,358 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:1
+msgid "Cross-period checks, verification reports, and work addressing"
+msgstr ""
+"Comprovacions entre períodes, informes de verificació i adreçament del "
+"treball"
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:7
+msgid ""
+"**Report:** `STAGE-2-084` · **Topic:** [Modelo work and revision "
+"lifecycle, part 2: verification, workbench and workspace](../topics"
+"/modelo-work-and-revision-lifecycle-part-2.md)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:10
+msgid ""
+"**Scope:** 11 files under `src/cadrumo/application/modelo`, totaling "
+"5,439 lines, 230,444 bytes, and 47,471 measured proxy tokens. All nine "
+"bounded-reader pages were read in order, covering each assigned line "
+"range. Static inspection only: no application execution or tests. The "
+"token count is the manifest's `o200k_base` proxy."
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacitats i mecanismes"
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:14
+msgid ""
+"Cross-period verification evaluates dependencies declared by the selected"
+" registry revision against prior observations, filing records, "
+"calculation revisions, verification reports and justificantes. It "
+"projects profile member rosters into a common dependency contract, and "
+"can narrow economic-activity-conditional sources only when profile "
+"applicability is positively resolved; errors or indeterminate "
+"applicability suppress nothing. Explicitly attested M111 no-retenciones "
+"periods are recognized as a separate no-obligation case. A helper can "
+"also derive zero-valued prior-filing overrides from the target revision's"
+" binding overrides. Registry-driven clean-state resolution "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`), fail-"
+"closed conditional applicability "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`), zero "
+"prior-filing values "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:16
+msgid ""
+"Each unclean dependency produces a blocking finding with the source "
+"model, period, dependency origin and blocker codes, plus legal and source"
+" references. Nonblocking advisories disclose operator-declared activity-"
+"start suppressions, first-year Modelo 202 fractional suppressions, "
+"nonofficial same-year local chains, explicitly zero prior filings, M111 "
+"no-retenciones claims, and dependencies on models the taxpayer does not "
+"file. When evidence is missing and no activity-start date is recorded, "
+"the gate adds a second blocker asking for that date so it can distinguish"
+" a true first filer from an omitted prior filing. A Modelo 303 IVA carry "
+"can be covered only by a matching, unblocked wallet decision with a "
+"selected amount and an allowed authority/source pair. Finding "
+"construction and first-filer rule "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`), wallet "
+"decision correlation "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`), blocking"
+" gate (`src/cadrumo/application/modelo/verification_cross_period.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:18
+msgid ""
+"Registry-authored verification predicates provide reusable cross-casilla "
+"and profile checks. Blocking operators cover nonzero requirements, "
+"exclusivity, caps, equality and printed totals, implications, required "
+"profile fields, and roll-forward balances with a one-cent tolerance. "
+"Advisory operators cover ratios, profile flags, positive values, "
+"mismatches, date-based eligibility cues and computed-versus-declared "
+"divergence. Inputs and legal grounding come from the selected registry "
+"revision; the evaluator retains generic operators rather than hard-coding"
+" declaration facts. A malformed/unrecognized expression currently "
+"evaluates as satisfied for blocking predicates and false for advisories, "
+"relying on registry authoring validation to prevent invalid patterns from"
+" reaching runtime. That is a concrete boundary to keep intact in any "
+"alternate registry-loading path. Blocking DSL "
+"(`src/cadrumo/application/modelo/verification_predicates.py`), advisory "
+"DSL (`src/cadrumo/application/modelo/verification_predicates.py`), "
+"registry predicate dispatch "
+"(`src/cadrumo/application/modelo/verification_predicates.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:20
+msgid ""
+"Verification findings are paired with typed, locale-neutral precondition "
+"identities by constructor identity rather than rendered message text. The"
+" DTO validators require every blocking finding to carry exactly one "
+"verify-leaf precondition, reject preconditions on warnings, and preserve "
+"report finding order. A separate snapshot schema carries the complete "
+"verification report, scalar-typed facts, publication state and recovery "
+"decisions without widening decimals or converting recovery arguments into"
+" executable commands. Precondition/result invariants "
+"(`src/cadrumo/application/modelo/verification_preconditions.py`), "
+"identity-based projection "
+"(`src/cadrumo/application/modelo/verification_preconditions.py`), "
+"canonical verification snapshot "
+"(`src/cadrumo/application/modelo/verification_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:22
+msgid ""
+"Two registered report-read operations expose a profile's verification "
+"history or one report. They validate canonical periods, UTC timestamps, "
+"unique/sorted facts and references, grant/completeness consistency and "
+"exact report-to-revision/work-unit coordinates. The operations refuse "
+"oversized records instead of clipping facts: limits bound rows, findings,"
+" casillas, facts, references, decimal range and the final serialized "
+"result. They capture the result in worker-owned custody, use credential-"
+"free requests, and authorize an unfiltered profile-wide list separately "
+"from a period-filtered list or single-report read. Bounded report "
+"projection "
+"(`src/cadrumo/application/modelo/verification_report_read_operation.py`),"
+" profile/revision binding and report capture "
+"(`src/cadrumo/application/modelo/verification_report_read_operation.py`),"
+" list and view capture "
+"(`src/cadrumo/application/modelo/verification_report_read_operation.py`),"
+" period-derived access "
+"(`src/cadrumo/application/modelo/verification_report_read_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:24
+msgid ""
+"The withholding-detail gate handles a specific false-zero risk in annual "
+"summaries. When calculation persisted an empty per-perceptor store, the "
+"gate requires taxpayer attestations for every quarterly window of the "
+"relevant periodic source; only M111 currently has an attestation channel."
+" It also checks whether received invoices show withholding liability or "
+"outgoing activity-category ledger rows show that a renta was satisfied. "
+"Recorded evidence defeats an absence attestation. Proven and "
+"uncontradicted absence remains a warning in the report; unproven or "
+"contradicted absence blocks verification. The gate explicitly does not "
+"reconcile a store that has some records but fewer than the ledger "
+"evidence, so callers must not treat this check as general store "
+"completeness. Absence classification "
+"(`src/cadrumo/application/modelo/withholding_detail_gate.py`), finding "
+"severity and provenance "
+"(`src/cadrumo/application/modelo/withholding_detail_gate.py`), append to "
+"verification "
+"(`src/cadrumo/application/modelo/withholding_detail_gate.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:26
+msgid ""
+"Wizard operations turn the canonical calculation path into an interactive"
+" flow. A private context read discovers remaining input steps for an "
+"exact active work unit and selected language. A recorded attempt invokes "
+"normal preparation and calculation; only the typed prepublication "
+"missing-binding refusal can become a `needs_input` result, and the "
+"returned step must identify that same binding with legal and source "
+"grounding. Other errors propagate. Before calculation, it marks the "
+"effect `UNKNOWN` because preparation may already have written migrations "
+"or IVA decisions; it reports `UPDATED` only when a revision was "
+"published. Cancellation is awaited around the irreversible section, and "
+"results remain profile-bound. Attempt outcomes and executor "
+"(`src/cadrumo/application/modelo/wizard_attempt_operation.py`), "
+"calculation/effect handling "
+"(`src/cadrumo/application/modelo/wizard_attempt_operation.py`), private "
+"wizard discovery "
+"(`src/cadrumo/application/modelo/wizard_context_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:28
+msgid ""
+"Work addressing centralizes natural filing coordinates and exact IDs for "
+"CLI/TUI callers. A visible target is model/year/period with an optional "
+"registry-revision assertion; exact work-unit and calculation-revision "
+"identifiers remain advanced paths. Natural targets are checked against "
+"one law-selected registry capture, with both requested and stored "
+"revision assertions independently compared to that same capture. The "
+"authority grade is only applicability at creation/addressing time; "
+"filing-grade checks remain later gates. Existing active work can be "
+"reused after profile-readiness validation; a new one uses the law-"
+"determined revision and rejects superseded census models. Law-selected "
+"revision assertion (`src/cadrumo/application/modelo/work_addressing.py`),"
+" reuse/create behavior "
+"(`src/cadrumo/application/modelo/work_addressing.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:30
+msgid ""
+"For consistent selection under concurrent updates, capture reads a "
+"versioned work-unit catalogue and, for implicit active-profile "
+"addressing, fingerprints the profile pointer before and after the "
+"catalogue read. A pointer change retries up to eight times. Captures "
+"receive an opaque same-process comparison domain and generation; later "
+"coordinates detect a superseding observation while hiding storage paths "
+"and keys. Verify, file and export apply distinct revision policies: "
+"verify permits an idempotent sealed-state retry for the verification "
+"action to resolve, file requires `VERIFICADO_COMPLETO`, and export "
+"accepts only current sealed states. Capture/current-coordinate contract "
+"(`src/cadrumo/application/modelo/work_addressing.py`), capture and "
+"recheck (`src/cadrumo/application/modelo/work_addressing.py`), "
+"verify/file/export resolution "
+"(`src/cadrumo/application/modelo/work_addressing.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:32
+msgid "Knowledge, safety, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:34
+msgid ""
+"These files rely on pinned registry authority, profile records and "
+"explicitly persisted filing, ledger and operator evidence. They do not "
+"establish current legal correctness; legal references and registry facts "
+"are inputs that must be validated elsewhere. Strong controls include "
+"fail-closed applicability, typed blocker identities, exact profile and "
+"revision correlation, result-size refusal, opaque process-local capture "
+"coordinates, retry on pointer/catalogue races and narrow handling of "
+"missing wizard input. No external network or LLM behavior appears here."
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:36
+msgid ""
+"The cross-period helper returns `None` when its calculation-grade "
+"registry snapshot cannot be resolved, which yields no findings from that "
+"helper alone. In the normal verification flow, the filing-grade snapshot "
+"is resolved earlier, but direct callers of the generic gate must preserve"
+" that prerequisite. Predicate evaluation also depends on registry "
+"authoring validation because unknown blocking syntax is treated as "
+"holding. The report projections contain detailed finding facts, including"
+" identifiers and monetary values; the surrounding access resolver scopes "
+"them by profile and period, but result custody, frontend disclosure and "
+"audit retention need adapter-level review. No assigned tests were "
+"present, so race handling, output custody, repository behavior and "
+"predicate validation were not executed."
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:38
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:40
+msgid ""
+"Synthesis should connect the cross-period checks to the generic clean-"
+"state evaluator and its repository implementations; verify that every "
+"caller resolves a mandatory snapshot before invoking the nullable helper;"
+" and confirm registry build validation on all supported authority-loading"
+" paths. It should also trace report-read capabilities through the "
+"operation owner and encrypted operand store, and relate the wizard's "
+"`UNKNOWN`/`UPDATED` effects to preparation-side writes. Work addressing "
+"depends on the shared pure selector, active-work lifecycle and revision "
+"repository contracts; callers should be checked for preserving its "
+"captured catalogue and pinned authority."
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:44
+msgid "All 11 assigned source files were read completely through pages 1–9."
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:46
+msgid ""
+"verification_cross_period.py "
+"(`src/cadrumo/application/modelo/verification_cross_period.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:47
+msgid ""
+"verification_preconditions.py "
+"(`src/cadrumo/application/modelo/verification_preconditions.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:48
+msgid ""
+"verification_predicates.py "
+"(`src/cadrumo/application/modelo/verification_predicates.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:49
+msgid ""
+"verification_projection.py "
+"(`src/cadrumo/application/modelo/verification_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:50
+msgid ""
+"verification_report_read_operation.py "
+"(`src/cadrumo/application/modelo/verification_report_read_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:51
+msgid ""
+"verification_repository_ports.py "
+"(`src/cadrumo/application/modelo/verification_repository_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:52
+msgid "verify_selector.py (`src/cadrumo/application/modelo/verify_selector.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:53
+msgid ""
+"withholding_detail_gate.py "
+"(`src/cadrumo/application/modelo/withholding_detail_gate.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:54
+msgid ""
+"wizard_attempt_operation.py "
+"(`src/cadrumo/application/modelo/wizard_attempt_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:55
+msgid ""
+"wizard_context_operation.py "
+"(`src/cadrumo/application/modelo/wizard_context_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/084-cross-period-checks-verification-reports-and-work-addressing.md:56
+msgid "work_addressing.py (`src/cadrumo/application/modelo/work_addressing.py`)"
+msgstr ""

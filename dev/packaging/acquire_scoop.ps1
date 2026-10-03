@@ -111,8 +111,8 @@ function Invoke-Native {
 }
 
 function Get-ScoopRoot {
-    if ($env:SCOOP) { return [System.IO.Path]::GetFullPath($env:SCOOP) }
-    return Join-Path ([Environment]::GetFolderPath("UserProfile")) "scoop"
+    if (-not $env:SCOOP) { throw "controlled Scoop storage environment is not initialized" }
+    return [System.IO.Path]::GetFullPath($env:SCOOP)
 }
 
 function Install-ScoopIfRequested {
@@ -121,13 +121,13 @@ function Install-ScoopIfRequested {
         [Parameter(Mandatory = $true)][string]$InstallerDir,
         [Parameter(Mandatory = $true)][bool]$Elevated
     )
+    $scoopRoot = Get-ScoopRoot
+    Set-CadrumoScoopShimsFirst -ScoopRoot $scoopRoot
     if (-not $Requested) {
-        if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-            throw "scoop is not installed; use -BootstrapScoop only in a disposable Windows container"
-        }
+        Assert-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot
         return
     }
-    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+    if (-not (Test-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot)) {
         # The container child already launches with -ExecutionPolicy Bypass, so
         # only widen at Process scope; a CurrentUser/machine scope write is
         # rejected by the Windows container's more-specific pinned policy and
@@ -147,10 +147,8 @@ function Install-ScoopIfRequested {
         if ($Elevated) { & $installer -RunAsAdmin } else { & $installer }
         if (-not $?) { throw "Scoop bootstrap failed" }
     }
-    $scoopShims = Join-Path (Get-ScoopRoot) "shims"
-    if (($env:PATH -split [System.IO.Path]::PathSeparator) -notcontains $scoopShims) {
-        $env:PATH = "$scoopShims$([System.IO.Path]::PathSeparator)$env:PATH"
-    }
+    Set-CadrumoScoopShimsFirst -ScoopRoot $scoopRoot
+    Assert-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         Invoke-Native -FilePath "scoop" -ArgumentList @("install", "git", "--no-update-scoop")
     }
@@ -385,6 +383,7 @@ function Invoke-ContainerAcquisition {
         "-v", "${resolvedEvidence}:C:\evidence",
         "-e", "CADRUMO_STORAGE_ROOT=C:\evidence\storage",
         "-e", "CADRUMO_LOCAL_STORAGE_ROOT=C:\evidence\storage",
+        "-e", "CADRUMO_SCOOP_INSTALL_ROOT=development/packages/scoop",
         "--workdir", "C:\repo",
         $Image,
         "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",

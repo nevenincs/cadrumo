@@ -629,6 +629,7 @@ def run_installed_tui_child_process(
     receipt_path: Path,
     passphrase: str,
     authority_root: Path | None = None,
+    runtime_socket_dir: Path | None = None,
     timeout_seconds: int = 240,
 ) -> InstalledTuiChildProcessEvidence:
     """Run a development child against an installed product interpreter.
@@ -656,6 +657,9 @@ def run_installed_tui_child_process(
     )
     if authority_root is not None:
         environment["CADRUMO_AUTHORITY_ROOT"] = str(authority_root.resolve(strict=True))
+    if runtime_socket_dir is not None:
+        environment["CADRUMO_STORAGE_ROOT"] = str(store)
+        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir.resolve(strict=True))
     completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
         [str(executable), "-m", child_module, *child_args],
         check=False,

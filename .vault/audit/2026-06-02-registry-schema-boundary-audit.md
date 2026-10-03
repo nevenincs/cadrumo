@@ -4,7 +4,7 @@ tags:
   - '#registry-schema-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:0cb84e7ac41a1dd974bf8e2729e8d0d8dcd0d689fec91bd2336207d359a66889'
+body_hash: 'sha256:ee6441ce178575be52d2e30a5095fdbd3d9d59a597d84425531c4928a8e1480a'
 related: []
 ---
 
@@ -79,11 +79,11 @@ compatibility, and whether the extraction requires an ADR.
 3. Move source/legal/extraction/workbook/cross-reference metadata models
    next as a generic metadata family.
 4. Move calculation definition models next: `FormulaExpression`,
-   `FormulaDefinition`, parameter rows/tables, 
+   `FormulaDefinition`, parameter rows/tables,
    `DataBindingDefinition`.
 5. Move casilla/completeness definitions after calculation definitions:
    `CasillaConstraints`, `CasillaDefinition`,
-   `CalculationCompletenessCasilla`, 
+   `CalculationCompletenessCasilla`,
    `CalculationCompletenessManifest`.
 6. Move export/record verification models after casillas and before the
    revision aggregate.

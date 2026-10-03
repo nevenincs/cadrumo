@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import DEVELOPMENT_TOOLING, is_test_source
 from dev.quality.source_import_analysis import (
     is_shipped_module,
@@ -19,13 +19,13 @@ from dev.quality.unread_inputs import report_unread
 
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule
-from .unreachable_policy import _DATA_GLOBS, _DEV_LABEL, _SKIPPED_DIRS, _UTF_8
+from .unreachable_policy import _DATA_GLOBS, _DEV_LABEL, _SKIPPED_DIRS
 
 
 def _repository_console_scripts(repo_root: Path) -> tuple[Path, dict[str, str]]:
     """Repository console scripts."""
     pyproject = repo_root / "pyproject.toml"
-    data = parse_toml(pyproject.read_text(encoding=_UTF_8))
+    data = parse_toml(pyproject.read_text(encoding=UTF_8))
     project = data.get("project")
     if not isinstance(project, dict):
         raise ValueError(f"{pyproject} has no [project] table")
@@ -231,7 +231,7 @@ def is_module_execution_surface(path: Path) -> bool:
     """Return whether an installed user can execute the module with ``python -m``."""
     if path.name == "__main__.py":
         return True
-    source = path.read_text(encoding=_UTF_8)
+    source = path.read_text(encoding=UTF_8)
     if "__main__" not in source:
         return False
     tree = ast.parse(source, filename=str(path))

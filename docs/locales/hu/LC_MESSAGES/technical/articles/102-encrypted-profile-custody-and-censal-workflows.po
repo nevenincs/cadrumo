@@ -1,0 +1,374 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:1
+msgid "Encrypted profile custody and censal workflows"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:7
+msgid ""
+"**Report:** `STAGE-2-102` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:10
+msgid ""
+"**Scope:** 17 modules under `src/cadrumo/application/user_profile`, "
+"totaling 5,396 lines, 227,775 bytes, and 47,477 measured `o200k_base` "
+"proxy tokens. All nine bounded-reader pages and assigned ranges were "
+"read. This is static inspection only: no application operation, archive "
+"import/export, provider read, or test was run."
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Képességek és mechanizmusok"
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:14
+msgid ""
+"Portable profile custody uses a sealed archive wrapper around the "
+"profile’s already-encrypted database and custody material. It does not "
+"add a second encryption layer. The archive validates its manifest and "
+"payload digest before parsing members, binds the payload to the expected "
+"profile identity, and caps payload size. Its unencrypted header exposes a"
+" narrow set of metadata (profile UUID, schema, time, digest); it omits "
+"the human-readable label. A fixed-width recovery slot is always empty, so"
+" archive transport does not silently carry an enrolled recovery secret. "
+"Archive format and writer "
+"(`src/cadrumo/application/user_profile/capsule_archive.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:16
+msgid ""
+"The profile record is stored as one authenticated secure-object row "
+"alongside a durable bucket-event witness. `ProfileRecordSession` binds "
+"record decoding and writes to an envelope digest, password generation, "
+"DEK epoch, and profile; it owns mutable key material and closes by "
+"clearing it. Reads check the exact row count and key, strict payload "
+"schema, write provenance, and linked event lineage. Replacement uses "
+"compare-and-swap over both row and event-history revisions and commits "
+"the row and event in one secure-object batch. A legacy schema migration "
+"authenticates the old row before replacing it and records which facts "
+"were cleared; passphrase rewrapping advances lineage while preserving "
+"record content. Record session and repository "
+"(`src/cadrumo/application/user_profile/capsule_record.py`), migration and"
+" reheading (`src/cadrumo/application/user_profile/capsule_record.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:18
+msgid ""
+"Restore accepts an unpublished capsule directory or already parsed "
+"archive material, proves the capsule’s own password against its sentinel,"
+" validates the staged database, and then delegates publication to the "
+"shared capsule lifecycle. The result explicitly reports that recovery was"
+" not enrolled. The password-only path does not consult an ambient master "
+"key, provider, environment value, or recovery secret; the record session "
+"closes in a `finally` path. Source parsing and restore outcome "
+"(`src/cadrumo/application/user_profile/capsule_restore.py`), password "
+"proof and lifecycle handoff "
+"(`src/cadrumo/application/user_profile/capsule_restore.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:20
+msgid ""
+"Custody carry normalizes a closed set of operator selections and asks the"
+" bound custody port for carried objects, exclusions, namespace counts, "
+"and unknown namespaces. Selecting full coverage fails closed if any "
+"namespace is unclassified; a successful result includes an explicit "
+"coverage manifest. The export-operation journal is separate from the "
+"artifact and bucket, contains identity/digest facts rather than the "
+"bundle, passphrase, or tax ID, and uses prepared/completed states for "
+"recovery. This gives export coordination a recoverable local operation "
+"record without making it a substitute for the archive payload. Coverage "
+"policy (`src/cadrumo/application/user_profile/custody_carry.py`), export "
+"journal contract "
+"(`src/cadrumo/application/user_profile/bundle_export_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:22
+msgid ""
+"The censal feature family separates three outcomes. A credential-free "
+"prepare operation reads the exact active profile and produces a bounded "
+"projection of every adoptable field as unset, cleared, or set, together "
+"with default review choices. A provider-backed preview obtains one live "
+"AEAT observation, reconciles it against the requested profile revision, "
+"and returns adopted, unchanged, and divergent values with `applied: "
+"false`; it does not mutate the profile. The separate resumable review "
+"operation persists its full observation and complete canonical field-"
+"intent set as a secure operand, projects only reviewed values to the "
+"frontend, and resumes from the durable checkpoint. Before applying, it "
+"rechecks profile ID, record revision, and digest. A rejection settles a "
+"typed result; an approval applies through the one cotejo authority. "
+"Prepare projection "
+"(`src/cadrumo/application/user_profile/censal_prepare_operation.py`), "
+"non-mutating preview "
+"(`src/cadrumo/application/user_profile/censal_preview_operation.py`), "
+"reviewed operand and executor "
+"(`src/cadrumo/application/user_profile/censal_operation.py`), checkpoint "
+"application (`src/cadrumo/application/user_profile/censal_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:24
+msgid ""
+"The live review routes through the canonical browser/session and censal-"
+"fetch ports, records possible session writes, owns browser or acquisition"
+" cleanup, and publishes one durable review instead of keeping a process-"
+"local handle for resume. Its access contract binds work to one exact "
+"profile and period-independent request; result and review disclosures "
+"require their registered schemas. Prepare requires no provider; live "
+"preview/review declares provider readiness at start. The shared access "
+"helper rejects terminal actions whose admitted submit belongs to a "
+"different profile or operation. Shared admitted-request check "
+"(`src/cadrumo/application/user_profile/censal_access.py`), preview access"
+" and provider policy "
+"(`src/cadrumo/application/user_profile/censal_preview_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:26
+msgid ""
+"The certificate-file import is a separate CLI-only secure-input mutation."
+" Its request restricts paths to fiscal address and indexed activity "
+"description/IAE fields, requires one fiscal address, unique paths, "
+"canonical ordering, nonblank values, and complete contiguous activity "
+"rows. It binds the profile to the active bucket and passes all facts "
+"through `apply_cotejo`, returning only a receipt of applied paths. The "
+"request validates the provenance enum and shape, but the shown operation "
+"does not itself parse or cryptographically authenticate the certificate; "
+"that assurance belongs to the upstream adapter that constructs the secure"
+" input. Import request validation "
+"(`src/cadrumo/application/user_profile/censal_file_import_operation.py`),"
+" profile check and single apply path "
+"(`src/cadrumo/application/user_profile/censal_file_import_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:28
+msgid "Knowledge, security, and assessment"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:30
+msgid ""
+"The censal observation model retains bounded identity and decomposed "
+"address fields, capture time, source URL, and a literal read mode. The "
+"synchronizer derives only three adoptable paths: composed fiscal address,"
+" postcode, and cadastral reference. It uses the read’s tax ID solely to "
+"establish ownership and refuses if either identity is missing, malformed,"
+" or differs after canonical Spanish-tax-ID validation. It does not infer "
+"name splits from AEAT’s combined name field. Existing operator values are"
+" protected; previously imported official values can refresh; operator-"
+"cleared values remain cleared. Comparisons are whitespace-trimmed but "
+"otherwise exact, avoiding unsupported equivalence assumptions. "
+"Observation shape "
+"(`src/cadrumo/application/user_profile/censal_observation.py`), identity "
+"ownership gate (`src/cadrumo/application/user_profile/censo_sync.py`), "
+"projection and reconciliation "
+"(`src/cadrumo/application/user_profile/censo_sync.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:32
+msgid ""
+"The provenance distinction is material: live read facts carry the AEAT-"
+"read token, while certificate artefacts use a non-official token. Cotejo "
+"stores deferred disagreements in indexed divergence facts, clears stale "
+"divergence rows when replacing the set, and emits one `CENSO_APPLIED` "
+"event for the transaction. Profile reads can surface an open-divergence "
+"warning. Adopted facts still pass the profile schema and setup-"
+"completeness validation; AEAT authority over taxpayer data is not treated"
+" as authority over the application’s schema. Cotejo transaction and "
+"validation (`src/cadrumo/application/user_profile/cotejo_apply.py`), "
+"divergence projection and notice "
+"(`src/cadrumo/application/user_profile/cotejo_apply.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:34
+msgid ""
+"The same synchronizer also exposes the operator-declared home-office "
+"ratio used by ledger consumers. It returns no value for missing, non-"
+"decimal, zero, negative, or out-of-range square-metre values, and binds "
+"profile decoding to the caller’s pinned authority operation. Separately, "
+"completeness rules calculate conditional filing prerequisites from "
+"validated taxpayer facts and published registries: examples include Cl@ve"
+" mobile route, Modelo IVA fields, legal-entity form/name, IRNR residence-"
+"country and representative fields, and socio-country values that are both"
+" required and prohibited according to the declared clave. Shared "
+"whitespace presence and repeatable-row logic keep validation and display "
+"surfaces aligned. `ProfilePreflightReport` records whether per-operation "
+"requirements were assessed, preventing a partial assessment from reading "
+"as a full pass. Ratio validation "
+"(`src/cadrumo/application/user_profile/censo_sync.py`), conditional "
+"profile requirements "
+"(`src/cadrumo/application/user_profile/completeness.py`), repeatable rows"
+" (`src/cadrumo/application/user_profile/completeness.py`), preflight "
+"assessment contract (`src/cadrumo/application/user_profile/commands.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:36
+msgid ""
+"The principal strengths are the explicit separation between live preview,"
+" reviewed mutation, and artefact import; secure-reference persistence for"
+" resumable review; revision-bound approvals; independent ownership "
+"checks; and atomic event-linked profile updates. Important trust "
+"boundaries remain outside this chunk: the concrete secure-object/custody "
+"adapters, archive filesystem handling, actual AEAT parser/session "
+"implementations, and frontend enforcement of registered disclosure "
+"projections. The file-import contract makes the parser boundary "
+"especially important because the application operation accepts well-"
+"shaped caller facts with artefact provenance. Static inspection cannot "
+"verify those adapters, cryptographic implementation, crash behavior, "
+"browser-process containment, or live AEAT semantics. The "
+"`capabilities.py` policy and export journal define additional gates and "
+"recovery metadata, but their end-to-end enforcement must be traced "
+"through the operation owner and concrete persistence adapters. Capability"
+" policy (`src/cadrumo/application/user_profile/capabilities.py`), journal"
+" recovery states "
+"(`src/cadrumo/application/user_profile/bundle_export_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:38
+msgid "Dependencies and follow-up"
+msgstr "Függőségek és további vizsgálatok"
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:40
+msgid ""
+"Trace archive restore and export through `ProfileCapsuleLifecycle`, the "
+"custody ports, secure-object repository, filesystem publisher, and event-"
+"history adapter. Verify archive tamper rejection and publication recovery"
+" under interruption. For censal work, follow the AEAT browser/session "
+"adapter, profile-record repository, operation checkpoint/operand store, "
+"disclosure projection layer, and workflow persistence around "
+"`apply_cotejo`. Test stale-baseline races, cancellation around remote "
+"session writes, cleanup on browser failure, invalid or hostile "
+"certificate inputs, unknown custody namespaces, and recovery after "
+"interrupted archive publication. Confirm that only the certificate parser"
+" can mint the secure file-import request and provenance claim. No test "
+"execution was performed here."
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:44
+msgid ""
+"All 17 assigned files were read fully across pages 1–9; no portions "
+"remain unread."
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:46
+msgid ""
+"bundle_export_operation.py "
+"(`src/cadrumo/application/user_profile/bundle_export_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:47
+msgid "capabilities.py (`src/cadrumo/application/user_profile/capabilities.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:48
+msgid ""
+"capsule_archive.py "
+"(`src/cadrumo/application/user_profile/capsule_archive.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:49
+msgid ""
+"capsule_record.py "
+"(`src/cadrumo/application/user_profile/capsule_record.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:50
+msgid ""
+"capsule_restore.py "
+"(`src/cadrumo/application/user_profile/capsule_restore.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:51
+msgid "censal_access.py (`src/cadrumo/application/user_profile/censal_access.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:52
+msgid ""
+"censal_file_import_operation.py "
+"(`src/cadrumo/application/user_profile/censal_file_import_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:53
+msgid ""
+"censal_observation.py "
+"(`src/cadrumo/application/user_profile/censal_observation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:54
+msgid ""
+"censal_operation.py "
+"(`src/cadrumo/application/user_profile/censal_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:55
+msgid ""
+"censal_prepare_operation.py "
+"(`src/cadrumo/application/user_profile/censal_prepare_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:56
+msgid ""
+"censal_preview_operation.py "
+"(`src/cadrumo/application/user_profile/censal_preview_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:57
+msgid "censo_errors.py (`src/cadrumo/application/user_profile/censo_errors.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:58
+msgid "censo_sync.py (`src/cadrumo/application/user_profile/censo_sync.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:59
+msgid "commands.py (`src/cadrumo/application/user_profile/commands.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:60
+msgid "completeness.py (`src/cadrumo/application/user_profile/completeness.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:61
+msgid "cotejo_apply.py (`src/cadrumo/application/user_profile/cotejo_apply.py`)"
+msgstr ""
+
+#: ../../technical/articles/102-encrypted-profile-custody-and-censal-workflows.md:62
+msgid "custody_carry.py (`src/cadrumo/application/user_profile/custody_carry.py`)"
+msgstr ""

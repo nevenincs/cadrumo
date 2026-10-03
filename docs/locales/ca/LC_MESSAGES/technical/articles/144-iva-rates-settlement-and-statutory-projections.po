@@ -1,0 +1,372 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:1
+msgid "IVA rates, settlement and statutory projections"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:7
+msgid ""
+"**Report:** `STAGE-2-144` · **Topic:** [Business and taxpayer "
+"domain](../topics/business-and-taxpayer-domain.md)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:10
+msgid "Scope"
+msgstr "Àmbit"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:12
+msgid ""
+"This chunk covers 16 files in domain/iva, totaling 4,849 manifest-counted"
+" lines, 202,680 bytes, and 45,785 measured o200k_base tokens. All nine "
+"bounded pages were read through their listed line ranges. This is static "
+"inspection only; I did not import or execute the application, modify "
+"src/, run tests, or verify the legal content against external sources."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:14
+msgid "Product capabilities"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:16
+msgid ""
+"The rate substrate resolves country, rate tier, role, and date against a "
+"caller-owned pinned authority. It distinguishes ordinary tier rates from "
+"temporary rates that coexist for only part of a tier, supports inverse "
+"lookup from a declared percentage to every valid tier, and offers a "
+"stricter unique-tier resolver when a caller needs one answer. Coverage "
+"checks distinguish “no rate table reaches this date” from “the rate is "
+"not in force.” resolve_category_rate returns either a dated domestic rate"
+" fraction or an explicit not-derivable reason; it refuses to split a "
+"gross at an ambiguous tier instead of assuming the ordinary rate. "
+"split_gross_at_rate rounds the base first and uses the remainder for IVA,"
+" preserving the rounded gross total rate lookup "
+"(`src/cadrumo/domain/iva/lookup.py`) coexisting tiers and inverse lookup "
+"(`src/cadrumo/domain/iva/lookup.py`) category resolution and gross split "
+"(`src/cadrumo/domain/iva/saturation.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:18
+msgid ""
+"The domain also projects statutory regime mentions and supply-nature "
+"citations from dated registry catalogues. A printed regime legend "
+"produces DERIVED, CONTRADICTED, or ABSENT; contradiction carries no "
+"category for a downstream consumer to misuse. Citation parsing can derive"
+" goods or services only when the matching statutory rows agree, and "
+"records contradictory citations as a separate outcome. Place-of-supply "
+"rules identify the provision that establishes placement, its validity "
+"window, and whether it determines goods/services; an ungrounded or out-"
+"of-window rule is refused legend outcomes "
+"(`src/cadrumo/domain/iva/legend_derivation.py`) supply-nature parser "
+"(`src/cadrumo/domain/iva/supply_nature.py`) place-of-supply resolution "
+"(`src/cadrumo/domain/iva/place_of_supply.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:20
+msgid ""
+"Other filing-related outcomes include the registry-selected OSS/IOSS "
+"regime catalogue, a refund-eligibility predicate based on REDEME "
+"enrollment or the terminal filing period, and Modelo 303 annual-"
+"settlement ordering derived from the revisions’ declared monthly or "
+"quarterly periods. The prorrata calculator computes the general "
+"deductible percentage rounded upward, resolves the special-regime "
+"threshold and inclusive/exclusive comparison for the filing year, and "
+"calculates the signed annual regularisation. The recargo resolver returns"
+" a dated applied-rate pairing or None when it has no candidate, "
+"preserving an explicit zero pairing as a real record OSS/IOSS catalogue "
+"(`src/cadrumo/domain/iva/oss.py`) refund gate "
+"(`src/cadrumo/domain/iva/refund_eligibility.py`) annual settlement order "
+"(`src/cadrumo/domain/iva/m303_settlement.py`) prorrata calculations "
+"(`src/cadrumo/domain/iva/prorrata.py`) dated recargo lookup "
+"(`src/cadrumo/domain/iva/recargo_equivalencia.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:22
+msgid ""
+"For Modelo 303 simplified-regime capture, the models retain annual Orden "
+"activities, modules, taxpayer facts and evidence, enforce unique "
+"identities and exact annual taxonomy, and pack activity rows into "
+"official record groupings. The source explicitly represents the missing "
+"official two-digit agricultural activity-code crosswalk as unresolved and"
+" refuses to validate agricultural filing rows until that authority exists"
+" unresolved agricultural authority "
+"(`src/cadrumo/domain/iva/regimen_simplificado_rows.py`) row validation "
+"(`src/cadrumo/domain/iva/regimen_simplificado_rows.py`). A SEPA helper "
+"derives the refund-account marca from the IBAN prefix or bank-country "
+"code SEPA derivation (`src/cadrumo/domain/iva/sepa_marca.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:24
+msgid "How it works"
+msgstr "Com funciona"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:26
+msgid ""
+"Rates are projected from published fact variants with their validity "
+"bounds and references. Exact rate selection preserves member state, tier,"
+" role, and devengo date in the resolver query. Temporary coexisting rates"
+" are excluded from the ordinary “what rate does this tier mean?” lookup "
+"but remain available to validate a declared rate. Category saturation "
+"uses that distinction to surface an operator explanation when the invoice"
+" category lacks enough information to choose between simultaneously valid"
+" percentages rate fact resolution (`src/cadrumo/domain/iva/lookup.py`) "
+"rate projection (`src/cadrumo/domain/iva/rates.py`) ambiguity handling "
+"(`src/cadrumo/domain/iva/saturation.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:28
+msgid ""
+"Legend and citation matchers operate on caller-selected registry "
+"projections; import does not create a process-wide vocabulary. They "
+"normalize only the declared aspects of text, check for normalized legend "
+"collisions, and keep absent evidence distinct from contradictions. Place-"
+"of-supply records require a closed validity window, citations, and one "
+"designated establishing reference among them. Citation models distinguish"
+" verified verbatim corpus text from unresolved citations with an explicit"
+" reason legend matching (`src/cadrumo/domain/iva/legend_derivation.py`) "
+"citation grounding (`src/cadrumo/domain/iva/schema.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:30
+msgid ""
+"Prorrata inputs are already-filtered euro totals; exclusions and "
+"provisional carry-forward belong to upstream aggregation/application "
+"code. General prorrata uses right-of-deduction / total-operations, rounds"
+" upward to an integer, and returns 100% when no operations make the "
+"limitation apply. Annual regularisation applies the difference between "
+"definitive and provisional percentages to deductible IVA and signs the "
+"result according to whether deduction rises or repayment is due. The "
+"special-regime parameters carry both the percentage margin and comparison"
+" rule, and the calculator checks that parameters were resolved for the "
+"year being settled formula and annual adjustment "
+"(`src/cadrumo/domain/iva/prorrata.py`) year match "
+"(`src/cadrumo/domain/iva/prorrata.py`) parameter source "
+"(`src/cadrumo/domain/iva/prorrata_especial_parameters.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:32
+msgid "Knowledge and data"
+msgstr "Coneixement i dades"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:34
+msgid ""
+"Most numeric, legal and classification tables are resolved through the "
+"governed registry, including IVA rates, recargo pairings, OSS/IOSS "
+"definitions, place-of-supply grounding, legends, supply-nature citations,"
+" and annual simplified-regime activity rows. IvaRateRecord validates date"
+" windows and requires legal references for Spanish rates or source "
+"references for foreign rates. IvaCitation requires verbatim text and no "
+"unresolved reason when marked verified; unresolved citations must instead"
+" have a reason and no quotation. The record checks establish shape and "
+"consistency, while corpus verification, revision selection, and actual "
+"source freshness depend on authority compilation and publication outside "
+"this chunk rate record contract (`src/cadrumo/domain/iva/schema.py`) "
+"citation checks (`src/cadrumo/domain/iva/schema.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:36
+msgid ""
+"Some domain boundaries remain caller-owned: prorrata receives prefiltered"
+" annual amounts, and the refund predicate receives a typed period and "
+"enrollment boolean. The SEPA participant set is a literal Python "
+"frozenset in this chunk, with an EPC source named in its module "
+"documentation; it has no date or registry-generation axis. This report "
+"describes that implementation and does not certify current participant "
+"membership SEPA set (`src/cadrumo/domain/iva/sepa_marca.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:38
+msgid "Security and safety"
+msgstr "Seguretat i protecció"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:40
+msgid ""
+"The main controls are refusal and traceability: rate ambiguity is "
+"surfaced instead of guessed, unresolved law is distinguishable from "
+"absent law, citations carry an explicit grounding state, and calculations"
+" use Decimal arithmetic with range checks. IvaRateRecord, citations, and "
+"prorrata records are strict frozen models; the simplified-regime row "
+"validator enforces the annual taxonomy, Censo epigraph and module "
+"identity/order before accepting non-agricultural rows. The code operates "
+"on registry projections and passed account data; it does not implement "
+"network access, account persistence, or authorization. derive_sepa_marca "
+"returns RESTO_PAISES for a missing or unrecognized country as well as for"
+" a country outside the literal SEPA set, so consumers cannot distinguish "
+"“unresolved country” from “known outside-zone” from this result alone "
+"SEPA fallback (`src/cadrumo/domain/iva/sepa_marca.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:42
+msgid "Implementation assessment"
+msgstr "Avaluació de la implementació"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:44
+msgid ""
+"The temporal model is strongest where caller-owned operations and dates "
+"are explicit. Rate and place-of-supply resolution retain those "
+"coordinates, annual prorrata parameters are tied back to the target year,"
+" and recargo uses the applied percentage rather than a broader category. "
+"Typed reason records let consumers show uncertainty instead of silently "
+"interpreting null as zero. The agricultural crosswalk gap is surfaced as "
+"a concrete refusal rather than fabricated from the annual activity "
+"description."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:46
+msgid ""
+"Several implementation details merit follow-up. First, "
+"load_iva_rate_table and rate_record_from_fact set supersedes_tier_default"
+" with bool(payload[...]). If the mapping payload stores textual \"false\""
+" values, Python treats that non-empty string as true; confirm the runtime"
+" payload type or replace this with an explicit boolean parser rate "
+"payload projection (`src/cadrumo/domain/iva/rates.py`). Second, "
+"rate_table_covers documents that the authored Spanish schedule begins in "
+"2023 for temporary food rows and 2024 for standing tiers, even though the"
+" source itself says the historical start dates remain an open question. "
+"Callers therefore fail closed for earlier dates, but the domain’s "
+"authored coverage is not a complete historical rate table coverage "
+"boundary (`src/cadrumo/domain/iva/lookup.py`)."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:48
+msgid ""
+"Third, the legend matcher returns the first containing phrase in declared"
+" order. It refuses exact normalized collisions, but it does not "
+"independently refuse two different phrases where one is contained in "
+"another; that is safe only while the selected vocabulary has no "
+"overlapping phrases first match behavior "
+"(`src/cadrumo/domain/iva/legend_derivation.py`). Fourth, the SEPA "
+"classifier collapses missing/unknown country into the same mark as a "
+"known non-SEPA country, and the membership set has no effective-date "
+"control. Check that the refund-account model always supplies a valid "
+"country and that the static set is periodically reconciled. There are no "
+"tests in the assigned chunk; static inspection cannot verify registry "
+"content, compiler-level citation checks, or whether callers apply each "
+"refusal/advisory as intended."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:50
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:52
+msgid ""
+"Synthesis should trace rate payload parsing in the registry compiler, "
+"historical coverage policy, and callers of resolve_category_rate; verify "
+"that citation and place-of-supply tables are checked against their legal "
+"catalogue before publication; and follow prorrata exclusions and prior-"
+"year carry in the aggregation/application layers. It should also confirm "
+"that callers surface missing SEPA-country evidence separately and that "
+"the agricultural simplificado refusal remains visible in the operator "
+"workflow."
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:54
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:56
+msgid "iva/legend_derivation.py (`src/cadrumo/domain/iva/legend_derivation.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:57
+msgid "iva/lookup.py (`src/cadrumo/domain/iva/lookup.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:58
+msgid "iva/m303_settlement.py (`src/cadrumo/domain/iva/m303_settlement.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:59
+msgid "iva/oss.py (`src/cadrumo/domain/iva/oss.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:60
+msgid "iva/place_of_supply.py (`src/cadrumo/domain/iva/place_of_supply.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:61
+msgid "iva/prorrata.py (`src/cadrumo/domain/iva/prorrata.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:62
+msgid ""
+"iva/prorrata_especial_parameters.py "
+"(`src/cadrumo/domain/iva/prorrata_especial_parameters.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:63
+msgid "iva/rates.py (`src/cadrumo/domain/iva/rates.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:64
+msgid ""
+"iva/recargo_equivalencia.py "
+"(`src/cadrumo/domain/iva/recargo_equivalencia.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:65
+msgid "iva/refund_eligibility.py (`src/cadrumo/domain/iva/refund_eligibility.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:66
+msgid "iva/regime_legend.py (`src/cadrumo/domain/iva/regime_legend.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:67
+msgid ""
+"iva/regimen_simplificado_rows.py "
+"(`src/cadrumo/domain/iva/regimen_simplificado_rows.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:68
+msgid "iva/saturation.py (`src/cadrumo/domain/iva/saturation.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:69
+msgid "iva/schema.py (`src/cadrumo/domain/iva/schema.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:70
+msgid "iva/sepa_marca.py (`src/cadrumo/domain/iva/sepa_marca.py`)"
+msgstr ""
+
+#: ../../technical/articles/144-iva-rates-settlement-and-statutory-projections.md:71
+msgid "iva/supply_nature.py (`src/cadrumo/domain/iva/supply_nature.py`)"
+msgstr ""

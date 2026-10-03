@@ -16,7 +16,7 @@ def bytecode(source: bytes, name: str) -> bytes:
     return importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(source) + marshal.dumps(code)
 
 
-def bundle(source: Path, destination: Path, excluded: list[str], bootstrap: bytes, version: str) -> None:
+def bundle(source: Path, destination: Path, excluded: list[str], bootstrap: dict[str, bytes], version: str) -> None:
     """Keep runtime stdlib modules and resources; omit declared development components."""
     if tuple(map(int, version.split("."))) != sys.version_info[:3]:
         raise ValueError("Bytecode assembly requires the exact pinned development Python")
@@ -33,6 +33,7 @@ def bundle(source: Path, destination: Path, excluded: list[str], bootstrap: byte
             info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, content)
-        info = zipfile.ZipInfo("_cadrumo_bootstrap.pyc", date_time=(1980, 1, 1, 0, 0, 0))
-        info.compress_type = zipfile.ZIP_DEFLATED
-        archive.writestr(info, bytecode(bootstrap, "_cadrumo_bootstrap.py"))
+        for module, source_bytes in bootstrap.items():
+            info = zipfile.ZipInfo(module + ".pyc", date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, bytecode(source_bytes, module + ".py"))

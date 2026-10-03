@@ -9,7 +9,7 @@ from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings,
     row_binding_casilla_ids_by_field,
 )
-from cadrumo.domain.calculations.registry.revision_context import _exported_casilla_ids
+from cadrumo.domain.calculations.registry.revision_context import build_revision_validation_context
 
 from ..compiler.loader import load_modelo_directory
 
@@ -26,7 +26,7 @@ def test_m180_repeated_binding_targets_are_exported_casillas(revision_id: str) -
     candidate = revision.model_copy(update={"export_layouts": (derived,)})
 
     assert len(set(bound.values())) == 27
-    assert set(bound.values()) <= _exported_casilla_ids(candidate)
+    assert set(bound.values()) <= build_revision_validation_context(candidate).exported_casillas
 
 
 def test_unresolved_row_binding_does_not_claim_an_exported_casilla() -> None:
@@ -48,4 +48,4 @@ def test_unresolved_row_binding_does_not_claim_an_exported_casilla() -> None:
     broken_layout = derived.model_copy(update={"records": tuple(records)})
     broken_revision = revision.model_copy(update={"export_layouts": (broken_layout,)})
 
-    assert target not in _exported_casilla_ids(broken_revision)
+    assert target not in build_revision_validation_context(broken_revision).exported_casillas

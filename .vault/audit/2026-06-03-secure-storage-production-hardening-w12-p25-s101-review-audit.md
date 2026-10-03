@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:b1a651119e51539fd7fcf1da576af7ce5e2347b4c5e4dca8617c8ab1c2bcf715'
+body_hash: 'sha256:6993524580765615873710f21e1a2f84b12684c9234230a455a670d7868acba7'
 related: []
 ---
 
@@ -36,7 +36,7 @@ Counting that command as evidence would have been misleading.
 Action: the gate was split by test file and rerun. The split validation passed:
 `test_config_custody_profile_lifecycle.py` passed 3 tests,
 `test_profile_lifecycle_verbs.py` passed 42 tests,
-`test_workflow_surface.py` passed 24 tests, 
+`test_workflow_surface.py` passed 24 tests,
 `test_cold_start_no_profile.py` passed 7 tests.
 
 ## S101-003 | MEDIUM | RESOLVED | Stale domain test path invalidated the first domain batch

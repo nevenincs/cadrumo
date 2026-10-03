@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:28a99e8be347ee334830f37b36a1ead1e81d4ff73c6885af897c43e2a2d08018'
+body_hash: 'sha256:e7f76dc1a1b848d89476d972144084cf309e8909e4d9dec993f71b3a2b2ec470'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"
@@ -326,6 +326,20 @@ The owner retained the real failed staging detectors instead of weakening equali
 ### S10 retained-owner checkpoint | low | Current binding census is 152 and authority remains stale
 
 Root ran the canonical binding-advisory and informational-ID primitives against one compiled bundled source authority. The receipt binding-owner-current-census.json observed at 2026-10-03T16:21:58Z has identical registry fingerprints before and after and stable interpreting inputs. It reports 152 unused bindings: 140 in M232, four in M347, three in M369 and five in M720. Fifteen non-calculation bindings remain separately visible rather than silently disappearing. The owning currency primitive reports the indexed authority stale against current legal/source inputs. This supersedes the earlier 179 count without changing ownership: the retained binding session owns these declarations/consumers and final authority publication, and the 33 tui-bb findings remain excluded. No final runtime-adoption or whole-run claim is made.
+
+### S24 fresh chain assessment | low | Exact ancestor-chain proof replaces the pair-only implementation
+
+The digest-bound M189/2025 cutover completed successfully. Its independently checked target is current, its form check reports zero stale layouts, and its local manifest SHA256 is f02bac4d65169d97828d739057c4247d2f8e6580a5cabba4a37dd13b7da1fb3d. These are the publication owner's pushed results, pending root's original receipt ingestion. The child is now a parseable 37-byte inheritance delta with its own generation receipt. The fresh canonical assessment identifies the five remaining export-layout repetitions in M189/2024 against 2023; 2025 itself has no redundant fields. Earlier interim attribution of the residual exclusively to 2025 is superseded by this fresh revision-level finding.
+
+The governing keyed-delta and complete-compaction criteria require an exact 2023-to-2024-to-2025 storage chain. Pair-only staging was an implementation limit, not an accepted exception to minimality. The sole publication owner is authorized to extend attested staging to exactly the recursively pinned ancestors, retaining independently reproduced source/map/profile inputs and packages, complete canonical effective meaning and ordered identities for every member, child-local claims, cycle and missing/changed/extra-member refusals, and digest-bound cutovers. A live 2024 replacement follows settled detector tests and independent review; 2025 must then be repinned and revalidated. No new review scope, continuity claim, waiver, binding edit or authority publication is authorized by storage reuse. S24 remains open through whole-chain minimality, complete assessment, second no-op, target/form currency and root's settled full-inventory proof.
+
+### S24 recursive chain | low | Production guard review PASS; serialized live acceptance incomplete
+
+Independent read-only review found no remaining production HIGH in the recursive chain guard. Selection has explicit cycle refusal, checks each pinned ancestor against its own manifest and source, and independently rerenders each source/map/profile package. Staging admits exactly the ordered ancestor chain; validation compares complete canonical materialization and member identities for every member, with local child claims and digest-bound old-target reproduction preserved. The focused suite initially exposed tests coupled to the formerly full live child and then one fixture whose render-root basename was invalid. The owner corrected these fixtures, reports four applicable passing cases plus a passing exact rerun of the corrected refusal case, and retains the failed attempts. Exact original command and receipt ingestion remain pending.
+
+The owner reports digest-bound 189/2024 publication exited zero and installed a compact local target with manifest SHA256 61c35ee896299ed301e05513100c2f50d8f095b7d8082cea977195abed3265f3. Its 2023 baseline is independently attested. The following 2025 reattestation refused concurrent M303 source changes and restored the previous two-file child target, whose manifest SHA256 remains f02bac4d65169d97828d739057c4247d2f8e6580a5cabba4a37dd13b7da1fb3d. That old child still pins the superseded 2024 manifest ae3689bc6074eb9c5a6de1f84601f8c75b7c56016d5667619d6bdcb785118403. The target-local publication interval is therefore explicitly INCOMPLETE, with no authority publication or final acceptance.
+
+The external M303 writer subsequently synchronized its stale 2022 form. This session's canonical M303 generator wrote zero fragments; it did not change binding declarations or claim the external synchronization as its own work. Current form check reports zero stale layouts and measured non-form bytes are unchanged around that no-op. The expected-one-change observation helper failed its assumption and is retained as history, not passing evidence. A fresh fully validated, byte-verified whole-authority compile with before/after input pins precedes any changed-input 2025 retry. Root's final proof also compares fresh registry, interpreting-code, evidence, publication-tree and modelo-locale fingerprints across all stages. Final chain currency, complete minimality, second no-op, M390 replacements and whole-inventory proof remain PENDING.
 
 ## Recommendations
 

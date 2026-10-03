@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.hashing import sha256_hex
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 from dev.packaging.hashing import sha256_path
 
-from .runtime_probe_contracts import _SHA256_RE, _UTF_8, CompatibilityProbeError
+from .runtime_probe_contracts import _SHA256_RE, CompatibilityProbeError
 from .runtime_probe_environment import _isolated_environment
 
 _RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)")
@@ -75,7 +75,7 @@ def _builder_pin(repo_root: Path) -> str:
         value = (
             (_DEFAULT_BUILDER_PIN if repo_root == REPO_ROOT else repo_root / _BUILDER_PIN_PATH)
             .read_text(
-                encoding=_UTF_8,
+                encoding=UTF_8,
             )
             .strip()
         )

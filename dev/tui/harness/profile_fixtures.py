@@ -24,7 +24,7 @@ from cadrumo.application.user_profile.fact_write import apply_manager_profile_fi
 from cadrumo.application.user_profile.overview import ProfileOverview, build_profile_overview
 from cadrumo.application.user_profile.plantilla_media_rows import (
     PlantillaMediaWriteSurface,
-    list_plantilla_media_years,
+    plantilla_media_years_of,
     remove_plantilla_media_year,
     set_plantilla_media_year,
 )
@@ -160,9 +160,10 @@ class ProfileReviewDoors:
 
     def list_plantilla_media(self) -> tuple[PlantillaMediaYear, ...]:
         """Read the recorded average workforce by year."""
-        return list_plantilla_media_years(
-            profile_id=self.profile_id, profile_decode_context=self.operation.profile_decode_context()
+        repository = ProfileRecordRepository.for_current_session(
+            self.profile_id, profile_decode_context=self.operation.profile_decode_context()
         )
+        return plantilla_media_years_of(repository.load(self.profile_id))
 
     def set_plantilla_media(self, year: int, average_workforce: Decimal, state: PlantillaMediaState) -> ProfileOverview:
         """Record one year's average workforce from the manager."""

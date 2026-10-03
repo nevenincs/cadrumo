@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:5395501c108cb2ff75251da12c1c0bcfa45b379ff865184ca52d947553320890'
+body_hash: 'sha256:c9b0acc26e24fda81ac869fe02b13df4241d776954887b6ff88caa5cf3699ea7'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Resolution: the package docstring now states the actual public contract, includi
 
 Validation:
 
-- the focused test run passed with 12 tests.
-- the focused test run passed.
+- the historical check passed with 12 tests.
+- the historical check passed.
 - Source scan found no direct `Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S140 files.
 
 Disposition: close `AFR-038` as `remote-mirror`.

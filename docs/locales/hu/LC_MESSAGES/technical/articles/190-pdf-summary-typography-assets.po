@@ -1,0 +1,130 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:1
+msgid "PDF summary typography assets"
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:7
+msgid ""
+"**Report:** `STAGE-2-190` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:10
+msgid "Scope and assessment"
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:12
+msgid ""
+"This chunk inventories seven font/license files in the calculation-"
+"summary PDF resource tree: three Hanken Grotesk faces, two JetBrains Mono"
+" faces, and one SIL Open Font License text for each family. The five "
+"TrueType files were inspected through their SFNT headers and name tables "
+"without invoking a renderer. Metadata identifies Hanken Grotesk Regular, "
+"SemiBold, and Bold at version 3.014 and JetBrains Mono Regular and Bold "
+"at version 2.304. Each font's embedded license metadata and both "
+"accompanying license texts identify SIL Open Font License 1.1. The "
+"included license texts preserve the conditions concerning bundling and "
+"embedding, reserved names, attribution, redistribution, and the "
+"prohibition on selling font software by itself."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:14
+msgid ""
+"The set supplies proportional and monospaced typography suitable for a "
+"report layout, but this chunk alone does not establish which PDF elements"
+" use each face. It contains font data and license text, not executable "
+"behavior or taxpayer records. No security issue is evident from the "
+"inventory. Static metadata parsing does not test glyph coverage, font "
+"shaping, embedding, or PDF rendering, and does not independently "
+"establish upstream provenance. The full per-file inventory and sizes are "
+"below."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:16
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:18
+msgid ""
+"HankenGrotesk-Bold.ttf (`src/cadrumo/_data/calculation_summary_pdf/fonts"
+"/HankenGrotesk-Bold.ttf`) — 73,640 bytes; face/version/license metadata "
+"inspected."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:19
+msgid ""
+"HankenGrotesk-OFL.txt (`src/cadrumo/_data/calculation_summary_pdf/fonts"
+"/HankenGrotesk-OFL.txt`) — 4,402 bytes, 94 lines; complete license text "
+"inspected."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:20
+msgid ""
+"HankenGrotesk-Regular.ttf "
+"(`src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-"
+"Regular.ttf`) — 73,648 bytes; face/version/license metadata inspected."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:21
+msgid ""
+"HankenGrotesk-SemiBold.ttf "
+"(`src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-"
+"SemiBold.ttf`) — 73,644 bytes; face/version/license metadata inspected."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:22
+msgid ""
+"JetBrainsMono-Bold.ttf (`src/cadrumo/_data/calculation_summary_pdf/fonts"
+"/JetBrainsMono-Bold.ttf`) — 277,828 bytes; face/version/license metadata "
+"inspected."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:23
+msgid ""
+"JetBrainsMono-OFL.txt (`src/cadrumo/_data/calculation_summary_pdf/fonts"
+"/JetBrainsMono-OFL.txt`) — 4,399 bytes, 93 lines; complete license text "
+"inspected."
+msgstr ""
+
+#: ../../technical/articles/190-pdf-summary-typography-assets.md:24
+msgid ""
+"JetBrainsMono-Regular.ttf "
+"(`src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-"
+"Regular.ttf`) — 273,900 bytes; face/version/license metadata inspected."
+msgstr ""

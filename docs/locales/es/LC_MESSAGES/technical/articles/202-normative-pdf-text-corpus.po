@@ -1,0 +1,186 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:1
+msgid "Normative PDF text corpus"
+msgstr "Corpus de texto de PDF normativos"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:7
+msgid ""
+"**Report:** `STAGE-2-202` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:10
+msgid "Scope"
+msgstr "Ámbito"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:12
+msgid ""
+"This group contains four extracted PDF text records totaling 290,575 "
+"bytes. They correspond to the 2003 Modelo 185 annex, the 2023 Modelo 721 "
+"order/layout, its 2024 amendment, and the 2026 VAT-model amendment/order."
+" I read bounded samples from each record's normalized text and parsed all"
+" four metadata records. I also checked each `source_sha256` against the "
+"corresponding PDF in `src/cadrumo/_data/corpus/normatives/pdf`; all four "
+"hashes matched. This confirms these text records are pinned to the "
+"bundled PDFs, not that either the source or its legal content is complete"
+" or current."
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:14
+msgid "Capability and knowledge represented"
+msgstr "Capacidad y conocimiento representado"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:16
+msgid ""
+"These files preserve form-layout and legal-instrument text for downstream"
+" reference/search. The 2023 Modelo 721 text describes the informational "
+"declaration on virtual currency held abroad and includes field "
+"definitions such as the year-end balance, currency origin, identifier "
+"type and the status/date when a person ceases to be a holder or "
+"authorized person. The 2024 order amends multiple information models, "
+"including 721, and its sampled layout text describes currency type/value "
+"and holder fields. Those fields imply the subject matter can involve "
+"financial holdings and identity documents, but the bundled files are "
+"schema text, not completed declarations or customer data (2023 Modelo 721"
+" order "
+"(`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2023-17429-modelo-721-layout.pdf.corpus_text.json`),"
+" 2024 amendment text "
+"(`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2024-27528-modelo-721"
+"-layout-amendment.pdf.corpus_text.json`))."
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:18
+msgid ""
+"The 2026 record contains Order HAC/27/2026 and technical changes to VAT "
+"models 303, 322, 353 and 390, including their associated electronic VAT-"
+"book specifications. This is regulatory and record-layout material, not a"
+" live model form or submission endpoint. It overlaps the raw PDF and "
+"extraction artifacts described in STAGE-2-197; synthesis should connect "
+"these representations without counting them as separate legal sources "
+"(2026 VAT-model order text "
+"(`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf.corpus_text.json`),"
+" [related raw normative corpus report](197-normative-reference-"
+"corpus.md))."
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:20
+msgid ""
+"The 2003 record begins with Order HAC/96/2003 and a Modelo 185 "
+"information schema: monthly information that Social Security management "
+"bodies and mutual societies must provide about affiliates or members, "
+"with machine-readable and telematic filing procedures. The extracted text"
+" later contains a section on telematic job-posting procedures in the "
+"Ministry of Economy. That is visibly unrelated to the Modelo 185 field "
+"specification; because this representation has no page objects, I cannot "
+"tell whether the captured PDF intentionally includes adjacent BOE matter "
+"or whether extraction scope bled across a document boundary. A consumer "
+"should not assume that every paragraph in this flattened record belongs "
+"to Modelo 185 (2003 Modelo 185 text "
+"(`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf.corpus_text.json`))."
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:22
+msgid "Data quality and trust boundaries"
+msgstr "Calidad de los datos y límites de confianza"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:24
+msgid ""
+"All four JSON records have the same five-field schema-v2 shape: logical "
+"`corpus_path`, source SHA-256, `extraction_platform` (`win32`), and one "
+"`normalised_text` string in addition to the schema version. The logical "
+"paths bind to the four local PDFs and all digests match. Unlike the page-"
+"oriented `.extracted.json` representation of the Modelo 390 source, these"
+" records flatten each PDF's text into one string. Page numbers are "
+"present as text in places, but there is no page-level boundary or table "
+"structure. Normalization also retains some extraction markers: the 2003 "
+"Modelo 185 text contains 83 U+FFFE noncharacters, and the 2026 390 text "
+"has seven plus 29 private-use characters, including markers adjacent to "
+"field flags. The visual meaning of those private-use characters cannot be"
+" recovered from this text alone. These are concrete fidelity limits for "
+"exact search, display or automated parsing; the matching source hashes "
+"make rechecking possible against the bundled PDF."
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:26
+msgid "Security and follow-up"
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:28
+msgid ""
+"The reviewed assets are public legal and form-layout documents with no "
+"filled taxpayer values or credentials. The formats are static JSON text; "
+"they do not collect or transmit user data, enforce authorization, perform"
+" calculations or submit filings. A product that lets users provide the "
+"financial and identity details described in these layouts would need "
+"separate privacy and validation controls; those flows are outside this "
+"chunk. Synthesis should trace whether consumers prefer the matching "
+"source PDF, the page-oriented extraction, or this flattened corpus text, "
+"and how they preserve model version/effective dates and exclude the "
+"unrelated-looking Modelo 185 passage. No runtime or law verification was "
+"performed."
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:30
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:32
+msgid ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf.corpus_text.json`"
+" — 34,058 bytes"
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:33
+msgid ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2023-17429-modelo-721-layout.pdf.corpus_text.json`"
+" — 21,200 bytes"
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:34
+msgid ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2024-27528-modelo-721"
+"-layout-amendment.pdf.corpus_text.json` — 88,905 bytes"
+msgstr ""
+
+#: ../../technical/articles/202-normative-pdf-text-corpus.md:35
+msgid ""
+"`src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf.corpus_text.json`"
+" — 146,412 bytes"
+msgstr ""

@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:f4252ee7f7dfcfb7a69f92ef5a7a173785344bcaa26d171a943995e8a327dc97'
+body_hash: 'sha256:1d0881d998d9d3fe5d6843e77de297c4f80bfdfc12dd2cba7492a043e3e0ca1e'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Transport failures are also normalized: `httpx.RequestError` is caught, logged a
 
 Validation:
 
-- the focused test run passed with 11 tests.
-- the focused test run passed.
+- the historical check passed with 11 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
 - Source scans found no direct `Settings()`, stale Gemini endpoint constant, query-string `params=`, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S138 code/test slice.
@@ -36,4 +36,4 @@ Resolution: the public exception message is now the generic `Gemini connection f
 
 Validation:
 
-- the focused test run passed after the change.
+- the historical check passed after the change.

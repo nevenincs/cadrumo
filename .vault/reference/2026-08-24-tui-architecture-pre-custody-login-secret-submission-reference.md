@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:daffea2618778cdc3ecdb42cfe544fbc28c76075ceff94973cfdeceb707a3380'
+body_hash: 'sha256:329486f86bb4964dd7ef169d8381cfe3d43a3b4f369d86d7903d6620ef169138'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
@@ -20,8 +20,6 @@ the implementation boundary for an operation-owned transient secret channel:
 the durable request is credential-free, the secret is exact-bound and consumed
 only from process memory, and restart before that consumption is a terminal
 interruption before any executor effect.
-
-
 
 The concrete secure-reference adapter is intentionally unsuitable for a profile password. Before login neither condition exists. Reusing either path would be circular, would persist a secret, or would create a second unlock authority.
 

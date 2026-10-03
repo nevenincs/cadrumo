@@ -1,0 +1,161 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:1
+msgid "Profile-worker request staging"
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:7
+msgid ""
+"**Report:** `STAGE-2-175` · **Topic:** [Installed runtime, terminal "
+"workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:12
+msgid ""
+"This chunk is the single 140-line module `worker_submission_staging.py`, "
+"read in full. Its manifest records a small measured token count; this is "
+"static analysis only. It was reviewed alongside the already assigned "
+"parent/worker submission bridges only to describe the interfaces, without"
+" executing them."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:14
+msgid "Capability and mechanics"
+msgstr "Képesség és működési részletek"
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:16
+msgid ""
+"The module holds large request payloads temporarily inside one immutable "
+"profile worker, before they become canonical operations. A staged request"
+" retains session, frontend, operation definition, subject and idempotency"
+" coordinates. It has no operation ID, journal entry or publication effect"
+" until `finish()` returns verified text to the canonical operation host. "
+"The worker caps staging at two simultaneous uploads, while the parent "
+"stream adapter has its own bounded admission slots "
+"(`worker_submission_staging.py` "
+"(`src/cadrumo/entrypoints/runtime/worker_submission_staging.py`))."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:18
+msgid ""
+"Each `begin` expires stale entries, refuses a closed manager, duplicate "
+"upload ID or full staging table, and creates a `SubmissionPayloadBuffer` "
+"from the request descriptor. `append` accepts only the upload’s exact "
+"upload/connection/session binding; the buffer enforces descriptor-level "
+"framing and contiguous chunks. If an append is malformed, the entire "
+"staged entry is dropped and its mutable buffer closed. `finish` calls the"
+" buffer’s whole-payload validation and drops the entry in a `finally` "
+"block even if validation fails; only then does it return a "
+"`StagedSubmission` containing the resulting JSON text and original "
+"admission coordinates. Canonical model decoding/admission happens in the "
+"operation host after this handoff, not here "
+"(`worker_submission_staging.py` "
+"(`src/cadrumo/entrypoints/runtime/worker_submission_staging.py`))."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:20
+msgid ""
+"An explicit abort is idempotent for a missing upload and, when present, "
+"requires the same connection and session. It intentionally does not "
+"require that the session still be live, allowing cleanup after "
+"retirement. Expiry uses a monotonic clock and removes uploads either "
+"after the fixed submission timeout or when an optional current-session "
+"inventory no longer includes their session. `close` marks the staging "
+"manager unavailable and wipes all incomplete entries "
+"(`worker_submission_staging.py` "
+"(`src/cadrumo/entrypoints/runtime/worker_submission_staging.py`))."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:22
+msgid "Security and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:24
+msgid ""
+"The local controls are clear: worker-local staging, a two-entry cap, "
+"exact upload/connection/session binding, finite expiry, early destructive"
+" cleanup on malformed chunks, cleanup on failed finish, explicit abort, "
+"and shutdown wiping. Staged state is not treated as authority to execute "
+"an operation; the canonical host receives the payload only after buffer "
+"validation. This module contains no filesystem access, network access, "
+"secret parsing or application execution, and no tests are included in the"
+" assigned source."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:26
+msgid ""
+"The payload buffer is the critical dependency: its descriptor limits, "
+"chunk order/size, digest, UTF-8/JSON acceptance and zeroization need to "
+"be verified in the application runtime contract. Parent and worker code "
+"must also ensure `begin` binds the exact request descriptor and `finish` "
+"cannot be retargeted. The module has no explicit lock; its current caller"
+" appears worker-confined, but any future multithreaded caller would need "
+"to preserve that confinement or synchronize its dictionary and mutable "
+"buffers. Static inspection cannot prove underlying buffer zeroization or "
+"that all abandoned uploads are eventually expired if the worker’s "
+"periodic sweep stops."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:28
+msgid "Dependencies and follow-up"
+msgstr "Függőségek és további vizsgálatok"
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:30
+msgid ""
+"`RuntimeProfileConnections` streams framed bytes through the bounded "
+"parent adapter, `ProfileWorker` owns this staging instance, and "
+"`ProfileWorkerOperationHost.submit_payload` receives only the finished "
+"`StagedSubmission`. Synthesis should trace `SubmissionPayloadBuffer` for "
+"exact limits and cleanup behavior, then confirm shutdown/cancellation and"
+" session-retirement tests cover partial uploads."
+msgstr ""
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:32
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/175-profile-worker-request-staging.md:34
+msgid ""
+"`worker_submission_staging.py` "
+"(`src/cadrumo/entrypoints/runtime/worker_submission_staging.py`) — lines "
+"1–140, fully read."
+msgstr ""

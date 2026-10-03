@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
 
 from .import_signal_projection import (
@@ -18,7 +18,7 @@ from .import_signal_projection import (
     _diagnostic_deductions,
     _remediation_lanes,
 )
-from .signal_values import _HOTSPOT_LIMIT, _UTF_8, _is_json_object
+from .signal_values import _HOTSPOT_LIMIT, _is_json_object
 
 _IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
 
@@ -192,7 +192,7 @@ class _ImportBoundariesProcessor:
             }
             (run_dir / "artifacts" / "import-health.json").write_text(
                 json.dumps(payload, indent=2, sort_keys=True) + "\n",
-                encoding=_UTF_8,
+                encoding=UTF_8,
                 newline="\n",
             )
             run_outputs["report"] = str(run_dir / "artifacts" / "import-health.json")

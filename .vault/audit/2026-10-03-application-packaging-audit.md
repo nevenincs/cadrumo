@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b146a53e2cd82fae644948cbf8d7ad772f77060deac000210c640875e0304550'
+body_hash: 'sha256:54c4cea69470b2456c471155ff63f5288d34a331b35e9b3fd7668b1a7ec7c20e'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
@@ -41,6 +41,59 @@ Subsequent review: REVISION REQUIRED for the current working tree; the prior art
 
 Concurrent generate.py edits generate storage overrides that the changed Rust provider preserves. native/package-layout.json still declares an empty allowlist and verify.py expects inherited storage redirects to be rejected. This is an unresolved interface mismatch, not a finding against the other task's intended storage semantics. The user has been asked whether to incorporate that policy and rebuild or hand over the verified artifact while its owner completes the changes. Whole-plan completion and current-source approval remain open.
 
+### cmake-shared-inputs | high | Configuration switching originally reset shared dependencies
+
+Review found that Visual Studio tracks custom actions separately per configuration,
+so Debug could dispatch provisioning after Release and delete the shared runtime.
+Corrected with input fingerprints, output inventories and an OS lock around shared
+writers. Focused checks pass for unchanged inputs, changed inputs, missing outputs
+and a second process waiting for the first writer. Full configuration-switch
+acceptance remains pending with the current artifact.
+
+### cmake-product-inputs | high | Product incremental inputs omitted selected authority
+
+Review found that the selected authority descriptor/database and root wheel metadata
+were absent from the original dependency graph. Both now participate in CMake inputs
+and content fingerprints. Transient publication locks/journals are excluded. The
+fresh wheel attempt correctly refused a stale modelo 303/2022 form-layout digest;
+the live checkout was subsequently verified current, and a new snapshot build is
+running. No registry validation was bypassed.
+
+### platform-ownership | high | Shared packaging originally embedded Windows assumptions
+
+The user's correction required moving physical platform names and operations into
+explicit backends. The shared layout now composes the Windows platform contract;
+SDK acquisition, PE relocation, pywin32 patches, resources, C bootstrap and Windows
+acceptance/trace tooling have explicit Windows owners. Shared assembly creates
+contract-derived parents, supports sibling .pth paths, and passes explicit roots
+to smoke tests. Platform contracts and the loader trigger CMake reconfiguration.
+Corrective review reports no remaining high findings in that scope. Unsupported
+Linux/macOS selections fail rather than using Windows defaults.
+
+### storage-owner-reconciliation | low | Current generation follows the user-confirmed core owner
+
+The accepted foundation amendment supersedes the earlier Known Folder and empty
+allowlist policy. Native generation consumes Settings.storage_env_var_names and
+canonical taxonomy defaults; the package layout no longer duplicates mutable
+location declarations. The two existing native storage contract tests pass. This
+resolves the prior decision/document mismatch; fresh artifact behavior still needs
+the acceptance run before S02-S04 can close.
+
+### current-cmake-evidence | medium | Final bundle checks remain pending
+
+Current verdict: PENDING. Five explicit cleanup targets passed in an independent
+configured build tree, preserving unrelated files and configuration and refusing
+source cleanup. Ruff and ty pass. Current Release host/bridge compile; dumpbin
+shows only api-ms-win-core-synch-l1-2-0, ntdll and KERNEL32 imports before main.
+The banner prints CADRUMO 0.5.1, build 1761, UTC build date and CPython 3.13.11.
+Earlier C static/DLL/Rust consumers passed; current full bundle, all native-module
+imports, optional development executable, install/ZIP acceptance and renewed trace
+remain owned by the executor and are not inferred from historical evidence.
+
 ## Recommendations
 
-Artifact acceptance is established by acceptance-closure; concurrent-root-policy and concurrent-override-policy supersede current-source approval. Reconcile those interfaces before rebuilding and rerunning affected checks. Preserve the checked pywin32/PDFium adaptations and rerun their artifact tests when dependencies change. Linux distribution formats/loaders and macOS architecture, signing and wheel availability remain later platform obligations.
+Finish the fresh CMake artifact acceptance before closing open plan steps. Historical
+artifact evidence remains scoped to its recorded source and layout. Preserve the
+checked PDFium/pywin32 adaptations and rerun dependency smoke tests when their
+inputs change. Linux formats/loaders and macOS compilation, signing and wheel
+availability remain platform obligations.

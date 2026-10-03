@@ -4,7 +4,7 @@ tags:
   - '#registry-workbook-parity-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:e6feebf253cf8e72b89d91c0a828b4e15df257592b606fcc1ef2767f5975fecf'
+body_hash: 'sha256:0a91b0371130c437232cbfdb6e0b6ad691c96e35b1cec1476cecd3da1e355210'
 related: []
 ---
 
@@ -39,16 +39,16 @@ parity comparison.
   remain in the facade initially or move first to a small model module.
 - Scanning and classification are a cohesive family:
   `discover_workbooks`, `scan_workbook`, `_scan_xlsx_contents`,
-  `_scan_worksheet_cells`, `_classify_xlsx`, `_formula_references`, 
+  `_scan_worksheet_cells`, `_classify_xlsx`, `_formula_references`,
   related failure-report helpers.
 - Runner/conversion is a cohesive family:
   `detect_workbook_runner`, `run_workbook_with_libreoffice`,
   `convert_binary_xls_with_libreoffice`,
-  `converted_binary_xls_with_libreoffice`, Excel COM execution, 
+  `converted_binary_xls_with_libreoffice`, Excel COM execution,
   binary conversion context helpers.
 - Parity comparison and backend verification are a cohesive family:
   `run_registry_workbook_parity`, `compare_registry_to_workbook`,
-  `verify_workbook_backend`, `assert_workbook_scan_clean`, 
+  `verify_workbook_backend`, `assert_workbook_scan_clean`,
   `assert_formula_workbook_runner_ready`.
 - `inventory_workbook_coverage` sits between scanning and reporting. It
   should move with scanning first unless implementation reveals tighter
@@ -57,7 +57,7 @@ parity comparison.
 ### Low
 
 - The conversion helpers use external process and platform capabilities,
-  so extraction should avoid changing timeout settings, error types, 
+  so extraction should avoid changing timeout settings, error types,
   executable-discovery behavior.
 
 ## Recommendations

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2082f59dfc9cc66514736cc192f6bbe3d978b2255315351a8216f9f8327754e2'
+body_hash: 'sha256:f83233ba852263dfb417f47433cad504f8351642c0a30a04f7d2a246313614c5'
 related: []
 ---
 
@@ -185,8 +185,6 @@ the three where the checkbox itself was wrong rather than merely
 unaccountable. `S51`, `S52`, `S53` remain open — their cited file:lines
 still read `load_settings()` directly, not re-verified again since the last
 pass.
-
-
 
 **Evidence**: each remaining site re-pointed onto `storage_path`/the
 accessor, verified by reading the changed file at a pinned SHA, not by
@@ -798,8 +796,6 @@ Accessor routing prevents a test drifting to vacuous; it does not prevent one
 arriving that way.
 
 #### Mechanical detection was tried and does not work — do not rebuild it
-
-
 
 - **over-fires roughly 30x** — 114 flags at `64c9fe6d6e` against at best 3 real
   candidates, independently reproduced at a second pin (`53f80f0830`, 110 flags)

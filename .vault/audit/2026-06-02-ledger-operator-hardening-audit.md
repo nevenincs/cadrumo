@@ -4,7 +4,7 @@ tags:
   - '#ledger-operator-hardening'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:f833a99a1948c5b238ced5adf391fc8e602b00091bed5f22ae71f0813abba93e'
+body_hash: 'sha256:54902e439c9be2eee1524ba26b48971354dac153c1a8f553fb120ee4483bcfe5'
 related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---
@@ -213,7 +213,7 @@ the import normalizer is wired.
   negative-amount foreign row would have crashed the moment a normalizer was
   supplied. Fixed to store the magnitude (sign carried by `raw.amount` +
   direction). This had never fired only because the CLI never wired a normalizer.
-- Multicurrency HIGH #2 (project `value_in_eur`/`fx_rate` on read surfaces) 
+- Multicurrency HIGH #2 (project `value_in_eur`/`fx_rate` on read surfaces)
   the asesor/year-end findings remain tracked P10/W11 Steps; #2 is now meaningful
   to land since import populates the values.
 

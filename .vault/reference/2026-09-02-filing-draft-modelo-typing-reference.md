@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5cbaa111a5dda0d31aee52ea35dab5ccd9378d0c91e87311156f4ee1dda7338'
+body_hash: 'sha256:58a3ff8a8ae11b89dfff025d8435486160141db16a129fe53f875f21a95806f6'
 related: []
 ---
 
@@ -101,8 +101,6 @@ through the envelope serialiser.
   bottom of that file. The file registers none.
 
 ### Existing test surfaces to extend
-
-
 
 ### What was not investigated
 

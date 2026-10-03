@@ -1,0 +1,351 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:1
+msgid "Taxpayer applicability and indexed registry authority"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:7
+msgid ""
+"**Report:** `STAGE-2-125` · **Topic:** [Tax calculation domain](../topics"
+"/tax-calculation-domain.md)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:12
+msgid ""
+"This chunk covers 13 registry-domain modules totaling 4,994 physical "
+"lines, 217,144 bytes, and 45,840 measured `o200k_base` proxy tokens. All "
+"nine assigned pages were read, including the complete applicability "
+"engine, indexed authority reader, codec, and SQLite store. This is static"
+" analysis; I did not load the application, alter source, or run tests. "
+"Embedded legal claims are treated as declared product knowledge, not "
+"current-law verification."
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:14
+msgid "Taxpayer applicability and 202 modality"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:16
+msgid ""
+"The applicability engine derives a per-modelo verdict from taxpayer "
+"entity type, natural-person IRPF income category/regime, fiscal "
+"residency, IVA regime, and payer facts. It distinguishes `APPLICABLE`, "
+"positive `NOT_APPLICABLE`, `ATTRIBUTION_PASS_THROUGH` for quota self-"
+"assessments owned by attribution entities, and `INCOMPLETE`. An "
+"undeclared model or missing required fact therefore does not silently "
+"become a confident obligation or exemption. Two-state payer facts with "
+"false values remain unanswered rather than proving “no”; registry-"
+"projected optional booleans can distinguish explicit no from absent data,"
+" and period companions can make an otherwise positive answer incomplete. "
+"The operator-facing rationale and legal reference IDs travel with the "
+"verdict. Rule evaluation "
+"(`src/cadrumo/domain/calculations/registry/applicability.py`) Payer-fact "
+"state model "
+"(`src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`)"
+" Projection declaration handling "
+"(`src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:18
+msgid ""
+"Coverage is deliberately mixed: the two IVA rules, 303 and 390, remain "
+"Python seed rules; a set of 34 other modelo IDs resolve their rule from "
+"registry revisions; a model outside both surfaces returns `INCOMPLETE` "
+"with a distinct “no rule yet” rationale. Beckham-window branches route "
+"Modelo 151 and suppress Modelo 100 while active, and suppress Modelo 720 "
+"during that window. Rules are hydrated through typed "
+"entity/income/regime/fiscal/IVA/payer vocabularies, and registry-backed "
+"lookups can reuse a generation-pinned operation. One cross-layer "
+"assumption is explicit: registry applicability content is expected to be "
+"uniform across revisions, so the resolver picks the first revision "
+"carrying the family rather than selecting by filing date. If that "
+"invariant changes, the loader/registry validator or this selector must "
+"change with it. Mixed rule surfaces "
+"(`src/cadrumo/domain/calculations/registry/applicability.py`) Registry "
+"rule IDs (`src/cadrumo/domain/calculations/registry/applicability.py`) "
+"Generation-pinned rule lookup "
+"(`src/cadrumo/domain/calculations/registry/applicability.py`) Beckham "
+"branches (`src/cadrumo/domain/calculations/registry/applicability.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:20
+msgid ""
+"Modelo 202 modality is a separate registry-fact projection. It requires a"
+" legal-entity type and prior 12-month turnover (`INCN`); missing INCN "
+"yields a typed incomplete result, while a strictly greater value than the"
+" dated art. 40.3 threshold selects mandatory modality and values at or "
+"below it select the optional modality. The threshold result retains its "
+"resolved fact provenance. The full profile function delegates to the raw-"
+"input function, so calculation contexts need not depend on the setup "
+"wizard. Threshold resolution "
+"(`src/cadrumo/domain/calculations/registry/applicability_modelo202.py`) "
+"Single modality rule "
+"(`src/cadrumo/domain/calculations/registry/applicability_modelo202.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:22
+msgid "Generation-pinned registry authority"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:24
+msgid ""
+"The core capability is lazy, typed access to a published SQLite authority"
+" generation. A closed canonical descriptor selects a content-addressed "
+"database by basename, byte size, SHA-256, and logical-generation digest; "
+"database target confinement rejects traversal. A configured authority "
+"root is definitive, so a missing descriptor there refuses rather than "
+"silently falling back to packaged data. Admission checks the database "
+"format and manifest generation, opens up to four read-only/query-only "
+"SQLite connections, and binds an operation to a logical generation plus "
+"reader incarnation. Component reads require the same pin, verify payload "
+"digests, load declared dependencies under that pin, and validate typed "
+"results. `IndexedRegistryAuthority` leases readers; on selector change it"
+" admits a replacement and keeps retired readers alive until their in-"
+"flight leases end. Descriptor validation "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`) Read-only"
+" reader admission "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`) Per-"
+"component digest and decode path "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`) "
+"Generation operation lease "
+"(`src/cadrumo/domain/calculations/registry/authority.py`) Configured-"
+"versus-packaged selector "
+"(`src/cadrumo/domain/calculations/registry/authority.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:26
+msgid ""
+"`PinnedAuthorityOperation` provides typed point reads for revisions, "
+"directories, facts, layouts, references, runtime catalogues, and "
+"evidence; snapshots use the same generation for their selected revision "
+"and dependencies. The eager `ValidatedRegistryAuthority` remains a "
+"separate development-validation surface. Capture/currentness checks use "
+"an HMAC-authenticated process-local comparison domain, while bounded "
+"authority caches retain facts/components and decoded graphs. The "
+"concurrent component cache coalesces loads for one key, detects recursive"
+" and cross-thread wait cycles, and evicts least-recently-used entries to "
+"a 64 MiB retained-weight budget. That budget is an object-graph "
+"accounting estimate, not an RSS limit; active caller references, "
+"connections, and in-flight loads are outside it. Pinned component API "
+"(`src/cadrumo/domain/calculations/registry/authority.py`) Capture "
+"coordinates (`src/cadrumo/domain/calculations/registry/authority.py`) "
+"Accounted concurrent cache "
+"(`src/cadrumo/domain/calculations/registry/authority_cache.py`) Budget "
+"and eviction "
+"(`src/cadrumo/domain/calculations/registry/authority_cache.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:28
+msgid ""
+"Authority evidence projections expose anchor-scoped legal text and source"
+" bytes only after SHA-256 checks, and provide quote-in-evidence matching "
+"without opening authoring corpus paths. The codec emits canonical JSON, "
+"refuses duplicate JSON members and non-finite constants, requires an "
+"exact envelope, selects decoders by closed query type, and performs "
+"Pydantic validation. The SQLite descriptor and database are content-"
+"addressed, but this slice contains no signature or publisher-identity "
+"verification: digest checks prove byte consistency with the selected "
+"descriptor, while trust in who published that descriptor/generation is an"
+" external packaging/deployment boundary. The component decoder also does "
+"not compare incoming component bytes with a canonical re-encoding, so "
+"duplicate/constant rejection is enforced at read time while canonical "
+"byte spelling is principally enforced by the publisher. Evidence digest "
+"checks (`src/cadrumo/domain/calculations/registry/authority_artifact.py`)"
+" Quote and source access "
+"(`src/cadrumo/domain/calculations/registry/authority_artifact.py`) "
+"Component codec "
+"(`src/cadrumo/domain/calculations/registry/authority_component_codec.py`)"
+" Strict component decoding "
+"(`src/cadrumo/domain/calculations/registry/authority_component_codec.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:30
+msgid ""
+"The reader hashes the full database when admitted and later compares file"
+" identity metadata to detect disappearance or replacement; cache hits "
+"avoid per-component SQLite/file reads. This is a performance choice under"
+" an immutable-published-artifact assumption. Publisher integrity scans "
+"are described as occurring before the descriptor is written, so "
+"deployment assurance depends on publication not mutating a selected "
+"generation in place. Streaming database admission hash "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`) Post-"
+"admission identity check "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:32
+msgid "Binding/catalogue contracts and assessment"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:34
+msgid ""
+"The capital-goods catalogue resolves a transaction-date fact into allowed"
+" kind and disposal-regime tokens, role projections, legal references, and"
+" a minimum acquisition year; it checks that role tokens occur in the "
+"declared ordered sets and that paired roles are distinct. Its binding "
+"provider distinguishes Modelo 303 casilla 43 from Modelo 390 casilla 63 "
+"as separate output facts. Binding aggregation defaults are centralized, "
+"with detail-row sources using rows and scalar sources using sums; "
+"provider declarations are a closed discriminated union over family-"
+"specific selectors, preventing a registry binding from independently "
+"pairing an open source token with an unrelated selector. Capital-goods "
+"catalogue validation "
+"(`src/cadrumo/domain/calculations/registry/bienes_inversion_catalogue.py`)"
+" Distinct filing outputs "
+"(`src/cadrumo/domain/calculations/registry/bienes_inversion_regularizacion_bindings.py`)"
+" Aggregation default "
+"(`src/cadrumo/domain/calculations/registry/binding_aggregation.py`) "
+"Closed provider union "
+"(`src/cadrumo/domain/calculations/registry/binding_provider.py`)"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:36
+msgid ""
+"Strong controls in this slice are explicit incomplete outcomes, closed "
+"typed authority components, immutable generation pins, digest-checked "
+"read-only storage, same-generation dependency decoding, and bounded "
+"concurrent caching. The main follow-up points are external verification "
+"of descriptor publisher trust and publication atomicity, tests for "
+"cutover/lease races and cross-thread cache cycles, and confirming the "
+"applicability uniformity invariant across every revision. Taxpayer "
+"profiles, INCN, legal citations, invoice thresholds, and other financial "
+"data are sensitive inputs, but this slice performs no live submission and"
+" does not itself authorize a taxpayer action. No tests are assigned here "
+"or were executed; comments citing earlier migration tests do not "
+"establish present test coverage."
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:38
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:40
+msgid ""
+"registry/applicability.py "
+"(`src/cadrumo/domain/calculations/registry/applicability.py`) — lines "
+"1–1,164"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:41
+msgid ""
+"registry/applicability_modelo202.py "
+"(`src/cadrumo/domain/calculations/registry/applicability_modelo202.py`) —"
+" lines 1–235"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:42
+msgid ""
+"registry/applicability_payer_facts.py "
+"(`src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`)"
+" — lines 1–297"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:43
+msgid ""
+"registry/applicability_routes.py "
+"(`src/cadrumo/domain/calculations/registry/applicability_routes.py`) — "
+"lines 1–34"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:44
+msgid ""
+"registry/authority.py "
+"(`src/cadrumo/domain/calculations/registry/authority.py`) — lines 1–1,039"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:45
+msgid ""
+"registry/authority_artifact.py "
+"(`src/cadrumo/domain/calculations/registry/authority_artifact.py`) — "
+"lines 1–488"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:46
+msgid ""
+"registry/authority_cache.py "
+"(`src/cadrumo/domain/calculations/registry/authority_cache.py`) — lines "
+"1–257"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:47
+msgid ""
+"registry/authority_component_codec.py "
+"(`src/cadrumo/domain/calculations/registry/authority_component_codec.py`)"
+" — lines 1–428"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:48
+msgid ""
+"registry/authority_store.py "
+"(`src/cadrumo/domain/calculations/registry/authority_store.py`) — lines "
+"1–430"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:49
+msgid ""
+"registry/bienes_inversion_catalogue.py "
+"(`src/cadrumo/domain/calculations/registry/bienes_inversion_catalogue.py`)"
+" — lines 1–399"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:50
+msgid ""
+"registry/bienes_inversion_regularizacion_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/bienes_inversion_regularizacion_bindings.py`)"
+" — lines 1–52"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:51
+msgid ""
+"registry/binding_aggregation.py "
+"(`src/cadrumo/domain/calculations/registry/binding_aggregation.py`) — "
+"lines 1–68"
+msgstr ""
+
+#: ../../technical/articles/125-taxpayer-applicability-and-indexed-registry-authority.md:52
+msgid ""
+"registry/binding_provider.py "
+"(`src/cadrumo/domain/calculations/registry/binding_provider.py`) — lines "
+"1–103"
+msgstr ""

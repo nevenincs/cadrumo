@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:820a1e3c0c6450b0a90cbde44b309f6eec9e402d42ffad1f8fd2671deccae40b'
+body_hash: 'sha256:97ad16e0bf7a9d4adabb70b625f7ec9f91f6294b822b2f0c6fa71e0252dce37a'
 related: []
 ---
 
@@ -18,9 +18,9 @@ The `active-profile` scanner signal is from human-facing error documentation for
 
 Validation:
 
-- the focused test run passed with 6 tests.
-- the focused test run passed with 22 tests.
-- the focused test run passed.
-- the focused test run passed.
+- the historical check passed with 6 tests.
+- the historical check passed with 22 tests.
+- the historical check passed.
+- the historical check passed.
 
 Disposition: close `AFR-029` as `manifest-discovery` false positive for this file.

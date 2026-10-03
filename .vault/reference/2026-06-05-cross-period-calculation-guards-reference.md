@@ -4,7 +4,7 @@ tags:
   - '#cross-period-calculation-guards'
 date: '2026-06-05'
 modified: '2026-10-03'
-body_hash: 'sha256:b16a4f42a5b630fa1b7ac60dc20f6b592f2d1a481974762d4f05d5cb8286f62e'
+body_hash: 'sha256:c4d195d6d8b430801b5ff7ee800662311aa8349eeafc8462c925ef7515748fd4'
 related: []
 ---
 
@@ -35,8 +35,6 @@ store with `source_kind = "aeat_sede_justificante"`. `_persist_latest_filed_calc
 selects the latest captured observation per modelo, year, and period.
 
 A `ModeloRecord` can carry `aeat_accepted = True` and `ExternalEvidence` with kinds `aeat_justificante_pdf`, `aeat_csv_register`, or `aeat_live_capture`. This proves the filing-record layer already has an external evidence vocabulary, but that vocabulary is not connected to `CalculationObservationRepository` coverage checks.
-
-
 
 There is not yet a distinct finding kind for incomplete cross-period evidence, local-only prior filing evidence, or remote/local justificante divergence.
 

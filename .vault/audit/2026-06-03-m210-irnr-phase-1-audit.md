@@ -4,7 +4,7 @@ tags:
   - '#m210-irnr-phase-1'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:2e7ec34223ad425c232b9efcdb806219d3fc0d9e2136ca7e0b201c0d03d0bec6'
+body_hash: 'sha256:ea3316d7b1949b8a50fad20aa07be8e6bbb198b3e2d7825306d5367cc10c8618'
 related:
   - "[[2026-06-03-m210-irnr-phase-1-research]]"
 ---
@@ -24,7 +24,7 @@ work_create-early-check interpretation per operator direction.
 ### Schema field
 
 the retired data file lines
-360-386 already declare `representante_fiscal_nif` 
+360-386 already declare `representante_fiscal_nif`
 `representante_fiscal_nombre` on the `taxpayer` section with
 selectors `taxpayer.representante_fiscal_nif` etc. The
 `TaxpayerProfile` dataclass exposes them; the model validator
@@ -81,7 +81,7 @@ gets the refusal LATE (at verify) rather than EARLY (at create).
 ## Closure interpretation
 
 The Step text "surface representante-fiscal-required refusal at
-modelo work create when fiscal_residency=NON_RESIDENT 
+modelo work create when fiscal_residency=NON_RESIDENT
 ue_eee_status is False" is ambiguous between two readings:
 
 1. **Verify-pipeline interpretation**: ensure the predicate

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:302d4fddc7205503f514594611ebd1eb5570d56489a74456bd24d6cff4177acb'
+modified: '2026-10-03'
+body_hash: 'sha256:9c293002d10f54ce6a5f743a287b32604f089d508128a52edbc4531524f5ddb1'
 related: []
 ---
 
@@ -28,10 +28,10 @@ The helper still only resolves and validates path shapes. It does not persist se
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_path_safety.py src/aeat/adapters/persistence/storage/test_substrate_smoke.py -k "path_safety or path_containment or safe_repository_id"` passed with 25 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/_path_safety.py src/aeat/adapters/persistence/storage/errors.py src/aeat/adapters/persistence/storage/test_path_safety.py` passed.
+- The historical check passed with 25 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- `git diff --check -- src/aeat/adapters/persistence/storage/_path_safety.py src/aeat/adapters/persistence/storage/errors.py src/aeat/adapters/persistence/storage/test_path_safety.py` passed.
+- The historical diff check passed.
 - Case-sensitive touched-file hygiene scan found no direct settings construction, environment access, direct output, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, broad exception catches, raw UTF-8 literals, or local `Path("db://secure_objects")` construction.
 - Subagent reviewer Archimedes reported no findings. Residual scope note: `PathContainmentError` intentionally preserves diagnostic `args` for compatibility, so future callers must keep path-safety context labels non-sensitive.
 

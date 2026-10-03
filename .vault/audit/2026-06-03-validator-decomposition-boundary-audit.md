@@ -4,7 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:0214144c4708b9dfef5717ed64fee6259a4b54e964dea254e381920fab8bfadb'
+body_hash: 'sha256:ee968de22efc0a67d790cecb09d87192cc7e1c119e0e97304c9c332f7a7f3d46'
 related: []
 ---
 
@@ -34,7 +34,7 @@ Audit the current registry validation modules before extracting additional valid
 
 ## Verification
 
-- `uv run --no-sync python -m py_compile src/aeat/domain/calculations/registry/_validate.py src/aeat/domain/calculations/registry/_validate_revision_sections.py src/aeat/domain/calculations/registry/_validate_cross_revision.py src/aeat/domain/calculations/registry/_validate_references.py`
+- The historical check
 
 ## Notes
 

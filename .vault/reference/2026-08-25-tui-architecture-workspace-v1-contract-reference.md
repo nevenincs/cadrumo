@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8acd8bd4b3d38339dc738d84b551fc43d0427d5efd1254965c467bba0dbe5bc8'
+body_hash: 'sha256:993784187b7869bc217bf0e3e82aa5a83df7ed0cdb40253a2a95d93e49eeab5f'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -99,8 +99,6 @@ The authority currently consumes that identity for caching but does not expose a
 
 ### Canonical bounded review
 
-
-
 Workspace V1 must carry that exact object or a typed ineligible-facet
 disposition. It must not widen `ModeloWorkReview`, reconstruct its casillas,
 repeat its join, or reuse the compact CLI `WorkReviewPayload`, which deliberately
@@ -136,8 +134,6 @@ The cross-authority `RegistryClosureReport` join remains development-only at
 import it or recreate it. Until a canonical production join/port exists,
 Workspace closure capability is `unmeasured`; the individual public limbs may
 still be projected honestly without claiming the missing conjunction.
-
-
 
 Workspace provenance may select and redact this graph, but it cannot invent a
 second resolver, edge, identity, or causal ordering. Preserve resolver identity,

@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:a86adf7d7e39f51ef41b038440cb7f4d171c5da90df3ff1b998d9092d3615bd4'
+body_hash: 'sha256:ffb147d6c2b88b4d4e54dd462f8d7b27e8ea602ae45bf6e2567ea618d021579f'
 related: []
 ---
 
@@ -34,9 +34,9 @@ The review pass noted that low-level OS exceptions could carry raw path strings 
 
 Validation:
 
-- the focused test run passed with 28 tests.
-- the focused test run passed with 21 tests.
-- the focused test run passed.
+- the historical check passed with 28 tests.
+- the historical check passed with 21 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed after removing stale `cli.ledger.link.*` extras through `python -m aeat.locales remove`.
 
 Disposition: close `AFR-042` as `remote-mirror`.

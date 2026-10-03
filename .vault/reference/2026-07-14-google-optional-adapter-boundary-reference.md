@@ -4,7 +4,7 @@ tags:
   - '#google-optional-adapter-boundary'
 date: '2026-07-14'
 modified: '2026-10-03'
-body_hash: 'sha256:6d3fed7cb3b90529692dcbe75d8908e1c494eeaa9c9aab648388605fa23af816'
+body_hash: 'sha256:87fe207cb5c8ac2b2d7c1b80deffb48800fc214a64c849728f138c2b004bbed2'
 related:
   - "[[2026-07-14-google-oauth-audit]]"
   - "[[2026-07-12-google-oauth-adr]]"
@@ -38,8 +38,6 @@ Google-specific KEK escrow, per-row restoration, or a second recovery format wou
 
 ### Drive evidence acquisition already reuses canonical byte custody
 
-
-
 An exact source search at the audited revision found no
 `KekEscrowEnvelope`, `inbound_ingested_files`, `sync inbound`, `google escrow`,
 or `google restore` implementation. No watched `_inbound` scanner, filename
@@ -48,8 +46,6 @@ must preserve the two explicit byte-bearing commands and retire only the
 unimplemented watched-inbox design.
 
 ### Calculation Sheets is a non-authoritative round trip
-
-
 
 Targeted confirmation found no `WorkUnit`, `ModeloWorkUnit`,
 `CalculationRevision`, `CalculationRevisionCatalogueRepository`, or domain

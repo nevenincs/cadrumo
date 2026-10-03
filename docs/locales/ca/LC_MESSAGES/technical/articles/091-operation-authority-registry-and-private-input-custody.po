@@ -1,0 +1,329 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:1
+msgid "Operation authority, registry and private input custody"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:7
+msgid ""
+"**Report:** `STAGE-2-091` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:10
+msgid ""
+"**Scope:** 16 files under `src/cadrumo/application/operations`, totaling "
+"3,976 lines, 159,656 bytes and 31,723 measured `o200k_base` proxy tokens."
+" All six bounded-reader pages were read. Static inspection only; no "
+"application execution or tests were run."
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacitats i mecanismes"
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:14
+msgid ""
+"This chunk supplies durable owner evidence, public operation "
+"registration, authorization context, secret custody and the assembled "
+"supervisor boundary. Conflict scope is a domain-separated digest of "
+"operation definition plus subject. Lease observations and transition "
+"results carry exact predecessor/current witnesses and an evidence digest "
+"over their canonical payload. Validators enforce acquisition, renewal, "
+"release, expiry and takeover laws; takeover requires a different owner "
+"and token, while renewals preserve owner/token/acquisition identity and "
+"extend expiry. Conflict-scope identity "
+"(`src/cadrumo/application/operations/persistence/leases.py`), lease "
+"witness and transition validation "
+"(`src/cadrumo/application/operations/persistence/leases.py`), takeover "
+"checks (`src/cadrumo/application/operations/persistence/leases.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:16
+msgid ""
+"Event replay is bounded to 1,000 rows and distinguishes ordinary pages, "
+"caught-up state and expired/compacted cursors requiring an advancing "
+"restart cursor. Unknown-operation status is confined to the lower adapter"
+" boundary and is translated to a typed refusal before public page "
+"construction. Replay statuses and bounded page contract "
+"(`src/cadrumo/application/operations/persistence/replay.py`), cursor "
+"validation (`src/cadrumo/application/operations/persistence/replay.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:18
+msgid ""
+"The registry binds each public schema ID/version to one exact model and "
+"fingerprint, publishes a deterministic contract-set digest, and requires "
+"its registrations to cover every definition. It validates "
+"projector/adapter signatures, request/result model relationships, access "
+"resolvers and the contract fixed point. Hydrating credential-free "
+"requests rejects duplicate JSON members and nonstandard constants. Public"
+" schema validation requires a strict immutable model graph, closed JSON "
+"schema, no secret-capable formats, and credential-free input field-name "
+"tripwires; only a field matching the `digest` token alone is admitted "
+"when its schema is exactly 64 lowercase hex characters. Registry schema "
+"identity and contract (`src/cadrumo/application/operations/registry.py`),"
+" exact registration coverage "
+"(`src/cadrumo/application/operations/registry.py`), credential-free "
+"schema checks "
+"(`src/cadrumo/application/operations/registry_schema_validation.py`), "
+"closed public schema compilation "
+"(`src/cadrumo/application/operations/registry_schema_validation.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:20
+msgid ""
+"Operation access resolvers receive a host-built context with profile, "
+"destination, frontend, action, contract, published authority and either a"
+" prior admitted request or held authority. The profile guard separately "
+"checks request subject, executor identity and active bucket against the "
+"selected profile. Admission provenance records the original profile "
+"binding, approved scope, access request, authority generation and a "
+"fingerprint of the exact request; it is retained as an encrypted operand,"
+" not as a reusable credential, and revalidates against the stored "
+"invocation. Profile identity checks "
+"(`src/cadrumo/application/operations/profile_guard.py`), encrypted "
+"admission provenance contract "
+"(`src/cadrumo/application/operations/provenance.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:22
+msgid ""
+"The process-local secret broker accepts only an exact durable requirement"
+" and mutable `bytearray`, enforces a 65,536-byte maximum and one-hour "
+"declaration ceiling, copies into broker-owned memory, then zeroizes the "
+"caller's buffer. The executor consumes a memory view once; scope exit "
+"wipes its backing buffer. Expiry, explicit discard and shutdown also "
+"clear stored or active buffers. Operation definitions reject secret-"
+"bearing workflows that would resume after owner loss. One-shot broker and"
+" zeroization (`src/cadrumo/application/operations/secret_submission.py`),"
+" definition and supervisor constraints "
+"(`src/cadrumo/application/operations/supervisor.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:24
+msgid ""
+"Response authorities are kept outside journal observations. A newly "
+"submitted operation receives a process-local capability; the broker holds"
+" a mutable token only for its exact pending review, actor, operation and "
+"revision. The bound response service checks expiry and proposal identity "
+"before exposing APPLY/REJECT intents and closes the bearer after one "
+"mutation attempt. Review, result, refresh, cancellation and detach "
+"services validate typed public requests and return stable refusals when "
+"state, schema, revision or authority does not match. Bound bearer "
+"validation and wiping "
+"(`src/cadrumo/application/operations/projection_services.py`), review and"
+" result services "
+"(`src/cadrumo/application/operations/projection_services.py`), single "
+"response-control boundary "
+"(`src/cadrumo/application/operations/projection_services.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:26
+msgid "Knowledge, security, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:28
+msgid ""
+"Canonical owner models are mirrored only when their shape cannot be "
+"safely exposed directly. The mirror preserves scalar type (including "
+"decimal spelling), validates exact field inventories, documents reviewed "
+"omissions, and restores canonical values with validation. Period mirrors "
+"reject noncanonical period spellings; generic public scalar conversion "
+"uses an explicit decimal wrapper. Blocking local reads can run in a "
+"worker thread, but the caller waits for result storage and no-effect "
+"recording to complete before cancellation is re-raised, avoiding a stored"
+" result paired with an absent effect fact. Mirror inventory and round "
+"trip (`src/cadrumo/application/operations/public_mirror.py`), period and "
+"scalar DTOs (`src/cadrumo/application/operations/public_period.py`), "
+"cancellation-safe local read capture "
+"(`src/cadrumo/application/operations/read_capture.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:30
+msgid ""
+"The supervisor composes the lease, submit, execution, settlement, "
+"reconciliation and bounded-drain stages around one registry and set of "
+"journal/lease/operand ports. It refuses configurations lacking a "
+"financial-custody repository when definitions declare transient amounts; "
+"secret lifetime must be shorter than the owner lease. Admission state "
+"gates submission, response, reconciliation and private stored-invocation "
+"reads during drain. Continuation is not blind replay: active ownership is"
+" checked, nonterminal work requiring a new owner is reconciled, and only "
+"then can a created operation start. Supervisor composition "
+"(`src/cadrumo/application/operations/supervisor.py`), admission and "
+"custody validation (`src/cadrumo/application/operations/supervisor.py`), "
+"authorized continuation/reconciliation path "
+"(`src/cadrumo/application/operations/supervisor.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:32
+msgid ""
+"One conditional secret-handling concern remains: review tokens are "
+"generated as immutable Python strings, then copied to mutable broker "
+"storage; the local publisher finally rebinds its variable to an empty "
+"string. That does not overwrite the original immutable string's memory. "
+"It is not journaled, and the later broker copy is zeroized, but the "
+"transient original remains subject to Python's normal object lifetime. "
+"Review token construction and publication "
+"(`src/cadrumo/application/operations/supervisor_context.py`), local token"
+" handoff (`src/cadrumo/application/operations/supervisor_context.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:34
+msgid ""
+"The durable contracts in this chunk are extensive, but implementations "
+"for journaling, lease CAS, encrypted operand storage, profile authority "
+"and startup invocation are elsewhere. In particular, "
+"`OperationTransientFinancialOperandBroker.reconcile_owner_restart` exists"
+" in the custody broker "
+"(`src/cadrumo/application/operations/financial_operand_submission.py`); "
+"this supervisor chunk does not call it during construction or ordinary "
+"operation reconciliation. Verify that a startup coordinator invokes it "
+"before operations are re-admitted, or custody checkpoints may remain "
+"unsettled after owner loss. No assigned tests are present, so the "
+"concurrency, single-use behavior and schema guards remain unverified by "
+"runtime evidence."
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:36
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:38
+msgid ""
+"Synthesis should trace the registry into concrete operation definitions, "
+"profile resolver and access authority, then connect the lease/journal"
+"/reference-store protocols to their real adapters. Confirm where process-"
+"start financial-custody recovery runs and inspect response-bearer "
+"lifetime in the actual frontend service. Verify public mirror call sites "
+"and ensure that callers use only the typed projections rather than "
+"retaining canonical private models."
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:40
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:42
+msgid ""
+"All 16 assigned files were read completely across pages 1–6; no portions "
+"were unread."
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:44
+msgid ""
+"persistence/leases.py "
+"(`src/cadrumo/application/operations/persistence/leases.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:45
+msgid ""
+"persistence/replay.py "
+"(`src/cadrumo/application/operations/persistence/replay.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:46
+msgid "profile_guard.py (`src/cadrumo/application/operations/profile_guard.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:47
+msgid ""
+"projection_services.py "
+"(`src/cadrumo/application/operations/projection_services.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:48
+msgid "provenance.py (`src/cadrumo/application/operations/provenance.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:49
+msgid "public_mirror.py (`src/cadrumo/application/operations/public_mirror.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:50
+msgid ""
+"public_model_conversion.py "
+"(`src/cadrumo/application/operations/public_model_conversion.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:51
+msgid "public_period.py (`src/cadrumo/application/operations/public_period.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:52
+msgid "public_scalar.py (`src/cadrumo/application/operations/public_scalar.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:53
+msgid "read_capture.py (`src/cadrumo/application/operations/read_capture.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:54
+msgid ""
+"refusal_evidence.py "
+"(`src/cadrumo/application/operations/refusal_evidence.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:55
+msgid "registry.py (`src/cadrumo/application/operations/registry.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:56
+msgid ""
+"registry_schema_validation.py "
+"(`src/cadrumo/application/operations/registry_schema_validation.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:57
+msgid ""
+"secret_submission.py "
+"(`src/cadrumo/application/operations/secret_submission.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:58
+msgid "supervisor.py (`src/cadrumo/application/operations/supervisor.py`)"
+msgstr ""
+
+#: ../../technical/articles/091-operation-authority-registry-and-private-input-custody.md:59
+msgid ""
+"supervisor_context.py "
+"(`src/cadrumo/application/operations/supervisor_context.py`)"
+msgstr ""

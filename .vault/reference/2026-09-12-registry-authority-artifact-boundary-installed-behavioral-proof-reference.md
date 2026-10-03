@@ -5,7 +5,7 @@ tags:
 date: '2026-09-12'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:63723abac56a2546931c675f6aa81a7d53befcb270c8201c049674ed94f4a254'
+body_hash: 'sha256:8c024a2801b97fa59a3e3332e6794d153d9f4e1a95f618fa6a191ccbd25d5f72'
 related: []
 ---
 
@@ -42,8 +42,6 @@ Reusable low-level helpers are `run_checked` at `dev/packaging/lane_verification
 ## Existing runtime refusal proof
 
 The tests at lines 182, 280, and 293 prove repeated corruption refusal after a good read and missing or corrupt publication refusal without an authoring fallback. These are strong domain tests but remain in-process and do not exercise installed CLI or MCP behavior.
-
-
 
 ## Coverage gaps
 

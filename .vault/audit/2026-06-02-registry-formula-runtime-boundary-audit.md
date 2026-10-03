@@ -4,7 +4,7 @@ tags:
   - '#registry-formula-runtime-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:854fdda1be07cd4a70c1d8ef3584727475c5ae1f62d34cb14fa8e53bee4c0da1'
+body_hash: 'sha256:cd7648d4a40afadc3da6c12280f3d62d1be943c35c287884415e65be0688e5ee'
 related: []
 ---
 
@@ -14,7 +14,7 @@ related: []
 
 Audited the retired module as
 the registry calculation engine and a large production module with broad
-consumers across filing, verification, CLI, Google Sheets, 
+consumers across filing, verification, CLI, Google Sheets,
 continuity tests.
 
 ## Findings
@@ -25,7 +25,7 @@ continuity tests.
   calculation result models, M210 sentinel constants, the
   `calculate_registry_snapshot` entry point, initial-value projection,
   previous-filing bound-casilla guards, expression dispatch, parameter
-  and bracket resolution, M210 rate resolution, rounding, type guards, 
+  and bracket resolution, M210 rate resolution, rounding, type guards,
   public `read_parameter`.
 - The file has no local diff at audit time, so it is a reasonable
   near-term implementation target after audit closure.
@@ -43,7 +43,7 @@ continuity tests.
 
 - Public entry orchestration is a cohesive family:
   `calculate_registry_snapshot`, `RegistryCalculationEntry`,
-  `RegistryCalculationResult`, observation materialisation, rounding, 
+  `RegistryCalculationResult`, observation materialisation, rounding,
   external-value validation. This should remain in `_formula_runtime.py`
   until helper families are extracted.
 - Initial values and previous-filing projection guards are a separate
@@ -75,13 +75,13 @@ continuity tests.
 
 1. Keep `_formula_runtime.py` as the public compatibility facade during
    staged decomposition.
-2. First safe extraction candidate: recursive expression evaluation 
+2. First safe extraction candidate: recursive expression evaluation
    arithmetic/comparison dispatch. Preserve `_evaluate_expression` as a
    private compatibility re-export while tests still import it directly.
 3. Second extraction candidate: parameter and bracket lookup helpers.
    Keep `read_parameter` public and delegating through the same helper.
 4. Third extraction candidate: M210 rate-resolution op and sentinel
-   helpers. Keep public sentinel aliases in `_formula_runtime.py` 
+   helpers. Keep public sentinel aliases in `_formula_runtime.py`
    registry-root exports stable.
 5. Defer initial-value and previous-filing absent-by-design extraction
    until `_PreviousModeloSelector` ownership is settled by the binding

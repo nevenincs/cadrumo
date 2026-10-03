@@ -312,6 +312,8 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     executable.write_text("", encoding="utf-8")
     receipt = tmp_path / "artifacts" / "financial.json"
     credential = f"{tmp_path.name}-test-credential"
+    runtime_socket_dir = tmp_path / "private-runtime"
+    runtime_socket_dir.mkdir(mode=0o700)
     observed: dict[str, object] = {}
 
     def fake_run(argv, **kwargs):
@@ -334,6 +336,7 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
         storage_root=tmp_path / "store",
         receipt_path=receipt,
         passphrase=credential,
+        runtime_socket_dir=runtime_socket_dir,
     )
 
     environment = observed["environment"]
@@ -341,6 +344,9 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     assert "PYTHONPATH" not in environment
     assert "CADRUMO_UNRELATED" not in environment
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_RUNTIME_SOCKET_DIR"] == str(runtime_socket_dir.resolve())
+    assert "CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE" not in environment
     assert json.loads(str(observed["input"])) == {"profile_passphrase": credential}
     assert evidence.returncode == 0
     assert evidence.receipt_status == "proven"

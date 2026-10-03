@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:e559142ec939d2e01d5641f74dfe3d0814a0d0fac9970db089d7d0e0ba527cc0'
+body_hash: 'sha256:1fac9c59eb422fbb5e37b34faae714bf66942c570ad01c8776e57ee351ddda41'
 related: []
 ---
 
@@ -215,7 +215,7 @@ the retired module.
 The source scan found no direct file read/write, storage-path helper, settings
 load, naked environment read, SQL route, secure-object repository construction,
 or runtime repository factory call in the reviewed file. The manifest-bucket
-signal is registry/resource discovery through the bundled model authority 
+signal is registry/resource discovery through the bundled model authority
 registry snapshot references. Re-exported filing operations do not execute
 persistence or export writes at import time and remain owned by their specific
 affected-file rows.
@@ -266,7 +266,7 @@ repository helper slice.
 The helper resolves explicit bucket ids after trimming, falls back to
 `resolve_active_bucket_id()` for active-profile authority, and delegates
 secure-object construction to `secure_object_repository_for_bucket()`. It does
-not read environment variables directly, construct raw production storage, 
+not read environment variables directly, construct raw production storage,
 derive SQL routes itself.
 
 Focused tests now cover explicit id handling, blank id refusal, active-profile
@@ -299,7 +299,7 @@ discovery and tree fingerprinting, then projects snapshots into filing schema
 views. Active profile loading is delegated to workflow/wizard repository
 surfaces. The reviewed file does not construct secure-object repositories,
 route SQL, inspect active sessions, or read settings/environment state directly.
-Filing-runtime `ModeloBuilderError` boundaries now carry locale metadata 
+Filing-runtime `ModeloBuilderError` boundaries now carry locale metadata
 non-sensitive context payloads for the reviewed missing-registry/profile/modelo
 selection/revision/provider/year-period/casilla-type failures.
 
@@ -317,7 +317,7 @@ The plan target for `AFR-111` is corrected to `runtime-default`, matching the
 W12 side-store classification that records inventory ledgers as secure-object
 migration completed. The service uses settings-backed runtime resolution,
 typed AEAT exception boundaries with locale metadata, and real-runtime tests
-for bucket isolation, route mismatch refusal, encrypted persistence, 
+for bucket isolation, route mismatch refusal, encrypted persistence,
 legacy JSON side-store absence.
 
 Closure assessment: `W12.P26.S213` can close as `runtime-default`.
@@ -331,7 +331,7 @@ persists FINANCIAL secure-object payloads through the active bucket runtime.
 
 Malformed JSON, invalid JSON shape, invalid flat `base_total`, invalid invoice
 kind, and import file read failures now raise localized `InvoiceValidationError`
-instances. The file-read failure path records debug evidence with file name 
+instances. The file-read failure path records debug evidence with file name
 error type before chaining the original `OSError`.
 
 Closure assessment: `W12.P26.S214` can close as `plaintext-exception`.
@@ -372,7 +372,7 @@ repositories. The plan target for `AFR-115` is corrected to `runtime-default`.
 
 `reconcile_invoice_repositories(bucket_id=...)` now passes the requested bucket
 to `InvoiceCatalogueRepository`, matching the transaction repository binding.
-The new real-runtime test persists both catalogues, applies reconciliation, 
+The new real-runtime test persists both catalogues, applies reconciliation,
 verifies both persisted catalogues update under the requested bucket.
 
 Closure assessment: `W12.P26.S217` can close as `runtime-default`.
@@ -381,12 +381,12 @@ Closure assessment: `W12.P26.S217` can close as `runtime-default`.
 
 The `W12.P26.S228` review found that live expedientes captures are encrypted
 remote mirrors of the authenticated AEAT declaration-register read surface.
-The service persists through `SecureSnapshotRepository` 
+The service persists through `SecureSnapshotRepository`
 `secure_object_repository_for_bucket()`, not plaintext JSONL files or direct SQL
 routes.
 
 Expedientes object-key validation and lookup refusals now carry locale-backed
-metadata. The not-found and ambiguous-prefix paths avoid leaking bucket ids 
+metadata. The not-found and ambiguous-prefix paths avoid leaking bucket ids
 matched full snapshot ids while retaining bounded diagnostic context.
 
 Closure assessment: `W12.P26.S228` can close as `remote-mirror`.
@@ -399,7 +399,7 @@ affected-file row is corrected from stale `manifest-discovery` plaintext
 metadata to `remote-mirror` with secure-object and remote-provider signals.
 
 The service persists through `SecureSnapshotRepository`,
-`LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE`, 
+`LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE`,
 `secure_object_repository_for_bucket()`. Refusal paths now carry locale-backed
 metadata and avoid leaking bucket ids or matched full snapshot ids.
 
@@ -429,7 +429,7 @@ corrected from stale `manifest-discovery` plaintext metadata to
 
 The service persists through `VerifyObservationRepository`,
 `LIVE_VERIFY_OBSERVATION_NAMESPACE`, and `secure_object_repository_for_bucket()`.
-Refusal paths now carry locale-backed metadata, avoid leaking bucket ids 
+Refusal paths now carry locale-backed metadata, avoid leaking bucket ids
 matched full observation ids, and fail closed when list-time decrypted payload
 buckets do not match the repository bucket.
 
@@ -439,7 +439,7 @@ Closure assessment: `W12.P26.S231` can close as `remote-mirror`.
 
 The `W12.P26.S232` review found that the retired module
 is a package API facade only. It imports and re-exports modelo application
-services and errors, documents explicit `bucket_id` application boundaries, 
+services and errors, documents explicit `bucket_id` application boundaries,
 does not construct repositories, load settings, inspect environment variables,
 open files, swallow exceptions, or mutate storage.
 
@@ -512,7 +512,7 @@ were reviewed before closure. This step hardens the fichero-BOE export boundary
 and refusal paths; it does not claim the shared workbook builder, Evidencia tab,
 offline/online workbook materialiser parity, visual facets, or official-layout
 parity gate. User-facing export refusals now carry locale keys and structured
-context, and cross-bucket/output-write refusals avoid echoing bucket ids 
+context, and cross-bucket/output-write refusals avoid echoing bucket ids
 operator filesystem paths.
 
 Closure assessment: `W12.P26.S236` can close as `plaintext-exception`.
@@ -536,7 +536,7 @@ Closure assessment: `W12.P26.S237` can close as `manifest-discovery`.
 
 The `W12.P26.S240`/`W12.P26.S243` review found that
 the retired module builds cached in-memory
-`OperatorSurfaceContract` records 
+`OperatorSurfaceContract` records
 the retired module defines strict frozen
 Pydantic contract records and enums. Neither file constructs storage
 repositories, selects secure storage backends, builds SQL routes, inspects
@@ -608,7 +608,7 @@ Closure assessment: `W12.P26.S244` can close as `runtime-default`.
 
 The `W12.P26.S245` review found that
 the retired module reads registry roots, source roots,
-workbook reports, scenario files, and parity tapes selected by the operator 
+workbook reports, scenario files, and parity tapes selected by the operator
 resolved from bundled resources. Its plaintext writes are explicit workbook
 verification and parity artifacts, not profile bucket state.
 
@@ -633,7 +633,7 @@ settings and domain loaders. It does not persist corpus state, profile state,
 secure objects, master-key material, or remote provider mirrors.
 
 Registry corpus refusals now use `RegistryApplicationInputError` with locale
-keys and structured context for topic locale, manual section, manual id, 
+keys and structured context for topic locale, manual section, manual id,
 manual rule-kind failures. Tests assert durable translation keys and context
 rather than raw English message substrings.
 
@@ -701,7 +701,7 @@ The `W12.P26.S270` review found that
 the retired module owns the encrypted user-profile
 value and snapshot namespaces but delegates default physical repository construction to
 the bucket storage runtime. It uses registered namespace constants, strict `Envelope`
-records, and domain user-profile models rather than duplicating storage routing 
+records, and domain user-profile models rather than duplicating storage routing
 record shapes.
 
 Missing profile-value and profile-snapshot loads now raise the existing AEAT
@@ -725,7 +725,7 @@ canonical profile orchestration. It delegates to `register_active_profile`,
 monkeypatch storage, read environment variables, or write profile state through an
 alternate backend.
 
-The helper reuses `nif_check_letter`, the core manual-provenance constant, 
+The helper reuses `nif_check_letter`, the core manual-provenance constant,
 `IVARegime.GENERAL`, so it no longer carries the previously observed duplicate NIF
 letter or provenance/IVA literals. Vaultspec RAG semantic search was used for
 duplication review and clustered the helper with real profile-registration call sites.
@@ -746,7 +746,7 @@ Registry policy, missing-binding, snapshot-load, and declaration-period mapping
 failures now use AEAT exception classes with locale keys and bounded structured context
 instead of raw English `str(exc)` wrappers or formatted plaintext exception messages.
 The locale catalogue entries were added through `python -m aeat.locales`, and the
-focused tests exercise the real bundled registry behavior without monkeypatching 
+focused tests exercise the real bundled registry behavior without monkeypatching
 duplicating calculation logic.
 
 Vaultspec RAG semantic search was used for duplication review and clustered the slice
@@ -767,7 +767,7 @@ wizard state through a side store.
 
 Existing-profile edit mode resolves the operator label through registered-profile
 guards and `read_profile_bucket`, then persists using the resolved immutable bucket id.
-Output-language defaults and overrides route through settings (`load_settings` 
+Output-language defaults and overrides route through settings (`load_settings`
 `override_settings`), and wizard refusals use `WizardMissingFlagError` locale keys with
 structured context.
 
@@ -783,12 +783,12 @@ The `W12.P26.S274` review found that
 the retired module is a projection layer from typed wizard
 answers to `UserProfileFact` records. Create and edit persistence delegate to
 `register_active_profile` and `set_active_fields`; the module does not construct
-repositories, open bucket paths, write bucket manifests, manage master-key material, 
+repositories, open bucket paths, write bucket manifests, manage master-key material,
 persist wizard state through a plaintext side store.
 
-The `Path` import is type-level wizard answer handling only: it canonicalizes 
+The `Path` import is type-level wizard answer handling only: it canonicalizes
 rehydrates PATH answers and performs no direct file IO. The edit-mode misuse refusal
-raises `WorkflowInputMismatchError` with a locale key. No broad exception swallowing 
+raises `WorkflowInputMismatchError` with a locale key. No broad exception swallowing
 naked environment reads were found.
 
 The patch path now also fails closed when a supplied question id is not declared by the
@@ -831,14 +831,14 @@ not own secure-storage persistence. It does not construct repositories, write bu
 manifests, manage master-key material, read environment variables, or persist plaintext
 side files.
 
-Active profile resolution delegates to `WorkflowState.active_profile_record()` 
+Active profile resolution delegates to `WorkflowState.active_profile_record()`
 `resolve_active_bucket_id()`, while manifest discovery remains in workflow/core profile
 bucket helpers. The status module consumes the active-profile contract and does not
 duplicate manifest scanning.
 
 Projection failures are wrapped in `WizardStatusError` with locale keys and bounded
 context. The only local `except` catches `pydantic.ValidationError`, preserves the cause,
-and surfaces a localized refusal. Focused status, active-profile resolution, 
+and surfaces a localized refusal. Focused status, active-profile resolution,
 profile-bucket scan tests passed.
 
 Closure assessment: `W12.P26.S276` can close as `manifest-discovery`.

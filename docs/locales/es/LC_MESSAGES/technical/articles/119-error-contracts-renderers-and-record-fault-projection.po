@@ -1,0 +1,366 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:1
+msgid "Error contracts, renderers, and record-fault projection"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:7
+msgid ""
+"**Report:** `STAGE-2-119` · **Topic:** [Core authority and shared "
+"controls](../topics/core-authority-and-shared-controls.md)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:12
+msgid ""
+"This chunk covers 17 core error and registry modules: 6,098 physical "
+"lines, 225,797 bytes, and 46,497 measured `o200k_base` proxy tokens. I "
+"read all nine assigned pages, including the complete error hierarchy, "
+"output renderers, record-fault projection, and application/adapter "
+"registry shards. The manifest's token count is below the 48,000-token "
+"chunk ceiling. This is static inspection only: exceptions were not "
+"raised, the application was not run, and no behavior or external legal "
+"claim was executed or validated."
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:14
+msgid "Registered error contracts"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:16
+msgid ""
+"The core layer defines seven stable categories—`ERROR`, `REFUSED`, "
+"`AUTH`, `INTEGRITY`, `FAIL`, `INTERNAL`, and `LOCKED`—and a frozen, "
+"strict `ErrorCode` record for code, category, message key, retryability, "
+"optional public-message selection, and runbook metadata. A similarly "
+"strict `ErrorEnvelope` carries the user-facing message, optional "
+"precondition action, retry instruction, context, and trace ID. This makes"
+" the exception taxonomy a machine-facing contract, not just a collection "
+"of Python class names. Categories and metadata records "
+"(`src/cadrumo/core/errors/error_codes.py`) Envelope fields "
+"(`src/cadrumo/core/errors/error_codes.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:18
+msgid ""
+"The declared registry maps exception qualified names to those stable "
+"records. It is loaded on first use, rejects duplicate code IDs and "
+"duplicate class ownership, and binds subclasses created before the "
+"catalogue load through a deferred set. After loading, a `CadrumoError` "
+"subclass without a declaration raises an internal invariant error rather "
+"than silently receiving an unstable fallback. `RecordedRegisteredError` "
+"validates a recorded code through the same catalogue, allowing persisted "
+"error references to be rendered without recreating the original "
+"exception. Duplicate checks and lazy catalogue load "
+"(`src/cadrumo/core/errors/error_codes.py`) Deferred class binding "
+"(`src/cadrumo/core/errors/error_codes.py`) Registered lookup and recorded"
+" codes (`src/cadrumo/core/errors/error_codes.py`) Recorded error class "
+"(`src/cadrumo/core/errors/hierarchy.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:20
+msgid ""
+"The registry data covers authentication and profile custody, workflow and"
+" wizard refusals, Modelo calculation and export boundaries, invoice and "
+"ledger operations, storage and persistence failures, and adapter errors. "
+"These rows declare how concrete exceptions should be classified and "
+"presented; they do not themselves implement those workflows or prove that"
+" every raising call site uses the intended exception. For example, the "
+"catalogue classifies login-disabled and ambiguous workflow-resume "
+"outcomes as non-retryable refusals, cross-bucket Modelo export as a "
+"refusal, and a duplicate committed custody label as non-retryable while a"
+" stale custody conflict is retryable. Auth and workflow outcomes "
+"(`src/cadrumo/core/errors/registry/_application_part1.py`) Cross-bucket "
+"export and custody retry distinctions "
+"(`src/cadrumo/core/errors/registry/_application_part2.py`) Custody "
+"duplicate-label contract "
+"(`src/cadrumo/core/errors/registry/_application_part2.py`) Adapter "
+"registry composition (`src/cadrumo/core/errors/registry/_adapters.py`) "
+"Profile bundle journal contracts "
+"(`src/cadrumo/core/errors/registry/_application_profile_bundle.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:22
+msgid ""
+"`retryable` has an explicit operational meaning: the identical request "
+"can succeed through time or another party's progress alone; an operator "
+"correction, changed argument, or different state requires a non-retryable"
+" result. Category-to-process-exit mapping is also centralized: the seven "
+"categories map to exit codes 1 through 7, with `INTERNAL` reserved for "
+"unexpected internal faults and expected domain refusals kept outside that"
+" bucket. This gives script callers consistent coarse outcomes, but the "
+"static catalogue cannot show whether all callers interpret the metadata "
+"correctly. Retryability contract "
+"(`src/cadrumo/core/errors/error_codes.py`) Exit-code mapping "
+"(`src/cadrumo/core/errors/error_codes.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:24
+msgid "Rendering and exception flow"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:26
+msgid ""
+"`CadrumoError` is the registered root. Subclass creation binds each leaf "
+"to a declared code, while a descriptor resolves codes lazily. The "
+"hierarchy provides cross-layer catch surfaces such as `CoreError`, "
+"`AuthError`, and `CoreNotFoundError`; the latter lets callers handle "
+"resource misses consistently across layers. `SiteHealthError` transports "
+"a typed structural status/evidence payload across the adapter/workflow "
+"boundary without importing an adapter type into core. A narrow "
+"`pydantic_validation_boundary` converts registered domain errors into the"
+" builtin `ValueError` required by Pydantic and preserves the typed "
+"failure as `__cause__`. Registered error construction "
+"(`src/cadrumo/core/errors/hierarchy.py`) Pydantic validator bridge "
+"(`src/cadrumo/core/errors/hierarchy.py`) Site-health transport "
+"(`src/cadrumo/core/errors/hierarchy.py`) Shared not-found base "
+"(`src/cadrumo/core/errors/not_found.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:28
+msgid ""
+"The output APIs construct human text or deterministic one-line JSON. JSON"
+" nests the typed error under the shared success-envelope spine "
+"(`schema_version`, command, active-profile label, status, notices); text "
+"output adds localized category prefixes and context labels. Both use the "
+"same category, code, retryability, and redacted context, while the CLI "
+"boundary supplies command/profile facts and core does not scan profile "
+"manifests. `build_error_envelope` also accepts a precondition action and "
+"trace ID. Envelope builder (`src/cadrumo/core/errors/error_codes.py`) "
+"Text renderer (`src/cadrumo/core/errors/error_codes.py`) JSON envelope "
+"(`src/cadrumo/core/errors/error_codes.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:30
+msgid ""
+"Context handling merges string-keyed `error.context`, eligible public "
+"instance attributes, and caller-supplied context, with explicit caller "
+"context taking precedence. It drops private attributes and selected "
+"implementation fields, removes keys classified as internal, replaces "
+"values under sensitive-looking keys with a fixed redaction marker, then "
+"applies `redact_for_log` to other values. Before redaction, "
+"stringification permits primitives, dates/times, enums, paths, decimals, "
+"and flat collections; arbitrary objects become a stable type placeholder "
+"rather than a repr dump. Both text and JSON renderers pass context "
+"through this path. Context merge and redaction "
+"(`src/cadrumo/core/errors/error_codes.py`) Public context projection "
+"(`src/cadrumo/core/errors/error_codes.py`) Safe value stringification "
+"(`src/cadrumo/core/errors/error_codes.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:32
+msgid ""
+"`internal_record_fault_context` adds an operator-safe summary for "
+"Pydantic record failures. It reports the model name, total count, up to "
+"five field-path/rule pairs, and the count withheld or omitted. It never "
+"copies Pydantic's `input`; unrecognized path components are replaced by "
+"`<key>` unless the supplied model declares the field name. For validator-"
+"authored `value_error` and `assertion_error` prose, it reports the error "
+"type and raising exception class instead of the message, because that "
+"prose commonly embeds the rejected taxpayer value. This gives an operator"
+" a compact contract-level clue without exposing the value through the "
+"public error context. The helper's usefulness depends on call sites "
+"passing the relevant record class; without it, string path parts are "
+"conservatively replaced. The source says the full Pydantic error payload "
+"remains in the error log, so log access and retention remain a separate "
+"privacy boundary. Record-fault projection and bounds "
+"(`src/cadrumo/core/errors/record_fault.py`) Path and message redaction "
+"rules (`src/cadrumo/core/errors/record_fault.py`) Validator-authored "
+"message handling (`src/cadrumo/core/errors/record_fault.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:34
+msgid "Security and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:36
+msgid ""
+"The strongest local controls are strict/frozen error DTOs, duplicate "
+"registry checks, deterministic category and retry metadata, and a shared "
+"context-redaction funnel. The record-fault projector is especially "
+"conservative: it drops raw input and validator-authored prose rather than"
+" attempting to scrub arbitrary diagnostic sentences. `CadrumoError` also "
+"keeps original exception data out of normal context merging through its "
+"private-field and explicit exclusion rules. These controls govern error "
+"reporting only; they do not establish authorization, network "
+"restrictions, or the correctness of the underlying application "
+"operations."
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:38
+msgid ""
+"There is a conditional message-disclosure risk: context values are "
+"scrubbed for the envelope's `context` field, but `resolve_error_message` "
+"interpolates values from the original `error.context` before rendering "
+"and can fall back to raw `error.args[0]`. The "
+"`public_message_from_registry` flag and canonical-key convention suppress"
+" that fallback for selected codes, but ordinary registered codes can "
+"still use translated text or exception text. If a template interpolates a"
+" sensitive context key, or an exception constructor puts a secret/PII "
+"value in its positional message, the message can expose it even when the "
+"separate context entry is redacted. I found no assigned locale templates "
+"or exhaustive raising call sites in this chunk to establish an actual "
+"exposed value; audit those templates and constructors, and test rendered "
+"text and JSON with secret-bearing contexts. Message resolution and raw "
+"fallback (`src/cadrumo/core/errors/error_codes.py`) Interpolation inputs "
+"(`src/cadrumo/core/errors/error_codes.py`) Separate context scrub "
+"(`src/cadrumo/core/errors/error_codes.py`)"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:40
+msgid ""
+"The main quality strength is that classification and retry semantics are "
+"explicit and centrally checked. The registry is nevertheless split across"
+" numerous generated-size shards, so change review must include the "
+"correct shard and the owning exception declaration. This chunk includes "
+"no tests; static inspection cannot establish catalog completeness in a "
+"live import, exact translation coverage, error-code stability across "
+"releases, or consumer compliance with retry and exit metadata. Useful "
+"follow-up is to test first-use registry loading and duplicate refusal, "
+"round-trip the text/JSON envelopes, and trace Pydantic boundaries to "
+"confirm sensitive record faults consistently pass through "
+"`internal_record_fault_context`."
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:44
+msgid "errors/__init__.py (`src/cadrumo/core/errors/__init__.py`) — lines 1–8"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:45
+msgid ""
+"errors/error_codes.py (`src/cadrumo/core/errors/error_codes.py`) — lines "
+"1–651"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:46
+msgid "errors/hierarchy.py (`src/cadrumo/core/errors/hierarchy.py`) — lines 1–402"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:47
+msgid "errors/not_found.py (`src/cadrumo/core/errors/not_found.py`) — lines 1–25"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:48
+msgid ""
+"errors/record_fault.py (`src/cadrumo/core/errors/record_fault.py`) — "
+"lines 1–245"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:49
+msgid ""
+"errors/registry/__init__.py "
+"(`src/cadrumo/core/errors/registry/__init__.py`) — lines 1–11"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:50
+msgid ""
+"errors/registry/_adapters.py "
+"(`src/cadrumo/core/errors/registry/_adapters.py`) — lines 1–22"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:51
+msgid ""
+"errors/registry/_adapters_part1.py "
+"(`src/cadrumo/core/errors/registry/_adapters_part1.py`) — lines 1–560"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:52
+msgid ""
+"errors/registry/_adapters_part2.py "
+"(`src/cadrumo/core/errors/registry/_adapters_part2.py`) — lines 1–683"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:53
+msgid ""
+"errors/registry/_adapters_part3.py "
+"(`src/cadrumo/core/errors/registry/_adapters_part3.py`) — lines 1–110"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:54
+msgid ""
+"errors/registry/_application.py "
+"(`src/cadrumo/core/errors/registry/_application.py`) — lines 1–26"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:55
+msgid ""
+"errors/registry/_application_part1.py "
+"(`src/cadrumo/core/errors/registry/_application_part1.py`) — lines 1–950"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:56
+msgid ""
+"errors/registry/_application_part2.py "
+"(`src/cadrumo/core/errors/registry/_application_part2.py`) — lines "
+"1–1,573"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:57
+msgid ""
+"errors/registry/_application_part3a1.py "
+"(`src/cadrumo/core/errors/registry/_application_part3a1.py`) — lines "
+"1–296"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:58
+msgid ""
+"errors/registry/_application_part3a2.py "
+"(`src/cadrumo/core/errors/registry/_application_part3a2.py`) — lines "
+"1–120"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:59
+msgid ""
+"errors/registry/_application_part3b.py "
+"(`src/cadrumo/core/errors/registry/_application_part3b.py`) — lines 1–380"
+msgstr ""
+
+#: ../../technical/articles/119-error-contracts-renderers-and-record-fault-projection.md:60
+msgid ""
+"errors/registry/_application_profile_bundle.py "
+"(`src/cadrumo/core/errors/registry/_application_profile_bundle.py`) — "
+"lines 1–36"
+msgstr ""

@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:a9158778d28895c82a3fb3b2d96c387d0338e77d284db48d6996dbefe8985390'
+body_hash: 'sha256:17a9875cb3b0fd1cf2624bb79b041a032d98a36d9afff95688ce0cef228bd503'
 related: []
 ---
 
@@ -18,7 +18,7 @@ The secure-object and remote-provider signals are data-shape concerns only: `OAu
 
 Validation:
 
-- the focused test run passed.
+- the historical check passed.
 - The broader focused Google adapter suite passed with 131 tests.
 - `uv run --no-sync ruff check` over the Google adapter production/test slice passed.
 

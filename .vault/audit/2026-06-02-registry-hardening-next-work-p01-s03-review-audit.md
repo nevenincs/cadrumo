@@ -4,7 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:99854082f60c266d87ab50d75a5db1870f0ef2a9dd4a5e7028f6e4d70c33ed83'
+body_hash: 'sha256:9aabd9f80920b79fdcc005934f86331a829b5226713c1ec798fe9404718d33dc'
 related: []
 ---
 
@@ -20,7 +20,7 @@ sorted loader order, and the committed loader/reviewability tests pass.
 
 ## Residual Risk
 
-M100 2022, 2021, and 2020 still have oversized completeness manifests 
+M100 2022, 2021, and 2020 still have oversized completeness manifests
 remain tracked by `P01.S04` through `P01.S06`.
 
 ## Verification

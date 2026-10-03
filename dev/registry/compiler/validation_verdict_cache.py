@@ -36,14 +36,13 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
-from dev._paths import REPO_ROOT
-
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.type_guards import is_str_keyed_dict
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"

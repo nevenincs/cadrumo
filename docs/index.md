@@ -208,3 +208,10 @@ Architecture <architecture/index>
 Authoring guide <authoring-guide>
 API <api/index>
 ```
+
+```{toctree}
+:hidden:
+:caption: Technical documentation
+
+Architecture and internals <technical/architecture>
+```

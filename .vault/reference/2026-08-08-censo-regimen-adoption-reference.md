@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:bcc65f708858348ca6e20acd8a8b8c73b99973eff3311f8800db463c7f336d5e'
+body_hash: 'sha256:a017d172ba017d112005edeb77c2afebee4997ff8d8bb9621fccae772911d8f2'
 related:
   - '[[2026-08-08-censo-regimen-adoption-adr]]'
 ---
@@ -47,10 +47,6 @@ rather than observed on an AEAT document.
 
 ## The régimen axis on the profile
 
-
-
-
-
 ## Legal grounding for the régimen itself
 
 The bundled consolidated corpus carries Ley 49/2002 arts. 6, 7, 10 and 14 under
@@ -70,8 +66,6 @@ and none of them is a régimen field.
 ## The divergence primitive
 
 Re-running the cotejo replaces the whole divergence namespace.
-
-
 
 ## Prior decisions bearing on the disagreement question
 

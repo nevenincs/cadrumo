@@ -4,9 +4,10 @@ tags:
   - '#modelo-200-base-determination'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:413c04470340c2aca329c8b1a05213fe0a6e09d1ecbb483081fe40260b867336'
+body_hash: 'sha256:ee6eb6461ce3f603e3ce5a6e2fa7e33741248972b11cd9f3870566f9634caa40'
 related:
   - '[[2026-06-04-modelo-200-base-determination-research]]'
+  - '[[2026-10-03-duplication-remediation-m200-stock-verification-adr]]'
 ---
 
 # `modelo-200-base-determination` adr: `Modelo 200 IS base-determination soundness: prevent silent zero-base under-declaration` | (**status:** `accepted`)
@@ -118,15 +119,20 @@ records (Prima de emisión, etc.), the implementation creates segmento-qualified
 `DP200013`/`DP200014` calc-only records (no `export_refs`, to avoid the page-014 ECPN
 fichero collision) and flips `DP200014:00552` manual→computed.
 
-`00547` is the layering seam: Phase 2 lands it MANUAL; the A4 BIN hook then makes it
-computed as `00547 = min(bin_disponible, max(€1M, 70%·00550))` — the 70% límite
-(Art. 26.1 LIS) applies to the base imponible previa *before* reserva and compensación,
-i.e. `00550`. The arts.13/16 value-derivations inside the correcciones stay operator-input
-(stateful follow-on sub-engines); the arts.10/11/14 BOE corpus ingest grounds legal_refs
-but does NOT block the calc (the base chain cites the grounded art-15/25/26 set). With
-this, a zero base is a computed consequence of the declared inputs, not a silent omission,
-and the Phase-1 advisory upgrades to a BLOCKING consistency check between the computed and
-any operator-entered base.
+`00547` remains the layering seam and the taxpayer's MANUAL/elective amount. Computing
+an applicable maximum for verification does not select or populate `00547`; the filer may
+elect less. The computed base chain consumes that actual election. The accepted stock
+rule of 2026-10-03 separately requires a positive election to have present opening stock
+and not exceed it; the generic statutory-cap predicate retains its existing semantics.
+The separate 00547/00550 condition, including statutory adjustments, remains unresolved
+by the stock ruling.
+
+The arts.13/16 value-derivations inside the correcciones stay operator-input (stateful
+follow-on sub-engines); the arts.10/11/14 BOE corpus ingest grounds legal_refs but does
+NOT block the calc (the base chain cites the grounded art-15/25/26 set). A zero base is a
+computed consequence of declared inputs. As the implemented-status note below records,
+the Phase-1 advisory remains non-blocking; consistency and stock blocking checks have
+separate meanings.
 
 ## Rationale
 
@@ -175,6 +181,35 @@ zero as an undetermined manual field. Its registry comment still describes the c
 as interim "until the base imponible is derived directly"; that comment is documentation
 drift, not a change to the accepted base formula. This dated status note records the
 implemented decision and does not alter its legal grounding or infer new authority.
+## Elective BIN clarification and decision history (2026-10-03)
+
+Authorized under the user's instruction, "make the decisision", with the bounded stock
+operator decision in `2026-10-03-duplication-remediation-m200-stock-verification-adr` and
+the scoped amendment to `2026-06-02-modelo-multiyear-renta-income-adr`. Computing the base
+chain or maximum permitted compensation does not select or populate `00547`. It remains
+the taxpayer's manual/elective amount and may be below the applicable maximum. A
+verification constraint bounds an election without forcing it to the cap. The separate
+00547/00550 condition, including statutory adjustments, remains unresolved by this
+stock ruling. This clarification changes no base formula and grants no publication or
+source-path release.
+
+For historical traceability, the replaced Implementation paragraph originally read:
+
+> `00547` is the layering seam: Phase 2 lands it MANUAL; the A4 BIN hook then makes it
+> computed as `00547 = min(bin_disponible, max(€1M, 70%·00550))` — the 70% límite
+> (Art. 26.1 LIS) applies to the base imponible previa *before* reserva and compensación,
+> i.e. `00550`. The arts.13/16 value-derivations inside the correcciones stay operator-input
+> (stateful follow-on sub-engines); the arts.10/11/14 BOE corpus ingest grounds legal_refs
+> but does NOT block the calc (the base chain cites the grounded art-15/25/26 set). With
+> this, a zero base is a computed consequence of the declared inputs, not a silent omission,
+> and the Phase-1 advisory upgrades to a BLOCKING consistency check between the computed and
+> any operator-entered base.
+
+The proposed automatic election and advisory upgrade in that paragraph are historical,
+not operative obligations. The computed-base status note and current elective-amount
+ruling govern their respective scopes. The other modelo, base-determination, and legal
+grounding commitments of this accepted ADR remain in force.
+
 ## Codification candidates
 
 - **Rule slug:** `no-silent-under-declaration`.

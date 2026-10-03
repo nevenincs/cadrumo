@@ -4,7 +4,7 @@ tags:
   - '#registry-bindings-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:18fd4bb0c18e9cf587c2dbd5aa7231a281f56b18c127aed3aca4b2ceb30b1967'
+body_hash: 'sha256:52831627a13ba71512ec5bb6a6e726ffff3af6f4de8221bcdf9f7f72d42c3d47'
 related: []
 ---
 
@@ -47,7 +47,7 @@ shared-worktree edits.
 - Invoice and counterpart aggregation share `_InvoiceSelector`,
   invoice-style row builders, and the `_counterpart_to_invoice` adapter.
   Counterpart should not be split independently until invoice helper
-  ownership is explicit, or the extraction will create import cycles 
+  ownership is explicit, or the extraction will create import cycles
   selector duplication.
 - Ledger aggregation is internally separable by source family: OSS/IOSS,
   IVA, and Renta have distinct observation models and selector builders.
@@ -65,7 +65,7 @@ shared-worktree edits.
 ### Low
 
 - `CasillaObservation`, `RegistryModeloObservation`,
-  `OracleModeloObservation`, `RegistryModeloObservationRequirement`, 
+  `OracleModeloObservation`, `RegistryModeloObservationRequirement`,
   `resolve_bound_casilla_inputs` are core cross-family DTO/API elements.
   They can remain in `_bindings.py` during resolver extraction, or move
   later to a small observation module only after public API boundary tests
@@ -101,7 +101,7 @@ shared-worktree edits.
    `test_ledger_iva_aggregation_binding.py`,
    `test_ledger_oss_aggregation_binding.py`,
    `test_ledger_renta_expense_binding.py`,
-   `test_selector_shape.py`, 
+   `test_selector_shape.py`,
    `test_public_api_boundaries.py`, scoped to the touched family.
 
 ## Codification candidates

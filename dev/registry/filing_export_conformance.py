@@ -6,8 +6,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Protocol, runtime_checkable
 
-from dev._paths import prepare_temporary_directory
-
 from pydantic import BaseModel
 
 from cadrumo.application.filing.export_verification import (
@@ -17,6 +15,7 @@ from cadrumo.application.filing.runtime import (
     RegistrySchemaAccessor,
 )
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.storage_environment import prepare_temporary_directory
 
 from .filing_export_proof_contracts import (
     FilingExportConformanceReceipt,

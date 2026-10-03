@@ -5,7 +5,7 @@ tags:
 date: '2026-07-31'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:aed35cbe29e7aebf19b4348da8d1b446ed77251e43928c0cf98fed864e703b32'
+body_hash: 'sha256:5af1682a4f4974208bd8ddf5d1abb6d7a9118b90f3cd5de9e56219b9092c9828'
 related: []
 ---
 
@@ -80,8 +80,6 @@ same semantic field:
 
 This is the one site in the diff where a naive global camelCase-to-snake_case rename would have silently changed a pinned digest.
 
-
-
 ### Removed and relocated composition helpers
 
 `mcp.shared.memory.create_connected_server_and_client_session`, the pre-2.0 helper that started a real in-process `Server` on the SDK's memory transport and returned an already-initialized `ClientSession`, does not exist as a standalone function in the installed 2.0.0 wheel.
@@ -94,8 +92,6 @@ generic-over-`Any` parameter that no longer applies to the concrete
 `ClientRequestContext`) was removed in the same hunk.
 
 ### File-level blast radius observed in the working tree
-
-
 
 ### What could not be verified from this position
 

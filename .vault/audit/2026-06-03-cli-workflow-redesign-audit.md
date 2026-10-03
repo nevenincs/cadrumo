@@ -4,7 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:df7f9b57dc152abbab00493b2752cfecf8bde70bb5ba9f8f7cfcf9a4ecd0dd19'
+body_hash: 'sha256:131b42911492df3c74cf4f9eb6fa58718d06f797aa21e615fe670b3c5843af4b'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
 ---
@@ -79,7 +79,7 @@ operator path today:
   current setup application carries no such migration; first-run is
   greenfield and there is no historical layout to migrate from.
 
-Both enum slots stay declared so a future env-management 
+Both enum slots stay declared so a future env-management
 setup-migration verb can wire its emission without re-litigating the
 enum design. The test gate
 `test_dormant_optional_events_remain_in_the_closed_catalogue` pins

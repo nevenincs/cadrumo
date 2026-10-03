@@ -13,7 +13,7 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev._paths import REPO_ROOT
 from dev.packaging.native.generate import generate
-from dev.packaging.native.verify import _verification_destination
+from dev.packaging.native.verify import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -41,17 +41,17 @@ def test_native_verification_stage_is_under_the_refined_build_root(tmp_path: Pat
     build_root = tmp_path / "build"
     build_root.mkdir()
 
-    default = _verification_destination(None, build_root)
-    relative = _verification_destination(Path("verification/package-one"), build_root)
+    default = verification_destination(None, build_root)
+    relative = verification_destination(Path("verification/package-one"), build_root)
     assert default.is_relative_to(build_root.resolve())
     assert relative == build_root.resolve() / "verification" / "package-one"
     checkout = tmp_path / "checkout"
     checkout.mkdir()
-    explicit_absolute = _verification_destination(
+    explicit_absolute = verification_destination(
         tmp_path / "external-package",
         build_root,
         repository_root=checkout,
     )
     assert explicit_absolute == tmp_path / "external-package"
     with pytest.raises(ValueError, match="CADRUMO_NATIVE_BUILD_ROOT"):
-        _verification_destination(Path("../outside"), build_root)
+        verification_destination(Path("../outside"), build_root)

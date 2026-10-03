@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcf39e1e25a965a4ad4aa90ad019cc2fb92b414e9f959b6a3869d4ac681343e3'
+body_hash: 'sha256:88d50ba6dbc40b19c28d21f1eed6042a6765c676c3843e8802652673887da58d'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - "[[2026-06-10-cli-operator-surface-audit]]"
@@ -25,17 +25,11 @@ Five-iteration RAG-led code investigation (2026-08-08) into whether the CLI has 
 
 ## The canonical schema (already exists)
 
-
-
-
-
 ## Three consumers of the same requirement set
 
 Rendered via the central error registry (`core/errors/registry/_application_part2.py:728-736`, code `REFUSED_MODELO_PROFILE_READINESS`) and locale template `application.modelo.errors.profile_readiness_missing` (`locales/en.yml:1048`): "Profile is incomplete for Modelo %{modelo} %{filing_year} %{period}; complete these profile facts first: %{missing}." — `%{missing}` is a raw comma-joined list of dotted schema paths. 2. **`aeat config profile preflight --modelo --filing-year --period [--revision-id]`** (`entrypoints/cli/_config/_profile_inspect.py`) — opt-in verb, same report, JSON payload `ProfilePreflightMissingPayload` (`entrypoints/cli/_config_payloads.py:544`) — same bare 3-field shape. 3. **`aeat app modelo readiness --modelo --revision-id --year --period`** (`entrypoints/cli/_modelo_readiness_cli.py`, via `state_projection.build_operator_state_projection`) — combines profile requirements (`ModeloReadinessMissingRequirementPayload`, `entrypoints/cli/_modelo_payloads.py:1097`, same bare 3 fields), calculation-binding requirements (`ModeloReadinessMissingBindingPayload`), and ledger issues as separate, un-unified sections.
 
 ## The reusable grounding-union source (already built, only used by the wizard)
-
-
 
 `application/wizard/_legal_zone.py`'s `PageLegalZone` already unions this index's `legal_refs`/`source_refs` with the schema field's own `legal_refs`, for wizard setup-flow pages ONLY — and even there, its own docstring states the result has "no render slot today" in the flow substrate.
 

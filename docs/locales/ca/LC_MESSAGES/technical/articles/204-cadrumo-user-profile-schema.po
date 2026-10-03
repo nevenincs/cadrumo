@@ -1,0 +1,255 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:1
+msgid "Cadrumo user-profile schema"
+msgstr "Esquema del perfil d’usuari de Cadrumo"
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:7
+msgid ""
+"**Report:** `STAGE-2-204` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:12
+msgid ""
+"This chunk contains one TOML schema, schema.toml "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`), at "
+"92,246 bytes and 2,207 lines. I read the file in bounded slices and "
+"inspected its complete structural inventory: 8 derived selectors, 26 "
+"sections, and 179 fields. The schema has 17 required fields; the rest are"
+" optional or conditionally meaningful. Field types include strings, "
+"enums, booleans, dates, objects, decimals, integers, money, arrays, and "
+"email. This is schema and embedded-comment evidence only: this report "
+"does not inspect the parser, validators, profile store, auth flow, export"
+" path, or snapshot implementation, and it does not execute the "
+"application. No actual taxpayer profile values are present in this file."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:14
+msgid "What this schema enables"
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:16
+msgid ""
+"The schema defines the profile vocabulary that other configuration and "
+"calculation surfaces can refer to. It connects identity, preferences, "
+"authentication, contacts, tax residence, census status, taxpayer type, "
+"business relationships, activities, IRPF and IVA facts, withholding, "
+"filing obligations, family facts, property, ratios, and specialist "
+"maritime-worker facts. Per-field `model_selectors`, "
+"`schedule_predicates`, enum choices, and legal-reference identifiers "
+"provide declared mappings into filing and scheduling models; these "
+"declarations are evidence of intended interfaces, not proof that each "
+"consumer resolves them correctly. For example, `identity.tax_id` is the "
+"required filing identity, while `tax_residence.ccaa` and "
+"`jurisdiction_scope` describe territory and explicitly include a "
+"`foral_unsupported` state (schema.toml "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`), tax-"
+"residence fields "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`))."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:18
+msgid ""
+"Eight selector patterns are designated calculation-owned namespaces "
+"rather than stored taxpayer facts. Seven derive annual child-related "
+"values from declared descendants, such as the state and autonomous-"
+"community minimums, nursery expenses, eligibility, and maternity "
+"deduction; another derives a state attribution ratio from the declared "
+"territorial regime. Comments explicitly distinguish these outputs from "
+"operator-entered inputs and give examples of similar-looking values "
+"deliberately kept as operator input (derived selectors "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). This is"
+" a useful ownership boundary in the data model. The calculation engine’s "
+"actual recomputation, year binding, and prevention of stale writes are "
+"outside this file and remain to be confirmed by the consumers."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:20
+msgid ""
+"Many tax facts are effective-dated. Nineteen sections mark their contents"
+" as time-dependent, while identity, preferences, capability flags, "
+"authentication settings, filing-level summaries, and provenance are not "
+"uniformly modeled that way. The schema also has explicit `valid_from` and"
+" nullable `valid_to` audit fields (provenance fields "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). This "
+"structure can preserve when values apply, but does not itself define "
+"conflict resolution, overlap policy, migration behavior, or which date a "
+"calculation chooses."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:22
+msgid ""
+"The `obligations` section captures declared eligibility predicates for "
+"third-party transaction thresholds, foreign assets, foreign virtual "
+"currency, and special lottery-tax cases. Their schedule/model selector "
+"declarations can drive downstream filing discovery, but the fields are "
+"user/profile facts and the schema does not prove the resulting schedule "
+"is correct or complete (obligation fields "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). The "
+"family section is especially expressive: it supports nested descendant "
+"facts such as birth and adoption dates, disability, cohabitation, "
+"custody, income, self-filing, minimum proration, maternal-work months, "
+"nursery costs, and an identifier. These fields can feed several derived "
+"selectors and return-model mappings, so their correctness depends on "
+"conditional validation and aggregation outside the schema (family fields "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`))."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:24
+msgid "Data provenance and trust"
+msgstr "Procedència de les dades i confiança"
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:26
+msgid ""
+"The schema describes categories of data, not an actual user profile. It "
+"classifies 86 fields as identity, 84 as financial, 4 as operational, 3 as"
+" audit, and 2 as secret. These counts show that most stored profile facts"
+" are highly sensitive. Provenance offers sources including manual CLI "
+"entry, setup wizard, Modelo 036 import, an AEAT census read, registry "
+"inference, and a taxpayer-supplied census artifact. Its description "
+"carefully says that `censo_artefact_g313` identifies an operator-provided"
+" certificate as a channel of evidence and is never verified by AEAT; that"
+" is an important trust distinction encoded directly in the schema "
+"(provenance source "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). The "
+"schema does not specify how source labels are assigned or whether they "
+"can be forged or changed."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:28
+msgid ""
+"The root declares profile version 7, an `immutable_secure_snapshot_hash` "
+"snapshot policy, and a removal policy that tombstones the live profile "
+"while retaining snapshots (schema policy "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). These "
+"names imply deliberate integrity and retention semantics, but are "
+"declarations, not demonstrated controls. In particular, “secure” does not"
+" establish encryption, hash verification, key handling, access controls, "
+"deletion scope, or a retention limit; keeping snapshots after live-"
+"profile removal also creates a consequential privacy and data-retention "
+"obligation for the implementing store."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:30
+msgid "Security and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:32
+msgid ""
+"Capability flags declare three materially different boundaries: local "
+"vision processing is described as on-host with no bytes leaving the "
+"machine; Google workbook export is described as an allowed external "
+"destination; and hosted evidence upload is described as permission-gated,"
+" disabled by default, and refused in gestor mode. The upload description "
+"also states that the document is removed from this machine when sent to a"
+" hosted model (capability fields "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). These "
+"are useful policy distinctions for operators, but this TOML file does not"
+" enforce them. A structural scan of all 179 field tables found no "
+"machine-readable `default` or `default_policy` property. Defaults appear "
+"only in the prose descriptions of these three flags, so correct initial "
+"state depends on consumers interpreting those strings or applying "
+"defaults elsewhere. The runtime loader and consent guard are high-"
+"priority cross-layer checks; this local representation alone cannot "
+"establish that uploads are actually off by default or that a permission "
+"is obtained before transmission."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:34
+msgid ""
+"Authentication fields distinguish the Cl@ve provider and route, an "
+"identity-classified DNI/NIE, and two secret-classified document challenge"
+" values. Descriptions say the non-QR route requests exactly one challenge"
+" value based on document type. Schema comments explain that the DNI/NIE "
+"repeats `identity.tax_id`, and assert that a mismatch is refused at live-"
+"session entry but can otherwise be written and read from the profile. "
+"They also explain the chosen sensitivity split and discuss redaction-"
+"policy implications (auth fields and rationale "
+"(`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`)). This "
+"documents an intentional constraint and possible invalid-at-rest state; "
+"it is not runtime evidence. Synthesis should inspect the profile write "
+"and live auth paths to establish whether the mismatch check is enforced "
+"at the session boundary, and should verify how both copies of the "
+"identifier and the secret challenge fields are masked in every surface "
+"and log."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:36
+msgid ""
+"The schema’s breadth and explicit sensitivity, effective-date, selector, "
+"and provenance metadata are strengths. Its limits are equally concrete: "
+"only 17 of 179 fields are unconditionally required, many constraints "
+"depend on combinations of provider, document type, taxpayer type, year, "
+"and filing scope, and this file alone does not encode a general "
+"conditional-validation graph. That may be a deliberate flexible profile "
+"design, but it makes the admission path and consumer validation essential"
+" to safe use. No tests or runtime verification are included in this "
+"chunk, and no substantive defect in those consumers is inferred here."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:38
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:40
+msgid ""
+"Synthesis should trace the schema loader and validator, profile "
+"editing/import paths, effective-date selection, derived-selector "
+"implementation, filing scheduler, auth session entry, secret-redaction "
+"configuration, consent-controlled cloud upload, Google export, and "
+"snapshot/tombstone storage. The unresolved questions concern enforcement "
+"and data lifecycle; they do not negate the capabilities declared by the "
+"schema."
+msgstr ""
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/204-cadrumo-user-profile-schema.md:44
+msgid ""
+"`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` — 92,246 "
+"bytes"
+msgstr ""

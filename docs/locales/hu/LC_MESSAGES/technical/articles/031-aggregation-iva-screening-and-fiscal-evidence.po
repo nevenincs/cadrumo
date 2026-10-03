@@ -1,0 +1,395 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:1
+msgid "Aggregation, IVA screening, and fiscal evidence"
+msgstr "Összesítés, IVA-szűrés és adóügyi bizonyítékok"
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:7
+msgid ""
+"**Report:** `STAGE-2-031` · **Topic:** [Aggregation and calculation "
+"services](../topics/aggregation-and-calculation-services.md)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:10
+msgid "Scope"
+msgstr "Hatókör"
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:12
+msgid ""
+"This chunk covers 16 application modules (4,753 lines; 44,907 measured "
+"o200k_base proxy tokens) in application/aggregation. I read all assigned "
+"ranges in eight bounded pages. This is static analysis only: no "
+"aggregation or filing operation was executed, and no tax rule or bundled "
+"legal source was externally validated. The measured tokenizer is a "
+"planning proxy, not a model-context guarantee."
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:14
+msgid "Outcomes and main flows"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:16
+msgid ""
+"The package supplies common aggregation primitives as well as model-"
+"specific source projections. The shared helpers bucket observations in "
+"input order, keep the first non-empty human-readable name for an "
+"identity, reject unsupported modelo keys, and fold ledger rows into "
+"sorted casilla totals with sorted transaction provenance. The quarter-to-"
+"date window helper refuses non-quarter periods and returns January 1 "
+"through quarter end so income and expense sides can use one window. A "
+"rollup checker proves declared totals equal the sum of their rollup rows;"
+" it deliberately does not prove the domain-specific uniqueness of those "
+"rows. Frozen Pydantic envelopes sort/freeze values and cross-check their "
+"modelo and period against the embedded fold. Shared grouping, window, "
+"fold, and total checks "
+"(`src/cadrumo/application/aggregation/_grouping.py`) Strict casilla "
+"models (`src/cadrumo/application/aggregation/_models.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:18
+msgid ""
+"The IVA transaction classifier is the transaction-ledger admission path. "
+"It resolves dated model and mapping facts from the pinned authority, then"
+" gates in order: filing-period treatment, invoice direction, business "
+"attribution, foreign-currency substrate, measured base/cuota/rate, date-"
+"valid rate tier, category applicability, cash-accounting eligibility, and"
+" deduction classification. Failures become typed row issues; the "
+"readiness helper intentionally reuses the same admission gates without "
+"calculating observation values. For mixed business use, the base remains "
+"unreduced while cuota and recargo follow the business share. A deductible"
+" input row requires an exact deduction kind and provenance, validated "
+"with the domain contract and facts such as investment-asset or rectified-"
+"ledger identity. IVA admission and amount rules "
+"(`src/cadrumo/application/aggregation/_iva_transaction.py`) Deduction "
+"validation and classification "
+"(`src/cadrumo/application/aggregation/_iva_transaction.py`) Shared "
+"readiness gate "
+"(`src/cadrumo/application/aggregation/_iva_transaction.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:20
+msgid ""
+"After admission, ordinary rows produce a settlement observation and may "
+"independently produce a prorrata reference or prorrata issue. Cash-"
+"accounting rows split base, cuota, and recargo by recorded payment "
+"evidence and payment date, preserve the applied rate and deduction "
+"identity on each settlement, and can add an informational operation-date "
+"observation. Unpaid remainder is assigned a later fallback date; only "
+"parts inside the requested filing period are emitted. This separates "
+"timing, row admission, and prorrata diagnostics instead of hiding an "
+"invalid attachment by dropping the transaction. The classifier reads "
+"legal tables and category/component declarations through the pinned "
+"authority, but this report does not verify their tax correctness. "
+"Projection and cash-accounting split "
+"(`src/cadrumo/application/aggregation/_iva_transaction.py`) Settlement "
+"parts (`src/cadrumo/application/aggregation/_iva_transaction.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:22
+msgid "Invoice IVA cross-check and Renta evidence"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:24
+msgid ""
+"The invoice screen supports the ledger-backed IVA binding resolver for "
+"M303/M390. It retains invoice lines with either a positive base or cuota,"
+" because base-only exempt and intra-community rows can still feed "
+"declared boxes. Where an invoice declares a category, the screen uses the"
+" dated category and counterparty gate; where input deduction applies, it "
+"requires one linked frozen transaction-ledger observation to supply the "
+"exact deduction authority rather than inventing a domestic-current "
+"classification. Line amounts are converted to EUR before ordinary IVA "
+"comparison, and an unresolved foreign-currency amount raises a validation"
+" error rather than being silently omitted. Recargo is attributed only "
+"when the invoice identifies a single rate tier; otherwise the screen "
+"emits a disclosure. Other separate findings cover category/counterparty "
+"contradiction, received reverse charge without a rate, missing deduction "
+"authority, and published-rate recargo divergence. Base-or-cuota admission"
+" and category projection "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`) "
+"EUR conversion and line projection "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`) "
+"Screen result and findings "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:26
+msgid ""
+"The silence guard gets binding IDs from the selected modelo revision, "
+"compares invoice-derived values with transaction-ledger values, and "
+"refuses when invoice IVA exceeds the filing ledger. It also distinguishes"
+" a missing deduction link where the ledger already carries the amount "
+"(diagnostic) from evidence that indicates the ledger is short (refusal). "
+"An unreadable invoice catalogue is represented as storage_degraded rather"
+" than treated as a clean empty catalogue. One concrete unit-consistency "
+"risk remains in the missing-authority branch: "
+"_uncovered_withheld_invoice_cuota sums InvoiceLine.iva_amount directly, "
+"while its own screen documents line amounts as denominated in invoice "
+"currency and ordinary observations as EUR. It compares that raw sum with "
+"transaction binding values without conversion. For an eligible foreign-"
+"currency invoice, this can overstate or understate the uncovered amount "
+"and can change whether the guard refuses; the caller path and currency "
+"policy should be traced and the sum converted or refused consistently. "
+"Withheld-cuota comparison "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py`)"
+" Currency semantics in invoice screen "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`) "
+"Terminal refusal policy "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:28
+msgid ""
+"There is a second conditional consistency issue in the linked-authority "
+"helper. Its docstring says every linked observation must agree on the "
+"complete deduction identity, but the implementation first filters to "
+"observations with both kind and provenance and then compares only those "
+"complete entries. If one linked transaction has complete authority and "
+"another linked transaction is incomplete, the incomplete one is ignored "
+"and the complete one can be applied to the invoice projection. This "
+"matters for multi-transaction invoice links if the supplied ledger "
+"observations can contain such a mixture; verify whether upstream linking "
+"or admission forbids that case, otherwise require every matched linked "
+"observation to be complete and identical. Linked deduction authority "
+"selection "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:30
+msgid ""
+"On the Renta income side, a linked issued invoice contributes fiscal "
+"figures only when its bucket and reciprocal one-transaction link match, "
+"its net cash equals invoice grand total less retention, and its "
+"decomposition is grounded. If any guard refuses invoice figures, the "
+"income row remains in aggregation using the cash path; the invoice "
+"refusal does not erase received income. Retention inference is bounded: "
+"it derives the gross-to-cash difference only when activity, base, and "
+"determinable IVA are present, and caps it using the supported governed "
+"rate. The advisory then separates declared retention from cash-shortfall "
+"inference, and distinguishes unmatched from sectoral-only rates. The "
+"optional profile signal changes wording for the sectoral advisory but "
+"cannot gate whether it fires. A strong-rate cash gap remains "
+"indistinguishable from actual withholding without separate evidence. "
+"Sales-invoice evidence checks "
+"(`src/cadrumo/application/aggregation/_renta_income_evidence.py`) Bounded"
+" withholding inference "
+"(`src/cadrumo/application/aggregation/_renta_income_evidence.py`) "
+"Inference-rate advisory "
+"(`src/cadrumo/application/aggregation/_retencion_rate_advisory.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:32
+msgid "Profile facts, provenance, and safeguards"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:34
+msgid ""
+"The M184 attribution-member resolver is activated only when the selected "
+"revision uses that source. It reads profile facts under a supplied or "
+"caller-held decode context, groups indexed socio fields, reports "
+"incomplete or schema-invalid rows, and projects only complete rows into "
+"both binding observations and filing-detail rows. The source identity is "
+"normalized through the tax-ID helper; row provenance identifies the "
+"profile field path and carries a fingerprint of the profile record. "
+"Explicit assigned base is required rather than inferred from share "
+"percentage. Resolver checks make malformed numeric facts visible as row "
+"diagnostics, although other optional conversions can still raise if "
+"stored values violate their expected shape. M184 resolver and profile "
+"projection (`src/cadrumo/application/aggregation/atribucion_member.py`) "
+"Row completeness and schema validation "
+"(`src/cadrumo/application/aggregation/atribucion_member.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:36
+msgid ""
+"The workspace-level source-boundary helper refuses invoice or transaction"
+" readers that explicitly declare a different bucket; unbound in-memory "
+"readers are accepted by design. That is a composition invariant for "
+"repository-backed reads, not a general authorization mechanism. These "
+"modules carry tax identifiers, invoice references, and profile-backed "
+"financial facts through resolver values and diagnostics. A fingerprint "
+"establishes content linkage, not authenticity; a bucket check establishes"
+" scope alignment, not access control. Errors and diagnostics should "
+"therefore be reviewed together with the outer source mesh and persistence"
+" boundaries. Bucket-bound catalogue readers "
+"(`src/cadrumo/application/aggregation/catalogue_read_binding.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:38
+msgid ""
+"Other smaller capabilities include one shared business-proportion "
+"dispatch and an explicit policy difference: quarterly M130 can accept the"
+" activity marker alone, while annual M100 requires business "
+"classification review. The undeclared-activity advisory fires only when "
+"activity narrowing excluded income, no excluded row declares any "
+"activity, the target casilla folded to zero, and the selected revision "
+"contains that casilla; its language states that the income is not "
+"classified rather than guessing its destination. The shared issue-reason "
+"module centralizes five rejection labels. The namespace initializer "
+"intentionally exports no facade. These are code-level behaviors, not "
+"validation of the filing treatment. Renta eligibility policy "
+"(`src/cadrumo/application/aggregation/_renta_business_eligibility.py`) "
+"Undeclared-activity advisory conditions "
+"(`src/cadrumo/application/aggregation/_undeclared_activity_advisory.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:40
+msgid "Assessment and follow-up"
+msgstr "Értékelés és további vizsgálatok"
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:42
+msgid ""
+"The strongest implementation pattern is explicit evidence routing: dated "
+"authority facts, typed refusal reasons, immutable observation provenance,"
+" clear distinction between a warning and a filing refusal, and a shared "
+"gate between readiness and calculation. Strict models protect aggregation"
+" output shape, while caller-selected revisions provide binding "
+"identifiers and legal references rather than local model-number tables. "
+"The chunk contains no tests, and static inspection cannot establish which"
+" readers/compositions are reachable in production or whether deployed "
+"registry data supports every described branch. Prioritize verification of"
+" the missing-authority currency mismatch and the incomplete-linked-"
+"authority case, then trace the source-mesh callers to determine whether "
+"those preconditions are guaranteed elsewhere. Also confirm that degraded "
+"invoice storage is surfaced to operators at the resolver boundary and "
+"that the profile reader uses the intended active profile for M184. "
+"Important dependencies include the IVA domain classifier and registry "
+"bindings, InvoiceCatalogueReadPorts, source_mesh, Renta ledger "
+"observations, the user-profile repository, and M184 detail-row "
+"projection."
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:44
+msgid "Coverage appendix"
+msgstr "Lefedettségi függelék"
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:46
+msgid ""
+"aggregation/__init__.py (10 lines) "
+"(`src/cadrumo/application/aggregation/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:47
+msgid ""
+"aggregation/_grouping.py (323 lines) "
+"(`src/cadrumo/application/aggregation/_grouping.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:48
+msgid ""
+"aggregation/_iva_transaction.py (1,076 lines) "
+"(`src/cadrumo/application/aggregation/_iva_transaction.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:49
+msgid ""
+"aggregation/_modelo_bindings_invoice_iva.py (1,109 lines) "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:50
+msgid ""
+"aggregation/_modelo_bindings_invoice_iva_refusal.py (264 lines) "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:51
+msgid ""
+"aggregation/_modelo_bindings_support.py (54 lines) "
+"(`src/cadrumo/application/aggregation/_modelo_bindings_support.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:52
+msgid ""
+"aggregation/_models.py (206 lines) "
+"(`src/cadrumo/application/aggregation/_models.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:53
+msgid ""
+"aggregation/_preconditions.py (45 lines) "
+"(`src/cadrumo/application/aggregation/_preconditions.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:54
+msgid ""
+"aggregation/_renta_business_eligibility.py (84 lines) "
+"(`src/cadrumo/application/aggregation/_renta_business_eligibility.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:55
+msgid ""
+"aggregation/_renta_income_evidence.py (217 lines) "
+"(`src/cadrumo/application/aggregation/_renta_income_evidence.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:56
+msgid ""
+"aggregation/_retencion_rate_advisory.py (596 lines) "
+"(`src/cadrumo/application/aggregation/_retencion_rate_advisory.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:57
+msgid ""
+"aggregation/_shared_issue_reasons.py (39 lines) "
+"(`src/cadrumo/application/aggregation/_shared_issue_reasons.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:58
+msgid ""
+"aggregation/_undeclared_activity_advisory.py (182 lines) "
+"(`src/cadrumo/application/aggregation/_undeclared_activity_advisory.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:59
+msgid ""
+"aggregation/atribucion_member.py (468 lines) "
+"(`src/cadrumo/application/aggregation/atribucion_member.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:60
+msgid ""
+"aggregation/business_proportion.py (50 lines) "
+"(`src/cadrumo/application/aggregation/business_proportion.py`)"
+msgstr ""
+
+#: ../../technical/articles/031-aggregation-iva-screening-and-fiscal-evidence.md:61
+msgid ""
+"aggregation/catalogue_read_binding.py (30 lines) "
+"(`src/cadrumo/application/aggregation/catalogue_read_binding.py`)"
+msgstr ""

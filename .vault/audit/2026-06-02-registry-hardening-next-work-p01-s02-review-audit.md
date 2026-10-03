@@ -4,7 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:4c81e0b45b11dc07735245ee124567c68ecf5cbefe402f0cb0d40bb260918ef1'
+body_hash: 'sha256:464ef31f9355927352fd377c9d426d89d4368ddbcf197b42305b84d26f79ce1c'
 related: []
 ---
 
@@ -23,7 +23,7 @@ casilla-count smoke check.
 ## Residual Risk
 
 The split reduces the largest M100 2024 fragment from 1706 lines to 600 lines.
-The same completeness-manifest pressure remains for M100 2023, 2022, 2021, 
+The same completeness-manifest pressure remains for M100 2023, 2022, 2021,
 2020 and is tracked by `P01.S03` through `P01.S06`.
 
 ## Verification

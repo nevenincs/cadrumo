@@ -6,9 +6,9 @@ import tempfile
 from hashlib import sha256
 from pathlib import Path
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev._paths import prepare_temporary_directory
 
 from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from .export_fragment_provenance_projection import loader_semantic_digest
@@ -21,6 +21,7 @@ def select_generated_export_inheritance(
     *,
     modelo: str,
     revision: str,
+    _visited: frozenset[str] = frozenset(),
 ) -> GeneratedExportInheritanceContext | None:
     """Return a baseline only when the child's entire effective layout is equal.
 
@@ -28,14 +29,23 @@ def select_generated_export_inheritance(
     still renders from its own source, semantic map and profile before equality
     with this baseline can be established by the renderer.
     """
+    if revision in _visited:
+        raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{revision}")
+    visited = _visited | {revision}
     definition = authority.modelo(modelo)
     selected = definition.revisions[revision]
     baseline_id = selected.family_storage_baseline
     if baseline_id is None:
         return None
+    if str(baseline_id) in visited:
+        raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{baseline_id}")
     baseline = definition.revisions.get(str(baseline_id))
     if baseline is None:
         raise RegistryValidationError(f"generated export inheritance baseline {baseline_id!r} is absent")
+    if len(selected.export_layouts) != 1 or len(baseline.export_layouts) != 1:
+        return None
+    if selected.export_layouts != baseline.export_layouts:
+        return None
     for selected_id in (str(baseline_id), revision):
         evolution_root = (
             registry_root / "modelos" / modelo / "revisions" / selected_id / "casilla_continuidad_evolutions"
@@ -45,10 +55,6 @@ def select_generated_export_inheritance(
                 "generated export inheritance cannot detach a revision with continuity evolutions: "
                 f"{modelo}/{selected_id}",
             )
-    if len(selected.export_layouts) != 1 or len(baseline.export_layouts) != 1:
-        return None
-    if selected.export_layouts != baseline.export_layouts:
-        return None
     # Artifact verification imports publication contracts, which refer to the
     # validator. Keep that dependency at the call boundary instead of creating
     # an import cycle while the validator is being defined.
@@ -73,6 +79,7 @@ def select_generated_export_inheritance(
             registry_root,
             modelo=modelo,
             revision=str(baseline_id),
+            _visited=visited,
         )
         if baseline_context is None or baseline_context.attestation != manifest.generated_export_inheritance:
             raise RegistryValidationError("generated export inheritance baseline chain attestation changed")

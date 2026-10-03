@@ -65,8 +65,8 @@ def stage_generated_export_candidate(
     """Stage the target's complete authority through the canonical loader.
 
     An ordinary candidate contains one detached complete edition. An attested
-    generated-export child instead contains exactly its pinned baseline and
-    thin child, retaining the storage chain needed to hydrate its layout.
+    generated-export child instead contains exactly its pinned ancestor chain
+    and thin child, retaining every storage link needed to hydrate its layout.
     """
     if bootstrap_target is not None and (bootstrap_target.modelo, bootstrap_target.revision) != (modelo, revision):
         raise ValueError(

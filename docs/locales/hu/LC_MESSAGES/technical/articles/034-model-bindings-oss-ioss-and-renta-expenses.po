@@ -1,0 +1,302 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:1
+msgid "Model bindings, OSS/IOSS, and Renta expenses"
+msgstr "Űrlapkötések, OSS/IOSS és Renta-költségek"
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:7
+msgid ""
+"**Report:** `STAGE-2-034` · **Topic:** [Aggregation and calculation "
+"services](../topics/aggregation-and-calculation-services.md)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:10
+msgid "Scope"
+msgstr "Hatókör"
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:12
+msgid ""
+"This chunk covers nine application aggregation modules (4,066 lines; "
+"38,361 measured o200k_base proxy tokens): Modelo binding resolvers, "
+"activity-asset and Renta-expense projections, withholding dispatch, "
+"observation-window utilities and ports, OSS/IOSS filing, and quarterly "
+"deductible expenses. I read every assigned line range over seven bounded "
+"pages, splitting one oversized page into smaller line ranges to avoid "
+"truncation. This is static analysis only; I did not load the application,"
+" run calculations, or validate legal rules against current sources."
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:14
+msgid "Filing-source resolution"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:16
+msgid ""
+"The binding layer adapts typed ledger observations and taxpayer facts "
+"into revision-selected binding values. IVA resolves canonical IVA "
+"observations, maps supported bindings and prorrata evidence, and emits "
+"diagnostics/provenance for observations not consumed by a binding. Renta "
+"income has separate annual and quarterly paths: Modelo 100 uses an annual"
+" window, Modelo 130 uses a cumulative quarter-to-date window, and Modelo "
+"131 admits only eligible agrarian activity while excluding "
+"subsidy/indemnity classes. These resolvers surface unrouted income, "
+"unsupported cash fallback and withholding quantity, and incomplete "
+"activity or grading evidence as diagnostics instead of silently treating "
+"the entire source as an ordinary figure. The Modelo 131 selector comes "
+"from the pinned authority operation. IVA resolver "
+"(`src/cadrumo/application/aggregation/modelo_bindings.py`) Renta income "
+"resolver (`src/cadrumo/application/aggregation/modelo_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:18
+msgid ""
+"The special impatriate-income projection reads its target, source "
+"jurisdictions and income categories from governed facts, rather than "
+"embedding a Python default. Invalid or absent facts leave no resolved "
+"target and produce source diagnostics; the resolver also keeps source-"
+"jurisdiction issues visible. The IRNR/Modelo 210 path is selected only "
+"for a durable official income-type code and passes that code into the "
+"ledger projection, preserving the selected classification through the "
+"aggregation. Impatriate income resolver "
+"(`src/cadrumo/application/aggregation/modelo_bindings.py`) IRNR income "
+"resolver (`src/cadrumo/application/aggregation/modelo_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:20
+msgid ""
+"The quarterly Renta-expense binding path cross-checks the activity-asset "
+"history before resolving expenses. Asset-register-owned acquisitions are "
+"withheld from ordinary expense treatment, while a competing depreciation "
+"route is refused rather than counted twice. The annual Modelo 100 "
+"resolver applies expense usage ratios and overlays those asset claims "
+"onto its first-slice expense observations. The quarterly expense resolver"
+" and annual one therefore protect the boundary between ordinary expense "
+"and registered-asset treatment while feeding distinct registry-selected "
+"targets. Quarterly Renta expense resolver "
+"(`src/cadrumo/application/aggregation/modelo_bindings.py`) Activity-asset"
+" expense observations "
+"(`src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`)"
+" Annual expense resolver "
+"(`src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:22
+msgid ""
+"The withholding source resolver is a canonical dispatcher for the "
+"supported withholding binding families. It uses declared source ownership"
+" and model-specific routing to select a calculation path; a table of "
+"resolver definitions is not itself a declaration that every calculation "
+"model is supported. Withholding resolver "
+"(`src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:24
+msgid "OSS/IOSS and Modelo 369"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:26
+msgid ""
+"The OSS/IOSS pipeline classifies tagged issued-invoice lines into typed "
+"candidates, retaining regime, destination Member State, rate kind, "
+"direction, transaction kind and amounts. It determines rate kind from an "
+"explicit line classification or the dated IVA rate, refuses a declarable "
+"line whose rate cannot be classified, converts native invoice amounts "
+"through the invoice's EUR-equivalent accessor, and refuses when "
+"conversion is unavailable. It attributes candidates using the shared "
+"invoice-devengo period predicate, normalizes Exterior period tokens, and "
+"carries contributing invoices alongside candidates so the resolver can "
+"explain substituted devengo dates. Candidate validation and amount "
+"conversion (`src/cadrumo/application/aggregation/oss_ioss.py`) Repository"
+" projection and period attribution "
+"(`src/cadrumo/application/aggregation/oss_ioss.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:28
+msgid ""
+"Validation checks stored IVA against the destination country's dated "
+"official rate with a one-cent tolerance, and uses the caller's pinned "
+"authority operation for rate and transaction-kind lookup. The standard "
+"resolver aggregates candidates into matching registry bindings; the "
+"Exterior projection additionally groups by destination and rate tier, "
+"then uses dated declarations for official country/rate wire codes instead"
+" of assuming enum values match filing codes. Unsupported row categories "
+"are surfaced as unrouted-observation diagnostics. With no candidates it "
+"emits one advisory for each declared OSS binding rather than making an "
+"unexplained zero look like a computed cuota. Observation validation "
+"(`src/cadrumo/application/aggregation/oss_ioss.py`) Binding aggregation "
+"(`src/cadrumo/application/aggregation/oss_ioss.py`) Exterior projection "
+"(`src/cadrumo/application/aggregation/oss_ioss.py`) Resolver and no-"
+"source behavior (`src/cadrumo/application/aggregation/oss_ioss.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:30
+msgid "Capture windows and quarterly gasto"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:32
+msgid ""
+"The shared observation-window utility validates keyed payloads and "
+"prepares every replacement before calling the repository's set-replace "
+"operation with both new rows and stale identifiers. The port contract "
+"says the replacement is atomic, which gives a capture a clear all-or-"
+"nothing boundary and prevents stale rows remaining beside a newly "
+"captured window. This module does not implement the storage transaction "
+"itself, so the contract's enforcement still depends on each bound "
+"repository. Observation key components are checked by a shared validator;"
+" the perceptor repository port hashes canonicalized tax IDs before using "
+"them in opaque storage keys, while non-identifying AEAT clave/subclave "
+"codes distinguish rows. The interface supports periodic loads and annual "
+"projections from active periodic source observations. Set-replace "
+"preparation and commit call "
+"(`src/cadrumo/application/aggregation/observation_window.py`) Key "
+"validation "
+"(`src/cadrumo/application/aggregation/observation_key_component.py`) "
+"Perceptor key and repository port "
+"(`src/cadrumo/application/aggregation/percepciones_observations_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:34
+msgid ""
+"The quarterly Renta gasto ledger reads only the cumulative in-window date"
+" partition for classification and obtains an out-of-window summary from "
+"the repository's date index. It uses the same IVA deduction-ratio "
+"resolver as annual Renta. Eligible rows are active outgoing transactions "
+"that are business or mixed, or carry an accepted activity marker; "
+"reviewed-excluded rows remain excluded. The amount uses EUR-equivalent "
+"taxable base plus the nonrecoverable share of IVA when both the IVA "
+"amount and deduction ratio are known, scaled by the business share for "
+"mixed use. Missing taxable base, unsupported foreign currency, and dates "
+"outside the cumulative window produce reasoned issues rather than being "
+"silently folded into a target. Incoming, personal, and unclassified "
+"outgoing rows are skipped because this pipeline does not claim them as "
+"deductible expenses. Repository window and ratio resolution "
+"(`src/cadrumo/application/aggregation/renta_gasto_ledger.py`) Eligibility"
+" and amount classification "
+"(`src/cadrumo/application/aggregation/renta_gasto_ledger.py`) Gate issues"
+" (`src/cadrumo/application/aggregation/renta_gasto_ledger.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:36
+msgid "Security, quality, and follow-up"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:38
+msgid ""
+"The chunk has clear application-owned repository ports, strict frozen "
+"value models, typed issue reasons, bucket checks, date-partitioned ledger"
+" reads and caller-pinned authority use in the registry-sensitive "
+"projections. Hashed perceptor identifiers reduce direct identity exposure"
+" in observation keys, and safe key-component validation limits storage-"
+"key injection through caller-provided components. These are local "
+"controls; repository encryption, access control, capture authorization "
+"and presentation redaction are outside these modules. Invoice candidates "
+"retain invoice identifiers as source references, and downstream "
+"logging/display policy should be checked at the composition boundary."
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:40
+msgid ""
+"The main follow-up is to trace admission to these resolvers: verify the "
+"selected binding revision and category facts are fixed before user- or "
+"model-provided values can influence them, and establish how capture "
+"authorization and atomic storage are enforced by concrete adapters. Also "
+"verify that the activity-asset register's acquisition and depreciation "
+"ownership checks cover every annual and quarterly expense entry point. "
+"These are cross-module verification questions, not demonstrated bypasses "
+"here. The static chunk contains no tests, and none were run. Bundled "
+"authority declarations are implementation inputs, not independent "
+"evidence of current legal correctness."
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:42
+msgid "Coverage appendix"
+msgstr "Lefedettségi függelék"
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:44
+msgid ""
+"aggregation/modelo_bindings.py (1,618 lines) "
+"(`src/cadrumo/application/aggregation/modelo_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:45
+msgid ""
+"aggregation/modelo_bindings_actividad_assets.py (279 lines) "
+"(`src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:46
+msgid ""
+"aggregation/modelo_bindings_renta_expenses.py (250 lines) "
+"(`src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:47
+msgid ""
+"aggregation/modelo_bindings_retenciones.py (245 lines) "
+"(`src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:48
+msgid ""
+"aggregation/observation_key_component.py (18 lines) "
+"(`src/cadrumo/application/aggregation/observation_key_component.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:49
+msgid ""
+"aggregation/observation_window.py (196 lines) "
+"(`src/cadrumo/application/aggregation/observation_window.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:50
+msgid ""
+"aggregation/oss_ioss.py (857 lines) "
+"(`src/cadrumo/application/aggregation/oss_ioss.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:51
+msgid ""
+"aggregation/percepciones_observations_repository.py (140 lines) "
+"(`src/cadrumo/application/aggregation/percepciones_observations_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/034-model-bindings-oss-ioss-and-renta-expenses.md:52
+msgid ""
+"aggregation/renta_gasto_ledger.py (463 lines) "
+"(`src/cadrumo/application/aggregation/renta_gasto_ledger.py`)"
+msgstr ""

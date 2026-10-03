@@ -4,7 +4,7 @@ tags:
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
 modified: '2026-10-03'
-body_hash: 'sha256:45fcc2dff42f36b8d687d3cf33c6b32ee15abff3aeb87e36c997d0a47b944f0f'
+body_hash: 'sha256:7d9b69618bcaeb8dbbd48dca3c49479abd0a20290827282e62b6342b2c6fd303'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
@@ -12,8 +12,6 @@ related:
 # `m303-form-vs-semantic-casilla-dual-keying` reference: `M303 official box to semantic source projection map`
 
 The authoritative, label-cross-checked Stage-2 projection map. Each in-scope official Diseno-de-Registros numbered cuota box is paired with the single already-computed semantic casilla id it copies. No box is wired without an exact 1:1 label match; the box's own `legal_refs` are copied verbatim onto its projection formula.
-
-
 
 ## Summary
 

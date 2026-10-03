@@ -1,0 +1,420 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:1
+msgid "Ledger binding families and Modelo 303 evidence projections"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:7
+msgid ""
+"**Report:** `STAGE-2-131` · **Topic:** [Tax calculation domain](../topics"
+"/tax-calculation-domain.md)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:10
+msgid "Scope and method"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:12
+msgid ""
+"This chunk covers 15 registry-domain modules, 4,892 physical lines, "
+"214,429 bytes, and 47,239 measured `o200k_base` proxy tokens. All nine "
+"bounded pages were read, including the explicitly sliced file ranges. "
+"This is static inspection only: no source was changed and no application "
+"code or tests were run. The modules center on ledger binding families and"
+" evidence-backed Modelo 303 projections, with supporting legal-reference "
+"and lineage validation."
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:14
+msgid "Ledger aggregation and safeguards"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:16
+msgid ""
+"The IVA family turns classified ledger rows into typed selector matches "
+"and Decimal totals for IVA amount, taxable base, or recargo. An "
+"observation carries several independent axes: category, rate tier and "
+"applied rate, flow, exemption article, cash-accounting treatment, "
+"settlement versus information role, deduction kind and provenance, "
+"prorrata class/sector, and investment or rectification identity. "
+"Validation ties the row's rate to its transaction date and refuses "
+"deduction authority on non-deducible rows; a deductible row needs both an"
+" exact deduction kind and provenance that passes the deduction-fact "
+"validator. The selector has corresponding optional filters for applied "
+"rate, deduction kind, and exemption, so annual per-rate boxes and "
+"ordinary-versus-investment input boxes can separate lines that share "
+"broader classification. IVA observation contract "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`) IVA "
+"selector contract "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:18
+msgid ""
+"For M303 and M390, the invoice-versus-ledger screen derives seven "
+"conceptual slots from the governed category and rate catalogues. It finds"
+" candidate bindings by typed selector axes, rejects unknown shapes and "
+"cross-model IDs, and requires each slot to be served exactly once or by "
+"disjoint deduction-kind partitions. A separate overlap diagnostic looks "
+"for same-axis deducible bindings that can claim the same input kind. "
+"These are registry-level protections against an invoice check silently "
+"missing a filing box or the same input VAT being declared twice. Screen "
+"binding selection "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`) "
+"Deduction overlap analysis "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:20
+msgid ""
+"Three IVA screens address different blind spots: unsupported nonzero "
+"rows, independent nonzero quantities that a row match alone would hide, "
+"and base categories that no selector could ever reach. The quantity "
+"screen treats base, VAT, and recargo as independent measures, while the "
+"structural base screen uses the real matcher and defaults to an "
+"M303-specific out-of-scope set. Its documentation correctly warns that "
+"another modelo must supply its own scope. These diagnostics report gaps; "
+"they do not create missing bindings or alter declarations. Unrouted IVA "
+"quantities "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`) "
+"Structurally unreachable IVA bases "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:22
+msgid ""
+"The OSS/IOSS family adds regime, destination Member State, rate tier, "
+"invoice direction, and transaction kind to the row match. Observation "
+"validation requires a generation-pinned governed-fact scope and checks "
+"that transaction kind belongs to the chosen regime at the transaction "
+"date. Binding selectors resolve typed regime, Member State, rate and "
+"transaction kinds, and the resolver sums either destination VAT or base. "
+"Its unsupported-row screen ignores rows whose base and VAT are both zero."
+" OSS observation and regime checks "
+"(`src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`) OSS "
+"aggregation and unsupported-row screen "
+"(`src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:24
+msgid ""
+"Renta expense bindings are narrower. The annual M100 first-slice provider"
+" fixes model 100, period `0A`, a declared target casilla and the single "
+"deductible-amount fact; the validator restricts targets to a closed "
+"casilla set. Its runtime matcher selects by model, period and target, "
+"sums already-computed deductible amounts, and can report unmatched "
+"nonzero observations. The M130 expense provider binds a target casilla "
+"for the cumulative year-to-date path; target validity is checked against "
+"the only currently supported expense box. Both leave expense eligibility,"
+" allocation, date windows and deductible-amount calculation upstream. The"
+" M130 reachability probe is documented and tested as structurally "
+"tautological (`target == target`); its meaningful guard is the closed "
+"target-casilla allowlist and revision integrity check, not the probe "
+"itself. M100 first-slice expense bindings "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`)"
+" M130 expense selector and probe "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:26
+msgid ""
+"Renta income supports M100, M130 and M131 with explicit fact selection: "
+"ingresos íntegros, cash received, declared taxable base, or declared "
+"withholding. The measure is required because these facts make different "
+"legal/financial claims. In particular, ingresos íntegros uses the IVA-"
+"exclusive base when present and falls back to gross cash otherwise; "
+"taxable-base-only omits a missing base; withholding aggregation counts "
+"only values declared on the linked invoice. Separate screens flag cash-"
+"fallback rows consumed by base-reading bindings, independent withholding "
+"that no binding draws, and inferred or unresolved withholding excluded "
+"from a declared-only total. The results preserve the difference between "
+"known zero and unknown substrate without silently promoting reconstructed"
+" withholding into a tax credit. Income selector and required fact "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+" Income resolver "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+" Grounding and withholding diagnostics "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+" Independent quantity screen "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+" Withholding partition "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:28
+msgid "Legal authority, continuity, and filing projections"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:30
+msgid ""
+"Runtime legal-reference checking is deliberately limited to reviewed "
+"status and a known-bad citation blocklist lookup. The module states that "
+"corpus extraction, provenance, and textual grounding are publisher "
+"responsibilities; installed runtime does not reopen the source corpus. "
+"This is a useful boundary, but it means the quality of a published "
+"citation depends on upstream publication checks. Legal-reference "
+"eligibility (`src/cadrumo/domain/calculations/registry/legal.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:32
+msgid ""
+"Lineage attestations provide an authored, edge-local claim that one "
+"stable family identity continues across the exact predecessor revision. "
+"They distinguish casilla continuity IDs from other family member IDs, "
+"require evidence for origins that call for it, prohibit absence origins, "
+"reject duplicate target identities, and validate the edge and unique "
+"membership on both sides against canonical indexes. The function is pure "
+"and returns authored order, leaving loader selection and membership-index"
+" construction to its caller. Lineage attestation model "
+"(`src/cadrumo/domain/calculations/registry/lineage_attestation.py`) "
+"Canonical-edge validation "
+"(`src/cadrumo/domain/calculations/registry/lineage_attestation.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:34
+msgid ""
+"The Lorca reduction reader resolves a dated mapping fact under governed "
+"authority, requires one legal and source reference plus required source "
+"text, checks exercise/date agreement and a lowercase SHA-256 digest, and "
+"refuses disagreement between payload evidence and variant metadata. It "
+"returns the percentage, periods and provenance as one immutable "
+"definition. Lorca reduction resolution "
+"(`src/cadrumo/domain/calculations/registry/lorca_reduction.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:36
+msgid ""
+"M303 differentiated-sector projection maps two canonical sectors into 18 "
+"authored endpoints per sector. It refuses ordinary contributions that "
+"contain investment-asset regularisations, missing or duplicate "
+"contribution identities, unknown sectors, incomplete annual deduction-"
+"kind populations, unresolved percentages, mismatched regularisation "
+"years, or contributions whose total differs from the canonical casilla "
+"43. The exonerado-390 projection maps six activity-code/IAE pairs and one"
+" Modelo 347 marker through exact typed references; applicable evidence "
+"must include the Modelo 347 decision, while inapplicable evidence yields "
+"no projection. Differentiated deduction projection "
+"(`src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py`)"
+" Exonerado 390 projection "
+"(`src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:38
+msgid ""
+"Annual Orden authority is compiled into year/revision/source-pinned "
+"projections and snapshots. Structural checks cover activity/module counts"
+" and distributions, agricultural axis counts, seasonal-band continuity, "
+"and percentage bounds while intentionally leaving annual legal "
+"coefficients and band boundaries free to change when supported by "
+"evidence. Projections require unique activities and coherent IAE "
+"identity, and snapshots carry exact source coordinates into activity "
+"references. The 2022 coordinate and record-design source are pinned "
+"separately. The resolver selects the projection through filing-year "
+"support and requires exactly one active cited record-design source at "
+"period end. Generated-shape rules "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_constants.py`) "
+"Projection and snapshot validation "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`)"
+" Snapshot resolution "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_resolution.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:40
+msgid ""
+"The M303 prorrata activity projection reads five persisted register rows "
+"and pairs each with five revision-declared endpoints. It returns nothing "
+"when activity rows do not apply, but refuses incomplete active "
+"collections and duplicate or incomplete endpoint matrices. The 303-to-390"
+" simplified-regime handoff fixes the source to the filed 4T and casillas "
+"51, 53, 52, 54, 55, 56, 57, 58 in semantic order; revision validation "
+"requires the ten official 390 endpoint numbers 74–83 exactly once and "
+"each target to be bound only by its mapped binding. Prorrata activity "
+"projection "
+"(`src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py`)"
+" Annual summary requirement and validation "
+"(`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`)"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:42
+msgid "Security, quality, and follow-up"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:44
+msgid ""
+"The examined boundary uses frozen typed models, closed selector "
+"vocabularies, exact period/target checks, and generation-scoped authority"
+" for several tax classifications. Ledger IDs and source identities are "
+"carried as evidence-bearing references; the modules do not themselves "
+"implement authentication, network access, file operations, or credential "
+"handling. This local observation does not establish those controls "
+"elsewhere in the application. Legal-source contents and the correctness "
+"of upstream ledger classification, prorrata allocation, filing evidence, "
+"and aggregation inputs remain outside this chunk."
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:46
+msgid ""
+"Two integration details merit verification. First, the exonerado-390 "
+"projector creates a dictionary keyed by evidence-row slot, so duplicate "
+"evidence slots would be overwritten unless the evidence model or caller "
+"rejects them; that uniqueness guarantee is not in these assigned files. "
+"Second, the annual-summary revision validator checks the official "
+"endpoint numbers and bound-only relation but does not itself check the "
+"target revision's modelo identity, so its loader integration should "
+"ensure it is called only for the intended Modelo 390 revision. The IVA "
+"observation/selector validators also mix transaction-date validation with"
+" some candidate-vocabulary checks at `today_madrid()`; confirm that this "
+"is the intended temporal policy when historical registry revisions are "
+"compiled. These are integration questions, not established filing "
+"defects. Static inspection provides no execution or test results; inline "
+"references to tests are not evidence that they pass."
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:48
+msgid "Coverage appendix"
+msgstr "Apéndice de cobertura"
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:50
+msgid ""
+"All 15 assigned files were fully read across nine bounded pages; no "
+"unread ranges remain."
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:52
+msgid ""
+"registry/ledger_iva_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`) — "
+"1–1399"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:53
+msgid ""
+"registry/ledger_oss_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`) — "
+"1–327"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:54
+msgid ""
+"registry/ledger_renta_gastos_estimacion_directa_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`)"
+" — 1–253"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:55
+msgid ""
+"registry/ledger_renta_gastos_pago_fraccionado_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py`)"
+" — 1–259"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:56
+msgid ""
+"registry/ledger_renta_income_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`)"
+" — 1–684"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:57
+msgid ""
+"registry/legal.py (`src/cadrumo/domain/calculations/registry/legal.py`) —"
+" 1–54"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:58
+msgid ""
+"registry/lineage_attestation.py "
+"(`src/cadrumo/domain/calculations/registry/lineage_attestation.py`) — "
+"1–282"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:59
+msgid ""
+"registry/lorca_reduction.py "
+"(`src/cadrumo/domain/calculations/registry/lorca_reduction.py`) — 1–151"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:60
+msgid ""
+"registry/m303_differentiated_deduction_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py`)"
+" — 1–282"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:61
+msgid ""
+"registry/m303_exonerado_390_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py`)"
+" — 1–127"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:62
+msgid ""
+"registry/m303_orden_constants.py "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_constants.py`) — "
+"1–161"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:63
+msgid ""
+"registry/m303_orden_projection_models.py "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`)"
+" — 1–417"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:64
+msgid ""
+"registry/m303_orden_resolution.py "
+"(`src/cadrumo/domain/calculations/registry/m303_orden_resolution.py`) — "
+"1–126"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:65
+msgid ""
+"registry/m303_prorrata_activity_projection.py "
+"(`src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py`)"
+" — 1–118"
+msgstr ""
+
+#: ../../technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md:66
+msgid ""
+"registry/m303_regimen_simplificado_annual_summary_bindings.py "
+"(`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`)"
+" — 1–252"
+msgstr ""

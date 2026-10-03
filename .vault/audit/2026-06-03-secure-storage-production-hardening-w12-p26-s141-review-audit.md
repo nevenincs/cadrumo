@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:39d1e5e0970abe7a02b42226a6d59b5df5953a82abd2444ccbe7bcd510213f59'
+body_hash: 'sha256:fcc62907d1bd63a5f4423de03b0e9f840dd6e5a6db6a8a7fe5f28691b5b1865c'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Resolution: the module docstring now states the split explicitly. Foundation tes
 
 Validation:
 
-- the focused test run passed with 5 selected tests.
-- the focused test run passed.
+- the historical check passed with 5 selected tests.
+- the historical check passed.
 - Source scan found no direct `Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S141 files.
 
 Disposition: close `AFR-039` as `remote-mirror`.

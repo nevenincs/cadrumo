@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:96e08ea0e22efad9b5f6c7e43377c75efcf2289a97ee4593d4cd17e9f0f3ad8c'
+body_hash: 'sha256:d7b627c50747a883462fb21e789a4ec2f1272be4894f222fc5eca1e47b8d1af5'
 related: []
 ---
 
@@ -74,8 +74,6 @@ for M111 rather than a regime code for M200.
 
 ## What the current M200 registry declares (the defect)
 
-
-
 - `modelo-200-page-000-draft-filing_year-pos-1`: offset 1, length 17, `kind =
   "draft"`, `draft_attribute = "filing_year"`. `_draft_value` (`_export.py:891`)
   resolves this to `str(draft.period.filing_year)` — 4 characters. `_pad`
@@ -131,11 +129,7 @@ default.
 
 ## Draft-attribute canonical widths (current abstention)
 
-
-
 ## `draft_attribute` and field-kind schema
-
-
 
 ## Files to change
 

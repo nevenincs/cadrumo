@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:2d468331dc7ab2064d9536b14c228e7bcecab2c4e8dbb56afbdf92acfa9b210a'
+body_hash: 'sha256:9c3d366bc90f6faf11b21d4ae2f89bc7186d91a2f395438b67f54d3b2ae3c91d'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Failure surfaces use typed `GoogleAuthError` subclasses rooted at `AeatError`, w
 
 Validation:
 
-- the focused test run passed with 24 tests.
-- the focused test run passed.
+- the historical check passed with 24 tests.
+- the historical check passed.
 - A source scan found no naked environment reads, DB route setup, secure-object repository constructors, local storage provider constructors, or direct local file read/write calls in `_oauth_flow.py`.
 
 Disposition: close `AFR-030` as `remote-mirror`. The live OAuth browser consent probe remains opt-in live evidence and is not counted as this offline ledger closure.
@@ -47,5 +47,5 @@ Resolution: missing active-profile bucket manifests and missing profile aggregat
 Validation:
 
 - `test_oauth_flow.py` covers a missing bucket manifest and a real isolated active-bucket runtime whose profile aggregate is absent.
-- the focused test run passed.
+- the historical check passed.
 - Targeted Ruff passed for `_oauth_flow.py` and `test_oauth_flow.py`.

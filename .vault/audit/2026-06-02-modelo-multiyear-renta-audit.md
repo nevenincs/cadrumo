@@ -4,7 +4,7 @@ tags:
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:c5d668414025354f8807ee50d5676044def678783bb6610d671aca949b9835b0'
+body_hash: 'sha256:3988cd47e2debbaee9c458dc2fd7be45189212148f21acada274128f9600eacc'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-income-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'
@@ -45,9 +45,9 @@ invariant rather than a hand-computed value. The recorder enforces its
 its own type boundary, and `assert_enrollment_matches_manifest` converts the
 manifest from an honour claim into a verified one.
 
-Structural completeness originally remained **gated on the remaining HIGH 
+Structural completeness originally remained **gated on the remaining HIGH
 MEDIUM findings below**. HIGH-1 and HIGH-2 were closed on the 2026-06-29
-corpus/registry path; HIGH-3 and the MEDIUM findings still required closure 
+corpus/registry path; HIGH-3 and the MEDIUM findings still required closure
 formal deferral before the campaign could be declared complete. The 2026-07-06
 current-state review below records the later closures and supersessions.
 
@@ -79,7 +79,7 @@ The current registry/corpus closes the two legal-grounding findings from this au
   casilla author trusts it.
 - **Current closure:** the bundled corpus now includes
   the retired data file.
-  The manifest identifies the Modelo 721 record design as Orden HFP/886/2023, 
+  The manifest identifies the Modelo 721 record design as Orden HFP/886/2023,
   the retired data file points Modelo 721
   legal/source refs to `BOE-A-2023-17429`, not the custodian-side Orden HFP/887/2023.
   The obsolete unreferenced `orden-hfp-887-2023` corpus artifacts were removed to
@@ -110,8 +110,8 @@ The current registry/corpus closes the two legal-grounding findings from this au
 
 ## Current State — 2026-07-06 Post-S89 Review
 
-The post-S89 current-state pass rechecked every remaining HIGH/MEDIUM blocker 
-the LOW softness items against the live tree after commits `8f5442bc0d` 
+The post-S89 current-state pass rechecked every remaining HIGH/MEDIUM blocker
+the LOW softness items against the live tree after commits `8f5442bc0d`
 `55d04363fd`:
 
 - HIGH-3 is closed: `test_modelo_353_grupo_aggregation_continuity.py` no longer
@@ -233,7 +233,7 @@ they are recorded so a future audit need not re-derive them.
   evidence token the caller cannot fabricate (calculation mode: a strictly
   positive produced-value count from a real engine run; context mode: a named
   real two-year context). `EnrollmentEvidence` enforces the `>=2 distinct renta
-  years` and per-observation evidence contract at its pydantic boundary, 
+  years` and per-observation evidence contract at its pydantic boundary,
   `assert_enrollment_matches_manifest` requires the recorded year-set to equal the
   manifest's declared `renta_years`. A stub records nothing; a single-period test
   records one year; both turn the gate RED.
@@ -244,7 +244,7 @@ they are recorded so a future audit need not re-derive them.
   oracle.
 - **RECONCILIATION class genuine.** 190←111, 180←115, 193←123 (periodic→annual
   retenciones roll-up) and 390←303 reconcile a real same-/cross-year source set.
-- **DATA_FIDELITY class genuine.** 347, 184, 232, 721, 308, 360, 349 persist 
+- **DATA_FIDELITY class genuine.** 347, 184, 232, 721, 308, 360, 349 persist
   reload typed observations across two renta years with strict pydantic equality
   and per-year isolation.
 - **THRESHOLD_CONTINUITY class genuine.** 036, 840, 720 assert a real

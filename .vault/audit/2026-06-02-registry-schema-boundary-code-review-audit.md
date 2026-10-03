@@ -4,7 +4,7 @@ tags:
   - '#registry-schema-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:49d812d32e442e3a24793776a46fdbba0049d799163d1b865b36b41ccacee10b'
+body_hash: 'sha256:c959aa411703a8ae922fc364bdce29854a0bb7a690c673b407f024a59cd52f72'
 related:
   - "[[2026-06-02-registry-schema-boundary-audit]]"
 ---
@@ -22,7 +22,7 @@ active peer formatting diff visible in the shared worktree.
 
 No issue found. The audit correctly separates behavior-preserving module
 decomposition from architecture changes: a facade-preserving generic
-family split needs no new ADR, while modelo-specific schema modules 
+family split needs no new ADR, while modelo-specific schema modules
 new schema construction semantics require an ADR first.
 
 ## SCHEMA-S21-003 | PASS | Public import compatibility is preserved

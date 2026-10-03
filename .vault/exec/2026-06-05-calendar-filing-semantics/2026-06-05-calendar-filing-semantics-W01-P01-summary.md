@@ -4,7 +4,7 @@ tags:
   - '#calendar-filing-semantics'
 date: '2026-06-05'
 modified: '2026-10-03'
-body_hash: 'sha256:15c92c3a88f2c991a49d8e154d3bf3f04db0a022c1a08149d5dcf28feef7e2cc'
+body_hash: 'sha256:41b1b4026f05f0c770b4a9623d2d42b42d7bd62b8cad87226955561410e3a992'
 related:
   - '[[2026-06-05-calendar-filing-semantics-plan]]'
 ---
@@ -12,7 +12,6 @@ related:
 # `calendar-filing-semantics` `W01.P01` summary
 
 Implemented the typed calendar evidence model and CLI storage wiring for local filing readiness, AEAT submitted evidence, and justificante verification.
-
 
 ## Description
 

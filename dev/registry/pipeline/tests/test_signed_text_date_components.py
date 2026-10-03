@@ -8,11 +8,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import _parse_record_fields
+from cadrumo.domain.calculations.registry.export_parse import ParsedExportFieldValue, parse_export_payload
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 
 from ...compiler.loader import load_shared_catalogues
 from ..joined_record_design import JoinedRecordDesignField, design_view
@@ -61,6 +65,20 @@ def _record(fields: tuple[ExportFieldDefinition, ...]) -> ExportRecordDefinition
     )
 
 
+def _parse_components(
+    layout_id: str, record_id: str, wire: str, fields: tuple[ExportFieldDefinition, ...]
+) -> tuple[ParsedExportFieldValue, ...]:
+    """Round-trip a complete declared payload through the public parser."""
+    record = _record(fields).model_copy(update={"id": record_id})
+    layout = ExportLayoutDefinition(
+        id=layout_id,
+        records=(record,),
+        legal_refs=fields[0].legal_refs,
+        source_refs=fields[0].source_refs,
+    )
+    return parse_export_payload(layout, wire.encode("ascii")).fields
+
+
 def test_sign_and_magnitude_round_trip_limits_and_refusals() -> None:
     fields = (
         _component("sign", 1, 1, ExportValuePolicy.SIGNED_COMPONENT_SIGN, binding=True),
@@ -70,7 +88,7 @@ def test_sign_and_magnitude_round_trip_limits_and_refusals() -> None:
     for value, prefix in ((Decimal("-99999999999.99"), "N"), (Decimal("0.01"), " ")):
         wire = "".join(render_fixed_width_export_field(field, value) for field in fields)
         assert len(wire) == 14 and wire[0] == prefix
-        parsed = _parse_record_fields("layout", "components", wire, fields)
+        parsed = _parse_components("layout", "components", wire, fields)
         assert tuple(item.value for item in parsed) == (value, value)
         assert (
             "".join(
@@ -83,7 +101,7 @@ def test_sign_and_magnitude_round_trip_limits_and_refusals() -> None:
             "".join(render_fixed_width_export_field(field, value) for field in fields)
     for wire in ("X0000000000001", "N0000000000000", "N00000000000A1"):
         with pytest.raises(RegistryValidationError):
-            _parse_record_fields("layout", "components", wire, fields)
+            _parse_components("layout", "components", wire, fields)
     with pytest.raises(ValueError, match="complete adjacent components"):
         _record((fields[0],))
 
@@ -98,21 +116,21 @@ def test_text_date_components_round_trip_and_calendar_refusal() -> None:
     for value in ("20240229", "20250101", "99991231"):
         wire = "".join(render_fixed_width_export_field(field, value) for field in fields)
         assert wire == value
-        parsed = _parse_record_fields("layout", "components", wire, fields)
+        parsed = _parse_components("layout", "components", wire, fields)
         assert tuple(item.value for item in parsed) == (value, value, value)
     for value in ("20250229", "20251301", "20250132", "2025-01-01", "2025011", "202501011"):
         with pytest.raises(RegistryValidationError):
             render_fixed_width_export_field(fields[0], value)
     for wire in ("20250229", "20251301", "20250001", "202501AA"):
         with pytest.raises(RegistryValidationError):
-            _parse_record_fields("layout", "components", wire, fields)
+            _parse_components("layout", "components", wire, fields)
     with pytest.raises(ValueError, match="complete adjacent components"):
         _record(fields[:2])
     optional = tuple(field.model_copy(update={"required": False}) for field in fields)
     assert "".join(render_fixed_width_export_field(field, None) for field in optional) == "00000000"
-    assert all(item.value is None for item in _parse_record_fields("layout", "components", "00000000", optional))
+    assert all(item.value is None for item in _parse_components("layout", "components", "00000000", optional))
     with pytest.raises(RegistryValidationError):
-        _parse_record_fields("layout", "components", "20250000", optional)
+        _parse_components("layout", "components", "20250000", optional)
 
 
 def _signed_triplet(*, integer_width: int, zero_sign: bool = False) -> tuple[ExportFieldDefinition, ...]:
@@ -153,12 +171,12 @@ def test_signed_source_triplets_round_trip_and_refuse_impossible_shapes() -> Non
     for value, prefix in ((Decimal("-9999999999999.99"), "N"), (Decimal("1.25"), " ")):
         wire = "".join(render_fixed_width_export_field(field, value) for field in fields)
         assert len(wire) == 16 and wire[0] == prefix
-        parsed = _parse_record_fields("layout", "components", wire, fields)
+        parsed = _parse_components("layout", "components", wire, fields)
         assert tuple(item.value for item in parsed) == (value,) * 3
     with pytest.raises(RegistryValidationError):
         render_fixed_width_export_field(fields[1], Decimal("10000000000000.00"))
     with pytest.raises(RegistryValidationError):
-        _parse_record_fields("layout", "components", "N" + "0" * 15, fields)
+        _parse_components("layout", "components", "N" + "0" * 15, fields)
     with pytest.raises(ValueError, match="complete adjacent components"):
         _record(fields[:2])
 
@@ -170,13 +188,13 @@ def test_signed_source_triplets_round_trip_and_refuse_impossible_shapes() -> Non
     )
     assert "".join(render_fixed_width_export_field(field, Decimal("0")) for field in negative_only) == "0" * 11
     assert (
-        tuple(item.value for item in _parse_record_fields("layout", "components", "0" * 11, negative_only))
+        tuple(item.value for item in _parse_components("layout", "components", "0" * 11, negative_only))
         == (Decimal(0),) * 3
     )
     with pytest.raises(RegistryValidationError):
         render_fixed_width_export_field(negative_only[0], Decimal("1"))
     with pytest.raises(RegistryValidationError):
-        _parse_record_fields("layout", "components", "0" + "0" * 9 + "1", negative_only)
+        _parse_components("layout", "components", "0" + "0" * 9 + "1", negative_only)
 
 
 def test_reviewed_pdf_parts_have_distinct_derived_profile_anchors() -> None:

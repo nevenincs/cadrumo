@@ -8,7 +8,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:a70aa621989eb1fa1a5378aac18bc389b4302eb558272517e141d958e0e044e4'
+body_hash: 'sha256:a6ac25c162b39b6ec7e1f2c2d3896e7339fbf7368eb30bc691ee068200572e61'
 ---
 
 # `filing-capability` plan
@@ -19,7 +19,7 @@ Close every authorable row of the filing capability worklist so each registry re
 
 Approved 2026-09-25. The operator answered the worklist decision with "filing yes": for each revision whose official record design is bundled, this application may claim filing authority, which the worklist gate requires beside the layout itself.
 
-The gate is `dev/registry/tests/test_filing_capability_worklist.py::test_every_registry_revision_can_produce_a_filing_artifact`. On 2026-09-25 it listed 50 revisions across 25 modelos; 48 are authorable gaps and are the Steps below, one per revision, grouped by modelo. Two rows are terminal and stay out of scope because approval cannot supply what they lack: 136/2026 has no published authority to ground a layout on, and 036/2025-02-03-y-siguientes is filed on the AEAT sede and produces no fichero. They remain on the worklist until their own reconsideration conditions change.
+On 2026-09-25 it listed 50 revisions across 25 modelos; 48 are authorable gaps and are the Steps below, one per revision, grouped by modelo. Two rows are terminal and stay out of scope because approval cannot supply what they lack: 136/2026 has no published authority to ground a layout on, and 036/2025-02-03-y-siguientes is filed on the AEAT sede and produces no fichero. They remain on the worklist until their own reconsideration conditions change.
 
 Decision coverage: the fichero-BOE export layout decision governs how a layout is authored and emitted; no new costly decision is involved. The per-revision authority judgement is the operator approval above, recorded here.
 

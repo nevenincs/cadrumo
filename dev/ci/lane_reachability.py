@@ -7,8 +7,9 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import UTF_8
 
-from .lane_configuration import _UTF_8, configured_marker_expression, configured_testpaths
+from .lane_configuration import configured_marker_expression, configured_testpaths
 from .lane_contracts import DirectoryCoverageReport, Lane, ReachabilityReport, UnreachableTest
 from .lane_marker_inventory import expression_selects, marker_sets_in, tracked_test_directories, tracked_test_files
 from .lane_recipe_commands import _justfile_lanes, _pytest_invocations, resolved_justfile_text
@@ -71,7 +72,7 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     if workflow_dir.is_dir():
         effective = workflow_triggers(root)
         for workflow in scan_directory(workflow_dir, pattern="*.yml"):
-            text = workflow.read_text(encoding=_UTF_8)
+            text = workflow.read_text(encoding=UTF_8)
             events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
             # Per RUN STEP, not per file: an inline invocation inherits the
             # reach of the job holding it, and reading the whole workflow text

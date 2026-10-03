@@ -4,7 +4,7 @@ tags:
   - '#product-packaging'
 date: '2026-06-28'
 modified: '2026-10-03'
-body_hash: 'sha256:33bbeb6b5e605f155fa9963d27a320a69f443d6df3ce2d06b3a84e1ca8831e0b'
+body_hash: 'sha256:1a6e293a1e91dec0c32d35904703982773b307b6f5f1523970bb041e988a21b2'
 related:
   - "[[2026-06-28-product-packaging-research]]"
 ---
@@ -19,8 +19,6 @@ research pass.
 ## Summary
 
 ### Packaging metadata and build backend
-
-
 
 `pyproject.toml:93` starts optional dependencies. `pyproject.toml:109` declares
 the `google` extra, `pyproject.toml:115` declares the `browser` extra with
@@ -41,21 +39,13 @@ External docs consulted: `https://packaging.python.org/en/latest/specifications/
 
 ### Bundled data resource boundary
 
-
-
 The accepted ADR and current wheel guard say the actual mechanism is physical relocation under `src/aeat/_data` plus `packages = ["src/aeat"]`.
 
 `src/cadrumo/core/tests/test_resources.py` verifies the resource root,
 `src/cadrumo/core/tests/test_resources.py` verifies representative leaves, and
 `src/cadrumo/core/tests/test_resources.py` verifies `as_path`.
 
-
-
 ### Optional extras and missing-dependency contract
-
-
-
-
 
 ### Product doctor and provisioning probes
 
@@ -67,10 +57,6 @@ begins at `src/cadrumo/application/provisioning.py` and returns
 `playwright install chromium` when no Chromium build is present.
 `probe_optional_extra` begins at `src/cadrumo/application/provisioning.py`, and
 `probe_optional_extras` begins at `src/cadrumo/application/provisioning.py`.
-
-
-
-
 
 ### Justfile and CI surfaces
 
@@ -99,8 +85,6 @@ This is the best existing no-secret browser smoke candidate for a fresh install 
 External docs consulted: `https://playwright.dev/python/docs/browsers`.
 
 ### LLM and evidence data boundaries
-
-
 
 These surfaces are runtime state, not distribution package data.
 

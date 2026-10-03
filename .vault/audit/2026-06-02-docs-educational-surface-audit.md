@@ -4,7 +4,7 @@ tags:
   - '#docs-educational-surface'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:6516a582a2842b4c2a29b49701c21e2116805221bf78a723c1e0bd728e553d54'
+body_hash: 'sha256:bf8cc103c53a608f1877b122751b03dbdd8728a6141128a5bcde8403aed635d5'
 related:
   - '[[2026-06-01-docs-educational-surface-adr]]'
 ---
@@ -17,7 +17,7 @@ A multi-reviewed documentation overhaul driven through a fan-out
 orchestration: every user-facing narrative document was read by two
 independent zero-context reviewers (one Diátaxis type-purity lens, one
 newcomer-clarity lens against the prose-style rules), and the codebase
-docstring surface was audited by `interrogate`, drafted, 
+docstring surface was audited by `interrogate`, drafted,
 readability-reviewed by a non-developer persona. The pass covered the
 seven-document narrative corpus (the retired document,
 `docs/how-to/index.md`, `docs/explanation/index.md`,
@@ -55,9 +55,9 @@ modules outside the actively-refactored registry schema.
 Sixty-four readability-reviewed Google-style docstrings were applied
 across nine modules: the three modelo persistence repositories
 (`bucket_id` / `exists` / `load` / `save`), four registry oracle
-modules (driver-protocol and oracle members), and the user-profile 
+modules (driver-protocol and oracle members), and the user-profile
 censo application repositories. Each docstring was drafted against the
-`core/identity` baseline, glosses the domain nouns on first use, 
+`core/identity` baseline, glosses the domain nouns on first use,
 uses plain double-backtick literals (stdlib cross-references
 module-qualified) so the nitpicky `-n -W` gate resolves them.
 

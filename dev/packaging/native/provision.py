@@ -1,46 +1,27 @@
-"""Acquire the pinned official CPython SDK and locked Windows base dependencies."""
+"""Acquire the platform runtime and install the locked production dependencies."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import shutil
-import zipfile
 from pathlib import Path
-
-import httpx
 
 from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..uv_constraints import export_runtime_constraints
-from .assemble import digest
+from .layout import backend, load_layout
 
 
 def provision(destination: Path) -> None:
     """Download one verified SDK and install the repository's base closure."""
     destination = destination.resolve()
     destination.mkdir(parents=True, exist_ok=True)
-    pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text().strip()
+    pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     tools = json.loads((REPO_ROOT / "native/toolchain.json").read_text(encoding="utf-8"))
-    archive = destination / f"python.{pin}.nupkg"
-    url = tools["cpython_source"].format(version=pin)
-    if not url.startswith("https://api.nuget.org/"):
-        raise ValueError("CPython SDK must come from the pinned HTTPS NuGet origin")
-    if not archive.exists():
-        with httpx.stream("GET", url, timeout=120) as response, archive.open("wb") as output:
-            response.raise_for_status()
-            for chunk in response.iter_bytes():
-                output.write(chunk)
-    if digest(archive) != tools["cpython_sha256"]:
-        raise ValueError("CPython SDK SHA256 mismatch")
-    sdk = destination / "cpython-nuget"
-    if not sdk.exists():
-        with zipfile.ZipFile(archive) as package:
-            for member in package.namelist():
-                if not (sdk / member).resolve().is_relative_to(sdk):
-                    raise ValueError("SDK archive contains an escaping path")
-            package.extractall(sdk)
+    contract = load_layout()
+    sdk = backend(contract).provision_sdk(destination, pin, tools, contract)
     requirements = destination / "requirements.txt"
     requirements.write_text("\n".join(export_runtime_constraints(repo_root=REPO_ROOT)), encoding="utf-8")
     uv = shutil.which("uv")
@@ -55,7 +36,7 @@ def provision(destination: Path) -> None:
             "pip",
             "install",
             "--python",
-            str(sdk / "tools/python.exe"),
+            str(sdk / contract["sdk"]["executable"]),
             "--target",
             str(dependencies),
             "--only-binary",

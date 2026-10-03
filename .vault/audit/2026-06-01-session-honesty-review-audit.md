@@ -4,7 +4,7 @@ tags:
   - '#session-honesty-review'
 date: '2026-06-01'
 modified: '2026-10-03'
-body_hash: 'sha256:a87ea39e1ed24b1e41e8e0c39e884771faf89056529ff6f29d61079aa82b5772'
+body_hash: 'sha256:f54d23cafec389a9c5d5a2b6125242d4c44f03eeea233549683098aac7483b9e'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
 ---
@@ -142,7 +142,7 @@ calculation oracle assertions authored without external citation.
 
 ### G1 PASS — no naked env reads
 
-`fd27f5714` adds `psutil>=5.9` to `[dependency-groups].dev` 
+`fd27f5714` adds `psutil>=5.9` to `[dependency-groups].dev`
 `26b363bb3` edits `pyproject.toml` `addopts`. Neither introduces
 `os.environ` / `os.getenv` in production code. The W30 epic
 explicitly uses `Settings()` and pytest fixtures throughout. PASS.

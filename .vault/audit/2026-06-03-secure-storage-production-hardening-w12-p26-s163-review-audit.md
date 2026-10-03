@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:e6ac8d53e2839ec66e99ff0d474e113710687096baa25867bc3d2da27fb49d03'
+modified: '2026-10-03'
+body_hash: 'sha256:f31f0e540001a6213f7964ef1d01a6f706d2bf404d772700bd7d2e6473cfac49'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S163-001 | PASS | Crypto facade does not persist key material
 
-`src/aeat/adapters/persistence/storage/crypto/__init__.py` is a package facade. It imports and re-exports AEAD constants, `EncryptedBlob`, `derive_key`, `encrypt_record`, `decrypt_record`, and the encrypted SQLAlchemy column types.
+The retired module is a package facade. It imports and re-exports AEAD constants, `EncryptedBlob`, `derive_key`, `encrypt_record`, `decrypt_record`, and the encrypted SQLAlchemy column types.
 
 The facade does not construct a master key, read settings, read environment variables, create storage routes, write files, write SQL rows, serialize passphrases, persist wrapped DEKs, or bypass the active bucket session. The `master-key` scanner signal is accepted because the facade names crypto primitives whose implementations live in `_crypto.py` and `_encrypted_columns.py`; this file itself has no custody behavior.
 
@@ -28,8 +28,8 @@ The direct tests exercise AEAD roundtrips, tamper detection, key-size validation
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/crypto/test_crypto.py src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py` passed with 70 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/crypto/__init__.py src/aeat/adapters/persistence/storage/crypto/test_crypto.py src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py` passed.
+- The historical check passed with 70 tests.
+- The historical check passed.
 - Touched-surface hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
 
 Review-agent note: spawning `vaultspec-code-reviewer` for this row failed with the current agent thread limit, so the formal review was completed locally using the same checklist.

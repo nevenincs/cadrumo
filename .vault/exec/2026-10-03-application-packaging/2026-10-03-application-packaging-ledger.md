@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb4538e94fdce5dcb4723dac0b621c0a8a1710a9e54b3c9fb688a9b01efd2c9c'
+body_hash: 'sha256:0071004f57aba911d686f25842cf648c95b7803a4de5bf17308347a88f57c88b'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
@@ -30,7 +30,6 @@ related:
 - `S02` `A` `native/platform/tests/consumer.c`
 - `S02` `A` `dev/packaging/native/__init__.py`
 - `S02` `A` `dev/packaging/native/generate.py`
-- `S02` `A` `dev/packaging/native/build.ps1`
 - `S02` `A` `dev/packaging/native/provision.py`
 - `S02` `verify:` `MSVC SDK Rust pinned native build and C static DLL Rust consumers` -> `pass`
 - `S02` `verify:` `fresh official SDK SHA256 and 77 locked Windows dependency wheels` -> `pass`
@@ -42,7 +41,6 @@ related:
 - `S03` `verify:` `fresh product wheel build and package assembly` -> `pass`
 - `S03` `verify:` `ruff check format and ty native Python tooling` -> `pass`
 - `S04` `A` `dev/packaging/native/verify.py`
-- `S04` `A` `dev/packaging/native/trace.ps1`
 - `S04` `A` `dev/packaging/native/trace_analysis.py`
 - `S04` `A` `dev/packaging/native/filesystem.wprp`
 - `S04` `M` `native/CONTRACT.md`

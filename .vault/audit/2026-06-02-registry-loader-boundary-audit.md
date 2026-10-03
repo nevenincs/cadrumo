@@ -4,7 +4,7 @@ tags:
   - '#registry-loader-boundary'
 date: '2026-06-02'
 modified: '2026-10-03'
-body_hash: 'sha256:59e396f1d9cafc50d65c21621b4e1cca027fb00f7bb8ae4c76f2b3c26f39c82a'
+body_hash: 'sha256:216f2d1e520c4954cda85041c8caff1d418fbcadc277931985f33cf92f82ab84'
 related: []
 ---
 
@@ -26,12 +26,12 @@ shape only and does not edit loader code.
   This cluster compiles directory-mode revision fragments into the same raw
   `revisions` map accepted by single-file mode.
 - **Keep in loader:** `load_modelo_file`, `load_modelo_directory`,
-  `load_modelo_path`, `load_modelo_source`, `load_registry_tree`, 
+  `load_modelo_path`, `load_modelo_source`, `load_registry_tree`,
   `discover_modelo_sources` should remain the public loader spine. Moving those
   names would create avoidable public API churn.
 - **Keep in loader:** Shared catalogue loading and registry-tree cache
   fingerprinting should stay with the root loader until a separate cache
-  boundary audit exists. Those helpers own legal catalogue merge semantics 
+  boundary audit exists. Those helpers own legal catalogue merge semantics
   authorization-fragment cache invalidation, not TOML fragment compilation.
 - **Extraction module shape:** The safe next module is a private helper such as
   `_loader_fragments.py` exporting only the fragment compiler functions needed

@@ -19,7 +19,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
 
 _HERE = Path(__file__).resolve().parent

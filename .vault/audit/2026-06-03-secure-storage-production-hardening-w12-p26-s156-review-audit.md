@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:a092862b9c06bc8b474c618b6226ff8de4f818d371351038e03d1815b9020fb6'
+modified: '2026-10-03'
+body_hash: 'sha256:531e063be2f9c77aa503891d536bc8f43c034bb703b0e5ce6898067c859e2601'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S156-001 | PASS | Bucket errors derive from the secure-storage AEAT base
 
-`src/aeat/adapters/persistence/storage/bucket/_errors.py` defines `BucketError` as a `SecureStorageError` subclass. `SecureStorageError` derives from the central `AeatError`, so bucket lifecycle, manifest validation, lock, and recovery failures remain catchable through the core AEAT exception hierarchy.
+The retired module defines `BucketError` as a `SecureStorageError` subclass. `SecureStorageError` derives from the central `AeatError`, so bucket lifecycle, manifest validation, lock, and recovery failures remain catchable through the core AEAT exception hierarchy.
 
 Existing tests assert every exported bucket error class inherits from `AeatError`, carries a registered error code, and builds a round-trippable error envelope. S156 hardened this coverage by adding `BucketValidationError` to the direct inheritance, registered-code, and distinct-code checks.
 
@@ -28,8 +28,8 @@ The `manifest-bucket` and `master-key` signals in this file are type-surface ref
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed with 29 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_errors.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed.
+- The historical check passed with 29 tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` reported `ca.yml`, `en.yml`, `es.yml`, and `hu.yml` ok.
 - Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
 - Plan state was reconciled after the CLI checked S156 but left `AFR-054` pending; the repaired state is `AFR-054`/`S156` closed and `AFR-055` through `AFR-057` / `S157` through `S159` pending.

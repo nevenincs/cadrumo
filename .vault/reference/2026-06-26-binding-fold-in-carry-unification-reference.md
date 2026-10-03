@@ -4,7 +4,7 @@ tags:
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
 modified: '2026-10-03'
-body_hash: 'sha256:066d6bdbe91500c4df2fbd8b9add927c1fd9bd30d9266b72eabe740992258b29'
+body_hash: 'sha256:54af0840c78d03f1aab4758a3e1f39deb6d2d6a2017e2204aadc9008440b8128'
 related:
   - "[[2026-06-26-binding-fold-in-carry-unification-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
@@ -23,8 +23,6 @@ be preserved. Current-state corrections below mark which pre-collapse anchors
 are now retired and which live shapes replaced them.
 
 Module(s): `aeat.domain.calculations.registry`, `aeat.application.calculations`, `aeat.application.aggregation`, `aeat.domain.iva_compensation`, `aeat.core.aggregation`.
-
-
 
 ## Current-state correction (2026-06-29)
 
@@ -79,8 +77,6 @@ and the shared fold primitive is in `_observation_fold.py`.
 
 Already shared - NOT duplicated.
 
-
-
 Plus the per-anchor expansion `_PreviousModeloSelector.required_period_anchors_for_target` (`_bindings_previous_filing.py:280`) and the M130 expanding-span enumerator `_prior_quarter_expanding_span_anchors` (`_bindings_previous_filing.py:451`).
 
 Offset/year arithmetic re-derived at the application layer: `_binding_prefill.py:681` (`snapshot.filing_year + _selector_year_delta(...)`) and `_relation_prefill.py:347-352` (`snapshot.filing_year + int(filing_year_delta)`).
@@ -112,10 +108,6 @@ Plan Steps: P04.S15 (grep-confirm zero callers), P04.S16 (`relocation:MultiYearR
 DRIFT (flag for adjudication): the plan P04.S16 names ONLY `EnrollmentRecorder` as the live neighbour to separate from. The module ALSO co-locates `PreviousFilingSourceResolver` (line 482) and the dangling `resolve_prior_year_observations` (line 545). The deletion must separate the orphan from BOTH live `EnrollmentRecorder` AND `PreviousFilingSourceResolver`, and should also remove the now-fully-dangling `resolve_prior_year_observations` wrapper (it has zero references at HEAD, so it is dead weight that exists only to call the deleted orphan). Update the `__all__` baseline (`_multi_year.py:570-580`) and the package `__all__` (`application/calculations/__init__.py:63,115`) accordingly.
 
 ## Anchor 6 - the untyped relation aggregation op (F4)
-
-
-
-
 
 Plan Steps: P01.S01 (type the field plus hydrate at loader boundary - NOTE the field actually lives in `_schema_surfaces.py:489`, see drift D2), P01.S02 (replace the inline re-parses with the accessor), P01.S03 (enforce at registry-build in `_validate_relation_sources.py`).
 

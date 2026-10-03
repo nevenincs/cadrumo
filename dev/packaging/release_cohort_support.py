@@ -41,7 +41,8 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev._paths import REPO_ROOT, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
 from .acquire_common import venv_bin_dir

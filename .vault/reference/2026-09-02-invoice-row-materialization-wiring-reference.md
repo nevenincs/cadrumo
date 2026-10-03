@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:70fce3d7387896821b183574dcd5164918378b2e48eb66d7d0db01e751d227aa'
+body_hash: 'sha256:a6fc179a4cb31ef831f46ec71cbee72077f20616ee3c1908e6d6de5796af501a'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-24-modelo-edit-contract-adr]]"
@@ -33,8 +33,6 @@ The application resolver calls that domain function only inside `_m349_operador_
 ### M349 rectification support is present on the manual path and absent on the invoice-derived path
 
 The domain invoice-row resolver can produce these bindings; the focused committed-registry proof is `src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry_bindings.py:478-525`.
-
-
 
 Invoice-derived rectifications do not reach that path. `_invoice_observation` emits party, date, base, total, and clave but never `is_rectification`, `rectified_year`, `rectified_period`, or `rectified_base_previous`: `src/cadrumo/application/invoices/source_resolver.py:659-689`. The canonical `Invoice` records `invoice_class` and `rectifies_invoice_number`, but not the rectified filing period or previous declared base: `src/cadrumo/domain/invoices/models.py:236-245` and `src/cadrumo/domain/invoices/models.py:336`. Finally, `_m349_operador_rows_from_observations` has no rectification binding map or `Modelo349RectificacionRow` construction branch at `src/cadrumo/application/invoices/source_resolver.py:914-960`.
 

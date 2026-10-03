@@ -25,7 +25,8 @@ if not __package__:
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import REPO_ROOT
 
 from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .build_paths import docs_build_root, docs_html_root, pin_docs_build_root

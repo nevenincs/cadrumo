@@ -1,0 +1,384 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:1
+msgid "Registry-backed calculation workbook plans and parity"
+msgstr "Planes de libros de cálculo respaldados por el registro y correspondencia"
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:7
+msgid ""
+"**Report:** `STAGE-2-098` · **Topic:** [Authentication and storage "
+"management](../topics/authentication-and-storage-management.md)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:10
+msgid ""
+"**Scope:** 17 files under `src/cadrumo/application/storage/calc_sheets`, "
+"totaling 5,501 lines, 212,643 bytes, and 47,384 measured `o200k_base` "
+"proxy tokens. All nine bounded-reader pages and assigned ranges were "
+"read. Static inspection only; no application execution or tests were run."
+" The parity harness is an external-write workflow: invoking it can create"
+" or update a Google spreadsheet."
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Capacidades y mecanismos"
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:14
+msgid ""
+"The package compiles one validated registry snapshot into a renderer-"
+"neutral `SheetExportPlan` shared by Google Sheets, offline XLSX, pull, "
+"and parity paths. Its deterministic layout maps input and informational "
+"casillas to `Entradas`, computed casillas to `Cálculos`, referenced "
+"parameters and relations to `Tarifas`, row-producing bindings to "
+"`Detalle`, plus provenance, evidence, and guide facets. Workbook metadata"
+" binds the Modelo, revision, filing period, engine version, registry "
+"digest, and export time. Cell addresses are structured tab/row/column "
+"records with their A1 spelling checked at construction; the closed plan "
+"rejects duplicate value/formula write coordinates. Layout planner "
+"(`src/cadrumo/application/storage/calc_sheets/layout.py`), plan builder "
+"(`src/cadrumo/application/storage/calc_sheets/engine.py`), strict export "
+"plan (`src/cadrumo/application/storage/calc_sheets/records.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:16
+msgid ""
+"Formula translation walks the registry expression tree and emits A1 "
+"formulas for arithmetic, min/max/clamp, comparisons, conditional "
+"selection, parameter and bracket lookups, enum/CCAA dispatch, and age-at-"
+"year-end. The engine applies each formula’s declared rounding separately,"
+" including ceiling-to-integer rather than nearest-integer rounding. "
+"Bracket lookup uses `INDEX`/`MATCH` over the filing-date-active, lower-"
+"bound-sorted tariff rows; dispatch keys are quoted safely and missing "
+"keys retain the runtime’s `#N/A` failure shape. `is_translatable` probes "
+"the real compiler rather than maintaining a second capability list. "
+"Unsupported expressions refuse with a typed translation error. Formula "
+"translation and probe "
+"(`src/cadrumo/application/storage/calc_sheets/_translator.py`), rounding "
+"and registry digest "
+"(`src/cadrumo/application/storage/calc_sheets/engine.py`), date-anchored "
+"layout and active tariff selection "
+"(`src/cadrumo/application/storage/calc_sheets/layout.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:18
+msgid ""
+"Before layout, the engine repeatedly excludes only `internal_only` "
+"computed casillas whose formulas cannot be represented, rebuilding the "
+"layout until the exclusions reach a fixpoint. This prevents formulas from"
+" retaining cell references to support casillas removed in an earlier "
+"pass, while leaving translatable internal values and official casillas "
+"intact. The plan then carries input seeds, formula cells, tariff values, "
+"legal/source provenance, styling and number formats, anchors, cell "
+"constraints, protection ranges, row-set headers, relation provenance, "
+"evidence, and guidance. Relation values are caller-resolved or explicitly"
+" supplied; registry requirements supply their legal/source grounding. If "
+"neither values nor resolver are given, relation cells remain blank for "
+"operator completion. Fixpoint exclusion "
+"(`src/cadrumo/application/storage/calc_sheets/engine.py`), plan assembly "
+"(`src/cadrumo/application/storage/calc_sheets/engine.py`), relation "
+"provenance record "
+"(`src/cadrumo/application/storage/calc_sheets/records.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:20
+msgid ""
+"The plan distinguishes input, computed, tariff, provenance, evidence, and"
+" guide surfaces. It emits protected ranges for calculated results, "
+"provenance, tariffs, guide, and evidence; input and repeating `Detalle` "
+"areas remain operator-editable. Declarative cell constraints retain sign "
+"and numeric bounds plus legal references, while shared styling records "
+"and the theme keep both renderers aligned. Workbook-cell helpers convert "
+"plan facets into a canonical addressed write stream so the transports do "
+"not reimplement address arithmetic. Protection and cell constraints in "
+"the engine (`src/cadrumo/application/storage/calc_sheets/engine.py`), "
+"presentation plan "
+"(`src/cadrumo/application/storage/calc_sheets/_styling.py`), shared cell "
+"stream (`src/cadrumo/application/storage/calc_sheets/workbook_cells.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:22
+msgid ""
+"Ledger evidence is projected into casilla-oriented contributor rows only "
+"when the caller supplies transaction-to-casilla attribution; missing "
+"attribution raises rather than guessing Modelo-specific tax meaning. "
+"Manual facts are carried separately. The same export identity stamps and "
+"evidence tables feed both renderers. Cross-revision relation stamps "
+"preserve value, provenance tier, source coordinates, references, and "
+"resolution time, omitting empty fields so absent evidence is not asserted"
+" as an empty fact. Evidence attribution gate "
+"(`src/cadrumo/application/storage/calc_sheets/evidence.py`), shared "
+"tables and identity stamps "
+"(`src/cadrumo/application/storage/calc_sheets/export_tables.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:24
+msgid ""
+"The export service applies an already-built plan through an injected "
+"Google adapter, then persists one sync-run record in the active bucket. "
+"It records success or a failed write attempt and re-raises adapter "
+"failures. Sharing the built plan lets a CLI preview describe exactly what"
+" the write would materialize; the export wrapper itself performs the "
+"remote side effect and records provenance. Export and sync-run recording "
+"(`src/cadrumo/application/storage/calc_sheets/export_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:26
+msgid ""
+"The parity harness compares three paths against one registry snapshot: "
+"local Decimal calculation, the formulas read back from the applied Sheets"
+" workbook, and caller-supplied expected AEAT values. It writes a scenario"
+" into `Entradas`/`Tarifas`, waits for recalculation, then reads computed "
+"cells and returns per-casilla results. Comparisons are intentionally "
+"exact on this axis: legal filing tolerances belong to filed-versus-"
+"computed reconciliation, not whether Sheets reproduces the engine or "
+"whether a preview would overwrite a changed cell. Missing values remain "
+"`None`, distinct from mismatches; without any AEAT oracle values, a "
+"local/Sheets match is `inconclusive`, not `all_match`. Exact parity "
+"comparison "
+"(`src/cadrumo/application/storage/calc_sheets/_parity_comparison.py`), "
+"verdict rules "
+"(`src/cadrumo/application/storage/calc_sheets/_parity_comparison.py`), "
+"write/read parity workflow "
+"(`src/cadrumo/application/storage/calc_sheets/parity_harness.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:28
+msgid "Knowledge, security, and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:30
+msgid ""
+"The export plan’s authoritative inputs are the caller’s pinned "
+"`RegistrySnapshot`, optional operator inputs, registry-identified "
+"relation requirements, and optional ledger-filing evidence plus explicit "
+"attribution. It is not canonical persistence; the package documentation "
+"distinguishes operator-facing workbook export from encrypted application "
+"storage. Formula provenance and export stamps make the workbook auditable"
+" and allow the pull path to reject a registry or engine mismatch. Storage"
+" boundary (`src/cadrumo/application/storage/__init__.py`), registry "
+"metadata hash (`src/cadrumo/application/storage/calc_sheets/engine.py`), "
+"cross-transport identity stamps "
+"(`src/cadrumo/application/storage/calc_sheets/export_tables.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:32
+msgid ""
+"The strongest design choice is the shared plan contract: formula "
+"generation, cell layout, provenance, row sets, styling, protection, and "
+"evidence are resolved once for multiple transports. Strict frozen "
+"records, canonical A1 coordinates, source-attribution refusal, registry-"
+"anchored relation metadata, active-date bracket filtering, "
+"formula/rounding separation, and explicit unsupported-op errors reduce "
+"silent drift. Row-set ingress checks that each submitted binding belongs "
+"to its declared grouping and rejects duplicate coordinates or overlapping"
+" ownership before delegating to the existing snapshot-bound observation "
+"assembler. Row-set ingress checks "
+"(`src/cadrumo/application/storage/calc_sheets/row_set_assembly.py`), "
+"source-grounded relation assembly "
+"(`src/cadrumo/application/storage/calc_sheets/engine.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:34
+msgid ""
+"The parity outcome has a strict provenance limit: expected figures are "
+"supplied by the caller, and this package does not authenticate that they "
+"came from AEAT. A partial expected-value map only establishes parity for "
+"the casillas it contains; `aeat_oracle_present` means at least one "
+"expected value was supplied. Therefore an `all_match` report is evidence "
+"for this snapshot and scenario, not whole-model legal validation. Exact "
+"comparisons may surface genuine decimal-engine versus Sheets precision "
+"differences; the code’s documented remedy is to quantize both sides to "
+"the Modelo’s money scale, not to adopt an unrelated legal tolerance. "
+"Caller-supplied oracle contract "
+"(`src/cadrumo/application/storage/calc_sheets/parity_harness.py`), "
+"scenario and partial-oracle behavior "
+"(`src/cadrumo/application/storage/calc_sheets/parity_harness.py`), "
+"exactness rationale "
+"(`src/cadrumo/application/storage/calc_sheets/_parity_comparison.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:36
+msgid ""
+"The export failure path attempts to persist a failed sync record before "
+"its bare `raise`; if that persistence call itself fails, its exception "
+"would replace the original adapter failure. That co-write failure mode "
+"should be checked against the sync-run persistence contract and tested. "
+"More broadly, this layer accepts Google credentials and root-folder "
+"identity from its caller but does not establish their authorization; "
+"composition and outbound adapters own that boundary. The live parity "
+"harness also performs remote create/update and cell writes, so it "
+"requires an explicitly composed test or user-authorized spreadsheet "
+"rather than being safe to invoke as a local unit check. Failure-path "
+"persistence "
+"(`src/cadrumo/application/storage/calc_sheets/export_service.py`), apply "
+"capability boundary "
+"(`src/cadrumo/application/storage/calc_sheets/export_service.py`), parity"
+" side effects "
+"(`src/cadrumo/application/storage/calc_sheets/parity_harness.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:38
+msgid "Dependencies and follow-up"
+msgstr "Dependencias y seguimiento"
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:40
+msgid ""
+"Trace the Google and XLSX materializers to verify they honor the shared "
+"cell stream, protection facets, constraints, registry stamps, relation "
+"stamps, and evidence table without adding unplanned writes. Follow pull "
+"imports through compatibility checks and row-set assembly into "
+"observation construction. Prioritize tests for translated versus "
+"unsupported registry ops, temporal tariff selection, integer ceiling "
+"rounding, exclusion fixpoints, missing contributor attribution, out-of-"
+"group row-set cells and overlapping row ownership, failed apply plus "
+"failed provenance persistence, and parity scenarios with absent/partial "
+"AEAT expectations. No assigned tests were run; the parity harness was "
+"inspected but not invoked."
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:42
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:44
+msgid ""
+"All 17 assigned files were read fully across pages 1–9; no portions "
+"remain unread."
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:46
+msgid "storage/__init__.py (`src/cadrumo/application/storage/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:47
+msgid ""
+"calc_sheets/__init__.py "
+"(`src/cadrumo/application/storage/calc_sheets/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:48
+msgid ""
+"calc_sheets/_parity_comparison.py "
+"(`src/cadrumo/application/storage/calc_sheets/_parity_comparison.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:49
+msgid ""
+"calc_sheets/_styling.py "
+"(`src/cadrumo/application/storage/calc_sheets/_styling.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:50
+msgid ""
+"calc_sheets/_translator.py "
+"(`src/cadrumo/application/storage/calc_sheets/_translator.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:51
+msgid ""
+"calc_sheets/casilla_parity.py "
+"(`src/cadrumo/application/storage/calc_sheets/casilla_parity.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:52
+msgid ""
+"calc_sheets/engine.py "
+"(`src/cadrumo/application/storage/calc_sheets/engine.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:53
+msgid ""
+"calc_sheets/errors.py "
+"(`src/cadrumo/application/storage/calc_sheets/errors.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:54
+msgid ""
+"calc_sheets/evidence.py "
+"(`src/cadrumo/application/storage/calc_sheets/evidence.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:55
+msgid ""
+"calc_sheets/export_service.py "
+"(`src/cadrumo/application/storage/calc_sheets/export_service.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:56
+msgid ""
+"calc_sheets/export_tables.py "
+"(`src/cadrumo/application/storage/calc_sheets/export_tables.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:57
+msgid ""
+"calc_sheets/layout.py "
+"(`src/cadrumo/application/storage/calc_sheets/layout.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:58
+msgid ""
+"calc_sheets/parity_harness.py "
+"(`src/cadrumo/application/storage/calc_sheets/parity_harness.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:59
+msgid ""
+"calc_sheets/records.py "
+"(`src/cadrumo/application/storage/calc_sheets/records.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:60
+msgid ""
+"calc_sheets/row_set_assembly.py "
+"(`src/cadrumo/application/storage/calc_sheets/row_set_assembly.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:61
+msgid ""
+"calc_sheets/theme.py "
+"(`src/cadrumo/application/storage/calc_sheets/theme.py`)"
+msgstr ""
+
+#: ../../technical/articles/098-registry-backed-calculation-workbook-plans-and-parity.md:62
+msgid ""
+"calc_sheets/workbook_cells.py "
+"(`src/cadrumo/application/storage/calc_sheets/workbook_cells.py`)"
+msgstr ""

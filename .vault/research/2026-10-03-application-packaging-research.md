@@ -5,13 +5,14 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c1ef604e89df709d4f091409888052c473429efc8340fc63cd9420749803853'
+body_hash: 'sha256:1d84d5d091a039fbcb786ee1bd040bbd6cd11193453078dc9dfb07527f4bca43'
 related:
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
   - "[[2026-06-28-product-packaging-adr]]"
   - "[[2026-09-02-cli-distribution-consolidation-adr]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
+
 # `application-packaging` research: `native application layout and foundations`
 
 How should the new desktop application assemble CADRUMO without duplicating its runtime authority or configuration? The evidence supports a native application layer around the existing Python product. Tauri is a user-settled input; the remaining research concerns isolation, shared C/Rust foundations, provisioning and deployment. Findings reflect the working tree and official documentation inspected on 2026-10-03; initial findings preceded native compilation; F7 records the subsequent Windows interpreter proof.
@@ -64,7 +65,7 @@ The locked Windows base closure supplies 77 third-party distributions. `dev/pack
 
 Relocation exposed PDFium's explicit ctypes path and pywin32's registry-derived extension/cache paths. `dev/packaging/native/assemble.py` applies two checked package adaptations, records before/after hashes, and maps public win32com extension identities. The corrected artifact imports `win32com.shell.shell` and selects the declared COM cache. These are package patches, not upstream CPython changes.
 
-Python audit writes pass within the declared root. Initial Process Monitor captures were incomplete; an initial WPR capture dropped events and is not acceptance evidence. A subsequent nonpaged WPR profile and scoped parser completed without event loss: the repeatable trace command observed 2013 parent/child events and four writes, all file mutations under the declared root. Its source is dev/packaging/native/trace.ps1; evidence is C:/Users/hello/cadrumo-native-proof/repeatable-trace/summary.json. This covers the exercised import/tempfile/COM-cache probe, not all product workflows. The existing all-platform wheelhouse also lacks the pinned pikepdf macOS wheel; that is a later platform obligation, not evidence of Windows incompatibility.
+Python audit writes pass within the declared root. Initial Process Monitor captures were incomplete; an initial WPR capture dropped events and is not acceptance evidence. A subsequent nonpaged WPR profile and scoped parser completed without event loss: the repeatable trace command observed 2013 parent/child events and four writes, all file mutations under the declared root. Its source is dev/packaging/native/platforms/windows_trace.ps1; evidence is C:/Users/hello/cadrumo-native-proof/repeatable-trace/summary.json. This covers the exercised import/tempfile/COM-cache probe, not all product workflows. The existing all-platform wheelhouse also lacks the pinned pikepdf macOS wheel; that is a later platform obligation, not evidence of Windows incompatibility.
 
 ## Sources
 

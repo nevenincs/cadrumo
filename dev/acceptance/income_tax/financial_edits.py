@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from .financial_contracts import _ANNUAL_EDITS, _EDIT_SECONDS
 from .financial_lifecycle import _workbench_notice
-from .financial_navigation import _open_work
+from .financial_navigation import open_work
 from .installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -118,7 +118,7 @@ async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
     from textual.css.query import NoMatches
     from textual.widgets import Static
 
-    workbench = await _open_work(pilot, work_unit_id=work_unit_id)
+    workbench = await open_work(pilot, work_unit_id=work_unit_id)
     for address, lexeme in _ANNUAL_EDITS:
         await _stage_workbench_value(pilot, workbench=workbench, address=address, lexeme=lexeme)
     if len(workbench.staged_changes) != len(_ANNUAL_EDITS):

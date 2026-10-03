@@ -1,0 +1,582 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:1
+msgid "Inbound document and financial adapters"
+msgstr "Adaptadors d’entrada documentals i financers"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:7
+msgid ""
+"**Report:** `STAGE-2-002` · **Topic:** [Document and financial "
+"imports](../topics/document-and-financial-imports.md)"
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:10
+msgid "Scope"
+msgstr "Àmbit"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:12
+msgid ""
+"This implementation chunk contains 30 files under "
+"`src/cadrumo/adapters/inbound/`: the Modelo 100 draft parser, censal-"
+"certificate refusal boundary, filed-declaration parser, structured "
+"e-invoice readers, and financial provider boundary plus mapped-tabular "
+"fallback. The manifest measures 47,391 proxy tokens. I read every "
+"assigned file in full, splitting the two long parsers into bounded line "
+"ranges. This report is static analysis of the on-disk snapshot; it does "
+"not run parsers or establish that external services, registries, or "
+"downstream application flows work at runtime."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:14
+msgid "Product capabilities and actors"
+msgstr "Capacitats del producte i actors"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:16
+msgid ""
+"For a taxpayer or operator importing a Renta document, `parse_borrador` "
+"reads an AEAT Modelo 100 borrador, preview simulation, or filed "
+"declaration into an observation of printed casilla values. It detects "
+"`VISTA PREVIA` first, then a CSV stamp, then `BORRADOR`; callers can "
+"override the kind and the year, which otherwise defaults to 2025. A per-"
+"year table registers the same observed-row extractor for 2021–2025. The "
+"detector and public entry point are in borrador/_detect.py "
+"(`src/cadrumo/adapters/inbound/borrador/_detect.py`) and "
+"borrador/parser.py (`src/cadrumo/adapters/inbound/borrador/parser.py`); "
+"the registration table is in borrador/_extractors/selection.py "
+"(`src/cadrumo/adapters/inbound/borrador/_extractors/selection.py`). Rows "
+"follow a four-digit casilla plus amount grammar; first duplicates are "
+"retained and later duplicates or unparseable amounts become warnings. An "
+"optional caller-projected extraction profile filters values and can "
+"enforce a minimum coverage fraction. The adapter itself does not resolve "
+"a tax registry or claim the extracted set is complete. The extractor "
+"records every value at page 1, with no bounding box and confidence 1.0, "
+"even though it concatenates page text before matching; these fields "
+"should not be read as spatially verified measurements "
+"(modelo_100_summary_v2025.py "
+"(`src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`)."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:18
+msgid ""
+"For filed declarations, path and in-memory byte entry points converge on "
+"a registry-profile-driven flow. The parser detects or accepts a template "
+"coordinate, resolves a period, loads or accepts a `RegistrySnapshot`, "
+"selects its `declaracion_pdf` extraction profile, validates the tax "
+"identifier, and extracts profile targets. The returned observation "
+"contains the parsed values, template and registry references, source "
+"digest, and provisional-layout flag. The bytes route is explicitly "
+"intended for decrypted live-read PDFs and keeps their content in memory "
+"(declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`), "
+"declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`)). Extraction "
+"supports numeric casilla, named-label, and bounding-box strategies. "
+"Bounding-box extraction uses page words and spatial limits; named-label "
+"amounts may also use word positions to separate overprinted form numbers."
+" Malformed and ambiguous targets always fail; missing targets fail only "
+"when resulting coverage falls below the registry threshold "
+"(declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:20
+msgid ""
+"The censal certificate adapter currently has no extraction capability. It"
+" checks the PDF magic header, then refuses both non-PDF and PDF input "
+"with separate translated error keys. Its module states that no real "
+"specimen has been observed, so it will not guess a layout "
+"(censo/parser.py (`src/cadrumo/adapters/inbound/censo/parser.py`)). This "
+"is an explicit unsupported state, not a partially implemented successful "
+"parser."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:22
+msgid ""
+"For structured invoices, `parse_einvoice_document` accepts standalone "
+"CII, UBL, or Facturae XML and PDF/A-3-style containers with embedded XML."
+" It reads seller and buyer roles, identifiers, names, addresses, invoice "
+"identifiers and dates, totals, tax bands, and line items into one syntax-"
+"independent DTO, then `translate_parsed_einvoice` copies that DTO into "
+"application-owned ledger contracts (einvoice/parsers.py "
+"(`src/cadrumo/adapters/inbound/einvoice/parsers.py`), "
+"einvoice/application_translation.py "
+"(`src/cadrumo/adapters/inbound/einvoice/application_translation.py`)). "
+"The code takes tax IDs from explicitly VAT-tagged values when possible "
+"and otherwise uses a broad two-letter-prefix-plus-digit shape heuristic; "
+"it does not checksum-validate the e-invoice party ID in this chunk "
+"(einvoice/parsers.py "
+"(`src/cadrumo/adapters/inbound/einvoice/parsers.py`)). Tax-category codes"
+" are looked up through the domain IVA category catalogue; the syntax "
+"adapters otherwise carry many values as stated rather than deciding their"
+" legal effect. Shape probing also identifies SII and VERI*FACTU payload "
+"families, but this invoice parser’s dispatch table only implements CII, "
+"UBL, and Facturae. Identification of those other shapes is not the same "
+"as parsing them here (einvoice/shape.py "
+"(`src/cadrumo/adapters/inbound/einvoice/shape.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:24
+msgid ""
+"The financial boundary turns provider-specific rows and exceptions into "
+"application ledger contracts. It routes `auto`/`n26` through content "
+"detection and explicit CSV, OFX/QFX, XLSX/Excel, and N26 PDF IDs to "
+"concrete providers. The provider files for those formats are outside this"
+" chunk, so their parsing behavior cannot be confirmed here "
+"(financial/ledger_import.py "
+"(`src/cadrumo/adapters/inbound/financial/ledger_import.py`)). The mapped-"
+"tabular provider is a fallback lane for otherwise unclaimed delimited "
+"tables. It maps columns once, requires date and amount roles, parses "
+"every row independently, imports usable rows, and reports unmapped "
+"columns, duplicate role assignments, and rejected rows. A valid source "
+"needs at least one parseable row (providers/_mapped_tabular.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`), "
+"providers/_mapped_tabular.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:26
+msgid "How it works"
+msgstr "Com funciona"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:28
+msgid ""
+"The two Modelo 100 entry points have different I/O profiles: the path "
+"version detects the artefact and then the extractor reads the PDF again, "
+"while the byte version extracts page text once and passes it through "
+"detection and extraction. Both hash the original bytes and derive a "
+"privacy-preserving source reference. Required NIF and exercise-year "
+"header fields must match; a declaration must also carry an AEAT CSV. "
+"Profile coverage is computed from matched target casillas, and a below-"
+"minimum result raises a typed `BorradorParseError` with missing IDs and "
+"coverage. One contract discrepancy is visible: "
+"`BorradorParseMode.OBSERVED` is documented as returning observed rows "
+"without coverage enforcement, but passing `extraction_profile` in that "
+"mode still sends the profile to the extractor, which filters rows and "
+"enforces its minimum. The public parser only checks the mode when "
+"registry-profile mode lacks a profile (borrador/parser.py "
+"(`src/cadrumo/adapters/inbound/borrador/parser.py`), "
+"modelo_100_summary_v2025.py "
+"(`src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:30
+msgid ""
+"Declaration detection reads the first two pages’ first 4,000 characters "
+"plus up to 2,000 characters from the last page for model, year, and an "
+"optional `Orden HAC` revision. If those fields are unavailable, explicit "
+"model and year are required; supplying all three template coordinates "
+"skips detection. A provided snapshot is checked against the template only"
+" for `modelo.id`; the local check does not compare its revision, filing "
+"year, or period with the resolved template and period, yet the snapshot "
+"profile and its own reference are used in the returned observation "
+"(declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`), "
+"declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`)). This is a "
+"concrete compatibility gap for callers that can pass a snapshot unrelated"
+" to the other coordinates. When no snapshot is passed, an indexed "
+"authority operation selects an applicability-grade snapshot and uses the "
+"receipt presentation date to disambiguate a revision where needed "
+"(declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:32
+msgid ""
+"For declaration extraction, the path backend tries a pypdfium2 fast path,"
+" accepts it only when declaration canaries match, and falls back to "
+"pdfplumber. Path results are cached with size, modification time, and "
+"content digest as the cache key; byte results are cached by digest in a "
+"bounded in-memory dictionary. Word-position extraction is lazy and "
+"prefers supplied bytes over a disk path. PDFium pages and text pages are "
+"closed in `finally` blocks. The extraction failures are structured as "
+"missing, malformed, ambiguous, and coverage data. However, missing "
+"targets that remain within the profile’s minimum coverage are returned "
+"without an advisory: the observation hard-codes `warnings=()` and does "
+"not expose successful coverage. That makes an allowed partial extraction "
+"difficult for downstream users to distinguish from a complete one "
+"(declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`), "
+"declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:34
+msgid ""
+"The e-invoice shape probe uses document bytes and recognized XML root or "
+"AEAT payload names rather than caller MIME type or file suffix. PDF "
+"embedded-file names only rank candidate order; content shape determines "
+"whether the payload is treated as an invoice. XML is parsed through "
+"`defusedxml` with a 32 MiB payload cap and a 100-level nesting limit. The"
+" depth check is iterative but runs after XML construction, so the byte "
+"cap is the earlier resource bound (einvoice/shape.py "
+"(`src/cadrumo/adapters/inbound/einvoice/shape.py`), einvoice/xml.py "
+"(`src/cadrumo/adapters/inbound/einvoice/xml.py`)). A PDF containing "
+"multiple readable invoice attachments yields the first accepted candidate"
+" in ranked order; this chunk does not report ambiguity or combine "
+"invoices. Numeric XML values use machine-text decimal coercion. Missing "
+"or unparseable values can remain `None` in the mutable DTO; mandatory-"
+"field and arithmetic acceptance policy must be resolved downstream. The "
+"parser also captures text-node-only `record_text` with separators to "
+"avoid treating markup names or assembled adjacent values as evidence."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:36
+msgid ""
+"Mapped tabular input is normalized by `core.tabular`, passed as a "
+"`NormalizedTable` to the application column-role resolver, projected into"
+" role/value pairs, then converted into raw transactions. Date parsing is "
+"day-first; amount parsing follows the detected decimal separator; "
+"currency codes are normalized and missing currency uses the provider "
+"default. Transaction IDs use a source-provided ID when available, "
+"otherwise a deterministic digest-and-row-derived ID. Unmapped columns and"
+" ambiguous role claims are reported; the first duplicated role wins. Row "
+"failures are skipped during ingest, while validation dry-runs all rows "
+"and returns the aggregate diagnostics (providers/_mapped_tabular.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`), "
+"providers/_mapped_tabular.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`))."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:38
+msgid "Knowledge and data"
+msgstr "Coneixement i dades"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:40
+msgid ""
+"Modelo 100 values are observations copied from PDF text; coverage "
+"profiles are supplied by the caller, so the parser does not itself "
+"establish registry authority. Declaration parsing uses validated registry"
+" snapshots and extraction profiles, and stamps a `RegistrySnapshotRef` so"
+" downstream logic can re-resolve the interpretation coordinate. The "
+"declaration snapshot compatibility check described above is narrower than"
+" the coordinate stamped into the observation. E-invoice tax category "
+"meaning comes from the IVA category catalogue, while country codes remain"
+" in each format’s stated code system (Facturae alpha-3 versus CII/UBL "
+"alpha-2); no country-code conversion is done here. Financial tabular row "
+"values become `RawTransaction` records with source provenance; mapped-"
+"tabular exports declare `synthetic_from_bank_published_text` and set "
+"`provisional_pending_specimen=True`, so this adapter itself flags their "
+"corpus basis as provisional. No assigned file persists records or "
+"declares freshness/reload policy."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:42
+msgid "Security and safety"
+msgstr "Seguretat i protecció"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:44
+msgid ""
+"The declaration and Modelo 100 byte entry points can keep decrypted PDF "
+"bytes in memory, and source references are digest-derived rather than "
+"exposing the input path in successful observations. The declaration "
+"PDFium fast path is canary-guarded and closes PDF objects; its caches "
+"retain extracted page text in process memory, up to 256 entries. The "
+"mapped-tabular provider retains source rows in raw transaction fields, "
+"including descriptions and counterparty values; persistence controls are "
+"outside this chunk. The ledger exception translator places the full input"
+" path and resolved provider error text in application error context "
+"(financial/ledger_import.py "
+"(`src/cadrumo/adapters/inbound/financial/ledger_import.py`)), so "
+"downstream error presentation and logging should be checked for path "
+"disclosure."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:46
+msgid ""
+"For e-invoices, the parser treats external XML as hostile and blocks "
+"entity/DTD handling through `defusedxml`, bounds XML bytes and nesting, "
+"and uses `pikepdf` to validate PDF containers and read embedded files. "
+"The attachment walk reads each embedded payload fully into memory before "
+"the XML reader’s 32 MiB limit is applied, and the PDF container itself "
+"has no local byte cap; very large PDF attachments are therefore a "
+"conditional memory-exhaustion risk. No signature, issuer authentication, "
+"or invoice authenticity verification appears in these assigned files. "
+"Structured parsing avoids sending those documents through an LLM by "
+"design, but correctness and authenticity still depend on the source and "
+"later verification steps. No parser-specific authorization or redaction "
+"layer is present in this chunk."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:48
+msgid "Implementation assessment"
+msgstr "Avaluació de la implementació"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:50
+msgid ""
+"The strongest implementation features are explicit unsupported behavior "
+"for unobserved censo layouts, strict registry-profile extraction for "
+"filed declarations, checksummed tax-ID validation in declaration parsing,"
+" bounded hardened XML parsing, role-based seller/buyer mapping, and "
+"honest provisional corpus metadata on mapped-tabular imports. Error types"
+" carry structured extraction failures instead of requiring message "
+"parsing. Source comments name fixtures and tests for parser behavior and "
+"schema payload names, but the tests themselves are outside this chunk and"
+" were not run or inspected."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:52
+msgid ""
+"Confirmed local issues are the `parse_mode`/profile behavior mismatch for"
+" borrador and the declaration snapshot check’s model-only compatibility "
+"validation. The declaration success path also suppresses tolerated "
+"missing-target information. Other risks depend on callers or external "
+"code: the broad fallback IVA-ID heuristic is not checksum validation; "
+"e-invoice DTO fields can be absent; profile quality and provisional "
+"layout disclosure must be honored downstream; the column-role resolver "
+"receives the full normalized table object and should be checked to "
+"confirm it uses header vocabulary only; and provider detection/exception "
+"presentation are implemented elsewhere. These are follow-up questions "
+"rather than proven defects in the unseen layers. The assigned files "
+"contain no runnable test suite or coverage output."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:54
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:56
+msgid ""
+"Synthesis should trace the registry authority and profile definitions "
+"that declaration parsing consumes, the downstream handling of tolerated "
+"missing values and provisional profiles, the PDF text and redaction "
+"helpers, the e-invoice application use and authenticity checks, the "
+"`resolve_column_roles` boundary, and the financial provider detection and"
+" transaction persistence flow. It should also check whether registry "
+"snapshots passed into `parse_declaracion` are guaranteed elsewhere to "
+"match the template year, revision, and period."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:58
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:60
+msgid ""
+"inbound/__init__.py (`src/cadrumo/adapters/inbound/__init__.py`) — all 34"
+" lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:61
+msgid ""
+"borrador/__init__.py "
+"(`src/cadrumo/adapters/inbound/borrador/__init__.py`) — all 51 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:62
+msgid ""
+"borrador/_detect.py (`src/cadrumo/adapters/inbound/borrador/_detect.py`) "
+"— all 66 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:63
+msgid ""
+"borrador/_extractors/__init__.py "
+"(`src/cadrumo/adapters/inbound/borrador/_extractors/__init__.py`) — all "
+"27 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:64
+msgid ""
+"borrador/_extractors/modelo_100_summary_v2025.py "
+"(`src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`)"
+" — all 248 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:65
+msgid ""
+"borrador/_extractors/selection.py "
+"(`src/cadrumo/adapters/inbound/borrador/_extractors/selection.py`) — all "
+"60 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:66
+msgid ""
+"borrador/_parsers/__init__.py "
+"(`src/cadrumo/adapters/inbound/borrador/_parsers/__init__.py`) — all 15 "
+"lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:67
+msgid ""
+"borrador/_parsers/pdfplumber_backend.py "
+"(`src/cadrumo/adapters/inbound/borrador/_parsers/pdfplumber_backend.py`) "
+"— all 41 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:68
+msgid ""
+"borrador/errors.py (`src/cadrumo/adapters/inbound/borrador/errors.py`) — "
+"all 73 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:69
+msgid ""
+"borrador/parser.py (`src/cadrumo/adapters/inbound/borrador/parser.py`) — "
+"all 113 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:70
+msgid ""
+"borrador/schema.py (`src/cadrumo/adapters/inbound/borrador/schema.py`) — "
+"all 146 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:71
+msgid ""
+"censo/__init__.py (`src/cadrumo/adapters/inbound/censo/__init__.py`) — "
+"all 9 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:72
+msgid ""
+"censo/parser.py (`src/cadrumo/adapters/inbound/censo/parser.py`) — all 44"
+" lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:73
+msgid ""
+"declaracion/__init__.py "
+"(`src/cadrumo/adapters/inbound/declaracion/__init__.py`) — all 57 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:74
+msgid ""
+"declaracion/_detect.py "
+"(`src/cadrumo/adapters/inbound/declaracion/_detect.py`) — all 98 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:75
+msgid ""
+"declaracion/_parsers/__init__.py "
+"(`src/cadrumo/adapters/inbound/declaracion/_parsers/__init__.py`) — all "
+"13 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:76
+msgid ""
+"declaracion/_parsers/pdfplumber_backend.py "
+"(`src/cadrumo/adapters/inbound/declaracion/_parsers/pdfplumber_backend.py`)"
+" — all 186 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:77
+msgid ""
+"declaracion/errors.py "
+"(`src/cadrumo/adapters/inbound/declaracion/errors.py`) — all 68 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:78
+msgid ""
+"declaracion/parser.py "
+"(`src/cadrumo/adapters/inbound/declaracion/parser.py`) — all 1,378 lines,"
+" read in three ranges."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:79
+msgid ""
+"declaracion/schema.py "
+"(`src/cadrumo/adapters/inbound/declaracion/schema.py`) — all 155 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:80
+msgid ""
+"einvoice/__init__.py "
+"(`src/cadrumo/adapters/inbound/einvoice/__init__.py`) — all 29 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:81
+msgid ""
+"einvoice/application_translation.py "
+"(`src/cadrumo/adapters/inbound/einvoice/application_translation.py`) — "
+"all 75 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:82
+msgid ""
+"einvoice/parsers.py (`src/cadrumo/adapters/inbound/einvoice/parsers.py`) "
+"— all 1,001 lines, read in four ranges."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:83
+msgid ""
+"einvoice/shape.py (`src/cadrumo/adapters/inbound/einvoice/shape.py`) — "
+"all 292 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:84
+msgid ""
+"einvoice/xml.py (`src/cadrumo/adapters/inbound/einvoice/xml.py`) — all "
+"120 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:85
+msgid ""
+"financial/__init__.py "
+"(`src/cadrumo/adapters/inbound/financial/__init__.py`) — all 22 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:86
+msgid ""
+"financial/ledger_import.py "
+"(`src/cadrumo/adapters/inbound/financial/ledger_import.py`) — all 130 "
+"lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:87
+msgid ""
+"financial/providers/__init__.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/__init__.py`) — all 46"
+" lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:88
+msgid ""
+"financial/providers/_constants.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/_constants.py`) — all "
+"26 lines."
+msgstr ""
+
+#: ../../technical/articles/002-inbound-document-and-financial-adapters.md:89
+msgid ""
+"financial/providers/_mapped_tabular.py "
+"(`src/cadrumo/adapters/inbound/financial/providers/_mapped_tabular.py`) —"
+" all 326 lines."
+msgstr ""

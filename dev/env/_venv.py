@@ -10,7 +10,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from dev._paths import REPO_ROOT, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import REPO_ROOT
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

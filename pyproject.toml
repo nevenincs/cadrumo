@@ -1366,7 +1366,21 @@ ignore_names = [
 # pywin32 ships these modules across its distribution roots; deptry's package
 # metadata cannot discover all of them. Keep the direct Windows ACL and COM
 # dependencies visible to the declaration check.
-"pywin32" = ["ntsecuritycon", "pythoncom", "pywintypes", "win32security"]
+"pywin32" = [
+  "ntsecuritycon",
+  "pythoncom",
+  "pywintypes",
+  "win32api",
+  "win32com",
+  "win32con",
+  "win32event",
+  "win32file",
+  "win32job",
+  "win32pipe",
+  "win32process",
+  "win32security",
+  "win32ts",
+]
 # The NVML binding's distribution name and its import name differ, so the
 # mapping is stated rather than guessed: deptry's fallback would be
 # `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an

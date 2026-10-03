@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e95a169e2b38a516411c86a25466cf312e569eba81603f42b88d6017281d31a0'
+body_hash: 'sha256:8814eb8e34c10db15bd42a980b4ae6fe7ebef15174957cdfeffa0f125423ebbd'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -6243,6 +6243,18 @@ related:
 - `S10` `verify:` `V10 gates on unchanged V9 product install` -> `pass`
 - `S10` `verify:` `V10 native sdk-autonomous [autonomous-crash], 4 consecutive runs` -> `pass`
 - `S10` `verify:` `V10 native sdk-demand [demand-after-stop]` -> `pass`
+- `S10` `M` `src/cadrumo/entrypoints/runtime_management.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_runtime_management.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/runtime_management.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_management.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/management_status.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_management_status.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager_restart_native.py`
+- `S10` `M` `dev/agent_eval/tests/test_installed_mcp_runtime_recovery.py`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py`
+- `S10` `by:` `root`
+- `S17` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
+- `S17` `by:` `root`
 
 ## Notes
 
@@ -7280,3 +7292,5 @@ related:
 - `S10` V7 install and gate/build/runner tooling are scratch under .tmp/windows-s10-v7 and .tmp/windows-s10-v8; V6 runners were invalidated by the main merge (source hash binding). S10 stays open: login inventory with unreadable LSA rows and full descendant/handle-inheritance containment remain unproven.
 - `S10` V8 confirms the unsigned exit-code fix: the managed supervisor replaced a natively crashed host without demand. sdk-autonomous reconnected the MCP SDK through the recovered runtime; its stale-lease probe used the owner-control connection, which the server deliberately refuses for private session traffic `(peer_untrusted),` so the test now uses a fresh verified connection. sdk-demand timed out because fixture tree retention took a full process snapshot per live PID `(~1,100` processes, `~110` s per retention); one shared parent snapshot now serves all candidates (0.21 s). V9 rerun pending.
 - `S10` All six selected Windows native cases have now passed on post-merge source with fresh noneditable installs. sdk-autonomous failed once in V9 (fresh MCP server started unauthenticated against the supervisor-recovered host; denial code not captured) and then passed 4 of 4 in V10 with identical product code: an intermittent admission race after crash recovery is suspected but unproven. The status helper now reports the full status document, so a recurrence will show its denial. Remaining S10 obligations still unproven: complete eligible-login inventory with unreadable LSA rows and last-eligible-logout, and full descendant/handle-inheritance containment; cold-start latency `(~95` s fresh install vs 75 s budget) remains a recorded finding.
+- `S10` Recover omitted historical S10 change rows from baseline snapshot 90d55a9a7e77fd622dc19eb2cfaae3ff106e1763; these record past work and do not restore current runtime administration.
+- `S17` Recover original historical S17 change evidence omitted after preservation; baseline snapshot 90d55a9a7e77fd622dc19eb2cfaae3ff106e1763 records this row. Current S01 separately verifies the adapted runtime-authority tests.

@@ -4,7 +4,7 @@ tags:
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
 modified: '2026-10-03'
-body_hash: 'sha256:68acf5b1e2f1a94a3b9f283bf3436f13c1c6f9b6cbc84b91b2625b6d69bee4ba'
+body_hash: 'sha256:df1a6bc39f1781652ba28c28e8f9b1aa2fe09a38098ea61b19845736d587f759'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
@@ -23,8 +23,6 @@ Module(s): `aeat.entrypoints.cli`, `aeat.domain.calculations.registry`,
 `aeat.application.aggregation`, `aeat.application.calculations`,
 `aeat.application.storage.calc_sheets`, `aeat.application.modelo`,
 `aeat.application.ledger`, `aeat.domain.iva_compensation`
-
-
 
 ## Summary
 

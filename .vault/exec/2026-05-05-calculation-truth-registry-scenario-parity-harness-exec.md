@@ -4,7 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-05'
 modified: '2026-10-03'
-body_hash: 'sha256:324450e9dd2dddefea3af6c16f98ebe757d56951515cba8d5ae04f856f5147d8'
+body_hash: 'sha256:6ceea73eb0b5c9abcf3fd326803431042c69f882a80c3902fc0223c9cb923761'
 related: []
 ---
 
@@ -13,7 +13,6 @@ related: []
 Added and restored a manual-first scenario/tape parity harness so registry
 calculation checks can be stored, replayed, and compared against the current
 runtime.
-
 
 ## Description
 

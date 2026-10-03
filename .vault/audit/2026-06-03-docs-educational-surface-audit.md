@@ -4,7 +4,7 @@ tags:
   - '#docs-educational-surface'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:4e9b2e524584595847ef385736d9c58aa2ec4f6f35d5745a962b6ff43d7d08c9'
+body_hash: 'sha256:74414fd83cab08d3a98808ae67e902820b78889ddf397b60bef7f511ddd537f3'
 related:
   - "[[2026-06-02-docs-educational-surface-audit]]"
   - "[[2026-06-01-docs-educational-surface-adr]]"
@@ -38,7 +38,7 @@ The kickoff brief's claim that 303 `calculate` is broken is stale. Evidence:
   is an intentional `TYPE_CHECKING` cycle-break, not a defect.
 - `aeat app modelo describe 303` resolves cleanly (revision
   `2023-y-siguientes`, 115 casillas, 8 bindings, 13 formulas).
-- `aeat app modelo work calculate` on a 303 work unit runs the engine 
+- `aeat app modelo work calculate` on a 303 work unit runs the engine
   refuses with instructive, law-grounded validation gates, not a crash:
   first the unset ledger-aggregation / `compensacion-pendiente-anteriores`
   bindings, then a requirement to initialise the IVA compensation wallet

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f534cceaad6027b0777624ec6114713849e5e3b95131f08088c2904f06d1a80'
+body_hash: 'sha256:c99eb9f7a3f841d381d523effb2094835d1c8c7dfa669bc863dbcfe596668259'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -51,3 +51,41 @@ The explicit user scope supports a bounded accepted foundation without promoting
 A Windows interpreter and assembled base product now execute outside the checkout. DLL/static C consumers, real native imports, child startup, hostile Python environments, Unicode paths, missing dependencies and package immutability have measured evidence. The fresh documented build and scoped OS-level file trace now pass, and both initial high review findings are resolved. Trace evidence covers the exercised parent/child import and temporary/cache probe; later workflows require their own verification. Linux loaders, distribution format and native macOS implementation remain unproven obligations.
 
 Later concurrent working-tree edits changed storage defaults and accepted overrides after the verified build. They have not been reconciled with this foundation contract. Artifact evidence remains tied to the preserved native source snapshot; current-source approval and plan completion are open. The user must not infer approval of that changed policy from the prior binary proof.
+
+## Amendment: CMake and platform ownership, 2026-10-03
+
+The subsequent user instructions authorize CMake Debug/Release builds, install,
+ZIP packaging, named cleanup targets, a bytecode standard-library ZIP, controlled
+package paths, executable identity resources, full dependency smoke tests and
+package-cohesion verification. They specify production `python` and a distinct
+optional development executable with `_d` before the platform suffix. Both use
+the release CPython ABI; a CPython debug-ABI distribution is not required. CADRUMO's
+three wheels are built from source, while third-party wheels come from the locked
+production dependency closure.
+
+This amendment supersedes the earlier `.artifacts/native` build convention and
+`bin/python` / unpacked-standard-library mapping. CMake defaults to
+`build/windows-x64`, with configuration-specific `bin`, `stage`, `packages` and
+verification outputs. The application contains `python.zip`, native dependencies
+under `bin`, and production Python packages under `cadrumo/site-packages`.
+`native/CONTRACT.md` owns the documented target and artifact naming reference.
+
+The user explicitly requires platform-independent packaging orchestration.
+`native/package-layout.json` owns shared package declarations;
+`native/platforms/windows-x64.json` owns Windows physical names and SDK locations.
+Shared helpers consume the selected merged contract. Platform-specific SDK,
+loader, relocation, executable-resource and acceptance behavior belongs to explicit
+platform backends. Only Windows has an implemented backend. Linux and macOS
+mapping obligations remain open; no placeholder implementation implies support.
+
+The user subsequently directed this work to consume the existing core storage
+owner and preserve repository-local development defaults and explicit overrides.
+This supersedes the earlier Known Folder and empty-override policy paragraphs.
+Native generation projects `Settings.storage_env_var_names()` and storage taxonomy
+values. The interpreter does not establish a separate LocalAppData convention or
+migrate storage. Package-specific external binary directories are explicitly
+allowlisted; they affect executable PATH without widening DLL search.
+
+The old artifact and trace evidence remains historical. Verification of the CMake
+and revised layout implementation must be recorded separately before the open
+plan steps can be completed. The broader application packaging ADR remains proposed.

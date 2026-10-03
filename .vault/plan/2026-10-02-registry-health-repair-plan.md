@@ -13,7 +13,7 @@ related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:a21f3d60c8f1947a4f6eb2a5dd671e4668deda2039fbbc4190d21627a1a5c4d6'
+body_hash: 'sha256:f86428476c070ed8311ea12a1f8f76c4dc61c38c574986beb2a2ce61234a843b'
 ---
 
 <!-- RETIRED: S22 -->
@@ -46,8 +46,8 @@ Operator continuation on 2026-10-03 authorizes implementation of every previousl
 - [ ] `S10` - Coordinate the retained binding owner, complete stable full-inventory verification and deliver the scoped review with final authority publication and currency verified from that owner's generation; `.vault/plan/2026-10-02-binding-consumer-closure-plan.md ownership boundary, dev/registry/registry_collapse_verification.py, dev/registry/pipeline/authority_publication.py read boundary, .authority/ owner boundary, .vault/audit/2026-10-02-registry-health-repair-registry-health-audit.md`.
 - [x] `S11` - Resolve the exact Modelo 122 referenced declaration-type constant through a source-pinned note reading while refusing alternatives, conditions, stale sources and geometry conflicts; `dev/registry/pipeline/note_literals.py, dev/registry/pipeline/_export_tree.py, dev/registry/pipeline/export_fragment_provenance.py, dev/registry/pipeline/tests/test_note_literal_derivation.py`.
 - [x] `S12` - Normalize case spelling of declared variable workbook markers and prove real Modelo 216 composition plus malformed marker refusals.; `dev/registry/compiler/record_design_workbook.py and dev/registry/tests/test_record_design.py`.
-- [x] `S13` - Enforce Modelo 216's source-pinned lower year bound in generated exports; `src/cadrumo/domain/calculations/registry/schema_exports.py and fixed_width_codec.py with separately owned fixed_width_parser.py handoff and dev/registry/pipeline/year_constraints.py and render_profile_eligibility.py and _export_tree.py and export_fragment_provenance.py and tests/test_source_bounded_year.py and modelo_216 source inputs`.
-- [x] `S14` - Preserve complete validated semantic-role context when checking an isolated generated revision; `Publisher validation repair in dev/registry/pipeline/_tree_validation.py and cli.py and tests/test_generated_tree_scope_context.py with source witness target replacement and typo and metadata refusal proofs`.
+- [x] `S13` - Enforce Modelo 216's source-pinned lower year bound in generated exports; `src/cadrumo/domain/calculations/registry/schema_exports.py and fixed_width_codec.py with separately owned fixed_width_parser.py handoff and dev/registry/pipeline/year_constraints.py and render_profile_eligibility.py and _export_tree.py and export_fragment_provenance.py and dev/registry/pipeline/tests/test_source_bounded_year.py and modelo_216 source inputs`.
+- [x] `S14` - Preserve complete validated semantic-role context when checking an isolated generated revision; `Publisher validation repair in dev/registry/pipeline/_tree_validation.py and cli.py and dev/registry/pipeline/tests/test_generated_tree_scope_context.py with source witness target replacement and typo and metadata refusal proofs`.
 - [x] `S15` - Resolve canonical record-design applicability from the actual requested filing frame, preserving unique source selection and historical ambiguity refusals; `dev/registry/pipeline/cli.py and source-frame publication helpers/tests with modelos126/128 named-target acceptance`.
 - [ ] `S16` - Preserve honest static-publication authority grade and source-pinned stable layout identity across Modelo123 supersession; `dev/registry/pipeline publication contracts/tests and render transport integration with root-owned bootstrap rows122/123/490 and named target publication`.
 - [x] `S17` - Support source-pinned reviewed transport choices and canonically proven zero-policy render profiles with ambiguity and incompleteness refusals; `dev/registry/pipeline/render_profile*.py and _export_tree.py with modelos156/193/131 input tests`.

@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from dev._paths import prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
 
 from .hashing import sha256_path
 from .runtime_wheel_acquisition import _acquire_all, prune_wheel_cache, wheel_cache_dir

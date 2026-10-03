@@ -1,0 +1,392 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:1
+msgid "deadline, currency, and evidence-consent domain"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:7
+msgid ""
+"**Report:** `STAGE-2-141` · **Topic:** [Business and taxpayer "
+"domain](../topics/business-and-taxpayer-domain.md)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:10
+msgid "Scope"
+msgstr "Hatókör"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:12
+msgid ""
+"This chunk covers 16 files totaling 4,712 manifest-counted lines, 196,901"
+" bytes, and 43,080 measured `o200k_base` tokens. It spans currency "
+"conversion records and service, the deadline profile and schedule engine,"
+" governed holiday calendars, filing-window and recargo resolution, setup-"
+"answer projection, and the evidence-consent audit record. Every assigned "
+"file was read in bounded slices through its end. This review is static; "
+"it did not import or execute the application, change `src/`, or run "
+"tests."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:14
+msgid "Product capabilities"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:16
+msgid ""
+"The deadline domain builds typed, registry-backed filing schedules from a"
+" taxpayer profile and a reference date. It projects the selected "
+"revision’s deadline windows, applies filing-schedule and profile "
+"predicates, filters obligations outside activity periods, classifies each"
+" close date as upcoming, due soon, due today, or overdue, and attaches a "
+"registry-backed recovery band to late obligations. It also provides "
+"“applies” and “explain” queries, a next-deadline helper, and one shared "
+"schedule producer intended to keep pending-obligation projections and "
+"workflow gates aligned engine schedule construction "
+"(`src/cadrumo/domain/deadlines/engine.py`) single schedule producer "
+"(`src/cadrumo/domain/deadlines/engine.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:18
+msgid ""
+"Deadline windows and policy predicates come from a pinned authority "
+"operation. A bounded LRU-like index retains projected windows for at most"
+" 32 generation/year pairs; holiday calendars are cached for 16 "
+"generation/year pairs; recargo bands are cached weakly by operation. The "
+"window projection selects the owning revision from directory metadata and"
+" avoids hydrating unrelated revision bodies. Result-qualified and Modelo "
+"210 income-type windows are deliberately left out of the static-profile "
+"engine and resolved through the shared filing-window matcher generation-"
+"keyed window index (`src/cadrumo/domain/deadlines/engine.py`) filing-"
+"window resolver (`src/cadrumo/domain/deadlines/plazo.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:20
+msgid ""
+"Holiday adjustment loads a published year calendar and its exact event "
+"facts from the pinned authority. It distinguishes national from CCAA "
+"holidays, checks CCAA holidays only when that territory’s list is marked "
+"verified, and carries coverage such as national-only or territory-"
+"unverified so a kept date is not presented as fully checked. It walks "
+"across year boundaries using that year’s calendar, and Modelo 369 is "
+"explicitly unshifted. Municipal holiday data is not present, which the "
+"coverage model and comments disclose publication-backed calendar loading "
+"(`src/cadrumo/domain/deadlines/festivos.py`) business-day walk "
+"(`src/cadrumo/domain/deadlines/festivos.py`) shift policy "
+"(`src/cadrumo/domain/deadlines/festivos.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:22
+msgid ""
+"`TaxpayerProfile` is the structured input surface for deadline rules: it "
+"carries taxpayer ID, registry-projected entity and tax-regime tokens, "
+"IRPF/IVA facts, declaration roles, group-member rosters, filing "
+"thresholds and statuses, activity dates, tax residence, enrollment, and "
+"special-regime facts. Nested IVA profiles keep refund IBAN and debit IBAN"
+" separate. Both are structurally normalized and validated with an ISO "
+"13616 shape and mod-97 checksum; the distinction prevents a refund "
+"destination from being treated as authority to debit. Cross-period group "
+"rosters validate member NIFs and require a unique, stable member set for "
+"a matching filing year and period account records "
+"(`src/cadrumo/domain/deadlines/models.py`) roster constraints "
+"(`src/cadrumo/domain/deadlines/models.py`) profile model "
+"(`src/cadrumo/domain/deadlines/models.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:24
+msgid ""
+"Other capabilities include resolving the dated multiple-payer work-income"
+" filing threshold, projecting persisted profile paths into setup answers,"
+" normalizing foreign currency with rate provenance, and recording "
+"metadata for consented off-host evidence dispatch. Currency records "
+"retain original amount, result, rate, source and rate date. The consent "
+"record retains evidence content address, provider, model, operator "
+"surface, profile bucket and timestamp, while omitting document bytes, "
+"prompt and response multiple-payer rule "
+"(`src/cadrumo/domain/deadlines/models.py`) currency service "
+"(`src/cadrumo/domain/currency/service.py`) consent record "
+"(`src/cadrumo/domain/evidence_consent/record.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:26
+msgid "How it works"
+msgstr "Hogyan működik"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:28
+msgid ""
+"The engine takes an optional pinned authority; otherwise it opens one "
+"operation for the full query. It sorts obligations deterministically by "
+"close date, Modelo and period. Missing registry windows are distinguished"
+" from registry validation failures. For overdue filings, the recovery "
+"path counts completed months and uses a separate anniversary test for the"
+" strictly-after-twelve-month tail, reflecting the model’s date-sensitive "
+"boundary. If no recovery entry is available for a Modelo, the schedule "
+"can still report the overdue status without speculative surcharge "
+"arithmetic status and computation "
+"(`src/cadrumo/domain/deadlines/engine.py`) recovery fallback "
+"(`src/cadrumo/domain/deadlines/engine.py`) recargo boundary "
+"(`src/cadrumo/domain/deadlines/recargo.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:30
+msgid ""
+"Holiday records use registry-projected territory tokens. The loader first"
+" requires an authored calendar-publication event, so absence of a date-"
+"level holiday is interpreted as a business day only for a published year."
+" Each holiday variant is resolved by its selectors and date, and each "
+"date is classified only against a calendar for the same year. The date "
+"walk is bounded to 14 days; missing next-year publication data refuses "
+"rather than silently treating the remaining dates as holidays-free. This "
+"chunk’s type distinguishes several degrees of regional coverage but has "
+"no municipal coverage publication proof "
+"(`src/cadrumo/domain/deadlines/festivos.py`) year-bound classification "
+"(`src/cadrumo/domain/deadlines/festivos.py`) bounded walk "
+"(`src/cadrumo/domain/deadlines/festivos.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:32
+msgid ""
+"The profile builder canonicalizes mapping values, layers only structural "
+"defaults, then asks registry-owned setup declarations to project typed "
+"answers. It separately resolves field families such as withholding, "
+"corporate options, fiscal address, activity, special regimes, the Modelo "
+"IVA block, and multiple-payer amounts. Profile presence is used to decide"
+" whether the IVA block is claimed; if claimed, required booleans and the "
+"registry composition and territory are required. Conditional validators "
+"require start dates for IMPATRIADO and country/representative details for"
+" certain non-resident profiles projection entrypoint "
+"(`src/cadrumo/domain/deadlines/profiles.py`) IVA block requirements "
+"(`src/cadrumo/domain/deadlines/profiles.py`) IVA resolver "
+"(`src/cadrumo/domain/deadlines/profiles.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:34
+msgid "Knowledge and data"
+msgstr "Tudás és adatok"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:36
+msgid ""
+"Tax schedules, filing windows, policy predicates, recargo bands, date-"
+"axis choices, holiday facts and most choice vocabularies are resolved "
+"from the repository’s governed registry. The domain passes explicit "
+"filing, submission or event coordinates rather than maintaining parallel "
+"rate tables. Currency-rate selection and fallback are explicitly "
+"delegated to the outbound provider; the adapter’s ECB quote inversion and"
+" most-recent-prior-publication behavior are outside this chunk. Profile "
+"inputs include tax identifiers, income and regime facts, IBANs, foreign-"
+"residence details and free-form notes. The consent record stores a "
+"content address and routing metadata, not the content itself. These files"
+" describe data shapes and resolution; they do not by themselves establish"
+" the current legal accuracy or provenance of the bundled registry."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:38
+msgid "Security and safety"
+msgstr "Biztonság és biztonságos működés"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:40
+msgid ""
+"The domain enforces canonical taxpayer and group-member IDs through "
+"`SubjectTaxId`, validates IBAN checksums, uses hidden-input model "
+"configurations for sensitive profile records, separates debit "
+"authorization from a refund account, and treats unresolved holiday "
+"coverage as explicitly incomplete. Registry windows are tied to "
+"generation pins, caches are bounded or weak-keyed, and missing "
+"authority/publication data fails closed. Consent is represented by a "
+"small audit record that excludes the evidence bytes and model "
+"prompt/response; the encrypted store and the permission gate are "
+"expressly outside the record module. Neither record validation nor the "
+"`actor`-like fields authenticate a human; authorization and secure "
+"persistence must be established by application and adapter layers."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:42
+msgid ""
+"Three malformed-input paths deserve follow-up. First, "
+"`project_setup_answers` turns any nonempty boolean token other than the "
+"exact string `true` into `False`, rather than refusing an unreadable "
+"stored token. If corrupt state reaches this projection, a positive answer"
+" can be converted to a negative one boolean projection "
+"(`src/cadrumo/domain/deadlines/setup_answer_projection.py`). Second, "
+"`_parse_optional_int` converts malformed multiple-payer counts to `None`;"
+" `evaluate_multiple_pagadores_obligation` then returns `False` when count"
+" or secondary income is absent. A malformed count can therefore suppress "
+"the specific conservative advisory the profile builder expects for an "
+"active multiple-payer case optional integer parser "
+"(`src/cadrumo/domain/deadlines/profiles.py`) multiple-payer decision "
+"(`src/cadrumo/domain/deadlines/models.py`). Third, missing exchange rates"
+" produce a `NormalizedAmount` with EUR amount zero and a `MISSING_RATE` "
+"status. The status allows callers to gate the value, but any consumer "
+"reading the numeric field without checking status would see a plausible "
+"zero; cross-layer consumers need confirmation missing-rate result "
+"(`src/cadrumo/domain/currency/service.py`)."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:44
+msgid ""
+"The consent record describes `evidence_content_address` as a SHA-256 "
+"address but only requires a nonempty string; format and correspondence to"
+" evidence are not checked here. Currency provider results similarly rely "
+"on the provider contract for rate validity in `NormalizedAmount`, whose "
+"rate and euro amount fields have no local range constraints. These are "
+"input-boundary risks whose practical reach depends on outbound adapters "
+"and constructors. No filesystem, network, irreversible action, or "
+"credential handling is implemented in this domain chunk."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:46
+msgid "Implementation assessment"
+msgstr "A megvalósítás értékelése"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:48
+msgid ""
+"Strengths include pinned and date-axis-aware authority resolution, shared"
+" window matching, a strict separation between static profile obligations "
+"and result-qualified filing windows, transparent holiday-coverage "
+"outcomes, deterministic projections, and explicit handling of the "
+"12-month recargo boundary. The taxpayer profile captures many legally "
+"material unset-versus-false states, and IBAN/refund/debit distinctions "
+"are carefully modeled. Error types distinguish benign missing-window data"
+" from invalid registry state."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:50
+msgid ""
+"The main weaknesses are silent coercion of malformed booleans and "
+"integers, plus numeric placeholder values on missing currency rates. The "
+"profile’s wide set of optional fields has several cross-field rules, but "
+"local validators do not establish every relationship between dates, "
+"taxpayer type, entity form and identifiers; correctness depends on typed "
+"construction and caller paths. The holiday source claims BOE grounding "
+"but the calendar source assets and registry declarations are outside this"
+" chunk. No tests are included in these files, and static inspection "
+"cannot verify legal correctness, adapter freshness or downstream status "
+"checks."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:52
+msgid "Dependencies and follow-up"
+msgstr "Függőségek és további vizsgálatok"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:54
+msgid ""
+"Synthesis should trace the authority registry and schedule consumers to "
+"confirm the indexed projection and its callers share one pinned "
+"generation. It should inspect the application behavior for missing FX "
+"rates, the FX provider’s freshness/error contract, and the code that "
+"refuses unverified currency values at export. For setup projection, "
+"verify whether profile storage guarantees canonical boolean tokens before"
+" this layer; for multiple-payer facts, trace parser errors and advisory "
+"routing. For consent, inspect the encrypted append/read store and the "
+"consent gate to confirm that its address, provider/model and "
+"acknowledgement are bound to the actual dispatch. The holiday registry’s "
+"source evidence, verified-territory population and municipal limitation "
+"should remain visible in synthesis."
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:56
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:58
+msgid "currency/__init__.py (`src/cadrumo/domain/currency/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:59
+msgid "currency/errors.py (`src/cadrumo/domain/currency/errors.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:60
+msgid "currency/models.py (`src/cadrumo/domain/currency/models.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:61
+msgid "currency/service.py (`src/cadrumo/domain/currency/service.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:62
+msgid "deadlines/__init__.py (`src/cadrumo/domain/deadlines/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:63
+msgid "deadlines/engine.py (`src/cadrumo/domain/deadlines/engine.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:64
+msgid "deadlines/errors.py (`src/cadrumo/domain/deadlines/errors.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:65
+msgid "deadlines/fact_context.py (`src/cadrumo/domain/deadlines/fact_context.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:66
+msgid "deadlines/festivos.py (`src/cadrumo/domain/deadlines/festivos.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:67
+msgid "deadlines/models.py (`src/cadrumo/domain/deadlines/models.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:68
+msgid "deadlines/plazo.py (`src/cadrumo/domain/deadlines/plazo.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:69
+msgid "deadlines/profiles.py (`src/cadrumo/domain/deadlines/profiles.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:70
+msgid "deadlines/recargo.py (`src/cadrumo/domain/deadlines/recargo.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:71
+msgid ""
+"deadlines/setup_answer_projection.py "
+"(`src/cadrumo/domain/deadlines/setup_answer_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:72
+msgid ""
+"evidence_consent/__init__.py "
+"(`src/cadrumo/domain/evidence_consent/__init__.py`)"
+msgstr ""
+
+#: ../../technical/articles/141-deadline-currency-and-evidence-consent-domain.md:73
+msgid ""
+"evidence_consent/record.py "
+"(`src/cadrumo/domain/evidence_consent/record.py`)"
+msgstr ""

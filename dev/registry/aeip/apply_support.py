@@ -7,8 +7,8 @@ from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from .errors import AeipError
 from .planning import _merge_source_refs
 from .types import AeipOccurrence, ChainPlanEntry, EvolutionPair
 
@@ -193,7 +193,7 @@ def _grounded_row_evidence(pair: EvolutionPair, earlier: AeipOccurrence, later: 
     """Render deterministic, source-backed evidence for a grounded successor row."""
     refs = _merge_source_refs(earlier, later)
     if not _source_refs_are_grounded(refs):
-        raise AeipError(
+        raise RegistryLoadError(
             f"{pair.chain_id} {pair.from_revision}->{pair.to_revision}: missing authoritative source refs",
         )
     evidence = (
@@ -203,7 +203,7 @@ def _grounded_row_evidence(pair: EvolutionPair, earlier: AeipOccurrence, later: 
         f"{pair.evolution_kind} from the official Spanish labels."
     )
     if len(evidence) > 1024:
-        raise AeipError(
+        raise RegistryLoadError(
             f"{pair.chain_id} {pair.from_revision}->{pair.to_revision}: grounded evidence exceeds 1024 characters",
         )
     return evidence

@@ -1,0 +1,379 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:1
+msgid "Live AEAT CLI capture and snapshot surfaces"
+msgstr "Captura CLI de l’AEAT en directe i superfícies d’instantànies"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:7
+msgid ""
+"**Report:** `STAGE-2-157` · **Topic:** [Operator interfaces, part 1: "
+"command graph and principal workflows](../topics/operator-interfaces-"
+"part-1.md)"
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:10
+msgid "Scope"
+msgstr "Àmbit"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:12
+msgid ""
+"This chunk covers 26 CLI modules (5,750 lines; 47,627 measured o200k_base"
+" proxy tokens), near the 48,000-token implementation cap. I read all "
+"assigned ranges across nine bounded pages and checked helper output "
+"boundaries for truncation. The files define live-read command handlers "
+"and contracts for filed declarations, IVA wallet evidence, expedientes, "
+"justificantes, notifications, local portal metadata, and Modelo 100 "
+"borrador snapshots. Static inspection only: I did not invoke the "
+"application or run tests. No tests are included in this chunk."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:14
+msgid "Product capabilities"
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:16
+msgid ""
+"The live CLI family distinguishes AEAT observation from AEAT mutation. "
+"Its module description says these commands collect or render local "
+"evidence and do not submit forms, make payments, acknowledge "
+"notifications, or perform representative write actions. The command-spec "
+"composer separates local metadata and encrypted-local reads from profile-"
+"bound network captures, and each operation emits a typed result envelope "
+"(live command family "
+"(`src/cadrumo/entrypoints/cli/_app_live_command_specs.py`), capture "
+"policy (`src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py`),"
+" live handler boundary (`src/cadrumo/entrypoints/cli/_app_live.py`))."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:18
+msgid ""
+"Operators can inspect locally captured expedientes, filed-declaration, "
+"justificante, notification, and IVA evidence; initiate bounded "
+"read/capture flows; import a local Modelo 100 draft PDF into a profile "
+"snapshot; and inspect a local portal catalogue. Expedientes commands "
+"capture a declaration-register snapshot and offer local list, view, and "
+"latest reads. Justificante pull captures a signed receipt through the "
+"registered profile worker, then reports its CSV, expediente, digest, "
+"capture state, and whether metadata or filing evidence was enrolled "
+"locally; list and view report custody metadata without printing the "
+"stored PDF body (expedientes handlers "
+"(`src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py`), receipt "
+"handler (`src/cadrumo/entrypoints/cli/_app_live_justificante_cli.py`), "
+"receipt payload "
+"(`src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:20
+msgid ""
+"Filed-history discovery unions two distinct signals: modelo/year pairs "
+"expected by the taxpayer profile and periods offered by AEAT’s register "
+"controls. It keeps those signals visible in JSON and explains that the "
+"AEAT option list’s taxpayer scoping is unconfirmed. The onboarding pull "
+"reports per-pair attempted/completed walks, rows, captures, refusals, "
+"empty results, wallet and notification stage outcomes, and a prose "
+"denominator note. It deliberately carries no coverage fraction. When a "
+"capture is limited, its notice compares the limit to observations reached"
+" rather than snapshots persisted, so a dry-run truncation is still "
+"disclosed; re-capture and evidence-enrolment advisories are forwarded "
+"rather than collapsed (discovery handler "
+"(`src/cadrumo/entrypoints/cli/_app_live.py`), onboarding payload "
+"(`src/cadrumo/entrypoints/cli/_app_live_filed_payloads.py`), pull-all and"
+" limit handling (`src/cadrumo/entrypoints/cli/_app_live.py`), advisories "
+"(`src/cadrumo/entrypoints/cli/_app_live.py`)). A single-modelo pull "
+"explicitly refuses the dry-run flag because that mode has no preview "
+"path; bulk/range capture exposes a dry-run option. Both are local "
+"evidence writes after a remote read, not AEAT filing actions (mode "
+"dispatch (`src/cadrumo/entrypoints/cli/_app_live.py`), capture result "
+"schema (`src/cadrumo/entrypoints/cli/_app_live_filed_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:22
+msgid ""
+"IVA wallet commands separate read-only wallet capture, local history, "
+"filed-history capture, and combined evidence acquisition. The combined "
+"flow presents filed-history and wallet outcomes independently, carries a "
+"manifest reference and redacted authentication outcome, and can report "
+"one surface succeeded even if the other failed. The wallet result reports"
+" selected authority, divergence and blocking status without returning raw"
+" wallet rows; history exposes carry-forward lots and prior decisions as "
+"local evidence (wallet capture payload "
+"(`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`), "
+"combined capture handler (`src/cadrumo/entrypoints/cli/_app_live.py`), "
+"combined payload "
+"(`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:24
+msgid ""
+"Notification pull captures a DEHú snapshot; list, view, and latest read "
+"it locally. The document subgroup is more sensitive. Its pull asks the "
+"registered operation to fetch a document only after resolving the "
+"notification from the profile’s own captured snapshot and checking AEAT "
+"already reports it as read. The CLI reports that the protected fetch did "
+"not perform comparecencia; local document view contacts AEAT not at all. "
+"Parsed sanction figures preserve printed decimal strings, and document "
+"history explicitly warns that individual served documents are not summed "
+"into a computed balance (guarded pull "
+"(`src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`), guard "
+"notice (`src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`), "
+"document payload "
+"(`src/cadrumo/entrypoints/cli/_app_live_notifications_payloads.py`)). "
+"Portal list/view commands project local catalogue entries and never open "
+"a browser or contact AEAT (portal list "
+"(`src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`)). Borrador "
+"import accepts a local PDF, returns extraction profile/coverage and a "
+"digest, and provides local active/list/view/latest snapshot queries; the "
+"payload describes the source path as excluded from the stored result "
+"(borrador handler "
+"(`src/cadrumo/entrypoints/cli/_app_live_borrador_cli.py`), borrador "
+"payload (`src/cadrumo/entrypoints/cli/_app_live_borrador_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:26
+msgid "Knowledge and data"
+msgstr "Coneixement i dades"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:28
+msgid ""
+"The CLI presents evidence from AEAT declaration registers, IVA "
+"wallet/history surfaces, DEHú snapshots and signed justificantes, "
+"alongside profile facts and registry-selected filing dependencies. It "
+"preserves uncertainty where sources do not support a complete account: "
+"filed-history pairs retain their discovery provenance; capture failures "
+"remain distinct from a completed zero-row walk; skipped casillas are "
+"named without exposing their values; notification documents carry a "
+"digest and parsed report without embedding the encrypted document bytes. "
+"These are evidence projections, not a legal validation of AEAT records or"
+" current tax rules."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:30
+msgid ""
+"Authentication preflight is rendered to stderr using the application’s "
+"report and a CLI redaction function; it surfaces configured/available "
+"state, identity-alignment status, session state, and credential-presence "
+"booleans rather than credential values (auth preflight "
+"(`src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`), redacted "
+"output fields "
+"(`src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`)). Local "
+"snapshot detail can include taxpayer and recipient names/NIFs, case "
+"identifiers, and tax amounts. Those are useful for the authorized "
+"operator but remain sensitive terminal/JSON output; this chunk does not "
+"establish how shell history, logs, or downstream automation retain them."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:32
+msgid "Security and implementation assessment"
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:34
+msgid ""
+"The main protections at this layer are exact-profile worker delegation, "
+"explicit distinctions between live capture and local read, profile-local "
+"evidence outputs, redacted authentication preflight, typed result "
+"payloads, and warnings that state what an empty, partial, or unparsed "
+"result means. The notification document path documents and exposes a "
+"consequential AEAT read guard, rather than letting operators mistake the "
+"act for a harmless local view. Enforcement of profile and unread-"
+"notification checks is in registered worker implementations outside this "
+"chunk, so synthesis should verify those operation boundaries."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:36
+msgid ""
+"One confirmed local output-schema defect weakens the IVA capture-history "
+"count invariant. The schema says every reported failure count must be "
+"backed by named declarations, but the validator compares count with list "
+"length only when the list is non-empty. Thus a result with "
+"failed_declaration_count=2 and failed_declarations=[] passes this local "
+"validator; the intended equality would reject it. This proves the wire "
+"contract does not enforce its own stated invariant. Whether an upstream "
+"worker can actually produce that combination is a separate caller "
+"invariant that synthesis should check (schema and validator "
+"(`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`), "
+"conditional check "
+"(`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`)). Make "
+"the equality unconditional and test both disagreement directions."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:38
+msgid ""
+"A smaller time-source consistency question remains: filed-list defaults "
+"use the Madrid application clock, while pull-all passes date.today() into"
+" its worker. If that date determines the history year span, hosts with a "
+"different local timezone can disagree near a calendar boundary. This is a"
+" conditional risk, not a proven wrong result; confirm the downstream use "
+"and choose one clock authority (filed list default "
+"(`src/cadrumo/entrypoints/cli/_app_live.py`), pull-all date "
+"(`src/cadrumo/entrypoints/cli/_app_live.py`))."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:40
+msgid ""
+"The command specs and payload models are detailed, but several outputs "
+"intentionally carry free-form failure text and local path references; "
+"this chunk cannot certify upstream redaction or filesystem confinement. "
+"No tests were present in this assignment, and no live behavior, provider "
+"behavior, legal freshness, or cross-profile isolation was tested."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:42
+msgid "Dependencies and follow-up"
+msgstr "Dependències i seguiment"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:44
+msgid ""
+"These CLI modules rely on registered exact-profile runtime operations, "
+"the live AEAT browser/session adapters, encrypted snapshot and attachment"
+" stores, registry-backed period/fact resolution, Pydantic output schemas,"
+" common envelope rendering, and application redaction. Synthesis should "
+"verify worker-side notification comparecencia gating, exact-profile "
+"lifetime, filed-history denominator inputs, IVA evidence reconciliation, "
+"and the failure-count caller invariant. Current AEAT or legal correctness"
+" is outside this static review."
+msgstr ""
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:46
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:48
+msgid "`src/cadrumo/entrypoints/cli/_app_ledger_rule_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_rule_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:49
+msgid "`src/cadrumo/entrypoints/cli/_app_ledger_rule_ratio_command_spec_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_ledger_rule_ratio_command_spec_support.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:50
+msgid "`src/cadrumo/entrypoints/cli/_app_live.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:51
+msgid "`src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:52
+msgid "`src/cadrumo/entrypoints/cli/_app_live_borrador_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_borrador_cli.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:53
+msgid "`src/cadrumo/entrypoints/cli/_app_live_borrador_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_borrador_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:54
+msgid "`src/cadrumo/entrypoints/cli/_app_live_borrador_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_borrador_payloads.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:55
+msgid "`src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:56
+msgid "`src/cadrumo/entrypoints/cli/_app_live_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:57
+msgid "`src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:58
+msgid "`src/cadrumo/entrypoints/cli/_app_live_expedientes_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_expedientes_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:59
+msgid "`src/cadrumo/entrypoints/cli/_app_live_expedientes_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_expedientes_payloads.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:60
+msgid "`src/cadrumo/entrypoints/cli/_app_live_filed_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_filed_payloads.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:61
+msgid "`src/cadrumo/entrypoints/cli/_app_live_foundation_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_foundation_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:62
+msgid "`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:63
+msgid "`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:64
+msgid "`src/cadrumo/entrypoints/cli/_app_live_justificante_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_justificante_cli.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:65
+msgid "`src/cadrumo/entrypoints/cli/_app_live_justificante_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_justificante_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:66
+msgid "`src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:67
+msgid "`src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:68
+msgid "`src/cadrumo/entrypoints/cli/_app_live_notifications_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_notifications_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:69
+msgid "`src/cadrumo/entrypoints/cli/_app_live_notifications_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_notifications_payloads.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:70
+msgid "`src/cadrumo/entrypoints/cli/_app_live_payloads_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_payloads_support.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:71
+msgid "`src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:72
+msgid "`src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`"
+
+#: ../../technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md:73
+msgid "`src/cadrumo/entrypoints/cli/_app_live_portals_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_app_live_portals_payloads.py`"

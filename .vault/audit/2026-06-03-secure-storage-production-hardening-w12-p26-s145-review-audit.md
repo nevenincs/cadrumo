@@ -4,7 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:947084b338e3b723a1020604eb2eb973a6c472464a73114ff2ae302de2e0377d'
+body_hash: 'sha256:fd546a33ff11da57fff6f9134366bdc68b7e0f4e6c5307cdc86b279fbbef0bc5'
 related: []
 ---
 
@@ -32,8 +32,8 @@ The new foundation test inspects the real `StorageProvider` Protocol signatures 
 
 Validation:
 
-- the focused test run passed with 42 tests.
-- the focused test run passed.
+- the historical check passed with 42 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - The touched-file source scan found no direct settings construction, project-root wrangling, environment access, print/typer output, suppressing pragmas, monkeypatch/fake/stub markers, skipped/xfail tests, or broad exception catches.
 

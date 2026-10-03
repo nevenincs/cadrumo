@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storage_environment
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, UTF_8
 
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
 from .import_boundaries_signal import _IMPORT_BOUNDARIES_SIGNAL, _ImportBoundariesProcessor
@@ -22,7 +22,6 @@ from .locales_status_signal import _LOCALES_STATUS_SIGNAL, _LocalesStatusSignalP
 from .paths import allocate_run_directory, allocate_scratch_directory, scratch_environment, test_log_root
 from .pytest_summary_signal import _PYTEST_SUMMARY_SIGNAL, _PytestSummaryProcessor
 from .registry_health_signal import _BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL, _RegistryHealthProcessor
-from .signal_values import _UTF_8
 
 _INTERRUPTED_EXIT_STATUS: Final[int] = 130
 
@@ -91,7 +90,7 @@ async def _stream_process(
     assert process.stdout is not None
     try:
         async for line in _stream_lines(process.stdout):
-            decoded = line.decode(_UTF_8, errors="replace")
+            decoded = line.decode(UTF_8, errors="replace")
             if processor is None:
                 print(decoded, end="", flush=True)
             else:
@@ -144,7 +143,7 @@ def _write_run_metadata(
     temporary = run_dir / "run.json.tmp"
     temporary.write_text(
         json.dumps(payload, indent=2) + "\n",
-        encoding=_UTF_8,
+        encoding=UTF_8,
         newline="\n",
     )
     os.replace(temporary, run_dir / "run.json")
@@ -220,7 +219,7 @@ def run(
         environment[refinement_variable] = tool_environment[native_variable]
     environment.update(tool_environment)
     environment.update(scratch_environment(scratch))
-    with log_path.open("x", encoding=_UTF_8, newline="\n") as transcript:
+    with log_path.open("x", encoding=UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")
         transcript.write(f"COMMAND {' '.join(command)}\n")
         if start_envelope_text is not None:
@@ -279,7 +278,7 @@ def run(
             sort_keys=True,
             separators=(",", ":"),
         )
-        with log_path.open("a", encoding=_UTF_8, newline="\n") as transcript:
+        with log_path.open("a", encoding=UTF_8, newline="\n") as transcript:
             transcript.write(envelope_text + "\n")
         print(envelope_text, flush=True)
     return exit_status

@@ -8,8 +8,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from .pytest_transcript_syntax import _normalize_root_cause
-from .signal_values import _UTF_8, _is_json_object, _write_json_lines
+from .signal_values import _is_json_object, _write_json_lines
 
 _LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
 
@@ -164,7 +166,7 @@ class _LocalesStatusSignalProcessor:
                 sort_keys=True,
             )
             + "\n",
-            encoding=_UTF_8,
+            encoding=UTF_8,
             newline="\n",
         )
         _write_json_lines(backlog_path, details.get("backlog", []))

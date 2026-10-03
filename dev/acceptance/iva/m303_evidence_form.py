@@ -15,7 +15,7 @@ from dev.acceptance.income_tax.tui_operation_controls import activate_tui_operat
 from dev.acceptance.income_tax.tui_selectors import WORKBENCH_AT_RISK_PROCEED, WORKBENCH_LIST, WORKBENCH_NOTICE
 
 from .m303_evidence_contracts import _EVIDENCE_SUBMIT_ID, TuiOutcome
-from .m303_evidence_navigation import _await_selector, _await_workbench_refresh, _open_work
+from .m303_evidence_navigation import _await_selector, _await_workbench_refresh, open_work
 from .m303_evidence_refusals import _notice_key, _visible_refusal
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
 
     from textual.css.query import NoMatches
 
-    await _open_work(pilot, work_unit_id=work_unit_id)
+    await open_work(pilot, work_unit_id=work_unit_id)
     await pilot.press("c")
     deadline = time.monotonic() + 120.0
     while time.monotonic() < deadline:

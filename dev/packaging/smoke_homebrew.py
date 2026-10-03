@@ -34,6 +34,9 @@ REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
 _STORAGE_ENVIRONMENT = importlib.import_module("cadrumo.core.storage_environment")
 resolve_storage_path = _STORAGE_ENVIRONMENT.resolve_storage_path
 tool_storage_environment = _STORAGE_ENVIRONMENT.tool_storage_environment
+require_homebrew_installation_prefix = importlib.import_module(
+    "dev.packaging.homebrew_storage",
+).require_homebrew_installation_prefix
 _COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
 CommandResult = _COMMAND_EXECUTION.CommandResult
 run_command = _COMMAND_EXECUTION.run_command
@@ -322,7 +325,7 @@ def run_homebrew_smoke(
         log_dir=logs,
         label="brew-prefix-root",
     ).stdout.strip()
-    brew_prefix = Path(prefix_text).resolve(strict=True)
+    brew_prefix = require_homebrew_installation_prefix(prefix_text)
     _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
     tap_repo = run_root / "tap"
     formula_dir = tap_repo / "Formula"
@@ -773,6 +776,14 @@ def run_deferred_cleanup(state_path: Path) -> int:
     run_root = resolved_state.parent
     logs = run_root / "logs"
     logs.mkdir(exist_ok=True)
+    os.environ.update(_homebrew_storage_environment())
+    prefix_text = _run(
+        [str(state["brew"]), "--prefix"],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-prefix-cleanup",
+    ).stdout
+    require_homebrew_installation_prefix(prefix_text)
     installed_prefix_text = state.get("installed_prefix")
     cleanup_errors, cleanup = _run_brew_cleanup(
         brew=Path(str(state["brew"])),

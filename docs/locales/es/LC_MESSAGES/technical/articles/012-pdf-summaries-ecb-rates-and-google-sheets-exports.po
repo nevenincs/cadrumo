@@ -1,0 +1,416 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:1
+msgid "PDF summaries, ECB rates, and Google Sheets exports"
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:7
+msgid ""
+"**Report:** `STAGE-2-012` · **Topic:** [External integrations and local "
+"runtime](../topics/external-integrations-and-local-runtime.md)"
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:10
+msgid "Scope"
+msgstr "Ámbito"
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:12
+msgid ""
+"This chunk contains 18 files and 4,050 assigned lines (37,113 measured "
+"proxy tokens) spanning CSV verification, Playwright installation, "
+"calculation-summary PDF writing/reading, ECB exchange rates, and Google "
+"Sheets export. All seven bounded pages were read in full. This is static "
+"inspection: I did not install Chromium, contact AEAT/ECB/Google, create a"
+" Drive file, or render/validate a PDF. Comments about fixtures or "
+"validators are not independent test results."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:14
+msgid "Capabilities and operation"
+msgstr "Capacidades y funcionamiento"
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:16
+msgid ""
+"`verify_csv` normalizes and shape-checks an AEAT CSV, optionally borrows "
+"a browser session or creates and owns one, performs a guarded GET to the "
+"configured public viewer, and reports `True` only when the final URL is "
+"the exact HTTPS verifier host/path and the returned HTML contains an "
+"iframe pointing to the matching CSV document endpoint. Unknown HTML or a "
+"mismatched viewer is `False`; transport/construction/parsing problems "
+"become a typed justificante-verification error. Borrowed contexts are "
+"closed without closing the caller’s browser session; self-created "
+"sessions are closed by the helper. The browser installer is a narrow "
+"process-control function: it invokes the current interpreter’s Playwright"
+" Chromium installer with a fixed argv, no shell, and a timeout; it "
+"suppresses subprocess output and returns the exit code (contract.py "
+"(`src/cadrumo/adapters/outbound/aeat/verify/contract.py`), contract.py "
+"(`src/cadrumo/adapters/outbound/aeat/verify/contract.py`), installer.py "
+"(`src/cadrumo/adapters/outbound/browser_runtime/installer.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:18
+msgid ""
+"The calculation-summary writer turns an application-provided presentation"
+" into an A4 PDF, records a structure plan while drawing headings, facts, "
+"and table cells, and then tags the rendered text objects and decorative "
+"paths. It refuses a mismatch between planned text and drawn text instead "
+"of assigning approximate accessibility tags. The container embeds the "
+"source report and CSV plus a certification statement and signature, sets "
+"XMP with PDF/A-3 and PDF/UA identifiers and registered product "
+"properties, includes an sRGB output intent, strips duplicate document-"
+"info metadata, and writes deterministic output. The XMP document "
+"identifiers derive from report/statement digests. The matching reader "
+"extracts attachments, product metadata, visible-layer digest/overlays, "
+"and text; its digest binds media boxes, decoded page streams, and "
+"embedded font-program digests (structure_tagging.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/structure_tagging.py`),"
+" structure_tagging.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/structure_tagging.py`),"
+" summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_reading.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_reading.py`),"
+" summary_reading.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_reading.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:20
+msgid ""
+"`EcbReferenceRateProvider` resolves a currency/date against the ECB Data "
+"Portal’s EUR-base daily series, looks back up to 14 days for the latest "
+"prior publication, and inverts the quote into the CCY-to-EUR multiplier "
+"expected by the domain service. It returns one for EUR, `None` for no "
+"usable currency series/window, and raises a typed provider error for "
+"network/protocol failures. The default HTTPS transport pins scheme and "
+"host, uses a configured timeout, and decodes the CSV response. Usable "
+"observations must have a parseable date and finite positive decimal; "
+"results are memoized per `(currency, date)` in the provider instance, and"
+" the process default provider is singleton-cached (ecb_provider.py "
+"(`src/cadrumo/adapters/outbound/fx/ecb_provider.py`), ecb_provider.py "
+"(`src/cadrumo/adapters/outbound/fx/ecb_provider.py`), ecb_provider.py "
+"(`src/cadrumo/adapters/outbound/fx/ecb_provider.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:22
+msgid ""
+"The Sheets adapter is a real remote writer. It creates or reuses a "
+"workbook in an app-owned `cadrumo-vault/calc-sheets/<modelo-period-year>`"
+" Drive hierarchy, creates missing managed tabs, sets locale, writes "
+"values and formulas, clears stale cells, applies protection and "
+"validation, sets formats/filters/frozen rows, and stamps registry/export "
+"identity as developer metadata. A read-only preview uses Drive/Sheets "
+"reads to compute ranges that would be cleared, changed value count, "
+"unchanged value count, and the formula count that the live writer would "
+"rewrite. The value and formatting helpers are pure request builders. The "
+"adapter describes the workbook as a human-readable mirror, never tax "
+"authority; a separate pull adapter is expected to check Drive ownership "
+"and registry digest before reading edits back. Drive/app ownership uses "
+"an `appProperties` marker and same-named foreign content is refused "
+"(calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"_calc_sheets_apply_formatting.py "
+"(`src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`),"
+" _calc_sheets_apply_values.py "
+"(`src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`), "
+"active_profile.py "
+"(`src/cadrumo/adapters/outbound/google/active_profile.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:24
+msgid "Security and quality"
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:26
+msgid ""
+"CSV verification uses a read-only policy with a fixed host and exact "
+"final viewer route, and it validates the embedded CSV rather than "
+"trusting generic response wording. The PDF writer removes the document-"
+"information dictionary and its module docstring says the XMP packet "
+"avoids taxpayer identifiers, while the file intentionally embeds the full"
+" report and CSV. XMP title and description are populated directly from "
+"`presentation.title` and `presentation.notice_body`, so whether those "
+"fields ever contain identity data depends on the upstream presentation "
+"contract. Signing behavior belongs to the injected application certifier."
+" PDF/A and PDF/UA identifiers and structural tagging demonstrate intent "
+"and implementation, not external conformance certification; no validator "
+"execution is in scope. `visible_layer_digest` also returns detected "
+"overlays separately from the digest. The writer calls the certifier with "
+"the digest and ignores the overlay list, relying on its own fresh "
+"renderer not to introduce annotations or non-font page resources "
+"(contract.py (`src/cadrumo/adapters/outbound/aeat/verify/contract.py`), "
+"summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`),"
+" summary_reading.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_reading.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:28
+msgid ""
+"There is a spreadsheet formula-injection boundary to resolve. The adapter"
+" combines literal value cells with formula cells and sends the whole "
+"batch using `USER_ENTERED`, while the value coercer passes strings "
+"through unchanged and the formula builder is already separate. If any "
+"literal cell can contain untrusted text beginning with `=`, Sheets can "
+"interpret it as a formula. The application plan’s input provenance and "
+"constraints need to be traced, and literal values should be verified to "
+"stay literal (calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"_calc_sheets_apply_values.py "
+"(`src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`), "
+"_calc_sheets_apply_values.py "
+"(`src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:30
+msgid ""
+"Google request execution names retry semantics explicitly: replay-safe "
+"requests receive up to three client retries; single-attempt failures "
+"carry an uncertain-effect marker. Most values/clear operations are "
+"address-idempotent, but the structural batch is marked `REPLAY_SAFE` "
+"while containing `createDeveloperMetadata` requests. Google metadata keys"
+" are not unique and the adapter itself deletes prior managed keys to "
+"avoid duplicates. If a successful structural write loses its response and"
+" is retried internally against the already-fetched spreadsheet snapshot, "
+"the same metadata can be created again. This is a concrete conditional "
+"mismatch between retry declaration and request semantics. The structural "
+"request can also delete protected ranges by description alone; an "
+"operator-created range with a matching description could be treated as "
+"app-managed. Review both behaviors before relying on the export as an "
+"ownership-preserving update (api.py "
+"(`src/cadrumo/adapters/outbound/google/api.py`), api.py "
+"(`src/cadrumo/adapters/outbound/google/api.py`), calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:32
+msgid ""
+"The writer improves interruption behavior by writing new values before "
+"clearing stale addresses, so it does not first empty a workbook. Calls "
+"still span multiple Google requests, so a failure can leave mixed "
+"generations of values, stale cells, formulas, or protections. Preview is "
+"read-only and reports value diffs, but it deliberately reports all "
+"formula cells as writes because the apply path rewrites formulas "
+"unconditionally. A default ECB provider caches `None` as well as "
+"successful rates per date for its process lifetime; if a same-day ECB "
+"observation appears after an initial empty response, a later lookup in "
+"that process remains missing. These are conditional operational "
+"limitations. Legal descriptions of ECB rates in comments have not been "
+"independently assessed (calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`), "
+"ecb_provider.py (`src/cadrumo/adapters/outbound/fx/ecb_provider.py`), "
+"ecb_provider.py (`src/cadrumo/adapters/outbound/fx/ecb_provider.py`))."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:34
+msgid ""
+"The chunk has no test modules. It refers to tests for summary font "
+"metrics, Google adapters, and the ECB transport but those files were "
+"outside the assigned scope. No live API request, browser install, "
+"spreadsheet mutation, PDF validation, or signature verification was "
+"performed."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:36
+msgid "Dependencies and follow-up"
+msgstr "Dependencias y seguimiento"
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:38
+msgid ""
+"PDF writing depends on the application presentation/request/certifier "
+"contracts, packaged fonts/ICC profile, ReportLab, pikepdf, and the "
+"visible-layer reader. Rate conversion depends on domain currency "
+"protocols, ISO currency/date parsers, settings, and the current ECB "
+"portal. Sheets export depends on the application `SheetExportPlan`, "
+"workbook cell stream, theme, and identity stamps plus Google Drive/Sheets"
+" APIs and ownership helpers. Synthesis should follow the pull side’s "
+"matching ownership/digest gate, trace all literal SheetValueCell sources "
+"for formula injection, review structural retry semantics and protection "
+"ownership, confirm credential/profile scope, and locate external PDF "
+"conformance/signature validation evidence."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:40
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:42
+msgid "All assigned files and line ranges were read:"
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:44
+msgid ""
+"aeat/verify/contract.py "
+"(`src/cadrumo/adapters/outbound/aeat/verify/contract.py`) — lines 1–287."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:45
+msgid ""
+"browser_runtime/__init__.py "
+"(`src/cadrumo/adapters/outbound/browser_runtime/__init__.py`) — line 1."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:46
+msgid ""
+"browser_runtime/installer.py "
+"(`src/cadrumo/adapters/outbound/browser_runtime/installer.py`) — lines "
+"1–33."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:47
+msgid ""
+"calculation_summary_pdf/__init__.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/__init__.py`) — "
+"lines 1–8."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:48
+msgid ""
+"calculation_summary_pdf/structure_tagging.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/structure_tagging.py`)"
+" — lines 1–227."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:49
+msgid ""
+"calculation_summary_pdf/summary_container.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`)"
+" — lines 1–289."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:50
+msgid ""
+"calculation_summary_pdf/summary_fonts.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_fonts.py`)"
+" — lines 1–71."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:51
+msgid ""
+"calculation_summary_pdf/summary_layout.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_layout.py`)"
+" — lines 1–554."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:52
+msgid ""
+"calculation_summary_pdf/summary_reading.py "
+"(`src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_reading.py`)"
+" — lines 1–143."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:53
+msgid ""
+"fx/__init__.py (`src/cadrumo/adapters/outbound/fx/__init__.py`) — lines "
+"1–19."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:54
+msgid ""
+"fx/ecb_provider.py (`src/cadrumo/adapters/outbound/fx/ecb_provider.py`) —"
+" lines 1–253."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:55
+msgid ""
+"google/__init__.py (`src/cadrumo/adapters/outbound/google/__init__.py`) —"
+" lines 1–8."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:56
+msgid ""
+"google/_calc_sheets_apply_formatting.py "
+"(`src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`)"
+" — lines 1–473."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:57
+msgid ""
+"google/_calc_sheets_apply_values.py "
+"(`src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`) — "
+"lines 1–241."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:58
+msgid ""
+"google/_preconditions.py "
+"(`src/cadrumo/adapters/outbound/google/_preconditions.py`) — lines 1–34."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:59
+msgid ""
+"google/active_profile.py "
+"(`src/cadrumo/adapters/outbound/google/active_profile.py`) — lines 1–55."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:60
+msgid ""
+"google/api.py (`src/cadrumo/adapters/outbound/google/api.py`) — lines "
+"1–248."
+msgstr ""
+
+#: ../../technical/articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md:61
+msgid ""
+"google/calc_sheets_apply.py "
+"(`src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`) — lines "
+"1–1,106."
+msgstr ""

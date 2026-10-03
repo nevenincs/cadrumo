@@ -12,6 +12,8 @@ related:
   - '[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]'
   - '[[2026-09-11-binding-schema-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-10-03-duplication-remediation-m200-stock-verification-adr]]'
+  - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
 body_hash: 'sha256:05a93648d6715018cadf024f0d56eeb74ed0cba19451e3acccc9b7219123cd1f'
