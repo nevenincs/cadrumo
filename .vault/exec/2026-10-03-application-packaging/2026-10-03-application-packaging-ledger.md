@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a11bc32caf6b043e4593d3558ffcbdeff51bd4c0496b50b9b476c70adfe97643'
+body_hash: 'sha256:32e5e98152b339bd7bda639e461c69c4fe96a17cd9f877f1db01d1bdc3de811b'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
@@ -62,3 +62,8 @@ related:
 - `S02` `verify:` `fresh official SDK SHA256 and 77 locked Windows dependency wheels` -> `pass`
 - `S02` `A` `native/interpreter/host.c`
 - `S02` `A` `native/interpreter/python.c`
+- `S03` `A` `native/interpreter/bootstrap.py`
+- `S03` `A` `dev/packaging/native/assemble.py`
+- `S03` `A` `dev/packaging/native/product.py`
+- `S03` `verify:` `fresh product wheel build and package assembly` -> `pass`
+- `S03` `verify:` `ruff check format and ty native Python tooling` -> `pass`
