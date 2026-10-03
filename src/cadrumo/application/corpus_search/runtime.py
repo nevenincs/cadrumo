@@ -23,6 +23,7 @@ import os
 import sqlite3
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...core.config import Settings, load_settings
 from ...core.directory_scan import scan_directory
@@ -30,11 +31,13 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.locks import exclusive_file_lock
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ._retrieval import run_retrieval
 from .citation_lookup import bundled_citation_lookup
 from .lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
 from .models import RetrievalResponse
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Bare filename, read off the taxonomy rather than an untethered string
 # literal. Still joined onto ``cadrumo_corpus_search_cache_dir`` exactly as
@@ -159,6 +162,7 @@ def _staging_database_path(database_path: Path) -> Path:
 def search_corpus(
     query: str,
     *,
+    operation: PinnedAuthorityOperation,
     limit: int = _DEFAULT_LIMIT,
     settings: Settings | None = None,
 ) -> RetrievalResponse:
@@ -169,6 +173,7 @@ def search_corpus(
 
     Args:
         query: The free-text query or an exact citation id.
+        operation: The caller's leased publication generation.
         limit: Maximum number of hits.
         settings: Optional settings override (test isolation).
 
@@ -176,17 +181,16 @@ def search_corpus(
         A :class:`RetrievalResponse`.
     """
     database_path = ensure_corpus_index(settings)
-    with bundled_indexed_authority().operation() as operation:
-        try:
-            citation_lookup = bundled_citation_lookup((query.strip(),), operation=operation)
-        except LookupError:
-            citation_lookup = None
-        return run_retrieval(
-            query,
-            database_path=database_path,
-            citation_lookup=citation_lookup,
-            limit=limit,
-        )
+    try:
+        citation_lookup = bundled_citation_lookup((query.strip(),), operation=operation)
+    except LookupError:
+        citation_lookup = None
+    return run_retrieval(
+        query,
+        database_path=database_path,
+        citation_lookup=citation_lookup,
+        limit=limit,
+    )
 
 
 __all__ = [

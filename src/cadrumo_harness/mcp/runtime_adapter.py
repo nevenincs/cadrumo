@@ -38,6 +38,7 @@ from cadrumo.core.time.clock import now
 
 from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
+from .corpus_query import corpus_query
 from .protocol_contract import (
     MCP_TOOL_NAMES,
     parse_model,
@@ -199,6 +200,8 @@ class RuntimeMcpAdapter:
                     return await self._authenticate(args)
                 if name == "authority":
                     return await self._wire(lambda: authority_query(args))
+                if name == "corpus_search":
+                    return await self._wire(lambda: corpus_query(args))
                 return await self._wire(lambda: call_admitted_operation(self, name, args))
             except AutomationRequesterUncertainError as error:
                 return {"outcome": "unresolved", "request_id": str(error.request_id), "code": error.reason}
