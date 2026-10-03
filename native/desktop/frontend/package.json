@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 127.0.0.1",
+    "preview": "vite preview",
     "check": "tsc --noEmit && eslint . && node --check ../scripts/host.mjs && node --check ../scripts/native-smoke.mjs && prettier --check . ../scripts ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts --ignore-unknown",
     "test": "playwright test"

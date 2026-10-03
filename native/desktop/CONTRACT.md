@@ -54,6 +54,13 @@ directory and run `npm run preview` in `frontend/` (port 1421). `npm run dev` us
 1420. `CADRUMO_DEV_PYTHON` optionally selects the existing development interpreter
 for build-time product identity projection.
 
+Both servers bind to `0.0.0.0` and refuse to switch ports when their selected port
+is occupied. Set `CADRUMO_DESKTOP_ALLOWED_HOSTS` to comma-separated exact hostnames
+in the environment or ignored `frontend/.env.local` for Tailscale access. Include
+the machines' MagicDNS names explicitly; no wildcard host allowance is enabled.
+This validates HTTP Host headers, not client identity; Tailscale access policy
+and the host firewall continue to control network access.
+
 ## Source and output owners
 
 - `frontend/`: authored React shell, build configuration, lockfile and browser tests.
