@@ -185,7 +185,7 @@ async def test_unproven_termination_retains_job_and_exact_primary_until_proven_r
     native.terminate_error = primary
     native.active = 3
     native.close_failures = {102: 1}
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
         scope.terminate(timeout=0)
     if primary_kind == "native":
         assert isinstance(caught.value, RuntimeRefusalError)
@@ -227,7 +227,7 @@ async def test_constructor_failure_preserves_primary_and_acquired_job_retry(nati
     )
     native.setup_error = primary
     native.close_failures = {7: 1}
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
         WindowsProcessScope()
     if primary_kind == "native":
         assert isinstance(caught.value, RuntimeRefusalError)
@@ -257,7 +257,7 @@ def test_constructor_failure_with_successful_release_exposes_no_unreturned_scope
         else _NativeError("released constructor failure")
     )
     native.setup_error = primary
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
         WindowsProcessScope()
     if primary_kind == "native":
         assert isinstance(caught.value, RuntimeRefusalError)

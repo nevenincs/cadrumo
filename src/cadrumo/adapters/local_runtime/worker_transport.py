@@ -20,7 +20,7 @@ def worker_endpoint(*, storage_root: Path, worker_namespace: UUID) -> WorkerEndp
     """Give each worker channel an immutable owner-only native namespace."""
     if sys.platform == "win32":
         return WindowsRuntimeEndpoint(storage_root=storage_root, worker_namespace=worker_namespace)
-    if sys.platform == "linux":
+    if sys.platform in {"linux", "darwin"}:
         # The endpoint creates and verifies the configured owner-only socket directory.
         return PosixRuntimeEndpoint(
             storage_root=storage_root,

@@ -208,7 +208,7 @@ def test_run_attempts_all_releases_preserves_primary_and_retains_only_failed_own
     entry = _entry(monkeypatch, tmp_path, body_failure=primary)
     entry.custody.failures = failures
     entry.control.failures = failures
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((AsyncResourceCleanupError, RuntimeRefusalError, ValueError, asyncio.CancelledError)) as caught:
         worker.run(entry.arguments)
     if primary is None:
         assert isinstance(caught.value, AsyncResourceCleanupError)
@@ -360,7 +360,7 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     monkeypatch.setattr(worker_service, "_serve", serve)
     try:
-        with pytest.raises(BaseException) as caught:
+        with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
             worker.run(entry.arguments)
     finally:
         release.set()

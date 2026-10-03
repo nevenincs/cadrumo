@@ -146,7 +146,11 @@ def apply_posix_worker_limits() -> None:
     import resource
 
     resource_module = cast(Any, resource)
-    resource_module.setrlimit(resource_module.RLIMIT_AS, (PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,) * 2)
+    # Darwin rejects every finite address-space limit. Its ready attestation
+    # omits that limit; the closed Argon2 grid, validated before allocation,
+    # bounds the worker's memory there.
+    if sys.platform != "darwin":
+        resource_module.setrlimit(resource_module.RLIMIT_AS, (PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,) * 2)
     resource_module.setrlimit(resource_module.RLIMIT_CPU, (PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,) * 2)
     resource_module.setrlimit(resource_module.RLIMIT_CORE, (0, 0))
     resource_module.setrlimit(resource_module.RLIMIT_FSIZE, (0, 0))

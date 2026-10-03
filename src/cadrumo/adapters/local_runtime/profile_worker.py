@@ -18,15 +18,16 @@ from ...application.runtime.profile_worker import (
 )
 from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...core.async_cleanup import AsyncResourceCleanupError
-from ...core.config import Settings
 from ...core.storage_environment import storage_directory
 from ...core.time.clock import now
 from .framing import accept_runtime_handshake
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
+from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
 from .profile_worker_human_admission import ProfileWorkerHumanAdmission
 from .runtime_frame_io import read_document, write_document
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
 from .worker_authorization import WorkerAuthorizationServer
+from .worker_environment import worker_path_environment_names
 from .worker_native_identity import worker_operation_namespace
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 from .worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
@@ -53,8 +54,8 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
     identity: ProfileWorkerIdentity
     _lock: RLock
     _operation_lock: RLock
-    _scope: WindowsProcessScope | LinuxProcessScope
-    _process: WindowsOwnedProcess | LinuxOwnedProcess
+    _scope: WindowsProcessScope | LinuxProcessScope | MacosProcessScope
+    _process: WindowsOwnedProcess | LinuxOwnedProcess | MacosOwnedProcess
     _authorization: WorkerAuthorizationServer | None
 
     def __init__(
@@ -67,7 +68,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         wall_clock: Callable[[], datetime] = now,
     ) -> None:
         """Launch and authenticate a contained installed worker before key access."""
-        if sys.platform not in {"win32", "linux"}:
+        if sys.platform not in {"win32", "linux", "darwin"}:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
         if worker_script is not None:
             worker_script = worker_script.resolve(strict=True)
@@ -94,6 +95,10 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             self._scope = (
                 WindowsProcessScope()
                 if sys.platform == "win32"
+                else MacosProcessScope(
+                    worker_id=identity.worker_id, storage_root=storage_root, worker_script=worker_script
+                )
+                if sys.platform == "darwin"
                 else LinuxProcessScope(worker_id=identity.worker_id, worker_script=worker_script)
             )
         except BaseException as error:
@@ -229,7 +234,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         self._operation_channel = operation_channel
         if operation_channel.peer != channel.peer:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        if isinstance(self._scope, LinuxProcessScope):
+        if isinstance(self._scope, LinuxProcessScope | MacosProcessScope):
             self._verify_native_peer(operation_channel)
         deadline = time.monotonic() + 10
         accept_runtime_handshake(
@@ -247,17 +252,15 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
 
 
 def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
-    """Retain storage controls and bind scratch storage across the isolated worker boundary."""
+    """Retain authority and storage controls across the isolated worker boundary."""
     if sys.platform == "win32":
         environment = {
-            key: value
-            for key, value in os.environ.items()
-            if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+            key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
         }
     else:
         environment = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
-        storage_names = Settings.storage_env_var_names()
-        environment.update({key: value for key, value in os.environ.items() if key in storage_names})
+        path_names = worker_path_environment_names()
+        environment.update({key: value for key, value in os.environ.items() if key in path_names})
     temporary_root = storage_directory("CADRUMO_TEMP_DIR", "tmp", root=storage_root)
     temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     environment.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})

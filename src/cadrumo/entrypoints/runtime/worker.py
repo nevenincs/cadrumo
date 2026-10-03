@@ -46,9 +46,7 @@ def _require_native_parent(channel: WorkerChannel, parent_pid: int) -> None:
     if channel.peer.process_id != parent_pid:
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
     if isinstance(channel, PosixRuntimeChannel):
-        with channel.capture_peer_pidfd():
-            if channel.peer.process_id != parent_pid:
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        channel.require_live_peer()
 
 
 @contextmanager
@@ -245,7 +243,7 @@ def run(
 ) -> int:
     """Admit only an exact native runtime parent and a contained current-cohort worker."""
     options = _parse_worker_arguments(arguments)
-    if sys.platform not in {"win32", "linux"} or not sys.flags.isolated:
+    if sys.platform not in {"win32", "linux", "darwin"} or not sys.flags.isolated:
         return 2
     resources = _WorkerRunResources()
     refusal: RuntimeRefusalError | AutomationCustodyError | None = None

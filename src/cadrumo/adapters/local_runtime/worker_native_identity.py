@@ -6,6 +6,7 @@ from uuid import UUID, uuid5
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .linux_worker_process import LinuxProcessScope
+from .macos_worker_process import MacosProcessScope
 from .posix_channel import PosixRuntimeChannel
 from .windows_process import WindowsProcessScope
 from .worker_transport import WorkerChannel
@@ -17,10 +18,10 @@ def worker_operation_namespace(worker_id: UUID) -> UUID:
 
 
 def verify_worker_native_pid(
-    channel: WorkerChannel, scope: WindowsProcessScope | LinuxProcessScope, os_owner_id: str
+    channel: WorkerChannel, scope: WindowsProcessScope | LinuxProcessScope | MacosProcessScope, os_owner_id: str
 ) -> int:
     """Require the exact native worker process and owner on its retained channel."""
-    if isinstance(scope, LinuxProcessScope):
+    if isinstance(scope, LinuxProcessScope | MacosProcessScope):
         if not isinstance(channel, PosixRuntimeChannel):
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         return scope.verify_worker(channel, owner_id=os_owner_id)

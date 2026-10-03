@@ -93,8 +93,7 @@ class WorkerAuthorizationClient:
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             if isinstance(channel, PosixRuntimeChannel):
-                with channel.capture_peer_pidfd():
-                    pass
+                channel.require_live_peer()
             deadline = time.monotonic() + 60
             verified = VerifiedRuntimeConnection(
                 channel,

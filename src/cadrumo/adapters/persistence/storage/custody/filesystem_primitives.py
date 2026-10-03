@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import stat
 import sys
@@ -11,7 +12,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, NoReturn
 
 from .....core.descriptor_write import write_all
 from .errors import ProfileCustodyPathAbsentError, ProfileCustodyRecordError
@@ -380,6 +381,96 @@ def posix_mkdir_child_directory(parent_fd: int, name: str) -> int:
     return posix_open_child_directory(parent_fd, name)
 
 
+@dataclass(frozen=True, slots=True)
+class NativeAtomicRename:
+    """One host's libc entry point and flag for a descriptor-relative atomic rename."""
+
+    symbol: str
+    flags: int
+
+
+def native_atomic_rename(platform: str, *, exchange: bool) -> NativeAtomicRename | None:
+    """Select the libc call that atomically swaps two names or refuses to replace one.
+
+    Linux ``renameat2`` takes ``RENAME_EXCHANGE`` (2) or ``RENAME_NOREPLACE``
+    (1). Darwin ``renameatx_np`` takes ``RENAME_SWAP`` (2) or ``RENAME_EXCL``
+    (4). No other host has a supported descriptor-relative form, so callers
+    refuse rather than emulate one with a check-then-rename window.
+    """
+    if platform == "linux":
+        return NativeAtomicRename(symbol="renameat2", flags=0x2 if exchange else 0x1)
+    if platform == "darwin":
+        return NativeAtomicRename(symbol="renameatx_np", flags=0x2 if exchange else 0x4)
+    return None
+
+
+def rename_noreplace_at(*, source_fd: int, source_name: str, destination_fd: int, destination_name: str) -> None:
+    """Rename one child between pinned directories only while the destination is absent."""
+    outcome = _call_native_atomic_rename(
+        native_atomic_rename(sys.platform, exchange=False),
+        source_fd=source_fd,
+        source_name=source_name,
+        destination_fd=destination_fd,
+        destination_name=destination_name,
+    )
+    if outcome is None:
+        raise ProfileCustodyRecordError("atomic no-replace profile capsule publication is unavailable")
+    result, error = outcome
+    if result != 0:
+        raise_rename_noreplace_failure(error)
+
+
+def raise_rename_noreplace_failure(error: int) -> NoReturn:
+    """Refuse a failed no-replace rename, separating an existing destination from any other cause."""
+    if error in {errno.EEXIST, errno.ENOTEMPTY}:
+        raise ProfileCustodyRecordError("profile capsule destination already exists") from None
+    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
+        error, os.strerror(error)
+    )
+
+
+def rename_exchange_at(*, parent_fd: int, first_name: str, second_name: str) -> None:
+    """Swap two named children atomically below the same pinned POSIX parent."""
+    outcome = _call_native_atomic_rename(
+        native_atomic_rename(sys.platform, exchange=True),
+        source_fd=parent_fd,
+        source_name=first_name,
+        destination_fd=parent_fd,
+        destination_name=second_name,
+    )
+    if outcome is None:
+        raise ProfileCustodyRecordError("atomic local custody record exchange is unavailable")
+    result, error = outcome
+    if result != 0:
+        raise ProfileCustodyRecordError("atomic local custody record exchange failed") from OSError(
+            error, os.strerror(error)
+        )
+
+
+def _call_native_atomic_rename(
+    native: NativeAtomicRename | None,
+    *,
+    source_fd: int,
+    source_name: str,
+    destination_fd: int,
+    destination_name: str,
+) -> tuple[int, int] | None:
+    """Return the native result and errno, or ``None`` when the host lacks the call."""
+    if native is None:
+        return None
+    import ctypes
+
+    function = getattr(ctypes.CDLL(None, use_errno=True), native.symbol, None)
+    if function is None:
+        return None
+    function.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    function.restype = ctypes.c_int
+    result = int(
+        function(source_fd, os.fsencode(source_name), destination_fd, os.fsencode(destination_name), native.flags)
+    )
+    return result, ctypes.get_errno()
+
+
 def is_reparse_metadata(metadata: os.stat_result) -> bool:
     """Return whether ``metadata`` describes a reparse-point entry."""
     return bool(getattr(metadata, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
@@ -430,6 +521,7 @@ def _write_exclusive_descriptor_fsynced(descriptor: int, payload: bytes) -> None
 
 __all__ = [
     "PROFILE_CUSTODY_COMMIT_FILENAME",
+    "NativeAtomicRename",
     "ProfileCustodyPasswordReadOperation",
     "WindowsDirectoryAnchorErrors",
     "anchor_directory",
@@ -437,9 +529,13 @@ __all__ = [
     "ensure_real_directory",
     "is_real_directory",
     "is_reparse_metadata",
+    "native_atomic_rename",
     "posix_directory_fd",
     "posix_mkdir_child_directory",
     "posix_open_child_directory",
+    "raise_rename_noreplace_failure",
+    "rename_exchange_at",
+    "rename_noreplace_at",
     "shared_directory_anchors",
     "windows_create_file_api",
     "windows_directory_anchor",

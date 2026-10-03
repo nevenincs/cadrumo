@@ -130,7 +130,8 @@ def _validate_namespace_descriptor(descriptor: int) -> None:
         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
 
 
-def _open_namespace(namespace: Path, *, create: bool) -> tuple[Path, int]:
+def open_private_namespace(namespace: Path, *, create: bool) -> tuple[Path, int]:
+    """Open one owner-only namespace below trusted ancestors without following its leaf."""
     if sys.platform == "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     try:

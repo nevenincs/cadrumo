@@ -59,10 +59,7 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
                 os.fsync(descriptor)
                 child = os.open(part, _directory_flags(), dir_fd=descriptor)
             observed = os.fstat(child)
-            if (
-                observed.st_uid not in (0, uid)
-                or observed.st_mode & 0o022
-            ):
+            if observed.st_uid not in (0, uid) or observed.st_mode & 0o022:
                 os.close(child)
                 raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
             os.close(descriptor)
@@ -128,6 +125,8 @@ def _directory_entries(directory: int) -> set[str]:
 
 
 def _require_exact_file(directory: int, name: str, expected: bytes) -> None:
+    if sys.platform != "linux":
+        raise _refusal()
     descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
     try:
         observed = os.fstat(descriptor)

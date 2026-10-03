@@ -23,9 +23,9 @@ from typing import Protocol
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.user_profile.access_contracts import LoginEligibility
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_path
-from ...application.user_profile.access_contracts import LoginEligibility
 from .linux_pidfd import open_linux_pidfd
 
 GNOME_LOGIN_EXTENSION_UUID = "login-observation@cadrumo.org"
@@ -302,6 +302,8 @@ def require_gnome_login_producer(uid: int) -> None:
 
 
 def _open_producer_directory(components: tuple[str, ...], uid: int) -> int:
+    if sys.platform != "linux":
+        raise _unavailable()
     directory = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
     try:
         for index, component in enumerate(components):
@@ -329,6 +331,8 @@ def _require_producer_files(directory: int, uid: int) -> None:
 
 
 def _require_producer_file(directory: int, name: str, uid: int) -> None:
+    if sys.platform != "linux":
+        raise _unavailable()
     descriptor = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory)
     try:
         observed = os.fstat(descriptor)

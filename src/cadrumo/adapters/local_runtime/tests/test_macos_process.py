@@ -213,7 +213,7 @@ def test_failed_constructor_preserves_primary_and_native_close_diagnostic(
     port = _WatchNativePort(initial=original, close_failure=cleanup)
     port.install(monkeypatch)
     observation = decode_macos_process_info(_payload(_record()), pid=123, expected_owner="501")
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
         native.MacosProcessWatch(observation)
     _assert_constructor_primary(caught.value, original, mode)
     assert caught.value.__dict__["cleanup_error"] is cleanup
@@ -227,7 +227,7 @@ def test_failed_constructor_successful_close_keeps_primary(monkeypatch: pytest.M
     port = _WatchNativePort(initial=original)
     port.install(monkeypatch)
     observation = decode_macos_process_info(_payload(_record()), pid=123, expected_owner="501")
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
         native.MacosProcessWatch(observation)
     _assert_constructor_primary(caught.value, original, mode)
     assert "cleanup_error" not in caught.value.__dict__
@@ -262,7 +262,7 @@ def test_constructor_close_failure_preserves_existing_canonical_cleanup_owners(
     port = _WatchNativePort(initial=original, close_failure=cleanup)
     port.install(monkeypatch)
     observation = decode_macos_process_info(_payload(_record()), pid=123, expected_owner="501")
-    with pytest.raises(BaseException) as caught:
+    with pytest.raises((RuntimeRefusalError, asyncio.CancelledError)) as caught:
         native.MacosProcessWatch(observation)
     _assert_constructor_primary(caught.value, original, mode)
     retained = caught.value.__dict__["cleanup_error" if field == "aliased" else field]

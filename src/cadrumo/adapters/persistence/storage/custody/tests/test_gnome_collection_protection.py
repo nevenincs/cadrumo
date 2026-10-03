@@ -27,6 +27,12 @@ _COLLECTION = "/org/freedesktop/secrets/collection/login"
 _SESSION = 42
 
 
+def _uid() -> int:
+    if sys.platform == "linux":
+        return os.getuid()
+    pytest.skip("Linux native metadata and kernel contract")
+
+
 class _SocketDouble:
     """Declared socket subset used by the production metadata transport."""
 
@@ -41,7 +47,7 @@ class _SocketDouble:
     ) -> None:
         self.response = bytearray(response)
         self.peer_pid = peer_pid
-        self.peer_uid = os.getuid() if peer_uid is None else peer_uid
+        self.peer_uid = _uid() if peer_uid is None else peer_uid
         self.may_send = may_send
         self.fragment_limit = fragment_limit
         self.sent: list[bytes] = []
@@ -236,7 +242,7 @@ def test_collection_id_uses_canonical_gnome_byte_escaping(suffix: str, identifie
     assert protection.gnome_collection_id(protection._PREFIX + suffix) == identifier
 
 
-@pytest.mark.parametrize("suffix", ["", "login/1", "bare_", "_00", "_61", "_AF", "_gg", "é"])
+@pytest.mark.parametrize("suffix", ["", "login/1", "bare_", "_00", "_61", "_AF", "_gg", "Ã©"])
 def test_unsupported_collection_identity_is_refused(suffix: str) -> None:
     with pytest.raises(AutomationCustodyError):
         protection.gnome_collection_id(protection._PREFIX + suffix)
@@ -356,12 +362,12 @@ def test_control_directory_refuses_symlinks_foreign_owners_and_unsafe_modes(
     monkeypatch: pytest.MonkeyPatch, defect: str
 ) -> None:
     def metadata(path: Path) -> SimpleNamespace:
-        owner, mode = os.getuid(), stat.S_IFDIR | 0o700
+        owner, mode = _uid(), stat.S_IFDIR | 0o700
         if path == Path("/synthetic"):
             if defect == "parent_link":
                 mode = stat.S_IFLNK | 0o700
             elif defect == "parent_owner":
-                owner = os.getuid() + 1
+                owner = _uid() + 1
             elif defect == "parent_writable":
                 mode |= 0o022
         elif path == Path("/synthetic/control"):
@@ -381,7 +387,7 @@ def test_control_directory_refuses_symlinks_foreign_owners_and_unsafe_modes(
 def test_pkcs11_endpoint_requires_exact_native_peer_and_unchanged_owned_socket(
     monkeypatch: pytest.MonkeyPatch, defect: str
 ) -> None:
-    uid = os.getuid()
+    uid = _uid()
     observed = 0
 
     def metadata(path: str, *, dir_fd: int, follow_symlinks: bool) -> SimpleNamespace:

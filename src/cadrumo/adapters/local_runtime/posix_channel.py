@@ -11,11 +11,15 @@ import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 from threading import RLock
+from typing import TYPE_CHECKING
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.login import RuntimeLoginEvidence
 from .posix import posix_owner_uid
+
+if TYPE_CHECKING:
+    from .macos_login import MacosPeerAuditToken
 
 
 def _linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
@@ -149,6 +153,32 @@ class PosixRuntimeChannel:
                 raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
             finally:
                 os.close(descriptor)
+
+    def capture_peer_audit_token(self) -> MacosPeerAuditToken:
+        """Re-read the pinned socket peer's kernel audit token on Darwin.
+
+        The token's pidversion is compared inside the kernel, so the result
+        names the exact live incarnation that owns this connection.
+        """
+        with self._capture_guard:
+            if self._closed or self._socket.fileno() < 0:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            if sys.platform != "darwin":
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            from .macos_login import macos_peer_audit_token
+
+            token = macos_peer_audit_token(self._socket, expected_owner=self._peer.os_owner_id)
+            if token.process_id != self._peer.process_id:
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            return token
+
+    def require_live_peer(self) -> None:
+        """Prove the verified peer is still the same live kernel process."""
+        if sys.platform == "darwin":
+            self.capture_peer_audit_token()
+            return
+        with self.capture_peer_pidfd():
+            pass
 
     def _set_deadline(self, deadline: float) -> None:
         remaining = remaining_budget(deadline)

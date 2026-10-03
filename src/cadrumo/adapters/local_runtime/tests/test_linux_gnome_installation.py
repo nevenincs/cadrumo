@@ -17,6 +17,7 @@ from cadrumo.core.config import override_settings
 from .. import linux_gnome_installation
 from ..linux_gnome_installation import inspect_gnome_login_producer, install_gnome_login_producer
 from ..linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
+from ..posix import posix_owner_uid
 
 pytestmark = [
     pytest.mark.unit,
@@ -60,7 +61,7 @@ def test_inspection_absence_is_read_only_and_installation_is_exact_and_idempoten
         observed = path.stat()
         assert path.read_bytes() == expected
         assert stat.S_IMODE(observed.st_mode) == 0o600
-        assert observed.st_uid == os.getuid() and observed.st_nlink == 1
+        assert observed.st_uid == posix_owner_uid() and observed.st_nlink == 1
         observations[name] = (observed.st_dev, observed.st_ino, observed.st_mtime_ns)
     assert inspect_gnome_login_producer()
     assert not install_gnome_login_producer()

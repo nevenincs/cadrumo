@@ -22,9 +22,9 @@ from .posix import (
     _lock_exclusive,
     _lock_flags,
     _open_lock,
-    _open_namespace,
     _socket_metadata,
     _unix_socket,
+    open_private_namespace,
     posix_owner_uid,
     posix_storage_identity,
 )
@@ -34,7 +34,7 @@ from .posix_channel import PosixRuntimeChannel
 def _restore_namespace_descriptor(endpoint: PosixRuntimeEndpoint) -> None:
     if endpoint._directory_fd >= 0:
         return
-    directory, descriptor = _open_namespace(endpoint._directory, create=False)
+    directory, descriptor = open_private_namespace(endpoint._directory, create=False)
     if directory != endpoint._directory:
         if descriptor >= 0:
             os.close(descriptor)
@@ -154,7 +154,7 @@ class PosixRuntimeEndpoint:
         )
         self._create_namespace = create_namespace
         self._closed = False
-        self._directory, self._directory_fd = _open_namespace(namespace, create=create_namespace)
+        self._directory, self._directory_fd = open_private_namespace(namespace, create=create_namespace)
         endpoint_identity = self.storage_identity
         if worker_namespace is not None:
             endpoint_identity = sha256_hex(f"{endpoint_identity}:{worker_namespace.hex}".encode("ascii"))

@@ -8,13 +8,20 @@ import select
 import subprocess
 import sys
 from pathlib import Path
+from typing import Protocol
 
 from ...adapters.local_runtime.linux_pidfd import open_linux_pidfd
-from ...adapters.local_runtime.linux_worker_process import (
-    linux_process_start_identity,
-    validated_linux_worker_arguments,
-)
+from ...adapters.local_runtime.linux_worker_process import linux_process_start_identity
+from ...adapters.local_runtime.worker_arguments import validated_worker_arguments
 from ...application.runtime.contracts import RuntimeRefusalError
+
+
+class _ParentPoll(Protocol):
+    """Kernel exit events consumed by the Linux guardian."""
+
+    def poll(self, timeout: int, /) -> list[tuple[int, int]]:
+        """Read pending parent exit events within the bounded wait."""
+        ...
 
 
 def _parse_arguments(arguments: list[str] | None) -> argparse.Namespace:
@@ -31,12 +38,14 @@ def _validated_arguments(options: argparse.Namespace) -> tuple[str, ...] | None:
     if worker_arguments[:1] == ["--"]:
         worker_arguments = worker_arguments[1:]
     try:
-        return validated_linux_worker_arguments(worker_arguments, worker_script=options.worker_script)
+        return validated_worker_arguments(worker_arguments, worker_script=options.worker_script)
     except RuntimeRefusalError:
         return None
 
 
 def _open_parent(options: argparse.Namespace) -> tuple[Path, int] | None:
+    if sys.platform != "linux":
+        return None
     parent = Path("/proc") / str(options.parent_pid)
     try:
         if (
@@ -49,7 +58,9 @@ def _open_parent(options: argparse.Namespace) -> tuple[Path, int] | None:
         return None
 
 
-def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: select.poll) -> bool:
+def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: _ParentPoll) -> bool:
+    if sys.platform != "linux":
+        return False
     try:
         return (
             not watcher.poll(0)
@@ -62,7 +73,7 @@ def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: select.p
 
 
 def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
-    from ...core.config import Settings
+    from ...adapters.local_runtime.worker_environment import worker_path_environment_names
 
     environment = {
         "PATH": "/usr/bin:/bin",
@@ -70,8 +81,8 @@ def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes]
         "LC_ALL": "C",
         "PYDANTIC_DISABLE_PLUGINS": "__all__",
     }
-    storage_names = Settings.storage_env_var_names()
-    environment.update({name: value for name, value in os.environ.items() if name in storage_names})
+    path_names = worker_path_environment_names()
+    environment.update({name: value for name, value in os.environ.items() if name in path_names})
     environment.update({name: os.environ[name] for name in ("TEMP", "TMP", "TMPDIR") if name in os.environ})
     try:
         return subprocess.Popen(  # noqa: S603 - fixed interpreter and verified worker arguments
@@ -87,7 +98,7 @@ def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes]
         return None
 
 
-def _watch_worker(watcher: select.poll, worker: subprocess.Popen[bytes]) -> int:
+def _watch_worker(watcher: _ParentPoll, worker: subprocess.Popen[bytes]) -> int:
     while True:
         if watcher.poll(200):
             return 2
@@ -97,6 +108,8 @@ def _watch_worker(watcher: select.poll, worker: subprocess.Popen[bytes]) -> int:
 
 
 def _run_linux_guardian(options: argparse.Namespace) -> int:
+    if sys.platform != "linux":
+        return 2
     worker_arguments = _validated_arguments(options)
     if worker_arguments is None:
         return 2

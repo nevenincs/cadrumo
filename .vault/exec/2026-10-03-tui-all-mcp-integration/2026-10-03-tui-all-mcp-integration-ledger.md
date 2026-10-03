@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a07d2ad0bccaaace50448670397f0ad22646a5d0479eb09c63339cb890a8a940'
+body_hash: 'sha256:1f2cb5dc3872d43a5dbe33aea26abaf4add7cc4c7ea2f0a395f55b5886e45171'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -57,3 +57,71 @@ related:
 - `S01` `M` `conftest.py`
 - `S01` `D` `src/cadrumo_harness/mcp/tests/conftest.py`
 - `S01` `verify:` `MCP82tests after repository fixture relocation` -> `pass`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/linux_gnome_installation.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/linux_gnome_lock.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/linux_worker_process.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/macos_coalition.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/macos_process.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/macos_worker_process.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/manager_commands.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/posix.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/posix_channel.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/profile_worker_lifetime.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/profile_worker_transport.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/macos_peer_exec_fixture.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/macos_test_process.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_installation.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/test_macos_coalition.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_process.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/test_macos_process_incarnation.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/test_posix_peer_liveness.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_process_cleanup.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/tests/test_worker_arguments.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/windows_inheritance_fixture.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/worker_arguments.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_client.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py`
+- `S02` `A` `src/cadrumo/adapters/local_runtime/worker_environment.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/worker_native_identity.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/worker_transport.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_control_projection.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/filesystem.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/gnome_collection_protection.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_gnome_collection_protection.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/linux_worker_guardian.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/macos_worker_guardian.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/tests/linux_worker_parent_fixture.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/tests/test_linux_worker_launch_contract.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_macos_worker_guardian.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/tests/test_worker_exit_cleanup.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S02` `A` `.codex/handoffs/tui-all-mcp-dispositions-platform.json`
+- `S02` `verify:` `Mac native containment and peer11tests` -> `pass`
+- `S02` `verify:` `Mac final sharedfixture2tests` -> `pass`
+- `S02` `verify:` `Mac atomic rename and supervised KDF cohort` -> `pass`
+- `S02` `verify:` `Portable platform cohorts120plus130plus79` -> `pass`
+- `S02` `verify:` `Platform source Ruff format and ty3platforms` -> `pass`
+- `S02` `verify:` `Native locked-Keychain needs-user refusal1test` -> `pass`
+- `S02` `by:` `platform`
+
+## Notes
+
+- `S02` Protected Keychain positive round trips unavailable in locked login context; unchanged Keychain provider requires unlocked native verification under S05. No protected-store success claimed.
