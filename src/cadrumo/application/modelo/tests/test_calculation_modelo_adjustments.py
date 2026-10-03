@@ -152,21 +152,20 @@ def test_union_refuses_a_divergent_amount_for_the_same_identity_naming_the_field
 
 
 def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -> None:
-    """M184/M232/M347 have no resolver-produced rows today: prove byte-identical output.
+    """M184/M232 have no resolver-produced rows today: prove byte-identical output.
 
     Establishing this generically (empty resolver side) rather than special-
-    casing each of the three modelos, since the union function itself has no
+    casing each modelo, since the union function itself has no
     modelo-specific branch -- it is the ABSENCE of a resolver contribution
     that must leave caller-supplied rows untouched, for any row kind.
     """
     from decimal import Decimal
 
-    from ....domain.modelos.row_models import Modelo184MemberRow, Modelo232VinculadaRow, Modelo347ContraparteRow
+    from ....domain.modelos.row_models import Modelo184MemberRow, Modelo232VinculadaRow
 
     caller_rows = (
         Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"), clave="D"),
         Modelo232VinculadaRow(pais="ES", nif="87654321B", importe=Decimal("200.00")),
-        Modelo347ContraparteRow(nif="11223344C", importe_Q1=Decimal("400.00")),
     )
 
     unioned = union_detail_rows_by_identity(resolver_rows=(), caller_rows=caller_rows)

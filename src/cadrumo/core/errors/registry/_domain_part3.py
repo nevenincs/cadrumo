@@ -600,16 +600,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos.row_models.Modelo347ThresholdError",
-        ErrorCode(
-            code="REFUSED_MODELO_347_THRESHOLD",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_347_threshold",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.modelos.row_models.Modelo184ShareSumError",
         ErrorCode(
             code="REFUSED_MODELO_184_SHARE_SUM",

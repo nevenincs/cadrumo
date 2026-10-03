@@ -1776,13 +1776,12 @@ cli:
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
         row_help: 'Típusos részletsor ismétlődő rekordokat tartalmazó tájékoztató
           nyomtatványokhoz. Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro''
-          (M184 tagsor), ''vinculada'' (M232 kapcsolt fél), ''operador'' (M349 közösségen
-          belüli szereplő) vagy ''contraparte'' (M347 bejelentett ellenoldal). Több
-          sor megadásához ismételd. Tedd idézőjelbe a teljes --row argumentumot; a
-          szóközös jogi neveket azon belül is idézd. M184 példa: --row ''miembro nif=12345678A
-          porcentaje=40 importe=10000''. M349 példa: --row ''operador codigo_pais=DE
-          nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
-          importe=50000''.'
+          (M184 tagsor), ''vinculada'' (M232 kapcsolt fél) vagy ''operador'' (M349
+          közösségen belüli szereplő). Több sor megadásához ismételd. Tedd idézőjelbe
+          a teljes --row argumentumot; a szóközös jogi neveket azon belül is idézd.
+          M184 példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          M349 példa: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: 'A --row {token} mezőt KULCS=ÉRTÉK alakban kell megadni.
           Ez egy kulcs-érték bejegyzés: a sor mezőneve a bal oldalon áll, utána egyetlen
           egyenlőségjel következik, az érték pedig a jobb oldalon.'

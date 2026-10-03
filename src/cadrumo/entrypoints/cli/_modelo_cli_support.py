@@ -59,7 +59,6 @@ from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
@@ -89,7 +88,6 @@ _SUPPORTED_ROW_MODELS: tuple[type[BaseModel], ...] = (
     Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
-    Modelo347ContraparteRow,
 )
 
 

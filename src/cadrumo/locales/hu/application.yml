@@ -1200,8 +1200,6 @@ application:
       calculate_m210_tipo_renta_unknown: 'A(z) %{value} nem érvényes Modelo 210 jövedelemtípus-kód.
         Elfogadott kódok: %{accepted}. Megalapozásra váró (még be nem nyújtható) kódok:
         %{fetch_gated}.'
-      calculate_m347_threshold_not_met: A Modelo 347 %{nif} partnere összesen %{total},
-        ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR küszöböt.
       calculate_m349_invalid_nif: A(z) {nif} közösségi adószám formátuma nem felel
         meg a(z) {pais} országban előírtnak.
       calculate_pension_inputs_incomplete: A nyugdíjterv kiváltási adatait együtt

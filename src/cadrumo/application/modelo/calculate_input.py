@@ -90,13 +90,10 @@ from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
-    Modelo347ContraparteRow,
-    Modelo347ThresholdError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
     validate_m184_member_share_sum,
-    validate_m347_threshold,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
@@ -673,16 +670,6 @@ def _validate_detail_rows(
         raise ModeloCalculateDetailRowsError(
             context={"total": str(exc.total), "count": str(exc.count)},
             translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
-        ) from exc
-
-    contraparte_rows = [row for row in rows if isinstance(row, Modelo347ContraparteRow)]
-    try:
-        with validating_governed_facts(operation):
-            validate_m347_threshold(contraparte_rows, effective_date=date(work_unit.filing_year, 12, 31))
-    except Modelo347ThresholdError as exc:
-        raise ModeloCalculateDetailRowsError(
-            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(exc.threshold.payload.value)},
-            translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc
 
     if str(work_unit.modelo) != "349":

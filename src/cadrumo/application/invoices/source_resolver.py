@@ -12,9 +12,10 @@ read capability. It projects those records into the calculation mesh as
 The :class:`~domain.invoices.models.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
 be represented as registry
-:class:`~domain.calculations.registry.invoice_bindings.InvoiceObservation` facts, with Modelo 349
-summary bindings, detail rows, transaction ids, and source provenance emitted
-through one resolver envelope.
+:class:`~domain.calculations.registry.invoice_bindings.InvoiceObservation` facts, with summary
+bindings, the repeated-record row bindings (the Modelo 347 declarado records),
+Modelo 349 detail rows, transaction ids, and source provenance emitted through
+one resolver envelope.
 """
 
 from __future__ import annotations
@@ -223,6 +224,7 @@ def _invoice_resolution_from_observations(
         observations,
         effective_date=date(context.filing_year, 12, 31),
     )
+    row_values = _invoice_row_values(context=context, observations=observations)
     declared_invoices = tuple(invoice for invoice, _ in observed_items)
     diagnostics = _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
     diagnostics += _unconverted_foreign_diagnostics(
@@ -241,7 +243,8 @@ def _invoice_resolution_from_observations(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         binding_values=binding_values,
-        detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
+        row_binding_values=_row_values_not_carried_by_detail_rows(row_values),
+        detail_rows=_m349_operador_rows_from_values(row_values),
         source_transaction_ids=tuple(
             sorted(
                 {transaction_id for invoice, _ in observed_items for transaction_id in invoice.linked_transaction_ids},
@@ -258,8 +261,9 @@ class InvoiceCatalogueSourceResolver:
     The resolver owns both invoice source kinds in the calculation mesh. It
     filters records by :class:`CalculationSourceContext`, turns declarable
     intracommunity entries into :class:`InvoiceObservation` facts, and returns a
-    :class:`CalculationSourceResolution` carrying binding values, Modelo 349
-    detail rows, linked transaction ids, and stable source provenance.
+    :class:`CalculationSourceResolution` carrying binding values, row binding
+    values, Modelo 349 detail rows, linked transaction ids, and stable source
+    provenance.
     """
 
     resolver_id: ClassVar[str] = "invoice_catalogue"
@@ -286,8 +290,9 @@ class InvoiceCatalogueSourceResolver:
                 active invoice sources and the invoices in scope.
 
         Returns:
-            The resolution carrying binding values, Modelo 349 detail rows,
-            linked transaction ids, diagnostics, and source provenance. Sources
+            The resolution carrying binding values, row binding values, Modelo
+            349 detail rows, linked transaction ids, diagnostics, and source
+            provenance. Sources
             the active revision does not declare resolve to an empty result, and
             a degraded catalogue read resolves to a storage-degradation result
             rather than a zero total.
@@ -1022,18 +1027,36 @@ def _m349_operador_row_from_values(
         raise RegistryValidationError(str(exc)) from exc
 
 
-def _m349_operador_rows_from_observations(
+def _invoice_row_values(
     *,
     context: CalculationSourceContext,
     observations: tuple[InvoiceObservation, ...],
-) -> tuple[Modelo349OperadorRow, ...]:
-    if context.modelo != Modelo("349").value or not observations:
-        return ()
-    row_values = resolve_invoice_binding_row_values(
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Build the revision's invoice row families once, through the canonical row builder."""
+    if not observations:
+        return {}
+    return resolve_invoice_binding_row_values(
         context.revision,
         observations,
         effective_date=date(context.filing_year, 12, 31),
     )
+
+
+def _row_values_not_carried_by_detail_rows(
+    row_values: Mapping[tuple[BindingId, int], Decimal | str],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Keep the row values that reach the revision as row bindings rather than typed detail rows.
+
+    Modelo 349 operador rows travel as :class:`Modelo349OperadorRow` detail rows,
+    where they union with operator-entered rows and replay into the same
+    bindings; emitting them here as well would persist one row on two channels.
+    """
+    return {key: value for key, value in row_values.items() if key[0] not in _M349_OPERADOR_ROW_BINDINGS}
+
+
+def _m349_operador_rows_from_values(
+    row_values: Mapping[tuple[BindingId, int], Decimal | str],
+) -> tuple[Modelo349OperadorRow, ...]:
     return tuple(
         _m349_operador_row_from_values(
             _m349_operador_row_values(row_values, row_index=row_index),

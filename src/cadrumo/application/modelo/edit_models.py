@@ -247,7 +247,7 @@ class ModeloEditDetailRowAddressV1(EditModel):
     """The natural-key address of one ``ModeloDetailRow``, never position or a minted id.
 
     ``detail_row_kind`` is the discriminated ``ModeloDetailRow.row_type`` value
-    (e.g. ``"miembro"``, ``"contraparte"``). ``natural_key`` is the row's own
+    (e.g. ``"miembro"``, ``"operador"``). ``natural_key`` is the row's own
     already-declared identity field, joined with ``|`` for a compound key
     (M349 operador/rectificación key on ``nif_comunitario|clave_operacion``,
     since one counterparty can carry more than one operation type) -- never a

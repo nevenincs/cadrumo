@@ -71,9 +71,6 @@ from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
-    Modelo347ClaveOperacion,
-    Modelo347ClaveOperacionValue,
-    Modelo347ContraparteRow,
     Modelo349ClaveOperacionValue,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
@@ -2414,35 +2411,6 @@ class Modelo349RectificacionRowWireV1(_WireDetailRowMirror):
         )
 
 
-class Modelo347ContraparteRowWireV1(_WireDetailRowMirror):
-    """Wire mirror of Modelo347ContraparteRow with quarterly amounts as characters."""
-
-    model_config = _WIRE_CONFIG
-
-    row_type: Literal["contraparte"] = "contraparte"
-    nif: Annotated[str, Field(min_length=1, max_length=20)]
-    nombre: Annotated[str, Field(max_length=200)] = ""
-    importe_Q1: _WireAmount = "0"
-    importe_Q2: _WireAmount = "0"
-    importe_Q3: _WireAmount = "0"
-    importe_Q4: _WireAmount = "0"
-    clave_operacion: Modelo347ClaveOperacionValue = Modelo347ClaveOperacion.A
-    pais_codigo: CountryCodeAlpha2 | None = None
-
-    def to_row(self) -> Modelo347ContraparteRow:
-        """Translate back to the real, fully re-validated domain row."""
-        return Modelo347ContraparteRow(
-            nif=self.nif,
-            nombre=self.nombre,
-            importe_Q1=Decimal(self.importe_Q1),
-            importe_Q2=Decimal(self.importe_Q2),
-            importe_Q3=Decimal(self.importe_Q3),
-            importe_Q4=Decimal(self.importe_Q4),
-            clave_operacion=self.clave_operacion,
-            pais_codigo=self.pais_codigo,
-        )
-
-
 class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo210AgrupacionRentaRow with its rates as characters."""
 
@@ -2477,7 +2445,6 @@ type ModeloDetailRowWireV1 = Annotated[
     | Modelo232VinculadaRowWireV1
     | Modelo349OperadorRowWireV1
     | Modelo349RectificacionRowWireV1
-    | Modelo347ContraparteRowWireV1
     | Modelo210AgrupacionRentaRowWireV1,
     Field(discriminator="row_type"),
 ]

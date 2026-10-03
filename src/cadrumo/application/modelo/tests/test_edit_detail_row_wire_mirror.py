@@ -2,10 +2,10 @@
 
 The mirrors exist so a detail-row edit can cross an operation payload, which
 means the only thing that makes them safe is that nothing changes on the way
-across. Each of the six is built from a real row, translated back, and compared
+across. Each of the five is built from a real row, translated back, and compared
 field by field against the row it came from.
 
-The registry codes are the part worth guarding. Two of the six row types hydrate
+The registry codes are the part worth guarding. Two of the five row types hydrate
 their codes through validator metadata, and the mirrors deliberately carry those
 codes unhydrated so the row type's own hydration runs during translation. That
 only holds while there is exactly one hydration: the refusal parity below fails
@@ -27,7 +27,6 @@ from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
@@ -39,7 +38,6 @@ from ..operation_definitions import (
     Modelo184MemberRowWireV1,
     Modelo210AgrupacionRentaRowWireV1,
     Modelo232VinculadaRowWireV1,
-    Modelo347ContraparteRowWireV1,
     Modelo349OperadorRowWireV1,
     Modelo349RectificacionRowWireV1,
     ModeloEditApplyDetailRowAddressV1,
@@ -162,31 +160,6 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
     return mirror, row
 
 
-def _m347_pair() -> tuple[Modelo347ContraparteRowWireV1, Modelo347ContraparteRow]:
-    """Build one M347 contraparte row with all four quarterly amounts set."""
-    mirror = Modelo347ContraparteRowWireV1(
-        nif="A12345674",
-        nombre="CONTRAPARTE SA",
-        importe_Q1="1000.01",
-        importe_Q2="2000.02",
-        importe_Q3="3000.03",
-        importe_Q4="4000.04",
-        clave_operacion="B",
-        pais_codigo="PT",
-    )
-    row = Modelo347ContraparteRow(
-        nif="A12345674",
-        nombre="CONTRAPARTE SA",
-        importe_Q1=Decimal("1000.01"),
-        importe_Q2=Decimal("2000.02"),
-        importe_Q3=Decimal("3000.03"),
-        importe_Q4=Decimal("4000.04"),
-        clave_operacion="B",
-        pais_codigo="PT",
-    )
-    return mirror, row
-
-
 def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210AgrupacionRentaRow]:
     """Build one M210 agrupación row and its wire mirror."""
     mirror = Modelo210AgrupacionRentaRowWireV1(
@@ -217,7 +190,6 @@ _PAIRS = {
     "m232_vinculada": _m232_pair,
     "m349_operador": _m349_operador_pair,
     "m349_rectificacion": _m349_rectificacion_pair,
-    "m347_contraparte": _m347_pair,
     "m210_agrupacion_renta": _m210_pair,
 }
 

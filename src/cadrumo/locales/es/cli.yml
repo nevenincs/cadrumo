@@ -1794,13 +1794,12 @@ cli:
         row_empty_spec: --row no puede estar vacío; se esperaba TIPO CAMPO=valor [...]
         row_help: 'Fila de detalle tipada para modelos informativos con registros
           repetibles. Formato: TIPO CAMPO=valor [CAMPO=valor ...]. TIPO es ''miembro''
-          (socio/partícipe M184), ''vinculada'' (operación vinculada M232), ''operador''
-          (operador intracomunitario M349) o ''contraparte'' (declarada M347). Repetir
-          para añadir más filas. Entrecomilla el argumento completo de --row; deja
-          entre comillas los nombres legales con espacios. Ejemplo M184: --row ''miembro
-          nif=12345678A porcentaje=40 importe=10000''. Ejemplo M349: --row ''operador
-          codigo_pais=DE nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
-          importe=50000''.'
+          (socio/partícipe M184), ''vinculada'' (operación vinculada M232) u ''operador''
+          (operador intracomunitario M349). Repetir para añadir más filas. Entrecomilla
+          el argumento completo de --row; deja entre comillas los nombres legales
+          con espacios. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: 'El campo --row {token} debe escribirse como CLAVE=VALOR.
           Es una entrada clave-valor: pon el nombre del campo de la fila a la izquierda
           de un único signo igual y su valor a la derecha.'

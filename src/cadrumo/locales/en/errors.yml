@@ -873,8 +873,6 @@ errors:
     modelo_210_agrupacion_renta_rows: Modelo 210 annual grouped-renta rows must form
       a lawful single grouping (one code, one rate, one identified property, and one
       payer unless the multi-payer exception applies).
-    modelo_347_threshold: Modelo 347 operations above the reporting threshold require
-      explicit declaration coverage.
     modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
       for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority:
       AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'

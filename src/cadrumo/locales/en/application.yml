@@ -1162,9 +1162,6 @@ application:
       calculate_m210_tipo_renta_unknown: '%{value} is not a valid Modelo 210 tipo
         de renta code. Accepted codes: %{accepted}. Codes pending grounding (not yet
         fileable): %{fetch_gated}.'
-      calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
-        does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
-        31.1.
       calculate_m349_invalid_nif: NIF-IVA {nif} does not match the expected format
         for country {pais}.
       calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all

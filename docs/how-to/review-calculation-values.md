@@ -179,12 +179,12 @@ instalment payments:
 :verify: Confirm the supplied relation value is recorded on the saved calculation.
 ```
 
-## Add rows for list-based forms (184, 232, 347, 349)
+## Add rows for list-based forms (184, 232, 349)
 
 Some informational modelos report a list of records rather than one set of boxes:
-attribution members (Modelo 184), related-party operations (Modelo 232),
-declared counterparties (Modelo 347), and intra-community traders (Modelo 349).
-Supply each record with a repeatable `--row` input.
+attribution members (Modelo 184), related-party operations (Modelo 232), and
+intra-community traders (Modelo 349). Supply each record with a repeatable
+`--row` input.
 
 Each `--row` starts with the record type, followed by its fields. A modelo
 applies only to its matching taxpayer type. The example first sets the profile
@@ -204,23 +204,22 @@ Use one of these record types:
 - `miembro` - an attribution member (Modelo 184). Each row names the income
   `clave` it attributes, such as `C` for rendimientos del capital inmobiliario.
 - `vinculada` - a related-party operation (Modelo 232).
-- `contraparte` - a declared counterparty (Modelo 347).
 - `operador` - an intra-community trader (Modelo 349).
 
 Cadrumo validates each row against the modelo's rules and refuses an incomplete
 set:
 
 - Modelo 184 - the members' `porcentaje` values must sum to 100.
-- Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros.
 - Modelo 349 - the trader's intra-community NIF must match its country format.
 
 The saved rows appear in the calculation output as `detail_row` lines. Check
 them to confirm what was recorded.
 
 Direct `--row` support is only one way repeating data can reach a calculation.
-Modelo 720 foreign assets already reach the calculation through their own source,
-even though Modelo 720 is not in the direct `--row` list above. Do not treat the
-absence of a direct row command as a missing source.
+Modelo 347 counterparty records come from the invoices you record in the ledger
+(see [Manage invoices](manage-invoices.md)), and Modelo 720 foreign assets reach
+the calculation through their own source, so neither is in the direct `--row`
+list above. Do not treat the absence of a direct row command as a missing source.
 
 ## Special calculation tools (IRPF comparison and exemptions)
 

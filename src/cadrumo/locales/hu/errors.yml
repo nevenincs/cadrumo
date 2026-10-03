@@ -883,8 +883,6 @@ errors:
     modelo_210_agrupacion_renta_rows: A Modelo 210 éves csoportosított jövedelem-sorainak
       egyetlen jogszerű csoportot kell alkotniuk (egy kód, egy kulcs, egy azonosított
       ingatlan, és egy kifizető, kivéve a több kifizetős kivételt).
-    modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
-      bevallási lefedettség szükséges.
     modelo_349_country_prefix_context: 'A Modelo 349 elutasítja a(z) {country_code}
       országprefixet a(z) {clave_operacion} műveletkulcshoz {filing_year}/{period}
       időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 útmutató.'

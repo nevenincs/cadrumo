@@ -1783,11 +1783,11 @@ cli:
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
         row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
           Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari
-          M349) o ''contraparte'' (declarada M347). Repetir per afegir més files.
-          Posa entre cometes l''argument complet de --row; mantén entre cometes els
-          noms legals amb espais. Exemple M184: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          M184), ''vinculada'' (operació vinculada M232) o ''operador'' (operador
+          intracomunitari M349). Repetir per afegir més files. Posa entre cometes
+          l''argument complet de --row; mantén entre cometes els noms legals amb espais.
+          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
           razon_social="DE Auto GmbH" clave_operacion=E importe=50000''.'
         row_kv_format_error: 'El camp --row {token} s''ha d''escriure com CLAU=VALOR.
           És una entrada clau-valor: posa el nom del camp de la fila a l''esquerra

@@ -60,7 +60,6 @@ from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
@@ -91,8 +90,8 @@ def require_detail_rows_declared_for_their_owning_modelo(
     """Refuse any detail row whose typed kind belongs to a different modelo.
 
     Each ``ModeloDetailRow`` subtype is a bespoke per-modelo shape (M184
-    member, M232 vinculada, M349 operador/rectificación, M347 contraparte,
-    M210 agrupación renta) that is never legitimately declared against a
+    member, M232 vinculada, M349 operador/rectificación, M210 agrupación
+    renta) that is never legitimately declared against a
     different modelo's work unit. Before this check existed, a mismatched
     row was silently PERSISTED into that revision's ``detail_rows`` while
     contributing to no figure -- a taxpayer-declared row that appeared to
@@ -134,7 +133,6 @@ def require_detail_rows_declared_for_their_owning_modelo(
 _ROW_IDENTITY_FIELDS: Mapping[type[ModeloDetailRow], tuple[str, ...]] = {
     Modelo184MemberRow: ("nif", "clave", "subclave"),
     Modelo232VinculadaRow: ("nif", "tipo_operacion"),
-    Modelo347ContraparteRow: ("nif", "clave_operacion"),
     Modelo349OperadorRow: ("nif_comunitario", "clave_operacion"),
     Modelo349RectificacionRow: ("nif_comunitario", "clave_operacion", "ejercicio", "periodo"),
     Modelo210AgrupacionRentaRow: ("source_id",),

@@ -1240,9 +1240,6 @@ application:
       calculate_m210_tipo_renta_unknown: '%{value} no és un codi de tipus de renda
         vàlid del Model 210. Codis acceptats: %{accepted}. Codis pendents de fonamentació
         (encara no presentables): %{fetch_gated}.'
-      calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
-        que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
-        31.1.
       calculate_m349_invalid_nif: El NIF-IVA {nif} no coincideix amb el format esperat
         per al país {pais}.
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions

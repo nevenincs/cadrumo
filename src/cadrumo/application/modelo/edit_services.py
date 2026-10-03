@@ -131,7 +131,6 @@ _DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
     "vinculada": ("nif",),
     "operador": ("nif_comunitario", "clave_operacion"),
     "rectificacion": ("nif_comunitario", "clave_operacion"),
-    "contraparte": ("nif",),
     "agrupacion_renta": ("source_id",),
 }
 

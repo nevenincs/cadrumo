@@ -641,10 +641,6 @@ ignore = [
   # the 47 N813 sites). The alias is the readable call form at every message
   # site; renaming it would churn the entire localized surface for no gain.
   "N813",
-  # AEAT record fields carry official mixed-case names (`importe_Q1`..`importe_Q4`
-  # are the quarterly-amount casillas). `aeat-naming` requires the official
-  # domain term over a lint-shaped respelling.
-  "N815",
   # Mutable class defaults on pydantic models are safe: pydantic deep-copies
   # field defaults per instance, so `list[str] = []` on a model attribute does
   # not exhibit the shared-state bug RUF012 warns about. Verified against the

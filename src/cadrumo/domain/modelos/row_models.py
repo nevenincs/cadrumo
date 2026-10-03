@@ -18,11 +18,6 @@ Supported row types:
   (``--row rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social=X``
   ``clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=Y base_anterior=Z``)
   Used when the operator declares Tipo-2 rectification records directly.
-* ``Modelo347ContraparteRow`` — contraparte declarada for modelo 347
-  (``--row contraparte nif=X nombre=Y importe_Q1=Z clave_operacion=A``)
-  One row per counterparty. Annual importe threshold check (> €3,005.06)
-  is performed by the CLI validator, not the model, so partial row sets
-  accumulate correctly before final validation.
 * ``Modelo210AgrupacionRentaRow`` — one component renta in an annual
   Modelo 210 agrupación (period ``0A``). The row retains the official
   two-digit renta code and the statutory grouping keys; it is evidence
@@ -58,9 +53,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
 from ..transactions.m210_income_classification import resolve_m210_payer_mode
@@ -817,99 +811,6 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Modelo 347 - contraparte declarada row
-#
-# Legal authority: Orden EHA/3012/2008 art. 1; RD 1065/2007 arts. 31-35
-# (reglamento de gestión e inspección tributaria, obligación de informar
-# sobre operaciones con terceros); Ley 58/2003 art. 93.
-# Threshold: total annual importe > €3,005.06 per counterparty (RD
-# 1065/2007 art. 33.1).  The threshold check is performed at the CLI
-# validator level, not here, so that partial row accumulation works.
-# ---------------------------------------------------------------------------
-
-
-class Modelo347ClaveOperacion(StrEnum):
-    """Clave de operación declarable on a Modelo 347 counterparty row.
-
-    This operation-key type is specific to the M347 row family and is not shared
-    with the registry-owned M349 operation-key shell.
-    """
-
-    A = "A"
-    B = "B"
-    C = "C"
-    D = "D"
-    E = "E"
-    F = "F"
-    G = "G"
-
-
-Modelo347ClaveOperacionValue = Literal[
-    Modelo347ClaveOperacion.A,
-    Modelo347ClaveOperacion.B,
-    Modelo347ClaveOperacion.C,
-    Modelo347ClaveOperacion.D,
-    Modelo347ClaveOperacion.E,
-    Modelo347ClaveOperacion.F,
-    Modelo347ClaveOperacion.G,
-]
-"""The same code set for a wire or operation payload field."""
-
-
-class Modelo347ContraparteRow(BaseModel):
-    """One contraparte declarada row for Modelo 347.
-
-    Fields mirror the per-counterparty Tipo-2 record layout declared in
-    ``347/revisions/2011-2024``.
-
-    One row per counterparty. The annual total importe (sum of Q1-Q4)
-    must exceed €3,005.06 per RD 1065/2007 art. 33.1.
-
-    Parity assertions:
-
-    * ``nif`` → ``contraparte.nif`` (counterparty tax id)
-    * ``nombre`` → ``contraparte.nombre`` (legal name)
-    * ``importe_Q1/Q2/Q3/Q4`` → quarterly importe slots
-    * ``clave_operacion`` → operation type code
-    * ``pais_codigo`` → ``contraparte.pais`` (ISO 3166-1; None = domestic)
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    row_type: Literal["contraparte"] = "contraparte"
-    nif: _NifStr
-    nombre: _NameStr = Field(default="")
-    importe_Q1: Decimal = Field(default=Decimal("0"))
-    importe_Q2: Decimal = Field(default=Decimal("0"))
-    importe_Q3: Decimal = Field(default=Decimal("0"))
-    importe_Q4: Decimal = Field(default=Decimal("0"))
-    clave_operacion: Modelo347ClaveOperacionValue = Modelo347ClaveOperacion.A
-    pais_codigo: _IsoCountryCode | None = None
-
-    @field_validator("nif")
-    @classmethod
-    def _nif_not_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("nif cannot be blank")
-        return value.upper()
-
-    @field_validator("pais_codigo")
-    @classmethod
-    def _pais_codigo_uppercase_alpha(cls, value: str | None) -> str | None:
-        if value is None:
-            return value
-        v = value.strip().upper()
-        if not v.isalpha() or len(v) != 2:
-            raise ValueError("pais_codigo must be an uppercase two-letter ISO 3166-1 country code or None for domestic")
-        return v
-
-    @property
-    def importe_total(self) -> Decimal:
-        """Sum of quarterly importes — used for M347 threshold check."""
-        return self.importe_Q1 + self.importe_Q2 + self.importe_Q3 + self.importe_Q4
-
-
-# ---------------------------------------------------------------------------
 # Modelo 210 - annual grouped-renta rows
 #
 # The selected registry revision owns the grouping catalogue and its
@@ -1109,7 +1010,6 @@ ModeloDetailRow = (
     | Modelo232VinculadaRow
     | Modelo349OperadorRow
     | Modelo349RectificacionRow
-    | Modelo347ContraparteRow
     | Modelo210AgrupacionRentaRow
 )
 
@@ -1118,22 +1018,8 @@ ModeloDetailRow = (
 
 
 # ---------------------------------------------------------------------------
-# Statutory cross-row / threshold validations (domain-owned)
+# Statutory cross-row validations (domain-owned)
 # ---------------------------------------------------------------------------
-
-
-class Modelo347ThresholdError(CadrumoError):
-    """A Modelo 347 contraparte row falls at or below the declarability threshold."""
-
-    def __init__(self, *, nif: str, total: Decimal, threshold: ResolvedScalarFact) -> None:
-        """Record the counterparty and the total that fell short of the threshold."""
-        self.nif = nif
-        self.total = total
-        self.threshold = threshold
-        super().__init__(
-            f"M347 contraparte (nif={nif!r}): importe total {total} does not exceed the "
-            f"{m347_threshold_decimal(threshold)} threshold required by RD 1065/2007 art. 33.1",
-        )
 
 
 class Modelo184ShareSumError(CadrumoError):
@@ -1146,37 +1032,6 @@ class Modelo184ShareSumError(CadrumoError):
         super().__init__(
             f"M184 miembro rows: share percentages must sum to exactly 100%; got {total} across {count} rows",
         )
-
-
-def validate_m347_threshold(
-    rows: Sequence[Modelo347ContraparteRow],
-    *,
-    effective_date: date,
-) -> None:
-    """Enforce the Modelo 347 per-counterparty declarability threshold.
-
-    RD 1065/2007 art. 33.1: only counterparties whose annual operations exceed
-    EUR 3,005.06 are declarable. The threshold applies to the SUM of every
-    operation with the same person (same NIF), aggregated across all contraparte
-    rows — not to each row in isolation. A counterparty's operations may be split
-    across several rows (e.g. entregas and adquisiciones), so a per-row check would
-    wrongly reject a counterparty whose individual rows are each at/below the
-    threshold while their annual aggregate exceeds it (a missed declaration), and
-    would never apply the "same person" threshold the regulation defines.
-
-    Raises:
-        Modelo347ThresholdError: for the first counterparty (in NIF first-appearance
-            order) whose AGGREGATED annual total is at or below the threshold.
-    """
-    if not rows:
-        return
-    threshold = resolve_m347_counterparty_annual_threshold(effective_date=effective_date)
-    totals_by_nif: dict[str, Decimal] = {}
-    for row in rows:
-        totals_by_nif[row.nif] = totals_by_nif.get(row.nif, Decimal("0")) + row.importe_total
-    for nif, total in totals_by_nif.items():
-        if total <= m347_threshold_decimal(threshold):
-            raise Modelo347ThresholdError(nif=nif, total=total, threshold=threshold)
 
 
 def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
@@ -1205,8 +1060,6 @@ __all__ = [
     "Modelo210AgrupacionRentaRow",
     "Modelo210AgrupacionRentaRowsError",
     "Modelo232VinculadaRow",
-    "Modelo347ContraparteRow",
-    "Modelo347ThresholdError",
     "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
     "Modelo349RectificacionRow",
@@ -1216,7 +1069,6 @@ __all__ = [
     "resolve_detail_row_owning_modelos",
     "validate_m184_member_share_sum",
     "validate_m210_agrupacion_renta_rows",
-    "validate_m347_threshold",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
 ]
