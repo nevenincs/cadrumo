@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ..domain.currency.models import EurRateLookup, EurRateLookupStatus
+from ..models import EurRateLookup, EurRateLookupStatus
 
 
 def eur_rate_lookup(

@@ -3,7 +3,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....tests.fx_lookup import eur_rate_lookup
 from ..models import (
     CurrencyNormalizationStatus,
     EurRateLookup,
@@ -11,6 +10,7 @@ from ..models import (
     MonetaryAmount,
 )
 from ..service import CurrencyNormalizationService, resolve_fx_conversion_stamp
+from .fx_lookup import eur_rate_lookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

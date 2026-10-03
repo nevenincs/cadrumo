@@ -15,10 +15,10 @@ from ....core.time.clock import now
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.models import EurRateLookup
+from ....domain.currency.tests.fx_lookup import eur_rate_lookup
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.models import TransactionCatalogue
-from ....tests.fx_lookup import eur_rate_lookup
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...operations.owner import OperationExecutorContext
 from ..persistence_ports import LedgerPersistenceConflictError

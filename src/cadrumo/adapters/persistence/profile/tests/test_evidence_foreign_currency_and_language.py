@@ -40,7 +40,7 @@ from cadrumo.core.external_constants import DEFAULT_CURRENCY
 from cadrumo.domain.iva.classification import InvoiceKind
 
 from .....domain.currency.models import EurRateLookup
-from .....tests.fx_lookup import eur_rate_lookup
+from .....domain.currency.tests.fx_lookup import eur_rate_lookup
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,

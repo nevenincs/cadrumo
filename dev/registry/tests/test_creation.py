@@ -39,6 +39,7 @@ from cadrumo.core.aggregation import IntracomOperationType, InvoiceDevengoRank
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.currency.models import EurRateLookup
+from cadrumo.domain.currency.tests.fx_lookup import eur_rate_lookup
 from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.errors import InvoiceValidationError
@@ -46,7 +47,6 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
-from cadrumo.tests.fx_lookup import eur_rate_lookup
 
 from ..maintenance_support import load_modelo_path
 

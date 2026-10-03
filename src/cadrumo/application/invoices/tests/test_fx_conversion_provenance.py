@@ -33,8 +33,8 @@ from pydantic import ValidationError
 
 from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import resolve_fx_conversion_stamp
+from ....domain.currency.tests.fx_lookup import eur_rate_lookup
 from ....domain.iva.classification import InvoiceKind
-from ....tests.fx_lookup import eur_rate_lookup
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_creation_ports import CatalogueInvoiceRateProviderPort
 

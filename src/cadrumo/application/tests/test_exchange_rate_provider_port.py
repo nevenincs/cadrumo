@@ -11,7 +11,7 @@ import pytest
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.currency.models import EurRateLookup
-from ...tests.fx_lookup import eur_rate_lookup
+from ...domain.currency.tests.fx_lookup import eur_rate_lookup
 from ..exchange_rate_provider import bind_exchange_rate_provider_factory, exchange_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
