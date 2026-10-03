@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dacbd8657201d5c11dfc6be5858b7759953d0489d68221f13e507aa797750b43'
+body_hash: 'sha256:7a79183a2108acdfb1ecc4a3415c1b136f56be924860dd6a2192406853a1bea4'
 related:
   - "[[2026-10-03-modelo-347-fileability-audit]]"
   - "[[2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr]]"
@@ -96,3 +96,7 @@ ambiguities, or a new diseño changes the record grammar. Accepted on the operat
 347 inmueble record (RGAT art. 34.1.d). We will emit no inmueble record when no lease data exists, advise
 landlords with business-premises leases, and add a landlord-lease data family on issued rental invoices as a
 follow-on Step that feeds the repeating inmueble record and type 1 positions 161 and 170.
+
+**Amendment (2026-10-03, review).** Clave E carries no floor from 2014-01-01, when consolidated RGAT art. 33.3
+("cualquiera que sea su importe", RD 828/2013 wording) took effect, not from 2025; filing years 2014-2024 keep an
+advisory because the 2011 diseño still describes E as "superiores a 3.005,06".
