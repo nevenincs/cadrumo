@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#invoice-canonical-structure'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a6ce59feb885487429e9cac1a6b6daeeb7f515bb41e1ec2aad6686567cc32349'
+body_hash: 'sha256:a8cb5b01450c7abbe88fdab487d44ca46c69f96697171a76274cff220ddca153'
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -38,12 +38,11 @@ settled before any resolution is written.
   exclusively on intra-community members and holds no domestic key; and the retencion
   routing, which reads only the retencion role.
 - The three domestic rated members are component-identical. They are produced by one
-  shared factory in `src/cadrumo/domain/iva/_components.py` and differ only in which tipo
+  shared factory and differ only in which tipo
   article they cite. A two-rate invoice tagged domestic-general and the same invoice
   tagged domestic-reduced were measured to decompose identically: grounded, base 1500.00,
   cuota 260.00, cash 1760.00, with identical Axis-A rows.
-- Modelo 303 never reads the invoice-level category. The aggregation loop in
-  `src/cadrumo/application/aggregation/_modelo_bindings.py` iterates the invoice lines and
+- Modelo 303 never reads the invoice-level category. The aggregation loop  iterates the invoice lines and
   derives each observation's category from the line's own rate, measured: a 21 percent
   line yields domestic-general and a 10 percent line domestic-reduced on the same
   invoice. The registry selectors naming domestic-general match that line-derived

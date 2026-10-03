@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d62f6b2755109397fe22c0f8d03820a9d126a7cc89b13bfd205de274d99bb293'
+body_hash: 'sha256:8294a2faec26737cd82b66e4e357a646eb425a492a5bc3bc7f6b2770f8b6bcef'
 related: []
 ---
 
@@ -101,7 +101,7 @@ describes. No exec record exists.
 
 ### exec-record-gap-complexity-allowlist | low | S34's cited gate passes
 
-`dev/audit/tests/test_complexity_allowlist.py` passes 7/7 at HEAD, consistent with
+The retired test passes 7/7 at HEAD, consistent with
 `S34`'s own detailed narration of the stale-key/inherited-member distinction. No exec
 record exists; the row's prose is the only account of the two wrong resolvers it says
 were caught before shipping.

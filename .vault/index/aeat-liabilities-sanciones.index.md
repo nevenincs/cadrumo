@@ -4,16 +4,11 @@ tags:
   - '#index'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6603693493c910f1874746d6fd5cb5170f3a138c6bc1209adaba4e4726b92c4e'
+body_hash: 'sha256:9c7d6ef5be9f63027d1586180784dd65e95e7cf0372f3d2b88ca46aed10201a9'
 related:
-  - '[[2026-08-07-aeat-liabilities-sanciones-P10-summary]]'
-  - '[[2026-08-07-aeat-liabilities-sanciones-P11-summary]]'
-  - '[[2026-08-07-aeat-liabilities-sanciones-P12-summary]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
-  - '[[2026-08-07-aeat-liabilities-sanciones-ledger]]'
-  - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
   - '[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]'
   - '[[2026-08-13-aeat-liabilities-sanciones-notification-documents-adr]]'
@@ -35,17 +30,6 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 
 - `2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit` - `aeat-liabilities-sanciones` audit: closeout honesty review after the live discovery session
 - `2026-08-13-aeat-liabilities-sanciones-notification-documents-close-audit` - `aeat-liabilities-sanciones` audit: `notification documents implementation close review`
-
-### exec
-
-- `2026-08-07-aeat-liabilities-sanciones-ledger` - `aeat-liabilities-sanciones` ledger
-- `2026-08-07-aeat-liabilities-sanciones-P10-summary` - `aeat-liabilities-sanciones` `P10` summary
-- `2026-08-07-aeat-liabilities-sanciones-P11-summary` - `aeat-liabilities-sanciones` `P11` summary
-- `2026-08-07-aeat-liabilities-sanciones-P12-summary` - `aeat-liabilities-sanciones` `P12` summary
-
-### plan
-
-- `2026-08-07-aeat-liabilities-sanciones-plan` - `aeat-liabilities-sanciones` plan
 
 ### research
 

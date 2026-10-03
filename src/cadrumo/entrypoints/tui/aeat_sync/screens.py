@@ -251,6 +251,11 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             )
             yield ContentDataTable[str](id="aeat-sync-rows", cursor_type="row", zebra_stripes=True)
             yield Static(id="aeat-sync-status", markup=False)
+            yield from self.compose_evidence()
+
+    def compose_evidence(self) -> ComposeResult:
+        """Allow a zone to render its existing captured evidence below comparison rows."""
+        return ()
 
     def on_mount(self) -> None:
         """Render all six independent source states and this screen's safe rows."""
@@ -601,7 +606,7 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
 
 
 class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
-    """Census comparison without taxpayer values."""
+    """Local census comparison and complete persisted AEAT evidence."""
 
     zone = AeatSyncWorkspaceZone.CENSUS
     heading = "tui.aeat_sync.census.title"
@@ -609,6 +614,58 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the census body."""
         super().__init__(controller, id="aeat-sync-census-screen")
+
+    @override
+    def compose_evidence(self) -> ComposeResult:
+        yield Static(id="aeat-sync-census-captured", markup=False)
+        yield ContentDataTable[str](id="aeat-sync-census-evidence", cursor_type="row", zebra_stripes=True)
+        yield Static(id="aeat-sync-census-value", markup=False)
+
+    def _populate_evidence(self) -> None:
+        observation = self.controller.projection.census_observation
+        table = self.query_one("#aeat-sync-census-evidence", DataTable)
+        table.clear(columns=True)
+        self.query_one("#aeat-sync-census-value", Static).update("")
+        captured = self.query_one("#aeat-sync-census-captured", Static)
+        table.display = observation is not None
+        if observation is None:
+            captured.update("")
+            return
+        captured.update(f"{observation.captured_at.isoformat()} · {observation.source_url}")
+        available = max(18, self.app.size.width - 18)
+        area_width, field_width = available // 4, available // 3
+        table.add_column(tr("tui.aeat_sync.column.area"), width=area_width)
+        table.add_column(tr("tui.aeat_sync.column.field"), width=field_width)
+        table.add_column(tr("tui.aeat_sync.column.aeat_value"), width=available - area_width - field_width)
+        for group, record in (
+            ("Datos Identificativos", observation.identity),
+            ("Domicilio Fiscal", observation.domicilio_fiscal),
+            ("Domicilio de Notificación", observation.domicilio_notificacion),
+        ):
+            for field, value in record.model_dump(mode="json").items():
+                table.add_row(group, field.replace("_", " "), "" if value is None else str(value))
+        for consultation in observation.consultations:
+            for section in consultation.sections:
+                area = section.title
+                if consultation.activity_row_index is not None:
+                    area = f"{area} · Actividad {consultation.activity_row_index + 1}"
+                if not section.rows:
+                    table.add_row(area, "", "")
+                for index, row in enumerate(section.rows, start=1):
+                    for cell in row.cells:
+                        role = "Casilla" if cell.role == "casilla" else None
+                        field = " · ".join(filter(None, (str(index), row.label, cell.column, role)))
+                        table.add_row(area, field, cell.text or "")
+
+    @override
+    async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if event.data_table.id == "aeat-sync-census-evidence":
+            event.stop()
+            self.query_one("#aeat-sync-census-value", Static).update(
+                "\n".join(str(value) for value in event.data_table.get_row(event.row_key))
+            )
+            return
+        await super().on_data_table_row_selected(event)
 
     _COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
         ("field", "tui.aeat_sync.column.field", 26),
@@ -657,6 +714,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
                 *(cells[name] for name, _, _ in taken),
                 key=_census_identity(row.path),
             )
+        self._populate_evidence()
 
 
 class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):

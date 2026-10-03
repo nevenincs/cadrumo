@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:014e0def2775fdce30de5039e4d60958410d163879b338577b6690853c095910'
+modified: '2026-10-03'
+body_hash: 'sha256:c5efc0f8ca454b2d2e88517e997899a24e69e45c2afdd4b848ec5486faaa8140'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S210-001 | PASS | Runtime helper owns no plaintext storage
 
-`src/aeat/application/filing/_runtime_repository.py` only resolves a bucket id
+The retired module only resolves a bucket id
 and delegates repository construction to
 `secure_object_repository_for_bucket()`. It does not open files, write
 manifests, construct SQL routes directly, read environment variables, or manage
@@ -36,10 +36,10 @@ patched repository objects.
 
 ## S210-004 | PASS | Validation
 
-- `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime_repository.py` passed with 5 tests.
-- `uv run --no-sync ruff check src/aeat/application/filing/_runtime_repository.py src/aeat/application/filing/test_runtime_repository.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/filing/test_runtime_repository.py src/aeat/application/filing/test_review_runtime_storage.py` passed with 7 tests.
-- `uv run --no-sync ruff check src/aeat/application/filing/_runtime_repository.py src/aeat/application/filing/_history_repository.py src/aeat/application/filing/_review.py src/aeat/application/filing/test_runtime_repository.py src/aeat/application/filing/test_review_runtime_storage.py` passed.
+- the historical check passed with 5 tests.
+- the historical check passed.
+- the historical check passed with 7 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S210

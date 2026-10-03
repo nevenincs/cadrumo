@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e99a4cfaf7063ce368ad27d9c3f161d189253f077438a9b50212a3eeffaba118'
+body_hash: 'sha256:40da955e8dafc51bcc0ed3980488a846259a8e8339eaa6f9093b302dcc15fc3f'
 related: []
 ---
 
@@ -35,7 +35,7 @@ annual modelo coverage is keyed to ejercicio and official publication, while M13
 a newly enrolled quarterly form. `select_revision` correctly treats
 `(modelo, filing_year, period)` as the natural key and refuses zero or multiple
 matches; it cannot determine whether a declared selector is grounded in an official
-design. See `src/cadrumo/domain/calculations/registry/_temporal.py:18` and the accepted
+design. See the former source file and the accepted
 period-resolution decision `2026-06-10-period-revision-resolution-adr`.
 
 The rejected alternative is forcing every modelo to a shared start year or extending
@@ -52,8 +52,7 @@ authors a replacement, even when its layout, filing schedule, extraction surface
 legal parameter evidence has not been rechecked for that year. The current bracket
 coverage validator explicitly does not validate the tail of an open revision beyond
 its last bounded bracket window, so it cannot serve as a general future-year gate.
-See `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py:171` and
-`src/cadrumo/domain/calculations/registry/_schema_references.py:106`.
+See the former source file and
 
 Three selector/date pairs already demonstrate semantic ambiguity: M200 declares
 selector start 2024 but `valid_from=2025-01-01`; M309 declares 2004 but starts
@@ -72,8 +71,7 @@ verification predicates 10/74. Some absence is legitimate—informative modelos 
 not carry calculation formulas or relations—but absence currently says neither
 “not applicable” nor “not implemented.” The informative-model invariant proves that
 schema-family applicability is domain-dependent, not globally uniform. See
-`src/cadrumo/domain/calculations/registry/_validate_revision_rules.py:45` and
-`src/cadrumo/domain/calculations/registry/_schema.py:1009`.
+the former source file and
 
 The favored option is a revision-owned coverage manifest derived against the real
 schema field set. Every family receives one typed disposition such as populated,
@@ -89,9 +87,8 @@ the honest fail-closed default and already defines agent-reviewed and operator-r
 states, but snapshot construction checks only selected legal-reference review status;
 it does not check the revision's own governance stamp. Thus an operator-reviewed legal
 slice can still serve a wholly pending revision. See
-`src/cadrumo/domain/calculations/registry/_schema_governance.py:1`,
-`src/cadrumo/core/_revision_review.py:39`, and
-`src/cadrumo/domain/calculations/registry/_snapshot.py:298`.
+
+the former source file, and
 
 This is the largest dev-to-production state leak. Mechanically upgrading the 94 rows
 is rejected because authorship and review cannot be derived. The ADR must choose
@@ -186,13 +183,5 @@ the ADR must name one before a backfill campaign can claim completeness.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_temporal.py:18`
-- `src/cadrumo/domain/calculations/registry/_schema_references.py:106`
-- `src/cadrumo/domain/calculations/registry/_schema.py:1009`
-- `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py:45`
-- `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py:171`
-- `src/cadrumo/domain/calculations/registry/_schema_governance.py:1`
-- `src/cadrumo/core/_revision_review.py:39`
-- `src/cadrumo/domain/calculations/registry/_snapshot.py:298`
 - `.vault/adr/2026-06-10-period-revision-resolution-adr.md`
 - `.vault/audit/2026-08-14-registry-corpus-structure-hardening-audit.md`

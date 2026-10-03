@@ -16,7 +16,7 @@ from ....core.modelo import Modelo
 from ....core.period import is_filing_period_token
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryValidationError
-from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import UNIQUE_REFERENCES_REQUIREMENT, required_mapping_entry, unique_mapping_tokens
 from .facts.string_mapping import (
     MappingValueWhitespace,
     StringMappingFact,
@@ -161,17 +161,6 @@ _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=M
 _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
-def _pipe(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split("|")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"payer applicability fact {key!r} must contain unique references")
-    return values
-
-
 def _profile_path_args(profile_key: str, *, token: str) -> tuple[frozenset[object], bool]:
     """Return a dotted profile path's leaf annotation and whether it crosses an optional section."""
     model: type[BaseModel] = TaxpayerProfile
@@ -236,7 +225,9 @@ def _declaration_profile_keys(entries: Mapping[str, str], prefix: str, *, token:
         )
     if single in entries:
         return (required_mapping_entry(entries, single, subject=_ENTRY_SUBJECT),)
-    keys = _pipe(entries, any_of)
+    keys = unique_mapping_tokens(
+        entries, any_of, subject=_ENTRY_SUBJECT, requirement=UNIQUE_REFERENCES_REQUIREMENT, separator="|"
+    )
     if len(keys) < 2:
         raise RegistryValidationError(f"payer applicability fact {token!r} derives from fewer than two profile keys")
     if f"{prefix}period_set_key" in entries:
@@ -312,7 +303,13 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
         prefix = f"{_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"payer applicability fact {raw_token!r} declares a mismatched value")
-        legal_refs = _pipe(entries, f"{prefix}legal_refs")
+        legal_refs = unique_mapping_tokens(
+            entries,
+            f"{prefix}legal_refs",
+            subject=_ENTRY_SUBJECT,
+            requirement=UNIQUE_REFERENCES_REQUIREMENT,
+            separator="|",
+        )
         profile_keys = _declaration_profile_keys(entries, prefix, token=raw_token)
         # Every key is validated; a short-circuiting any() would leave later keys unchecked.
         key_three_states = [_declaration_profile_key(key, token=raw_token) for key in profile_keys]

@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-19'
-body_hash: 'sha256:32f3f36c561b9aa27a87cce09a5595690092fdf0fc3f04bb3e9306de8faad1d5'
+modified: '2026-10-03'
+body_hash: 'sha256:af7c23574d3010915c41cc8604af78ed671a8ccbb489ca61a07669ec30904cd4'
 related:
   - "[[2026-07-15-distribution-installation-readiness-research]]"
 ---
@@ -56,12 +56,7 @@ command-bearing installation with the complete cohort.
 
 ### The smoke manifest must become a cohort evidence contract
 
-`dev/packaging/smoke_core.py:881-901` records only `ok`, lane, timestamp, work
-directory, paths, checks, and optional details; `dev/packaging/tests/test_smoke_manifest.py:14-35`
-pins that limited shape. It omits source commit/tag, cohort version, artifact digests,
-platform and client identities, command transcript, and promotion destination. Each
-lane independently rebuilds, including core at `dev/packaging/smoke_core.py:925`,
-all-extras at `dev/packaging/smoke_extras.py:97`, and the browser/pip variants.
+`dev/packaging/smoke_core.py:881-901` records only `ok`, lane, timestamp, work directory, paths, checks, and optional details; `dev/packaging/tests/test_smoke_manifest.py:14-35` pins that limited shape. It omits source commit/tag, cohort version, artifact digests, platform and client identities, command transcript, and promotion destination.
 
 Make build output immutable and make every lane accept the cohort plus expected digests.
 Append signed or otherwise tamper-evident result records for each platform/channel row;
@@ -92,51 +87,23 @@ and the observation contract is defined at
 
 ### Installed MCP behavior belongs in packaging acceptance
 
-Package metadata correctly owns `aeat` and `cadrumo-mcp` at `pyproject.toml:92-97`.
-The reusable real-client oracle initializes, lists resources/prompts/tools, and calls
-`cadrumo_harness_load` at `src/cadrumo/entrypoints/mcp/tests/test_client_handshake.py:57-84`,
-but resolves `cadrumo-mcp` from ambient PATH at line 59. Add a clean wheel `[agent]`
-lane using the absolute executable inside the target environment, scrubbed checkout
-paths, and the full handshake/tool call. Correct the all-extras gate's case-sensitive
-lowercase identity check at `dev/packaging/smoke_extras.py:57-68`; valid output is
-uppercase `CADRUMO`.
+Package metadata correctly owns `aeat` and `cadrumo-mcp` at `pyproject.toml:92-97`. Add a clean wheel `[agent]` lane using the absolute executable inside the target environment, scrubbed checkout paths, and the full handshake/tool call.
 
-The full protocol itinerary has been exercised through a real stdio SDK client against
-the source environment: profile creation through `execute`, `cadrumo_whoami` after the
-profile-switch gate re-armed, work creation through `execute`, and the complete Modelo
-200 calculation through `execute`. It finished in 86.3 seconds inside the 120-second
-mutation tier at `src/cadrumo/entrypoints/mcp/_call_runtime.py:35-55`. Promote that exact
-flow into the installed-wheel lane; do not weaken it back to `cadrumo_harness_load`.
+The full protocol itinerary has been exercised through a real stdio SDK client against the source environment: profile creation through `execute`, `cadrumo_whoami` after the profile-switch gate re-armed, work creation through `execute`, and the complete Modelo 200 calculation through `execute`. Promote that exact flow into the installed-wheel lane; do not weaken it back to `cadrumo_harness_load`.
 
-`src/cadrumo/entrypoints/mcp/_server.py:312` launches bare `aeat`. A scrubbed-PATH real
-installed-server run fails with `[WinError 2]`, while a PATH restricted to the exact
-three-wheel environment passes the full oracle. Replace ambient lookup with an absolute
-interpreter-local/sibling console-script resolution and fail closed if it is absent.
-The acceptance lane launches absolute installed `cadrumo-mcp`, removes checkout paths,
-scrubs PATH of all unrelated Cadrumo executables, and proves both executables belong to
-the same environment and cohort.
+A scrubbed-PATH real installed-server run fails with `[WinError 2]`, while a PATH restricted to the exact three-wheel environment passes the full oracle. Replace ambient lookup with an absolute interpreter-local/sibling console-script resolution and fail closed if it is absent. The acceptance lane launches absolute installed `cadrumo-mcp`, removes checkout paths, scrubs PATH of all unrelated Cadrumo executables, and proves both executables belong to the same environment and cohort.
 
 ### Plugin and marketplace generation are the right authority but need boot proof
 
-`src/cadrumo/agent/_workspace.py:353-404` emits plugin manifest, skills, agents, and
-MCP configuration from one source. `src/cadrumo/agent/_workspace.py:409-458` delegates
-the marketplace-served plugin to the same emitter. Preserve that boundary.
+Preserve that boundary.
 
-The generated bootstrap at `src/cadrumo/agent/_workspace.py:76-98` and
-`src/cadrumo/agent/_workspace.py:353-363` is an external `uvx` acquisition. The validator
-returns a successful `skipped` result without Claude at
-`dev/packaging/smoke_plugin_validate.py:43-79`, and neither `justfile:247` nor
-`.github/workflows/packaging-smoke.yml:49-69` includes it. Require strict validation on
-a declared Claude-capable row, install the generated complete marketplace through the
-real client, observe MCP startup, and call a cohort-pinned tool.
+Require strict validation on a declared Claude-capable row, install the generated complete marketplace through the real client, observe MCP startup, and call a cohort-pinned tool.
 
 The generated `cadrumo[agent]` bootstrap also omits the two data companions. Publishing
 it unchanged would still produce a clean server unable to perform the calculation.
 Generation must target the complete mandatory product dependency cohort, and validation
 must inspect the resolved distributions before the real client oracle runs.
 
-Marketplace parity at `src/cadrumo/agent/tests/test_marketplace_generation.py:58-70`
-is healthy, but drift protection at lines 73-78 compares only `marketplace.json`.
 Byte-compare and publish the complete generated tree only after its bootstrap passes.
 
 ### MCPB remains an assembly artifact until a supported client runs it

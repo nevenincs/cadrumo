@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:b8b529825e2339c69756499f965bb1a20d8921f1fa6a5593e6446cd92e45a11c'
+modified: '2026-10-03'
+body_hash: 'sha256:b2ebf83ebb7399c84fbe6414b4dcfb6af4c756c2eac80362c411fb63e8641eac'
 related: []
 ---
 
@@ -29,16 +29,13 @@ delegator, not a parallel implementation.
 
 ### `rename(bucket_id, new_display_name)`
 
-Authoritative primitive: `ProfileRepository.rename(profile_id, new_label)` at
-`src/aeat/application/user_profile/_profile_repository.py:415`. This is the
+Authoritative primitive: `ProfileRepository.rename(profile_id, new_label)` . This is the
 sole writer of the cross-store label mutation: it updates the encrypted
 `UserProfileRecord.display_name` and the plaintext bucket manifest `label` in
 one atomic unit of work. A thin orchestration coordinator
-`rename_profile(profile_id, new_label, ...)` at
-`src/aeat/application/user_profile/_orchestration.py:612` delegates to the
-repository and is re-exported in `src/aeat/application/user_profile/__init__.py`
+`rename_profile(profile_id, new_label, ...)`  delegates to the
+repository and is re-exported
 `__all__`. The lifecycle service path emits `PROFILE_RENAMED` per
-`src/aeat/application/user_profile/_lifecycle.py:226`.
 
 Shadowing risk: HIGH. Bucket `label` and profile `display_name` cannot diverge
 under the existing code path, so a `BucketMaintenanceService.rename` that
@@ -57,17 +54,13 @@ operator's surface.
 ### `delete(bucket_id, confirmed=False)`
 
 Authoritative primitives split soft tombstone from hard directory removal.
-Soft: `ProfileRepository.delete(profile_id)` at
-`src/aeat/application/user_profile/_profile_repository.py:477` clears the
+Soft: `ProfileRepository.delete(profile_id)`  clears the
 active-profile pointer, writes the manifest lifecycle status, and tombstones
 the encrypted record in a single bucket session. The lifecycle service
-`ProfileLifecycleService.remove` at
-`src/aeat/application/user_profile/_lifecycle.py:180` emits
+`ProfileLifecycleService.remove`  emits
 `PROFILE_TOMBSTONED`. The application orchestrator
-`delete_profile_with_lifecycle_span(profile_id)` at
-`src/aeat/application/user_profile/_orchestration.py:313` is the top-level
-re-export. Hard: `remove_profile_bucket_directory(profile_id)` at
-`src/aeat/application/user_profile/_orchestration.py:410` trash-renames then
+`delete_profile_with_lifecycle_span(profile_id)`  is the top-level
+re-export. Hard: `remove_profile_bucket_directory(profile_id)`  trash-renames then
 recursively deletes the bucket directory.
 
 Shadowing risk: MEDIUM-HIGH. The two-step soft-then-hard pattern is the
@@ -90,14 +83,12 @@ completes; `PROFILE_TOMBSTONED` is still emitted from the inner service.
 
 Authoritative primitives exist at application and adapter layers but no
 operator entrypoint composes them. The application-layer serialiser
-`serialize_profile_bundle(bucket_id)` at
-`src/aeat/application/user_profile/_bundle.py:45` reads the profile record and
+`serialize_profile_bundle(bucket_id)`  reads the profile record and
 all four financial-history categories (work units, ledger transactions,
 calculation revisions, filing records) from the bucket's encrypted
 repositories and assembles them into a `UserProfilePortableExport`
-(`src/aeat/domain/user_profile/_portable_export.py:28`). The adapter-layer
-`ExportArchiveHeader` at
-`src/aeat/adapters/persistence/storage/bucket/_export_header.py:25` provides
+. The adapter-layer
+`ExportArchiveHeader`  provides
 the plaintext frontmatter contract (bucket_id, manifest_digest,
 recovery_wrap_present, archive_schema_version, created_at). Neither symbol is
 currently re-exported at the application package `__all__`.
@@ -118,7 +109,7 @@ re-export, not through an internal-submodule import.
 ### `import(source_path, force_replace=False)`
 
 Authoritative primitive: `deserialize_profile_bundle(bundle, target_bucket_id)`
-at `src/aeat/application/user_profile/_bundle.py:93`. Validates
+. Validates
 `bundle_schema_version` against the frozen `SUPPORTED_BUNDLE_SCHEMA_VERSIONS`
 set declared on the same module, then writes work units, ledger transactions,
 calculation revisions, and filing records via the per-category repository save
@@ -138,12 +129,11 @@ the application package `__all__`.
 ### `browse(bucket_id, namespace_filter=None, cursor=None)`
 
 Authoritative primitives are foundational repository methods on
-`SecureObjectRepository` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py`:
+`SecureObjectRepository` :
 `list_namespaces()` (line 688), `list_keys(namespace)` (line 920),
 `list_records(namespace, ...)` (line 937, paginated), and
 `peek_metadata(namespace, object_key)` (line 1534, plaintext metadata without
-decryption). The redaction policy is carried by `SensitivityClass` at
-`src/aeat/core/classification.py`. None of these primitives is re-exported
+decryption). The redaction policy is carried by `SensitivityClass` . None of these primitives is re-exported
 through the application layer; they are adapter-layer building blocks.
 
 Shadowing risk: LOW. No competing browse surface exists.
@@ -174,7 +164,7 @@ until the search ADR lands.
 ## Implementation-authority verification
 
 `BucketMaintenanceService` does not exist anywhere in the codebase. The only
-reference is in `src/aeat/entrypoints/cli/test_ledger_verb_spine.py:227` which
+reference is  which
 pins the pre-landing state of `bucket_app` to its current single verb
 (`history`) so the implementer is forced to update the expected roster when
 the maintenance verbs mount.
@@ -199,8 +189,7 @@ review.
 
 2. Every bucket-maintenance event uses an existing closed enum: the
    `BucketEventType` values `BUCKET_RENAMED`, `BUCKET_DELETED`,
-   `BUCKET_EXPORTED`, `BUCKET_IMPORTED` already exist at
-   `src/aeat/domain/buckets/_event.py:100-103`. The `BucketEventObjectType`
+   `BUCKET_EXPORTED`, `BUCKET_IMPORTED` already exist . The `BucketEventObjectType`
    enum at the same module lacks a `BUCKET` value; emitting any of the four
    bucket-maintenance events requires either adding `BUCKET = "bucket"` to
    that closed catalogue (preferred) or reusing the existing `PROFILE` value
@@ -209,9 +198,8 @@ review.
 
 3. Errors raised by the service MUST descend from `AeatError` and carry a
    declared `ErrorCode` registry entry, per the existing
-   `bind_error_code __init_subclass__` discipline at
-   `src/aeat/core/errors/__init__.py`. The error classes live near the service
-   but the catalogue entry lands in `src/aeat/core/errors/_registry.py` so the
+   `bind_error_code __init_subclass__` discipline . The error classes live near the service
+   but the catalogue entry lands  so the
    service-side declaration cannot ship before the registry-side entry, per
    the audit Finding 1 from `2026-06-03-cross-domain-continuity-audit.md`.
 

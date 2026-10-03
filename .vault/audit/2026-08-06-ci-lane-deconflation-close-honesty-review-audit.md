@@ -6,8 +6,7 @@ date: '2026-08-06'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:3adb552417b4e3faa8ff44d9223c5cf5741180520552a3c5cf42db1f6cabe842'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 # `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
 

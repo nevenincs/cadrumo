@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#result-summary-locale-behaviour'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e14329feb44fae578b92c1a5dc10b858cd54563a37b5ccafefb7cb7db12fa28'
+body_hash: 'sha256:a94998ac5a30877bc370e55b7b01caa5f58d4aadf06600d462df44f6a5c367ba'
 related: []
 ---
 
@@ -30,7 +30,6 @@ language, and whether the properties asserted by the commit that repaired the co
 test are true of the tree. The covering test is
 `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py`; the resolution
 site is `calculation_result_summary` in
-`src/cadrumo/application/modelo/_result_summary.py`.
 
 ## Findings
 

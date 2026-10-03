@@ -15,10 +15,10 @@ from ....application.auth.operator_results import AuthLoginResult
 from ....application.auth.session_acquire_operation_access import AuthSessionAcquireOperationProjection
 from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.auth_provider import AuthProviderKind
-from ....core.config import load_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRecordedOperationError, CliRefusedBoundaryError
 from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_deadlines import provider_login_settlement_seconds
 from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
 from ..runtime_registered_operation import run_registered_operation
@@ -45,7 +45,6 @@ def run_auth_login(
     profile_id = UUID(str(pointer.bucket_id))
     try:
         client = require_profile_client(ctx, expected_profile_id=profile_id)
-        settings = load_settings()
         completed = run_registered_operation(
             client,
             AuthSessionAcquireOperationRequest(provider=provider_kind, fresh=fresh, reset_lock=reset_lock),
@@ -55,12 +54,7 @@ def run_auth_login(
             request_version=1,
             result_version=1,
             timeout=120,
-            # Entry navigation, AEAT's whole approval window, the post-approval landing and the
-            # representation gate each spend their own budget; the command must outwait all of them.
-            settlement_timeout=(
-                settings.cadrumo_clave_movil_timeout_ms + 3 * settings.cadrumo_browser_navigation_timeout_ms
-            )
-            / 1000,
+            settlement_timeout=provider_login_settlement_seconds(),
         )
     except RuntimeRefusalError as error:
         raise CliRefusedBoundaryError(context={"reason": error.reason.value}) from None

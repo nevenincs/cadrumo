@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:bce5b37e21b77b938874ad84e896cbe8e29719067c61aa36207262e5ec553440'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 # `ci-lane-deconflation` audit: P02 S59 reconciliation review
 

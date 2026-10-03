@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#docs-tooling-separation'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:cb2dd13f17771423c311eff6535dfec77ee05ba2205b2ba4d1511c103f9775f4'
+modified: '2026-10-03'
+body_hash: 'sha256:380dfb350e3cacef6c35f5a05f88dc8e7017b50d7a7a7cb3294ef08b54eea9a6'
 related:
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-06-14-aeat-cli-userdocs-hardening-audit]]'
 ---
 
@@ -60,7 +59,7 @@ terminology is doc-build-only, so its presence in the wheel is incidental.
 
 ### F4 - The relevance ranking references the terminology API page
 
-`src/aeat/_data/terminology/relevance/relevance.json` carries shipped offline-search
+the former source file carries shipped offline-search
 ranking entries that target the terminology code's API page
 (`api/aeat.terminology.html`, `code:aeat.terminology`). Removing the terminology
 code from the production package removes its autodoc stubs

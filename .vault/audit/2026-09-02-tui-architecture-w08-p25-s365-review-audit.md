@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:49dcbc95a6ea717aa0de6fd5db169deba785a7c00506494b6a62475c1fd58625'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---
 

@@ -34,6 +34,7 @@ See Also:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -299,6 +300,7 @@ def run_security_scan(
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,
+            environment=_semgrep_environment(),
         )
     except subprocess.TimeoutExpired:
         return SecurityResult.unavailable(f"semgrep exceeded its {timeout:g}s timeout")
@@ -311,6 +313,26 @@ def run_security_scan(
         return SecurityResult.unavailable(f"semgrep exited {completed.returncode}: {tail}")
 
     return classify_semgrep_output(completed.stdout)
+
+
+def _semgrep_environment() -> dict[str, str]:
+    """Bind scanner state explicitly; Semgrep ignores XDG roots that do not exist."""
+    from cadrumo.core.storage_environment import prepare_temporary_directory, tool_storage_environment
+
+    environment = dict(os.environ)
+    environment.update(tool_storage_environment())
+    locations = {
+        "SEMGREP_SETTINGS_FILE": ("XDG_CONFIG_HOME", "semgrep/settings.yml"),
+        "SEMGREP_LOG_FILE": ("XDG_STATE_HOME", "semgrep/semgrep.log"),
+        "SEMGREP_VERSION_CACHE_PATH": ("XDG_CACHE_HOME", "semgrep/version"),
+    }
+    for variable, (category, member) in locations.items():
+        path = Path(environment[category]) / member
+        path.parent.mkdir(parents=True, exist_ok=True)
+        environment[variable] = str(path)
+    temporary = str(prepare_temporary_directory())
+    environment.update({"TEMP": temporary, "TMP": temporary, "TMPDIR": temporary})
+    return environment
 
 
 def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:

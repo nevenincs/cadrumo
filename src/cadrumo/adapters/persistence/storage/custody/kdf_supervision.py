@@ -389,7 +389,7 @@ def unlock_profile_custody_password_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _SupervisedKdfWorker(deadline=deadline) as worker,
+            _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker,
         ):
             dek = worker.unwrap(
                 password=password_bytes,
@@ -429,7 +429,7 @@ def wrap_profile_custody_password_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _SupervisedKdfWorker(deadline=deadline) as worker,
+            _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker,
         ):
             wrapped_dek = worker.wrap(
                 secret=secret_bytes,
@@ -469,7 +469,10 @@ def unlock_profile_custody_recovery_material(
     secret_bytes = encode_recovery_secret(secret)
     deadline = time.monotonic() + timeout_seconds
     try:
-        with profile_kdf_lease(settings=settings, deadline=deadline), _SupervisedKdfWorker(deadline=deadline) as worker:
+        with profile_kdf_lease(settings=settings, deadline=deadline), _SupervisedKdfWorker(
+            deadline=deadline,
+            settings=settings,
+        ) as worker:
             dek = worker.unwrap(
                 password=secret_bytes,
                 kdf=kdf,
@@ -508,7 +511,10 @@ def wrap_profile_custody_recovery_material(
     secret_bytes = encode_recovery_secret(secret)
     deadline = time.monotonic() + timeout_seconds
     try:
-        with profile_kdf_lease(settings=settings, deadline=deadline), _SupervisedKdfWorker(deadline=deadline) as worker:
+        with profile_kdf_lease(settings=settings, deadline=deadline), _SupervisedKdfWorker(
+            deadline=deadline,
+            settings=settings,
+        ) as worker:
             wrapped = worker.wrap(secret=secret_bytes, dek=dek, kdf=kdf, associated_data=associated_data, recovery=True)
     except TimeoutError:
         raise _resource_refusal() from None
@@ -538,6 +544,7 @@ def _measure_profile_kdf(
         profile_kdf_lease(settings=settings, deadline=deadline),
         _SupervisedKdfWorker(
             deadline=time.monotonic() + remaining,
+            settings=settings,
         ) as worker,
     ):
         derivation_seconds = worker.calibrate(parameters)

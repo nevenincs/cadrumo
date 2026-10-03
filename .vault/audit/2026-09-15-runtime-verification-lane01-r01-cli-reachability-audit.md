@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:80c898a806f6f26f3b6d715dc790b0c95bbfde9de9ab0bde0850ce7162d350df'
+body_hash: 'sha256:11097d9ecd07dd6bf537116362339bd2a57d70434734f063335b1c1fcbe44f61'
 related: []
 ---
 
@@ -41,7 +41,7 @@ Unproven: which boundary drops `2024-desde-06` before validation (temporal envel
 
 Follow-up trace of F01's unproven boundary, using read-only source inspection, git history, and a read-only (`mode=ro`) SQLite query of the published generation. No product command or test was rerun.
 
-The authority document is confirmed: `src/cadrumo/_data/registry/authority/authority.current.json` (format `cadrumo-authority-descriptor-v1`, logical generation `2bdbfabc…2c66`) selects `authority-06f66544…a2dd.sqlite3` (82059264 bytes). Both files are dated 2026-09-15 14:13:44 and were committed in `2aa0fec2d0` (14:23 +0200), after the last 038 source commit `427d431bd7` (07:10). Neither file has uncommitted changes. Runtime opens the descriptor through `bundled_indexed_authority()` → `IndexedRegistryAuthority` → `SQLiteAuthorityReader` (`src/cadrumo/domain/calculations/registry/authority.py:841-912`).
+Both files are dated 2026-09-15 14:13:44 and were committed in `2aa0fec2d0` (14:23 +0200), after the last 038 source commit `427d431bd7` (07:10). Neither file has uncommitted changes. Runtime opens the descriptor through `bundled_indexed_authority()` → `IndexedRegistryAuthority` → `SQLiteAuthorityReader` (`src/cadrumo/domain/calculations/registry/authority.py:841-912`).
 
 The published generation is complete for 038. It has a `modelo_directory/038` component whose `revisions` metadata lists `2024-desde-06` and `2025-y-siguientes`, plus one `modelo_revision` component for each. So the predecessor is not lost by publication or the temporal envelope.
 

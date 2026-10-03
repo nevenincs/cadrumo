@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:8993b6ce7bae41ca632e771eb192ecddbfa87eafa715521129709e2cf589df1b'
+modified: '2026-10-03'
+body_hash: 'sha256:deed558f62c9bffe653b60b0f6a27707752f7aac00b10ccfcff3fb6669158940'
 related: []
 ---
 
@@ -18,11 +18,11 @@ The default now uses `load_settings().aeat_llm_cache_dir`, preserving explicit `
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/llm/test_cache.py src/aeat/adapters/outbound/llm/test_cache_roundtrip.py src/aeat/adapters/outbound/llm/test_redaction.py` passed with 29 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/llm/test_cache.py src/aeat/adapters/outbound/llm/test_cache_roundtrip.py src/aeat/adapters/outbound/llm/test_redaction.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "llm_cache or cache_default_root"` passed with 5 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/llm/_cache.py src/aeat/adapters/outbound/llm/test_cache.py src/aeat/adapters/outbound/llm/test_cache_roundtrip.py src/aeat/adapters/outbound/llm/test_redaction.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
+- the focused test run passed with 29 tests.
+- the focused test run passed with 5 selected tests.
+- the focused test run passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
+- `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
 - Source scan found no direct `PROJECT_ROOT`, direct `Settings()`, hard-coded `var/llm-cache`, `# noqa`, pragma, or `type: ignore` in the S137 code/test slice.
 
 Disposition: close `AFR-035` as `remote-mirror`.

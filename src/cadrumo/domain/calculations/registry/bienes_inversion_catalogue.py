@@ -119,13 +119,6 @@ class BienInversionCatalogue:
         return token
 
 
-def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT)
-    if not values:
-        raise RegistryValidationError(f"LIVA capital-goods vocabulary {key!r} must contain legal references")
-    return values
-
-
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
@@ -163,7 +156,7 @@ def _kind_definitions(entries: Mapping[str, str]) -> list[BienInversionKindDefin
             BienInversionKindDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_tokens(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     if len({item.token for item in kind_definitions}) != len(kind_definitions):
@@ -182,7 +175,7 @@ def _disposal_regime_definitions(entries: Mapping[str, str]) -> list[BienInversi
             BienInversionDisposalRegimeDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_tokens(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     if len({item.token for item in disposal_definitions}) != len(disposal_definitions):

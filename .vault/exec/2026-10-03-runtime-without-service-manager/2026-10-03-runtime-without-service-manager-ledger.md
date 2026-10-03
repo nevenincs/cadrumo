@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4c4b960d8e9b29aa1391b8fd16580dbebabf53d15eb2759e6c2df6fcacfb77b7'
+body_hash: 'sha256:b9adf10d25fb7ec3cc75e2f306bdc4dc0f35d06ee1e2367f97004cc9ad5de2a5'
 related:
   - "[[2026-10-03-runtime-without-service-manager-plan]]"
 ---
@@ -29,15 +29,10 @@ related:
 - `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py`
 - `S03` `M` `src/cadrumo/application/runtime/profile_access.py`
 - `S03` `M` `src/cadrumo/application/runtime/transport.py`
-- `S03` `D` `src/cadrumo/application/runtime/owner_control.py`
 - `S03` `M` `src/cadrumo/adapters/local_runtime/server.py`
 - `S03` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
 - `S03` `M` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
 - `S03` `M` `src/cadrumo/adapters/local_runtime/runtime_profile_transport.py`
-- `S03` `D` `src/cadrumo/entrypoints/runtime_management.py`
-- `S03` `D` `src/cadrumo/entrypoints/cli/app_runtime.py`
-- `S03` `D` `src/cadrumo/entrypoints/cli/app_runtime_command_specs.py`
-- `S03` `D` `src/cadrumo/entrypoints/cli/app_runtime_payloads.py`
 - `S03` `M` `src/cadrumo/entrypoints/cli/command_specs.py`
 - `S03` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/app.py`
@@ -47,10 +42,6 @@ related:
 - `S03` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py`
-- `S03` `D` `src/cadrumo/entrypoints/tui/runtime_management.py`
-- `S03` `D` `src/cadrumo/entrypoints/tui/runtime_management_cleanup.py`
-- `S03` `D` `src/cadrumo/entrypoints/tui/runtime_management_display.py`
-- `S03` `D` `src/cadrumo/entrypoints/tui/runtime_management_reader.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
@@ -65,9 +56,6 @@ related:
 - `S03` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
 - `S03` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_native.py`
 - `S03` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_framing.py src/cadrumo/entrypoints/tui/tests/test_runtime_session.py src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo_harness/mcp/tests/test_adapter_cleanup.py --tb=short` -> `pass`
-- `S04` `D` `src/cadrumo/adapters/local_runtime/windows_manager.py`
-- `S04` `D` `src/cadrumo/adapters/local_runtime/linux_manager.py`
-- `S04` `D` `src/cadrumo/adapters/local_runtime/macos_manager.py`
 - `S04` `M` `src/cadrumo/adapters/local_runtime/manager_commands.py`
 - `S04` `verify:` `platform registration and management reference inspection` -> `pass`
 - `S05` `M` `docs/how-to/connect-an-agent.md`
@@ -81,7 +69,6 @@ related:
 - `S05` `M` `src/cadrumo/locales/ca/cli.yml`
 - `S05` `M` `src/cadrumo/locales/hu/common.yml`
 - `S05` `M` `src/cadrumo/locales/hu/cli.yml`
-- `S05` `D` `dev/agent_eval/tests/test_installed_mcp_runtime_recovery.py`
 - `S05` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_client.py`
 - `S05` `verify:` `CLI reference and tree generation` -> `pass`
 - `S05` `verify:` `CLI runtime command absence` -> `pass`

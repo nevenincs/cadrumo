@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:c5a87d62940d25fd8e89b2235555628c4f93128a64dc2584a7b98107ce86a804'
+modified: '2026-10-03'
+body_hash: 'sha256:709f53f4b959a83dc65389a5a78d8382913c2490ac9e1ee7c656f00a2c839d8b'
 related: []
 ---
 
@@ -25,8 +25,7 @@ is never asked whether a split is warranted.
 
 ### F1 — The evidence-driven split already exists end to end, but only as a separate verb
 
-`suggest_evidence_split` → `apply_evidence_split` in
-`src/aeat/application/ledger/_llm_classification.py` is a complete suggest → review
+`suggest_evidence_split` → `apply_evidence_split`  is a complete suggest → review
 → apply loop: it loads the parent, runs the `LLMSplitProposer` over the on-host
 evidence (text or vision image), DERIVES each child's euro amount from the parent
 gross and the child's proportion (summing exactly to the parent), and DERIVES each
@@ -35,13 +34,13 @@ model-selected `IvaCategory`. The apply path composes the single-writer
 `split_transaction` then per-child `update_manual_transaction_fields`, stamping the
 `llm:<model>` provenance and the parent invoice's evidence link. The CLI exposes
 this as `aeat app ledger split --llm --read-evidence [--apply --yes]`
-(`_ledger_split_llm` in `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`). The
+(`_ledger_split_llm` ). The
 base/IVA separation the operator asked for is therefore already implemented — it is
 the *discoverability and intelligence* around it that is missing.
 
 ### F2 — `split --llm` forces ≥2 children; the model cannot return a "no split" verdict
 
-`LLMSplitResponse._check_children` in `src/aeat/domain/transactions/_llm.py` raises
+`LLMSplitResponse._check_children`  raises
 when fewer than two children are proposed, and `build_split_prompt` instructs the
 model to "divide this transaction into TWO OR MORE children". A single-line invoice
 run through `split --llm` is therefore coerced into ≥2 artificial children. There is
@@ -51,7 +50,7 @@ splits is wrong on the common single-line case.
 
 ### F3 — `classify --read-evidence` never signals that the invoice is multi-component
 
-`LLMClassificationResponse` (`src/aeat/domain/transactions/_llm.py`) carries
+`LLMClassificationResponse`  carries
 `classification` / `category` / `iva_category` / `business_pct` but no
 multiplicity signal, and `build_classification_prompt` never asks the model whether
 the invoice contains multiple distinct rate/category lines. So

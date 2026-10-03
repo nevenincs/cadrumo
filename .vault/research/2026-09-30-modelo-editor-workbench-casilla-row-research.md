@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:22081272d5b6ac32bf15dd23e5a3b2a167e77898286549bff0a95a3f0790d56b'
+body_hash: 'sha256:408cae695b236f2425857cd5ef9dfd47d887523b57da8802aa00390085b9b511'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -38,7 +38,7 @@ Nothing under `Y:\` was written; all scripts, prototypes and screenshots live in
 
 - The only edit control is a bare `Input` per writable casilla or manual-input binding,
   placeholder = casilla id, no label, value, type, help or state
-  (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:180-196`).
+
 - Apply reads every input as a raw string and submits only non-empty ones
   (`overview.py:360-369`). A blank box therefore means "no intent": the operator cannot
   clear a value, and cannot tell "I left it" from "I emptied it". Combined with the
@@ -633,6 +633,6 @@ attention overlays on one page (03 proven zero vs 10 entered zero vs 16 n/a vs 1
 - `src/cadrumo/application/modelo/calculation_summary_presentation.py:135-145`
 - `src/cadrumo/application/modelo/work_review.py:109-145`
 - `src/cadrumo/domain/filing/schema.py:54`
-- `src/cadrumo/entrypoints/tui/modelo/view/overview.py:180-196`
+
 - `src/cadrumo/entrypoints/tui/profile/overview.py:95-102`
 - `src/cadrumo/locales/{es,en,ca,hu}/modelo/schema/*.yml`

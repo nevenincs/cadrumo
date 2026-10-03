@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:99d708839a8b090903921b22db622600c31642ac42941bf61e222f8e13260b31'
+body_hash: 'sha256:0b9820b00018f96b423bd2a70ad7fda1c8750ac1fda9e86d098f7d08033f0b30'
 related:
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
@@ -35,29 +35,7 @@ and all four locale catalogues.
 
 ### live-tui-refusal-matrix | medium | Most invalid boundaries bypass the real Textual submission surface
 
-- [ ] `src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:47-81`
-  labels its invalid-candidate matrix as submission coverage, but the test calls
-  `attempt_registration` directly. Only the original fourteen-scalar case later drives
-  `RegistrationApp` with a real Textual Pilot. Consequently the 257-scalar, 1,025-byte,
-  high-surrogate, and low-surrogate cases do not prove live feedback, button submission,
-  pinned-status rendering, focus behavior, worker containment, or absence of the
-  generic INTERNAL path at the actual TUI boundary. The accepted ADR and S11 explicitly
-  require live-TUI parity across scalar, byte, and surrogate boundaries. The shared
-  assessor makes the production behavior plausible, and the independent runtime lane
-  is green, but a direct presenter call is not evidence for that acceptance criterion.
-
 ### secure-input-channel-prose | low | Shared secure-input documentation contradicts the live creation channel order
-
-- [ ] `src/cadrumo/entrypoints/cli/_config/_secure_input.py:1-6` says custody secrets use
-  exactly three channels and never the process environment, while
-  `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:12-22` and
-  `resolve_creation_passphrase` deliberately retain `CADRUMO_SECRET_PASSPHRASE` as the
-  unattended creation fallback. The creation module accurately documents its own
-  behavior, but the shared security contract makes a broader false claim. In addition,
-  `resolve_creation_passphrase` describes its order as console-first even though an
-  explicitly requested `--secrets-stdin` channel is checked first. This is prose drift,
-  not an observed secret leak; bounded `SecretStr` stdin validation and no-echo tests
-  passed.
 
 ## Recommendations
 

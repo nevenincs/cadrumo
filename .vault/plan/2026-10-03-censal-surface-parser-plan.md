@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-censal-surface-parser-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:1d001519759e5f991c49a7244bff4f3cdeee4766b810e314e47c28d6123b29c0'
+body_hash: 'sha256:1e1d447919cb7d705f3c162ae9c1e21ce02ce686c120d9229efadafdcf0e154d'
 ---
 
 # `censal-surface-parser` plan
@@ -19,7 +19,8 @@ Approved 2026-10-03. The operator requested live mapping, own-name Cl@ve Movil a
 
 ## Steps
 
-- [ ] `S01` - Implement semantic census consultation parsing and guarded popup acquisition; prove complete live capture and encrypted observation parity; `src/cadrumo/adapters/outbound/aeat/sede, src/cadrumo/application/user_profile/censal_observation.py`.
+- [ ] `S01` - Implement semantic census consultation parsing and guarded popup acquisition; prove complete live capture and encrypted observation parity; `src/cadrumo/adapters/outbound/aeat/sede, src/cadrumo/application/user_profile/censal_observation.py, src/cadrumo/application/user_profile/censal_operation.py, src/cadrumo/entrypoints/tests/test_censal_operation_operand.py, src/cadrumo/entrypoints/tests/censal_review_test_support.py, src/cadrumo/core/external_constants.py, src/cadrumo/core/external_constants.toml, src/cadrumo/entrypoints/cli/config/_censo_transport.py, dev/quality/metadata/import_load_targets.json`.
+- [ ] `S02` - Verify live CLI and TUI pull, persistent census readback across fresh sessions, and shared encrypted custody; repair gaps in the existing flow without remote writes; `src/cadrumo/application/user_profile, src/cadrumo/application/aeat_sync, src/cadrumo/application/workbench_generation_reader.py, src/cadrumo/entrypoints, src/cadrumo/adapters/persistence/operations`.
 
 ## Parallelization
 
@@ -28,4 +29,3 @@ Sequential, one browser session. No delegated implementation.
 ## Verification
 
 Synthetic parser mutation tests cover reordered headers, presentation changes, unknown fields, ambiguous values and auth/maintenance pages. Real browser tests prove consultation-only navigation and popup handling. A live authenticated pull compares all parsed fields with rendered DOM evidence, then verifies the canonical reviewed observation through encrypted custody. Run focused tests, Ruff format/lint, configured type and import checks, then review the integrated change. Do not report capture as adoption of ungrounded regime facts.
-

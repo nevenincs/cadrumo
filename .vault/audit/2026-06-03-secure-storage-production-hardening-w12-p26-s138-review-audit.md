@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:31d8ce85f0d0a6bc8b62fdb8abf9d227231e14f349b90d6a0ff7f28e005ca75c'
+modified: '2026-10-03'
+body_hash: 'sha256:f4252ee7f7dfcfb7a69f92ef5a7a173785344bcaa26d171a943995e8a327dc97'
 related: []
 ---
 
@@ -20,10 +20,10 @@ Transport failures are also normalized: `httpx.RequestError` is caught, logged a
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/llm/_providers/test_gemini.py src/aeat/adapters/outbound/llm/_providers/test_base.py src/aeat/adapters/outbound/llm/test_client.py` passed with 11 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/llm/_providers/gemini.py src/aeat/adapters/outbound/llm/_providers/test_gemini.py src/aeat/adapters/outbound/llm/_providers/test_base.py src/aeat/adapters/outbound/llm/test_client.py` passed.
+- the focused test run passed with 11 tests.
+- the focused test run passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
+- `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
 - Source scans found no direct `Settings()`, stale Gemini endpoint constant, query-string `params=`, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S138 code/test slice.
 
 Disposition: close `AFR-036` as `remote-mirror`.
@@ -36,4 +36,4 @@ Resolution: the public exception message is now the generic `Gemini connection f
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/llm/_providers/test_gemini.py src/aeat/adapters/outbound/llm/_providers/test_base.py src/aeat/adapters/outbound/llm/test_client.py` passed after the change.
+- the focused test run passed after the change.

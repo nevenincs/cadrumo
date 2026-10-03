@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:5c7d63e1415c245c40e0e6998698db1482a0e5f2f7cf8c449bf087ee482caa07'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-w01-p01-phase-review-audit]]"
 ---
 

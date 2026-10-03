@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:99b878a88169e81d2a78bbeaee6a54e2bac8578a9b8610ac3496880cc87e9b8d'
+modified: '2026-10-03'
+body_hash: 'sha256:93a5cd70be2adf99198355c5b5347be789de84f8c2fd7825ee4e759526a5db15'
 related: []
 ---
 
@@ -32,8 +32,8 @@ shape, but persistence and listing route through `secure_object_repository_for_a
 
 ## S225-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/live/__init__.py src/aeat/application/live/test_iva_remote_state_acquisition.py src/aeat/application/live/test_iva_wallet_capture_backend.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_iva_remote_state_acquisition.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing monotonic-order warning.
 

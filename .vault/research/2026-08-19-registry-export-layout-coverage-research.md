@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-export-layout-coverage'
 date: '2026-08-19'
-modified: '2026-08-19'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f03f00675277348f0cd820d4164f84b0c699d96421c102cabbafa1b0a79ded85'
+body_hash: 'sha256:367d0ae57d6351e5d3089aa5831b4da2c63868939b0dad4ebd616b028f306ec8'
 related: []
 ---
 
@@ -108,6 +108,6 @@ would require authoring a layout, not an impossibility.
 
 - AEAT record-design index: `sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos.html`
   and its five range pages (retrieved 2026-08-19)
-- `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`
+
   (`modelo_publishes_a_record_design`, and the grade/design double scoping)
 - Bundled registry source catalogue (`kind = "record_design"` entries)

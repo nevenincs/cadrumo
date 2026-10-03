@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ..config import override_settings
+from ...tests.env_scope import isolated_aeat_env
+from ..config import Settings, override_settings, settings_override
 from ..logging import default_log_file_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -37,6 +38,11 @@ def test_default_log_file_path_falls_back_to_default_without_override() -> None:
     derived default path (``<cadrumo_local_storage_root>/logs/cadrumo.log``),
     so the diagnostic log stays isolated per workspace."""
 
-    resolved = default_log_file_path()
+    with isolated_aeat_env():
+        token = settings_override.set(Settings())
+        try:
+            resolved = default_log_file_path()
+        finally:
+            settings_override.reset(token)
     assert resolved.name == "cadrumo.log"
     assert resolved.parent.name == "logs"

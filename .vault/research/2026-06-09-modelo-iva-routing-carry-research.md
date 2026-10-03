@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:67dd51317d274c8e85d10833223d519b05d391f4ad1bd9024e9e78303cbd647d'
+modified: '2026-10-03'
+body_hash: 'sha256:a9476d7e5f598f841b16d468304088d9f0c9775e813ea847c9e2b83647b1b422'
 related: []
 ---
 
@@ -25,13 +25,10 @@ surfaced these gaps is recorded in the `cli-ledger-testimonials` P05 audit adden
 The M303 `ledger_iva_aggregation` binding set (identical across the `2009-y-siguientes`
 and `2023-y-siguientes` revisions) carries five cuota bindings: repercutido
 general/reducido/super-reducido, soportado interiores, and autorepercutido
-intracomunitaria. The classifier `_flow_direction_for` in
-`src/aeat/application/aggregation/_iva_ledger.py` derives flow purely from the bank
+intracomunitaria. The classifier `_flow_direction_for`  derives flow purely from the bank
 `TransactionDirection` and emits only `REPERCUTIDO`/`SOPORTADO` — never
-`INVERSION_SUJETO_PASIVO`, even though the substrate `derive_flow_for_classification` in
-`src/aeat/domain/iva/_flow.py` already maps reverse-charge categories to that flow. The
-advisory source is `unsupported_ledger_iva_observations` in
-`src/aeat/domain/calculations/registry/_ledger_bindings.py`, which flags any declarable
+`INVERSION_SUJETO_PASIVO`, even though the substrate `derive_flow_for_classification`  already maps reverse-charge categories to that flow. The
+advisory source is `unsupported_ledger_iva_observations` , which flags any declarable
 observation no binding consumes.
 
 Per-`IvaCategory` disposition (the 14 declarable values; `RECARGO_EQUIVALENCIA`,
@@ -82,9 +79,8 @@ Actionable tiers:
 
 ### Item 3 — cross-period local-carry wiring design
 
-`PreviousFilingSourceResolver` (`src/aeat/application/calculations/_multi_year.py`) has
-zero production callers; the calculate mesh in
-`src/aeat/application/modelo/_calculation_actions.py` merges only the IVA + renta ledger
+`PreviousFilingSourceResolver`  has
+zero production callers; the calculate mesh  merges only the IVA + renta ledger
 resolvers. `file_modelo_revision` passes `obs_repo` only to the read-side cross-period
 clean-state guard and never calls `save_observation`, so locally-filed observations are
 never persisted; the only production writer is the live AEAT-remote-capture path. Thus

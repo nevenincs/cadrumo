@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:c0c884ce6820679e5c14c29bd919eda69692ffa78071bbc8a1279a36831045e4'
+modified: '2026-10-03'
+body_hash: 'sha256:17e1a305ae15f121402618ab9d96c8beed914dfd8df17dac14cebdfa88aa26d1'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The focused tests retain the upstream AES-GCM known-answer vector, random nonce 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_dek_wrap.py src/aeat/adapters/persistence/storage/master_key/test_dek_wrap_errors.py` passed with 16 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_dek_wrap.py src/aeat/adapters/persistence/storage/master_key/test_dek_wrap.py src/aeat/adapters/persistence/storage/master_key/test_dek_wrap_errors.py` passed.
+- the historical check passed with 16 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Touched-surface hygiene scan found no broad exception suppressions, direct settings construction, naked environment access, fake/stub/monkeypatch markers, skipped/xfail tests, or direct output.
 

@@ -65,6 +65,7 @@ if ($InsideContainer -and $Mode -ne "Host") {
 }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+. (Join-Path $PSScriptRoot "storage_paths.ps1")
 
 function Invoke-Native {
     param(
@@ -382,6 +383,8 @@ function Invoke-ContainerAcquisition {
         "-v", "${RepoRoot}:C:\repo:ro",
         "-v", "${resolvedCohort}:C:\cohort:ro",
         "-v", "${resolvedEvidence}:C:\evidence",
+        "-e", "CADRUMO_STORAGE_ROOT=C:\evidence\storage",
+        "-e", "CADRUMO_LOCAL_STORAGE_ROOT=C:\evidence\storage",
         "--workdir", "C:\repo",
         $Image,
         "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
@@ -422,6 +425,8 @@ function Invoke-ContainerAcquisition {
     }
 }
 
+$EvidenceDir = Resolve-CadrumoStoragePath -Value $EvidenceDir -RepositoryRoot $RepoRoot
+Initialize-CadrumoScoopStorageEnvironment -RepositoryRoot $RepoRoot
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null
 $resolvedTopLevelEvidence = (Resolve-Path $EvidenceDir).Path
 foreach ($resultName in ("acquire-scoop-evidence.json", "acquire-scoop-failure.json")) {

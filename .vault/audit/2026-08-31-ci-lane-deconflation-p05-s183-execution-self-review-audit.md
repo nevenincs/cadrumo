@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd4fd098fa7e137de438b22c7e5c1adadbb746a8dae922c7bb3d4dc641bc431f'
+body_hash: 'sha256:cece36664aa45bb9eb2a463d52e917d25c96c4292cb604dc963f2b80b806406f'
 related: []
 ---
 
@@ -29,7 +29,7 @@ The full audit did not complete, so there is no claim that the repository-wide s
 
 ### peer-relocation-isolation | medium | A concurrent calculation-actions relocation overlaps the staging surface
 
-The S183 commit must contain only the bindings extraction. Its temporary-index manifest excludes the peer relocation hunk in `src/cadrumo/application/modelo/_calculation_actions.py`.
+The S183 commit must contain only the bindings extraction.
 
 ## Recommendations
 

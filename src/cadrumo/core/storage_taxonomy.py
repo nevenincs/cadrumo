@@ -204,6 +204,12 @@ class StorageCategory(StrEnum):
     # ── State substrate and identity ────────────────────────────────────────
     TOKENS = "tokens"
     CHROMIUM_DATA = "chromium-data"
+    TEMPORARY_FILES = "temporary-files"
+    RUNTIME_SOCKETS = "runtime-sockets"
+    PLAYWRIGHT_BROWSERS = "playwright-browsers"
+    OLLAMA_MODELS = "ollama-models"
+    OLLAMA_HOME = "ollama-home"
+    GNOME_EXTENSIONS = "gnome-extensions"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"

@@ -23,8 +23,7 @@ from ..aggregation.withholding_observation_service import (
 )
 from ..operations.models import (
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
     terminal_receipt_matches,
 )
 from ..operations.public_period import PublicPeriod
@@ -260,12 +259,10 @@ def _require_successful_aggregate_receipt(report: ModeloAggregateReport, receipt
     message = "modelo-aggregate result contradicts its terminal receipt"
     if report.refusal_code is not None:
         raise ValueError(message)
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(report.projection.profile_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE,
         message=message,
     )
-    require_succeeded_receipt_references(receipt, message=message)

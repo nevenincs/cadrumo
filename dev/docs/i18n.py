@@ -47,7 +47,7 @@ if not __package__:
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temporary_directory
 from dev.first_party_source import is_test_source
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
@@ -531,7 +531,7 @@ def update_catalogues(
         _run_catalogue_update(repo_root, docs_root, templates, languages)
         prune_orphan_catalogues(repo_root, languages)
         return
-    with TemporaryDirectory(prefix="cadrumo-docs-pot-") as scoped_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-pot-", dir=prepare_temporary_directory()) as scoped_text:
         scoped = Path(scoped_text)
         _stage_selected_templates(templates, validated_pages(docs_root, pages), scoped, docs_root)
         _run_catalogue_update(repo_root, docs_root, scoped, languages)
@@ -598,7 +598,7 @@ def _run_scoped_pages(repo_root: Path, pages: Sequence[str], *, extract_only: bo
     """
     docs_root = repo_root / "docs"
     selected = validated_pages(docs_root, pages)
-    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-") as scoped_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-", dir=prepare_temporary_directory()) as scoped_text:
         templates = extract_pot(repo_root, out_dir=Path(scoped_text))
         print(f"Extracted the whole surface; syncing {len(selected)} page(s) from {templates}", flush=True)
         if extract_only:
@@ -703,7 +703,7 @@ def _stage_selected_templates(templates: Path, pages: Sequence[str], destination
 
 def _scoped_update_from(repo_root: Path, docs_root: Path, templates: Path, pages: Sequence[str]) -> None:
     """Run the catalogue update from a tree narrowed to exactly *pages*."""
-    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-") as selected_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-", dir=prepare_temporary_directory()) as selected_text:
         selected = Path(selected_text)
         _stage_selected_templates(templates, pages, selected, docs_root)
         _run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)

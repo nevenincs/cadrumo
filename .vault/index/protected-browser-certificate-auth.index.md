@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#protected-browser-certificate-auth'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e445cdaff51a5403e034032680e14683d79c633a8816a812a75c9be1cfd405ad'
+body_hash: 'sha256:f56d96b788779ac20f186177ec06620ef10b6c14d4a40be65b4e34e3f0a084b9'
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
   - '[[2026-07-16-protected-browser-certificate-auth-audit]]'
-  - '[[2026-07-16-protected-browser-certificate-auth-ledger]]'
-  - '[[2026-07-16-protected-browser-certificate-auth-plan]]'
   - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#protected-browser-certificat
 ### audit
 
 - `2026-07-16-protected-browser-certificate-auth-audit` - `protected-browser-certificate-auth` audit: `ADR-to-code hard-cut reconciliation`
-
-### exec
-
-- `2026-07-16-protected-browser-certificate-auth-ledger` - `protected-browser-certificate-auth` ledger
-
-### plan
-
-- `2026-07-16-protected-browser-certificate-auth-plan` - `protected-browser-certificate-auth` plan
 
 ### research
 

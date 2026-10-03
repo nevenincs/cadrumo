@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s88-locale-selector'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:ecbd2d3320aee3758daa3dd70e8d62be5332f223dfa4c8debf23f732eadb2a3f'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s88-locale-selector` audit: `S88 locale selector review`

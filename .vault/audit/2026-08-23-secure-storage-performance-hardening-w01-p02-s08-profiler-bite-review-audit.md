@@ -3,25 +3,17 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:41968d7bf032f2ae8cb04b1ce4d9e9c98f0d96b5a94f153561a37c298abf5a27'
-related:
-  - '[[2026-08-22-secure-storage-performance-hardening-plan]]'
+body_hash: 'sha256:4080f6ef2e1c84be7a47cc4618da0d8241ad2e9ea8b14c9ccf3644605d6c1692'
+related: []
 ---
 
 # `secure-storage-performance-hardening` audit: `W01.P02.S08 profiler bite review`
 
 ## Scope
 
-Independently reviewed the uncommitted `W01.P02.S08` changes in
-`src/cadrumo/tests/cli_performance.py` and
-`src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py` against the
-accepted campaign ADR, research, plan, and repository quality rules. The review
-covered fresh-process timing of the planted work, source/store isolation,
-registry-family attribution, filesystem attribution, root/group/leaf census
-coverage, anti-tautology strength, platform behaviour, secret handling, and
-scope containment.
+The review covered fresh-process timing of the planted work, source/store isolation, registry-family attribution, filesystem attribution, root/group/leaf census coverage, anti-tautology strength, platform behaviour, secret handling, and scope containment.
 
 ## Findings
 

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-17'
-body_hash: 'sha256:df9a3a25d23dfc6b451bed44fd6144a430c1431f38b477d24ca91b509eb28879'
-related:
-  - "[[2026-07-05-cpdefix-followup-allgreen-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:f9b0be86939929e9c90197c4f5eead32896ab27678fa2f6e3bc6a00bb749eb17'
+related: []
 ---
 
 # `cpdefix-followup-allgreen` audit: `current blocker resync`
@@ -25,11 +24,11 @@ The accepted counterpart-source provider ADR still governs the reserved `ledger_
 
 ### m347-no-bindings-blocker-is-stale-in-part | medium | M347 now has invoice-owned summary bindings
 
-The old blocker that M347 had no declaring bindings is stale. The current registry has committed M347 summary bindings and `src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py` proves the invoice-total threshold behavior. This does not fire the counterpart-provider trigger because the bindings are intentionally invoice-owned (`collectible_invoice` / `payable_invoice`), and the counterpart tests assert the reserved provider does not claim them. Verification passed: `uv run --no-sync pytest -q -n 0 src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py src/aeat/application/aggregation/tests/test_per_modelo_service.py -k "counterpart" --tb=short` reported 4 passed and 23 deselected.
+The old blocker that M347 had no declaring bindings is stale. The current registry has committed M347 summary bindings and the retired test proved the invoice-total threshold behavior. This does not fire the counterpart-provider trigger because the bindings are intentionally invoice-owned (`collectible_invoice` / `payable_invoice`), and the counterpart tests assert the reserved provider does not claim them. Verification passed: the historical check reported 4 passed and 23 deselected.
 
 ### m720-row-carrier-blocker-is-stale | low | foreign_asset row carrier and enrollment have landed
 
-The older binding-resolver closeout statement that M720 still lacked a row-indexed carrier is stale. Current source has `CalculationSourceResolution.row_binding_values`, the foreign-assets resolver returns validated row binding values through that carrier, and the calculate path enrolls `ForeignAssetsAggregationSourceResolver`. Verification passed: `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_foreign_assets.py src/aeat/application/modelo/tests/test_calculation_resolution.py src/aeat/application/modelo/tests/test_revision_replay_inputs.py src/aeat/application/aggregation/tests/test_source_mesh.py src/aeat/application/aggregation/tests/test_source_mesh_readiness.py --tb=short` reported 62 passed.
+The older binding-resolver closeout statement that M720 still lacked a row-indexed carrier is stale. Current source has `CalculationSourceResolution.row_binding_values`, the foreign-assets resolver returns validated row binding values through that carrier, and the calculate path enrolls `ForeignAssetsAggregationSourceResolver`. Verification passed: the historical check reported 62 passed.
 
 ### source-enrollment-health-current | low | prior global source-enrollment blocker is stale
 
@@ -45,7 +44,7 @@ The working tree remains heavily dirty from other concurrent campaigns, though t
 
 ### closeout-review-clean | low | final diff has no additional blocker
 
-The closeout review covered the final plan state, the cpdefix vault artifacts, and the only source edit in `src/aeat/domain/calculations/registry/_validate_verification_predicates.py`. The source edit only compresses module docstring prose, leaves the reviewability baseline unchanged, and is covered by the targeted reviewability test plus the S09 scoped aggregation/registry gate. No critical, high, or medium issues were found in the final diff.
+The closeout review covered the final plan state, the cpdefix vault artifacts, and the only source edit in the retired module. The source edit only compresses module docstring prose, leaves the reviewability baseline unchanged, and is covered by the targeted reviewability test plus the S09 scoped aggregation/registry gate. No critical, high, or medium issues were found in the final diff.
 
 ## Recommendations
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:b90154c31e538fa2123cc00331d50a1362ad8893608d6cea1f79482a63e7f31d'
+modified: '2026-10-03'
+body_hash: 'sha256:faee8d8b55eab773fa984fab198bd54c99d117134133e227bb27155179c3a776'
 related: []
 ---
 
@@ -72,7 +72,7 @@ Test files are source files named `test_*.py`, `*_test.py`, `conftest.py`, or un
   factory and registry surfaces as well as remaining repository implementations. S101
   and S102 must keep distinguishing approved runtime-owned access from raw competing
   constructors.
-- The production `settings_sql_route`, `master_key_session`, and
+- The production `settings_sql_route`, `master_key_session`, 
   `active_profile_resolution` increases show that rollout code now carries more
   explicit route/session/bucket policy. That is acceptable only where owned by runtime,
   bootstrap custody, or manifest discovery dispositions.
@@ -83,21 +83,21 @@ Test files are source files named `test_*.py`, `*_test.py`, `conftest.py`, or un
 - The repository grew by 430 Python files since the baseline. The delta therefore
   should be used as a current closeout map, not as a direct one-number success metric.
 - The first S100 guard rerun found one new unapproved explicit database-route test
-  setup in `src/aeat/application/live/test_iva_wallet_capture_backend.py`. The test was
+  setup in the retired test. The test was
   migrated to real `isolated_runtime_profile` storage and runtime-bound repository
   injection instead of adding another explicit-route allowlist entry.
 
 ## Validation
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py`
+- the historical check
   - Result: 7 passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_iva_wallet_capture_backend.py`
+- the historical check
   - Result: 4 passed.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py`
+- the historical check
   - Result: all checks passed.
-- `uv run --no-sync ruff check src/aeat/application/live/test_iva_wallet_capture_backend.py src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py`
+- the historical check
   - Result: all checks passed.
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
+- `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
   - Result: existing `PLAN022` monotonicity warning only.
 
 ## Required follow-up

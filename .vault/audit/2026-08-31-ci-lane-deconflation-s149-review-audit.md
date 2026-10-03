@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:a6228f955178e9075c7b4fd199ea6e908574118529de18a6ce9a08de0067049d'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `Review P05 S149 identity resolution split`

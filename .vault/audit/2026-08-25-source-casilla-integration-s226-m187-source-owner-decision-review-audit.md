@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:bc359578d7ba06e989c51d82024c763e78b128b7d9d640c5faa376473f286b2b'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 # `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
 

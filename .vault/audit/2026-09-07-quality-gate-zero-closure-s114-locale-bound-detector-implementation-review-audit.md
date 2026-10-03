@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:3bd829a0be85a5b77fce36c1e43a48435e16c4af6eb19ba5718f32e06f52a826'
 related:
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
 ---
 # quality-gate-zero-closure audit: S114 locale-bound detector implementation review

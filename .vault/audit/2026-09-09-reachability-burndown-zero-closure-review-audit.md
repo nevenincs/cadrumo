@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-09'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:863502a7c1124155302d25e52093d23560a22e3e27a128efc338e10ab6290271'
-related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
+related: []
 ---
 
 # `reachability-burndown` audit: `exact zero closure review`

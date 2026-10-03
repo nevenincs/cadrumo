@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:19465bcefb4f5f810799dec6505d6ec78a70a568659d49147993612cec34b1b7'
+body_hash: 'sha256:49de806308344f7619c80b819ca0a25d0b20734d8ca3b0787672be815489e510'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]"
   - "[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]"
@@ -21,7 +21,7 @@ This reference grounds the next authority storage decision in live code as of 20
 
 ### The missing schema is the profile facts schema
 
-The on-disk `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:1` declares `cadrumo.user_profile`, version 6, sections, fields and derived selectors with legal references. `src/cadrumo/domain/user_profile/loader.py:39` loads it directly from bundled TOML, using a path/size/mtime cache at lines 52-66. `ProfileSchemaDefinition` remains the canonical typed contract at `src/cadrumo/domain/user_profile/schema.py:351`. These are declarations about profile facts, not taxpayer records.
+These are declarations about profile facts, not taxpayer records.
 
 Compilation already uses that schema indirectly: `dev/registry/compiler/validator.py:422` defaults to `load_user_profile_schema()` to validate model bindings, while `dev/registry/compiler/authority.py:110` does not inject a schema captured with the candidate. The input fingerprint collector checks an obsolete location under the AEAT root at `dev/registry/compiler/loader_fingerprints.py:232`. The actual schema is a sibling outside that root. Publication hashes AEAT files and evidence under corpus/manual roots at `dev/registry/pipeline/authority_publication.py:367` and `dev/registry/compiler/source_evidence_fingerprint.py:110`. It neither captures this sibling schema nor includes it in the compiled catalogues.
 
@@ -29,7 +29,7 @@ A read-only live Python probe imported the real fingerprint collectors and profi
 
 ### Governed tax facts are already enrolled
 
-`dev/registry/compiler/fact_loader.py:34` strictly parses one governed fact with `GovernedFact.model_validate`, rejecting unknown top-level tables and authored provider identity. `dev/registry/compiler/fact_providers.py:84` owns provider compilation/fingerprints/reset/directories; registrations at line 380 include authored facts and model projections. `dev/registry/compiler/authority.py:174` loads authored facts before model validation and attaches the final provider catalogue at line 222. The Python schema participates in domain-code build identity through `dev/registry/compiler/build_identity.py:14`.
+`dev/registry/compiler/fact_loader.py:34` strictly parses one governed fact with `GovernedFact.model_validate`, rejecting unknown top-level tables and authored provider identity. `dev/registry/compiler/fact_providers.py:84` owns provider compilation/fingerprints/reset/directories; registrations at line 380 include authored facts and model projections. `dev/registry/compiler/authority.py:174` loads authored facts before model validation and attaches the final provider catalogue at line 222.
 
 `src/cadrumo/domain/calculations/registry/authority_artifact.py:568` reconstructs governed facts from the published payload. The read-only artifact probe found 158 compiled governed facts; this observation is not an acceptance count. `uv run --no-sync pytest dev/registry/tests/test_fact_loader.py dev/registry/tests/test_fact_providers.py -q` exited 0 with 23 passing tests. These tests prove existing parser/provider behavior, not profile schema enrollment or a new backend.
 
@@ -45,15 +45,15 @@ A read-only live Python probe imported the real fingerprint collectors and profi
 
 The current fixed artifact locator is `src/cadrumo/domain/calculations/registry/authority.py:583`. Shared runtime admission at `authority_artifact.py:386` checks file identity, retries changing reads and caches only successful immutable graphs. Capture identity is process-incarnation sensitive as well as generation-sensitive; preserve that distinction when handles become lazy.
 
-Current `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py:264` rejects a digest-consistent malformed typed payload during open, because every component is decoded. Lazy loading necessarily changes this timing for unrequested typed payloads if all unsigned digests have been deliberately recomputed. Ordinary raw-byte corruption can still be rejected anywhere in the file at admission by a full-file digest. Full typed traversal before publication remains independently necessary; SQLite structural integrity is not semantic conformance or authentication.
+Lazy loading necessarily changes this timing for unrequested typed payloads if all unsigned digests have been deliberately recomputed. Ordinary raw-byte corruption can still be rejected anywhere in the file at admission by a full-file digest. Full typed traversal before publication remains independently necessary; SQLite structural integrity is not semantic conformance or authentication.
 
 ### Package and resource obligations
 
-`pyproject.toml:243` and line 345 pin the JSON artifact; exclusions cover AEAT authoring, not the sibling profile schema. `src/cadrumo/tests/test_wheel_content_boundary.py:309` checks archive contents. `dev/packaging/tests/test_installed_oracles.py:450` exercises artifact-only runtime, and line 579 exercises installed CLI/MCP corruption refusal.
+
 
 `src/cadrumo/core/resources/bundled_data.py:51` retains an extraction ExitStack for the process. `bundled_path` at line 77 yields filesystem resources, while scoped `as_path` at line 98 has a shorter lease. SQLite connections require an authority-directory resource lifetime covering both the descriptor and referenced database. Normal filesystem wheel installs are the initial supported target; zip-import must not be claimed without a real resource-lifetime test.
 
-`dev/registry/benchmark_authority.py:14` measures imports, authority hydration, first and repeated snapshots, public queries, enumeration and process memory. Its fresh-interpreter driver is at line 74. Command: `uv run --no-sync python -m dev.registry.benchmark_authority --runs 3`. It is currently observational rather than an authority performance acceptance gate.
+Its fresh-interpreter driver is at line 74. Command: `uv run --no-sync python -m dev.registry.benchmark_authority --runs 3`. It is currently observational rather than an authority performance acceptance gate.
 
 ### Consumer migration inventory
 
@@ -79,7 +79,7 @@ Every application-plan row must name one file or genuinely cohesive area; this i
 
 `dev/registry/compiler/fact_providers.py:303` inspects only immediate TOMLs under top-level directories; the subsequent recursive walk is limited to registered roots. An isolated temporary `rogue/nested/0001-omitted.toml` was accepted by the real directory-ownership validator (probe exit 0). Its filename declares a fact fragment but no provider owns it. By contrast, descendants of the registered facts root are intentionally loaded recursively. `dev/registry/tests/test_authority_enrollment.py:101` still expects a child under the owned facts root to require separate registration. Running `uv run --no-sync pytest dev/registry/tests/test_authority_enrollment.py -q` exited 1 with 1 failed, 4 passed; the sole failure is `test_top_level_sibling_under_the_governed_root_requires_an_exact_provider_owner`, DID NOT RAISE. This is a current pre-existing contract contradiction, not a regression from documentation work.
 
-The profile loader projects only three root members before strict model validation at `src/cadrumo/domain/user_profile/loader.py:86`. A temporary copy of the real schema with an added unknown top-level table loaded successfully through the real parser (probe exit 0). Strict Pydantic validation therefore does not currently make the TOML envelope strict.
+A temporary copy of the real schema with an added unknown top-level table loaded successfully through the real parser (probe exit 0). Strict Pydantic validation therefore does not currently make the TOML envelope strict.
 
 Provider `lifecycle_components` is not consumed, and `inherited_identity_domains` is checked for nonemptiness rather than resolved into executable dependency receipts at `dev/registry/compiler/fact_providers.py:88` and line 196. Current full-source hashing protects model projections conservatively; these fields do not establish selective dependency correctness. The seven implemented family types are repeated across schema, query and result unions at `src/cadrumo/domain/calculations/registry/facts/schema.py:143`, line 390, and `facts/resolution.py:85`, line 191. No matching family-enrollment parity gate was found in the focused audit; that is an inventory finding, not proof that no indirect test exists.
 

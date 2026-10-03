@@ -22,12 +22,6 @@ The rule covers national holidays plus the autonomous-community holiday
 of the taxpayer's domicilio fiscal. Local (municipal) holidays do NOT
 affect AEAT filing deadlines and are not part of this calendar.
 
-Weekends need no calendar: Ley 39/2015 art. 30.2 excludes "los sábados, los
-domingos y los declarados festivos" from días hábiles and art. 30.5 moves a
-last day that is inhábil "al primer día hábil siguiente". A year whose holiday
-calendar is not yet published still has its weekends applied; only its
-holidays stay unchecked, and the result says so.
-
 One well-known exception: **Modelo 369** (OSS / IOSS one-stop-shop)
 deadlines do NOT shift, even when the close date falls on a non-
 business day, because the OSS / IOSS regime is governed by the EU
@@ -56,7 +50,7 @@ from pydantic_core import CoreSchema, core_schema
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import RegistryToken
-from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
+from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import TemporalProjectionDirection
@@ -150,9 +144,8 @@ class DeadlineHolidayCoverage(StrEnum):
       only weekends and national holidays were checked.
     * ``NOT_SHIFTED`` — the modelo's deadline does not move for non-working
       days, so no calendar applies.
-    * ``CALENDAR_UNAVAILABLE`` — no holiday calendar is published for a year
-      the shift consulted, so weekends were applied but holidays were not
-      checked.
+    * ``CALENDAR_UNAVAILABLE`` — the holiday calendar could not be resolved
+      and the original close date was kept unverified.
     """
 
     NATIONAL_AND_TERRITORY = "national_and_territory"
@@ -249,11 +242,6 @@ class DeadlineShift(BaseModel):
 #: never grows a switch statement.
 MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
 
-#: Shift-reason token stating that holidays could not be checked because a
-#: consulted year has no published holiday calendar. It stands alone when the
-#: close date is a weekday and joins the weekend token when the date moved.
-CALENDAR_UNAVAILABLE_SHIFT_REASON = "calendar_unavailable"
-
 
 # ---------------------------------------------------------------------------
 # Calendar loader.
@@ -272,25 +260,9 @@ def load_holiday_calendar(
 ) -> HolidayCalendar:
     """Load a calendar through the caller's pinned operation.
 
-    A year with no governed publication is refused with
-    :class:`DeadlineValidationError`.
-    """
-    calendar = _load_published_calendar(year, operation=operation)
-    if calendar is None:
-        raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
-    return calendar
-
-
-def _load_published_calendar(
-    year: int,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> HolidayCalendar | None:
-    """Return the year's published calendar, or ``None`` when none is published.
-
     A calendar view shifts every deadline of a year against the same
     publication, so successful loads are reused per generation pin and year.
-    An unpublished year is not cached and is resolved again on its next request.
+    A refused year is not cached and is resolved again on its next request.
     """
     key = (operation.pin(), year)
     with _holiday_calendar_cache_lock:
@@ -298,9 +270,7 @@ def _load_published_calendar(
         if cached is not None:
             _holiday_calendar_cache.move_to_end(key)
             return cached
-    calendar = _published_calendar_from_authority(year, operation=operation)
-    if calendar is None:
-        return None
+    calendar = holiday_calendar_from_authority(year, operation=operation)
     with _holiday_calendar_cache_lock:
         _holiday_calendar_cache[key] = calendar
         _holiday_calendar_cache.move_to_end(key)
@@ -321,21 +291,8 @@ def holiday_calendar_from_authority(
     unpublished calendar year.  All individual holiday values are then read
     through exact event queries, retaining the authority's provenance.
     """
-    calendar = _published_calendar_from_authority(year, operation=operation)
-    if calendar is None:
-        raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
-    return calendar
-
-
-def _published_calendar_from_authority(
-    year: int,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> HolidayCalendar | None:
     coordinate = date(year, 7, 1)
     publication = _resolve_holiday_publication(year, coordinate, operation=operation)
-    if publication is None:
-        return None
     boe_ref_value, boe_url_value, verified_value = _publication_fields(publication, year=year)
     territory = _calendar_territory_resolver(operation=operation)
     verified_territories = _verified_calendar_territories(
@@ -362,8 +319,7 @@ def _resolve_holiday_publication(
     coordinate: date,
     *,
     operation: PinnedAuthorityOperation,
-) -> ResolvedEventFact | None:
-    """Return the year's authored publication, or ``None`` when the year has none."""
+) -> ResolvedEventFact:
     selected = operation
     try:
         publication = selected.resolve_governed_fact(
@@ -373,8 +329,6 @@ def _resolve_holiday_publication(
                 effective_date=coordinate,
             )
         )
-    except GovernedFactNotApplicableError:
-        return None
     except RegistryValidationError as exc:
         raise DeadlineValidationError(f"holiday calendar publication for {year} could not be resolved") from exc
     if not isinstance(publication, ResolvedEventFact):
@@ -382,7 +336,7 @@ def _resolve_holiday_publication(
     # A publication carried over from another year proves nothing about this
     # one: only an authored publication makes absent holiday events business days.
     if publication.projection_direction is not TemporalProjectionDirection.AUTHORED:
-        return None
+        raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
     return publication
 
 
@@ -637,20 +591,17 @@ def _calendar_source(
     calendars: tuple[HolidayCalendar, ...],
     *,
     operation: PinnedAuthorityOperation,
-) -> Callable[[int], HolidayCalendar | None]:
-    """Return a per-year calendar lookup: supplied calendars first, then the authority.
-
-    ``None`` means the year has no published calendar.
-    """
+) -> Callable[[int], HolidayCalendar]:
+    """Return a per-year calendar lookup: supplied calendars first, then the authority."""
     supplied: dict[int, HolidayCalendar] = {}
     for calendar in calendars:
         if calendar.year in supplied:
             raise DeadlineValidationError(f"more than one holiday calendar was supplied for {calendar.year}")
         supplied[calendar.year] = calendar
 
-    def calendar_for(year: int) -> HolidayCalendar | None:
+    def calendar_for(year: int) -> HolidayCalendar:
         calendar = supplied.get(year)
-        return calendar if calendar is not None else _load_published_calendar(year, operation=operation)
+        return calendar if calendar is not None else load_holiday_calendar(year, operation=operation)
 
     return calendar_for
 
@@ -658,11 +609,9 @@ def _calendar_source(
 def _territory_coverage(
     ccaa_code: CalendarCCAA | None,
     *,
-    calendar: HolidayCalendar | None,
+    calendar: HolidayCalendar,
 ) -> tuple[DeadlineHolidayCoverage, CalendarCCAA | None]:
     """Return the coverage one year's calendar gives and the territory it may apply."""
-    if calendar is None:
-        return DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE, None
     # A later deadline is the harmful error, so a territory's regional
     # holidays only move a date once its list for the year is verified.
     if ccaa_code is None:
@@ -672,30 +621,17 @@ def _territory_coverage(
     return DeadlineHolidayCoverage.TERRITORY_UNVERIFIED, None
 
 
-def _weaker_coverage(
-    current: DeadlineHolidayCoverage,
-    year_coverage: DeadlineHolidayCoverage,
-) -> DeadlineHolidayCoverage:
-    """Return the weaker coverage; unchecked holidays outrank an unverified territory."""
-    if DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE in (current, year_coverage):
-        return DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    if DeadlineHolidayCoverage.TERRITORY_UNVERIFIED in (current, year_coverage):
-        return DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
-    return current
-
-
 def _walk_to_business_day(
     start: date,
     *,
     ccaa_code: CalendarCCAA | None,
     coverage: DeadlineHolidayCoverage,
-    calendar_for: Callable[[int], HolidayCalendar | None],
+    calendar_for: Callable[[int], HolidayCalendar],
 ) -> tuple[date, DeadlineHolidayCoverage]:
     """Walk forward from ``start`` judging each day against its own year's calendar.
 
-    A year with no published calendar is judged on weekends alone. The
-    returned coverage is degraded when a year the walk enters does not verify
-    the territory or has no published calendar.
+    The returned coverage is degraded when a year the walk enters does not
+    verify the territory.
     """
     walked_coverage = coverage
 
@@ -703,9 +639,8 @@ def _walk_to_business_day(
         nonlocal walked_coverage
         calendar = calendar_for(candidate.year)
         year_coverage, applied_territory = _territory_coverage(ccaa_code, calendar=calendar)
-        walked_coverage = _weaker_coverage(walked_coverage, year_coverage)
-        if calendar is None:
-            return candidate.weekday() not in _WEEKEND
+        if year_coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
+            walked_coverage = year_coverage
         return is_business_day(candidate, calendar=calendar, ccaa_code=applied_territory)
 
     adjusted = _first_business_day(start, ccaa_code=ccaa_code, business_day=business_day)
@@ -736,14 +671,11 @@ def shift_deadline(
     Each day is judged against its own year's calendar, so a walk past 31
     December sees the following year's holidays. A year absent from
     ``calendars`` is resolved through the caller's pinned ``operation`` from
-    the governed publication and holiday event facts. A year with no governed
-    publication is never treated as a holiday-free calendar: its weekends
-    still move the date (Ley 39/2015 art. 30.2 and 30.5), the coverage is
-    ``CALENDAR_UNAVAILABLE`` and the shift reason carries
-    :data:`CALENDAR_UNAVAILABLE_SHIFT_REASON`, so the date is never presented
-    as checked against holidays. A malformed publication still fails closed
-    with :class:`DeadlineValidationError`. Coverage reports the weakest
-    verification among the years consulted.
+    the governed publication and holiday event facts. A missing publication
+    fact for any year the walk enters fails closed with
+    :class:`DeadlineValidationError`; it is never treated as a holiday-free
+    calendar. Coverage reports the weakest territory verification among the
+    years consulted.
     """
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
@@ -765,14 +697,10 @@ def shift_deadline(
     coverage, applied_territory = _territory_coverage(ccaa_code, calendar=close_calendar)
 
     # Determine whether the original date is a business day.
-    holidays_on_close = (
-        ()
-        if close_calendar is None
-        else _holidays_on(
-            original_close_date,
-            calendar=close_calendar,
-            ccaa_code=applied_territory,
-        )
+    holidays_on_close = _holidays_on(
+        original_close_date,
+        calendar=close_calendar,
+        ccaa_code=applied_territory,
     )
     is_weekend = original_close_date.weekday() in _WEEKEND
 
@@ -782,7 +710,7 @@ def shift_deadline(
             adjusted_close_date=original_close_date,
             shifted=False,
             shift_days=0,
-            shift_reason="business_day" if close_calendar is not None else CALENDAR_UNAVAILABLE_SHIFT_REASON,
+            shift_reason="business_day",
             jurisdictions=(),
             holiday_refs=(),
             coverage=coverage,
@@ -800,8 +728,6 @@ def shift_deadline(
         coverage=coverage,
         calendar_for=calendar_for,
     )
-    if coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
-        reason = f"{reason} + {CALENDAR_UNAVAILABLE_SHIFT_REASON}"
 
     return DeadlineShift(
         original_close_date=original_close_date,
@@ -816,7 +742,6 @@ def shift_deadline(
 
 
 __all__ = (
-    "CALENDAR_UNAVAILABLE_SHIFT_REASON",
     "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
     "HOLIDAY_EVENT_FACT_ID",
     "MODELOS_WITHOUT_SHIFT",

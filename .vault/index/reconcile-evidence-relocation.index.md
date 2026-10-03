@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#reconcile-evidence-relocation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e7d93021f5bf6b2bd9df95106238b9a076da006f094debda49ba7f583d70462f'
+body_hash: 'sha256:cdc9efd9016337cc146c057771332bd50ba32475a86206c91f1ee3d48e799108'
 related:
   - '[[2026-07-25-reconcile-evidence-relocation-adr]]'
-  - '[[2026-07-25-reconcile-evidence-relocation-ledger]]'
-  - '[[2026-07-25-reconcile-evidence-relocation-plan]]'
   - '[[2026-07-25-reconcile-evidence-relocation-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#reconcile-evidence-relocatio
 ### adr
 
 - `2026-07-25-reconcile-evidence-relocation-adr` - `reconcile-evidence-relocation` adr: `where reconcile diff detail persists` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-25-reconcile-evidence-relocation-ledger` - `reconcile-evidence-relocation` ledger
-
-### plan
-
-- `2026-07-25-reconcile-evidence-relocation-plan` - `reconcile-evidence-relocation` plan
 
 ### research
 

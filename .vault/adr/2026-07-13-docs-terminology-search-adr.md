@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docs-terminology-search'
 date: '2026-07-13'
-modified: '2026-09-10'
-body_hash: 'sha256:c224fd1c268cbb53889b162c31677568c3978026a309de2b1229583e18aee8be'
+modified: '2026-10-03'
+body_hash: 'sha256:17dd46d0ea32058fe33ae38fde040f60ee24a57fcd7001912a5ac08422ba819a'
 related:
   - "[[2026-07-13-docs-terminology-search-research]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -134,7 +134,7 @@ Execution of the cutover surfaced a fact the decision missed: the committed
 `*.extracted.md` / `*.extracted.json` sidecars are no longer only the dev-RAG
 interim. They are PRODUCT data — the shipped offline corpus search builds its
 lexical index from the bundled `*.html.extracted.json` triples
-(`src/cadrumo/application/corpus_search/_lexical_index.py`), the
+, the
 manual-oracle grounding anchors (`raw_evidence_locator`) cite line ranges
 inside `*.extracted.md`, and the wheel content boundary deliberately ships
 the extracted text WHILE EXCLUDING the source binaries, so inside the wheel

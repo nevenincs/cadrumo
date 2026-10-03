@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:99bea277d989307e25b9e5a35641df01ec1b8df0716606f1c955481dbae7efa8'
+body_hash: 'sha256:96e08ea0e22efad9b5f6c7e43377c75efcf2289a97ee4593d4cd17e9f0f3ad8c'
 related: []
 ---
 
@@ -60,17 +60,7 @@ that invokes the existing computed key.
 
 ## Modelo 111's sibling composition, the working precedent
 
-`src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/export/0010-record-envelope-header.toml`
-declares the open tag as six fields, all summing to offset 1-17: literal `<T`
-(offset 1, len 2), literal `111` (offset 3, len 3), literal `0` (offset 6, len
-1), draft `filing_year` (offset 7, len 4), draft `period_code` (offset 11, len
-2), literal `0000>` (offset 13, len 5) — then literal `<AUX>` (offset 18, len
-5), filler (offset 23, len 70), header `program_version` (offset 93, len 4),
-filler (offset 97, len 4), header `presenter_nif` (offset 101, len 9), filler
-(offset 110, len 213), literal `</AUX>` (offset 323, len 6). A separate record
-`0030-record-envelope-footer.toml`, `record_type = "envelope_footer"`, `order =
-2`, carries the single computed closing-tag field (offset 1, len 18,
-`computed_key = "envelope_closing_tag"`).
+A separate record `0030-record-envelope-footer.toml`, `record_type = "envelope_footer"`, `order = 2`, carries the single computed closing-tag field (offset 1, len 18, `computed_key = "envelope_closing_tag"`).
 
 M200's positions 18, 23, 93, 97, 101, 110, 323 match M111's byte-for-byte
 (`<AUX>` at 18/len5, reserved at 23/len70, program_version at 93/len4, reserved
@@ -84,8 +74,7 @@ for M111 rather than a regime code for M200.
 
 ## What the current M200 registry declares (the defect)
 
-`src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`,
-record `modelo-200-page-000`, `record_type = "page_000"`, `order = 0`:
+
 
 - `modelo-200-page-000-draft-filing_year-pos-1`: offset 1, length 17, `kind =
   "draft"`, `draft_attribute = "filing_year"`. `_draft_value` (`_export.py:891`)
@@ -142,31 +131,14 @@ default.
 
 ## Draft-attribute canonical widths (current abstention)
 
-`src/cadrumo/domain/calculations/registry/_validate_exports.py:67-103`,
-`_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS`, keyed by `draft_attribute`:
-`profile_tax_id` is gated at 9 (`SPANISH_TAX_ID_WIDTH`); `modelo` and `period`
-abstain (`None`, no declaration anywhere to gate against); `filing_year`
-abstains with an explicit comment naming this exact M200 divergence as the
-reason; `period_code` abstains "because the token's width has not been
-established against the published diseños." The `DP200000` sheet's row 1
-establishes `periodo` at 2 characters (`"0A"` in the example), matching every
-other `period_code` declaration corpus-wide (23 declarations, uniform at 2 per
-the dispatch brief's measured distribution) — the abstention reason for
-`period_code` no longer holds once this reference is read.
+
 
 ## `draft_attribute` and field-kind schema
 
-`src/cadrumo/domain/calculations/registry/_schema_surfaces.py:695` types
-`draft_attribute` as `Literal["modelo", "period", "profile_tax_id",
-"filing_year", "period_code"]` — no change needed; the restructured page-000
-record composes existing `draft`, `literal`, and `header` field kinds, all
-already declared and validated (`_validate_field_kind`,
-`_schema_surfaces.py:708-720`: `LITERAL` requires `literal`, `HEADER` requires
-`header_key`, `COMPUTED` requires `computed_key`).
+
 
 ## Files to change
 
-- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`
   — restructure the open-tag field into the six-component composite, promote
   `<AUX>`/`</AUX>` to `literal`, promote `program_version`/NIF-empresa-desarrollo
   to `header`.
@@ -174,7 +146,6 @@ already declared and validated (`_validate_field_kind`,
   77` (immediately after `did`'s `order = 76`), one field: offset 1, length 18,
   `kind = "computed"`, `computed_key = "envelope_closing_tag"` — mirrors
   `0030-record-envelope-footer.toml` for M111 exactly.
-- `src/cadrumo/domain/calculations/registry/_validate_exports.py` —
   `_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS["filing_year"]` moves from `None` to `4`
   once the sole divergent declaration is fixed; `["period_code"]` moves from
   `None` to `2` on the same evidence.

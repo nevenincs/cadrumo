@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m202-first-period-attestation'
 date: '2026-06-19'
-modified: '2026-07-17'
-body_hash: 'sha256:f31b260be66998832a26fe3f18881e80b2ec53eba5444a91221804c37e8ca39c'
+modified: '2026-10-03'
+body_hash: 'sha256:f2e072f4291faa753995dc906ce9dab3102bc60e3c2b49523befb2c61339a510'
 related:
   - '[[2026-06-13-first-filer-attestation-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
@@ -17,7 +17,7 @@ related:
 
 A genuinely-not-obligated first-year Impuesto sobre Sociedades (IS) company
 cannot clear the Modelo 200 to Modelo 202 cross-period clean-state gate. The gate
-(`src/cadrumo/application/calculations/_cross_period_clean_state.py`) derives a
+ derives a
 cross-period dependency on Modelo 202 (pagos fraccionados) and demands AEAT
 evidence of a prior-period Modelo 200/202 filing. For a first-year IS filer under
 modalidad cuota (LIS art. 40.2) that evidence cannot exist: in modalidad cuota the
@@ -47,8 +47,7 @@ fraccionado is computed on the CURRENT year's running base imponible, so it IS
 owed in the first IS year. The split therefore hinges on the derived modality.
 
 The obligation logic already exists and is grounded:
-`derive_modelo_202_modality(profile)` in
-`src/cadrumo/domain/calculations/registry/_applicability_modelo202.py` returns
+`derive_modelo_202_modality(profile)`  returns
 `ART_40_2_OPTIONAL` (legal entity, INCN <= 6.000.000), `ART_40_3_MANDATORY`
 (legal entity, INCN > 6.000.000), or `INCOMPLETE` (not a legal entity, or INCN
 undeclared). The first-year fact is read from the operator-declared

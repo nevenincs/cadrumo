@@ -3,13 +3,14 @@ tags:
   - '#plan'
   - '#release-readiness-gate'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:f343e29e848d311bdecaa17374839daf0adcc9dbb5bd9b49b9bfaf807f713bd1'
 tier: L1
 related:
   - '[[2026-07-04-release-readiness-gate-adr]]'
   - '[[2026-07-06-release-readiness-gate-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:681dbee4be594d2178166ef15210fa6185582ff21e52628822497f18332c046e'
 ---
+
 # `release-readiness-gate` plan
 
 ## Description
@@ -29,7 +30,7 @@ release-rollback` prints that procedure without ever executing it.
 
 ## Steps
 
-- [x] `S01` - Implement the release audit-state gate, RC-soak procedure, and rollback procedure per GH issue #415; `dev/release/readiness.py, dev/release/tests/test_readiness.py, docs/_release_checklist.yaml, docs/_release_notes_template.md, justfile, RELEASING.md, src/aeat/tests/test_release_config.py`.
+- [x] `S01` - Implement the release audit-state gate, RC-soak procedure, and rollback procedure per GH issue #415; `dev/release/readiness.py, dev/release/tests/test_readiness.py, docs/_release_checklist.yaml, docs/_release_notes_template.md, justfile, RELEASING.md, src/cadrumo/tests/test_release_config.py`.
 
 ## Parallelization
 

@@ -8,6 +8,10 @@ import os
 import sys
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
+from cadrumo.core.storage_environment import configured_storage_root, storage_directory
+
 from dev.registry.binding_signal.common import required_mapping, stable_dump
 from dev.registry.binding_signal.consumer_audit import audit_consumers
 from dev.registry.binding_signal.report import blocking_findings, build_report, summary
@@ -32,7 +36,12 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR", ".tmp")) / "binding-signal.json",
+        default=storage_directory(
+            "CADRUMO_DEV_ARTIFACTS_DIR",
+            "development/artifacts",
+            root=configured_storage_root(repository_root=REPO_ROOT),
+        )
+        / "binding-signal.json",
         help="Detailed JSON destination; the just command overrides this with its run artifact path.",
     )
     parser.add_argument(

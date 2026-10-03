@@ -7,12 +7,11 @@ from datetime import date
 
 from ...iva.schema import IvaArt69DosService, IvaExemptionArticle
 from .errors import RegistryValidationError
-from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import UNIQUE_REFERENCES_REQUIREMENT, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource
 from .iva_schema_vocabulary_source import (
     SCHEMA_VOCABULARY_SUBJECT,
     UNIQUE_TOKENS_REQUIREMENT,
-    csv_legal_references,
     resolve_scoped_schema_entries,
 )
 from .iva_schema_vocabulary_tokens import _require_token
@@ -105,7 +104,12 @@ def resolve_iva_exemption_article_catalogue(
             IvaExemptionArticleDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=SCHEMA_VOCABULARY_SUBJECT),
-                legal_refs=csv_legal_references(entries, f"{prefix}.legal_refs", required=True),
+                legal_refs=unique_mapping_tokens(
+                    entries,
+                    f"{prefix}.legal_refs",
+                    subject=SCHEMA_VOCABULARY_SUBJECT,
+                    requirement=UNIQUE_REFERENCES_REQUIREMENT,
+                ),
             ),
         )
     return IvaExemptionArticleCatalogue(definitions=tuple(definitions))
@@ -130,7 +134,12 @@ def resolve_iva_art69_dos_service_catalogue(
             IvaArt69DosServiceDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=SCHEMA_VOCABULARY_SUBJECT),
-                legal_refs=csv_legal_references(entries, f"{prefix}.legal_refs", required=True),
+                legal_refs=unique_mapping_tokens(
+                    entries,
+                    f"{prefix}.legal_refs",
+                    subject=SCHEMA_VOCABULARY_SUBJECT,
+                    requirement=UNIQUE_REFERENCES_REQUIREMENT,
+                ),
             ),
         )
     return IvaArt69DosServiceCatalogue(definitions=tuple(definitions))

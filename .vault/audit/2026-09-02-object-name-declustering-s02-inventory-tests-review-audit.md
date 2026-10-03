@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e4511de94dfdf64257a050907ddcf77011f4f22c7e67aa50c96ccf48b1ca7374'
+body_hash: 'sha256:6022178a3a0dd0ca4967a3f10e3d287ecc1142e5540c2015292f9c72a45d6ee4'
 related: []
 ---
 
@@ -13,14 +13,7 @@ related: []
 
 ## Scope
 
-Reviewed the two `W01.P01.S02` regression tests in
-`dev/audit/tests/test_object_names.py` against the accepted inventory contract,
-the production serializer in `dev/audit/object_names.py`, and the open medium
-finding from the `W01.P01.S01` review. The review covered complete declaration
-records, deterministic reruns and input ordering, raw-byte source identity,
-inventory-digest sensitivity, line-independent finding identity, line-bearing
-site drift, and qualified-site stability. No production or test code was
-changed by this review.
+The review covered complete declaration records, deterministic reruns and input ordering, raw-byte source identity, inventory-digest sensitivity, line-independent finding identity, line-bearing site drift, and qualified-site stability. No production or test code was changed by this review.
 
 The focused suite completed with 24 passing tests. Ruff lint and formatting
 checks passed for the production module and focused test module. The new tests

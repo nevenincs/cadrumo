@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e29136c184947ba6c320c5a68b1b1b3cbf784b00686152fd14b4e6a2dac044b0'
+modified: '2026-10-03'
+body_hash: 'sha256:e7cde363f6a2b888b3385bc3c6aecdcb976edaa88f07ccc34aa2950d091d24c4'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S285-001 | PASS | Active-profile health storage boundary
 
-`src/aeat/application/workflow/_profile_health.py` is an application health and repair
+The retired module was an application health and repair
 projection over the active profile. It reads active-profile pointers, bucket manifests,
 and encrypted profile records through centralized settings, pointer I/O, bucket
 manifest helpers, workflow state repositories, and lifecycle services. It does not
@@ -43,8 +43,8 @@ manifest helpers, and workflow repositories rather than duplicating those concer
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/workflow/_profile_health.py src/aeat/application/workflow/test_profile_health.py src/aeat/entrypoints/cli/_config/__init__.py src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_profile_health.py src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py::test_config_profile_show_does_not_suggest_switch_for_missing_record`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "active profile health projection manifest status repair next_action settings master key no active bucket session" --type code --port 8766 --max-results 10`
 

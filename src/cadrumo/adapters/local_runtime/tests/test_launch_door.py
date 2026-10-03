@@ -25,7 +25,7 @@ from ..posix_endpoint import PosixRuntimeEndpoint
 from ..runtime_transport_cleanup import RuntimeTransportCleanup
 from ..startup import RuntimeLaunchDoor
 from ..windows import WindowsRuntimeEndpoint
-from .process_support import launch_fixture
+from .process_support import launch_fixture, runtime_namespace_base
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 
@@ -69,8 +69,7 @@ class _RuntimeProcess:
 
 @asynccontextmanager
 async def _fixture(root: Path) -> AsyncIterator[tuple[_RuntimeProcess, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
-    temporary_parent = None if sys.platform == "win32" else Path("/") / "tmp"
-    with tempfile.TemporaryDirectory(prefix="cr-door-", dir=temporary_parent) as folder:
+    with tempfile.TemporaryDirectory(prefix="s-", dir=runtime_namespace_base()) as folder:
         namespace = Path(folder) / "ipc"
         runtime = _RuntimeProcess(root, namespace)
         endpoint = (

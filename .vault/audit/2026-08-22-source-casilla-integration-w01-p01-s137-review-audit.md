@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c3abec74db77bd88f8911c7202a5abed554d287d49af8888a1cd3ef2a9fd1d34'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
 ---
 # `source-casilla-integration` audit: `W01 P01 S137 calculation workflow catalogue review`

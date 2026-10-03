@@ -68,7 +68,7 @@ from typing import Final
 from dev._paths import REPO_ROOT, UTF_8
 from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.exit_codes import FINDINGS_CODES, OK
-from dev.test_runs.paths import allocate_run_directory
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
@@ -383,7 +383,7 @@ def main() -> int:
     else:
         print(render_text_report(report, args.full))
 
-    run_dir = persist_report(repo_root, report, tuple(sys.argv))
+    run_dir = persist_report(test_log_root(), report, tuple(sys.argv))
     if not args.json:
         print(f"full report persisted to {run_dir}")
 

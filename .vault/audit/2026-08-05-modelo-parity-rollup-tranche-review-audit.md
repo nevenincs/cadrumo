@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:89af83a5cfa144a056e476f7d783981925e8472c385115fa32442953bee3d2c7'
+body_hash: 'sha256:1beb27ab151052b1d707d03aba76b566be88d657723d9fd7bc8dad08c5cb41ae'
 related:
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
 
 # `modelo-parity-rollup` audit: `Luna Max parity tranche code review`
@@ -18,7 +17,7 @@ related:
 
 Reviewed the accepted five-domain parity ADR, the denominator research, the L3 execution plan, and the bounded Luna Max changes for exact annual-coordinate measurement, casilla producer/formula closure, and M100 2024 external-oracle enrollment.
 
-Owned surfaces reviewed were `dev/registry/conformance/manager.py`, `dev/tests/test_registry_conformance_cli.py`, `src/cadrumo/domain/calculations/registry/_schema.py`, `src/cadrumo/domain/calculations/registry/_validate.py`, `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_casilla_wiring_contract.py`, and the M100 2024 verification expectation declaration. Unrelated contribuyente and profile worktree changes were preserved and treated as peer-owned.
+Owned surfaces reviewed were `dev/registry/conformance/manager.py`, the retired test, the retired module, the retired module, the retired test, and the M100 2024 verification expectation declaration. Unrelated contribuyente and profile worktree changes were preserved and treated as peer-owned.
 
 ## Findings
 

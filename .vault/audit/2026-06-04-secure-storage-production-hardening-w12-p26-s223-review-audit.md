@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:2d70c8ef0d92a3cc16cb781db69990294cca13f5194f89c57337e68c34e8d4f1'
+modified: '2026-10-03'
+body_hash: 'sha256:5b9610b24cd1191f5832ceec5f3d9654e67a83346dcf1ae66bc283c9a387d87e'
 related: []
 ---
 
@@ -26,8 +26,8 @@ The report proves the production default path loads the requested bucket.
 
 ## S223-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/ledger/_preflight.py src/aeat/application/ledger/test_preflight.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/ledger/test_preflight.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for S223.

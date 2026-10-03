@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:42afdc70b6016becb161f5c9eb52e9185ad157994855c4aa59232f6677a7bceb'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-tui-architecture-w08-p25-s365-review-audit]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"

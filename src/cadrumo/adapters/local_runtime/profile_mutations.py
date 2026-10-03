@@ -4,28 +4,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cache
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
-from ...application.operations.frontend_requests import (
-    OperationResultProjectionRefusalV1,
-    OperationResultProjectionRequestV1,
-    OperationResultProjectionSuccessV1,
-)
+from ...application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from ...application.operations.models import OperationId
 from ...application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
-    OperationSchemaIdentityV1,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import bounded_deadline_after
-from ...application.runtime.operation_access import (
-    RuntimeOperationProjected,
-    RuntimeOperationReply,
-    RuntimeOperationResult,
-)
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
@@ -49,7 +39,6 @@ from ...application.user_profile.profile_operation_contracts import (
     ProfileRepeatableRowUpdateOperationRequest,
 )
 from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import (
     OperationEffect,
     OperationTerminalCondition,
@@ -58,7 +47,12 @@ from ...core.operations import (
 from .frontend_client import RuntimeFrontendClient
 from .frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 from .operation_run_error_context import operation_run_error_context
-from .operation_settlement import PinnedConnection, start_and_await_terminal, submit_operation
+from .operation_settlement import (
+    PinnedConnection,
+    read_settled_result_bytes,
+    start_and_await_terminal,
+    submit_operation,
+)
 
 type ProfileMutationRequest = (
     ProfileFieldMutationOperationRequest
@@ -172,7 +166,7 @@ def run_profile_mutation(
     observation. ``terminal_condition`` and ``effect`` are populated only when
     a valid terminal observation was actually received.
     """
-    deadline, registration, contract, result_schema = _profile_mutation_contract(client, request, timeout)
+    deadline, registration, contract = _profile_mutation_contract(client, request, timeout)
     pinned = PinnedConnection.of(client)
     profile_id = pinned.profile_id
     subject_ref = profile_operation_subject(str(profile_id))
@@ -204,23 +198,8 @@ def run_profile_mutation(
                 terminal_condition=condition,
                 effect=effect,
             )
-        result = client.operation(
-            RuntimeOperationResult(
-                request_id=uuid4(),
-                profile_id=profile_id,
-                session_id=pinned.session_id,
-                result=OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=projection.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=result_schema,
-                ),
-            ),
-            deadline=deadline,
-        )
-        accepted = _validated_profile_mutation_projection(
-            result, operation_id, registration, contract, request, profile_id
-        )
+        encoded = read_settled_result_bytes(client, operation_id, projection, contract, deadline=deadline)
+        accepted = _validated_profile_mutation_projection(encoded, registration, contract, request, profile_id)
         return ProfileMutationCompletion(operation_id=operation_id, projection=accepted, effect=effect)
     except ProfileMutationRunError:
         raise
@@ -240,9 +219,7 @@ __all__ = ["ProfileMutationCompletion", "ProfileMutationRequest", "ProfileMutati
 
 def _profile_mutation_contract(
     client: RuntimeFrontendClient, request: ProfileMutationRequest, timeout: float
-) -> tuple[
-    float, OperationPublicDefinitionRegistrationV1, OperationPublicDefinitionContractV1, OperationSchemaIdentityV1
-]:
+) -> tuple[float, OperationPublicDefinitionRegistrationV1, OperationPublicDefinitionContractV1]:
     """Validate the exact supported request and acquire its canonical mutation contract."""
     if type(request) not in _SUPPORTED_REQUEST_TYPES:
         raise TypeError("unsupported profile mutation request type")
@@ -253,30 +230,18 @@ def _profile_mutation_contract(
     contract = client.contract(registration.contract.definition_id, deadline=deadline)
     if contract != registration.contract or contract.result_schema is None:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    return deadline, registration, contract, contract.result_schema
+    return deadline, registration, contract
 
 
 def _validated_profile_mutation_projection(
-    result: RuntimeOperationReply,
-    operation_id: OperationId,
+    encoded: bytes,
     registration: OperationPublicDefinitionRegistrationV1,
     contract: OperationPublicDefinitionContractV1,
     request: ProfileMutationRequest,
     profile_id: UUID,
 ) -> ProfileMutationOperationProjection:
     """Require a typed settled result for the addressed profile and expected revision."""
-    if (
-        not isinstance(result, RuntimeOperationProjected)
-        or result.operation_id != operation_id
-        or result.projection_kind != "result"
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    if result.document.get("outcome") == "refused":
-        refused = OperationResultProjectionRefusalV1.model_validate_json(canonical_json_bytes(result.document))
-        raise RuntimeFrontendRefusedError(refused.code.value)
-    success = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(
-        canonical_json_bytes(result.document)
-    )
+    success = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(encoded)
     expected_type = next(
         binding.model_type for binding in registration.schema_bindings if binding.identity == contract.result_schema
     )

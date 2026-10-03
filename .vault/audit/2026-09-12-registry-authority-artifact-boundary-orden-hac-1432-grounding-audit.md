@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:ff0b3a60a173c98e978473d7b7a008969e0ed9a84c80b3862845ea6e07bb26cd'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 # `registry-authority-artifact-boundary` audit: `Orden HAC/1432/2024 grounding repair`
 

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:09ea798caf4973972ba66cc040f1b1da19e8914272e104cb58cc71a24429c566'
+body_hash: 'sha256:35b68cdfd574886ac9f9aacc77515aa9a75d6eeb9db053484e9de203fbc255cc'
 related: []
 ---
 
@@ -21,11 +21,11 @@ The implementation exposes a store-wide `FileFallbackMasterKeyProvider`, master-
 
 ### Current authority is store-scoped while the user contract is profile-scoped
 
-The file provider persists `master.key` and `master.kdf`, and the application custody facade describes access to those store-level artifacts (`src/cadrumo/application/user_profile/_custody.py:27`). Bucket manifests carry public KDF parameters and a recovery-enrollment mirror (`src/cadrumo/adapters/persistence/storage/bucket/_manifest.py:133`). Multiple profiles therefore depend on shared custody state even though profile selection and password entry express an independent profile boundary.
+The file provider persists `master.key` and `master.kdf`, and the application custody facade describes access to those store-level artifacts . Bucket manifests carry public KDF parameters and a recovery-enrollment mirror . Multiple profiles therefore depend on shared custody state even though profile selection and password entry express an independent profile boundary.
 
 ### Recovery currently crosses the normal profile aggregate
 
-Recovery status is read from its envelope and then mirrored into the active manifest through a separate write (`src/cadrumo/application/user_profile/_custody.py:154`, `src/cadrumo/application/user_profile/_custody.py:225`). Sealed archives also condition their member count and payload on optional `recovery.wrap` material (`src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_reader.py:227`). This coupling lets missing or damaged optional material affect otherwise valid password custody or backup completeness unless the new format separates the authorities.
+Recovery status is read from its envelope and then mirrored into the active manifest through a separate write (the former source file, the former source file). Sealed archives also condition their member count and payload on optional `recovery.wrap` material . This coupling lets missing or damaged optional material affect otherwise valid password custody or backup completeness unless the new format separates the authorities.
 
 ### Password-derived independent profile custody fits the security boundary
 
@@ -51,11 +51,7 @@ This research did not attempt to recover production secrets, read retired artifa
 ## Sources
 
 - `src/cadrumo/adapters/persistence/storage/master_key/__init__.py:1`
-- `src/cadrumo/application/user_profile/_custody.py:27`
-- `src/cadrumo/application/user_profile/_custody.py:154`
-- `src/cadrumo/application/user_profile/_custody.py:225`
-- `src/cadrumo/adapters/persistence/storage/bucket/_manifest.py:133`
-- `src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_reader.py:227`
+
 - `packaging/mcpb/build.py:207`
 - `pyproject.toml:34`
 - Commits `cf0414481611a819bcd193367b01867ea65b9601`, `ed32e783fca6d4de1b54963d0f6ecfec73058af4`, and `15e70a6aac126dfac1b8954e8a28475a7b3f4821`

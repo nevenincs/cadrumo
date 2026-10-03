@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
+from dev._paths import prepare_temporary_directory
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
@@ -49,7 +50,7 @@ from .bootstrap_supersession import (
     validate_bootstrap_manual_export_layout_supersession,
 )
 from .bootstrap_targets import GeneratedExportBootstrapTarget, generated_export_bootstrap_target
-from .candidate_staging import stage_generated_export_candidate
+from .candidate_staging import stage_attested_inherited_modelo, stage_generated_export_candidate
 from .edition_candidate_staging import (
     drop_cross_edition_evolutions,
     edition_requires_detachment,
@@ -58,6 +59,8 @@ from .edition_candidate_staging import (
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .export_tree_models import RenderedExportTree
+from .generated_export_inheritance import select_generated_export_inheritance
+from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .render_check import (
     GeneratedExportBootstrapTransport,
@@ -207,6 +210,7 @@ class PreparedGeneratedTreeInvocation:
     target_export_root: Path
     published_modelo_root: Path | None
     supersession: GeneratedExportSupersession | None = None
+    inheritance: GeneratedExportInheritanceContext | None = None
 
 
 def reviewed_bootstrap_target(
@@ -303,6 +307,12 @@ def prepare_generated_tree_invocation(
         raise ValueError(str(error)) from error
 
     candidate_root = root / "candidate" / "registry" / "aeat"
+    inheritance = select_generated_export_inheritance(
+        authority,
+        target_root,
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+    )
     stage_generated_export_candidate(
         target_root,
         candidate_root,
@@ -310,6 +320,7 @@ def prepare_generated_tree_invocation(
         revision=invocation.revision,
         supporting_modelos=supporting_modelos(invocation.modelo),
         bootstrap_target=bootstrap_target,
+        inheritance=inheritance,
     )
     validation = GeneratedExportTreeValidationContext(
         registry_root=candidate_root,
@@ -329,6 +340,7 @@ def prepare_generated_tree_invocation(
             root,
             revision=invocation.revision,
         ),
+        inheritance=inheritance,
     )
     return PreparedGeneratedTreeInvocation(
         invocation=invocation,
@@ -337,8 +349,14 @@ def prepare_generated_tree_invocation(
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=target_export_root,
-        published_modelo_root=stage_published_modelo(root, modelo=invocation.modelo, revision=invocation.revision),
+        published_modelo_root=stage_published_modelo(
+            root,
+            modelo=invocation.modelo,
+            revision=invocation.revision,
+            inheritance=inheritance,
+        ),
         supersession=supersession,
+        inheritance=inheritance,
     )
 
 
@@ -355,7 +373,13 @@ def supporting_modelos(modelo: str) -> frozenset[str]:
     return frozenset(item for item in referenced - {modelo} if (modelos_root / item).is_dir())
 
 
-def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | None:
+def stage_published_modelo(
+    root: Path,
+    *,
+    modelo: str,
+    revision: str,
+    inheritance: GeneratedExportInheritanceContext | None = None,
+) -> Path | None:
     """Stage a one-revision published modelo only when check needs the witness.
 
     The witness is staged in registry shape with the published authored facts
@@ -371,6 +395,14 @@ def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | 
     staged_registry_root = root / "published-registry" / "aeat"
     shutil.copytree(source_registry_root / "facts", staged_registry_root / "facts")
     shutil.copytree(source_registry_root / "legal", staged_registry_root / "legal")
+    if inheritance is not None:
+        return stage_attested_inherited_modelo(
+            source_modelo_root,
+            staged_registry_root / "modelos" / modelo,
+            revision=revision,
+            inheritance=inheritance,
+            include_target_export=True,
+        )
     staged = stage_isolated_edition(
         source_modelo_root,
         staged_registry_root / "modelos" / modelo,
@@ -495,6 +527,7 @@ def _render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExpo
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
         source_defects=source_defects_for(prepared.invocation.source_ref),
+        inheritance=prepared.inheritance,
     )
     prepare_generated_form_layout_companion(prepared.validation, temporary_root=prepared.candidate_root.parents[2])
     return rendered
@@ -696,7 +729,6 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         committed_root=prepared.target_export_root,
         rendered_root=candidate_export_root,
     )
-    require_republication_eligibility(prepared.invocation, target_state, comparison)
     validate_generated_export_tree(
         context=prepared.validation,
         joined=prepared.inputs.joined,
@@ -705,7 +737,53 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
+    if prepared.inheritance is not None and comparison.disposition_class == "record_drift":
+        _require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
+    else:
+        require_republication_eligibility(prepared.invocation, target_state, comparison)
     publish_prepared_invocation(prepared, rendered, target_state)
+
+
+def _require_storage_equivalent_republication(
+    prepared: PreparedGeneratedTreeInvocation,
+    rendered: RenderedExportTree,
+    target_state: GeneratedExportTreeTargetStateReceipt,
+    comparison: RenderComparison,
+) -> None:
+    """Admit only an exact old full tree becoming an equal, attested keyed delta."""
+    _require_republication_target_binding(prepared.invocation, target_state, comparison)
+    if (
+        prepared.inheritance is None
+        or rendered.output_files != ("0000-export-layout.toml",)
+        or rendered.provenance_manifest.generated_export_inheritance != prepared.inheritance.attestation
+        or comparison.disposition_class != "record_drift"
+        or comparison.only_rendered
+    ):
+        raise ValueError("storage-equivalent republish requires an exact attested child delta and old full tree")
+    full_root = prepared.candidate_root.parents[2] / "full-storage-witness" / "export"
+    full_rendered = render_complete_export_tree(
+        full_root,
+        revision_id=prepared.inputs.revision_id,
+        joined=prepared.inputs.joined,
+        semantic_map=prepared.inputs.semantic_map,
+        transport_profile=prepared.inputs.transport_profile,
+        render_profile=prepared.inputs.render_profile,
+        render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        source_defects=source_defects_for(prepared.invocation.source_ref),
+    )
+    if full_rendered.layout != rendered.layout or full_rendered.field_derivations != rendered.field_derivations:
+        raise ValueError("storage-equivalent republish changed fresh child layout or derivations")
+    old_full_comparison = compare_export_tree_roots(
+        modelo=prepared.invocation.modelo,
+        revision=prepared.invocation.revision,
+        layout_id=prepared.inputs.layout_id,
+        committed_root=prepared.target_export_root,
+        rendered_root=full_root,
+    )
+    if not old_full_comparison.reproduced:
+        raise ValueError(
+            "storage-equivalent republish refuses an old target that does not reproduce the current full source render"
+        )
 
 
 def _run(
@@ -814,7 +892,9 @@ def target_currentness(
         effective_filing_year,
         effective_period,
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-generated-export-currentness-") as temporary_name:
+    with tempfile.TemporaryDirectory(
+        prefix="cadrumo-generated-export-currentness-", dir=prepare_temporary_directory()
+    ) as temporary_name:
         prepared = at_edition_grade(
             prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority),
             selected.effective_authority_grade,

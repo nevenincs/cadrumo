@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:2a31f22f0784046a2ce6dc610b71ba7b42b3f63497182c1e03517d2a155a71a5'
+modified: '2026-10-03'
+body_hash: 'sha256:34ac0a4ad9114b96a58891f28683351ecfd6b03f9ccb50ca7ff52b599903d804'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S261-001 | PASS | Affected file is stale and absent
 
-`src/aeat/application/topics/__init__.py` is absent from the current tree. The topic catalogue was relocated out of the application package; active registry code imports the topic records and loader from `aeat.core.topics`. Reintroducing the application module would regress the domain-boundary cleanup.
+The retired module was absent from the current tree. The topic catalogue was relocated out of the application package; active registry code imports the topic records and loader from `aeat.core.topics`. Reintroducing the application module would regress the domain-boundary cleanup.
 
 ## S261-002 | PASS | No storage or privacy surface remains at the stale path
 

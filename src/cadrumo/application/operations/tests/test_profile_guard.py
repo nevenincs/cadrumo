@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -18,8 +18,8 @@ from ..owner import OperationExecutorContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFILE_ID = uuid4()
-_OTHER_PROFILE_ID = uuid4()
+_PROFILE_ID = UUID("6a1f0000-0000-4000-8000-0000000000a1")
+_OTHER_PROFILE_ID = UUID("6a1f0000-0000-4000-8000-0000000000b2")
 _DEFINITION_ID = "profile.guard.test"
 
 
@@ -193,7 +193,7 @@ def _access_request(
     )
 
 
-def test_profile_access_payload_returns_the_exact_typed_payload() -> None:
+def test_profile_access_payload_returns_the_admitted_payload() -> None:
     payload = _ProfilePayload(profile_id=_PROFILE_ID)
 
     admitted = profile_guard.require_access_request_profile_payload(
@@ -282,4 +282,22 @@ def test_work_unit_access_payload_refuses_another_payload_type_first() -> None:
             access_profile_id=_PROFILE_ID,
         )
 
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_access_payload_returns_the_typed_payload_and_checks_the_definition() -> None:
+    payload = _ProfilePayload(profile_id=_PROFILE_ID)
+
+    assert (
+        profile_guard.require_access_request_payload(
+            _access_request(payload), definition_id=_DEFINITION_ID, payload_type=_ProfilePayload
+        )
+        is payload
+    )
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        profile_guard.require_access_request_payload(
+            _access_request(payload, definition_id="profile.guard.other"),
+            definition_id=_DEFINITION_ID,
+            payload_type=_ProfilePayload,
+        )
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE

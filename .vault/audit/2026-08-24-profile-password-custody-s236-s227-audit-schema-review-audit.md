@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6289c6adca505b7b2aed1647c80134bc75d3558b265a87bb6e886474ad3ff61d'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 # `profile-password-custody` audit: `s236 s227 audit schema review`
 

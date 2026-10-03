@@ -6,8 +6,8 @@ date: '2026-06-10'
 related:
   - "[[2026-06-10-ledger-invoice-unification-research]]"
 superseded_by: '2026-08-06-invoice-canonical-structure-adr'
-modified: '2026-08-06'
-body_hash: 'sha256:a009ecccf23ef904ef39aadce594b364c94edef3d7a77364028f7fbb174a6901'
+modified: '2026-10-03'
+body_hash: 'sha256:3db02db569a6be341ce7438f1cd43a905515eb4ae1f8d553d08df5b41d497e50'
 ---
 # `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `superseded`)
 
@@ -68,7 +68,7 @@ removes while keeping the load-bearing internal taxonomy intact.
   invoice direction. An *issued* invoice (we billed a customer) is *collectible*;
   a *received* invoice (a vendor billed us) is *payable*. The
   `_source_resolver._invoice_source_kind` function
-  (`src/cadrumo/application/invoices/_source_resolver.py:108`) already encodes
+   already encodes
   exactly this: `ISSUED → collectible_invoice`, `RECEIVED → payable_invoice`.
 - The source-kind strings are persisted contract, not labels. They appear in M349
   registry TOML (18 occurrences), `INVOICE_BINDING_SOURCE_KINDS`,
@@ -76,10 +76,10 @@ removes while keeping the load-bearing internal taxonomy intact.
   `{bucket_id}:{source_kind}` storage key grammar, and `AggregationSourceKind`.
   Collapsing them would break authored authority and stored data.
 - Two invoice aggregates exist for good reason: the rich `Invoice`
-  (`src/cadrumo/domain/invoices/_models.py`) is the calculation/reconciliation
+   is the calculation/reconciliation
   authority with derived identity, line-item arithmetic, and modelo aggregation;
   the slim `BusinessOperationInvoice`
-  (`src/cadrumo/application/ledger/_business_operation_invoice.py`) is the flat
+   is the flat
   operator-edit record. They have no shared base and no conversion path. Merging
   them is out of scope and rejected.
 - The English noun `invoice` conflicts with `aeat-spanish-stem-naming` (the

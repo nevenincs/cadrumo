@@ -21,7 +21,6 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    OperationTerminalCondition,
     profile_operation_subject,
 )
 from ...core.time.clock import now
@@ -39,8 +38,7 @@ from ..operations.capabilities import (
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
 )
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
@@ -138,15 +136,13 @@ _RECEIPT_CONTRADICTION = "verify capture result contradicts its terminal receipt
 def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = VerifyCaptureOperationReport.model_validate(result, strict=True)
     observation = report.observation
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=_definition_id(observation.surface),
         subject_ref=profile_operation_subject(str(observation.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED if report.newly_persisted else OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )
-    require_succeeded_receipt_references(receipt, message=_RECEIPT_CONTRADICTION)
     return VerifyCapturePublicResultV1.from_record(observation)
 
 

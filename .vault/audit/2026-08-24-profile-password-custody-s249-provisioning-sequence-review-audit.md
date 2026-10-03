@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:2e0599d4094230536bc0fe12d568e4c565fe61c6217d7c415e4b51e2c75a1e77'
 related:
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
-  - "[[2026-08-13-profile-password-custody-plan]]"
 ---
 
 # `profile-password-custody` audit: `S249 provisioning sequence review`

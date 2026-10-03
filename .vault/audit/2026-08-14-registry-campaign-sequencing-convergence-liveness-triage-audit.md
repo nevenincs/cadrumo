@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:81f9f54d3e68fe5f4cebf0bd17e3795001246e317399b09c3a94662629f80b66'
+body_hash: 'sha256:15d4360d28cf1b0601c6305411a295a0d88899c2cda5c13f5cc9d77458923168'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
 ---
@@ -180,7 +180,7 @@ qualification. Found every file literally named `manager.py` in the repo
 (5 total, not 1): `dev/docs/apidocs/manager.py`, `dev/locales/manager.py`
 (almost certainly the one this denylist was actually written for — the
 locale tool's own manager, reasonable to exclude from a locale-key
-scanner), `dev/registry/aeip/manager.py`,
+scanner), the retired module,
 `dev/registry/conformance/manager.py`, `dev/registry/newmodelo/manager.py`.
 The basename-only match silently also skips the other four.
 
@@ -191,7 +191,7 @@ now — confirmed by reading the files, not inferred from the file names.
 
 **Exact wake condition, stated as a condition someone can notice rather
 than a vague caveat:** the day ANY of `dev/docs/apidocs/manager.py`,
-`dev/registry/aeip/manager.py`, `dev/registry/conformance/manager.py`, or
+The retired module, `dev/registry/conformance/manager.py`, or
 `dev/registry/newmodelo/manager.py` gains a `tr(...)` call or a
 `message_key=` argument, this scanner silently stops seeing it — no
 missing-key error, no orphaned-key warning, nothing. This is a `dev/`

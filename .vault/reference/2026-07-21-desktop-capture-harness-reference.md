@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#desktop-capture-harness'
 date: '2026-07-21'
-modified: '2026-07-21'
-body_hash: 'sha256:daddeb27e765667681d488d1f3d2187d7c414e6df8f4684fbb6be8c2aee51f91'
+modified: '2026-10-03'
+body_hash: 'sha256:1a3923f50392ce9e3b78bedbd393d54d7daca5cb7e19999d23ee8ac394507fac'
 related:
   - '[[2026-07-21-desktop-capture-harness-adr]]'
 ---
@@ -22,14 +22,13 @@ Empirical grounding gathered on the Windows build host on 2026-07-21 with non-de
 ## State model
 
 - All mutable state lives under `%APPDATA%\Claude` (Roaming, unvirtualized real path, not redirected by Store appdata virtualization).
-- Installed MCPB extensions live under `Claude Extensions\<id>\` with an enablement/user-config record at `Claude Extensions Settings\<id>.json`. The cadrumo MCPB is present and enabled as `local.mcpb.cadrumo-project-neve.md.cadrumo`, manifest version `0.2.1`, launch `uv run --no-project --directory ${__dirname} src/server.py`, with `CADRUMO_LOCAL_STORAGE_ROOT`/`CADRUMO_MCP_PERSONA`/`CADRUMO_MCP_SURFACE`/`CADRUMO_MCP_REQUIRED_VERSION`/`CADRUMO_MCP_COHORT_SHA256` env.
 - `config.json` holds session auth as `oauth:tokenCacheV2` (and `oauth:tokenCache`), Electron safeStorage ciphertext with a base64 `djEw` (`v10`) prefix. On Windows safeStorage is DPAPI, bound to the WINDOWS USER account, not to the profile directory.
 - Chromium session state is under `Network\Cookies`, `Local Storage`, `Session Storage`, and `Local State`.
 - Desktop pipes each MCP server's stderr to `logs\mcp-server-<name>.log`; the cadrumo one is `logs\mcp-server-Cadrumo tax assistant console.log`.
 
 ## Auth seeding (feasible)
 
-Because the token cache is DPAPI-user-bound rather than profile-bound, copying the curated set (`config.json`, `Local State`, `Network\Cookies`, `Local Storage`, `Session Storage`) from a blessed source profile into a fresh isolated user-data dir lets the SAME Windows user decrypt it. This is the same seeding shape as the `.credentials.json` copy in `dev/packaging/smoke_plugin_install.py`. One-time interactive login into the source profile is the auth root; every run is clean except the seeded auth.
+Because the token cache is DPAPI-user-bound rather than profile-bound, copying the curated set (`config.json`, `Local State`, `Network\Cookies`, `Local Storage`, `Session Storage`) from a blessed source profile into a fresh isolated user-data dir lets the SAME Windows user decrypt it. One-time interactive login into the source profile is the auth root; every run is clean except the seeded auth.
 
 ## Launch / drive wall (characterized)
 

@@ -3,14 +3,15 @@ tags:
   - '#reference'
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
-modified: '2026-08-24'
-body_hash: 'sha256:aba3dc8b04f26e638d321b471eca9509a27bfe5aebde1bb0e50de146d1de94e3'
+modified: '2026-10-03'
+body_hash: 'sha256:d730f9ac424b4fa35f97cb2902a346c7a8ca46cf62ba9fa406b7e12e8d2edb15'
 related:
   - "[[2026-07-12-calculation-truth-registry-plan]]"
   - "[[2026-07-12-calculation-truth-registry-classification-review-audit]]"
   - '[[2026-07-14-calculation-export-import-adjudication-plan]]'
   - '[[2026-07-14-calculation-export-import-adjudication-adr]]'
 ---
+
 # `calculation-export-import-adjudication` reference: `Export and import adjudication implementation map`
 
 ## Summary
@@ -27,7 +28,6 @@ submitted-file path; its declaration-PDF path remains evidence-gated.
 
 ## Definitions and adjudication gate
 
-- **Registry authority** means the single validated, immutable registry snapshot loaded by `ValidatedRegistryAuthority` in `src/cadrumo/domain/calculations/registry/_authority.py:36`. A repository, accessor, or runtime schema provider is a projection over that authority, not another source of truth.
 - **Export layout** means reviewed registry data describing a filing format. It is interpreted by the generic renderer and parser; it is not a Modelo-specific Python exporter.
 - **Submitted file** means an AEAT fichero payload interpreted by the generic export-layout parser.
 - **Extraction profile** means reviewed registry data describing fields in a declaration PDF. It is interpreted by the generic declaration parser; it is not a Modelo-specific parser class.
@@ -86,14 +86,7 @@ authorities, schema stores, or archive formats.
 
 | Concern | Canonical implementation | Verification anchors | Boundary |
 |---|---|---|---|
-| Registry authority | `ValidatedRegistryAuthority` in `src/cadrumo/domain/calculations/registry/_authority.py:36`; `StaticModeloRepository._resolve_authority` in `src/cadrumo/core/resources/_repos/modelos.py:38` | Registry authority and corpus tests under `src/cadrumo/domain/calculations/registry/tests/` | There is one authority. `StaticModeloRepository.authority` is a thin faÃƒÂ§ade. |
 | Runtime schema provider | `build_runtime_schema_provider` in `src/cadrumo/application/filing/runtime.py:359`; cached helper at `:409` and `ValidatedRegistryAuthority.load(...)` at `:417` | Runtime filing tests exercise the typed `RegistrySchemaAccessor` projection | The provider projects the canonical snapshot; it must not become an independent schema store. |
-| Export layout resolution | `resolve_export_layout` in `src/cadrumo/domain/calculations/registry/_export.py:50` | Layout contract checks in `src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part2.py:700` | Layouts are registry data selected for an applicable revision. |
-| Export rendering and verification | `export_draft` in `src/cadrumo/application/filing/_export.py:278`, `_render_export_layout` at `:514`, `_render_record` at `:645`, and `_render_field` at `:699` | Real round trips and mutation detection in `src/cadrumo/application/filing/tests/test_fichero_boe_export_roundtrip.py` | The renderer is generic. A missing layout is not grounds for a new renderer. |
-| Submitted-file parsing | `parse_export_payload` in `src/cadrumo/domain/calculations/registry/_export_parse.py:65`; observation routing in `src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py:186` | `verify_export` in `src/cadrumo/application/filing/_export.py:391` and the fichero BOE round-trip test | The parser consumes the same registry layout as the renderer. |
-| Declaration-PDF parsing | `parse_declaracion_bytes` and profile selection in `src/cadrumo/adapters/inbound/declaracion/_parser.py:158` and `:454` | `src/cadrumo/adapters/inbound/tests/test_extraction_parser_paths_resolve.py`; `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_boundary_m130.py`; corpus gates in `src/cadrumo/domain/calculations/registry/tests/test_corpus_round_trip_gate.py:169` | Profiles are registry data. Selection must resolve exactly one applicable profile and hard-fail otherwise. |
-| Live declaration observation | Submitted-file-first routing with PDF fallback in `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py:936`; generic PDF call at `src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py:407` | Adapter tests assert the actual observation paths | Submitted files and PDFs are two evidence formats routed to the corresponding generic parser. |
-| Sealed archive persistence | `write_sealed_archive` in `src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py`; `read_sealed_archive` in `src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_reader.py` | Real archive round trips and rejection cases in `src/cadrumo/adapters/persistence/storage/bucket/tests/test_sealed_archive_roundtrip.py:52` | This is a local encrypted envelope with optional recovery material, not a declaration or AEAT fichero engine. |
 
 The accepted registry-authority, declaration-extraction, and fichero-BOE decisions converge on the same architecture: reviewed registry data feeds shared engines. The sealed archive remains a distinct persistence service. None of these areas requires a duplicate code path.
 
@@ -115,7 +108,7 @@ The accepted registry-authority, declaration-extraction, and fichero-BOE decisio
 | 369 | Legacy discovery and export-routing wording identify a possible outbound surface. | `aeat-dr-369-2021`, XLSX record design, from 2021-07-01, aligned with three separate Union, Importacion, and Exterior revision variants. | Three filing links and parity references exist; no layouts. | **Conditional candidate with mandatory regime separation.** Confirm the product mandate and never flatten the three variants into one assumed schema. |
 | 840 | Legacy wording explicitly identifies missing layout-binding rows, but does not establish a current product mandate. | `aeat-dr-840`, PDF record design, from 2003-09-19, aligned with the revision. | Filing link and parity reference exist; no layout. | **Explicit but conditional data candidate.** Confirm machine-file generation as product scope before transcribing registry fields and bindings. |
 
-Every active candidate currently has zero export layouts. That observation is implementation state, not a mandate. The generic exporter already refuses revisions without a selected layout at `src/cadrumo/application/filing/_export.py:319` and reports unsupported or non-renderable layouts through the guard ending at `:365`; these are correct safety boundaries.
+Every active candidate currently has zero export layouts. That observation is implementation state, not a mandate.
 
 ## Declaration-extraction adjudication register
 
@@ -129,7 +122,7 @@ Every active candidate currently has zero export layouts. That observation is im
 | 353 | Legacy goal requires real declaration evidence before an extraction profile is accepted. | Registered record-design source begins in 2026; the revision begins in 2008. No filed declaration specimen is bundled. | Generic extractor link exists; no profile. | **Evidence-gated.** Limit any future profile to evidenced windows. |
 | 360 | Legacy goal requires real declaration evidence before an extraction profile is accepted. | Record-design authority and revision align from 2010-04-01, but no filed declaration specimen is bundled. | Generic extractor link exists; no profile. | **Evidence-gated.** Alignment of a record design does not prove declaration-PDF geometry. |
 
-The reconciliation service currently enrols only Modelos 100, 111, 130, 190, 303, and 390 in `src/cadrumo/application/modelo/_reconcile.py:66`. This is current scope, not permission to manufacture profiles for the remaining candidates. A candidate becomes implementable only when a real artefact supports deterministic field coordinates, applicability, and a real-behavior corpus test.
+This is current scope, not permission to manufacture profiles for the remaining candidates. A candidate becomes implementable only when a real artefact supports deterministic field coordinates, applicability, and a real-behavior corpus test.
 
 ## Modelo 100 exercise-2026 time gate
 

@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#registry-record-design-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:9e48f7bf2a925ce141045f3ce97090ab60533c3a32db2a37f347dda7435755fd'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:f308038316e50ce8b20a300a54872a05cb9f64dade19d5e580fd25477ec2199e'
+related: []
 ---
 
 # `registry-record-design-boundary` audit: `record design extraction boundary audit`
 
 ## Scope
 
-Audited `src/aeat/domain/calculations/registry/_record_design.py` as a
+Audited the retired module as a
 large registry production module that mixes official Diseño de Registro
 source parsing with registry completeness and coverage derivation.
 
@@ -24,12 +23,12 @@ source parsing with registry completeness and coverage derivation.
 - `_record_design.py` is 1,755 working-tree lines and combines public
   record-design models, file dispatch, workbook extraction, XLS
   extraction, PDF text extraction, PDF visual-chart extraction,
-  calculation-closure derivation, completeness-manifest derivation, and
+  calculation-closure derivation, completeness-manifest derivation, 
   Diseño coverage reporting.
 - The current working tree contains formatting-only peer WIP in the
   calculation-closure/completeness region. This slice must not edit
   production code.
-- `src/aeat/domain/calculations/registry/__init__.py` re-exports the
+- the retired module re-exports the
   public record-design API, and `test_public_api_boundaries.py` treats
   `_record_design` as a private module. Extraction must preserve
   `aeat.domain.calculations.registry` imports and keep `_record_design.py`
@@ -72,7 +71,7 @@ source parsing with registry completeness and coverage derivation.
    and visual-chart fallback parsing. Do not split visual-chart helpers
    independently in the first pass.
 5. Extract calculation closure, completeness derivation, and coverage
-   reporting into a private derivation module after parser extraction or
+   reporting into a private derivation module after parser extraction 
    after the active peer formatting WIP lands.
 6. Preserve the `extract_record_design` dispatcher and cache key behavior
    exactly.

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:f28e4e7eab5ae5be129c07bae2260f6f1a21d2e4d38bc213cea33dc5bc0339c0'
+modified: '2026-10-03'
+body_hash: 'sha256:59723f5987098e09200b73a2e37ebc90adc8798a2859370996b9af0e4cd98f3b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S447-001 | PASS | IVA wallet seed is an application facade
 
-Reviewed the S447 scope as `vaultspec-code-reviewer`. `src/aeat/application/modelo/_iva_wallet_seed.py`
+Reviewed the S447 scope as `vaultspec-code-reviewer`. The retired module
 obtains taxpayer identity through the bucket/profile taxpayer service and delegates
 state changes to the IVA compensation application service. It does not construct secure
 storage, inspect manifests, read raw environment variables, or write local files.

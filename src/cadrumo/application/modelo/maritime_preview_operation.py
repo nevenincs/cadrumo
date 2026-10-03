@@ -177,7 +177,6 @@ def _request(request: OperationRequest[BaseModel], *, profile_id: UUID) -> Model
         definition_id=MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,
         payload_type=ModeloMaritimePreviewRequest,
         access_profile_id=profile_id,
-        exact_type=True,
     )
 
 

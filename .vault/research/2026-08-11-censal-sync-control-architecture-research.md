@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#censal-sync-control'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:461a5fe6ea5212effa562c635d051eca5f4526835abb3b6f4ee618882aa090f7'
+body_hash: 'sha256:5d217d58766d143a44e50c99044657f3c324d5c34168bc2a80a9ab79ad51c3a3'
 related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-08-08-sync-control-surface-adr]]'
@@ -29,10 +29,6 @@ its `--apply` branch. The profile-manager action performs the same acquisition
 and then unconditionally saves `apply_censal_read`, without a review or approval
 transition. One capability therefore has two consent contracts at current HEAD
 `07d63e7ac53fa8a4ea10628f9799ac00cc74fe26`.
-`src/cadrumo/entrypoints/cli/_config/_censo_file.py:142`
-`src/cadrumo/entrypoints/cli/_config/_censo_file.py:183`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:153`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:210`
 
 ### No durable review operand or per-field intent exists
 
@@ -43,10 +39,6 @@ complete remote observation, local baseline, suggested action, operator choice,
 approval, and baseline fingerprint are not persisted together. A preview cannot
 therefore be resumed or applied later as the exact reviewed input, and a second
 CLI invocation re-reads AEAT instead of consuming the prior preview.
-`src/cadrumo/application/user_profile/_censo_sync.py:186`
-`src/cadrumo/application/user_profile/_censo_sync.py:275`
-`src/cadrumo/application/user_profile/_censo_sync.py:380`
-`src/cadrumo/application/user_profile/_cotejo_apply.py:246`
 
 ### Status and spinner observe presentation mechanics rather than sync state
 
@@ -59,13 +51,6 @@ census navigation, parse, review readiness, and apply have no shared operation
 identifier or typed stage. The initial Cl@ve countdown can consequently remain
 visible after the internal auth state has advanced, while the spinner cannot say
 which stage is active.
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:81`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:729`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:854`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:865`
-`src/cadrumo/core/_operator_progress.py:10`
-`src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_support.py:203`
-`src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py:1015`
 
 ### Existing tests prove seams, not the real lifecycle
 
@@ -76,9 +61,6 @@ sequence. Application reconciliation tests construct typed census results
 directly. Missing coverage includes no-write-before-approval, per-field and
 approve-all selection, stale-review refusal, every operation-stage transition,
 and spinner termination on success, refusal, failure, and cancellation.
-`src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py:360`
-`src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py:448`
-`src/cadrumo/application/user_profile/tests/test_censal_sync.py:1`
 
 ### Accepted decisions conflict and require explicit reconciliation
 
@@ -92,7 +74,6 @@ an explicit supersession ruling would deepen an already contradictory accepted
 corpus.
 `.vault/adr/2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr.md:64`
 `.vault/adr/2026-07-25-censal-profile-autofill-adr.md:228`
-`src/cadrumo/application/user_profile/_censo_sync.py:412`
 
 ### The application-owned request is the only option that closes every defect
 
@@ -132,25 +113,6 @@ remain ADR questions.
 
 ## Sources
 
-- `src/cadrumo/entrypoints/cli/_config/_censo_file.py:142`
-- `src/cadrumo/entrypoints/cli/_config/_censo_file.py:183`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:153`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:210`
-- `src/cadrumo/application/user_profile/_censo_sync.py:186`
-- `src/cadrumo/application/user_profile/_censo_sync.py:275`
-- `src/cadrumo/application/user_profile/_censo_sync.py:380`
-- `src/cadrumo/application/user_profile/_censo_sync.py:412`
-- `src/cadrumo/application/user_profile/_cotejo_apply.py:246`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:81`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:729`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:854`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:865`
-- `src/cadrumo/core/_operator_progress.py:10`
-- `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_support.py:203`
-- `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py:1015`
-- `src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py:360`
-- `src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py:448`
-- `src/cadrumo/application/user_profile/tests/test_censal_sync.py:1`
 - `.vault/adr/2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr.md:64`
 - `.vault/adr/2026-07-25-censal-profile-autofill-adr.md:228`
 - commit `07d63e7ac53fa8a4ea10628f9799ac00cc74fe26`

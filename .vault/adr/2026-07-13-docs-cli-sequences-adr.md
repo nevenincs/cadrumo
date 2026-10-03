@@ -4,7 +4,7 @@ tags:
   - '#docs-cli-sequences'
 date: '2026-07-13'
 modified: '2026-10-03'
-body_hash: 'sha256:ce18b318b8a58ac7e2a2544f501c6e1c62e472153817e612431023540481cba8'
+body_hash: 'sha256:5dfd9b94fee474d853e2defecf958d46d72b5f141a21becf575a2bf06ffdffa2'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
@@ -103,16 +103,16 @@ sandbox and seeding model (D6), and rollout (D7).
 ## Considerations
 
 Nearly the entire execution stack already exists in-house and was verified at
-HEAD for this decision. `invoke_cached_cli` in `src/cadrumo/tests/cli_runner.py`
+HEAD for this decision. `invoke_cached_cli`
 invokes the cached Click tree in-process with `env=`/`input=` support;
-`isolated_profile_storage_root` in `src/cadrumo/tests/secure_sql.py` yields a
+`isolated_profile_storage_root` yields a
 hermetic real-crypto storage root under `override_settings`;
 `test_app_quickfile.py` already drives a full create→calculate→verify→export
 chain on exactly those two primitives. The determinism substrate is accepted
-and implemented: `frozen_clock` in `src/cadrumo/core/time/_clock.py`, and
+and implemented: `frozen_clock`, and
 `capture_envelopes`, `canonicalise`, `mask_document`, `differing_paths`,
 `assert_golden_match`, and the narrow declared `GOLDEN_MASK_FIELDS`
-(`snapshot_id`, `run_id`) in `src/cadrumo/core/observability/_golden.py`,
+(`snapshot_id`, `run_id`),
 already defended by an anti-tautology proof in its own test module.
 CLI-surface-as-data is solved by `dev/docs/cli_reference.py` (English-pinned
 subprocess environment, lazy-subtree materialisation, per-command param

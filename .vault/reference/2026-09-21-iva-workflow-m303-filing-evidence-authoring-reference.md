@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#iva-workflow'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b6dac7c92c8c40e3f8f21aff9fec7f15f3339d46c553c13efa9b97d6b574cda7'
+body_hash: 'sha256:ebe7f3419366d4813f96eae293590662c59f2d7c29b8dc29eaeeddc1426336ba'
 related:
   - "[[2026-09-21-iva-workflow-reference]]"
 ---
+
 # `iva-workflow` reference: `M303 filing evidence production authoring map`
 
 ## Summary
@@ -37,18 +38,7 @@ scope, year, coordinates, ordering and evidence references are cross-validated
 
 ## Current production flow
 
-The installed CLI accepts a plaintext JSON path and validates it directly with
-`FilingInstanceEvidence.model_validate_json`; it does not construct the value
-(`src/cadrumo/entrypoints/cli/_m303_filing_evidence_input.py:17`). Calculation
-then validates period, profile scope, authority snapshot, rows, calculated
-result and exemption observations
-(`src/cadrumo/application/modelo/m303_filing_evidence.py:55`). The validated
-envelope is stored inside `CalculationRevision.filing_instance_evidence`
-(`src/cadrumo/domain/modelos/calculation_revision.py:847`) and participates in
-revision identity
-(`src/cadrumo/domain/modelos/calculation_revision_identity.py:310`). Its
-catalogue is encrypted by the existing calculation-revision repository
-(`src/cadrumo/adapters/persistence/profile/modelos_calculation.py:78`).
+Calculation then validates period, profile scope, authority snapshot, rows, calculated result and exemption observations (`src/cadrumo/application/modelo/m303_filing_evidence.py:55`). The validated envelope is stored inside `CalculationRevision.filing_instance_evidence` (`src/cadrumo/domain/modelos/calculation_revision.py:847`) and participates in revision identity (`src/cadrumo/domain/modelos/calculation_revision_identity.py:310`). Its catalogue is encrypted by the existing calculation-revision repository (`src/cadrumo/adapters/persistence/profile/modelos_calculation.py:78`).
 
 No production constructor for the complete envelope exists. The complete
 builder is test-only and consumes test authority fixtures
@@ -59,7 +49,6 @@ the missing installed journey is not only command registration.
 
 - The bundled authority owns the record design, annual Orden, coefficients,
   scope vocabulary and DANA availability
-  (`src/cadrumo/application/calculations/m303_orden_resolution.py:26`).
 - The secure IVA profile owns simplified-regime scope
   (`src/cadrumo/application/modelo/m303_regimen_simplificado_scope.py:71`).
 - Existing application calculation owns the simplified result from filing rows

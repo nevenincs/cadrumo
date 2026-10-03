@@ -113,6 +113,7 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_auth_certificate_secret_set",
         "config_auth_certificate_secret_remove",
         "config_profile_censo_pull",
+        "config_profile_censo_show",
         "config_profile_censo_import",
         "app_live_filed_list",
         "app_live_filed_discover",

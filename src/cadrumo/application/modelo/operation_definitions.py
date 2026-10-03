@@ -26,7 +26,6 @@ from ...core.operations import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    OperationTerminalCondition,
 )
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -43,8 +42,7 @@ from ..operations.capabilities import (
 )
 from ..operations.models import (
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
@@ -1154,15 +1152,13 @@ def _require_export_terminal_receipt(
     message = "export result contradicts its terminal receipt"
     if receipt is None:
         raise ValueError(message)
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         terminal_receipt,
         definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
         subject_ref=receipt.work_unit_id,
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
         message=message,
     )
-    require_succeeded_receipt_references(terminal_receipt, message=message)
 
 
 def _project_modelo_export_result(result: BaseModel, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:

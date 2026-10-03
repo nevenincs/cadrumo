@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:aacbc833979767b24cd780985a7bdfc413b554518bb982edcf8d8b6c3efe8ae8'
+body_hash: 'sha256:0b08f97902f527c7f4150450b8e9ba1fb20071ee136bb1f53a0a70d652f7c647'
 related:
   - "[[2026-09-11-facts-registry-iva-raw-authority-retirement-research]]"
 ---
+
 # `facts-registry` reference: raw IVA authority reader inventory
 
 ## Summary
@@ -17,7 +18,7 @@ The four remaining raw IVA legal tables are operative authority, not removable d
 
 ### Catalogue regulations
 
-`src/cadrumo/domain/iva/catalogue.py:33` reads `iva/catalogues.toml` directly and `src/cadrumo/core/resources/_repos/iva_catalogues.py:36` projects it by year. The replacement must preserve 21 category rules, reverse-charge and supplier-NIF flags, manual-reference and exemption semantics, and per-citation legal identifier, verbatim quotation, verified-or-unresolved state/reason, and closed citation window. The existing resolver's exact-year and evidence refusal behavior is at `src/cadrumo/domain/iva/catalogue.py:140`; neither mappings nor multi-output facts carry per-entry citation disposition. The current `IvaCatalogue` facade must not survive as a forwarding compatibility adapter.
+The replacement must preserve 21 category rules, reverse-charge and supplier-NIF flags, manual-reference and exemption semantics, and per-citation legal identifier, verbatim quotation, verified-or-unresolved state/reason, and closed citation window. The current `IvaCatalogue` facade must not survive as a forwarding compatibility adapter.
 
 ### Place of supply
 
@@ -33,7 +34,7 @@ The four remaining raw IVA legal tables are operative authority, not removable d
 
 ### IVA-local grounding
 
-`src/cadrumo/domain/iva/_grounding.py:52` validates raw-table legal evidence at runtime for place-of-supply and territorial loaders. Its removal is safe only after provider validation and the published authority retain equivalent evidence, provenance, and refusal semantics at runtime. Compiler-only validation is insufficient for product behavior.
+Its removal is safe only after provider validation and the published authority retain equivalent evidence, provenance, and refusal semantics at runtime. Compiler-only validation is insufficient for product behavior.
 
 ### Required replacement gates
 

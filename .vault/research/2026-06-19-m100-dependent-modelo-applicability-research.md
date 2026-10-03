@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m100-dependent-modelo-applicability'
 date: '2026-06-19'
-modified: '2026-07-17'
-body_hash: 'sha256:db6b0ced2c0463a60fd9138adcb10dc70d5894025257edc8224617ad9a2b67bc'
+modified: '2026-10-03'
+body_hash: 'sha256:a890dc6b350b4623354178b52d799e31049c830d410617f1e3993107a7a8c4a3'
 related: []
 ---
 
@@ -16,7 +16,7 @@ Adversarial finding from the filing-campaign red-team (verified at HEAD). The or
 
 ### The defect (confirmed at registry + clean-state level)
 
-The M100 construct `renta-2024-dependent-modelos` declares UNCONDITIONAL cross-period dependencies (bindings + relations) on the withholding/instalment modelos `111`, `115`, `123`, `130`, `131`, `193` (`src/aeat/_data/registry/aeat/modelos/100/revisions/2024/constructs/0010-renta-2024-dependent-modelos.toml`, relations `0001-0006`). Each `relation` / `previous_filing` requirement is derived by `cross_period_dependency_requirements` and evaluated by `evaluate_cross_period_clean_state` (`src/aeat/application/calculations/_cross_period_clean_state.py`). For a normal employee (salary + rental) who never files these modelos, the upstream filings are absent, so each dep blocks with `MISSING_OBSERVATION` / `MISSING_CURRENT_FILING_RECORD` → BLOCKING `cross_period_dependency_unclean`, and M100 verify is unreachable.
+The M100 construct `renta-2024-dependent-modelos` declares UNCONDITIONAL cross-period dependencies (bindings + relations) on the withholding/instalment modelos `111`, `115`, `123`, `130`, `131`, `193` (the former source file, relations `0001-0006`). Each `relation` / `previous_filing` requirement is derived by `cross_period_dependency_requirements` and evaluated by `evaluate_cross_period_clean_state` . For a normal employee (salary + rental) who never files these modelos, the upstream filings are absent, so each dep blocks with `MISSING_OBSERVATION` / `MISSING_CURRENT_FILING_RECORD` → BLOCKING `cross_period_dependency_unclean`, and M100 verify is unreachable.
 
 There is NO not-applicable path. The first-filer pre-activity suppression (`partition_cross_period_requirements_by_activity_start`, ADR 2026-06-13-first-filer-attestation) only scopes out STRICTLY-pre-activity deps; for a same-year employee these withholding deps are in-activity, so they are not suppressed.
 

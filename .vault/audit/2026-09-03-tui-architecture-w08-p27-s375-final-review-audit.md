@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:3c4a662def43d18a1d41b4d608dd54a32367dff75f01d59e6559d8a29be31b95'
 related:
-  - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 ---
 # `tui-architecture` audit: `W08.P27.S375 holistic final review`

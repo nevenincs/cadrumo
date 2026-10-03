@@ -1,8 +1,8 @@
 ---
 tags: ['#audit', '#secure-storage-production-hardening']
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:e240618931f3571b85b9287c6d16b7d1b3718ef99c1b679616bd87f37335b2d6'
+modified: '2026-10-03'
+body_hash: 'sha256:cd92e2986294c4932ea68e5da685f96ab340e6e43aca06320ab5806b72bc3e6e'
 related: []
 ---
 
@@ -16,7 +16,7 @@ Resolved. The reviewer pass was retried after the usage-limit window elapsed. Re
 
 ## S48-002 | LOCAL REVIEW | Profile-bound stale repository test now matches hardened runtime contract
 
-Local review checked the remaining S48 code delta in `src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py`. The updated test uses a real repository returned by `isolated_runtime_profile`, exits the real session context, then asserts that the runtime-bound repository fails closed through `StorageValidationError`.
+Local review checked the remaining S48 code delta in the retired test. The updated test uses a real repository returned by `isolated_runtime_profile`, exits the real session context, then asserts that the runtime-bound repository fails closed through `StorageValidationError`.
 
 The assertion covers the stable translated envelope key `errors.storage.runtime.not_ready` and pins `aeat_output_language` through `override_settings`, not through ambient environment mutation, before checking the rendered English readiness detail.
 

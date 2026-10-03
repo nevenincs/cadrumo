@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#data-output-standardization'
 date: '2026-07-14'
-modified: '2026-07-14'
+modified: '2026-10-03'
 body_hash: 'sha256:bff8efe1239c5af4683210fde4a3aeaa907127c5c0125f4154234ae5bbef46a8'
 related:
   - '[[2026-07-13-data-output-standardization-adr]]'
-  - '[[2026-07-13-data-output-standardization-plan]]'
   - '[[2026-07-13-data-output-standardization-research]]'
 ---
 

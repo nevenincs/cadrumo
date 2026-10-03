@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:390b0bd43548487ed7a6f504e3e9d6a268b35ee015fe91d871add77358a941b2'
+modified: '2026-10-03'
+body_hash: 'sha256:c0b71cb3ea5a4907c273505b9891c352ad13ab9061c6b1f91b4fdad281bfaef7'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S373-001 | PASS | User-profile values do not own storage
 
-`src/aeat/domain/user_profile/_values.py` defines strict profile fact, record, and
+The retired module defined strict profile fact, record, and
 snapshot value models plus canonical id/hash helpers. It does not create secure-object
 repositories, load settings, inspect active bucket runtime, read environment variables,
 open files, scan manifests, provision buckets, or call remote providers.
@@ -41,14 +41,14 @@ monkeypatches, skipped tests, or tautological assertions.
 
 ## S373-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/user_profile/_values.py src/aeat/domain/user_profile/tests/test_values.py src/aeat/domain/user_profile/tests/test_schema.py src/aeat/domain/user_profile/tests/test_registry_contract.py src/aeat/application/user_profile/_repository.py src/aeat/application/user_profile/tests/test_repository.py src/aeat/application/user_profile/tests/test_repository_roundtrip.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/user_profile/tests/test_values.py src/aeat/domain/user_profile/tests/test_schema.py src/aeat/domain/user_profile/tests/test_registry_contract.py src/aeat/application/user_profile/tests/test_repository.py src/aeat/application/user_profile/tests/test_repository_roundtrip.py` passed with 35 tests.
+- the historical check passed.
+- the historical check passed with 35 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "UserProfileRecord UserProfileSnapshot profile_id manifest bucket secure object repository runtime settings" --type code --port 8766 --max-results 8` reported the MCP service on port 8766 as unreachable and did not fall back in-process.
 
 ## S373-006 | LOW | Profile repository ownership prose is broader than implementation
 
-Mandatory review noted that `src/aeat/application/user_profile/_profile_repository.py`
+Mandatory review noted that the retired module
 opens with "single, sole writer" wording, while orchestration and health repair also
 write specific profile stores. This does not block S373 because `_values.py` is still a
 non-storage value module, but the wording should be narrowed in a future

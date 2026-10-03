@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-07'
-modified: '2026-07-17'
-body_hash: 'sha256:7e4b45d8258b6e3489595540735af2fae2cf99fccc45753b5c5f10c2dfb8b65a'
+modified: '2026-10-03'
+body_hash: 'sha256:dff6da3e74b312b013c58c7050d497d7e48b78b3154a3a2b59466d5c2d390f27'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -182,16 +182,16 @@ report):
 
 - `src/cadrumo/core/` (a new `_prorrata_exclusions.py` or the IVA core module) — the new
   `Art104TresExclusion` StrEnum (six leaves). Unique to this ADR.
-- `src/cadrumo/domain/transactions/_models.py` — the operator-declared exclusion tag on the
+- the former source file — the operator-declared exclusion tag on the
   ledger row. **SHARED with `prorrata-especial` (input_classification) and
   `prorrata-sectores-diferenciados` (sector reference).**
-- `src/cadrumo/application/calculations/_prorrata_regularizacion.py` — the rollup applies the
+- the former source file — the rollup applies the
   exclusions; the divergence/pre-fill advisory. **SHARED with `prorrata-especial` (the
   +10% mandatory-especial advisory lives here).**
-- `src/cadrumo/application/aggregation/_iva_ledger.py` — exclusion filtering at the annual
+- the former source file — exclusion filtering at the annual
   volume rollup. **SHARED with `prorrata-especial` (regime routing) and
   `prorrata-sectores-diferenciados` (sector routing) — hottest shared surface.**
-- `src/cadrumo/domain/iva/_prorrata.py` — the exclusion set is registry-grounded; substrate
+- the former source file — the exclusion set is registry-grounded; substrate
   consumes it in the definitive-percentage computation. **SHARED (additive) with the
   sibling ADRs.**
 - `src/cadrumo/adapters/persistence/profile/bienes_inversion.py` (or its facade) — read-only

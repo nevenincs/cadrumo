@@ -539,7 +539,7 @@ def _registration(
 ) -> OperationPublicDefinitionRegistrationV1:
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
         payload = require_access_request_payload(
-            request, definition_id=definition.definition_id, payload_type=request_type, exact_type=True
+            request, definition_id=definition.definition_id, payload_type=request_type
         )
         # The migration traverses the entire stored revision catalogue, not
         # only the displayed filing years, so each action needs all periods.

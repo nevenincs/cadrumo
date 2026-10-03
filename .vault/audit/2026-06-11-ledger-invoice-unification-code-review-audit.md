@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#ledger-invoice-unification'
 date: '2026-06-11'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:a047f7a8b0d99ad7205728509ead0e10689c105cf22e1d767f50ca87d902109d'
 related:
-  - '[[2026-06-10-ledger-invoice-unification-plan]]'
   - '[[2026-06-10-ledger-invoice-unification-adr]]'
   - '[[2026-06-10-ledger-invoice-unification-research]]'
 ---

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76a23c506a2df81f457261dff571425fd0f698841d5d6a3b4ea495425da36ab5'
+body_hash: 'sha256:20e17044b076c3448bfdeb69a108d1114d8504d1e6427ef5352a1530e7f6ce27'
 related:
   - '[[2026-09-30-modelo-editor-workbench-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-audit]]'
@@ -15,9 +15,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-form-model-research]]'
   - '[[2026-09-30-modelo-editor-workbench-imports-bindings-research]]'
   - '[[2026-09-30-modelo-editor-workbench-journey-help-research]]'
-  - '[[2026-09-30-modelo-editor-workbench-ledger]]'
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
-  - '[[2026-09-30-modelo-editor-workbench-plan]]'
   - '[[2026-09-30-modelo-editor-workbench-reference]]'
   - '[[2026-10-02-modelo-editor-workbench-generated-export-layout-companion-cutover-adr]]'
 ---
@@ -37,14 +35,6 @@ Auto-generated index of all documents tagged with `#modelo-editor-workbench`.
 ### audit
 
 - `2026-09-30-modelo-editor-workbench-audit` - `modelo-editor-workbench` audit: `Plan-close review of the modelo editor workbench`
-
-### exec
-
-- `2026-09-30-modelo-editor-workbench-ledger` - `modelo-editor-workbench` ledger
-
-### plan
-
-- `2026-09-30-modelo-editor-workbench-plan` - `modelo-editor-workbench` plan
 
 ### reference
 

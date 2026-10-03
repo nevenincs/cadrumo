@@ -11,7 +11,12 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.access_contracts import (
+    AccessScope,
+    AuthorityState,
+    Availability,
+    ProfileAccessStatus,
+)
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
@@ -36,8 +41,8 @@ class _AdmittedClient:
             profile_id=profile_id,
             session_id=self.session_id,
             session_expires_at=now() + timedelta(minutes=5),
-            grant_state=None,
-            grant_expires_at=None,
+            grant_state=AuthorityState.ACTIVE,
+            grant_expires_at=now() + timedelta(minutes=5),
             grant_valid=True,
             profile_bound=True,
             storage=Availability.AVAILABLE,

@@ -2363,6 +2363,7 @@ cli:
         view_help: Megjeleníti az aktív profil minden szolgáltatási képességének feloldott
           állapotát.
       censo:
+        show_help: A teljes mentett nyilvántartási pillanatkép megjelenítése AEAT-kapcsolat nélkül.
         apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
           csak előnézet).'
         divergencia_leaf_artefact_value: AEAT-érték

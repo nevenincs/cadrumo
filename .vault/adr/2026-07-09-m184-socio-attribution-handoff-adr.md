@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m184-socio-attribution-handoff'
 date: '2026-07-09'
-modified: '2026-08-15'
-body_hash: 'sha256:cd3dd2bbc5f210e4b376e89ba74b118b6a1fb4841170640eba298a8fdb8580e6'
+modified: '2026-10-03'
+body_hash: 'sha256:332e08a3a8463215dd8dca18f9873fe04175e0a56ca45d59fa1d89d8fc07e48a'
 related:
   - '[[2026-07-10-m184-socio-attribution-handoff-research]]'
 ---
@@ -187,9 +187,9 @@ transport upgrade rather than a redesign.
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` (fact group)
 - `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/` and
   `revisions/2025/bindings/` (profile bindings onto atribucion casillas)
-- `src/cadrumo/application/modelo/_profile_binding.py` (fact projection, if the
+- the former source file (fact projection, if the
   repeating-group shape needs a selector extension)
-- `src/cadrumo/application/modelo/_verification_actions.py` /
+
   `_verification_predicates.py` (omission advisory)
 - `src/cadrumo/entrypoints/cli/_modelo.py` + `_modelo_rendering.py` (M184 handoff
   Notices)

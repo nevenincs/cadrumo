@@ -58,8 +58,20 @@ def _selected_candidate_revision(
     """Load the isolated tree and require it to contain only the requested revision."""
     modelos, catalogues = load_registry_tree(candidate_root)
     modelo = next(modelo for modelo in modelos if str(modelo.id) == str(context.target.modelo))
-    if tuple(modelo.revisions) != (str(context.target.revision_id),):
-        raise RegistryValidationError("generated form companion candidate must contain exactly the selected revision")
+    expected = (
+        (str(context.target.revision_id),)
+        if context.inheritance is None
+        else (
+            *tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors),
+            str(context.target.revision_id),
+        )
+    )
+    if tuple(modelo.revisions) != expected:
+        raise RegistryValidationError("generated form companion candidate has an unpinned or missing revision")
+    if context.inheritance is not None and (
+        modelo.revisions[expected[-2]].export_layouts != (context.inheritance.baseline_layout,)
+    ):
+        raise RegistryValidationError("generated form companion baseline layout differs from its attestation")
     revision = modelo.revisions[str(context.target.revision_id)]
     return modelo, revision, catalogues
 

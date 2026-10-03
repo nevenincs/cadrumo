@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:9d13d3f7d02c53c218bcd2156cfa189ee5302cf755c49ef8d0cd8ec6044cc2ec'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 # `aeat-export-fragment-generator-authority` audit: `S45 typed producer integration final review`
 

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#data-provenance-consolidation'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:e35d30642f8917584b95eda461f3731563cac32760337df11182107e9a1ff0e5'
 related:
   - "[[2026-09-10-data-provenance-consolidation-adr]]"
-  - "[[2026-09-10-data-provenance-consolidation-plan]]"
 ---
 
 # `data-provenance-consolidation` audit: `authority-publication and import-boundary review`

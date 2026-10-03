@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s93-authority-regression'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:e69c2cde35d7d35107c983c0257ce3a6cf4ccbb587705dab8e31b86f1238ce1b'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s93-authority-regression` audit: `S93 authority regression code review`

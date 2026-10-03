@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:6902d0f9e979bfd3ab24cf684082a6b5730f23b0ebddd80679466f95918e6a17'
-related:
-  - "[[2026-09-02-python-runtime-compatibility-plan]]"
+related: []
 ---
 # `python-runtime-compatibility` audit: `P03 code review`
 

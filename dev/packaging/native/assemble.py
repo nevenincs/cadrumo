@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import shutil
 from pathlib import Path
 
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
+
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT
+
+from ..uv_constraints import export_runtime_constraints
+from .stdlib import bundle as bundle_stdlib
 
 
 def digest(path: Path) -> str:
@@ -17,27 +25,41 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def assemble(python: Path, dependencies: Path, build: Path, destination: Path) -> None:
+def assemble(
+    python: Path, dependencies: Path, build: Path, destination: Path, metadata: Path, *, development: bool = False
+) -> None:
     """Relocate native modules while retaining their qualified import names."""
     root = destination.resolve()
     if root.exists():
         raise FileExistsError(f"Assembly requires a fresh destination: {root}")
-    layout = json.loads((REPO_ROOT / "native/package-layout.json").read_text(encoding="utf-8"))["paths"]
+    contract = json.loads((REPO_ROOT / "native/package-layout.json").read_text(encoding="utf-8"))
+    layout, files = contract["paths"], contract["files"]
+    allowed = set(PRODUCT_IDENTITY.cohort_distributions)
+    for pin in export_runtime_constraints(repo_root=REPO_ROOT):
+        requirement = Requirement(pin)
+        if requirement.marker is None or requirement.marker.evaluate():
+            allowed.add(canonicalize_name(requirement.name))
+    distributions = {
+        canonicalize_name(distribution.metadata["Name"]): distribution.version
+        for distribution in importlib.metadata.distributions(path=[str(dependencies)])
+    }
+    if set(distributions) != allowed:
+        raise ValueError(f"Production dependency closure mismatch: {set(distributions) ^ allowed}")
     lib = root / layout["stdlib"]
     packages = root / layout["packages"]
     native = root / layout["native"]
     native.mkdir(parents=True)
-    shutil.copytree(
-        python / "Lib",
-        lib,
-        ignore=shutil.ignore_patterns(
-            "site-packages", "__pycache__", "test", "tests", "idlelib", "tkinter", "ensurepip"
-        ),
-    )
-    shutil.copytree(dependencies, packages, ignore=shutil.ignore_patterns("__pycache__", "bin"))
+    bootstrap = (REPO_ROOT / "native/interpreter/bootstrap.py").read_text(encoding="utf-8")
+    if bootstrap.count("LAYOUT = {}") != 1:
+        raise ValueError("Missing bootstrap layout projection marker")
+    bootstrap = bootstrap.replace("LAYOUT = {}", f"LAYOUT = {contract!r}")
+    identity = json.loads(metadata.read_text(encoding="utf-8"))
+    bundle_stdlib(python / "Lib", lib, contract["stdlib_exclude"], bootstrap.encode(), identity["python"])
+    shutil.copytree(dependencies, packages, ignore=shutil.ignore_patterns("__pycache__", "bin", "tests"))
     shutil.copy2(build / "python.exe", root / layout["executable"])
-    shutil.copy2(build / "cadrumo_python.dll", native)
-    shutil.copy2(REPO_ROOT / "native/interpreter/bootstrap.py", lib / "_cadrumo_bootstrap.py")
+    if development:
+        shutil.copy2(build / files["development_executable"], root / files["development_executable"])
+    shutil.copy2(build / files["bridge"], native)
     for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
         shutil.copy2(source, native / source.name)
     modules: dict[str, str] = {}
@@ -63,7 +85,7 @@ def assemble(python: Path, dependencies: Path, build: Path, destination: Path) -
         target = native / "packages/pywin32_system32" / f"{name}313.dll"
         if target.is_file():
             modules[name] = target.relative_to(root).as_posix()
-    paths = []
+    paths = [packages.relative_to(root).as_posix()]
     for pth in packages.glob("*.pth"):
         if pth.name != "pywin32.pth":
             raise ValueError(f"Unreviewed .pth file: {pth.name}")
@@ -84,7 +106,8 @@ def assemble(python: Path, dependencies: Path, build: Path, destination: Path) -
         before = digest(bindings)
         source = bindings.read_text(encoding="utf-8")
         old = "libpaths = ('./{prefix}{name}.{suffix}',),"
-        new = "libpaths = (str(pathlib.Path(sys.executable).parent / 'bin/python/packages/pypdfium2_raw/pdfium.dll'),),"
+        relative_dll = (native / "packages/pypdfium2_raw/pdfium.dll").relative_to(root).as_posix()
+        new = f"libpaths = (str(pathlib.Path(sys.executable).parent / {relative_dll!r}),),"
         if source.count(old) != 1:
             raise ValueError("Unrecognized pypdfium2 ctypesgen loader")
         bindings.write_text(source.replace(old, new), encoding="utf-8")
@@ -126,22 +149,47 @@ def assemble(python: Path, dependencies: Path, build: Path, destination: Path) -
         dll_names[identity] = hashed
     data = root / "data"
     data.mkdir(exist_ok=True)
-    (data / "native-modules.json").write_text(
+    (root / files["native_manifest"]).write_text(
         json.dumps({"modules": modules, "dll_directories": dll_dirs, "python_paths": paths}, indent=2),
         encoding="utf-8",
     )
     authority = packages / "cadrumo/_data/registry/authority"
     if authority.is_dir():
         shutil.move(authority, root / layout["authority"])
-    shutil.copy2(python / "LICENSE.txt", root / "CPython-LICENSE.txt")
+    path_file = root / files["path_file"]
+    path_file.write_text(
+        "# CADRUMO package-relative import paths; executable directives are forbidden.\n"
+        + "\n".join((root / p).relative_to(path_file.parent).as_posix() for p in paths)
+        + "\n",
+        encoding="utf-8",
+    )
+    license_file = root / files["python_license"]
+    license_file.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(python / "LICENSE.txt", license_file)
+    shutil.copy2(metadata, root / files["build_metadata"])
+    startup_files = [
+        layout["executable"],
+        layout["stdlib"],
+        files["path_file"],
+        files["build_metadata"],
+        files["native_manifest"],
+        (native / files["bridge"]).relative_to(root).as_posix(),
+        (native / files["runtime"]).relative_to(root).as_posix(),
+    ]
+    if development:
+        startup_files.append(files["development_executable"])
     manifest = {
+        "build": identity,
+        "layout": contract,
+        "startup_files": startup_files,
+        "distributions": distributions,
         "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text().strip(),
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
         "relocation": relocation,
         "patches": patches,
         "files": {p.relative_to(root).as_posix(): digest(p) for p in sorted(root.rglob("*")) if p.is_file()},
     }
-    (data / "package-manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (root / files["package_manifest"]).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"Assembled {root}: {len(modules)} relocated extension modules")
 
 
@@ -151,5 +199,7 @@ if __name__ == "__main__":
     parser.add_argument("--dependencies", type=Path, required=True)
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--metadata", type=Path, required=True)
+    parser.add_argument("--development", action="store_true")
     args = parser.parse_args()
-    assemble(args.python, args.dependencies, args.build, args.destination)
+    assemble(args.python, args.dependencies, args.build, args.destination, args.metadata, development=args.development)

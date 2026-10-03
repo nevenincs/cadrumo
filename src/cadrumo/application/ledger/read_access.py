@@ -18,6 +18,7 @@ from ..operations.access_resolution import (
     with_commit_action,
 )
 from ..operations.models import OperationRequest
+from ..operations.profile_guard import require_access_request_payload
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
@@ -94,9 +95,8 @@ def resolve_ledger_request_read_access(
     request_type: type[BaseModel],
 ) -> ResolvedOperationAccess:
     """Bind whole-profile read access for exactly ``request_type`` under ``definition_id``."""
-    if request.definition_id != definition_id or type(request.payload) is not request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = getattr(request.payload, "profile_id", None)
+    payload = require_access_request_payload(request, definition_id=definition_id, payload_type=request_type)
+    profile_id = getattr(payload, "profile_id", None)
     if not isinstance(profile_id, UUID):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())

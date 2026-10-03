@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7cae9629d61dd24451a79729d97691dc618d26f6981039aa8b2222a15a3cd418'
+body_hash: 'sha256:272863f3981efec3b782194622223ecee2faea161ebd293945aceb9142a29cee'
 related:
   - "[[2026-07-14-honest-all-green-adr]]"
 ---
@@ -19,7 +19,7 @@ Review the P06 file-capture sync repository boundary and its strict type-check r
 
 ### sync-run-repository-nullability | high | the new application port is still optional at its required write site
 
-`capture_filed_data_bulk` rejects a missing `sync_run_repository` for a non-preview capture, but the later `record_sync_run` call receives the unchanged `SyncRunRecordRepositoryProtocol | None` variable. Targeted `basedpyright` therefore rejects `src/cadrumo/application/live/_filed_data_capture.py:901` because the writer requires a non-optional protocol. This is P06-owned and prevents the strict type lane from reaching green, despite the focused real-stack behavior tests passing. The concrete `SyncRunRecordRepository` remains adapter-owned, the application imports only `SyncRunRecordRepositoryProtocol`, and the CLI composition root supplies the concrete adapter; no persistence implementation leaked back into application.
+`capture_filed_data_bulk` rejects a missing `sync_run_repository` for a non-preview capture, but the later `record_sync_run` call receives the unchanged `SyncRunRecordRepositoryProtocol | None` variable. Targeted `basedpyright` therefore rejects the retired module because the writer requires a non-optional protocol. This is P06-owned and prevents the strict type lane from reaching green, despite the focused real-stack behavior tests passing. The concrete `SyncRunRecordRepository` remains adapter-owned, the application imports only `SyncRunRecordRepositoryProtocol`, and the CLI composition root supplies the concrete adapter; no persistence implementation leaked back into application.
 
 #### Resolution
 

@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#filing-chain-reconciliation'
 date: '2026-09-17'
-modified: '2026-09-19'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb8a48867f4849344bd13c667fcf8684f5ea206bda0e03e2a987c46558633b5d'
+body_hash: 'sha256:28a54f651a03283ceb0778d8b9afb296b3a137f7039af808d52a6a0a77ec20d3'
 related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
-  - '[[2026-09-17-filing-chain-reconciliation-ledger]]'
-  - '[[2026-09-17-filing-chain-reconciliation-plan]]'
   - '[[2026-09-17-filing-chain-reconciliation-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#filing-chain-reconciliation`
 ### adr
 
 - `2026-09-17-filing-chain-reconciliation-adr` - `filing-chain-reconciliation` adr: `Filing chain with pending local entries and AEAT reconciliation` | (**status:** `accepted`)
-
-### exec
-
-- `2026-09-17-filing-chain-reconciliation-ledger` - `filing-chain-reconciliation` ledger
-
-### plan
-
-- `2026-09-17-filing-chain-reconciliation-plan` - `filing-chain-reconciliation` plan
 
 ### reference
 

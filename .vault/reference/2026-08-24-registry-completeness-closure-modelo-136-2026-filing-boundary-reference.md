@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e7fcfaac0ef956ead63a45b89d8aeaf12bdaaae5b05d5f147defa7a8f9ce9d4'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:2fa08189d1cace318391f3525004b9dbfb7fad2e18cec3b16eb2d4dc7d540457'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `modelo 136 2026 filing boundary`
 
 Modelo 136 revision 2026 remains an active AEAT quarterly electronic-form obligation, but it is not fileable by Cadrumo. The official sources establish form completion and transmission, while AEAT's current record-design catalogue has no Modelo 136 entry. Without an official positional or schema contract, authoring a fixed-width layout would invent filing semantics. This finding records the filing boundary only; the separately governed non-filing authority grade is outside S14.
@@ -53,6 +53,4 @@ Reconsider fileability only if all of these are true:
 - `src/cadrumo/_data/registry/aeat/legal/modelo-136.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/136/revisions/2026/revision.toml`
 - `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_136/files/modelo-136-procedure-record.html`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_136_grounding.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

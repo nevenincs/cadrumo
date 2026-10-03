@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:201b6801f64a3aee340cab27d69c2828f6b96baac0a79722594a06e9da993853'
+body_hash: 'sha256:971fbb54681f8bf7223388856bfeceafd693a8ebbe45377263d7e5cea9daef17'
 related:
   - "[[2026-09-02-object-name-declustering-adr]]"
   - "[[2026-09-02-object-name-declustering-s23-concurrency-staleness-review-audit]]"
@@ -69,10 +69,7 @@ mechanism by which a `high` finding came to be reported as closed.
 
 ### teardown-can-overturn-a-verified-result | high | Cleanup failure reverted an apply whose gates all passed
 
-`_run_gates_in_verified_copy` removed its temporary copy with a bare `shutil.rmtree` inside a
-`finally`. On Windows that raises `WinError 145` whenever anything inside the copy is still
-held. Raising from `finally` replaced the function's real result, so the `OSError` became
-`apply_error` at `dev/quality/object_name_replay.py:595` and the live tree was rolled back.
+`_run_gates_in_verified_copy` removed its temporary copy with a bare `shutil.rmtree` inside a `finally`. On Windows that raises `WinError 145` whenever anything inside the copy is still held.
 
 Observed once, on a run whose six gates had all passed: the apply wrote the tree, the
 post-apply verified copy could not be deleted, and the writes were reverted with
@@ -118,7 +115,6 @@ caught a forty-second-old receipt in seconds instead of after a 34-minute apply.
   09:26 to 14:25. Attributed causes: broken gate at HEAD (4), peer mid-refactor working tree
   (3), retained transaction root (1), teardown cleanup (1), receipt staleness (2), operator
   invocation error (1), the remainder environment. **None attributable to the renames.**
-- `dev/quality/object_name_replay.py:589-602` (rollback path), `:317-319` (verified-copy
   teardown), `:334-337` (`_create_transaction_root` refusal), `:651` (transaction removal
   gated on `not primary_failure_active`).
 - Inventory determinism probe: three scans at 14:26:05 / :28 / :50, all `866f380f...`.

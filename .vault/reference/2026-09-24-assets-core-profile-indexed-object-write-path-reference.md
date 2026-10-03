@@ -6,8 +6,7 @@ date: '2026-09-24'
 modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:fa415111814cee5ac190a23a1843373e1d39619328ea6e696c69803cc81f9c19'
-related:
-  - "[[2026-09-23-assets-core-plan]]"
+related: []
 ---
 
 # `assets-core` reference: `How indexed profile objects are written and read today`

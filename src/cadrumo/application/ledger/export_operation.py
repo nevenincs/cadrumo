@@ -23,7 +23,7 @@ from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECU
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
@@ -142,13 +142,11 @@ class LedgerExportExecutor:
 
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> str:
         """Publish the human export and settle each concrete write outcome."""
-        payload = request.payload
-        if (
-            request.definition_id != LEDGER_EXPORT_OPERATION_DEFINITION_ID
-            or type(payload) is not LedgerExportRequest
-            or not isinstance(payload, LedgerExportRequest)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        payload = require_access_request_payload(
+            request,
+            definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
+            payload_type=LedgerExportRequest,
+        )
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
         tracker = LedgerCommitAttemptTracker()

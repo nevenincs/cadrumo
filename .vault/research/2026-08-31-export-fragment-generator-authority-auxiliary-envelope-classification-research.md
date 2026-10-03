@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:52244501eac16a56a07f9dab5ccc4c4e90ccf5a21a22af5ded564d9233e53116'
+body_hash: 'sha256:7c90d5360504600c20baf61a5deafd410804aa292089d52b3d4d5afbe3a2de37'
 related:
   - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
 ---
@@ -73,8 +73,7 @@ reads as total-less through the same comparison.
 
 ### The second hard-coded spelling
 
-Even correctly classified, both modelos would be refused by `_CLOSER_RE` in
-`dev/registry/pipeline/_variable_envelope.py:126`, which admits `AAAA` or four concrete
+Even correctly classified, both modelos would be refused by `_CLOSER_RE` , which admits `AAAA` or four concrete
 digits for the year and nothing else. Its own comment says "TWO official spellings, both
 admitted" and reasons that neither is asserted against a filing instance because the
 instance supplies the year. `EEEE` is a third spelling of that same placeholder, and the
@@ -101,8 +100,8 @@ available without filing, and is the same authority every other layout decision 
 ## Sources
 
 - `dev/registry/compiler/record_design.py:1853,1894` — the exact-case checks that classify variable-length records.
-- `dev/registry/pipeline/_variable_envelope.py:126` — the closer pattern that admits two placeholder spellings.
+- the former source file — the closer pattern that admits two placeholder spellings.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx` — the Modelo 390 row-20 closer and variable-envelope declaration.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx` — the structurally matching Modelo 303 envelope.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_232/files/01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx` — the Modelo 232 envelope using the same placeholder.
-- `dev/registry/pipeline/tests/test_variable_envelope.py` — the real extraction and envelope classification tests.
+- the former source file — the real extraction and envelope classification tests.

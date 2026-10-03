@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:740ffd4cc37b4b0bb10dd1f4573c541a433fd3e0099118497be5e920fbb211a2'
+body_hash: 'sha256:872f853067bf0180f706a3c5921378b5a10c03ecdb4dac60f026592cf2beeefa'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -264,7 +264,7 @@ positions exactly as the generator does. Both authorities hold the same view of
 these bytes, and neither one is the defect.
 
 The defect is upstream, in `_matching_component_parent_index`
-(`src/cadrumo/domain/calculations/registry/_record_design.py:733`). It nests a
+. It nests a
 sub-field only when the ordinal is DOTTED (`19.1` under `19`), which is the
 discriminator that correctly keeps Modelo 303's `14bis` a peer. Modelo 184 prints
 its desglose with BARE CONSECUTIVE ordinals -- parent `12`, sub-field `13` -- so
@@ -1763,7 +1763,7 @@ subsequent entry -- including several written during this session -- repeated it
 as though nothing had been built. **Measured, that is wrong and has been wrong
 for some time.**
 
-`compile_filing_envelope_definition` exists in `dev/registry/_variable_envelope.py`,
+`compile_filing_envelope_definition` exists in the retired module,
 generalised off the Modelo 303 original, and `VariableEnvelopeSemantic` is an
 authorable map section. **Four of the eight modelos are fully done** -- each with
 an authored semantic map, an authored envelope semantic, and a PUBLISHED
@@ -1899,7 +1899,7 @@ Modelo 232's other refusal is separate and structural: design record `DR23200` i
 an auxiliary envelope header ("a source-proved 328-byte composition outside the
 fixed-record totals") that the layout does not emit and that needs its own
 emission contract. `compile_auxiliary_envelope_record` already exists in
-`dev/registry/_auxiliary_envelope_record.py` and is imported by the export tree
+The retired module was imported by the export tree
 renderer, so this is contract APPLICATION rather than contract building -- the
 same correction this audit needed for the variable-envelope claim.
 
@@ -5951,8 +5951,8 @@ four hours and three days respectively.
 
 ### An incomplete relocation that made a whole module die on its own path
 
-`dev/registry/tests/test_dp30302_field_matrix.py` loaded
-`dev/registry/dp30302_field_matrix.toml`. Git recorded the file as a PURE RENAME
+The retired test loaded
+The retired data file. Git recorded the file as a PURE RENAME
 into `dev/registry/analysis/` -- `{ => analysis}`, zero content change, and the
 blob digests match -- but the path constant was left one directory up, so every
 case that loads the artefact died on "must be a real file" rather than on
@@ -6701,13 +6701,13 @@ control. Mixed-ending files: **128 -> 0**.
 `test_registry_workbook_parity_module_does_not_grow_past_reviewed_baseline`
 raised `FileNotFoundError` on every run: it measured
 `registry/_workbook_parity.py`, which no longer exists. It had not been deleted
--- it moved to `dev/registry/parity/_workbook_parity.py` in the dev-harness
+-- it moved to the retired module in the dev-harness
 split. I checked that before acting, because "delete the dead gate" and
 "re-point the live gate" are different changes and the first would have thrown
 away real coverage.
 
 The ratchet moved with the module, to a new
-`dev/registry/tests/test_dev_module_reviewability.py`. Deliberately NOT into
+The retired test. Deliberately NOT into
 `test_workbook_parity.py` beside it: that module drives LibreOffice and is
 marked `external_tool`, so the default lane holds it out, and a line-count
 ratchet parked there would have looked enrolled while never running. Pinned at
@@ -8389,7 +8389,7 @@ boundary outright.
 `src/cadrumo` and `scaffold/registry` and expected two callers, one of them
 `scaffold/registry/_semantic_map_loader.py`.
 
-That module now lives at `dev/registry/pipeline/_semantic_map_loader.py`.
+That module formerly lived in the retired module.
 Scanning a directory that does not exist finds nothing and looks exactly like a
 loader that stopped calling the compiler, so the gate was asserting a path no
 walk could reach -- the same shape as the workbook-parity ratchet that pointed
@@ -9018,7 +9018,7 @@ multi-line basic strings with line-ending continuations, widest line now 502.
 **The known hazard was checked first.** This document records m188 and m194 being
 **permanently unstampable** through the sanctioned writer precisely because their
 notes were multi-line, and that the fix landed in
-`dev/registry/conformance/_stamp.py`. So the wrapping is only safe post-fix.
+The retired module. So the wrapping is only safe post-fix.
 Verified rather than assumed: a wrapped M136 note was restamped on a temp copy of
 the tree through `stamp_revision`, the note was replaced, the other governance
 scalars were preserved and every non-governance key was unchanged.
@@ -9229,7 +9229,7 @@ one. That is the third sweep, and the pattern names its own cause —
 `_render_toml_value` emits every governance scalar on ONE line, so every stamping
 round re-introduces the defect the sweep just cleared.
 
-`dev/registry/conformance/_stamp.py` now renders a long assignment as a wrapped
+The retired module now renders a long assignment as a wrapped
 TOML multi-line basic string, with every newline eaten by a line-ending
 backslash, so the VALUE is byte-identical to the single-line form. Short notes
 are untouched, so ordinary manifests and their diffs do not move. The wrap width
@@ -9893,7 +9893,7 @@ false positive and nothing else.
 Modelo 390's `envelope_header` was NOT measured by that classifier (it has no
 sheet), and is not claimed clean on the strength of it. Its own builder enforces
 contiguity and an exact 1..328 span at
-`dev/registry/pipeline/_m390_auxiliary_envelope.py:293`, and that gate passes.
+The retired module, and that gate passes.
 
 ### Two source kinds shipped without their locale keys
 
@@ -12229,7 +12229,7 @@ recorded rather than guessed. The fix to `2026-y-siguientes`, which has its own
 ### The reach was outside the registry tree
 
 A full registry inventory reported 82 failures, and 29 of them were one bug:
-`dev/registry/tests/test_export_tree.py` pins modelo 184 as its ISOLATED tree
+The retired test pins modelo 184 as its ISOLATED tree
 and named the pre-split revision id, so every publication and check test built
 on that fixture raised `KeyError: '2015-y-siguientes'`. The 184 sweep had
 searched files mentioning modelo 184 and this fixture reaches it through a
@@ -14408,7 +14408,7 @@ tallies over a tree the campaign is actively authoring, so they belong to
 whoever authors it -- and they are the "never gate on an exact count"
 antipattern, which is why they drift at all.
 
-`dev/tests/test_registry_conformance_cli.py` carries its own standing red: a
+The retired test carried its own standing red: a
 conformance ratchet whose baseline has drifted (`composed_modelos current=58
 required=73`). It has never been inside this campaign's measured set, recorded
 now so it stops being invisible.
@@ -16622,7 +16622,7 @@ verified finish in the remaining tick; a partially regenerated tree is worse
 than an unregenerated one.
 
 Worth noting for whoever picks it up: the generator already detects these. The
-reserved test in `dev/registry/pipeline/_render_profile.py` is type-agnostic --
+reserved test in the retired module was type-agnostic --
 `"reservado" in field.normalized_description.casefold()` -- so the defect is
 downstream of detection, not a missed match.
 

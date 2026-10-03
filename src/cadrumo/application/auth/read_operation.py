@@ -156,7 +156,6 @@ def resolve_auth_read_access(
         definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
         payload_type=AuthReadRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
     disclosures = operation_disclosures(

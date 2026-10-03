@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e12a3c50a5e3bed90e6fe9696501d0b4e2d949e7bbd99559e6d54c6d5f690ee3'
+body_hash: 'sha256:1a75cfca0f7879e1c0032f9048b384f85606fd21519c01285b53bd3ad16e5c5f'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -40,11 +40,6 @@ Three independent measurements agree.
 | Those with a production caller | 0 |
 
 The two TUI-routed commands are `app_modelo_work_review` and `app_modelo_work_select`.
-The enrolled set is pinned by assertion in
-`src/cadrumo/entrypoints/cli/tests/test_global_tui_request.py:70`, so it is an enforced
-contract rather than drift. `TuiCapability` is declared at
-`src/cadrumo/entrypoints/cli/command_spec.py:725` and defaults to `NOT_IMPLEMENTED` at
-`:780`.
 
 ## Registry and schema authority
 
@@ -109,21 +104,9 @@ least one source reference, and an `absent_by_design` marker
 (`src/cadrumo/domain/calculations/registry/bindings.py:257`). The derived flat value view
 is Decimal-only, so text-family casillas disappear from it.
 
-Overrides run on two independent axes. The disposition ladder at
-`src/cadrumo/application/aggregation/_source_mesh.py:359` marks 12 sources LOCK — all ledger
-aggregations, invoices, modelo 347, modelo 303 régimen simplificado, and inventory —
-where an operator override is refused outright by
-`calculation_actions.py:1772`. Four sources are CARRY, where the override wins. The
-overlay order is profile, then backend mesh, then borrador, then caller. When an operator
-value displaces a computed one, `collect_operator_override_divergence_diagnostics` at
-`src/cadrumo/application/modelo/_operator_override_advisory.py:48` is the only disclosure
-that it happened. Editor writability must derive from the same lock set the engine uses
-(`src/cadrumo/application/modelo/edit_services.py:160`).
+Overrides run on two independent axes. Four sources are CARRY, where the override wins. The overlay order is profile, then backend mesh, then borrador, then caller. When an operator value displaces a computed one, `collect_operator_override_divergence_diagnostics` at `src/cadrumo/application/modelo/_operator_override_advisory.py:48` is the only disclosure that it happened. Editor writability must derive from the same lock set the engine uses (`src/cadrumo/application/modelo/edit_services.py:160`).
 
-There are 38 machine-verified diagnostic reasons on
-`src/cadrumo/application/aggregation/_source_mesh.py:524`, of which 36 are not persisted onto
-the revision. A surface that reads a stored revision loses them; they must be captured at
-calculation time. The CLI structured calculate result carries none at all.
+A surface that reads a stored revision loses them; they must be captured at calculation time. The CLI structured calculate result carries none at all.
 
 ## Filing lifecycle
 
@@ -191,24 +174,13 @@ typed precondition failure with a recovery action, warnings carry none.
 
 ## Edit contract
 
-`open_modelo_edit_session` at
-`src/cadrumo/application/modelo/edit_session.py:554` is the intended frontend API: 15
-methods over one opaque handle, with no contract record crossing the boundary. Concurrency
-is optimistic compare-and-swap on four coordinates within a fifteen-minute window,
-checked at preflight and again immediately before effect, never rebasing.
+Concurrency is optimistic compare-and-swap on four coordinates within a fifteen-minute window, checked at preflight and again immediately before effect, never rebasing.
 
-`project_modelo_edit_mutation_capability` in
-`src/cadrumo/application/modelo/_edit_facade.py` is the designated admission seam. Every
-row is deliberately `UNMEASURED` in this version. Its `reconsideration_condition` at
-`:71` still cites a dependency receipt that an accepted decision retired, and is stale
-text requiring correction.
+Every row is deliberately `UNMEASURED` in this version. Its `reconsideration_condition` at `:71` still cites a dependency receipt that an accepted decision retired, and is stale text requiring correction.
 
 ## Export and destinations
 
-There is no destination abstraction: no port, no target enum, no registry. Every verb
-hardcodes one transport. The name `destination` is already taken inside the TUI for
-screen routing (`src/cadrumo/entrypoints/tui/destination_session.py`), which is a naming
-hazard for any new vocabulary.
+There is no destination abstraction: no port, no target enum, no registry. Every verb hardcodes one transport.
 
 The sole byte producer for fixed-width output is
 `src/cadrumo/domain/calculations/registry/fixed_width_codec.py:300`, consumed through
@@ -268,9 +240,7 @@ renders as an ordinary flow screen, so guided creation needs no new entrypoint c
 guided-flow substrate is `src/cadrumo/application/flows/`; the wizard package is legacy
 vocabulary bridged one way.
 
-Long-running work reaches the operator through two symbols only:
-`present_operation_modal` and `is_detached_outcome`
-(`src/cadrumo/entrypoints/tui/operations/facade.py:30`).
+
 
 ## Governance mechanisms in force
 
@@ -278,32 +248,13 @@ The exit-receipt family was retired outright — schemas, five validators and th
 proof type — by the accepted interface decision, and the corresponding quality module was
 deleted. Rebuilding it is an identified hazard.
 
-What survives, explicitly retained because it asserts implementation shape, is the modelo
-action denominator at `dev/quality/modelo_workspace_action_denominator.py`, whose closed
-classification vocabulary and reviewed row table were split into the sibling modules
-`dev/quality/modelo_workspace_action_classification.py` and
-`dev/quality/modelo_workspace_action_classification_table.py` so that row growth and gate
-growth stop competing for one size ceiling. It derives its
-candidate set from production imports only, never a filesystem walk, and diffs the live
-candidate set against a closed hand-reviewed table. A new modelo command reds the gate
-immediately rather than inheriting a mechanical classification. Its dispositions are
-bounded review, read pending, mutation pending, flow owned, deferred, and a reserved
-non-visual case, and two delivered arms added since. Measured green at 19 passing tests, with
-79 classifications over 79 live identities and zero violations: 42 read pending, 32 mutation
-pending, 2 flow owned, 2 bounded review, 1 deferred.
+It derives its candidate set from production imports only, never a filesystem walk, and diffs the live candidate set against a closed hand-reviewed table. A new modelo command reds the gate immediately rather than inheriting a mechanical classification. Its dispositions are bounded review, read pending, mutation pending, flow owned, deferred, and a reserved non-visual case, and two delivered arms added since. Measured green at 19 passing tests, with 79 classifications over 79 live identities and zero violations: 42 read pending, 32 mutation pending, 2 flow owned, 2 bounded review, 1 deferred.
 
 UPDATED AS DELIVERED. The paragraphs below described the gate as it stood when this reference
 was written; the admission work has since landed and the description is corrected here rather
 than left to mislead a later reader.
 
-It was a scope enumerator rather than an admission gate, and the distinction was load-bearing.
-Its drift check compared only four mechanical fields, so neither the recorded disposition nor
-the interface capability was observed and wiring a route changed no gate outcome. The taxonomy
-also offered no arm a delivered mutation could occupy. IT NOW OBSERVES SIX FIELDS, the four
-mechanical ones plus the interface capability and surface dispatchability, named in
-`_SIGNATURE_FIELDS` at `dev/quality/modelo_workspace_action_denominator.py:218`; the taxonomy
-carries a delivered arm for reads and one for mutations, both still unoccupied; and a recorded
-disposition contradicting the observed shape now reds.
+It was a scope enumerator rather than an admission gate, and the distinction was load-bearing. Its drift check compared only four mechanical fields, so neither the recorded disposition nor the interface capability was observed and wiring a route changed no gate outcome. The taxonomy also offered no arm a delivered mutation could occupy.
 
 One review-package row declared no write route while performing a profile-bound write, which
 the drift check could not see because it compares against the spec's own declaration. That row
@@ -320,13 +271,7 @@ by a scoping predicate, because being wired requires dispatch membership; the fa
 arm is deliberately unscoped, since a row claiming delivery while dispatchable by nothing sits
 outside the intersection by construction.
 
-Five enrolment registries exist and none is aware of the others: the modelo workspace
-destination table, the shell destination catalogue, the visual-verification surface list,
-the workbench fixtures, and the modelo fixtures. The modelo fixtures at
-`src/cadrumo/entrypoints/tui/devtools/modelo_fixtures.py:294` are consumed by nothing but
-their own test, so the six modelo destinations, the editor and the selection surfaces are
-not drivable from the harness. Every new full-screen class additionally requires a
-classification entry or the coverage gate refuses.
+Five enrolment registries exist and none is aware of the others: the modelo workspace destination table, the shell destination catalogue, the visual-verification surface list, the workbench fixtures, and the modelo fixtures. Every new full-screen class additionally requires a classification entry or the coverage gate refuses.
 
 Acceptance for a modelo surface runs through two distinct gates, and conflating them produces a
 matrix that does not exist. Raster artefacts are identified by surface, viewport and theme

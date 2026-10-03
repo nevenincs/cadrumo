@@ -104,7 +104,7 @@ def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_oper
 ) -> None:
     with administration_subject(tmp_path) as subject:
         registry = build_production_operation_registry(
-            automation_administration_factory=lambda _context, _profile: ThreadedAutomationAdministration(
+            automation_administration_factory=lambda _identity, _profile: ThreadedAutomationAdministration(
                 subject.service
             )
         )

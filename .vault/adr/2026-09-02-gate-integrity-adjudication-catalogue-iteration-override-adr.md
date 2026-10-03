@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#gate-integrity-adjudication'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e6db979da26bf3c78bd74d18e6cc3d0ee2befc6d91fc348d9938d0491059def7'
+body_hash: 'sha256:a2c996499ad0ec91d2cbde558bf25af48bd5db93caccc7e1a2347f20405a19d3'
 related:
   - "[[2026-09-02-gate-integrity-adjudication-research]]"
   - "[[2026-09-02-gate-integrity-adjudication-negative-test-typing-adr]]"
@@ -67,7 +67,7 @@ the catalogue contract rather than a typing patch.
 - The behaviour actually consumed is value iteration, and its production
   footprint is small and enumerable:
   `src/cadrumo/application/user_profile/bundle.py` at lines 227, 230, 233, and
-  236, `src/cadrumo/domain/iva/verify.py:69`, and
+  236, the former source file, and
   `src/cadrumo/application/modelo/calculation_actions.py:1927`. The remainder is
   test code, concentrated in
   `src/cadrumo/domain/transactions/tests/test_catalogue.py` with scattered

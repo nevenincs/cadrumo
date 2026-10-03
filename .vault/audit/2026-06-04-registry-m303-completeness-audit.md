@@ -4,9 +4,8 @@ tags:
   - '#registry-hardening-next-work'
 date: '2026-06-04'
 modified: '2026-10-03'
-body_hash: 'sha256:dd2cfb3d740a05649574a5c16c0f5600b5efe1d86b6010a01e48c32918e8d8fa'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+body_hash: 'sha256:2bde7ec316dc2a7c0c259bca42dcae0a07af7612aac76251b209f7770bdc8a9f'
+related: []
 ---
 
 # `registry-hardening-next-work` audit: `M303 completeness manifest stale totals`
@@ -50,7 +49,6 @@ Executable derivation through `calculation_closure_casilla_ids`,
 
 The 2023 revision now declares `27` and `45` as formula-backed official Diseño
 projection targets in
-`src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/formulas/0001-dr303-projections.toml`
 and the matching casilla declarations carry those formulas. Keeping them in the
 2023 completeness manifest is therefore required by the current calculation
 closure. The 2009 revision keeps the form/export casillas but no longer includes

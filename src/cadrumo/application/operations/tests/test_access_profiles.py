@@ -319,3 +319,34 @@ def test_fresh_period_independent_access_needs_no_held_authority() -> None:
     )
 
     assert resolved.request.period_independent and resolved.request.action is AccessAction.SUBMIT
+
+
+@pytest.mark.parametrize(
+    "action", [AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.CANCEL, AccessAction.DETACH]
+)
+def test_a_replay_from_a_fresh_session_keeps_the_admitted_scope_whatever_its_origin(action: AccessAction) -> None:
+    """A later session has a new destination and may use another frontend; observation stays available."""
+    submitted = _context(AccessAction.SUBMIT, result_schema_id="any.registered.result")
+    later = replace(
+        _context(action, result_schema_id="any.registered.result"), frontend=OperationFrontendProjection.MCP
+    )
+    assert later.destination_id != submitted.destination_id
+
+    single = bind_replayed_or_fresh_single_period_access(
+        replace(later, admitted_request=_admitted(submitted, periods=frozenset({_PERIOD}))),
+        LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        definition_id=_DEFINITION_ID,
+        fresh_period=_period_must_not_be_read,
+    )
+    independent = bind_replayed_period_independent_access(
+        replace(later, admitted_request=_admitted(submitted, periods=frozenset())),
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        definition_id=_DEFINITION_ID,
+    )
+
+    assert single.request.periods == frozenset({_PERIOD})
+    assert independent.request.period_independent
+    for resolved in (single, independent):
+        assert resolved.request.destination_id == later.destination_id
+        assert resolved.request.frontend is OperationFrontendProjection.MCP
+        assert all(item.destination_id == later.destination_id for item in resolved.policy.disclosures)

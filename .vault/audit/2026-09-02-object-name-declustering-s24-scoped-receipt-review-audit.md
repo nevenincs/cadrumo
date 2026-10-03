@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:932a5e13a5c0ef0d012c433eea878732b915696a2bcd9600238ba81f829acd58'
+body_hash: 'sha256:02bfba803831d33a28e0a8031a052b9c310c4681db8a351e1b0acc29b8fedf34'
 related: []
 ---
 
@@ -99,12 +99,7 @@ low findings.
 
 ## Final closure
 
-Resolved: `inventory-churn-integration-teeth` is closed. The replay integration test now
-rescans the repository after creating `dev/concurrent_helper.py`, asserts the current
-inventory digest changed, rebuilds the current component, and invokes replay with the fresh
-inventory and component while retaining the earlier receipt. The successful replay and exact
-preservation assertion now cover genuine unrelated inventory churn through the production
-boundary rather than only filesystem byte churn.
+Resolved: `inventory-churn-integration-teeth` is closed. The successful replay and exact preservation assertion now cover genuine unrelated inventory churn through the production boundary rather than only filesystem byte churn.
 
 The focused detector passed (1 test in 3.59 seconds); Ruff lint, Ruff format, and ty passed for
 the amended replay test. Final S24 status is no findings at any severity.

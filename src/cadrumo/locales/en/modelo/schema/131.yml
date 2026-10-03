@@ -213,6 +213,10 @@ modelo:
             label: Result payable from previous self-assessments
           retenciones-ingresos-a-cuenta:
             label: Withholdings and payments on account
+      construct:
+        modelo-131-objective-estimation-instalment:
+          field:
+            title: 'Modelo 131: instalment payment under objective estimation'
       field:
         official_name: Modelo 131. Personal Income Tax. Entrepreneurs and professionals
           under objective assessment. Instalment payment.

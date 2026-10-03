@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f92e25686abe15394944a2bacb037f7d42c586b2b0a85c6f6e6b28eb793cfb4f'
+body_hash: 'sha256:53889b85dda583cd8530feed6867e3a68d650f55e231989c29765c0ce65398a2'
 related: []
 ---
 
@@ -65,9 +65,7 @@ reviewer ratifies it.
 non-negative bound onto the canonical invoice". The premise is out of date in
 two ways, both worth recording.
 
-The step cites `src/cadrumo/domain/invoices/_models.py`, which no longer exists;
-the models are at `domain/invoices/models.py`. And the bound is not prospective.
-It is already there:
+And the bound is not prospective. It is already there:
 
 - `models.py:801` -- `base_total`, `iva_total`, `grand_total` all refuse a
   negative value

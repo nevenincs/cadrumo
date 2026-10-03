@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-17'
-modified: '2026-07-17'
-body_hash: 'sha256:d3fa536cd4b54a053e6f7e4ca701c08b4b9852a28080ae26695e16c25751df22'
-related:
-  - "[[2026-07-15-distribution-installation-readiness-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:08687a6d197d411f95a41c86b6631c1adb32ec1ff413603bf8d9fc2339c4c8eb'
+related: []
 ---
 
 # `distribution-installation-readiness` audit: `S67 distribution identity verifier code review`
@@ -15,8 +14,8 @@ related:
 
 Reviewed `W02.P06.S67` against the accepted distribution-harness identity decision and
 its research record. The review was limited to
-`dev/packaging/verify_distribution_identity.py` and
-`dev/packaging/tests/test_verify_distribution_identity.py`, with read-only inspection
+The retired module and
+The retired test, with read-only inspection
 of the production generators and MCP projections needed to judge the verifier. The
 three focused real-behavior tests passed. They import production code directly and use
 no fake, mock, stub, patch, monkeypatch, skip, or expected-failure shortcut.
@@ -362,7 +361,7 @@ Linux and macOS coverage remains open under S24.
 project, complete real-cohort archive tests, retained provisioned runtime, and
 installed MCP oracle. The compatibility declaration advertises only Python
 `>=3.13,<3.14`; it makes no operating-system or client-support claim. The
-bundle launches UV against its own project and `src/server.py`, with all three
+bundle launches UV against its own project and the retired module, with all three
 `0.2.1` product distributions resolved from bundle-local wheels and bound to
 their stamped digests.
 

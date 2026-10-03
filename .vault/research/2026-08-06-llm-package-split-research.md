@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4bbf7726ebea996663d31e8bdc310a77aa9bcdcd89020c36565b2fb3b242e11'
+body_hash: 'sha256:3bcdec911f7483e603424774295c4f11dc52a9c0070af48e4056e07172143d64'
 related:
   - "[[2026-08-06-llm-invoice-read-reconciliation-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
@@ -110,7 +110,7 @@ restricts which functions may join onto the storage root.
 `test_ephemeral_key_hygiene.py:78-98` guards test-side key isolation.
 
 Every one of them derives its scan corpus from `SRC_CADRUMO`, defined as
-`Path(__file__).resolve().parents[1]` in `src/cadrumo/tests/_inventory.py:11` — literally
+`Path(__file__).resolve().parents[1]`  — literally
 `src/cadrumo`, walked via `package_python_files()` → `SRC_CADRUMO.rglob("*.py")`
 (`_inventory.py:98-109`). Code in a different top-level package under `src/` is outside
 that walk. A temp-file write, a plaintext side store, or an unreviewed `write_bytes` in
@@ -208,7 +208,7 @@ that refuses with the install hint if so, and raising
 `CliCommandGroupUnavailableError` if not. Non-`ModuleNotFoundError` failures deliberately
 propagate (`:924-926`). The shared test support records why this seam exists: `textual`
 became required while stale environments lacked it, and `app modelo` silently degraded to
-a placeholder for a day (`tests/_command_group_import_support.py:1-31`).
+a placeholder for a day .
 
 One precedent is a trap rather than a model: the `agent` extra is **not** registered in
 `OPTIONAL_EXTRAS`. It hand-writes its install hint at `entrypoints/mcp/_server.py:157`
@@ -554,35 +554,21 @@ core side rather than behind the extra.
   uv sources `:284-298`; `[tool.vaultspec-rag]` `:300-301`; dev group and torch
   `:302-311`; pillow `:342`
 - `.importlinter:2`
-- `src/cadrumo/tests/_inventory.py:11`, `:98-109`
-- `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py:24-57`,
+
   `:59-241`, `:349-369`, `:386-398`, `:411-449`
 - `src/cadrumo/tests/test_storage_provenance_gate.py:370-382`
 - `src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py:78-98`
 - `src/cadrumo/adapters/persistence/storage/runtime_repository.py:36-41`, `:44-54`
-- `src/cadrumo/adapters/persistence/storage/envelope/_secure_repository.py:186-263`
+
 - `src/cadrumo/adapters/persistence/storage/attachment.py:108-127`, `:240-262`, `:394-415`
-- `src/cadrumo/application/ledger/_evidence_input.py:101`, `:118-146`, `:162-197`, `:165`, `:203`
-- `src/cadrumo/core/_models.py:39`
-- `src/cadrumo/domain/attachments/_protocols.py:18-57`
-- `src/cadrumo/core/_optional_extras.py:46-68`, `:74-81`, `:84-109`, `:112-131`, `:134-160`, `:163-177`
-- `src/cadrumo/core/_capabilities.py:36-45`
+
 - `src/cadrumo/entrypoints/cli/__init__.py:907-947`, `:1039-1060`
-- `src/cadrumo/entrypoints/cli/tests/_command_group_import_support.py:1-31`
-- `src/cadrumo/entrypoints/mcp/__init__.py:67-76`, `src/cadrumo/entrypoints/mcp/_server.py:157`
+
 - `src/cadrumo/application/provisioning.py:75-115`, `:220-246`, `:249-281`
 - `src/cadrumo/application/diagnostics_run_health.py:71`
-- `src/cadrumo/application/ledger/_llm_classification.py:53-54`, `:235-297`, `:261`,
+
   `:274-282`, `:380-423`
-- `src/cadrumo/application/ledger/_llm_diagnostics.py:43-46`
-- `src/cadrumo/application/ledger/_evidence_draft.py:457-459`, `:461-468`
-- `src/cadrumo/adapters/outbound/llm/_cache.py:20`, `:123`, `:205`
-- `src/cadrumo/adapters/outbound/llm/_run_telemetry.py:55`, `:153`
-- `src/cadrumo/adapters/outbound/llm/_usage.py:20`, `:119`
-- `src/cadrumo/adapters/outbound/llm/_providers/local.py:57-94`, `:86`, `:95-96`
-- `src/cadrumo/adapters/outbound/llm/_providers/anthropic.py:53-58`
-- `src/cadrumo/adapters/outbound/aeat/browser/_factory.py:317-321`
-- `src/cadrumo/adapters/inbound/financial/providers/_ofx.py:189`, `:320`
+
 - `packaging/cadrumo_data_manuals/pyproject.toml`, `packaging/cadrumo_data_official/pyproject.toml`
 - `.venv/Lib/site-packages/pypdfium2/_helpers/bitmap.py:250-270`; `pypdfium2@5.12.1`
   distribution metadata (no `Requires-Dist`)

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-08-05'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3728196967dd61d952297a6f74cb203adce2c9e5dd81a9b9c068f4b1b6cc774'
+body_hash: 'sha256:6149f77151f13067364b032c1b43ef7dac01ab9cfb0c3f1d2a11e03ff342d1ae'
 related: []
 ---
 
@@ -116,7 +116,7 @@ segment is needed in the key at all.
 ## Sources
 
 - `src/cadrumo/_data/registry/aeat/modelos/100/revisions/*/casillas/`
-- `src/cadrumo/domain/calculations/registry/_schema_base.py` (the `ContinuidadId` constraint)
-- `src/cadrumo/domain/calculations/registry/_validate_cross_revision.py`
+- the former source file (the `ContinuidadId` constraint)
+
 - commit `2788477897` (the batch pass whose parked buckets this quantifies)
 - commit `bff1bc9f0c` (the casilla-order gate; label resolution now runs through the loader)

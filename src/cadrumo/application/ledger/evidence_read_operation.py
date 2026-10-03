@@ -17,12 +17,16 @@ from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_terminal_receipt,
+)
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
@@ -225,18 +229,14 @@ def _require_read_receipt(
     profile_id: UUID,
 ) -> None:
     """Require the terminal receipt identity and effect for a successful read."""
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or receipt.effect is not OperationEffect.NONE
-    ):
-        raise ValueError("evidence read result has an incompatible terminal receipt")
+    message = "evidence read result has an incompatible terminal receipt"
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        effect=OperationEffect.NONE,
+        message=message,
+    )
 
 
 def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:

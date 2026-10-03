@@ -290,6 +290,47 @@ def require_succeeded_receipt_references(receipt: OperationTerminalReceipt, *, m
         raise ValueError(message)
 
 
+def require_succeeded_terminal_receipt(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    effect: OperationEffect,
+    message: str,
+) -> None:
+    """Raise ``ValueError(message)`` unless ``receipt`` is this target's succeeded settlement with ``effect``.
+
+    Combines :func:`require_terminal_receipt_match` for the succeeded condition
+    with :func:`require_succeeded_receipt_references`, so one refusal message
+    covers both the receipt's identity and its result references.
+    """
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=subject_ref,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=effect,
+        message=message,
+    )
+    require_succeeded_receipt_references(receipt, message=message)
+
+
+def refused_receipt_references_hold(receipt: OperationTerminalReceipt) -> bool:
+    """Return whether ``receipt`` carries exactly a refused operation's references.
+
+    A refused receipt names its refusal and no result or failure code, and never
+    pairs refusal detail with error detail. Receipt validation already enforces
+    this; checking it again keeps a receipt copied without validation from
+    releasing a refusal.
+    """
+    return (
+        receipt.refusal_ref is not None
+        and receipt.result_ref is None
+        and receipt.failure_error_code is None
+        and (receipt.refusal_detail_ref is None or receipt.error_detail_ref is None)
+    )
+
+
 def validate_terminal_reference_meaning(
     *,
     condition: OperationTerminalCondition,
@@ -420,6 +461,7 @@ __all__ = [
     "OperationTerminalReceipt",
     "new_operation_id",
     "require_succeeded_receipt_references",
+    "require_succeeded_terminal_receipt",
     "require_terminal_receipt_match",
     "require_terminal_receipt_match_any_effect",
     "terminal_receipt_matches",

@@ -155,6 +155,16 @@ def _submission_session(client: RuntimeFrontendClient, expected_session_id: UUID
     return session_id
 
 
+def _exchange_deadline(deadline: float | None) -> float:
+    if deadline is not None:
+        remaining_budget(deadline)
+    selected = time.monotonic() + 30
+    if deadline is not None:
+        selected = min(selected, deadline)
+    remaining_budget(selected)
+    return selected
+
+
 async def _admit_submission_contract(
     client: RuntimeFrontendClient, definition_id: str, deadline: float, session_id: UUID
 ) -> None:
@@ -218,12 +228,7 @@ class RuntimeOperationController:
         return reply
 
     def _call_deadline(self) -> float:
-        deadline = time.monotonic() + 30
-        if self.deadline is not None:
-            deadline = min(deadline, self.deadline)
-        if deadline <= time.monotonic():
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        return deadline
+        return _exchange_deadline(self.deadline)
 
     @classmethod
     async def submit(
@@ -239,9 +244,7 @@ class RuntimeOperationController:
     ) -> RuntimeOperationController:
         """Submit a registered request without transferring response capabilities."""
         session_id = _submission_session(client, expected_session_id)
-        exchange_deadline = min(time.monotonic() + 30, deadline) if deadline is not None else time.monotonic() + 30
-        if exchange_deadline <= time.monotonic():
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        exchange_deadline = _exchange_deadline(deadline)
         await _admit_submission_contract(client, definition_id, exchange_deadline, session_id)
         request = RuntimeOperationSubmit(
             request_id=uuid4(),

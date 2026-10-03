@@ -13,11 +13,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import BadZipFile
 
+from dev._paths import REPO_ROOT
+
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from dev.cache_root import dev_cache_dir
@@ -255,8 +258,8 @@ def corpus_text_cache_dir() -> Path:
         The directory holding the corpus-text cache file.
     """
     override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
-    if override:
-        return Path(override)
+    if override and override.strip():
+        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("corpus-text")
 
 

@@ -1,0 +1,518 @@
+[[revisions.2013-2022.export_layouts]]
+id = 'modelo-270-fichero-boe'
+
+[[revisions.2013-2022.export_layouts.records]]
+id = 'modelo-270-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '270'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-decl-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'presenter.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-nif'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'perc.nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-nif-representante-legal'
+offset = 27
+length = 9
+kind = 'casilla'
+casilla_id = 'perc.nif-representante-legal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-nombre'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'perc.nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-nombre-representante'
+offset = 76
+length = 40
+kind = 'casilla'
+casilla_id = 'perc.nombre-representante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-tipo-perceptor'
+offset = 116
+length = 1
+kind = 'casilla'
+casilla_id = 'perc.tipo-perceptor'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-clave-personalidad'
+offset = 117
+length = 1
+kind = 'casilla'
+casilla_id = 'perc.clave-personalidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-provincia'
+offset = 118
+length = 2
+kind = 'casilla'
+casilla_id = 'perc.provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-fecha-sorteo'
+offset = 120
+length = 8
+kind = 'casilla'
+casilla_id = 'perc.fecha-sorteo'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-fecha-pago'
+offset = 128
+length = 8
+kind = 'casilla'
+casilla_id = 'perc.fecha-pago'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-importe-premio-component-136'
+offset = 136
+length = 13
+kind = 'casilla'
+casilla_id = 'perc.importe-premio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-importe-premio-component-149'
+offset = 149
+length = 2
+kind = 'casilla'
+casilla_id = 'perc.importe-premio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-base-retencion-component-151'
+offset = 151
+length = 13
+kind = 'casilla'
+casilla_id = 'perc.base-retencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-base-retencion-component-164'
+offset = 164
+length = 2
+kind = 'casilla'
+casilla_id = 'perc.base-retencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-retencion-component-166'
+offset = 166
+length = 13
+kind = 'casilla'
+casilla_id = 'perc.retencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-retencion-component-179'
+offset = 179
+length = 2
+kind = 'casilla'
+casilla_id = 'perc.retencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-gestor-cobro'
+offset = 181
+length = 1
+kind = 'casilla'
+casilla_id = 'perc.gestor-cobro'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-blancos'
+offset = 182
+length = 251
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-nif-pais-residencia'
+offset = 433
+length = 20
+kind = 'casilla'
+casilla_id = 'perc.nif-pais-residencia'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-fecha-nacimiento'
+offset = 453
+length = 8
+kind = 'casilla'
+casilla_id = 'perc.fecha-nacimiento'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-ciudad-nacimiento'
+offset = 461
+length = 35
+kind = 'casilla'
+casilla_id = 'perc.ciudad-nacimiento'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-codigo-pais-nacimiento'
+offset = 496
+length = 2
+kind = 'casilla'
+casilla_id = 'perc.codigo-pais-nacimiento'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-pais-residencia'
+offset = 498
+length = 2
+kind = 'casilla'
+casilla_id = 'perc.pais-residencia'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-perc-blanco-final'
+offset = 500
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[revisions.2013-2022.export_layouts.records.row_field_casilla_ids]

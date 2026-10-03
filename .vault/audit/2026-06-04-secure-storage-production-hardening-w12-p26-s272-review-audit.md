@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:c038b440f090b6271d00071c1ffb7c55080f8e18481404e038360ece7d6bc9e2'
+modified: '2026-10-03'
+body_hash: 'sha256:bd9b85056bf11fb7de628bcd290cec586e538de0abeabf37977d0d008b74257b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S272-001 | PASS | Verification boundary owns no plaintext storage
 
-`src/aeat/application/verification/_verify.py` loads registry snapshots through the
+The retired module loads registry snapshots through the
 bundled resources authority, or through a caller-supplied registry-root override. It
 does not persist declaration state, profile state, secure objects, master-key material,
 or remote provider mirrors.
@@ -40,8 +40,8 @@ alternate registry loader was introduced.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/verification/_verify.py src/aeat/application/verification/test_verify.py src/aeat/locales`
-- `uv run --no-sync pytest -q src/aeat/application/verification/test_verify.py src/aeat/application/verification/test_verify_helpers.py`
+- the historical check
+- the historical check
 - `python -m aeat.locales audit`
 
 Disposition: close `AFR-170`.

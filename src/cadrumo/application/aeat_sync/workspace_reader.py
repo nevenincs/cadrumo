@@ -5,12 +5,10 @@ comparing local records against such an observation, and the decision that
 governs this surface is explicit: initial load is local-only, and reaching the
 AEAT is always an operator action with visible progress and result.
 
-So the projection a session opens with reports what is genuinely local — the
-profile record and the local filing records — and states, per source, why the
-rest is empty. An AEAT authority is NEVER CAPTURED because nothing has been
-pulled yet; a local authority with no installed row reader is UNAVAILABLE. A
-zero filing count is neither of those: it is an observed zero, and it stays
-distinguishable from both.
+The projection restores the profile, local filing records and stored census
+evidence. Sources without a stored capture remain NEVER_CAPTURED; a local
+authority with no installed reader is UNAVAILABLE. A zero filing count is an
+observed zero and stays distinguishable from both.
 
 What the workspace does offer, even before a pull, are the pull actions
 themselves, joined to the operation contracts the session actually composed —
@@ -27,7 +25,8 @@ from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
-from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from ..user_profile.censal_observation import CensalObservation
+from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read
 from .workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -145,7 +144,15 @@ def _observation(
     profile_count: int,
     filing_count: int,
     custody_count: int | None,
+    census_observation: CensalObservation | None,
 ) -> AeatSyncWorkspaceSourceObservationV1:
+    if source is AeatSyncWorkspaceSource.AEAT_CENSUS and census_observation is not None:
+        return AeatSyncWorkspaceSourceObservationV1(
+            source=source,
+            availability=AeatSyncWorkspaceAvailability.AVAILABLE,
+            observed_at=census_observation.captured_at,
+            item_count=1,
+        )
     if source in _AEAT_SOURCES:
         return AeatSyncWorkspaceSourceObservationV1(
             source=source,
@@ -284,11 +291,12 @@ def _overview_row(
     filing_count: int,
     custody_count: int | None,
     contracts: OperationPublicContractSetV1,
+    census_observation: CensalObservation | None = None,
 ) -> AeatSyncWorkspaceOverviewRowV1:
     """State only what the local side genuinely observed for this area.
 
-    The AEAT side is never observed before a pull, so every area's comparison
-    is UNOBSERVED.
+    Stored census evidence establishes remote presence at its capture time.
+    The census detail rows separately compare individual profile fields.
 
     The local side is a THREE-way answer, not two. An area whose local source
     this session read reports PRESENT when it holds records and ABSENT when it
@@ -311,9 +319,22 @@ def _overview_row(
     return AeatSyncWorkspaceOverviewRowV1(
         area=area,
         local_state=local_state,
-        aeat_state=AeatSyncSourceState.NOT_OBSERVED,
+        aeat_state=(
+            AeatSyncSourceState.PRESENT
+            if area is AeatSyncOverviewArea.CENSUS and census_observation is not None
+            else AeatSyncSourceState.NOT_OBSERVED
+        ),
+        aeat_observed_at=(
+            census_observation.captured_at
+            if area is AeatSyncOverviewArea.CENSUS and census_observation is not None
+            else None
+        ),
         local_observed_at=local_observed_at,
-        discrepancy_kind=AeatSyncDiscrepancyKind.UNOBSERVED,
+        discrepancy_kind=(
+            AeatSyncDiscrepancyKind.NONE
+            if area is AeatSyncOverviewArea.CENSUS and census_observation is not None
+            else AeatSyncDiscrepancyKind.UNOBSERVED
+        ),
         supported_actions=actions,
         supported_operations=operations,
     )
@@ -344,27 +365,15 @@ def _census_rows(
     subject_key: str,
     censo_values: Mapping[str, str],
     contracts: OperationPublicContractSetV1,
+    observation: CensalObservation | None = None,
 ) -> tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...]:
-    """Show what the profile holds for each censo-comparable field, uncompared.
+    """Compare populated remote facts with the local profile's declared values.
 
-    One row per path in `CENSAL_ADOPTABLE_PATHS`, always -- including the paths
-    the profile leaves empty. A field the operator has not filled in is exactly
-    the field a censo pull is most likely to change, so dropping its row would
-    hide the comparison worth making from the surface whose job is to offer it.
-
-    The local side distinguishes two things the projection would otherwise
-    conflate. A path the record carries is its value. A path the record does
-    not carry is the empty string -- OBSERVED and blank, because the profile
-    was read and genuinely holds nothing there. Neither is `None`, which on
-    this row means nobody looked, and nobody-looked is false of a record this
-    session read to build the row in the first place.
-
-    The AEAT side is `None` on every row and the status is NOT_COMPARED,
-    because no pull has happened. That pairing is enforced on the row itself,
-    so a later producer cannot leave the status behind when it starts filling
-    the AEAT column in.
+    Missing remote facts remain unobserved: historical captures cannot prove
+    an explicit blank. The complete captured evidence is projected separately.
     """
     actions, operations = _admitted_capabilities(AeatSyncOverviewArea.CENSUS, contracts)
+    remote = {} if observation is None else {fact.path: str(fact.value) for fact in censal_facts_from_read(observation)}
     return tuple(
         AeatSyncWorkspaceFactV1(
             bucket_id=bucket_id,
@@ -372,9 +381,17 @@ def _census_rows(
             row=AeatSyncWorkspaceCensusRowV1(
                 path=path,
                 category=_CENSUS_FIELD_CATEGORIES[path],
-                status=AeatSyncCensusStatus.NOT_COMPARED,
+                status=(
+                    AeatSyncCensusStatus.NOT_COMPARED
+                    if path not in remote
+                    else AeatSyncCensusStatus.UNCHANGED
+                    if censo_values.get(path, "").strip() == remote.get(path, "").strip()
+                    else AeatSyncCensusStatus.UNSET
+                    if not censo_values.get(path, "")
+                    else AeatSyncCensusStatus.CONFLICT
+                ),
                 local_value=censo_values.get(path, ""),
-                aeat_value=None,
+                aeat_value=remote.get(path),
                 supported_actions=actions,
                 supported_operations=operations,
             ),
@@ -438,8 +455,9 @@ def read_local_aeat_sync_workspace_projection(
     operation_contracts: OperationPublicContractSetV1,
     custody_count: int | None = None,
     censo_values: Mapping[str, str] | None = None,
+    census_observation: CensalObservation | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
-    """Project the pre-pull AEAT Sync workspace for one authenticated profile.
+    """Project local state and the latest stored AEAT census for one authenticated profile.
 
     `custody_count` is how many notification documents this profile already
     holds locally. `None` means this session did not read the store -- distinct
@@ -473,6 +491,7 @@ def read_local_aeat_sync_workspace_projection(
                         profile_count=1,
                         filing_count=len(filings),
                         custody_count=custody_count,
+                        census_observation=census_observation,
                     )
                     for source in aeat_sync_workspace_sources(zone)
                 ),
@@ -491,6 +510,7 @@ def read_local_aeat_sync_workspace_projection(
                     filing_count=len(filings),
                     custody_count=custody_count,
                     contracts=operation_contracts,
+                    census_observation=census_observation,
                 ),
             )
             for area in AeatSyncOverviewArea
@@ -503,6 +523,16 @@ def read_local_aeat_sync_workspace_projection(
                 subject_key=subject_key,
                 censo_values=censo_values,
                 contracts=operation_contracts,
+                observation=census_observation,
+            )
+        ),
+        census_observation=(
+            None
+            if census_observation is None
+            else AeatSyncWorkspaceFactV1(
+                bucket_id=bucket_id,
+                subject_key=subject_key,
+                row=census_observation,
             )
         ),
         filed_declarations=_filed_declaration_rows(

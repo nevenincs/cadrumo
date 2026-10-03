@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a80076b4c5b9540ffe46881b0b6fd22af6de9aa00910e8ea947db85dd62f2eea'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 # `source-casilla-integration` audit: `S113 helper candidate classification review`
 

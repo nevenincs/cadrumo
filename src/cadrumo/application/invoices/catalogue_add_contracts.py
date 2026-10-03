@@ -20,7 +20,7 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaRateKind
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.public_scalar import PublicDecimal
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 
@@ -260,14 +260,10 @@ def _require_invoice_add_receipt_envelope(receipt: OperationTerminalReceipt, res
 
 
 def _require_invoice_add_success_receipt(receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("invoice-add success has an incompatible terminal receipt")
+    message = "invoice-add success has an incompatible terminal receipt"
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED or receipt.effect is not OperationEffect.UPDATED:
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_invoice_add_refusal_receipt(receipt: OperationTerminalReceipt, result: InvoiceAddResult) -> None:

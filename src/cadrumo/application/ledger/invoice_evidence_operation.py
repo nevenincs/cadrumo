@@ -32,7 +32,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.owner import OperationExecutorContext
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -166,16 +166,14 @@ def _require_invoice_evidence_terminal_outcome(
     *,
     effects: frozenset[OperationEffect],
 ) -> None:
+    message = "invoice evidence result has an incompatible terminal receipt"
     if (
         receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
         or receipt.effect not in effects
     ):
-        raise ValueError("invoice evidence result has an incompatible terminal receipt")
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 __all__ = [

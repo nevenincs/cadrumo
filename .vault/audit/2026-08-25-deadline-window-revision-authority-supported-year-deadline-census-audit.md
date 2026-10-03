@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:850327d91cbce6a46825add61e3b7171c7183104ef3bb8d57263198c1eea62ea'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 # `deadline-window-revision-authority` audit: `supported year deadline census`
 

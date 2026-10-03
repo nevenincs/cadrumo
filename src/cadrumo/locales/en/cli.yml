@@ -2211,6 +2211,7 @@ cli:
         view_help: Show the resolved state of every service capability for the active
           profile.
       censo:
+        show_help: Read the complete saved census snapshot without contacting AEAT.
         apply_help: Enroll the parsed censal facts onto the active profile (default
           is preview only).
         divergencia_leaf_artefact_value: AEAT value

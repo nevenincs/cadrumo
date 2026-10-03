@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-identifiers'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:3ca5942b4c7412182c2cea151015b04de17578a1c9481f10c545369b818edd63'
-related:
-  - "[[2026-08-07-canonical-identifiers-plan]]"
+related: []
 ---
 
 # `canonical-identifiers` audit: `s10 provenance roundtrip`

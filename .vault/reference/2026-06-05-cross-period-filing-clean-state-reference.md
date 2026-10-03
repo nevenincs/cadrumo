@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:07bcd6f122c41a07ce9b83d04b345eaa747ca49f46c963e09dbdaf0a2ffb9864'
+modified: '2026-10-03'
+body_hash: 'sha256:f2a28d4fdac5c34876816a4bfac49f996dda51f8b7c021d2229a84529498c890'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
@@ -21,7 +21,6 @@ annual summaries, and cross-member fan-in.
 
 ## Strict domain resolver
 
-- `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`
   exposes `previous_filing_observation_requirements` and
   `resolve_previous_filing_binding_values`.
 - `resolve_previous_filing_binding_values` refuses incomplete direct
@@ -35,7 +34,6 @@ annual summaries, and cross-member fan-in.
 
 ## Application prefill is permissive
 
-- `src/aeat/application/calculations/_binding_prefill.py` resolves
   `previous_filing` bindings from `CalculationObservationRepository`.
 - The prefill contract states that unavailable bindings are skipped silently
   and that strict enforcement is the caller's choice via report coverage.
@@ -47,7 +45,6 @@ annual summaries, and cross-member fan-in.
 
 ## Registry relations are also permissive
 
-- `src/aeat/application/calculations/_relation_prefill.py` resolves relation
   sources from the observation repository.
 - The relation prefill contract says missing local sources become
   `RelationValue(value=None)` with operator-manual provenance so the engine
@@ -61,7 +58,6 @@ annual summaries, and cross-member fan-in.
 
 ## Calculation can accept manual previous-filing values
 
-- `src/aeat/application/modelo/_binding_resolution.py` merges profile,
   backend, borrador, relation, and caller binding values for
   `calculate_modelo_revision`.
 - `resolve_bound_casilla_inputs_for_available_bindings` projects only
@@ -75,7 +71,6 @@ annual summaries, and cross-member fan-in.
 
 ## Verification, export, and file lack a uniform dependency proof
 
-- `src/aeat/application/modelo/_actions.py` contains
   `calculate_modelo_revision`, `verify_modelo_revision`, and
   `file_modelo_revision`.
 - `verify_modelo_revision` checks revision state, content integrity, required
@@ -86,14 +81,12 @@ annual summaries, and cross-member fan-in.
 - `file_modelo_revision` requires `VERIFICADO_COMPLETO` and runs workflow and
   IVA wallet checks, but it inherits the absence of a general upstream
   clean-state gate.
-- `src/aeat/application/modelo/_export.py` accepts verified-complete and filed
   revisions, refuses missing ledger export evidence for ledger-derived
   revisions, and rebuilds the export from the revision. It does not impose an
   independent upstream cross-period clean-state proof.
 
 ## Filing records carry stronger state than observations
 
-- `src/aeat/domain/modelos/_filing_record.py` defines
   `ModeloRecordStatus.VIGENTE` and `ModeloRecordStatus.SUPERSEDIDO`, with at
   most one current record per bucket, modelo, filing year, and period.
 - `ModeloRecord` carries `aeat_accepted` and optional `ExternalEvidence`.
@@ -119,12 +112,11 @@ annual summaries, and cross-member fan-in.
 
 ## Live and import paths create evidence, but do not join it into a proof
 
-- `src/aeat/application/live/__init__.py` exposes
+- `src/cadrumo/application/live/__init__.py` exposes
   `capture_source_filed_data` and `persist_filed_calculation_observation`.
 - `persist_filed_calculation_observation` promotes AEAT filed-declaration
   observations into `CalculationObservationRepository` with
   `source_kind="aeat_sede_justificante"`.
-- `src/aeat/application/modelo/_actions.py` exposes
   `import_external_filing_evidence`, which creates a filed calculation
   revision and a current `ModeloRecord` with `aeat_accepted=True` and
   `external_evidence` populated.
@@ -134,7 +126,6 @@ annual summaries, and cross-member fan-in.
 
 ## Observation storage is value-centric
 
-- `src/aeat/application/calculations/_observations_repository.py` stores a
   `_ObservationEnvelopePayload` containing `RegistryModeloObservation`,
   `captured_at`, `source_kind`, and optional `member_nif`.
 - `source_kind` is a free string described as `app_filing`,
@@ -161,7 +152,6 @@ annual summaries, and cross-member fan-in.
 
 ## Existing adjacent gates
 
-- The amendment path in `src/aeat/application/modelo/_actions.py` already
   requires imported official evidence on an external baseline before creating
   an amendment. That is a useful precedent for evidence-gated state.
 - IVA wallet reconciliation already has an application-level decision object

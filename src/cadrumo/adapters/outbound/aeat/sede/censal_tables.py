@@ -70,13 +70,22 @@ _EMPTY_MARKERS = frozenset({"noexistenregistros", "nohayregistros", "nosehanenco
 def _table_rows(table: Tag) -> tuple[tuple[str, ...], tuple[CensalRow, ...]]:
     columns: tuple[str, ...] = ()
     result: list[CensalRow] = []
-    for row in table.find_all("tr"):
-        if row.find_parent("table") is not table or row.find_parent("tfoot") is not None:
+    explicitly_empty = False
+    for row in table.select("tr, [role=row]"):
+        if row.find_parent("tfoot") is not None:
             continue
-        cells = tuple(row.find_all(["th", "td"], recursive=False))
+        owner = row.find_parent(lambda tag: tag.name == "table" or tag.get("role") in {"table", "grid"})
+        if owner is not table:
+            continue
+        cells = tuple(
+            child
+            for child in row.children
+            if isinstance(child, Tag)
+            and (child.name in {"th", "td"} or child.get("role") in {"columnheader", "cell", "gridcell"})
+        )
         if not cells:
             continue
-        if all(cell.name == "th" for cell in cells):
+        if all(cell.name == "th" or cell.get("role") == "columnheader" for cell in cells):
             if any(cell.get("colspan", "1") != "1" for cell in cells):
                 continue
             incoming = tuple(census_text(cell) or "" for cell in cells)
@@ -94,7 +103,10 @@ def _table_rows(table: Tag) -> tuple[tuple[str, ...], tuple[CensalRow, ...]]:
         if len(cells) == 1 and census_key(census_text(cells[0]) or "") in _EMPTY_MARKERS:
             if result:
                 raise census_shape_error("empty marker contradicts table records")
+            explicitly_empty = True
             continue
+        if explicitly_empty:
+            raise census_shape_error("table records contradict empty marker")
         if len(cells) != len(columns) or any(
             cell.get("colspan", "1") != "1" or cell.get("rowspan", "1") != "1" for cell in cells
         ):
@@ -108,6 +120,8 @@ def _table_rows(table: Tag) -> tuple[tuple[str, ...], tuple[CensalRow, ...]]:
                 ),
             )
         )
+    if not result and not explicitly_empty:
+        raise census_shape_error("table is empty without an explicit empty-result marker")
     return columns, tuple(result)
 
 
@@ -134,8 +148,8 @@ def parse_censal_table(
     if heading is None:
         raise census_shape_error("consultation heading missing")
     sections: list[CensalSection] = []
-    for table in soup.select("table"):
-        headers = {census_key(census_text(cell) or "") for cell in table.select("th")}
+    for table in soup.select("table, [role=table], [role=grid]"):
+        headers = {census_key(census_text(cell) or "") for cell in table.select("th, [role=columnheader]")}
         if not _REQUIRED_COLUMNS[kind].issubset(headers):
             continue
         _, rows = _table_rows(table)
@@ -144,4 +158,12 @@ def parse_censal_table(
         sections.append(CensalSection(title=title or kind, rows=rows))
     if not sections:
         raise census_shape_error("recognizable consultation table missing")
+    for match in re.finditer(
+        r"mostrados\s+los\s+registros\s+(\d+)\s+a\s+(\d+)\s+de\s+un\s+total\s+de\s+(\d+)",
+        soup.get_text(" ", strip=True),
+        re.IGNORECASE,
+    ):
+        first, last, total = map(int, match.groups())
+        if first != 1 or last != total or total != sum(len(section.rows) for section in sections):
+            raise census_shape_error("consultation is paginated or its record count is inconsistent")
     return CensalConsultation(kind=kind, source_url=census_source_url(source_url), sections=tuple(sections))

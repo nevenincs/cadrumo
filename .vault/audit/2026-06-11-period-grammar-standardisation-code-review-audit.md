@@ -4,7 +4,7 @@ tags:
   - '#period-grammar-standardisation'
 date: '2026-06-11'
 modified: '2026-10-03'
-body_hash: 'sha256:5381fae7dde2ed137be2a371896d408fe55e4e0cfec0543b67860ecab58dd22e'
+body_hash: 'sha256:275f7966073607e567c9414680364a5e9a26942576c82ab0e4b2e048c0f9842d'
 related:
   - '[[2026-06-11-period-grammar-standardisation-adr]]'
 ---
@@ -29,16 +29,16 @@ Residual risk: full-repository and vault checks were not run for this review.
 Review of commit `e6a54068f` found the parser cleanup itself matches the rollout intent:
 combined forms refuse, and raw AEAT `nT` only resolves with `ejercicio`.
 
-The remaining issue is in `src/aeat/application/overview/_calendar.py`: `_obligation_period_to_core`
+The remaining issue is in the retired module: `_obligation_period_to_core`
 still comments and documents that `parse_canonical_period` handles combined forms, then calls
 it without `ejercicio`. After the parser cleanup, that branch no longer handles those forms.
 Normal schedule obligations pass `core.Period` and bypass this path, so the risk is stale
 fallback documentation rather than a known runtime regression.
 
-This was not fixed in the parser cleanup commit because `src/aeat/application/overview/_calendar.py`
+This was not fixed in the parser cleanup commit because the retired module
 currently contains non-authored WIP in the shared worktree.
 
-Verification reported by the reviewer: `src/aeat/domain/tests/test_period.py` passed with
+Verification reported by the reviewer: the retired test passed with
 `41 passed`, and registry schema/query tests passed with `50 passed`.
 
 ## PERIOD-003 | INFO | No findings in stale guidance cleanup
@@ -57,7 +57,7 @@ boundary support module; that failure was outside this slice.
 ## PERIOD-004 | INFO | No findings in review-filter example cleanup
 
 Review of commit `1f2c3e68d` found no issues. The commit only changed one docstring
-example in `src/aeat/application/review/_errors.py` from a year-qualified hybrid period
+example in the retired module from a year-qualified hybrid period
 to a bare token example, with no behavior path touched.
 
 ## PERIOD-005 | INFO | No findings in stale combined fixture cleanup
@@ -68,7 +68,7 @@ bare `period=1T` with separate `year=2026` where applicable.
 
 Verification reported by the reviewer: focused tests for the touched files plus ledger
 period grammar produced `136 passed, 22 failed`. The failures were isolated to
-`src/aeat/application/auth/tests/test_operator.py` with the known shared-worktree
+The retired test with the known shared-worktree
 `ProfileKeysRegistrationError` registration issue; the reviewed period, review, and
 submission coverage passed.
 
@@ -101,7 +101,7 @@ but the CLI `ledger check` path still constructed `period=str(year)` before call
 `core.Period` and calls `.contains(...)`, so the string path could crash once imported
 transactions were present.
 
-The same review also flagged that `src/aeat/application/ledger/tests/_action_test_support.py`
+The same review also flagged that the retired test
 had temporarily become a broad re-export barrel for production ledger APIs, which weakened
 the test import boundary.
 
@@ -245,13 +245,13 @@ the index reader matched `git ls-files` exactly with `27,766` tracked paths.
 Review of commit `8d47ac156` found no issues in the scoped cleanup. The
 reviewer confirmed that `calendar_events_from_expedientes_snapshots` constructs
 `core.Period` directly from `declaration.ejercicio` plus the bare
-`declaration.period`, and that `src/aeat/domain/period.py` no longer exports or
+`declaration.period`, and that the retired module no longer exports or
 defines `parse_canonical_period`. A repository search found no remaining Python
 references to the removed adapter.
 
 Verification reported by the reviewer: the domain period test module passed
-with `30 passed`; ruff passed for `src/aeat/application/overview/_calendar.py`,
-`src/aeat/domain/period.py`, and `src/aeat/domain/tests/test_period.py`; a direct
+with `30 passed`; ruff passed for the retired module,
+The retired module, and the retired test; a direct
 runtime exercise of the overview expediente projection produced the expected
 typed-period filing summary; and `git diff --check` reported no whitespace
 errors on the scoped files.
@@ -269,7 +269,7 @@ The reviewer confirmed that the `OverviewCalendarEntry.period` and
 `aeat.core.Period` field types instead of describing a combined canonical string.
 
 Verification before the commit: stale `Canonical period string` / `2026Q1`
-matches were gone from `src/aeat/application/overview/_calendar.py`; ruff passed
+matches were gone from the retired module; ruff passed
 for that file; `git diff --check` reported no whitespace errors on the scoped
 file; the focused overview typed-period assertion and the combined-string gate
 passed with `2 passed`.
@@ -334,8 +334,8 @@ field is not read by `_build_submission_record`. Commit `f2e82a658` aligned the
 fixture with the typed contract by passing the existing `Period` value object.
 
 Verification for the import cleanup: ruff passed for
-`src/aeat/application/filing/_import.py` and
-`src/aeat/application/filing/tests/test_import.py`; the import and justificante
+The retired module and
+The retired test; the import and justificante
 parser suites passed with `90 passed`. Verification for the follow-up fixture
 alignment: ruff passed for `test_import.py`, and the focused import suite passed
 with `10 passed`.
@@ -395,8 +395,8 @@ registry-introspection path, where it is a bare declared token filter rather
 than a filing-period value object.
 
 Verification after the change: ruff passed for
-`src/aeat/application/modelo/_registry_discovery.py` and
-`src/aeat/entrypoints/cli/_modelo_discovery_cli.py`; the modelo registry CLI
+The retired module and
+The retired module; the modelo registry CLI
 surface and registry query suites passed with `92 passed`; and CLI import smoke
 printed `OK`.
 

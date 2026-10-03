@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:683cdd346bdd356d4559d1f73c0a3c5fd62359fa3508b6b7af139163d826af7a'
-related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
+related: []
 ---
 
 # `reachability-burndown` audit: `S208 runtime fingerprint cache facade withdrawal review`

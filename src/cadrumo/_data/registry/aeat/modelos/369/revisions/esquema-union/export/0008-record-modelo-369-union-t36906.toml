@@ -1,0 +1,263 @@
+[[revisions.esquema-union.export_layouts]]
+id = 'modelo-369-union-fichero'
+
+[[revisions.esquema-union.export_layouts.records]]
+id = 'modelo-369-union-t36906'
+record_type = 't36906-un'
+order = 3
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1527-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-182'
+offset = 1527
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-182'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1544-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-183'
+offset = 1544
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-183'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1546-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-184'
+offset = 1546
+length = 15
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-184'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1561-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-185'
+offset = 1561
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-185'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1563-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-186'
+offset = 1563
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-186'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1568-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-187'
+offset = 1568
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-187'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1569-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-188'
+offset = 1569
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-188'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1586-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-189'
+offset = 1586
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-189'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1603-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-190'
+offset = 1603
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-190'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1605-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-191'
+offset = 1605
+length = 15
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-191'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1620-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-192'
+offset = 1620
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-192'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1622-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-193'
+offset = 1622
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-193'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1627-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-194'
+offset = 1627
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-194'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1628-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-195'
+offset = 1628
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-195'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-06-1645-5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-196'
+offset = 1645
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.5-prestaciones-de-servicios-desde-establecimientos-permanentes-en-otro-196'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36906-1662-reservado'
+offset = 1662
+length = 17
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36906-1679-constante-t36906'
+offset = 1679
+length = 9
+kind = 'literal'
+literal = '</T36906>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-union.export_layouts.records.row_field_casilla_ids]

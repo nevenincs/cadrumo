@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#corpus-sidecar-freshness-repair'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:53cc4deef2d836b4bae8b03076ed5d821c78665ce1dc717b0c7ac153c731e0d5'
+body_hash: 'sha256:82204be9dfb805497d75bbab94a28e387d8d4c14bbc885d72d0423bdfe839146'
 related: []
 ---
 # `corpus-sidecar-freshness-repair` research: deterministic corpus-sidecar generation and drift detection
@@ -16,7 +16,7 @@ The committed corpus contains product-search and evidence derivatives, but HTML 
 
 ### HTML and workbook derivatives have writers but no batch owner
 
-`extract_html` writes deterministic sidecar pairs for one normative source, and `extract_workbook` does the same for one record-design workbook. No command enumerates their enrolled source populations, writes the complete set, or performs a no-write expected-output comparison. In contrast, manual PDF text has `extract_manual_corpus_text --check` and matching `just` recipes. `sync_aeat_record_design_corpus` verifies fetched source artefacts and manifests only; it does not create text derivatives. The missing batch owner explains why source changes and new workbooks can land without a corresponding sidecar. `dev/docs/preprocess/normatives_html.py:524`; `dev/docs/preprocess/_workbook.py:257`; `dev/corpus/extract_manual_corpus_text.py:183`; `dev/corpus/sync_aeat_record_design_corpus.py:830`; `justfile:401`.
+`extract_html` writes deterministic sidecar pairs for one normative source, and `extract_workbook` does the same for one record-design workbook. No command enumerates their enrolled source populations, writes the complete set, or performs a no-write expected-output comparison. In contrast, manual PDF text has `extract_manual_corpus_text --check` and matching `just` recipes. `sync_aeat_record_design_corpus` verifies fetched source artefacts and manifests only; it does not create text derivatives. The missing batch owner explains why source changes and new workbooks can land without a corresponding sidecar. `dev/docs/preprocess/normatives_html.py:524`; the former source file; `dev/corpus/extract_manual_corpus_text.py:183`; `dev/corpus/sync_aeat_record_design_corpus.py:830`; `justfile:401`.
 
 ### The live corpus is presently inconsistent
 
@@ -39,7 +39,7 @@ One option is a one-off regeneration using the existing functions. It fixes toda
 - `dev/corpus/tests/test_extraction_sidecar_freshness.py:172`
 - `dev/corpus/extract_manual_corpus_text.py:183`
 - `dev/corpus/sync_aeat_record_design_corpus.py:830`
-- `dev/docs/preprocess/_workbook.py:257`
+
 - `dev/docs/preprocess/hook.py:61`
 - `dev/docs/preprocess/normatives_html.py:524`
 - `dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py:327`

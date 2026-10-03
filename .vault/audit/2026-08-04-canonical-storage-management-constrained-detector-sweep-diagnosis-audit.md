@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6858c6f1387edd2802fe547edb295b395d69187957db585fdf0652d5c604b496'
+body_hash: 'sha256:c2376e2997f58e63baa9b9b4b30df139ec547ea15c9be05ce5b6d2d652c25df1'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -15,7 +15,7 @@ related:
 ## Scope
 
 The `--scope tests` "injected-but-constrained" detector (`WriteSite.constrained`,
-`dev/write_site_census.py`) was built to catch a literal that reads as free
+The retired module) was built to catch a literal that reads as free
 (`temporary`/`pass_through`) but secretly agrees with a value a sibling fixture or
 a spawned process independently derives from the real taxonomy accessor. Before
 trusting it as a triage instrument, it was run against the full test tree and
@@ -42,7 +42,7 @@ says another):
    miss is not a vocabulary gap at all, so no signal-set tuning — including the
    two changes just funded — closes it. The code for step 2 was implemented,
    then reverted in the same session once step 3 landed; see the commit history
-   on `dev/write_site_census.py` for both.
+   on the retired module for both.
 
 ## Findings
 
@@ -156,7 +156,7 @@ hand-classification commits retiring real sites. **That reconciliation is
 false.** `honesty` measured both the `53f80f0830` and `dcfb8209e4` versions of
 the detector directly against the `dcfb8209e4` tree and got identical results
 from each (`183`/`519`/`702`) — the detector file is byte-identical between the
-two pins (`git diff 53f80f0830 dcfb8209e4 -- dev/write_site_census.py` is
+two pins (the historical check is
 empty), and the intervening test-tree churn (11 files, +464/−7, net additive)
 cannot retire 212 sites. A cross-check recorded as agreement is exactly the
 kind of finding this campaign has learned gets the least scrutiny, because
@@ -285,7 +285,7 @@ check, tested against both known misses) was measured to catch 3 of 3 oracles,
 but on this sample addresses only the minority mechanism — one of the two
 misses caught genuinely, the other incidentally, per a second reading — and
 was retracted rather than shipped; see the decision history above and the
-revert commit on `dev/write_site_census.py`.
+revert commit on the retired module.
 
 The one undeclared void surfaces a distinct, more dangerous failure mode: a
 rename does not break the test, it silently **voids** it — an absence

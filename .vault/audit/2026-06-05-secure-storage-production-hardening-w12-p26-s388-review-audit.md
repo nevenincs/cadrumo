@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:33f108e86ba4d53fa8e9a4afd636745875ec4b8b34c301e6fe65317515dd8532'
+modified: '2026-10-03'
+body_hash: 'sha256:3a37ef2fc02cb7f8def6d89af481a0efda3db3d6b961b7ffe81e868ccbb1aea6'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S388-001 | PASS | Review payload module is schema-only
 
-`src/aeat/entrypoints/cli/_review_payloads.py` defines strict `OutputSchema` payloads
+The retired module defined strict `OutputSchema` payloads
 for `review.queue` and `review.view`. It contains no storage constructor, provider
 factory, settings read, manifest scan, filesystem IO, or mutation path.
 
@@ -25,16 +25,16 @@ only serializes the context into the CLI JSON contract.
 
 ## S388-003 | PASS | Review command surface remains read-only
 
-`src/aeat/entrypoints/cli/_review.py` delegates `queue` and `view` to
+The retired module delegates `queue` and `view` to
 `project_review_queue()` / `project_review_item()`, projects rows through
 `ReviewQueueRowPayload`, and emits envelopes. It does not mutate review sources or
 construct a competing backend.
 
 ## S388-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_review_payloads.py src/aeat/entrypoints/cli/_review.py src/aeat/entrypoints/cli/tests/test_review_payloads_roundtrip.py src/aeat/entrypoints/cli/tests/test_review_operator_errors.py src/aeat/application/review/_operator.py src/aeat/application/review/_aggregator.py src/aeat/application/review/_adapters.py src/aeat/application/review/tests/test_adapters.py` passed.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_review_payloads_roundtrip.py src/aeat/entrypoints/cli/tests/test_review_operator_errors.py` passed with 5 tests.
-- `uv run --no-sync pytest -q -m unit src/aeat/application/review/tests/test_adapters.py src/aeat/application/review/tests/test_operator.py src/aeat/application/review/tests/test_aggregator.py src/aeat/application/review/tests/test_models.py` passed with 40 tests.
+- the historical check passed.
+- the historical check passed with 5 tests.
+- the historical check passed with 40 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "review payloads ReviewQueueRowPayload registered schema bucket id remote mirror manifest discovery" --type code --port 8766 --max-results 6` returned review payload and row projection evidence plus remote-mirror references.
 

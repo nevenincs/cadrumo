@@ -8,7 +8,6 @@ body_schema: 'body-v1'
 body_hash: 'sha256:b0f9c65d120eaa472bffb8bd19ce0c83ea3a3cfd0e7e37b02c617081fbfc0fd8'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
-  - "[[2026-08-06-invoice-canonical-structure-plan]]"
   - "[[2026-08-07-invoice-canonical-structure-close-honesty-review-audit]]"
 ---
 # `invoice-canonical-structure` audit: `Decision-to-Step coverage: all 21 ADR decisions checked against the tree`

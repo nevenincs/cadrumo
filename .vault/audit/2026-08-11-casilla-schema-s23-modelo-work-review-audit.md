@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a97d7d79776c3ed0c89c84a80b95cd5b433d71f3292be202d541893ccd575d6'
+body_hash: 'sha256:319448b1b75f437a3c4b8e8ebfba6f035bfb553d413a2ec74f43cb24e9bcf4ba'
 related:
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
-  - "[[2026-08-10-casilla-schema-plan]]"
 ---
+
 # `casilla-schema` audit: `S23 modelo work review read model`
 
 ## Scope
@@ -40,7 +40,7 @@ Reviewed W03.P07.S23 against the accepted read-model ADR, the campaign plan and 
 ## Verification
 
 - Fresh VaultSpec RAG grounded the accepted read-model ADR, plan, research, producer, persistence contract, and canonical derivations.
-- `pytest -q -n0 src/cadrumo/application/modelo/tests/test_modelo_work_review.py`: 2 passed.
+- the historical check: 2 passed.
 - Scoped Ruff: passed.
 - Scoped BasedPyright: 0 errors, 0 warnings, 0 notes.
 - Facade runtime identity: passed for both `ModeloWorkReview` and `build_modelo_work_review`.
@@ -68,7 +68,7 @@ The equal-value case is now explicitly documented and tested without an anomaly,
 ## Re-review verification
 
 - Fresh VaultSpec RAG grounded the current producer, tests, accepted read-model ADR, and canonical replay behavior.
-- `pytest -q -n0 src/cadrumo/application/modelo/tests/test_modelo_work_review.py`: 3 passed.
+- the historical check: 3 passed.
 - Scoped Ruff: passed.
 - Scoped BasedPyright: 0 errors, 0 warnings, 0 notes.
 - Scoped `git diff --check`: passed.

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:aba2f4a24b193ffd90cd3adb5ad8d0bf33b04acd8ecbd4542ff25009acf6e2a0'
+modified: '2026-10-03'
+body_hash: 'sha256:e70e71ee2b006eebaa84a0832bde445d01689d086624bfdc032c8b154ca5e8ab'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-operability-followup-research]]'
@@ -27,7 +27,7 @@ ways that will bite a real client regardless of how the surface is shaped.
 
 Every tool call is one blocking `subprocess.run(["aeat", "--format",
 "json", ...])` with NO `timeout=` argument and no intermediate output
-(`src/aeat/entrypoints/mcp/_server.py`, lines 225–271). The `_call_tool`
+(the former source file, lines 225–271). The `_call_tool`
 handler (line 502) takes no progress token and never sends
 `notifications/progress`. The Playwright-backed live-pull family
 (`app.live.expedientes.pull`, `notifications.pull`, `justificante.pull`,

@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#censo-operator-manual-enrolment'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2be411f4623948f2a2113f09b5dc8ec9f268372b8ec3940c7381d8df25bb9357'
+body_hash: 'sha256:7033ca4f4e62fdfe7962b043b4c5532e500443dfcdaf3605ee3596681017036b'
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
-  - '[[2026-07-11-censo-operator-manual-enrolment-ledger]]'
-  - '[[2026-07-11-censo-operator-manual-enrolment-plan]]'
   - '[[2026-07-12-censo-operator-manual-enrolment-audit]]'
   - '[[2026-07-12-censo-operator-manual-enrolment-research]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#censo-operator-manual-enrolm
 ### audit
 
 - `2026-07-12-censo-operator-manual-enrolment-audit` - `censo-operator-manual-enrolment` audit: `operator-manual migration residual audit`
-
-### exec
-
-- `2026-07-11-censo-operator-manual-enrolment-ledger` - `censo-operator-manual-enrolment` ledger
-
-### plan
-
-- `2026-07-11-censo-operator-manual-enrolment-plan` - `censo-operator-manual-enrolment` plan
 
 ### research
 

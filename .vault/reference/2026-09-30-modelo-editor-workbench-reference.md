@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5b14fb594a7e625ec239deabf1335273dd7c5bb5ae476cba8045b4dfa9956fa7'
+body_hash: 'sha256:3819a7b3190945025f23832241008a072d9d1819cafd37debf0ba4b4f13491aa'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
 ---
@@ -25,13 +25,10 @@ casilla declarations under `src/cadrumo/_data/registry/aeat/modelos/*/revisions/
 
 - The only edit surface is a column of bare text inputs on the overview page, one per
   writable casilla or manual-input binding, with the casilla id as placeholder and no
-  label, value, help, type, or state (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:181`).
   The apply handler reads each input as a raw string and submits every non-empty one
-  (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:355`).
 - The inputs page is a read-only data table grouped by schema record family
   (casillas, bindings, formulas, relations, parameters) rather than by the modelo's
   sections, with a four-column row of address, label, value and input kind
-  (`src/cadrumo/entrypoints/tui/modelo/view/inputs.py:124`).
 - The workspace projection never carries the canonical work review: both admissions
   declare the work-review facet `UNMEASURED` with no review
   (`src/cadrumo/application/modelo/workspace.py:189`,

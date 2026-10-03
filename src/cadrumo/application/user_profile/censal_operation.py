@@ -207,7 +207,12 @@ class CensalReviewedOperand(BaseModel):
         return content_hash_hex(
             self.model_dump(
                 mode="json",
-                exclude={"proposed_effect_digest"},
+                exclude={
+                    "proposed_effect_digest": True,
+                    # Existing reviewed preimages predate consultation evidence.
+                    # Their digest must not acquire a new empty default field.
+                    "observation": set() if self.observation.consultations else {"consultations"},
+                },
                 exclude_defaults=False,
                 exclude_none=False,
                 exclude_unset=False,

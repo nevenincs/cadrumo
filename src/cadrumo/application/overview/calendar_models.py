@@ -345,9 +345,10 @@ class OverviewCalendarEntry(BaseModel):
         )
         if known_territory != (self.holiday_territory is not None):
             raise ValueError("OverviewCalendarEntry.holiday_territory is present exactly when the territory is known")
-        # Without a holiday calendar the weekend part of the shift still
-        # applies, so only an exempt modelo's date may never move.
-        unevaluated = self.holiday_coverage is _DeadlineHolidayCoverage.NOT_SHIFTED
+        unevaluated = self.holiday_coverage in (
+            _DeadlineHolidayCoverage.NOT_SHIFTED,
+            _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+        )
         if unevaluated and self.adjusted_closes_on != self.closes_on:
             raise ValueError("OverviewCalendarEntry cannot shift a deadline its holiday coverage did not evaluate")
         return self

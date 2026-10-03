@@ -20,6 +20,7 @@ from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ..operator_actions.models import ActionReference
+from ..user_profile.censal_observation import CensalObservation
 from .workspace import (
     COMPARED_CENSUS_STATUSES,
     AeatSyncAeatObservationState,
@@ -133,6 +134,7 @@ def project_aeat_sync_workspace(
     operation_contracts: OperationPublicContractSetV1,
     overview: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...] = (),
     census: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...] = (),
+    census_observation: AeatSyncWorkspaceFactV1[CensalObservation] | None = None,
     filed_declarations: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...] = (),
     notifications: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...] = (),
     evidence_comparison: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...] = (),
@@ -142,7 +144,22 @@ def project_aeat_sync_workspace(
     TypeAdapter(BucketId).validate_python(bucket_id)
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
+    if census_observation is not None and (
+        census_observation.bucket_id != bucket_id
+        or census_observation.subject_key != subject_key
+        or (census_observation.row.identity.nif or "").strip().upper() != subject_key.strip().upper()
+    ):
+        raise AeatSyncWorkspaceProjectionError("census observation belongs to another profile or taxpayer")
     obs = _observations(zone_observations)
+    if census_observation is not None:
+        for zone in (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceZone.CENSUS):
+            source = next(item for item in obs[zone].sources if item.source is AeatSyncWorkspaceSource.AEAT_CENSUS)
+            if (
+                source.availability
+                not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+                or source.observed_at != census_observation.row.captured_at
+            ):
+                raise AeatSyncWorkspaceProjectionError("census evidence contradicts its source observation")
     _validate_action_catalogue(action_catalogue)
     groups = {
         AeatSyncWorkspaceZone.OVERVIEW: overview,
@@ -191,6 +208,7 @@ def project_aeat_sync_workspace(
         zones=zones,
         overview=out_overview,
         census=out_census,
+        census_observation=None if census_observation is None else census_observation.row,
         filed_declarations=out_filed,
         notifications=out_notifications,
         evidence_comparison=out_comparison,

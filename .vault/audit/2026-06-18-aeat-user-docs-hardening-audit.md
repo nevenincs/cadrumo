@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#aeat-user-docs-hardening'
 date: '2026-06-18'
-modified: '2026-07-17'
-body_hash: 'sha256:6f0d5066a99f92c4e5edce59f323f836bf8b9bc898b2d1ebc45a64c2d8a0eac6'
-related:
-  - "[[2026-06-16-aeat-user-docs-hardening-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:a5f694d2e63ac12cdfbe9e5d8778aebd14ae18611c9328acae4beabedd1578b7'
+related: []
 ---
 
 # `aeat-user-docs-hardening` audit: `Naive-user persona documentation and functionality review`
@@ -207,7 +206,7 @@ and should be addressed once at the source rather than page-by-page.
   optional `TRANSACTION_ID` positional swallows the literal `rebuild`, so the command
   the troubleshooting page calls "safe to regenerate at any time" fails with a hex
   -validation error instead of dispatching. Source: troubleshooting. ROOT CAUSE
-  (coordinator): in `src/aeat/entrypoints/cli/_participation_cli.py` the `participation`
+  (coordinator): in the retired module the `participation`
   group is built with `invoke_without_command=True` AND its callback declares an
   optional positional `transaction_id` Argument; Click parses the positional greedily,
   so `rebuild` binds to `transaction_id` and the `rebuild` subcommand never dispatches.

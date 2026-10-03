@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:290631e3d8d6790bf4ef36b98f1b700acc914ba751e403ca9dacd18b6500c746'
+body_hash: 'sha256:8627d805f8937d4e3b130405f36d0fe4193c316284ab38a199fe139d1938c194'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]"
 ---
 
@@ -46,15 +45,15 @@ Vaultspec RAG and exact source census found all `ModeloWorkspace*` definitions i
 
 ### target-wire-redeclaration | high | Shape sniffing creates a second target grammar instead of tagged canonical arms
 
-`_target_from_mapping` and `ModeloWorkspaceRequestV1._adapt_wire_target` at `src/cadrumo/application/modelo/_workspace_models.py:157` redeclare allowed-key sets, select an arm by the presence of `work_unit_id`, reparse `Period`, and reconstruct the canonical target dataclasses. The request target at line 213 is therefore not a public discriminated union, and the refusal at line 668 reuses the private validator across class ownership. This is distinct from the clean duplicate-model census: it is a parallel wire-parser authority over existing target models. Replace it with narrow Workspace-owned literal-tagged arms containing the canonical operands, or first reconcile the canonical target contract; delete the shape-sniffing helper without an alias or bridge.
+The request target at line 213 is therefore not a public discriminated union, and the refusal at line 668 reuses the private validator across class ownership. This is distinct from the clean duplicate-model census: it is a parallel wire-parser authority over existing target models. Replace it with narrow Workspace-owned literal-tagged arms containing the canonical operands, or first reconcile the canonical target contract; delete the shape-sniffing helper without an alias or bridge.
 
 ### readiness-contract-loss | high | Generic facts cannot preserve the canonical readiness axes
 
-The model family has no typed Workspace readiness projection, while `ModeloWorkspaceCapabilityV1` at `src/cadrumo/application/modelo/_workspace_models.py:429` offers only an open-ended tuple of name/value facts. That shape cannot preserve `profile_ready`, `per_operation_requirements_assessed`, profile refusal and missing requirements, registry and binding readiness, ledger preflight and nullable ledger readiness, issues, and aggregate readiness exactly as the accepted ADR requires. S128 would have to encode a parallel fact-name convention or drop owner data. Add a strict typed projection of the canonical readiness record and keep evidence facts explanatory only.
+That shape cannot preserve `profile_ready`, `per_operation_requirements_assessed`, profile refusal and missing requirements, registry and binding readiness, ledger preflight and nullable ledger readiness, issues, and aggregate readiness exactly as the accepted ADR requires. S128 would have to encode a parallel fact-name convention or drop owner data. Add a strict typed projection of the canonical readiness record and keep evidence facts explanatory only.
 
 ### nested-payload-bounds | medium | The outer page limit leaves nested record cardinality unbounded
 
-Beyond the unrestricted localized value at `src/cadrumo/application/modelo/_workspace_models.py:286` and cursor at line 470, the page-size check at lines 473-483 bounds only outer records. `section_path`, legal/source references, repeated-row values and provenance, family dispositions, and evidence-horizon references have neither authoritative finite maxima nor bounded expansion contracts. Declare executable bounds for each nested collection or move it behind a coordinate-pinned page or expansion envelope; add oversize refusal tests.
+`section_path`, legal/source references, repeated-row values and provenance, family dispositions, and evidence-horizon references have neither authoritative finite maxima nor bounded expansion contracts. Declare executable bounds for each nested collection or move it behind a coordinate-pinned page or expansion envelope; add oversize refusal tests.
 
 ## Recommendations
 

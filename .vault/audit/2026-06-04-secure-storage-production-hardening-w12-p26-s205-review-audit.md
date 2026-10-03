@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e069a03512d86eae790f96f1a9c4af6e583bb487b1219c79479588406cef55bf'
+modified: '2026-10-03'
+body_hash: 'sha256:22d79d71e04180a7c09ca926f1b842b6c40a457116a1964e4459ac2fab8a7746'
 related: []
 ---
 
@@ -34,8 +34,8 @@ English text.
 
 ## S205-004 | PASS | Validation
 
-- `uv run --no-sync -q ruff check src/aeat/application/evidence/_service.py src/aeat/application/evidence/_models.py src/aeat/application/evidence/test_evidence.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/evidence/test_evidence.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S205

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d817643998616e081352e99f524c40f60274ea2f7ac7625a43fb46faf18fa073'
+modified: '2026-10-03'
+body_hash: 'sha256:a127f9861e793ce5d2fce27d5d5df63fda9e093a076cebd683a74ce63a546f9a'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
@@ -42,8 +42,8 @@ S192 fail-closed invoice repository contract.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/aggregation/_source_mesh.py src/aeat/application/aggregation/test_source_mesh.py src/aeat/application/aggregation/test_modelo_source_mesh_ledger.py src/aeat/application/aggregation/test_source_mesh_profile_live.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/aggregation/test_source_mesh.py src/aeat/application/aggregation/test_modelo_source_mesh_ledger.py src/aeat/application/aggregation/test_source_mesh_profile_live.py` passed with 19 tests.
+- the historical check passed.
+- the historical check passed with 19 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: initial S193 review found no critical or high issues and raised

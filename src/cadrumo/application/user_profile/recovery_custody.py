@@ -39,6 +39,7 @@ from ...core.time.clock import now as _now
 from .authentication import ProfilePasswordProofOperation
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
+    default_profile_record_crypto_port,
     install_profile_recovery_envelope,
     load_profile_custody_password_material,
     load_profile_custody_recovery_material,
@@ -66,8 +67,6 @@ if TYPE_CHECKING:
         ProfileCustodyUnlockPort,
         ProfileRecoveryKeyPort,
     )
-
-_RECOVERY_KDF_SALT_BYTES = 16
 
 
 class ProfileRecoveryError(CadrumoError):
@@ -196,7 +195,7 @@ def enroll_profile_recovery(
             profile_id=profile_id,
             dek=unlock.dek,
             dek_epoch=material.envelope.dek_epoch,
-            salt=token_bytes(_RECOVERY_KDF_SALT_BYTES),
+            salt=token_bytes(default_profile_record_crypto_port().passphrase_kdf_policy().salt_bytes),
         )
         enrollment = ProfileRecoveryEnrollment(envelope=minted.envelope, recovery_key=minted.recovery_key)
         with enrollment.recovery_key:

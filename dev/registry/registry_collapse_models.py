@@ -44,45 +44,6 @@ _REPRESENTATION_ONLY: Final = frozenset(
 )
 
 
-_TOOL_INPUTS: Final = (
-    "dev/registry/registry_collapse_verification.py",
-    "dev/registry/registry_collapse_models.py",
-    "dev/registry/registry_collapse_fingerprints.py",
-    "dev/registry/registry_collapse_comparison.py",
-    "dev/registry/registry_collapse_values.py",
-    "dev/registry/registry_collapse_assessment.py",
-    "dev/registry/registry_collapse_assessment_normalization.py",
-    "dev/registry/registry_collapse_roots.py",
-    "dev/registry/registry_collapse_requests.py",
-    "dev/registry/registry_collapse_authority_queries.py",
-    "dev/registry/registry_collapse_candidate.py",
-    "dev/registry/registry_collapse_converter.py",
-    "dev/registry/registry_collapse_cache.py",
-    "dev/registry/registry_collapse_inputs.py",
-    "dev/registry/registry_collapse_authority_checks.py",
-    "dev/registry/registry_collapse_run.py",
-    "dev/registry/edition_delta_migration.py",
-    "dev/registry/edition_delta_assessment.py",
-    "dev/registry/edition_delta_fields.py",
-    "dev/registry/edition_delta_payload.py",
-    "dev/registry/edition_delta_source.py",
-    "dev/registry/edition_delta_types.py",
-    "dev/registry/edition_family_delta.py",
-    "dev/registry/edition_family_delta_collapse.py",
-    "dev/registry/compiler/loader.py",
-    "dev/registry/compiler/loader_materialisation.py",
-    "dev/registry/compiler/edition_materialisation.py",
-    "dev/registry/compiler/authority.py",
-    "dev/registry/compiler/authority_database.py",
-    "dev/registry/pipeline/authority_publication.py",
-    "src/cadrumo/domain/calculations/registry/keyed_families.py",
-    "src/cadrumo/domain/calculations/registry/schema.py",
-    "src/cadrumo/domain/calculations/registry/temporal.py",
-    "src/cadrumo/domain/calculations/registry/authority.py",
-    "src/cadrumo/domain/calculations/registry/facts/resolution.py",
-)
-
-
 _FACT_QUERY_TYPES: Final = {
     GovernedFactFamily.SCALAR: ScalarFactQuery,
     GovernedFactFamily.BRACKET: BracketFactQuery,

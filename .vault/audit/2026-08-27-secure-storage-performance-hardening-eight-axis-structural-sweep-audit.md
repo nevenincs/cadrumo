@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c53ad9e2714f2d4ba8580400d11e597cdbbd64fc4a84f058b2bfb59195293763'
 related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-27-secure-storage-performance-hardening-closure-honesty-review-audit]]"
 ---
 # `secure-storage-performance-hardening` audit: eight-axis structural sweep

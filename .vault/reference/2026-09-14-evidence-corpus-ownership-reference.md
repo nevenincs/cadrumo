@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#evidence-corpus'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:063701f89c75d7a7ea75ebc0544c837d39629a2708c9b34aef43c7b6ce2d7679'
+body_hash: 'sha256:ae06067727e5fe66b7075272fe169d34594f7d054e14a8cb09c158adca675e6c'
 related:
   - '[[2026-09-14-registry-corpus-pruning-ownership-reference]]'
 ---
+
 # `evidence-corpus` reference: `ownership`
 
 ## Summary
@@ -47,7 +48,7 @@ Companion distributions are suffix-partitioned portions of one logical resource 
 
 6. **Evidence locators remain mixed with prose and filenames.** The ellipsis paths above cannot support mechanical dependency analysis. Filename suffixes and size floors also participate in `corpus_tier` checks in `corpus_catalogue.py:137`; renaming can change acceptance despite identical evidence. Separate stable identity, actual media type, source granularity and optional descriptive filenames. Replace abbreviated citations with exact typed references without inventing historical inspections.
 
-7. **Retired preprocessing remains present.** `dev/docs/preprocess/_text.py` declares itself retired and has an empty enrollment set but retains extractor functions and tests as a migration precursor. Its documented CP1252 dictionary concern needs an encoding check at the actual reader before retiring that module. Stale comments also describe a future preprocess hook that already exists and runtime sidecar reads that have moved to the authority artifact.
+Its documented CP1252 dictionary concern needs an encoding check at the actual reader before retiring that module. Stale comments also describe a future preprocess hook that already exists and runtime sidecar reads that have moved to the authority artifact.
 
 ### What not to prune on this evidence
 

@@ -1318,7 +1318,9 @@ def build_production_operation_registry(
         text_probe=probe_text_extraction_fitness,
     )
     resolved_censal_definition = _production_registry_censal(censal_definition, resolved_operator_scope_ports)
-    censal_prepare_definition = build_censal_prepare_operation_definition()
+    from .censal_readback_composition import read_stored_censal_observation
+
+    censal_prepare_definition = build_censal_prepare_operation_definition(read_stored_censal_observation)
     censal_file_import_definition = build_censal_file_import_operation_definition()
     censal_preview_definition = build_censal_preview_operation_definition(
         certificate_secret_backend_factory=build_certificate_secret_backend,

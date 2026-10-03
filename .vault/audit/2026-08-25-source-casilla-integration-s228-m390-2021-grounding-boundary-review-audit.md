@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e691d815bf27cb8ea0ecc3c4ab4f935b09c07d171dee72f9efb36e65c04ae72'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:3bb1f197f0aa6aa8feef95b75d2907ad7a19e30b33a93dfd5dfae34e03233db4'
+related: []
 ---
+
 # `source-casilla-integration` audit: `S228 M390 2021 grounding-boundary review`
 
 ## Scope
@@ -49,10 +49,7 @@ export claim was added.
 
 ### verification | low | focused gates support the decision boundary
 
-`uv run pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_m390_temporal_epochs.py src/cadrumo/domain/calculations/registry/tests/test_record_design_source_selection.py`
-passed 44 tests. Ruff passed on those focused test paths. Vault structural,
-frontmatter, links, schema, and ADR-status checks are clean. Remaining Vault
-warnings are pre-existing feature annotations and concurrent unrelated work.
+Ruff passed on those focused test paths. Vault structural, frontmatter, links, schema, and ADR-status checks are clean. Remaining Vault warnings are pre-existing feature annotations and concurrent unrelated work.
 
 ## Recommendations
 

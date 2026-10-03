@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f7e8869955edf08db833d86820064a3c8aad314c275e3ce15157adcc9d9b2fa2'
+body_hash: 'sha256:13ff10f47e92a427ec65a19406ef466ec5bbb8aab19f2d4286250db4a721c64d'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -275,7 +275,7 @@ This measures the best available anchor per casilla, all revisions (`a11.py`, `p
 ##### F13. What the TUI renders today
 
 - **Overview.** It emits one bare `Input` per writable entry with the id as placeholder
-  (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:181`).
+
 - **Inputs page.** It groups by schema record family, not form section
   (`view/inputs.py:124`). Nothing consumes pages, sections, rows or order.
 - **Profile editor.** It already has the fold/count/help language to reuse
@@ -553,7 +553,7 @@ typed reads.
 Cost: O(casillas + bindings). 200/2025 has 3,474 entries. The builder is eager and complete, and
 paging belongs to the renderer per D3.
 
-**Development-time generator** `dev/registry/form_layout/generate.py`. It is modelo-independent:
+**Development-time generator** the former source file. It is modelo-independent:
 one seed ladder, the same code for all 146 revisions.
 
 1. **Anchors.** Anchors are collected in this order:
@@ -889,7 +889,6 @@ These mockups show three things the model must supply:
 
 ## Sources
 
-- `dev/registry/form_layout/generate.py`
 - `dev/registry/record_design_labels.py:50`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_*/files/*.extracted.md`
 - `src/cadrumo/_data/registry/aeat/modelos/<m>/revisions/<r>/form_layout/*.toml`
@@ -899,5 +898,5 @@ These mockups show three things the model must supply:
 - `src/cadrumo/domain/calculations/registry/export.py:91`
 - `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
 - `src/cadrumo/domain/calculations/registry/schema_surfaces.py:342`
-- `src/cadrumo/entrypoints/tui/modelo/view/overview.py:181`
+
 - `src/cadrumo/entrypoints/tui/profile/overview.py:155`

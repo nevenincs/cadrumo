@@ -4,21 +4,17 @@ tags:
   - '#index'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76a355eae35d3367a7b9227efbe85acd4b2ca96b824eace85cb4136c6b0f4d53'
+body_hash: 'sha256:71f5a908160ce0d1e09d3bea76d6b51c4c148d376cddb70c28ab94ef5e9808ff'
 related:
   - '[[2026-09-21-assets-core-audit]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
-  - '[[2026-09-21-assets-core-ledger]]'
   - '[[2026-09-21-assets-core-lifecycle-and-integration-research]]'
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
   - '[[2026-09-21-assets-core-ownership-contracts-reference]]'
-  - '[[2026-09-21-assets-core-plan]]'
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
   - '[[2026-09-23-assets-core-amortization-method-set-research]]'
-  - '[[2026-09-23-assets-core-ledger]]'
-  - '[[2026-09-23-assets-core-plan]]'
   - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
   - '[[2026-09-23-assets-core-vehicle-affectation-adr]]'
   - '[[2026-09-23-assets-core-vehicle-affectation-research]]'
@@ -44,16 +40,6 @@ Auto-generated index of all documents tagged with `#assets-core`.
 ### audit
 
 - `2026-09-21-assets-core-audit` - `assets-core` audit: `Integrated assets-core review`
-
-### exec
-
-- `2026-09-21-assets-core-ledger` - `assets-core` ledger
-- `2026-09-23-assets-core-ledger` - `assets-core` ledger
-
-### plan
-
-- `2026-09-21-assets-core-plan` - `assets-core` plan
-- `2026-09-23-assets-core-plan` - `assets-core` plan
 
 ### reference
 

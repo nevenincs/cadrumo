@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3354aa7cb95bb5bed28da9bb53d427b6591ab3635cfa1ad2379613975cd8953'
+body_hash: 'sha256:d951ff486167c5f77ce7ab4b92399764adfb37d86dec7777b76ec6cb00c1920a'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -80,8 +80,8 @@ include input classification, formulas or bindings, constraints, continuity,
 export metadata, semantic role, legal/source references, and localization
 accessors. Calculation input is also split across numeric and text Casillas,
 numeric and enum bindings, relations, and detail rows
-(`src/cadrumo/domain/calculations/registry/_schema_surfaces.py:102-303`,
-`src/cadrumo/application/modelo/_calculate_input.py:149-177`). Letting widgets
+
+the former source file). Letting widgets
 interpret those domain objects would move registry and calculation policy into
 the entrypoint.
 
@@ -98,7 +98,7 @@ stable interface without making Textual types part of the application API.
 
 Calculation revisions are immutable, content-addressed records whose identity
 includes scalar, binding, relation, row, provenance, and detail-row inputs
-(`src/cadrumo/domain/modelos/_calculation_revision.py:399-463`). The existing
+. The existing
 calculate-input builder validates a complete input bundle before passing it to
 the calculation boundary. There is no mutable domain draft that a field widget
 can safely patch. The wizard substrate supplies a useful precedent: edit in
@@ -140,8 +140,6 @@ edit baseline: work-catalogue revision, calculation-catalogue revision, current
 calculation-revision id, registry revision, schema identity/fingerprint, and the
 application-issued permitted edit surface. A Workspace read token cannot replace
 them because it is explicitly not a mutation precondition
-(`src/cadrumo/application/modelo/_revision_persistence.py:224-427`,
-`src/cadrumo/domain/modelos/_work_unit.py:125-177`).
 
 The existing success path already co-commits an immutable calculation revision,
 the advanced work-unit pointer, and the corresponding bucket event under
@@ -154,13 +152,12 @@ coordinates must refuse before any write; a failed compare-and-swap leaves all
 four records absent. A receipt that contains only safe identities can prove an
 already-committed `UPDATED` effect without retaining financial values
 (`src/cadrumo/adapters/persistence/profile/modelos_work_units.py:221-282`,
-`src/cadrumo/application/modelo/tests/test_lifecycle_event_atomicity.py:1-18`).
 
 ### Repeated rows require draft identity distinct from canonical row coordinates
 
 Persisted row materialization is keyed by canonical binding and row coordinates,
 and the calculation revision validates row values and provenance together
-(`src/cadrumo/domain/modelos/_calculation_revision.py:1011-1017`). A newly added
+. A newly added
 unsaved row has no such durable coordinate, while positional widget IDs change
 under insert, delete, or reorder. Stable TUI-local draft row keys are therefore
 needed for focus and dirty tracking. The ordered edit intent can be mapped to
@@ -205,8 +202,8 @@ cancellation, settlement, result, and effect semantics. The current operation
 registry already distinguishes frontend projection enrollment, while current
 inspection still exposes a persisted snapshot rather than the complete public
 observation required by that architecture
-(`src/cadrumo/application/operations/_registry.py:61-65`,
-`src/cadrumo/application/operations/_supervisor.py:366-369`). The Modelo
+
+the former source file). The Modelo
 workspace must therefore consume the operation projection only after the
 operation cohort closes; it cannot define a sibling operation DTO.
 
@@ -253,7 +250,7 @@ A reproducible current-HEAD measurement of `bundled_authority()` on 2026-08-24
 found 58 Modelos and 102 revisions. The largest revision carries 3,462 Casillas,
 707 distinct section paths, 975 bindings, and 578 projection endpoints. Repeated
 row mappings and detail-row tuples have no interface-level upper bound
-(`src/cadrumo/domain/modelos/_calculation_revision.py:1011-1094`). An eager
+. An eager
 widget-per-field workspace and an unbounded provenance tree are therefore not
 credible acceptance targets.
 
@@ -349,17 +346,11 @@ decisions.
 - `2026-08-10-casilla-schema-read-model-adr`
 - `2026-06-04-modelo-addressing-ux-adr`
 - `2026-07-23-tui-wizard-substrate-adr`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:102-303`
-- `src/cadrumo/application/modelo/_calculate_input.py:149-177`
-- `src/cadrumo/application/modelo/_revision_persistence.py:224-427`
+
 - `src/cadrumo/adapters/persistence/profile/modelos_work_units.py:221-282`
-- `src/cadrumo/domain/modelos/_calculation_revision.py:399-463`
-- `src/cadrumo/domain/modelos/_calculation_revision.py:1011-1094`
-- `src/cadrumo/domain/modelos/_work_unit.py:125-177`
-- `src/cadrumo/application/operations/_registry.py:61-65`
-- `src/cadrumo/application/operations/_supervisor.py:366-369`
+
 - `src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py:167-199`
 - `src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py:2311-2415`
-- `src/cadrumo/application/modelo/tests/test_lifecycle_event_atomicity.py:1-18`
+
 - Runtime measurement on 2026-08-24: `uv run --no-sync python -c` over
   `cadrumo.domain.calculations.registry.bundled_authority()`.

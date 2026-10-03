@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c982ad7226235a5373554ae9e302cd09c87fd0740ce48fa13d449167b23db300'
+body_hash: 'sha256:ac7f800bf245349bb270e26dae0f3f3fe105ef763d7fc6b08645d5880e15faed'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -122,7 +122,7 @@ the 3,100 bindings, both in M100.
   - The carries (303 casilla 110, 130 casilla 05 and the carries read only by formulas) can be
     overridden from the CLI but not from the TUI.
 - **The only "binding override" inputs the TUI ever shows are M390 fichero fields.** They are
-  rendered with raw ids as placeholders (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:190`).
+  rendered with raw ids as placeholders .
 - A Sources view that lists only casilla-fed bindings would miss things. It would not show 130's two
   formula-only carries (the prior-year negative-results cap and the previous-year net income), M100's
   16 formula-only bindings, including the 130/131 pagos fraccionados relations, or M390's 173
@@ -608,7 +608,7 @@ must say which channel it feeds.
 | B10 | Medium | **`data_inventory` is casilla-keyed**, so `modelo requires` omits formula-only and fichero-only bindings. Measured: 130 has 2, 100 has 16, and 390 has 173 fichero-only. | `data_inventory.py:307-338` |
 | B11 | Medium | **Ledger and invoice provenance rows carry no binding or casilla link**, and `CalculationSourceProvenance` has no `binding_id`. "Which entries make up casilla 07" cannot be answered from the persisted revision. | `source_mesh.py:673-704`; `aggregation/modelo_bindings.py:505-514` |
 | B12 | Low-medium | **Orphan bindings.** 130 declares 3 ledger bindings with no consumer: taxable-base, rendimiento-neto and retenciones cumulative. 347 declares 2 declarante-summary bindings (count of counterparties, total annual amount) with no consumer, while all 43 of its casillas are manual, so the user types totals the ledger could compute. This may be intentional; it needs adjudication. | `census2.py` output |
-| B13 | Low-medium | **The withholding capture screen hard-codes English labels** and is a plain `Screen`, which breaks the locale contract. | `src/cadrumo/entrypoints/tui/withholding/screen.py:100-117` |
+| B13 | Low-medium | **The withholding capture screen hard-codes English labels** and is a plain `Screen`, which breaks the locale contract. | the former source file |
 | B14 | Low | **AEAT sync operations and profile "source" buttons are never mounted.** The launcher passes no handoff or `launch_source`. | `launcher.py:1212-1221`, `:519-535` |
 | B15 | Low | **The edit baseline is admitted once**, when the workspace is composed, and expires after 5 minutes, so a longer session is refused as stale at submit. This was already recorded by the workbench reference. | `launcher.py:1035`; `edit_admission.py:57` |
 
@@ -672,6 +672,5 @@ must say which channel it feeds.
 - `src/cadrumo/domain/modelos/calculation_revision.py:803-905`
 - `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py:209`
 - `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:343`
-- `src/cadrumo/entrypoints/tui/modelo/view/overview.py:190`
-- `src/cadrumo/entrypoints/tui/withholding/screen.py:100-117`
+
 - `src/cadrumo/locales/*/docs.yml`

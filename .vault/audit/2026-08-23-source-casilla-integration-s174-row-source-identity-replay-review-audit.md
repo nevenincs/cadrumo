@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:45c262fae2f35eb0d7fe2c42f5ccb902bfc984b2f1e78ab6b7e67d105b68af1d'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 
 # `source-casilla-integration` audit: `source-casilla-integration audit: s174 row source identity replay review`

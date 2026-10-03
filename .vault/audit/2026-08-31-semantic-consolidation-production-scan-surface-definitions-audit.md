@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7df2a455c89458830614975e87c8315dfabaf8a267821e2b03e9863a79927836'
+body_hash: 'sha256:3afcdee4b4640931d14589dae7a15b383f26ba7241f54657e4e0d4bc3edd1332'
 related: []
 ---
 
@@ -35,12 +35,7 @@ A designed answer for the shared surface, then adoption by the walkers that mean
 "production" -- not by all 55. The scoped walkers should keep their scopes and
 say so.
 
-One constraint worth stating before anyone reaches for it: pointing
-`dev/source_connectivity/discovery.py` at `cadrumo.tests._inventory` creates a
-`dev -> cadrumo.tests` edge, and `cadrumo.tests` is currently the trigger for
-nine armed import-linter pins that name the bare package and will stop matching
-if its `__init__` goes inert. That is not a reason to avoid the consolidation,
-but it belongs in the same change.
+That is not a reason to avoid the consolidation, but it belongs in the same change.
 
 ## The disagreements have teeth
 

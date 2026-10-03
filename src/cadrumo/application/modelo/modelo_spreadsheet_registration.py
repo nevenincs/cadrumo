@@ -8,8 +8,8 @@ from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.models import (
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    refused_receipt_references_hold,
+    require_succeeded_terminal_receipt,
     terminal_receipt_matches,
 )
 from ..operations.operation_definition import OperationDefinition
@@ -58,9 +58,8 @@ def _refusal_receipt_matches(
 ) -> bool:
     if refusal is None:
         return False
-    # The result-reference check repeats receipt validation so a receipt copied
-    # without validation cannot evade it. Only an output-path refusal can leave
-    # an unknown effect: publication may have begun.
+    # Only an output-path refusal can leave an unknown effect: publication may
+    # have begun.
     admissible_effects = (
         (OperationEffect.NONE, OperationEffect.UNKNOWN)
         if isinstance(refusal, SpreadsheetOutputPathRefusal)
@@ -80,7 +79,7 @@ def _refusal_receipt_matches(
         and receipt.refusal_ref in declared_codes
         and receipt.refusal_ref == spreadsheet_refusal_code(refusal)
         and receipt.refusal_detail_ref is not None
-        and receipt.result_ref is None
+        and refused_receipt_references_hold(receipt)
     )
 
 
@@ -101,15 +100,13 @@ def _project_spreadsheet_result(
         raise ValueError("spreadsheet result contradicts its terminal receipt")
     if projection.outcome == "succeeded":
         message = "spreadsheet success has an incompatible receipt"
-        require_terminal_receipt_match(
+        require_succeeded_terminal_receipt(
             receipt,
             definition_id=definition_id,
             subject_ref=subject_ref,
-            condition=OperationTerminalCondition.SUCCEEDED,
             effect=_expected_effect(definition_id),
             message=message,
         )
-        require_succeeded_receipt_references(receipt, message=message)
     elif not _refusal_receipt_matches(definition_id, subject_ref, projection.refusal, receipt, declared_codes):
         raise ValueError("spreadsheet refusal has an incompatible receipt")
     validated = outcome_type.model_validate(projection.model_dump(mode="python"), strict=True)

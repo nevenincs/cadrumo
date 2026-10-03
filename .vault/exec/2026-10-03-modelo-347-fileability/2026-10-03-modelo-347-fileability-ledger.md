@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd920172e27819a2fa4bf4e59ded76f64cce02d372c2439d19005d0ac01f18c4'
+body_hash: 'sha256:6b8bace0383841e8501e423658acc1ccd507df6db8988918809956a2ddbc02ab'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -62,7 +62,6 @@ related:
 - `S03` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
 - `S03` `M` `src/cadrumo/domain/modelos/row_models.py`
 - `S03` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_observations.py`
-- `S03` `D` `src/cadrumo/domain/modelos/tests/test_row_models_m347_revision.py`
 - `S03` `A` `src/cadrumo/domain/modelos/tests/test_row_models_revision_ids.py`
 - `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
 - `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_amend_detail_row_argv.py`
@@ -236,11 +235,7 @@ related:
 - `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
 - `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
 - `S15` `M` `src/cadrumo/application/filing/record_renderer.py`
-- `S15` `A` `src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py`
-- `S15` `A` `src/cadrumo/application/filing/tests/test_optional_record_omission.py`
-- `S15` `A` `src/cadrumo/application/modelo/_m347_inmueble_advisory.py`
 - `S15` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
-- `S15` `A` `src/cadrumo/application/modelo/tests/test_m347_inmueble_advisory.py`
 - `S15` `verify:` `inspect_authoring_candidate` -> `pass`
 - `S13` `M` `dev/registry/tests/test_modelo_347_registry.py`
 - `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml`
@@ -271,7 +266,6 @@ related:
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
-- `S06` `A` `src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py`
 - `S06` `M` `src/cadrumo/domain/calculations/registry/export_value_policy.py`
 - `S06` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
 - `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`

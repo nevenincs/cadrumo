@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#github-actions'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee0e7b78068e3b35ccd1acf3b180abfb54f0584a206ca762e7c65d5df99e8f37'
+body_hash: 'sha256:79f0c21aea82c103f0bbed3cd3d22cfa3f78477e3ac7cb9d8369665ce5b8dd56'
 related: []
 ---
 
@@ -61,8 +61,8 @@ Every job bootstraps uv, `just` and `just setup` separately, about 30 copies. Th
 - Stale entries in `.github/ci-contract-allow.txt`:
   - `:36` refers to "Dispatch the publish workflow"; the real step is "Dispatch release validation" (`release-please.yml:100`).
   - `:106` refers to a step that no longer exists in `publish.yml`.
-- `dev/ci_contract.py:8` cites `tests/test_ci_contract_parity.py`, which does not exist.
-- `WATCHDOG_JOB_NAME` (for example `packaging-quick.yml:68`) never equals the real job name, so the self-exclusion in `dev/ci/runner_queue_watchdog.py:215,410` never matches.
+- the former source file cites the former source file, which does not exist.
+- `WATCHDOG_JOB_NAME` (for example `packaging-quick.yml:68`) never equals the real job name, so the self-exclusion  never matches.
 - `.github/actionlint.yaml:18` declares `labels: []`; it is otherwise comments.
 - There is no `.pre-commit-config.yaml`. `prek.toml:48-71` holds the local hook set.
 
@@ -142,16 +142,15 @@ Candidate shape the evidence supports, not a decision:
 
 - **Failing today.** 12 selected tests fail on this tree, including:
   - `dev/ci/tests/test_check_set_contract.py:71` and `:124`.
-  - `dev/ci/tests/test_python_runtime_compatibility_workflow.py:135,149,164`. These expect a `pull_request` trigger, which contradicts `dev/ci/tests/test_change_class_tiers.py:108-111`.
+  - the former source file. These expect a `pull_request` trigger, which contradicts `dev/ci/tests/test_change_class_tiers.py:108-111`.
   - Six tests in `dev/tests/test_lane_reachability.py`.
 - **Tied to the current layout; any restructure breaks them:**
   - `dev/ci/tests/test_ci_workflow.py` (`:89-140`, `:524`, `:731`)
   - `dev/ci/tests/test_change_class_tiers.py` (`:121-150`, `:165`, `:174`, `:276`, `:322`, `:365`, `:401`, `:418`)
   - `dev/ci/lane_reachability.py`
-  - `dev/packaging/tests/test_packaging_quick_workflow.py`, `test_packaging_smoke_workflow.py`, `test_homebrew_workflow.py`, `test_scoop_workflow.py`, `test_evidence_release_transport.py:57-84`
-  - `dev/release/tests/test_publish_workflow.py:135-155`, `test_external_client_release_boundary.py:16`
-  - `dev/ci/tests/test_runner_queue_watchdog.py:359,513`
-  - `dev/deploy/tests/test_docs_publish_workflow.py:45-67`
+  - the former source file, `test_packaging_smoke_workflow.py`, `test_homebrew_workflow.py`, `test_scoop_workflow.py`, `test_evidence_release_transport.py:57-84`
+  - the former source file, `test_external_client_release_boundary.py:16`
+
   - `src/cadrumo/tests/test_release_config.py:300`
 - **Survives a restructure:** `dev/ci/tests/test_action_pinning.py:113`, since every action is pinned by SHA.
 - **Also needs updating:** `.github/ci-contract-allow.txt` and `docs/_release_checklist.yaml:18-30`.
@@ -224,7 +223,7 @@ Candidate gate within 10 minutes, measured, not decided:
 - **Contents.** 19 workflows, three issue templates, `actionlint.yaml`, `ci-contract-allow.txt` and `ci-control-plane.md`. There are no composite actions and no `workflow_call` workflows.
 - **Repeated setup.** 45 jobs contain 44 checkouts, 36 `setup-uv` steps, 26 `just` installs and 28 `just setup` calls. A local composite action under `.github/actions/<name>/action.yml` would replace about 130 of those steps with about 45 references.
   - The checkout must stay in each job, because a local action can only be used after the repository is checked out.
-  - `dev/ci_contract.py` rule 2 requires the literal `taiki-e/install-action` pin in every workflow that calls `just`, so that rule would change.
+  - the former source file rule 2 requires the literal `taiki-e/install-action` pin in every workflow that calls `just`, so that rule would change.
 - **Platform constraints** (https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows):
   - Reusable workflows must sit directly in `.github/workflows/`; subdirectories are not supported.
   - Nesting is limited to 10 levels.
@@ -250,8 +249,8 @@ Candidate gate within 10 minutes, measured, not decided:
   | macOS ARM64 | offline; runs only on AC power |
   | Linux ARM64 (docker) | offline |
 
-  - `.github/ci-control-plane.md:33` says there is one Linux X64 runner, while `dev/runners/README.md:318-320` describes two; the API lists one.
-  - `dev/ci/tests/test_self_hosted_fleet.py:216` requires every job to run on a self-hosted runner.
+  - `.github/ci-control-plane.md:33` says there is one Linux X64 runner, while the former source file describes two; the API lists one.
+  - the former source file requires every job to run on a self-hosted runner.
 - **Every Windows and macOS job today is packaging:** `packaging-quick`, `packaging-smoke`, `packaging-scoop`, `packaging-homebrew` and the `publish.yml:154` smoke matrix. `runner-fleet-health.yml:92-124` is runner infrastructure.
 - **Platform product tests run in no workflow:**
   - `windows_only` tests of the launcher stubs (`just test-windows`, `pyproject.toml:1155`).
@@ -276,7 +275,7 @@ The adversarial review of the draft lanes found these facts:
   - packaging performance contracts (`justfile:495`)
   - the future-directive policy (`python-runtime-compatibility.yml:84-86`)
   - every `dev/` test group; `testpaths` covers only `src/` (`pyproject.toml:1081-1084`)
-- **Workflow-count floors.** `dev/ci/tests/test_self_hosted_fleet.py:76-77` requires at least 8 workflows and 6 gated ones, and its comment says two sibling modules use the same floor.
+- **Workflow-count floors.** the former source file requires at least 8 workflows and 6 gated ones, and its comment says two sibling modules use the same floor.
 - **Semgrep diff mode needs the base commit.** `--baseline-commit` requires the base commit to be present locally. The default checkout is shallow and on the merge ref.
 - **Change-scoped selection.** A mechanism exists:
   - Map changed files to their owning `tests/` directories.
@@ -336,8 +335,7 @@ Not investigated: merge-queue availability on this plan, timings on the Linux ru
 - `dev/registry/analysis/registry_status.py:116-176`
 - `dev/packaging/campaign.py:616`
 - `dev/packaging/release_cohort.py:170-185`
-- `dev/ci_contract.py:8`
-- `dev/ci/runner_queue_watchdog.py:215`, `:410`
+
 - `dev/ci/tests/test_change_class_tiers.py:108-111`, `:322`
 - `docs/download.md:98`, `:104`
 - `release-please-config.json:6-7`

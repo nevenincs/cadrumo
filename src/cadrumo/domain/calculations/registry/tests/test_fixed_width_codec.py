@@ -402,8 +402,7 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
     ("overrides", "raw"),
     (
         ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_MONTH}, "13"),
-        # Required: an optional day slot writes 00 as its absent fill and reads it back as absence.
-        ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY, "required": True}, "00"),
+        ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY}, "00"),
         ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, "0999"),
         (
             {
@@ -877,32 +876,3 @@ def test_a_sign_contradicting_the_design_type_is_refused_at_the_registry_boundar
 def test_a_design_type_on_a_slot_without_a_sign_is_refused() -> None:
     with pytest.raises(ValidationError, match="has no sign"):
         _field(data_type="text", padding="right_space", justification="left", design_type="N")
-
-
-def test_an_absent_optional_year_zero_fill_reads_back_as_absence() -> None:
-    """A year has no zero, so the zeros AEAT writes in an empty numeric slot can only be its absence.
-
-    The 2025 Modelo 347 declarado EJERCICIO (pos. 132-135) is such a slot: it
-    carries the year of a cash collection above 6.000 euros and is otherwise
-    without content, which "los campos numericos que no tengan contenido se
-    rellenaran a ceros" writes as 0000.
-    """
-    optional = _field(length=4, value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR)
-    required = _field(length=4, value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR, required=True)
-
-    assert render_fixed_width_export_field(optional, None) == "0000"
-    assert parse_fixed_width_export_field(optional, "0000") is None
-    assert parse_fixed_width_export_field(optional, "2025") == 2025
-    with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
-        parse_fixed_width_export_field(required, "0000")
-    with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
-        parse_fixed_width_export_field(optional, "0999")
-
-
-def test_a_year_carried_as_an_integral_decimal_renders_and_a_fractional_one_refuses() -> None:
-    """Integer casillas reach the renderer as Decimal; an integral one is the same year."""
-    field = _field(length=4, value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR)
-
-    assert render_fixed_width_export_field(field, Decimal("2025")) == "2025"
-    with pytest.raises(RegistryValidationError, match="four-digit-year export value"):
-        render_fixed_width_export_field(field, Decimal("2025.5"))

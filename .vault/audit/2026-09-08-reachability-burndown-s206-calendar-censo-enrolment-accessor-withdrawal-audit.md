@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:95cb55b9e7cbe357f115e5d442e14b630f66fd3292e199beb0d9cdc0372841fc'
-related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
+related: []
 ---
 
 # `reachability-burndown` audit: `S206 calendar censo enrolment accessor withdrawal review`

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-latency-budget'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:0798909129a2ad4f452ef0b336b2547b8d06cd6eac6b03beef6acc86dd56e806'
+modified: '2026-10-03'
+body_hash: 'sha256:8b91177f8c2976bc43154bb2065061614b7eb5ce7af2091da7806aeda28c481a'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
   - "[[2026-07-06-ledger-perf-optimization-reference]]"
@@ -31,12 +31,12 @@ pending #599.
 
 ### F2 - O2 partition exists, but targeted reads are still N+1
 
-`src/aeat/adapters/persistence/profile/transactions.py` already implements
+the former source file already implements
 `partition_by_date_range`, and the IVA, M130 income, M130 gasto, M100 income, and
 impatriado repository-backed entry points already call it where the transaction-date
 index is valid. The residual Fable finding is narrower: the indexed path still loops
 over in-window transaction ids and calls `SecureObjectRepository.load` once per id.
-`src/aeat/adapters/persistence/storage/sql/secure_objects.py` has namespace scans,
+the former source file has namespace scans,
 single-row `load`, `namespace_payload_hashes`, `save_many`, and `apply_batch`, but no
 targeted multi-load. A batch secure-object load is therefore the first implementation
 slice.
@@ -63,7 +63,7 @@ the accepted ADR amended before implementation.
 
 ### F5 - The Transaction before-validator residual is still present
 
-`src/aeat/domain/transactions/_models.py` still uses
+the former source file still uses
 `@model_validator(mode="before")` for `Transaction._enforce_derived_transaction_id`.
 It validates/coerces `raw`, derives the SHA-256 id, and manually coerces enums,
 decimals, timestamps, optional strings, attachment tuples, and history collections
@@ -153,23 +153,22 @@ transaction payload, not by the decryption-free namespace hash scan:
 
 Current contract sources:
 
-- `src/aeat/adapters/persistence/profile/transactions.py:330` -
   `save_with_secure_object_writes` composes transaction writes with event/invoice writes.
-- `src/aeat/adapters/persistence/profile/transactions.py:671` - `_reconcile` loads the
+- the former source file - `_reconcile` loads the
   membership index, scans namespace payload hashes, serializes every incoming
   transaction, hashes every payload, and returns changed writes plus deletions.
-- `src/aeat/adapters/persistence/profile/transactions.py:601` - `_sync_date_index`
+- the former source file - `_sync_date_index`
   rebuilds the derived plaintext date-index diff from the whole incoming catalogue.
-- `src/aeat/adapters/persistence/storage/sql/secure_objects.py:898` -
+
   `namespace_payload_hashes` is a decryption-free namespace metadata scan.
-- `src/aeat/adapters/persistence/storage/sql/secure_objects.py:924` - `apply_batch`
+- the former source file - `apply_batch`
   persists transaction and sibling secure-object writes atomically.
-- `src/aeat/application/ledger/_actions_common.py:714` -
+
   `_save_transaction_catalogue_and_events` is the common single-writer persistence helper.
-- `src/aeat/application/ledger/_actions_manual.py:456` and
-  `src/aeat/application/ledger/_actions_manual.py:617` are representative single-row
+- the former source file and
+  the former source file are representative single-row
   update/classify paths; both know the transaction id being changed.
-- `src/aeat/application/ledger/_actions_classification.py:277` keeps bulk classify
+- the former source file keeps bulk classify
   load-once/save-once and is already the multi-row amortized shape.
 
 Design option A - repository dirty-set API:

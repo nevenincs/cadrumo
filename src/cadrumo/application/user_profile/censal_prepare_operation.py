@@ -33,7 +33,9 @@ from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
+from .censal_observation import CensalObservation
 from .censal_operation import CensalOperationRequest, build_censal_operation_request
+from .censal_readback import CensalObservationReader
 from .censo_sync import CENSAL_ADOPTABLE_PATHS
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_effective_facts
@@ -44,7 +46,7 @@ if TYPE_CHECKING:
 CENSAL_PREPARE_OPERATION_DEFINITION_ID = "user-profile.censo-prepare"
 CENSAL_PREPARE_PHASE_READ = "user-profile.censo-prepare.read"
 MAX_CENSAL_PREPARE_VALUE_LENGTH = 4_096
-_CENSAL_PREPARE_RESULT_MAX_BYTES = min(16_384, PROJECTION_DOCUMENT_MAX_BYTES - 4_096)
+_CENSAL_PREPARE_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _BoundedEffectiveValue = Annotated[str, Field(max_length=MAX_CENSAL_PREPARE_VALUE_LENGTH)]
 _CensalPath = Annotated[str, Field(min_length=3, max_length=160)]
@@ -94,6 +96,7 @@ class CensalPrepareOperationProjection(BaseModel):
     profile_id: UUID
     operation_request: CensalOperationRequest
     effective_fields: tuple[CensalPrepareFieldProjection, ...]
+    observation: CensalObservation | None = None
 
     @model_validator(mode="after")
     def _validate_exact_profile_and_order(self) -> Self:
@@ -150,6 +153,10 @@ def _prepare_exact_profile(
 class CensalPrepareOperationExecutor:
     """Read the current profile record and publish its bounded preparation."""
 
+    def __init__(self, observation_reader: CensalObservationReader | None = None) -> None:
+        """Bind the existing capture-history reader when composed by the runtime."""
+        self._observation_reader = observation_reader
+
     async def execute(
         self,
         request: OperationRequest[CensalPrepareOperationRequest],
@@ -167,6 +174,11 @@ class CensalPrepareOperationExecutor:
             payload.profile_id,
             authority_operation=context.authority_operation,
         )
+        if self._observation_reader is not None:
+            observation = await self._observation_reader(payload.profile_id)
+            projection = projection.model_copy(update={"observation": observation})
+        if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _CENSAL_PREPARE_RESULT_MAX_BYTES:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
         async def capture() -> str:
             reference = await context.operands.put(projection, written_at=now())
@@ -201,7 +213,9 @@ def _validated_censal_prepare_request(
     return payload
 
 
-def build_censal_prepare_operation_definition() -> OperationDefinition:
+def build_censal_prepare_operation_definition(
+    observation_reader: CensalObservationReader | None = None,
+) -> OperationDefinition:
     """Declare the recorded, credential-free, nonmutating preparation read."""
     return OperationDefinition(
         definition_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID,
@@ -210,7 +224,7 @@ def build_censal_prepare_operation_definition() -> OperationDefinition:
         executor_factory=OperationExecutorFactory(
             request_type=CensalPrepareOperationRequest,
             executor_type=CensalPrepareOperationExecutor,
-            build=CensalPrepareOperationExecutor,
+            build=lambda: CensalPrepareOperationExecutor(observation_reader),
         ),
         phase_codes=(CENSAL_PREPARE_PHASE_READ,),
         interaction_kinds=frozenset(),

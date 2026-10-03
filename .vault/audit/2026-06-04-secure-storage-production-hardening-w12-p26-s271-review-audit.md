@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:275fc7de1b8fb93a4c0ba457aaf0c0e778bf01b163a1ea1682dadb7bef8475c5'
+modified: '2026-10-03'
+body_hash: 'sha256:ad11e64c08334c1dae88e715e9bb6c5cb960114c2b33ee9509af174cb890ec90'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S271-001 | PASS | Test helper delegates to canonical orchestration
 
-`src/aeat/application/user_profile/_testing.py` is a test convenience over
+The retired module was a test convenience over
 `register_active_profile`, `select_profile`, and `set_active_fields`. It does not create
 a fake repository, monkeypatch storage, read environment variables, or write profile
 state outside the canonical orchestration path.
@@ -32,7 +32,7 @@ over runtime-backed profile registration, not a duplicate persistence backend.
 
 ## S271-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_testing.py src/aeat/application/user_profile/test_orchestration_pointer.py src/aeat/tests/test_output_language.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_orchestration_pointer.py src/aeat/tests/test_output_language.py`
+- the historical check
+- the historical check
 
 Disposition: close `AFR-169`.

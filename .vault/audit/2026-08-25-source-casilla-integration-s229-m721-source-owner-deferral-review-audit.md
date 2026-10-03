@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcd7990355ba73e938b845a4d90ac0c3ae952ea32e249e5e15f1f7d8f9f7dc50'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:17c906e8ce4648aec9b35ca7d1f2189508f28bff7e1c1d78a6a613c4a374b876'
+related: []
 ---
+
 # `source-casilla-integration` audit: `S229 M721 source-owner deferral review`
 
 ## Scope
@@ -52,10 +52,7 @@ threshold-continuity.
 
 ### verification | low | focused evidence is green
 
-`uv run pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_modelo_721_registry.py`
-passed 7 tests. Ruff passed on that focused path. Vault checks previously report
-clean structural, schema, and ADR-status gates; remaining feature warnings are
-pre-existing annotations and concurrent shared work.
+Ruff passed on that focused path. Vault checks previously report clean structural, schema, and ADR-status gates; remaining feature warnings are pre-existing annotations and concurrent shared work.
 
 ## Recommendations
 

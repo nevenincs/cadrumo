@@ -4,7 +4,7 @@ tags:
   - '#filing-architecture-docs'
 date: '2026-06-08'
 modified: '2026-10-03'
-body_hash: 'sha256:083aa1ba55c44fe85c5dbed1fd8f70126b95034d246262ae4e2f707d36d231ad'
+body_hash: 'sha256:b3c944d21b272b374f326921d95a58a18a3fe1a5062f5b063421f7d749cf171b'
 related: []
 ---
 
@@ -21,7 +21,7 @@ The goal is to identify underdescribed CLI commands, missing recipes, and abrupt
 ## Findings
 
 ### Finding F01: Missing Modelo 130 How-to Guide
-While Modelo 130 is utilized in the on-rails tutorial (`docs/tutorials/index.md`), there is no dedicated how-to guide for Modelo 130 under `docs/how-to/` to match `docs/how-to/modelo-303.md` and `docs/how-to/modelo-390.md`. A user wanting a goal-oriented recipe specifically for Modelo 130 has to extract it from the tutorial context.
+While Modelo 130 is utilized in the on-rails tutorial , there is no dedicated how-to guide for Modelo 130 under `docs/how-to/` to match `docs/how-to/modelo-303.md` and `docs/how-to/modelo-390.md`. A user wanting a goal-oriented recipe specifically for Modelo 130 has to extract it from the tutorial context.
 
 ### Finding F02: Complete Absence of live-read Command Documentation
 The CLI commands under `aeat app live` (such as `aeat app live borrador`, `aeat app live expedientes`, `aeat app live verify`, `aeat app live portals`, and `aeat app live notifications`) are not documented in any narrative guide. The read-only integration with the AEAT portal is a core feature, but is currently a blind spot.
@@ -52,9 +52,9 @@ The landing page `docs/index.md` fails to link to several important how-to guide
 ## Recommendations
 
 1. **Create `docs/how-to/modelo-130.md`:** Author a goal-oriented recipe for preparing, calculating, and verifying a Modelo 130 quarterly return.
-2. **Create a conceptual bridge document:** Author `docs/explanation/ledger-to-calculation.md` to explain the bindings, period conversions, mixed-use ratios, and the transition from transaction ledger to calculated draft.
+2. **Create a conceptual bridge document:** Author the retired document to explain the bindings, period conversions, mixed-use ratios, and the transition from transaction ledger to calculated draft.
 3. **Expand `docs/how-to/filing-spine.md`:** Enrich this page to explain the verification gate, findings, snapshot evidence capture, and the recovery commands (`runs`, `resume`).
-4. **Create a how-to guide for live AEAT portal operations:** Author `docs/how-to/live-portal-queries.md` to cover `aeat app live` commands.
+4. **Create a how-to guide for live AEAT portal operations:** Author the retired document to cover `aeat app live` commands.
 5. **Update `docs/index.md`:** Add cards or links to censo updates, manual calculation inputs, and authentication to resolve the landing page gaps.
 
 ## Codification candidates
@@ -66,7 +66,7 @@ State: None. No findings meet the three durability criteria for new project rule
 Reviewing the campaign as a new developer inheriting the codebase:
 
 ### 1. Assessment of Completed Work
-- **Overview data pipeline and ledger-to-calculation logic**: Fully detailed in `docs/explanation/ledger-to-calculation.md` and `docs/explanation/index.md`. The explanation uses simple, non-demanding, non-technical language as required by the taxpayer-centric guidelines.
+- **Overview data pipeline and ledger-to-calculation logic**: Fully detailed in the retired document and `docs/explanation/index.md`. The explanation uses simple, non-demanding, non-technical language as required by the taxpayer-centric guidelines.
 - **Cross-referencing**: Structured links have been added across the main index, quickstart, and core how-to guides.
 - **CLI conformance**: Automated verification via `test_documented_command_conformance.py` is fully clean.
 

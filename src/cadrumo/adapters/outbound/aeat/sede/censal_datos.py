@@ -21,12 +21,10 @@ Domicilio Fiscal* / *Cambio de Domicilio de Notificaciones* / *Baja de
 Domicilio de Notificaciones* buttons whose scripts build relative
 ``ModifDomiDual`` / ``ModifDomiNotif`` targets, and it links the M036
 filing tool. Reading the rendered DOM is a read; driving any of those
-controls is not. This reader therefore navigates and parses only: it
-submits nothing, fills nothing, clicks nothing, and
-:func:`_assert_read_landing` fails closed at runtime if AEAT ever lands
-it on a modification path. That runtime landing guard is the primary
-wall; the module-level string check in the sede write-surface gate is
-the weaker second one.
+controls is not. The subsidiary activities, tax-status and obligations
+consultations open separate tabs. Their exact read routes and named controls
+are guarded before requests leave the browser; modification controls are
+never driven. The landing refusal remains defence in depth.
 
 Public surface: :func:`parse_censal_datos`,
 :func:`fetch_censal_datos`, :func:`censal_datos_url`, and
@@ -397,6 +395,8 @@ def _identity_from(fields: Mapping[str, str]) -> CensalObservationIdentity:
     typed: dict[str, Any] = {key: value for key, value in fields.items()}
     raw_birth = typed.pop("fecha_nacimiento", None)
     birth_date = parse_date(raw_birth, fmt="ddmmyyyy", on_error="none") if raw_birth else None
+    if raw_birth and birth_date is None:
+        raise census_shape_error("unrecognized birth-date format")
     for flag in (
         "obligado_notificaciones_electronicas",
         "suscrito_voluntariamente_notificaciones_electronicas",
@@ -415,7 +415,7 @@ def _parse_flag(raw: str | None) -> bool | None:
         return True
     if folded in _NEGATIVE:
         return False
-    return None
+    raise census_shape_error("unrecognized notification-flag value")
 
 
 # ── Live read ──────────────────────────────────────────────────────────────
@@ -429,9 +429,9 @@ async def fetch_censal_datos(
 ) -> CensalObservation:
     """Read the censal consulta surface with the authenticated session.
 
-    The read navigates to the consulta view and parses the rendered DOM.
-    It never submits a form, fills a field, or activates a control, and it
-    refuses at runtime if AEAT lands it on a censal modification path.
+    The read parses the landing and every subsidiary consultation through
+    the page's own read-only controls. Exact navigation routes are guarded,
+    and the result is withheld if any required consultation cannot be read.
 
     Args:
         session: An authenticated :class:`AeatSession` whose encrypted
@@ -541,7 +541,13 @@ async def _navigate_and_parse(
                     "marker_present": False,
                 },
             )
-        consultations = await capture_censal_consultations(page, policy=READ_GUARD_POLICY, settings=settings)
+        try:
+            consultations = await capture_censal_consultations(page, policy=READ_GUARD_POLICY, settings=settings)
+        except PlaywrightError as exc:
+            raise SedeNavigationError(
+                f"Census consultation browser acquisition failed ({type(exc).__name__})",
+                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            ) from None
         log.info("fetch_censal_datos: read complete censal consulta from %s", landing.path)
         return result.model_copy(update={"consultations": consultations})
     finally:

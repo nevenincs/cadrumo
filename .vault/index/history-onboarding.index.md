@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#history-onboarding'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c931a34fc5bcef88d3dbd153d23c3d77a704fc5d4e5a05d7bbf3b2402cc24de'
+body_hash: 'sha256:39ee3d7fb28d029048d089c24d23a4bef8bf704604af51142e83357f3398c232'
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
-  - '[[2026-08-07-history-onboarding-ledger]]'
-  - '[[2026-08-07-history-onboarding-plan]]'
   - '[[2026-08-07-history-onboarding-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#history-onboarding`.
 ### adr
 
 - `2026-08-07-history-onboarding-adr` - `history-onboarding` adr: `New-profile AEAT history discovery and onboarding` | (**status:** `accepted`)
-
-### exec
-
-- `2026-08-07-history-onboarding-ledger` - `history-onboarding` ledger
-
-### plan
-
-- `2026-08-07-history-onboarding-plan` - `history-onboarding` plan
 
 ### reference
 

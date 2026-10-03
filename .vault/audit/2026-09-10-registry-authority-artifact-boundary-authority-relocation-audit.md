@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:a5dc5a4de339605faf08bcce3a8716594b6c3e3163ffc78e33fe1a238edfdfe6'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 
 # `registry-authority-artifact-boundary` audit: `authority relocation`

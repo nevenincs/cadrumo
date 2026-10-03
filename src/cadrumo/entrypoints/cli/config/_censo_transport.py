@@ -23,9 +23,10 @@ never set, or one whose current value a previous censal read wrote and
 the authority has since changed. A value the operator declared, and a
 path they deliberately cleared, are reported for them to adjudicate.
 
-What ``pull`` fills is identity and address, and only that: the censal
-regime fields have no working read route, so the verb neither promises
-nor writes them. The read is always of the authenticated session's own
+The live observation includes identity, addresses, activities, premises,
+tax status and obligations. Profile adoption uses the existing supported
+address mappings; captured regime rows are evidence, not inferred profile
+settings. The read is always of the authenticated session's own
 record — there is no option to aim it at another taxpayer, because the
 product does not support acting as a representative. Its result reports
 all three outcomes, adopted, unchanged and diverging: a path the profile
@@ -48,7 +49,13 @@ import typer
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ..common import emit_envelope
-from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
+from ._censo_payloads import (
+    CensoFactPayload,
+    CensoFileIngestResult,
+    CensoPullDivergencePayload,
+    CensoPullResult,
+    CensoStoredResult,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -147,9 +154,13 @@ def censo_pull(
         apply = reviewed.applied
         if not apply:
             adopted = ()
+        # The review result identifies its exact proposal. A separate latest
+        # capture read could race another pull and misattribute its evidence.
+        observation = None
     else:
         preview = preview_censal_with_runtime(ctx)
         adopted, unchanged, divergences, source_url = _projected_preview_outcomes(preview)
+        observation = preview.observation
 
     result = CensoPullResult(
         applied=apply,
@@ -157,6 +168,7 @@ def censo_pull(
         adopted=adopted,
         unchanged=unchanged,
         divergences=divergences,
+        observation=observation,
     )
     lines = _pull_lines(
         applied=apply,
@@ -180,6 +192,16 @@ def censo_pull(
         lines=lines,
         notices=notices,
     )
+
+
+def censo_show(ctx: typer.Context) -> None:
+    """Read the latest saved census through the existing exact-profile runtime door."""
+    from .runtime_censal_prepare import prepare_censal_review
+
+    observation = prepare_censal_review(ctx).observation
+    result = CensoStoredResult(observation=observation)
+    lines = ["captured\tfalse"] if observation is None else [observation.model_dump_json(indent=2)]
+    emit_envelope(ctx, command="config.profile.censo.show", result=result, lines=lines)
 
 
 def _reviewed_adopted_payloads(
@@ -426,4 +448,4 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
     return notices
 
 
-__all__ = ["censo_import", "censo_pull"]
+__all__ = ["censo_import", "censo_pull", "censo_show"]

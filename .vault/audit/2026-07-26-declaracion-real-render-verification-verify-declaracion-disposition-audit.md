@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-10-03'
 body_hash: 'sha256:a4fbaba5cae5d15ea666ca00fc3de24c3937121fcb1071b18090f91003d2096f'
-related:
-  - '[[2026-07-26-declaracion-real-render-verification-plan]]'
+related: []
 ---
 
 # `declaracion-real-render-verification` audit: `verify_declaracion disposition evidence`

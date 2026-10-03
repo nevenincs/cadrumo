@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-art105-cinco-interrupted'
 date: '2026-07-07'
-modified: '2026-09-08'
-body_hash: 'sha256:a1385b41c319de586eba4d559e34c6218232bdb3ec6c0d42075d73d290c24817'
+modified: '2026-10-03'
+body_hash: 'sha256:8d2f514f7a4faf5f29af0ceb35160a158358a1bb3029ba3f8ed928613d1fa02f'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -176,14 +176,14 @@ report). This slice is deliberately register/seeding-internal — it touches NO 
 transaction field, NO per-input classification, and NO CLI verb, making it the least
 entangled of the four with the ledger/CLI surfaces:
 
-- `src/cadrumo/core/_prorrata_register.py` — an interrupted-state member/marker (or a new
+- the former source file — an interrupted-state member/marker (or a new
   provenance `interrumpida_tres_ultimos`) in the register enums. **SHARED (additive) with
   `prorrata-especial` and `prorrata-sectores-diferenciados` (register enums).**
 - `src/cadrumo/domain/prorrata_register/__init__.py` — the interrupted-ejercicio representation
   on `ProrrataRegisterEntry` and the last-three-active-years seed walk. **SHARED with
   `prorrata-sectores-diferenciados` (per-sector orchestration) and `prorrata-especial`
   (especial-complete signal).**
-- `src/cadrumo/domain/iva/_prorrata.py` — reuse `compute_prorrata_definitiva_anual` over the
+- the former source file — reuse `compute_prorrata_definitiva_anual` over the
   summed three-year volumes (read-mostly; maybe a global-aggregate helper). **SHARED
   (additive) with the sibling ADRs.**
 - the register seeding path (`application/calculations/_prorrata_regularizacion.py` or the

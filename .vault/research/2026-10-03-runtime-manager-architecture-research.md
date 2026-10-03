@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac3b635e9db7774e296fc7450cfea97f84091d86e61a4656a216719420d4e5ec'
+body_hash: 'sha256:26a82405a0a1b6e90d631a626a0b4225d1e576d20ccd1788db887f4056b68b7a'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -14,9 +14,9 @@ related:
 
 # `runtime-manager-architecture` research: `Windows runtime host options: service, scheduled task, on-demand agent`
 
-Question (operator, 2026-10-03): Cadrumo's CLI/TUI/MCP live operations run in a shared local runtime that on Windows is started through a per-user Task Scheduler task. Should that be replaced by a classic Windows Service with a dedicated binary, and what host satisfies the runtime's requirements without destroying valid implementation? This record frames the option space against requirements derived from code and accepted decisions. It does not decide; 2026-10-03-runtime-without-service-manager-adr is a proposed candidate, not a conclusion.
+Question (operator, 2026-10-03): At the 2026-10-03 measurement, Cadrumo's CLI/TUI/MCP live operations used a shared local runtime started on Windows through a per-user Task Scheduler task. Should that be replaced by a classic Windows Service with a dedicated binary, and what host satisfies the runtime's requirements without destroying valid implementation? This record frames the option space against requirements derived from code and accepted decisions. The accepted 2026-10-03-runtime-without-service-manager-adr records the decision; this research preserves the earlier option assessment.
 
-Evidence picture: every custody and identity check in the current runtime presumes it runs as the logged-on user, inside that user's interactive desktop logon session. A session-0 Windows Service fails those checks by design and cannot open the visible browser the Cl@ve QR route needs, so a service is only viable as a privileged broker in front of a per-user runtime. The real choice is how the per-user runtime gets started and supervised, either by a per-user interactive-token task or by an on-demand detached spawn. The defects the operator observed are in how registration is provisioned and cleaned up, not in the logon model.
+Evidence picture: the custody and identity checks in the inspected runtime presumed it runs as the logged-on user, inside that user's interactive desktop logon session. A session-0 Windows Service fails those checks by design and cannot open the visible browser the Cl@ve QR route needs, so a service is only viable as a privileged broker in front of a per-user runtime. The option at the time was how the per-user runtime would be started and supervised, either by a per-user interactive-token task or by an on-demand detached spawn. The defects the operator observed were in how registration was provisioned and cleaned up, not in the logon model.
 
 ## Findings
 
@@ -30,11 +30,11 @@ The accepted topology makes one local runtime the authority for profile-session 
 - Worker, browser and KDF children contained in runtime-owned kill-on-close Job Objects (`src/cadrumo/adapters/local_runtime/windows_process.py:199-233`; 2026-09-26-mcp-purpose-authentication-adr, "Management surfaces and process containment").
 - Admitted work that survives client disconnect, and an MCP adapter that never stops the shared runtime (same ADR and section).
 
-Login autostart is an optional capability the ADR keeps separate from manager availability and unattended authorization ("Manager availability, login autostart and unattended authorization are separate capabilities"). None of the guarantees above is supplied by the OS service manager. The proposed ADR makes the same observation (2026-10-03-runtime-without-service-manager-adr, Considerations).
+Login autostart is an optional capability the ADR keeps separate from manager availability and unattended authorization ("Manager availability, login autostart and unattended authorization are separate capabilities"). None of the guarantees above is supplied by the OS service manager. The accepted ADR makes the same observation (2026-10-03-runtime-without-service-manager-adr, Considerations).
 
 ### The recorded rationale chose a per-user interactive-token task; no Windows Service comparison was recorded
 
-The accepted text is: "Windows background startup uses a per-user Task Scheduler logon task with the interactive token, with no stored Windows password or highest-privilege elevation" (2026-09-26-mcp-purpose-authentication-adr, "Local transport and platform contract"). The same ADR's Constraints exclude any "system-wide daemon" and "pre-OS-login execution". Its evidence (2026-09-26-mcp-purpose-authentication-research, "Background ownership follows OS login") cites only `TASK_LOGON_INTERACTIVE_TOKEN` and user LaunchAgents. No vault record weighs a SCM service against the task; a grep of `.vault/` for "windows service", "session 0" and "service control manager" finds only CI-runner and harness records. The Service-versus-task question is therefore open in the record, not settled.
+The then-accepted text was: "Windows background startup uses a per-user Task Scheduler logon task with the interactive token, with no stored Windows password or highest-privilege elevation" (2026-09-26-mcp-purpose-authentication-adr, "Local transport and platform contract"). The same ADR's Constraints exclude any "system-wide daemon" and "pre-OS-login execution". Its evidence (2026-09-26-mcp-purpose-authentication-research, "Background ownership follows OS login") cites only `TASK_LOGON_INTERACTIVE_TOKEN` and user LaunchAgents. No vault record weighs a SCM service against the task; a grep of `.vault/` for "windows service", "session 0" and "service control manager" finds only CI-runner and harness records. The Service-versus-task question is therefore open in the record, not settled.
 
 ### The current code requires the runtime itself to be in the client's interactive desktop logon
 
@@ -65,17 +65,6 @@ Fresh Cl@ve Móvil login opens a headed Playwright window so the operator can sc
 
 Result: a Windows Service cannot satisfy "runs in the client's interactive desktop logon with the user's credential set and a visible browser" without a per-user component. The minimal correct split is a SYSTEM broker that only launches a per-user runtime in the user's session, and that per-user runtime still holds all custody. The broker adds supervision and pre-login start, which the accepted ADR excludes. In exchange it adds admin installation, a SYSTEM attack surface and a second binary.
 
-### Task Scheduler interactive-token tasks are a Microsoft-shipped per-user pattern; the defects are in provisioning
-
-- Measured on this machine on 2026-10-03, read-only `Get-ScheduledTask`: OneDrive registers `OneDrive Startup Task-<user SID>` with `LogonType Interactive` and a logon trigger in the root folder, one per user. Edge's machine-wide updaters use `ServiceAccount` tasks. The current Cadrumo task has the same shape: `InteractiveToken`, `LeastPrivilege`, optional `LogonTrigger`, on-demand start, no stored password (`src/cadrumo/adapters/local_runtime/service_definitions.py:49-101`; registration with logon type 3 at `src/cadrumo/adapters/local_runtime/windows_manager.py:367-414`).
-- The launcher, not the scheduler, owns restart. It makes at most three isolated host attempts, each with its own Job (`src/cadrumo/entrypoints/runtime/bootstrap.py:66-68`, `:137`). The scheduler contributes three things: starting in the user's interactive session without the caller's process tree, job or console; login autostart; and a name-addressable start/stop.
-- Defects that match "amateurish", each a provisioning or lifecycle choice rather than the logon model:
-  - One task per storage root, named `cadrumo-runtime-<64-hex storage identity>` (`src/cadrumo/adapters/local_runtime/service_definitions.py:17-19`), registered in the root folder rather than a vendor folder (`src/cadrumo/adapters/local_runtime/windows_manager.py:91`).
-  - No product unregister path. The product has no `DeleteTask` call; only the test fixture deletes (`src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py:416-420`). The CLI surface is status/start/enable/disable/stop with no uninstall (`src/cadrumo/entrypoints/cli/app_runtime.py:28-98`).
-  - Provisioning is a prerequisite for ordinary use. Without a provisioned manager the launch door refuses `UNAVAILABLE` (`src/cadrumo/adapters/local_runtime/startup.py:152-171`), so live CLI/TUI commands fail with `runtime_unavailable` until `aeat app runtime enable|disable` runs `configure_installed_runtime_management` (`src/cadrumo/entrypoints/runtime_management.py:236-249`).
-  - `Hidden=true` (`src/cadrumo/adapters/local_runtime/service_definitions.py:82`) only hides the task from the Task Scheduler UI (https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-hidden). The action runs the console-subsystem `cadrumo-runtime.exe` script (`pyproject.toml:139`, `src/cadrumo/adapters/local_runtime/runtime_manager_composition.py:17-35`). Whether a console window appears in the user's session was not tested here.
-  - Tests provision real tasks against temporary roots, for example the CLI `enable` path in `dev/agent_eval/tests/test_runtime_automation_management_parity.py:754`. The operator reported about 24 leaked `cadrumo-runtime-*` tasks pointing at deleted pytest roots. On 2026-10-03 the read-only query found 2 remaining, so others were removed outside this research.
-
 ### On-demand spawned user agent with idle exit: what it keeps and loses
 
 - Precedents: `gpg-agent` "is automatically started on demand by gpg, gpgsm, gpgconf, or gpg-connect-agent" (https://www.gnupg.org/documentation/manuals/gnupg/Invoking-GPG_002dAGENT.html). git's credential-cache daemon is started if not running and forgets after a 900-second default timeout (https://git-scm.com/docs/git-credential-cache). 1Password CLI delegates to the user's desktop app with per-terminal authorization (https://developer.1password.com/docs/cli/app-integration-security). None of these is a SCM service. OpenSSH's Windows `ssh-agent` is the counterexample, and it has no UI.
@@ -90,7 +79,7 @@ Rejected on the record. It breaks the single shared owner across CLI/TUI/MCP and
 
 ### Linux and macOS per-user managers are idiomatic
 
-A systemd user service, with optional socket activation, and a per-user LaunchAgent limited to the `Aqua` session type (`src/cadrumo/adapters/local_runtime/service_definitions.py:104-129`) are the platforms' standard per-user supervision mechanisms (https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html; https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). GnuPG ships systemd user socket examples but now calls systemd-based launching deprecated, citing races with its own on-demand start lock (https://dev.gnupg.org/T6336). That is a caution against running a manager and on-demand spawn side by side without one ownership primitive. Cadrumo's pipe/`flock` ownership already covers the race. macOS profile workers currently refuse `CONTAINMENT_UNAVAILABLE` (`src/cadrumo/adapters/local_runtime/profile_worker.py:179-180`), independent of the host choice.
+A systemd user service, with optional socket activation, and a per-user LaunchAgent limited to the `Aqua` session type are the platforms' standard per-user supervision mechanisms (https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html; https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). GnuPG ships systemd user socket examples but now calls systemd-based launching deprecated, citing races with its own on-demand start lock (https://dev.gnupg.org/T6336). That is a caution against running a manager and on-demand spawn side by side without one ownership primitive. Cadrumo's pipe/`flock` ownership already covers the race. macOS profile workers currently refuse `CONTAINMENT_UNAVAILABLE` (`src/cadrumo/adapters/local_runtime/profile_worker.py:179-180`), independent of the host choice.
 
 ### Requirements and options matrix
 
@@ -102,17 +91,17 @@ Requirements on Windows, derived from the findings above. R1: run as the user, i
 | SCM service as the user | no (service logon, session 0) | no | no (stores password) | yes | yes | yes | yes | yes | installer-owned | yes |
 | SYSTEM broker plus per-user runtime | yes (runtime) | yes | no (admin install) | yes | yes | yes | yes | yes | installer-owned | yes |
 | Per-user service template | unsupported for third parties | no | no | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| Interactive-token task (current) | yes | yes | yes | yes | yes once provisioned | yes | launcher retries | yes | missing today (fixable) | yes |
+| Interactive-token task (historical) | yes | yes | yes | yes | yes once provisioned | yes | launcher retries | yes | missing then (fixable) | yes |
 | On-demand detached spawn with idle exit | yes | yes | yes | yes | yes, no provisioning | at risk under kill-on-close host jobs | next start reconciles | no | trivial | yes |
 | Frontend-owned or in-process | yes | yes | yes | no | yes | no | no | no | trivial | partial |
 
-### What the ADR must settle
+### Questions considered by the ADR
 
 - Whether login autostart and unattended agent work while no Cadrumo client is running are product requirements. Only the task and the service variants provide them; on-demand spawn does not.
 - Whether R6 is required against hosts that place children in kill-on-close jobs. If so, on-demand spawn alone is insufficient on Windows and needs a non-inheriting start (task, WMI, or a broker).
 - If the task is kept: provisioning on first use without a separate verb, a vendor task folder, a single task per user rather than per storage root, a product uninstall verb, and test isolation so tests cannot register real tasks. A hybrid is possible, where on-demand spawn is the default and the task is an opt-in for autostart.
 - Whether a signed, windowless native host binary is wanted for identity and no-console behaviour. That question is independent of service-versus-task.
-- Code that stays valid under every option except the frontend-owned one: endpoint DACL and peer verification (`src/cadrumo/adapters/local_runtime/windows.py`), desktop-logon and login-provenance checks (`windows_desktop_logon.py`, `windows_login.py`), Job containment (`windows_process.py`), sealed bootstrap and worker isolation (`src/cadrumo/entrypoints/runtime/bootstrap.py:347-364`, `worker.py`), single-owner convergence and the startup readiness loop (`src/cadrumo/adapters/local_runtime/startup.py:152-200`). Only the manager adapter is option-specific: `windows_manager.py`, `windows_task_definition.py`, `windows_task_process.py`, `windows_managed_stop.py`, and the managed launcher branch in `bootstrap.py`. Under a SCM service, the login-provenance checks would also have to change.
+- Code that stays valid under every option except the frontend-owned one: endpoint DACL and peer verification (`src/cadrumo/adapters/local_runtime/windows.py`), desktop-logon and login-provenance checks (`windows_desktop_logon.py`, `windows_login.py`), Job containment (`windows_process.py`), sealed bootstrap and worker isolation (`src/cadrumo/entrypoints/runtime/bootstrap.py:347-364`, `worker.py`), single-owner convergence and the startup readiness loop (`src/cadrumo/adapters/local_runtime/startup.py:152-200`). The former manager adapter was option-specific; an SCM service would also require different login-provenance checks.
 
 Not investigated: actual job membership of Claude Desktop, VS Code or Windows Terminal children; console-window visibility of the current task; Windows Hello or PIN-only accounts with service logon; whether Cl@ve fresh login currently executes inside the runtime worker.
 
@@ -123,19 +112,13 @@ Not investigated: actual job membership of Claude Desktop, VS Code or Windows Te
 - `src/cadrumo/adapters/local_runtime/windows.py:237-242`, `:386-408`
 - `src/cadrumo/adapters/local_runtime/posix.py:104`
 - `src/cadrumo/adapters/local_runtime/windows_process.py:199-233`
-- `src/cadrumo/adapters/local_runtime/windows_manager.py:91`, `:367-414`
-- `src/cadrumo/adapters/local_runtime/service_definitions.py:17-19`, `:49-129`
 - `src/cadrumo/adapters/local_runtime/startup.py:152-200`
-- `src/cadrumo/adapters/local_runtime/runtime_manager_composition.py:17-35`
 - `src/cadrumo/adapters/local_runtime/profile_worker.py:179-180`
-- `src/cadrumo/adapters/local_runtime/tests/windows_managed_runtime_fixture.py:416-420`
 - `src/cadrumo/adapters/persistence/storage/custody/automation_secret_store.py:90-120`
 - `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py:190-220`
 - `src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py:21-23`, `:704-713`
 - `src/cadrumo/entrypoints/runtime/bootstrap.py:48-68`, `:137`, `:347-418`
 - `src/cadrumo/entrypoints/runtime/worker.py:75-82`, `:311-318`
-- `src/cadrumo/entrypoints/runtime_management.py:236-249`
-- `src/cadrumo/entrypoints/cli/app_runtime.py:28-98`
 - `dev/agent_eval/tests/test_runtime_automation_management_parity.py:754`
 - `pyproject.toml:139`
 - https://learn.microsoft.com/en-us/windows/win32/services/interactive-services

@@ -1,7 +1,8 @@
 """Explicit per-user setup of the installed GNOME login observer resources.
 
-Run this native setup entrypoint with an isolated interpreter. Installation
-does not enable the extension or grant application access.
+Run this native setup entrypoint with an isolated interpreter. Publication
+does not make GNOME Shell discover the extension, enable it, or grant
+application access.
 """
 
 from __future__ import annotations
@@ -25,9 +26,9 @@ def run(arguments: list[str] | None = None) -> int:
         if sys.platform != "linux":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         if selected.action == "inspect":
-            result = "installed" if inspect_gnome_login_producer() else "absent"
+            result = "published" if inspect_gnome_login_producer() else "absent"
         else:
-            result = "created" if install_gnome_login_producer() else "already_installed"
+            result = "published" if install_gnome_login_producer() else "already_published"
         sys.stdout.write(result + "\n")
         return 0
     except RuntimeRefusalError as refusal:

@@ -20,13 +20,16 @@ from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
-    OperationTerminalCondition,
     profile_operation_subject,
 )
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_terminal_receipt,
+)
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
@@ -363,18 +366,14 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
 
 
 def _require_add_success_receipt(receipt: OperationTerminalReceipt, *, profile_id: UUID) -> None:
-    if (
-        receipt.identity.definition_id != LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or receipt.effect is not OperationEffect.UPDATED
-    ):
-        raise ValueError("ledger evidence add has an incompatible terminal receipt")
+    message = "ledger evidence add has an incompatible terminal receipt"
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        effect=OperationEffect.UPDATED,
+        message=message,
+    )
 
 
 def _build_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:

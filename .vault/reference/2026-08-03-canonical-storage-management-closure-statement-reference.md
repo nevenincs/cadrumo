@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:bd5d2be5ad721039bc2232c9d5ee583b3afa574404442aad49a81a8f54bd348e'
+body_hash: 'sha256:2082f59dfc9cc66514736cc192f6bbe3d978b2255315351a8216f9f8327754e2'
 related: []
 ---
 
@@ -186,11 +186,7 @@ unaccountable. `S51`, `S52`, `S53` remain open — their cited file:lines
 still read `load_settings()` directly, not re-verified again since the last
 pass.
 
-**Provenance**: `S24` verified directly against committed HEAD
-(`git show HEAD:src/cadrumo/core/_bucket_pointer_io.py`) by the plan/vault
-agent. `S51`–`S53` still carry the earlier caveat: measured via `git show
-HEAD:<path>` reads with no SHA captured — re-verify before citing as
-settled.
+
 
 **Evidence**: each remaining site re-pointed onto `storage_path`/the
 accessor, verified by reading the changed file at a pinned SHA, not by
@@ -298,13 +294,7 @@ manual review of the ~99 write sites. The review was performed by census
 rather than by hand, and it returned something stronger than a classification:
 **the criterion cannot be evaluated over the set it names.**
 
-**Provenance**: `dev/write_site_census.py`, landed with its test at commit
-`30f2493ee1`, quantifying over write primitives in the AST rather than over the
-taxonomy — the direction that matters, since a census iterating declared
-members cannot see an *un*enrolled site. Recomputable at any revision by
-`python -m dev.write_site_census <revision>`; the figure is deliberately not
-restated here as a bare number, because a count in prose has no maintainer and
-this corpus has already lost two to that.
+Recomputable at any revision by `python -m dev.write_site_census <revision>`; the figure is deliberately not restated here as a bare number, because a count in prose has no maintainer and this corpus has already lost two to that.
 
 **Evidence**: classified by where the written path comes from. Measured at
 revision `a5889c3199`, **98 matched sites of which 43 are pass-through**; of the
@@ -564,28 +554,9 @@ land. Re-read at closure time rather than citing this document's number.
 **STATUS: pending, both.** Real, verified, newly discovered while
 reconciling this wave rather than commissioned in advance.
 
-**`S108`** — the new directory-grammar agreement gate (landed with `S89`)
-found `application/_config_reset_repository.py` carrying its own duplicate
-`CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"` constant, joined onto
-the raw storage root, bypassing `storage_path()` entirely — even though
-`_storage_path_definitions.py` already declares this exact shape
-(`config_reset_journal`). Named as an exemption in the gate rather than
-fixed or laundered; this Step tracks closing it. **Provenance**: verified
-directly by the plan/vault agent against committed HEAD `c16bb9a0ae`
-(`git show HEAD:src/cadrumo/application/_config_reset_repository.py`).
+**`S108`** — the new directory-grammar agreement gate (landed with `S89`) found `application/_config_reset_repository.py` carrying its own duplicate `CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"` constant, joined onto the raw storage root, bypassing `storage_path()` entirely — even though `_storage_path_definitions.py` already declares this exact shape (`config_reset_journal`).
 
-**`S109`** — `src/cadrumo/tests/test_compatibility_lifecycle_gate.py::test_the_enrollment_predicate_names_every_uncovered_durable_format`
-is red at HEAD, campaign-caused: this campaign's own persisted-format
-declarations added `bucket_database_file` and `secret_index`, and the
-gate's hand-written expected tuples were never updated to include them.
-Routed (open, not yet fixed). Consider deriving the expectation from the
-declared formats rather than restating it by hand — a hardcoded census of
-uncovered formats is the gate shape this project forbids elsewhere.
-**Provenance**: run directly by the plan/vault agent, working tree (not a
-clean archive — this test file itself has no uncommitted changes, but the
-run was not pinned): `pytest src/cadrumo/tests/test_compatibility_lifecycle_gate.py::test_the_enrollment_predicate_names_every_uncovered_durable_format`,
-**3 failed** (all three parametrised cases), confirming the same cause the
-coordinator named.
+Routed (open, not yet fixed).
 
 **What would make either "no" if closure were declared today**: both are
 open, unambiguously — `S109` in particular is a currently-red test, the
@@ -828,11 +799,7 @@ arriving that way.
 
 #### Mechanical detection was tried and does not work — do not rebuild it
 
-Recorded so the next person does not build the same tool without knowing it was
-built and measured. `WriteSite.constrained` exists in `dev/write_site_census.py`
-and its `--scope tests` sweep was checked against three oracles stated before the
-run (`f101eb9427`, audit
-`2026-08-04-...-constrained-detector-sweep-diagnosis-audit`):
+
 
 - **over-fires roughly 30x** — 114 flags at `64c9fe6d6e` against at best 3 real
   candidates, independently reproduced at a second pin (`53f80f0830`, 110 flags)

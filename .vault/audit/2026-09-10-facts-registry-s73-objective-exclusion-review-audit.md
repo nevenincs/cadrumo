@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:7e2a1388e7c7ef3c89650626279997f5c23bba31b12e0d3be7f68e30845132ee'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 
 # `facts-registry` audit: `S73 objective-estimation exclusion review`

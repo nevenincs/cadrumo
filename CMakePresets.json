@@ -1,0 +1,23 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {"major": 3, "minor": 30, "patch": 0},
+  "configurePresets": [
+    {
+      "name": "windows-x64",
+      "displayName": "Windows x64 pinned MSVC",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/windows-x64",
+      "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows"}
+    }
+  ],
+  "buildPresets": [
+    {"name": "debug", "configurePreset": "windows-x64", "configuration": "Debug"},
+    {"name": "release", "configurePreset": "windows-x64", "configuration": "Release"},
+    {"name": "package-debug", "inherits": "debug", "targets": ["package"]},
+    {"name": "package-release", "inherits": "release", "targets": ["package"]}
+  ],
+  "testPresets": [
+    {"name": "debug", "configurePreset": "windows-x64", "configuration": "Debug", "output": {"outputOnFailure": true}},
+    {"name": "release", "configurePreset": "windows-x64", "configuration": "Release", "output": {"outputOnFailure": true}}
+  ]
+}

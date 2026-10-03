@@ -13,7 +13,7 @@ from ...application.runtime.contracts import (
 )
 from ...application.runtime.deadline_budget import deadline_after, remaining_budget
 from ...core.async_cleanup import (
-    AsyncResourceCleanupError,
+    async_cleanup_failures,
     attach_async_cleanup_error,
     await_cancellation_complete,
     close_async_resources,
@@ -41,12 +41,8 @@ class RuntimeEndpointConnector(Protocol):
 
 def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
     """Keep failed startup owners visible after cancellation or deadline mapping."""
-    for name in ("async_cleanup_error", "cleanup_error"):
-        failure = source.__dict__.get(name)
-        if isinstance(failure, BaseException) and not isinstance(failure, AsyncResourceCleanupError):
-            failure = failure.__dict__.get("async_cleanup_error")
-        if isinstance(failure, AsyncResourceCleanupError):
-            attach_async_cleanup_error(target, failure)
+    for failure in async_cleanup_failures(source):
+        attach_async_cleanup_error(target, failure)
 
 
 class RuntimeLaunchDoor:

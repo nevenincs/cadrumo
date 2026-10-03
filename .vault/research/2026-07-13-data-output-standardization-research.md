@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:7e80866cc2fb64d71c9d337a33139f65d7b1b189044609c719899fbf3faadc39'
+modified: '2026-10-03'
+body_hash: 'sha256:932e9c46bbd4ccd835f0b14e72536102100ea1bf15c43abec9fcd017721dbac6'
 related: []
 ---
 
@@ -142,7 +142,7 @@ could diverge.
 
 **F3.2 — Direct OS-temp use instead of tmp_path.**
 `domain/calculations/registry/tests/test_authority.py:359` and
-`tests/test_loader_cache_isolation.py:180` inspect `Path(tempfile.gettempdir())`
+the former source file inspect `Path(tempfile.gettempdir())`
 directly (white-box coupling to the loader's disk-pickle location). Seven more
 dev-side tests use raw `tempfile.TemporaryDirectory()` instead of `tmp_path`
 (`dev/docs/tests/test_cli_tree.py:65`, `test_glossary_reference.py:139`,
@@ -168,7 +168,7 @@ with stale `aeat.*` imports), a second naked `scratch/test_conformance_check.py`
 
 **F3.4 — Isolation-fixture drift (no single source of truth for redirecting
 output dirs in tests).** Canonical helpers exist
-(`src/cadrumo/tests/secure_sql.py:228` `isolated_profile_storage_root`, `:449`
+(the former source file `isolated_profile_storage_root`, `:449`
 `isolated_cli_runtime_profile`, plus siblings), but ~22 test files each define
 a private copy-pasted `_isolated_cli_backend` autouse fixture repeating the
 same five `override_settings(cadrumo_token_dir=..., cadrumo_runs_dir=...,
@@ -189,10 +189,10 @@ its own namespaced fixtures tree with sidecar provenance — no drift.
 ### Axis 4 — Dev scripts, packaging, and generated-artifact producers
 
 **F4.1 — Packaging generators are clean.** `materialise_plugin()` /
-`materialise_marketplace()` (`src/cadrumo/agent/_workspace.py:369,428`) write
+`materialise_marketplace()`  write
 under operator-chosen output dirs with `cadrumo-` naming, and the checked-in
 marketplace scaffold is generator-locked by test.
-`dev/packaging/smoke_plugin_validate.py:86` (`cadrumo-plugin-smoke-`) and
+the former source file (`cadrumo-plugin-smoke-`) and
 `dev/docs/serve.py:514` (`cadrumo-docs-serve-`) use correct prefixes and
 clean up by default.
 
@@ -401,8 +401,8 @@ should be deleted or wired, not left as dead vocabulary.
   `entrypoints/cli/_modelo_review_package_cli.py`,
   `application/ledger/_actions_split_merge.py`, `_actions_manual.py`
 - `src/cadrumo/conftest.py`, repo-root `conftest.py`,
-  `src/cadrumo/tests/secure_sql.py`, `src/cadrumo/tests/env_scope.py`
-- `dev/packaging/smoke_plugin_validate.py`, `dev/docs/` generators,
+  the former source file, `src/cadrumo/tests/env_scope.py`
+- the former source file, `dev/docs/` generators,
   `dev/registry/newmodelo/manager.py`, `.gitignore`
 - Prior art: secure-persistence-foundation research (2026-04-27),
   secure-persistence-enforcement ADR (2026-05-06), cadrumo product rename

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:09c6b3fecb2e27d743a9add07439e60ef550ea63364717895f9c5c8f083f0369'
+modified: '2026-10-03'
+body_hash: 'sha256:57b1835f5d723deecc7582f10f6253aa716d18afb9e3e47e96de6528a5fc338b'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The review CLI caught `ReviewError` and raised `BadParameter(str(exc))`, bypassi
 
 ## S252-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/review/_operator.py src/aeat/application/review/_errors.py src/aeat/application/review/test_operator.py src/aeat/entrypoints/cli/_review.py src/aeat/entrypoints/cli/test_review_operator_errors.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/review/test_operator.py src/aeat/entrypoints/cli/test_review_operator_errors.py src/aeat/entrypoints/cli/test_error_registry_contract.py` passed with 12 tests.
+- the historical check passed.
+- the historical check passed with 12 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: keep `AFR-150` closed as `manifest-discovery` with operator diagnostic privacy and CLI translated rendering hardened.

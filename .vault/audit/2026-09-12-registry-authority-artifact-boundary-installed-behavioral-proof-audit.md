@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:426d7b65de358af932d9beb455b1830401bf5b2c89fe2ea7849f586962362ac1'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 
 # `registry-authority-artifact-boundary` audit: `installed behavioral proof`

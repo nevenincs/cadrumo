@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:feeeb62e6d95af545b54533174e35b2b08d6beb8a870c4ad75788bfc69a5a907'
+modified: '2026-10-03'
+body_hash: 'sha256:c3df6d1048b25185621e8ae4443d592b3c6c1cd67f4ea9c4acc407cc8bb9ccf7'
 related: []
 ---
 
@@ -20,8 +20,8 @@ The user-facing no-active-profile remediation now uses `tr("adapters.google.prof
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_profile_binding.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed with 6 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_profile_binding.py src/aeat/adapters/outbound/google/test_profile_binding.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed.
+- the focused test run passed with 6 tests.
+- the focused test run passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Source scan found no storage repository constructors, provider selection, SQL route setup, naked environment reads, settings bypass, or direct local file read/write calls in `_profile_binding.py`.
 
@@ -36,4 +36,4 @@ Resolution: the missing `create_profile` leaf now exists under `adapters.google.
 Validation:
 
 - `uv run --no-sync -q python -m aeat.locales audit` now reports `ca.yml: ok`, `en.yml: ok`, `es.yml: ok`, and `hu.yml: ok`.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_profile_binding.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py` passed.
+- the focused test run passed.

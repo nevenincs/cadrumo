@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b0701a4fa55f509ab67724ebffef2235e8e09c8cb8e5e09be47f37b93c24c9b9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S87 Modelo 390 temporal split review`
 

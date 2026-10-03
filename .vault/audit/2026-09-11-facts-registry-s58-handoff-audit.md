@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:dac018106d00bf524f03a3eee212cf4ad77464f2bf0dabe1a76acded2caa3a55'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` audit: S58 published-authority handoff review
 

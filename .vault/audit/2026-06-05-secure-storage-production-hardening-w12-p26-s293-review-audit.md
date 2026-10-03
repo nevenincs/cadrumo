@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:ba5465983a0aae980bd4c92145d58d295dbff8891006dec97e0cc652ce160faf'
+modified: '2026-10-03'
+body_hash: 'sha256:ef7bb3fd9f767430cffcf997020d1384a6bd0acbba8d285222745f36d647e7ab'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S293-001 | PASS | Adapter registry owns master-key runtime errors
 
-`src/aeat/core/errors/registry/_adapters.py` declares the storage master-key runtime
+The retired module declared the storage master-key runtime
 errors with explicit registry rows: unavailable master key, unsupported KDF version,
 locked keychain, passphrase mismatch, missing key material, missing active bucket
 session, reentrant master-key provider entry, and master-key type mismatch. The rows
@@ -32,7 +32,7 @@ localized remediation message key used by the CLI envelope.
 ## S293-003 | PASS | Duplication search found the canonical surface
 
 Vaultspec RAG clustered the queried master-key registry terms back to
-`src/aeat/core/errors/registry/_adapters.py`, the master-key provider implementation,
+The retired module, the master-key provider implementation,
 and master-key/config routing tests. No duplicate registry table or second adapter
 master-key error-code authority was found.
 
@@ -47,8 +47,8 @@ prefix.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/errors/registry/_adapters.py src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py`
-- `uv run --no-sync pytest -q src/aeat/core/errors/test_registry.py src/aeat/core/errors/test_registry_enforcement.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_kdf_errors.py src/aeat/adapters/persistence/storage/master_key/test_dek_wrap_errors.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "storage master key keychain locked error registry locked category locale" --type code --port 8766 --max-results 8`
 - `uv run --no-sync vaultspec-rag search "MasterKeyKeychainLockedError GoogleAuthKeychainLockedError BucketLockedError ErrorCategory LOCKED" --type code --port 8766 --max-results 8`

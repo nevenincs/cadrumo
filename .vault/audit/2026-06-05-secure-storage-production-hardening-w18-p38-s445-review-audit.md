@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:c380c6be8b3dc85eff324443bed73ee654a5578bbcb8ca83eb9838f84251f4ba'
+modified: '2026-10-03'
+body_hash: 'sha256:296ab2ac80b0100df208353299dd1a3c73e6583a2737ec1b60b28c4ee603dbf3'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S445-001 | PASS | Create policy uses centralized settings
 
-Reviewed the S445 scope as `vaultspec-code-reviewer`. `src/aeat/application/modelo/_work_create_policy.py`
+Reviewed the S445 scope as `vaultspec-code-reviewer`. The retired module
 uses `load_settings()` for the M210 live-engine feature gate and does not parse raw
 environment variables or duplicate configuration defaults.
 

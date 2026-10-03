@@ -8,9 +8,9 @@ related:
   - "[[2026-07-20-release-asset-transport-audit]]"
 supersedes:
   - '2026-07-20-release-asset-transport-adr'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0cf6d81c4a78bb962276db580b62344aca1ba32a3aab918dd5ffc1cb89924775'
+body_hash: 'sha256:91d23cb841c581d7a2d6ed848ef4a51b69368f7aa362533735d9eefcd2154444'
 ---
 # `release-asset-transport` adr: `evidence and cohort transport returns to Actions artifacts` | (**status:** `accepted`)
 
@@ -185,8 +185,8 @@ locally-minted evidence release unchanged because it has no backing run, and the
 "stays a release download". A release download needs a release-download transport, so
 the download surface had a caller at the moment this record was accepted.
 
-Three modules import it and did so throughout: `dev/release/release_candidate.py`,
-`dev/release/seal_candidate.py` and `dev/release/soak_promoter.py`. Between them they
+Three modules import it and did so throughout: the former source file,
+the former source file and the former source file. Between them they
 take `download_release_assets`, `list_releases`, `resolve_gh`, `run_gh_with_retry`,
 `EvidenceLane` and `evidence_tag`.
 
@@ -204,7 +204,7 @@ in turn masked seven unrelated failures in the publish-workflow gate for as long
 break stood.
 
 The remedy keeps both decisions true. The surviving transport moved to
-`dev/release/_asset_transport.py`, beside the three consumers that need it and out of
+the former source file, beside the three consumers that need it and out of
 the packaging package, whose remaining evidence concern is the publication leak sweep.
 The retired surfaces stayed deleted, and a property gate now refuses any developer-harness
 module that can delete a release, so D4's ruling on the collector is enforced by

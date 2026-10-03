@@ -59,7 +59,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.test_runs.paths import allocate_run_directory
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
@@ -374,7 +374,7 @@ def main() -> int:
         print(render_text(dimensions, overall, full=args.full))
 
     command = tuple(sys.argv)
-    run_dir = persist(allocate_run_dir(repo_root), dimensions, overall, command=command)
+    run_dir = persist(allocate_run_dir(test_log_root()), dimensions, overall, command=command)
     if not args.json:
         print(f"\nfull report persisted to {run_dir / 'summary.json'} and {run_dir / 'summary.md'}")
 

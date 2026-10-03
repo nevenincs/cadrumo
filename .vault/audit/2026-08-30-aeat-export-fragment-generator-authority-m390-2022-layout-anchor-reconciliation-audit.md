@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d530c95e057d79eb85d03f6e3ac94f44fadf6d8e710dca2841396d7f92fc5cfa'
+body_hash: 'sha256:029f8b55f2638fcc818679bd2b3879f881fda4614f4596c35d29def9afc79767'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-16-registry-campaign-sequencing-export-layout-authoring-backlog-audit]]"
 ---
 
@@ -17,7 +16,7 @@ related:
 
 The committed Modelo 390 2022 fixed-width export layout, reconciled field-by-field against the parser anchors of the hash-pinned official design `aeat-dr-390-2022` (sha256 `7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe`).
 
-Layout read from the fourteen committed fragments under `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/export_layouts/`. Anchors read through `load_record_design_intermediate` via the census helper in `dev/registry/tests/test_m390_2022_numbered_anchor_census.py`, whose own gate is green at 537 anchors. Matching is by `(record, offset)`. No production code was modified.
+Layout read from the fourteen committed fragments under `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/export_layouts/`. Matching is by `(record, offset)`. No production code was modified.
 
 ## Findings
 

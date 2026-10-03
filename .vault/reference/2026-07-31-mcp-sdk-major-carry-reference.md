@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#mcp-sdk-major-carry'
 date: '2026-07-31'
-modified: '2026-07-31'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1c7bf7f3a1cda899005f777cf917e6f8227e5311484aec9e7350ceb15f7f22f0'
+body_hash: 'sha256:aed35cbe29e7aebf19b4348da8d1b446ed77251e43928c0cf98fed864e703b32'
 related: []
 ---
 
@@ -73,45 +73,18 @@ Confirmed via the working-tree diff, each a Python-attribute rename with the
 same semantic field:
 
 - `result.isError` to `result.is_error`
-  (`dev/packaging/installed_mcp_oracle.py`, `dev/packaging/serving_path_benchmark.py`)
 - `result.structuredContent` to `result.structured_content`
-  (`dev/packaging/installed_mcp_oracle.py`)
 - `initialized.serverInfo.name` to `initialized.server_info.name`
-  (`dev/packaging/installed_mcp_oracle.py`, three call sites)
 - `tool.inputSchema` to `tool.input_schema`
-  (`dev/packaging/verify_distribution_identity.py`,
-  `src/cadrumo/agent/eval/_live_harness.py`)
 - `params.requestedSchema` to `params.requested_schema`
-  (`src/cadrumo/agent/eval/_live_harness.py`)
 
-`dev/packaging/verify_distribution_identity.py` builds a pinned inventory
-digest from paths of the shape `<tool>:inputSchema.properties.<name>`; the
-change there keeps the `"inputSchema"` string label (the wire-shaped path
-segment) and only swaps the attribute read from `tool.inputSchema` to
-`tool.input_schema`, with an inline comment explaining why the label does
-not move. This is the one site in the diff where a naive global
-camelCase-to-snake_case rename would have silently changed a pinned digest.
+This is the one site in the diff where a naive global camelCase-to-snake_case rename would have silently changed a pinned digest.
 
-`session.read_resource` also changed its parameter type: the working-tree
-diff in `dev/packaging/installed_mcp_oracle.py` wraps the `AnyUrl` argument
-in `str(...)` before the call, where the 1.x signature accepted the `AnyUrl`
-object directly.
+
 
 ### Removed and relocated composition helpers
 
-`mcp.shared.memory.create_connected_server_and_client_session`, the pre-2.0
-helper that started a real in-process `Server` on the SDK's memory transport
-and returned an already-initialized `ClientSession`, does not exist as a
-standalone function in the installed 2.0.0 wheel. The new untracked module
-`src/cadrumo/tests/mcp_session.py` reimplements its exact contract on top of
-`mcp.client.Client` in `mode="legacy"` (its module docstring states the SDK
-still ships the underlying transport primitives,
-`mcp.client._memory.InMemoryTransport` and
-`mcp.shared.memory.create_client_server_memory_streams`, just not the
-composed helper). `src/cadrumo/tests/__init__.py` re-exports
-`connected_server_and_client_session` from that module; the packaging
-`serving_path_benchmark.py` was repointed from the removed SDK helper to
-this in-tree one in the same diff.
+`mcp.shared.memory.create_connected_server_and_client_session`, the pre-2.0 helper that started a real in-process `Server` on the SDK's memory transport and returned an already-initialized `ClientSession`, does not exist as a standalone function in the installed 2.0.0 wheel.
 
 `mcp.shared.context.RequestContext` relocated to
 `mcp.client.session.ClientRequestContext`; `_live_harness.py`'s elicitation
@@ -122,20 +95,7 @@ generic-over-`Any` parameter that no longer applies to the concrete
 
 ### File-level blast radius observed in the working tree
 
-Modified: `pyproject.toml`, `uv.lock`, `dev/packaging/installed_mcp_oracle.py`,
-`dev/packaging/serving_path_benchmark.py`,
-`dev/packaging/verify_distribution_identity.py`,
-`src/cadrumo/agent/eval/_live_harness.py`, `src/cadrumo/tests/__init__.py`,
-and twelve files under `src/cadrumo/entrypoints/mcp/tests/`
-(`test_capability_posture.py`, `test_client_handshake.py`,
-`test_corpus_tools.py`, `test_direct_dispatch_gate_composition.py`,
-`test_harness_delivery.py`, `test_identity_gate.py`, `test_meta_tools.py`,
-`test_prompts.py`, `test_sdk_adaptation.py`,
-`test_server_loop_responsiveness.py`, `test_serving_gates.py`,
-`test_toolset_activation.py`). Untracked (new): `src/cadrumo/tests/mcp_session.py`.
-`entrypoints/mcp/_server.py` itself was not yet touched at the time of this
-record; the decorator-to-constructor-callback rewrite it needs remains
-pending.
+
 
 ### What could not be verified from this position
 

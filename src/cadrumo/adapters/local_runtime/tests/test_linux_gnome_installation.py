@@ -8,11 +8,11 @@ import sys
 from collections.abc import Generator
 from importlib.resources import files
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.config import override_settings
 
 from .. import linux_gnome_installation
 from ..linux_gnome_installation import inspect_gnome_login_producer, install_gnome_login_producer
@@ -26,22 +26,18 @@ pytestmark = [
 
 
 @pytest.fixture
-def isolated_home(monkeypatch: pytest.MonkeyPatch) -> Generator[Path]:
-    # Only native home resolution is substituted. Every path/owner/permission,
-    # file read, fsync and no-replace rename uses actual native operations.
-    with TemporaryDirectory(
-        prefix=".cadrumo-gnome-install-test-", dir=linux_gnome_installation._native_home()
-    ) as scratch:
-        home = Path(scratch) / "synthetic-home"
-        home.mkdir(mode=0o700)
-        monkeypatch.setattr(linux_gnome_installation, "_native_home", lambda: home)
-        monkeypatch.setenv("HOME", str(Path(scratch) / "foreign-home"))
-        monkeypatch.setenv("XDG_DATA_HOME", str(Path(scratch) / "foreign-data"))
+def isolated_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[Path]:
+    # Every file operation uses the real no-follow/native primitives under the
+    # isolated pytest project root; ambient home/XDG values remain irrelevant.
+    home = tmp_path
+    monkeypatch.setenv("HOME", str(tmp_path / "foreign-home"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "foreign-data"))
+    with override_settings(cadrumo_local_storage_root=home / "storage"):
         yield home
 
 
 def _target(home: Path) -> Path:
-    return home / ".local/share/gnome-shell/extensions" / GNOME_LOGIN_EXTENSION_UUID
+    return home / "storage/integrations/gnome/extensions" / GNOME_LOGIN_EXTENSION_UUID
 
 
 def _resources() -> dict[str, bytes]:
@@ -53,7 +49,7 @@ def _resources() -> dict[str, bytes]:
 
 def test_inspection_absence_is_read_only_and_installation_is_exact_and_idempotent(isolated_home: Path) -> None:
     assert not inspect_gnome_login_producer()
-    assert not (isolated_home / ".local").exists()
+    assert not (isolated_home / "storage/integrations").exists()
     assert install_gnome_login_producer()
     target = _target(isolated_home)
     assert set(path.name for path in target.iterdir()) == {"extension.js", "metadata.json"}
@@ -75,8 +71,8 @@ def test_inspection_absence_is_read_only_and_installation_is_exact_and_idempoten
     }
     assert after == observations
     assert list(target.parent.iterdir()) == [target]
-    assert not (isolated_home.parent / "foreign-home").exists()
-    assert not (isolated_home.parent / "foreign-data").exists()
+    assert not (isolated_home / "foreign-home").exists()
+    assert not (isolated_home / "foreign-data").exists()
 
 
 @pytest.mark.parametrize(
@@ -117,11 +113,11 @@ def test_partial_unsafe_or_conflicting_installation_is_never_replaced(isolated_h
     assert not any(path.name.startswith("." + GNOME_LOGIN_EXTENSION_UUID) for path in target.parent.iterdir())
 
 
-@pytest.mark.parametrize("component", [".local", "share", "gnome-shell", "extensions", GNOME_LOGIN_EXTENSION_UUID])
+@pytest.mark.parametrize("component", ["integrations", "gnome", "extensions", GNOME_LOGIN_EXTENSION_UUID])
 def test_symlinked_component_refuses_without_touching_foreign_directory(isolated_home: Path, component: str) -> None:
     target = _target(isolated_home)
-    parts = (".local", "share", "gnome-shell", "extensions", GNOME_LOGIN_EXTENSION_UUID)
-    parent = isolated_home
+    parts = ("integrations", "gnome", "extensions", GNOME_LOGIN_EXTENSION_UUID)
+    parent = isolated_home / "storage"
     for part in parts:
         if part == component:
             break
@@ -140,16 +136,18 @@ def test_symlinked_component_refuses_without_touching_foreign_directory(isolated
         assert not target.exists()
 
 
-def test_writable_native_home_refuses_without_publishing(isolated_home: Path) -> None:
-    isolated_home.chmod(0o777)
+def test_writable_configured_storage_root_refuses_without_publishing(isolated_home: Path) -> None:
+    storage_root = isolated_home / "storage"
+    storage_root.mkdir(mode=0o700)
+    storage_root.chmod(0o777)
     try:
         for operation in (inspect_gnome_login_producer, install_gnome_login_producer):
             with pytest.raises(RuntimeRefusalError) as caught:
                 operation()
             assert caught.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
-        assert not (isolated_home / ".local").exists()
+        assert not (storage_root / "integrations").exists()
     finally:
-        isolated_home.chmod(0o700)
+        storage_root.chmod(0o700)
 
 
 def test_abandoned_stage_is_preserved_and_never_treated_as_success(isolated_home: Path) -> None:

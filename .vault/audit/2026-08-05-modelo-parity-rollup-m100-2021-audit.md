@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:38b6f47abb18556addcf762c83fee9792341054893f76a35475d3088ba8750fe'
+body_hash: 'sha256:6b2df0c9c53608784d2061670b82b056d3a442a15b2e98b8172d4ce2aa7e231a'
 related: []
 ---
 ## Scope
@@ -39,8 +39,8 @@ SOL approved the additive three-file write set after RAG/code grounding: the man
 ## Implementation
 
 - `src/cadrumo/_data/corpus/manual_oracles/modelo-100-2021-cuotas-integras-escala-aragon.json` records the official locator, eight expected values, formula IDs, and source boundary.
-- `src/cadrumo/domain/calculations/registry/tests/test_m100_2021_cuotas_integras_escala_aragon_manual_worked_example.py` runs the real registry scenario, checks the Aragon oracle, checks the Aragon/Madrid tariff divergence, asserts bidirectional formula wiring, and verifies live policy enrollment.
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/verification_expectations/0002-reconcile-when-present.toml` contains the additive external-grounding and reconciliation enrollment.
+- the retired test ran the real registry scenario, checks the Aragon oracle, checks the Aragon/Madrid tariff divergence, asserts bidirectional formula wiring, and verifies live policy enrollment.
+- the retired data file contained the additive external-grounding and reconciliation enrollment.
 
 ## Verification
 

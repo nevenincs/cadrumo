@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-08-03'
+modified: '2026-10-03'
 body_hash: 'sha256:2d906f8e322fddb9c1a8529b242408b771c4cf7ee57b5b0739e3efebc7139e0b'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"
-  - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'

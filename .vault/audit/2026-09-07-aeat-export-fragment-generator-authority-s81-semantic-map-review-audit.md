@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:03fe04c2c5e06eb008406cfcbe02d736f9073015beac7961f9525d004e73fdb7'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `S81 Modelo 390 2024 semantic map review`

@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:2b322f3fa06f56bc22b225be806cab7dafab597e65bcdf46846c4dc73a5af666'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S03]]'
+modified: '2026-10-03'
+body_hash: 'sha256:99854082f60c266d87ab50d75a5db1870f0ef2a9dd4a5e7028f6e4d70c33ed83'
+related: []
 ---
 
 # P01.S03 Review
@@ -22,16 +20,16 @@ sorted loader order, and the committed loader/reviewability tests pass.
 
 ## Residual Risk
 
-M100 2022, 2021, and 2020 still have oversized completeness manifests and
+M100 2022, 2021, and 2020 still have oversized completeness manifests 
 remain tracked by `P01.S04` through `P01.S06`.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_directory_mode_merges_completeness_manifest_casilla_fragments -q`
+- the historical check
   - Result: 1 passed in 0.38s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 6.92s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_tree_loads_directory_modelos -q`
+- the historical check
   - Result: 1 passed in 114.60s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_directory_source_inventory_lists_every_revision_fragment_toml -q`
+- the historical check
   - Result: 1 passed in 85.94s.

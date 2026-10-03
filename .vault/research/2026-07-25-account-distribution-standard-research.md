@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#account-distribution-standard'
 date: '2026-07-25'
-modified: '2026-08-15'
-body_hash: 'sha256:639d5d7e7ea4487da0dffd5ead5b91a31be43e784830b57093c58dbacfdf4cb3'
+modified: '2026-10-03'
+body_hash: 'sha256:61d2935cffe275b94d0ca7af38c4567565edfa1dc445670105b52bebcd37ffa0'
 related:
   - '[[2026-07-25-distribution-repo-topology-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -64,7 +64,7 @@ its run history shows every publish arriving as `workflow_dispatch` and none as
 masks its inertness.
 
 `publish.yml` is then a three-job chain: `build` (`uv build`), `smoke-test`
-(`uv run --isolated --no-project --with dist/*.whl tests/smoke_check.py` — the
+(`uv run --isolated --no-project --with dist/*.whl the former source file` — the
 built artifact is installed and executed standalone before anything is
 published), and `publish-pypi` under `environment: {name: pypi}` with
 `permissions: {id-token: write}` running `uv publish`. Authentication is OIDC

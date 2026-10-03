@@ -21,14 +21,14 @@ from ..framing import VerifiedRuntimeConnection
 from ..posix_endpoint import PosixRuntimeEndpoint
 from ..server import RuntimeTransportServer
 from ..windows import WindowsRuntimeEndpoint
+from .process_support import runtime_namespace_base
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.fixture
 def server(tmp_path: Path) -> Iterator[tuple[RuntimeTransportServer, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
-    parent = None if sys.platform == "win32" else Path("/") / "tmp"
-    with tempfile.TemporaryDirectory(prefix="cr-host-", dir=parent) as folder:
+    with tempfile.TemporaryDirectory(prefix="s-", dir=runtime_namespace_base()) as folder:
         endpoint = (
             WindowsRuntimeEndpoint(storage_root=tmp_path)
             if sys.platform == "win32"

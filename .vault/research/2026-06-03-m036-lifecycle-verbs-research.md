@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m036-lifecycle-verbs'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:ec41579c8b25cafd34820a08f59671ab77186943a27264032105f77410e2eeb9'
+modified: '2026-10-03'
+body_hash: 'sha256:6738ab76da5d6da9853aa8a4efcfa4314a1337442b8040ec212e5ede973b2047'
 related: []
 ---
 
@@ -56,7 +56,7 @@ behavioural changes). It did NOT ship CLI verbs.
 
 ### Domain foundation
 
-`src/aeat/domain/calculations/registry/_censo_modelos.py` already
+the former source file already
 defines `CensoModeloEventKind {ALTA, MODIFICACION, BAJA}`,
 `CENSO_MODELO_EVENT_KINDS = ("alta", "modificacion", "baja")`,
 `CensoModeloFoundationContract`, and the active/historical routing
@@ -98,7 +98,7 @@ The `aeat app m036 ...` top-level shape is NOT recommended —
 
 ## Backend service signatures
 
-New module `src/aeat/application/modelo/_m036_lifecycle.py`:
+New module the former source file:
 
 - `class M036DeclarationCommand(BaseModel)`: profile_id, event_kind
   (CensoModeloEventKind), declared_on (date — when operator filed
@@ -118,7 +118,7 @@ sensitivity (parallel shape to `LIVE_CENSO_SNAPSHOT_NAMESPACE`).
 
 ## New BucketEventType members
 
-Add to `src/aeat/domain/buckets/_event.py`:
+Add to the former source file:
 
 - `CENSO_DECLARATION_ALTA = "modelo.036.declaration.alta"`
 - `CENSO_DECLARATION_MODIFICACION = "modelo.036.declaration.modificacion"`
@@ -129,7 +129,7 @@ from the existing `profile.censo.refreshed/applied` mirror events.
 
 ## Service-contract test plan (5-7)
 
-Under `src/aeat/application/modelo/test_m036_lifecycle.py`:
+Under the former source file:
 
 1. `test_record_alta_persists_declaration` — round-trip through
    SecureObjectRepository, strict pydantic equality.
@@ -146,7 +146,7 @@ Under `src/aeat/application/modelo/test_m036_lifecycle.py`:
 
 ## CLI test plan (3-4)
 
-Under `src/aeat/entrypoints/cli/test_m036_lifecycle_verbs.py`:
+Under the former source file:
 
 1. `test_m036_alta_records_and_emits_event` — CliRunner end-to-end.
 2. `test_m036_modificacion_refuses_without_prior_alta` — typed
@@ -187,12 +187,9 @@ Subagent ground-truth discovery 2026-06-03 against #629
 W85.P414.S2349. Cited file:line evidence:
 - `.vault/adr/2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr.md`
   + 2026-05-16 amendment
-- `src/aeat/_data/registry/aeat/modelos/036/manifest.toml`
-- `src/aeat/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml`
-- `src/aeat/domain/calculations/registry/_censo_modelos.py`
-- `src/aeat/application/live/_censo.py`
-- `src/aeat/entrypoints/cli/_config/_profile_censo.py` (existing
+
+- the former source file (existing
   read/mirror CLI — pattern to follow)
-- `src/aeat/entrypoints/cli/_modelo.py` (mount target)
-- `src/aeat/domain/buckets/_event.py` (add 3 BucketEventType
+- the former source file (mount target)
+- the former source file (add 3 BucketEventType
   members)

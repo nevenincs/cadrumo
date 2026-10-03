@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#registry-workbook-parity-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:3ea00df0725daa4902533e044b544da7c97ab0bf5175c92e01e45d7a370fe6b9'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:e6feebf253cf8e72b89d91c0a828b4e15df257592b606fcc1ef2767f5975fecf'
+related: []
 ---
 
 # `registry-workbook-parity-boundary` audit: `workbook parity extraction boundary audit`
 
 ## Scope
 
-Audited `src/aeat/domain/calculations/registry/_workbook_parity.py` as a
+Audited the retired module as a
 large registry production module that owns workbook discovery,
 classification, conversion, runner execution, and registry-vs-workbook
 parity comparison.
@@ -29,7 +28,7 @@ parity comparison.
   comparison, backend verification, and failure-report construction.
 - The file has no local diff at audit time, so it is a reasonable
   near-term implementation target after audit closure.
-- `src/aeat/domain/calculations/registry/__init__.py` re-exports the
+- the retired module re-exports the
   public workbook-parity API. Extraction must preserve registry-root
   imports and should keep `_workbook_parity.py` as a compatibility facade
   during staged decomposition.
@@ -40,16 +39,16 @@ parity comparison.
   remain in the facade initially or move first to a small model module.
 - Scanning and classification are a cohesive family:
   `discover_workbooks`, `scan_workbook`, `_scan_xlsx_contents`,
-  `_scan_worksheet_cells`, `_classify_xlsx`, `_formula_references`, and
+  `_scan_worksheet_cells`, `_classify_xlsx`, `_formula_references`, 
   related failure-report helpers.
 - Runner/conversion is a cohesive family:
   `detect_workbook_runner`, `run_workbook_with_libreoffice`,
   `convert_binary_xls_with_libreoffice`,
-  `converted_binary_xls_with_libreoffice`, Excel COM execution, and
+  `converted_binary_xls_with_libreoffice`, Excel COM execution, 
   binary conversion context helpers.
 - Parity comparison and backend verification are a cohesive family:
   `run_registry_workbook_parity`, `compare_registry_to_workbook`,
-  `verify_workbook_backend`, `assert_workbook_scan_clean`, and
+  `verify_workbook_backend`, `assert_workbook_scan_clean`, 
   `assert_formula_workbook_runner_ready`.
 - `inventory_workbook_coverage` sits between scanning and reporting. It
   should move with scanning first unless implementation reveals tighter
@@ -58,7 +57,7 @@ parity comparison.
 ### Low
 
 - The conversion helpers use external process and platform capabilities,
-  so extraction should avoid changing timeout settings, error types, or
+  so extraction should avoid changing timeout settings, error types, 
   executable-discovery behavior.
 
 ## Recommendations

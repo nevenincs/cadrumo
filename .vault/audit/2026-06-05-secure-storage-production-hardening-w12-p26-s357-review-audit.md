@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:b5c2b066792bf1185cd4e382604b2d50fc961bf02fbb81c146bc9702d8022048'
+modified: '2026-10-03'
+body_hash: 'sha256:4862929d1766031298597080b2d0041c4de535a7c8efece350d579ffaf81e518'
 related: []
 ---
 
@@ -35,10 +35,10 @@ monkeypatches, skips, or mirrored business logic were introduced.
 
 ## S357-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_runtime_repository.py src/aeat/domain/modelos/test_runtime_repository.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_runtime_repository.py` passed with 5 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime.py -k "runtime_repository_factory_refuses_unready_runtime or runtime_repository_factory_rechecks"` passed with 6 selected tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
+- the historical check passed.
+- the historical check passed with 5 tests.
+- the historical check passed with 6 selected tests.
+- the historical check passed with 10 selected tests.
 
 Reviewer note: no critical, high, medium, or low runtime-storage findings remain for
 the S357 slice.

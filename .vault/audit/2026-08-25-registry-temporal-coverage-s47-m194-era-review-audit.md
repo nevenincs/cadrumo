@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:575ec560979a1e65341bb2118b4228c03e7257e1c65cf6dc160c3d5a82918a44'
-related:
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `S47 Modelo 194 design-era review`

@@ -14,9 +14,10 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import RuntimeOperationRequest
+from cadrumo.core.config import override_settings
 
 from ..registered_operation_contracts import RegisteredOperationProgress
-from ..registered_operation_deadlines import operation_settlement_deadline
+from ..registered_operation_deadlines import operation_settlement_deadline, provider_login_settlement_seconds
 from ..registered_operation_exchange import RegisteredOperationExchange
 from ..runtime_registered_operation import run_registered_operation
 
@@ -84,3 +85,15 @@ def test_settlement_deadline_is_offset_from_the_monotonic_clock() -> None:
 
     assert before + 60.0 <= deadline <= after + 60.0
     assert before + 5.0 <= operation_settlement_deadline(5.0, None) <= time.monotonic() + 5.0
+
+
+def test_a_live_read_outwaits_a_fresh_provider_login_before_its_own_budget() -> None:
+    """Stopping earlier disconnects the command, retiring its lease and the worker's key custody mid-login."""
+    with override_settings(cadrumo_clave_movil_timeout_ms=90_000, cadrumo_browser_navigation_timeout_ms=20_000):
+        wait = provider_login_settlement_seconds(after_login=120)
+        before = time.monotonic()
+        deadline = operation_settlement_deadline(120, wait)
+
+    # 90 s approval window, three 20 s navigations, then the read's own 120 s.
+    assert wait == 270.0
+    assert deadline - before >= 90 + 120

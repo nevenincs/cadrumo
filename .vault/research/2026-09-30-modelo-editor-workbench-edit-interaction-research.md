@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eae6f04913639c0ca83657aa255f94fd66525f887a6b8b6ca3c499f903fbf223'
+body_hash: 'sha256:b15109d0de58b538ccadf9e00df73c00926a5d0ae60fcee30163ba20142689ae'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -25,7 +25,7 @@ How I measured: the scripts ran against the published authority at the repo-root
 (`CADRUMO_AUTHORITY_ROOT` pointed there, read-only). The reproduction runs the real admission, wire translation and executor
 (`admit_modelo_edit_baseline` -> `ModeloEditApplySubmissionV1.from_submission(...).to_submission()` -> `apply_modelo_edit`)
 over real encrypted storage under the scratch directory (`isolated_runtime_profile` plus `profile_adapter_composition`, with the
-same complete synthetic profile as `src/cadrumo/entrypoints/tui/tests/modelo_workspace_session.py:54`). All values are synthetic.
+same complete synthetic profile as the former source file). All values are synthetic.
 Semantic code search (vaultspec-rag) was not used. I located code with targeted grep and full reads.
 
 ---
@@ -36,7 +36,7 @@ Semantic code search (vaultspec-rag) was not used. I located code with targeted 
 
 - The TUI has one edit surface. For every writable surface entry it composes a bare `Input` whose placeholder is `Box {casilla}` or
   `Declared input {binding}`. The input shows no label, current value, origin, type, unit or help
-  (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:181-197`, catalogue `src/cadrumo/locales/en/common.yml:1943-1946`).
+  (the former source file, catalogue `src/cadrumo/locales/en/common.yml:1943-1946`).
 - Apply sends every non-empty box as `SET_TYPED_VALUE`, with the raw string as the value (`overview.py:355-370`,
   `src/cadrumo/entrypoints/tui/modelo/lifecycle.py:129-169`). The door builds no `CLEAR_DECLARED_VALUE` and no `REMOVE_OVERRIDE`
   intent, so a user can neither clear a value nor restore a source value.
@@ -146,7 +146,7 @@ The path is: door `lifecycle.py:129` -> wire `operation_definitions.py:2196-2305
 
 - The baseline lives 5 minutes (`edit_admission.py:57`). It is admitted when the lifecycle door is built
   (`launcher.py:1035-1041`). Doors are built eagerly, one per declaration, while the declarations workbench is composed
-  (`src/cadrumo/entrypoints/tui/modelo/installed_workspace.py:131-135`, called from `launcher.py:970`). Any apply more than 5 minutes
+  (the former source file, called from `launcher.py:970`). Any apply more than 5 minutes
   after the declarations screen was built is therefore refused as `stale_edit_baseline` with coordinate `baseline_expiry`
   (reproduced: `repro_130.out`, "expired baseline").
 - The coordinates are whole-bucket digests. `work_catalogue_revision` and `calculation_catalogue_revision` hash the entire bucket
@@ -338,7 +338,7 @@ in process, before the operation, so it can name addresses. The operation refusa
 
 ##### 2.4 Staged session: state, dirty tracking and state machine
 
-TUI-local, memory only. The location is `src/cadrumo/entrypoints/tui/modelo/edit/session.py`.
+TUI-local, memory only. The location is the former source file.
 
 ```python
 @dataclass(frozen=True)
@@ -746,10 +746,8 @@ an apply.
 - `src/cadrumo/application/modelo/edit_value_grammar.py`
 - `src/cadrumo/application/modelo/m303_filing_evidence.py:74-88`
 - `src/cadrumo/domain/calculations/registry/schema_base.py:699-700`
-- `src/cadrumo/entrypoints/tui/modelo/edit/session.py`
-- `src/cadrumo/entrypoints/tui/modelo/installed_workspace.py:131-135`
+
 - `src/cadrumo/entrypoints/tui/modelo/lifecycle.py:129-169`
-- `src/cadrumo/entrypoints/tui/modelo/view/overview.py:181-197`
-- `src/cadrumo/entrypoints/tui/tests/modelo_workspace_session.py:54`
+
 - `src/cadrumo/locales/en/common.yml:1943-1946`
 - `src/cadrumo/locales/es/errors.yml:934-935`

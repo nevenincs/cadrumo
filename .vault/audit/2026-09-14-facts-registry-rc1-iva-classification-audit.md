@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5282a6f09c84f97c518ca215b1ddf351457b2c70b578565a5ab8895edd5d1b2f'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` audit: `RC1 IVA classification remediation review`
 

@@ -33,7 +33,13 @@ def _record_casilla_key_findings(
 ) -> None:
     """Record casilla key findings."""
     found.orphan_keys[locale] = tuple(
-        sorted(key for key in leaves if key not in self.dependents and not self._undeclared_revision(key))
+        sorted(
+            key
+            for key in leaves
+            if key not in self.dependents
+            and key not in self.binding_presentation_keys
+            and not self._undeclared_revision(key)
+        )
     )
     found.undeclared_revision_keys[locale] = tuple(sorted(key for key in leaves if self._undeclared_revision(key)))
     found.null_leaves[locale] = tuple(

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7e5342e662ef9bf7c644f57a4c1c3f7d38929c5fcc251f8dc44d8ff894fc41fb'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 
 # `profile-password-custody` audit: `S246 watchdog disarm review`

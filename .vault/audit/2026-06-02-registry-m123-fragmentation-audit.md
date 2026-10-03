@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-m123-fragmentation'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:ee1d681b5e1950809fd424af0d74305c40c676b2d8d2a0aa0d46e01d43b8dc00'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+related: []
 ---
 
 # `registry-m123-fragmentation` audit: `M123 directory-mode fragmentation need audit`

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f14ea159d94edd43f8171bf1208409f10f6ded7026c45bdbb1e394eba5840bda'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 # `deadline-window-revision-authority` audit: `all modelo surface parity`
 

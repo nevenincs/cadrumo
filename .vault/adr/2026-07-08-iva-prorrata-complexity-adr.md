@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#iva-prorrata-complexity'
 date: '2026-07-08'
-modified: '2026-08-15'
-body_hash: 'sha256:24e4c9f6f36bd0a010b0e501a19110fb6ba0b799fc0413b40886d1dd884db5d6'
+modified: '2026-10-03'
+body_hash: 'sha256:07f0bbb79db7b0238d1174dc560257fb7b0596f8250f8bd0fdc6a774eddc8ad2'
 related:
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-07-prorrata-especial-adr]]'
@@ -18,13 +18,13 @@ related:
 
 The LIVA art. 103.Dos.2 +10% mandatory-especial advisory
 (`build_prorrata_especial_mandatory_advisory`,
-`src/cadrumo/application/calculations/_prorrata_regularizacion.py`, W02.P03.S13) is
+the former source file, W02.P03.S13) is
 built and unit-tested but never emitted on the live Modelo 303 settlement path —
 a dormant advisory. The 2026-07-08 campaign audit found the live emit is not a
 wiring step because of two blockers. First, the comparison needs the ejercicio's
 whole-year deducible cuota total under BOTH regimes, and the live collector
 (`collect_prorrata_regularizacion_diagnostics`,
-`src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py`) holds only
+the former source file) holds only
 the declared regime's per-period `casilla_values`. Second — the audience
 problem this ADR decides — the obligation targets a filer computing under
 GENERAL prorrata, but a general-regime bucket carries no per-input
@@ -200,7 +200,7 @@ ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial
 
 **Typed reason axis.** Two new members on the
 `CalculationSourceDiagnosticReason` Literal in
-`src/cadrumo/application/aggregation/_source_mesh.py`:
+
 `"prorrata_especial_obligatoria"` and
 `"prorrata_especial_check_unavailable"`.
 
@@ -221,16 +221,16 @@ cadrumo.locales set` for all four catalogues (en/es/ca/hu), never by hand-editin
 the `.yml` files, and `test_parity` plus the translation-honesty gate must stay
 green (`aeat-locales-cli`; a locale gap already bit this campaign).
 
-**Files changed:** `src/cadrumo/application/aggregation/_iva_ledger.py` (or a new
+**Files changed:** the former source file (or a new
 sibling module) plus `src/cadrumo/application/aggregation/__init__.py` (helper +
-export), `src/cadrumo/application/aggregation/_source_mesh.py` (reason members),
-`src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py` (branch),
+export), the former source file (reason members),
+the former source file (branch),
 `src/cadrumo/entrypoints/cli/_ledger.py` locale-key default text plus
 `src/cadrumo/locales/{en,es,ca,hu}.yml` via the locales CLI, plus tests. No
 registry TOML change, no new CLI verb, no new Notice code.
 
 **Anti-dormant test shape** (in
-`src/cadrumo/application/modelo/tests/test_prorrata_regularizacion_advisory.py`
+
 or a sibling module; real repositories via `isolated_runtime_profile`,
 law-derived scenarios per the S15 oracle pattern — spreads derived from the
 art. 106 reglas, never from the substrate under test):

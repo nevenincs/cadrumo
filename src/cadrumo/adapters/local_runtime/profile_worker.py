@@ -18,6 +18,8 @@ from ...application.runtime.profile_worker import (
 )
 from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.config import Settings
+from ...core.storage_environment import storage_directory
 from ...core.time.clock import now
 from .framing import accept_runtime_handshake
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
@@ -107,7 +109,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         try:
             endpoint.listen()
             operation_endpoint.listen()
-            environment = _worker_launch_environment()
+            environment = _worker_launch_environment(storage_root=storage_root)
             environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
             product_version = version("cadrumo")
             worker_entrypoint = (
@@ -244,10 +246,19 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
 
-def _worker_launch_environment() -> dict[str, str]:
-    """Retain the sanitized platform environment for the isolated contained worker."""
-    return (
-        {key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))}
-        if sys.platform == "win32"
-        else {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
-    )
+def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
+    """Retain storage controls and bind scratch storage across the isolated worker boundary."""
+    if sys.platform == "win32":
+        environment = {
+            key: value
+            for key, value in os.environ.items()
+            if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+        }
+    else:
+        environment = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
+        storage_names = Settings.storage_env_var_names()
+        environment.update({key: value for key, value in os.environ.items() if key in storage_names})
+    temporary_root = storage_directory("CADRUMO_TEMP_DIR", "tmp", root=storage_root)
+    temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    environment.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
+    return environment

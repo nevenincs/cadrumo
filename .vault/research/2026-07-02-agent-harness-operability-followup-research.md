@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#agent-harness-operability-followup'
 date: '2026-07-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:a472361f5a2bc2a7acaf8052afacb54610c40925b7c3d5e81b1c2425ca6bc0cc'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-audit]]'
-  - '[[2026-07-02-agent-harness-refoundation-plan]]'
 ---
 
 # `agent-harness-operability-followup` research: `operability and grounding completion (deferred from refoundation close)`

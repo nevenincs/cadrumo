@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f0dc6bfd9d6d60ccce5b68bdff55caa47fc82cd9f1fc87fedcb7f6a7ff868577'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
 # `tui-architecture` audit: `S20 persistence adapter facade review`

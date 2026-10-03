@@ -10,8 +10,8 @@ related:
   - "[[2026-07-04-release-readiness-gate-adr]]"
   - "[[2026-07-20-release-asset-transport-reference]]"
 superseded_by: '2026-08-07-release-asset-transport-public-repo-artifact-return-adr'
-modified: '2026-08-07'
-body_hash: 'sha256:07cadcae0d9e41ccfb7c60fad63dc739308a61a3d4d00afc41bb5e6bd5d2a414'
+modified: '2026-10-03'
+body_hash: 'sha256:0d409d89995eaedef517d4ae7b3380d7294a22a01f32d3f6abe0af2430ace0a2'
 ---
 # `release-asset-transport` adr: `evidence and cohort transport moves from Actions artifacts to GitHub Release assets` | (**status:** `superseded`)
 
@@ -68,7 +68,7 @@ GitHub Release assets do not count against Actions storage: they are stored outs
 
 **D6 — Lifecycle and cleanup: bounded retention, promotion-preserving, dispatch-only.** Evidence drafts are retained under a keep-window policy: every draft referenced by the most recent successful promotion is kept, plus the newest three draft sets per producing workflow (operator-ruled K equals 3). Everything older is deleted by a new `evidence-gc.yml` that is `workflow_dispatch`-only — the operator ruled out a schedule trigger — running on the self-hosted Linux runner with `dry_run` defaulting to true. The GC deletes only drafts whose tag matches the reserved pattern `^evidence-(smoke|scoop|homebrew|claude)-[0-9]+$`, refuses anything else, and never touches non-draft releases, so the real `v*` releases are structurally out of its reach. The keep-set and namespace-refusal logic lives in a tested Python subcommand, not inline shell.
 
-**D7 — One evidence-row contract for local lanes and CI.** The `DistributionEvidence` schema, filenames, and the readiness reader are unchanged. The canonical row location remains a flat directory of JSON rows passed to the readiness gate via `--evidence-dir`; local lanes keep writing `var/distribution-install-readiness/`, and CI's Gate 2 aggregation fills the same-shaped directory from release assets instead of artifacts. The cohort contract stays a directory the cohort loader accepts. Transport is invisible below the gate; nothing in `dev/` learns about releases except the new manifest emit/verify/leak-sweep/gc helper, proposed home `dev/packaging/evidence_release.py`, with tests.
+**D7 — One evidence-row contract for local lanes and CI.** The `DistributionEvidence` schema, filenames, and the readiness reader are unchanged. The canonical row location remains a flat directory of JSON rows passed to the readiness gate via `--evidence-dir`; local lanes keep writing `var/distribution-install-readiness/`, and CI's Gate 2 aggregation fills the same-shaped directory from release assets instead of artifacts. The cohort contract stays a directory the cohort loader accepts. Transport is invisible below the gate; nothing in `dev/` learns about releases except the new manifest emit/verify/leak-sweep/gc helper, proposed home the former source file, with tests.
 
 **D8 — Self-evidencing final release.** Gate 3 continues to create the single `v<version>` release from the sealed cohort. Addition: it also attaches the twelve verified evidence rows and the per-lane evidence manifests to the final release — gated by the D9 publication leak sweep — so the published release is self-auditable and draft GC can never orphan the audit trail of a shipped version. Because rows are clean at birth, the bytes attached to the final release are byte-identical to the draft assets Gate 2 verified, and the draft manifests' digests remain valid for the published copies.
 

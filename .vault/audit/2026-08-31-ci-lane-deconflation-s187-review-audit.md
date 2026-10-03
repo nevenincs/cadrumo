@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:7d2d3666691accc77fa38dbe5548632106eaf5336bc81a47e1991c4603cefd42'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `Review P05 S187 invoice row materialization`

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:977cfcafd0b499786ed87227281ef7273cc82d6e298ab4af0fe2f7cf695d0087'
+modified: '2026-10-03'
+body_hash: 'sha256:e627a6f4162cbdb94c15534786a9d6b2f5cba4ccd922e505017f7ffa3a725c5f'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]"
   - "[[2026-07-01-modelo-verify-nonzero-guards-residuals-adr]]"
@@ -29,7 +29,7 @@ Constitutional caveat (must be resolved before finalizing a corpus excerpt, per 
 
 ### 1b. The bundled corpus does not carry the minimum; casilla 33's legal_refs are mis-grounded
 
-`src/aeat/_data/corpus/normatives/html/ley-27-2014-art-40.html` is the consolidated art. 40 text but stops at apartado 5; its apartado 3 ends at "pagos fraccionados efectuados correspondientes al período impositivo" with no minimum-payment paragraph. Its only INCN figure is the €6.000.000 threshold that forces the art. 40.3 modality (apartado 3, párrafo 6) — a different threshold from the €10.000.000 minimum-payment gate. grep across `src/aeat/_data/registry/aeat/legal/is.toml` finds no art-30-bis, no da-14, and no disposición-adicional entry for the mínimo.
+the former source file is the consolidated art. 40 text but stops at apartado 5; its apartado 3 ends at "pagos fraccionados efectuados correspondientes al período impositivo" with no minimum-payment paragraph. Its only INCN figure is the €6.000.000 threshold that forces the art. 40.3 modality (apartado 3, párrafo 6) — a different threshold from the €10.000.000 minimum-payment gate. grep across the former source file finds no art-30-bis, no da-14, and no disposición-adicional entry for the mínimo.
 
 Casilla 33 (`.../202/revisions/2025-y-siguientes/casillas/0049-33.toml`, byte-identical label/refs in `2019-2022/casillas/0042-33.toml` and `2023-2024/casillas/0042-33.toml`) declares legal_refs = ["ley-27-2014:art-40", "art-29", "art-30", "art-105"] — the framework mechanics, none of which establish the minimum value. Per `registry-calculation-legal-grounding` ("every regulatory value must declare the binding provision that establishes it"), casilla 33 is currently mis-grounded independently of any verify-gate decision. Grounding DA-14ª (authoring the legal-catalogue entry + consolidated-corpus excerpt, then adding it to casilla 33's legal_refs) is a standalone, low-risk correction that does not depend on the guard question.
 
@@ -41,7 +41,7 @@ Casilla 33 (`.../202/revisions/2025-y-siguientes/casillas/0049-33.toml`, byte-id
 
 The semantically-correct guard is: (INCN ≥ €10.000.000) AND (resultado positivo ajustado > 0) ⇒ casilla 33 > 0. None of the three inputs is available to the verify gate:
 
-1. The INCN is not visible to the predicate evaluator. It exists in the system as a Decimal profile fact `taxpayer.incn_prior_12_months`, delivered via the source = "profile" binding `modelo-202-2025-y-siguientes-incn-prior-12-months` (`bindings/0002-...toml`) and consumed at calculate time by `derive_modelo_202_modality`. But `_evaluate_verification_predicates` and `_evaluate_advisory_predicate_fires` (`src/aeat/application/modelo/_verification_actions.py`, signatures near lines 633 and 792) receive only casilla_values (Mapping[CasillaId, Decimal]) and text_values (Mapping[CasillaId, str]) — no binding or profile-fact channel. The €10M gate signal exists but is structurally unreachable by any predicate.
+1. The INCN is not visible to the predicate evaluator. It exists in the system as a Decimal profile fact `taxpayer.incn_prior_12_months`, delivered via the source = "profile" binding `modelo-202-2025-y-siguientes-incn-prior-12-months` (`bindings/0002-...toml`) and consumed at calculate time by `derive_modelo_202_modality`. But `_evaluate_verification_predicates` and `_evaluate_advisory_predicate_fires` (the former source file, signatures near lines 633 and 792) receive only casilla_values (Mapping[CasillaId, Decimal]) and text_values (Mapping[CasillaId, str]) — no binding or profile-fact channel. The €10M gate signal exists but is structurally unreachable by any predicate.
 2. The existing categorical operator cannot express a numeric threshold. `casilla_equals_implies_nonzero` (added by `2026-06-30-m210-categorical-conditional-predicate-adr`) gates on a text-casilla equality, not a numeric ≥ literal comparison, and the INCN is not a casilla at all. It is the wrong shape twice over.
 3. The minimum's own base is off-form. Casilla 04 (resultado contable después del Impuesto sobre Sociedades) is not the DA-14ª resultado positivo de PyG ajustado (the exclusion set in 1a is not modelled), so even with a gate the antecedent that should drive "the minimum ought to be positive" is not cleanly available.
 
@@ -49,7 +49,7 @@ The nearest naive guard `implies_nonzero(["04", "33"])` was already rejected by 
 
 ## Finding 2 — M714 base-imponible → base-liquidable: legitimate-zero population is real (mínimo exento)
 
-`patrimonio.base-liquidable` = `patrimonio.base-imponible` − mínimo exento (Ley 19/1991 art. 28: €700.000 general, autonomically variable — Comunitat Valenciana €600.000; grounded at `src/aeat/_data/registry/aeat/legal/patrimonio.toml:11` ley-19-1991:art-28). Both casillas are input_kind = "manual" with no formula linkage (`.../714/revisions/2021-y-siguientes/casillas/0001-casillas.toml:35-57`).
+`patrimonio.base-liquidable` = `patrimonio.base-imponible` − mínimo exento (Ley 19/1991 art. 28: €700.000 general, autonomically variable — Comunitat Valenciana €600.000; grounded  ley-19-1991:art-28). Both casillas are input_kind = "manual" with no formula linkage (`.../714/revisions/2021-y-siguientes/casillas/0001-casillas.toml:35-57`).
 
 A filer with base imponible > 0 but ≤ the mínimo exento legitimately has base liquidable = 0. This is not a rare edge: the M714 filing obligation (Ley 19/1991 art. 37) is triggered independently by patrimonio bruto > €2.000.000, so a taxpayer with, say, €650.000 net base but €2M+ gross assets must file with a legitimately zero base liquidable. `implies_nonzero(["patrimonio.base-imponible", "patrimonio.base-liquidable"])` would false-fire on every such filer, and the CCAA-variable mínimo exento means no fixed constant lets a guard even estimate the boundary. Recommendation: keep deferred (documented non-guard). The prerequisite to make it guardable is to model base-liquidable = max(base-imponible − mínimo_exento_CCAA, 0) as a computed formula (requires a CCAA mínimo-exento table in the registry) — after which a zero is a computed consequence and no advisory is needed (the M200 Phase-2 shape).
 

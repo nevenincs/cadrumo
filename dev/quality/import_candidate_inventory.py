@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from dev._paths import UTF_8
+
+from cadrumo.core.storage_environment import resolve_storage_path
 from dev.first_party_source import is_test_module_name
 
 from .import_check_models import Authority, ImportOccurrence
@@ -130,7 +132,7 @@ def write_candidate_artifact(repository: Path, candidate: CandidateInventory) ->
     raw_artifacts = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
     if not raw_artifacts:
         return None
-    artifacts = Path(raw_artifacts).resolve()
+    artifacts = resolve_storage_path(raw_artifacts)
     path = artifacts / "import-boundary-candidate.json"
     path.write_text(
         json.dumps(candidate, indent=2, sort_keys=True) + "\n",

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:da321f4280e86e2d20e1d9e1aac8a304fd7eefab8b1ecf444be9bc0dfb6e5b35'
+modified: '2026-10-03'
+body_hash: 'sha256:fe193a82588013eb6946d0d459816b3a6b62cd0baa23577c83fc31260b2accf5'
 related: []
 ---
 
@@ -39,8 +39,8 @@ exception text.
 
 ## S238-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/_profile_binding.py src/aeat/application/modelo/test_profile_binding.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_profile_binding.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-136` as `manifest-discovery` with API and privacy

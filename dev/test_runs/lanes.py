@@ -25,9 +25,9 @@ import time
 from dataclasses import dataclass
 from typing import IO, TYPE_CHECKING
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 
-from .paths import allocate_run_directory
+from .paths import allocate_run_directory, test_log_root
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -214,7 +214,7 @@ def _run_all(
 
 def run_lanes(
     lanes: Sequence[str],
-    repository: Path = REPO_ROOT,
+    repository: Path | None = None,
     *,
     json_events: bool = False,
     persist_evidence: bool = True,
@@ -225,7 +225,8 @@ def run_lanes(
 
     Args:
         lanes: The just recipes to run, in order.
-        repository: The checkout the run evidence is written beneath.
+        repository: Optional injected base for run evidence. Production defaults
+            to ``CADRUMO_TEST_LOG_ROOT`` under the configured storage root.
         preflight_count: Number of leading lanes that must all pass before the
             remaining lanes may run. All leading lanes run even when one fails.
         lane_kinds: Explicit machine-readable purposes for specialized lanes.
@@ -249,7 +250,7 @@ def run_lanes(
         _summarise(results)
         return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
 
-    run_root = allocate_run_directory(repository, family="lane-runs", label="lanes")
+    run_root = allocate_run_directory(repository or test_log_root(), family="lane-runs", label="lanes")
     for name in RUN_SUBDIRECTORIES:
         (run_root / name).mkdir(parents=True, exist_ok=True)
 

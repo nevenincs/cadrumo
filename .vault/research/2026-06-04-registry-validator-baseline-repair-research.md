@@ -5,9 +5,7 @@ tags:
 date: '2026-06-04'
 modified: '2026-10-03'
 body_hash: 'sha256:79c6ca87cbc122eadc0b7bce76355988b5432ba2fa704d4a35465b3e8587ec1b'
-related:
-  - "[[2026-06-04-registry-validator-baseline-repair-plan]]"
-  - "[[2026-06-04-registry-row-width-pressure-plan]]"
+related: []
 ---
 
 # `registry-validator-baseline-repair` research: `phase two research grounding`

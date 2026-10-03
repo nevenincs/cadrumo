@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:58f8629de0cca38c8f243bbe34a4d669e1f05253446cd3702cbf43d22a166b60'
+body_hash: 'sha256:64e0afea528a5f1cb11ed87d1e861438cacb33ebdb21ea252b2c140810ab9b28'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -59,10 +59,7 @@ spanned roughly 28 files. The isolation axis has not landed and is not counted
 after confirming that directory is not nested under `buckets/` or a bucket's
 `db/`.
 
-*Canonical:* `keystore_path` and `validate_keystore_separation`, both in
-`src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py:29`. The
-primitives are already correct and already reused — the duplication is the
-two-line validate-then-join **call sequence** wrapping them, not the path math.
+The primitives are already correct and already reused — the duplication is the two-line validate-then-join **call sequence** wrapping them, not the path math.
 
 *Members:* `master_key/_persisted_session.py:527` (`profile_session_path`),
 `master_key/_master_key_bucket_dek.py:27` (`bucket_dek_path`),
@@ -353,7 +350,6 @@ Recorded so a future pass does not re-litigate them:
   vault-corpus review measured 46 entries and 15 files at the SHA it checked,
   and a later burndown wave has since added more. Any number written here would
   be stale before this document's next read. The authority is `len(STORAGE_TAXONOMY)`
-  in `src/cadrumo/core/_storage_taxonomy.py`, plus the file-kind count from
   iterating each member's `node_kind`; recompute against a pinned HEAD rather
   than trusting a number in this or any other prose document.
 

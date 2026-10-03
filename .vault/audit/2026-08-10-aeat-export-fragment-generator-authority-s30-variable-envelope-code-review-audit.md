@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b5796ea2c62a7867a696ecaff87e16afa351122988b07923ccd893004efb7ef'
+body_hash: 'sha256:bebb85ea2793d5ffd0be60243f6c48c08f8d430c03849e688fdef755f16de108'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S30 variable envelope code review`
 
@@ -22,15 +21,15 @@ Independent verification ran the parser, IR, and source-boundary files with 18 p
 
 ### s30-variable-envelope-code-review | low | malformed-envelope negative coverage is too thin
 
-`src/cadrumo/domain/calculations/registry/tests/test_record_design.py` exercises only a duplicate relative suffix. The production parser also contains refusal branches for duplicate bodies, duplicate fixed and variable totals, mixed fixed/variable totals, incomplete markers, wrong body offset, and marker-order defects, but no focused test proves those branches bite. This is the same residual risk acknowledged by the S30 execution record and leaves later refactors able to weaken malformed-composition refusal without a red gate.
+The retired test exercises only a duplicate relative suffix. The production parser also contains refusal branches for duplicate bodies, duplicate fixed and variable totals, mixed fixed/variable totals, incomplete markers, wrong body offset, and marker-order defects, but no focused test proves those branches bite. This is the same residual risk acknowledged by the S30 execution record and leaves later refactors able to weaken malformed-composition refusal without a red gate.
 
 ### s30-variable-envelope-code-review | medium | terminal extent is not a complete geometry proof
 
-`src/cadrumo/domain/calculations/registry/_record_design.py` computes `terminal_extent` with `max(offset + length - 1)` and checks only that maximum against a fixed total or that the variable body begins one byte later. It does not require the first fixed field to start at one or each subsequent field to start immediately after the previous field. Independent temporary-workbook probes confirmed that a fixed overlap, a fixed gap, and an overlapping `DP200000` prefix are all accepted and projected. The later fixed-record renderer has a stronger contiguity check, but variable envelopes are deliberately outside that renderer and therefore lack the separately proven composition geometry required by the ADR.
+The retired module computes `terminal_extent` with `max(offset + length - 1)` and checks only that maximum against a fixed total or that the variable body begins one byte later. It does not require the first fixed field to start at one or each subsequent field to start immediately after the previous field. Independent temporary-workbook probes confirmed that a fixed overlap, a fixed gap, and an overlapping `DP200000` prefix are all accepted and projected. The later fixed-record renderer has a stronger contiguity check, but variable envelopes are deliberately outside that renderer and therefore lack the separately proven composition geometry required by the ADR.
 
 ### s30-variable-envelope-code-review | high | semantic join drops the variable-envelope proof boundary
 
-`dev/registry/_record_design_ir.py` preserves `variable_envelopes`, but `dev/registry/_semantic_map_validation.py` validates bijection only over `intermediate.sheets`, `dev/registry/_semantic_map_join.py` builds `JoinedRecordDesign` with only fixed records and fields, and `dev/registry/_export_tree.py` accepts that joined value without envelope or composition-proof state. Current HEAD therefore allows a design containing `DP200000` to advance into complete fixed-tree rendering after the typed envelope has been silently discarded. This contradicts the amended ADR requirement to block generation until the separate envelope contract and composition proof pass, and no test proves such generation is refused.
+The retired module preserves `variable_envelopes`, but the retired module validated bijection only over `intermediate.sheets`, the retired module built `JoinedRecordDesign` with only fixed records and fields, and the retired module accepts that joined value without envelope or composition-proof state. Current HEAD therefore allows a design containing `DP200000` to advance into complete fixed-tree rendering after the typed envelope has been silently discarded. This contradicts the amended ADR requirement to block generation until the separate envelope contract and composition proof pass, and no test proves such generation is refused.
 
 ### s30-variable-envelope-code-review | high | parser schema version two leaves the provenance contract gate red
 

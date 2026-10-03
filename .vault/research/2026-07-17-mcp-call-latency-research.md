@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcp-call-latency'
 date: '2026-07-17'
-modified: '2026-07-19'
-body_hash: 'sha256:2b1efe74e3198dd06640064e5118ff80710026e720a266d89d35c9016c70b1e7'
+modified: '2026-10-03'
+body_hash: 'sha256:a896e4c774b6f8abc440cb5aed1d4763f1adf3d9944f733096f52d11002d0b73'
 related:
   - '[[2026-07-17-mcp-service-robustness-research]]'
 ---
@@ -45,7 +45,7 @@ driver `var/perf-forensics/repro_first_touch.py`.
 `cProfile` of the first `work create`
 (`var/perf-forensics/workcreate-first-prof1.prof`, 55.8 s instrumented):
 `_load_authority` 48.98 s cumulative, of which `validate_registry` 41.21 s —
-the authority loader (`src/cadrumo/domain/calculations/registry/_authority.py`)
+the authority loader
 validates the full registry unconditionally inside its in-process
 `lru_cache`d constructor. Inside validation, `validate_source_citations` ran
 2,027 times (36.29 s) and decomposed into:
@@ -75,7 +75,7 @@ Verified with runtime-wrapped counters, no production edits
   Residual cold cost: 18.2 s PDF extraction + ~9.3 s validation proper.
 - Warm-process registry cost: unchanged 3.7 s (two follow-on processes: zero
   writes, zero extractions, byte-identical cache file).
-- R4 (`yaml.CSafeLoader` in `src/cadrumo/core/i18n/_render.py`): CLI package
+- R4 (`yaml.CSafeLoader` ): CLI package
   import module-body self time 413 ms → 52–82 ms; cumulative import 920 ms →
   ~660–750 ms median idle (`var/perf-forensics/importtime-checkout-cli-post-r4.txt`).
 - Flush-relocation caveat: after the reviewability-driven move of

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:d9c20929a5a2f38df8a78120aafa51dcce95374971990afd47e3b4d916ee2d40'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
 ---
 # `tui-architecture` audit: `S33 censal lifecycle conformance review`
 

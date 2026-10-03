@@ -6,11 +6,9 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:15d9ad961e5383f44b0af15cce4615bae919639c454e0415f40dc342e9cbe975'
+body_hash: 'sha256:99d7a3c148a465b3274d30b1ebf3bcc51c42229e6aad247cfbe41ef8c7ba31c3'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
-  - '[[2026-06-10-docs-terminology-search-ledger]]'
-  - '[[2026-06-10-docs-terminology-search-plan]]'
   - '[[2026-06-10-docs-terminology-search-research]]'
   - '[[2026-06-11-docs-terminology-search-audit]]'
   - '[[2026-06-11-docs-terminology-search-code-review-audit]]'
@@ -63,12 +61,10 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 
 ### exec
 
-- `2026-06-10-docs-terminology-search-ledger` - `docs-terminology-search` ledger
 - `2026-07-13-docs-terminology-search-ledger` - `docs-terminology-search` ledger
 
 ### plan
 
-- `2026-06-10-docs-terminology-search-plan` - `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 - `2026-07-13-docs-terminology-search-plan` - `docs-terminology-search` plan
 
 ### reference

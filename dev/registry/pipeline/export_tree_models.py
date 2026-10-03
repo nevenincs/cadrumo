@@ -71,5 +71,16 @@ class RenderedExportTree(_StrictModel):
 
     layout: ExportLayoutDefinition
     field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
-    output_files: tuple[str, ...] = Field(min_length=2)
+    output_files: tuple[str, ...] = Field(min_length=1)
     provenance_manifest: ExportFragmentProvenanceManifest
+
+    @model_validator(mode="after")
+    def _require_complete_or_exact_inherited_delta(self) -> RenderedExportTree:
+        if len(self.output_files) == 1 and (
+            self.output_files != ("0000-export-layout.toml",)
+            or self.provenance_manifest.generated_export_inheritance is None
+        ):
+            raise ValueError("one-file generated export requires the exact attested inheritance delta")
+        if len(self.output_files) > 1 and self.provenance_manifest.generated_export_inheritance is not None:
+            raise ValueError("inherited export attestation requires one canonical delta fragment")
+        return self

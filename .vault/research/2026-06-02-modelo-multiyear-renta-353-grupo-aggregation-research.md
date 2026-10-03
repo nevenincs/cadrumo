@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-multiyear-renta-353-grupo-aggregation'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:0265db9b23cf6258d86045fc761d009d749b905c6f88318d74d309d863e2b896'
+modified: '2026-10-03'
+body_hash: 'sha256:90893caaeab22ce9d76cb8694627ade6349e550c97a3f9635fbdfa9c5b5f8997'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
@@ -28,7 +28,7 @@ in-repo legal corpus rather than taken from the coordinator scratch.
 
 ### F1. The two modelos share an identical result-casilla shape
 
-Verified in `src/aeat/_data/registry/aeat/modelos/322/.../casillas/0001-casillas.toml`
+Verified
 and the matching `353` file. Both revisions (`322` → `2008-y-siguientes`,
 `353` → `2008-y-siguientes`) declare the same three computed result casillas with
 identical ids and semantic roles:
@@ -45,13 +45,12 @@ the four 303 quarters into one annual total.
 
 ### F2. 353 has NO cross-member binding today — this is the gap
 
-`src/aeat/_data/registry/aeat/modelos/353/.../bindings/0001-bindings.toml`
 declares only `source = "ledger_iva_aggregation"` bindings (repercutido by rate,
 soportado interiores, autorepercutido intracomunitaria). It models the entidad
 dominante computing its OWN aggregate from its OWN ledger. It has **zero**
 `source = "previous_filing"` bindings, so nothing pulls the member 322 results.
 The precedent it should clone — `390`'s prev-303 bindings — lives at
-`src/aeat/_data/registry/aeat/modelos/390/.../bindings/0001-bindings.toml`
+
 lines ~68-126: `modelo-390-prev-303-cuota-devengada-total` /
 `-cuota-deducible-total` / `-resultado-regimen-general`, each
 `source = "previous_filing"`, `selector = { source_modelo = "303",
@@ -60,8 +59,7 @@ filing_year_delta = 0, source_periods = [...], source_casillas = [...] }`,
 
 ### F3. The previous_filing selector has NO member/declarant axis
 
-The selector model is `_PreviousModeloSelector` in
-`src/aeat/domain/calculations/registry/_bindings.py` (around line 326). Its
+The selector model is `_PreviousModeloSelector`  (around line 326). Its
 config is `ConfigDict(strict=True, frozen=True, extra="forbid")` — so any new
 matching axis MUST be added as an explicit declared field; a TOML author cannot
 smuggle one in. Its fields are exactly: `source_modelo`, `filing_year_delta`,
@@ -99,7 +97,7 @@ observations and (b) tell the resolver to sum across them. Both the selector
 `{ fact = "row_field", row_field = "member_tax_id", grouping =
 "per_atribucion_member", record = "miembro" }`. Crucially, `per_atribucion_member`
 is a **free-form selector string**, NOT a `RowSetGroupingKind` enum value:
-`RowSetGroupingKind` (in `src/aeat/core/aggregation.py`) only declares
+`RowSetGroupingKind` () only declares
 `WITHHOLDING`, `RELATED_PARTY`, `FOREIGN_ASSET`, `ATRIBUCION`, `REFUND`. The
 `grouping` axis lives inside the typed `_AtributionSelector` and drives
 per-member row expansion via `AtributionMemberObservation` (which DOES carry
@@ -125,7 +123,7 @@ aggregate, not on any individual member 322.
 The coordinator scratch cited `ley-37-1992:art-163-sexies` /
 `-quinquies` / `-nonies` for the grupo-de-entidades régimen. Those article files
 do **not** exist in the in-repo corpus: enumerating
-`src/aeat/_data/registry/aeat/legal/iva.toml` shows the only `art-163-*` entries
+the former source file shows the only `art-163-*` entries
 are the `-octiesdecies` … `-octovicies` (REDEME / régimen-especial) cluster, not
 the grupo-de-entidades articles. The refs that DO resolve, and that the 322/353
 casillas already cite, are:

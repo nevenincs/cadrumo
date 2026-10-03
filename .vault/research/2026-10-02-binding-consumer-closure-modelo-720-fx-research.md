@@ -3,12 +3,12 @@ tags:
   - '#research'
   - '#binding-consumer-closure'
 date: '2026-10-02'
-modified: '2026-10-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:756da2a905c332597ad80dcbcaf8efd7625d629a2d803411dff59577ecc9320e'
-related:
-  - '[[2026-10-02-binding-consumer-closure-plan]]'
+body_hash: 'sha256:a548e0f7eb367d3cf5771f5b911f186542b79d7501b3915235b25c4e2484c636'
+related: []
 ---
+
 # `binding-consumer-closure` research: `Modelo 720 legally binding exchange rate`
 
 Question: which exchange rate, and at which date, turns a foreign-currency Modelo 720
@@ -87,8 +87,7 @@ BOE-A-2022-24664.
   (`src/cadrumo/adapters/outbound/fx/ecb_provider.py:134-140`, `src/cadrumo/core/money/rounding.py:43`).
 - G7 (refuses correctly): a discontinued currency yields `MISSING_RATE`.
 - G8: the live ECB answers 404 for an unknown code, mapped to `ExchangeRateProviderError`
-  (`src/cadrumo/adapters/outbound/fx/ecb_provider.py:224-231`), while the test stub answers an
-  empty 200 (`src/cadrumo/adapters/outbound/fx/tests/ecb_stub.py:52-54`).
+  (`src/cadrumo/adapters/outbound/fx/ecb_provider.py:224-231`), while the former test stub answered an empty 200.
 - G9: no real-estate euro freeze in
   `src/cadrumo/application/calculations/foreign_asset_redeclaration.py:200-203,234-249`.
 - G10: the 20.000 EUR baseline is the previous filing year (720 bindings 330-357), not "la

@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8521d50281927709bbf96e5f54bc023e8ff46d13f1a043781c52968b65c643a'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:0188e47199b85215e0d5f5c3c9c11756fcc4a5b93e5141083165f5d47217a321'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `Modelo 390 2021 casilla and filing authority`
 
 ## Summary
@@ -106,8 +106,5 @@ compatibility layout, remote submission, or any new export pathway.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md`
 - `src/cadrumo/_data/registry/aeat/legal/iva.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/`
-- `src/cadrumo/application/registry/_filing_export_coverage.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_m390_temporal_epochs.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

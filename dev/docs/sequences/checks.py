@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.tests.golden_comparison import canonicalise
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
 from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
 
@@ -450,7 +450,9 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
         SequenceEngineError: When the child cannot run the check surface
             (any exit other than 0 or 1).
     """
-    with TemporaryDirectory(prefix="cli-sequence-progress-", ignore_cleanup_errors=True) as tmp:
+    with TemporaryDirectory(
+        prefix="cli-sequence-progress-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+    ) as tmp:
         journal = Path(tmp) / "last-frame.json"
         environment = english_pinned_environment()
         environment[_PROGRESS_JOURNAL_ENV] = str(journal)
@@ -633,7 +635,9 @@ def check_page_coherence_in_subprocess(
 
 def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> SequenceTranscript:
     """Run one sequence in a disposable sandbox directory."""
-    with TemporaryDirectory(prefix="cli-sequence-", ignore_cleanup_errors=True) as tmp:
+    with TemporaryDirectory(
+        prefix="cli-sequence-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+    ) as tmp:
         return execute_sequence(sequence, sandbox_root=Path(tmp))
 
 
@@ -827,7 +831,9 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
     """Check page coherence items."""
     executable = [item for item in items if item.sequence.executed_frames]
     try:
-        with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
+        with TemporaryDirectory(
+            prefix="cli-sequence-page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+        ) as tmp:
             with _sequence_progress_scope(docname):
                 transcripts = execute_page_sequences(
                     [item.sequence for item in executable],

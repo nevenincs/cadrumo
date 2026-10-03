@@ -7,7 +7,7 @@ record_type = 'inmueble'
 order = 2
 encoding = 'iso-8859-1'
 line_ending = 'crlf'
-required = false
+required = true
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm347-2025.inmueble.f001'

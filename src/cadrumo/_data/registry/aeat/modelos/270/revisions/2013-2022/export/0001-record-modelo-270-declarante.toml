@@ -1,0 +1,378 @@
+[[revisions.2013-2022.export_layouts]]
+id = 'modelo-270-fichero-boe'
+
+[[revisions.2013-2022.export_layouts.records]]
+id = 'modelo-270-declarante'
+record_type = 'declarante'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '1'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '270'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'presenter.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-razon-social'
+offset = 18
+length = 40
+kind = 'header'
+producer_key = 'taxpayer.legal_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-tipo-soporte'
+offset = 58
+length = 1
+kind = 'literal'
+literal = 'T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-persona-contacto-telefono'
+offset = 59
+length = 9
+kind = 'casilla'
+casilla_id = 'decl.persona-contacto-telefono'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-persona-contacto-nombre'
+offset = 68
+length = 40
+kind = 'header'
+producer_key = 'contact_person.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-numero-identificativo'
+offset = 108
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.numero-identificativo'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-complementaria'
+offset = 121
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-sustitutiva'
+offset = 122
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.sustitutiva'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-numero-identificativo-anterior'
+offset = 123
+length = 13
+kind = 'casilla'
+casilla_id = 'decl.numero-identificativo-anterior'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-perceptores'
+offset = 136
+length = 9
+kind = 'casilla'
+casilla_id = 'decl.total-perceptores'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-importe-premios-component-145'
+offset = 145
+length = 15
+kind = 'casilla'
+casilla_id = 'decl.total-importe-premios'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-importe-premios-component-160'
+offset = 160
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.total-importe-premios'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-base-retencion-component-162'
+offset = 162
+length = 15
+kind = 'casilla'
+casilla_id = 'decl.total-base-retencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-base-retencion-component-177'
+offset = 177
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.total-base-retencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-retenciones-component-179'
+offset = 179
+length = 15
+kind = 'casilla'
+casilla_id = 'decl.total-retenciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-total-retenciones-component-194'
+offset = 194
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.total-retenciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[[revisions.2013-2022.export_layouts.records.fields]]
+id = 'modelo-270-decl-blancos'
+offset = 196
+length = 305
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2368-2013:art-1',
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+]
+source_refs = ['boe-dr-270-2013-2022']
+
+[revisions.2013-2022.export_layouts.records.row_field_casilla_ids]

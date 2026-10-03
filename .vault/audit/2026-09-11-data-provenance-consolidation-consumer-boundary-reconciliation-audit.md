@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#data-provenance-consolidation'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5cf6eebace7a16eda4ff6d0cd7191287299446af4f643cf62bebf7d88accf0ec'
-related:
-  - "[[2026-09-10-data-provenance-consolidation-plan]]"
+related: []
 ---
 
 # `data-provenance-consolidation` audit: `consumer boundary reconciliation`

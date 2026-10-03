@@ -41,7 +41,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temporary_directory
 from dev.packaging.command_execution import run_command
 
 from .acquire_common import venv_bin_dir
@@ -77,7 +77,7 @@ def _session_scratch_root(prefix: str) -> Path:
     fixtures write venvs and wheels measured in hundreds of megabytes, so the
     finalizer is registered at creation rather than left to the caller.
     """
-    root = Path(tempfile.mkdtemp(prefix=prefix))
+    root = Path(tempfile.mkdtemp(prefix=prefix, dir=prepare_temporary_directory()))
     atexit.register(shutil.rmtree, root, ignore_errors=True)
     return root
 

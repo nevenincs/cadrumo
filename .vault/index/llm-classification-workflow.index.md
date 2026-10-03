@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#llm-classification-workflow'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f385b672bc2d3893b699f7e49243887ac950f8013e6f3cb5a4f1a2592ce9b5ca'
+body_hash: 'sha256:cce040d7979335704ce9650acb30f2494e2566e083b3dd54dadf69260a2770d4'
 related:
   - '[[2026-06-14-llm-classification-workflow-adr]]'
   - '[[2026-06-14-llm-classification-workflow-audit]]'
-  - '[[2026-06-14-llm-classification-workflow-ledger]]'
-  - '[[2026-06-14-llm-classification-workflow-plan]]'
   - '[[2026-06-14-llm-classification-workflow-research]]'
   - '[[2026-06-15-llm-classification-workflow-adr]]'
   - '[[2026-06-15-llm-classification-workflow-audit]]'
@@ -32,14 +30,6 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 
 - `2026-06-14-llm-classification-workflow-audit` - `llm-classification-workflow` audit: `Campaign-close honesty review: split recommendation and auto-split`
 - `2026-06-15-llm-classification-workflow-audit` - `llm-classification-workflow` audit: `Campaign-close honesty review: audit-trailed reject terminal (F10)`
-
-### exec
-
-- `2026-06-14-llm-classification-workflow-ledger` - `llm-classification-workflow` ledger
-
-### plan
-
-- `2026-06-14-llm-classification-workflow-plan` - `llm-classification-workflow` plan
 
 ### research
 

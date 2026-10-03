@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#m210-irnr-phase-1'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:ced0f2441e9cf208c19dfbb905309af31baa0bd1042ec8fc975092e2035bbc97'
+modified: '2026-10-03'
+body_hash: 'sha256:2e7ec34223ad425c232b9efcdb806219d3fc0d9e2136ca7e0b201c0d03d0bec6'
 related:
   - "[[2026-06-03-m210-irnr-phase-1-research]]"
 ---
@@ -23,8 +23,8 @@ work_create-early-check interpretation per operator direction.
 
 ### Schema field
 
-`src/aeat/_data/registry/aeat/user_profile/schema.toml` lines
-360-386 already declare `representante_fiscal_nif` and
+the retired data file lines
+360-386 already declare `representante_fiscal_nif` 
 `representante_fiscal_nombre` on the `taxpayer` section with
 selectors `taxpayer.representante_fiscal_nif` etc. The
 `TaxpayerProfile` dataclass exposes them; the model validator
@@ -34,7 +34,7 @@ False` (i.e. non-EEA non-resident).
 
 ### Verification predicate
 
-`src/aeat/_data/registry/aeat/modelos/210/revisions/2025/verification_expectations/0001-verification_predicates.toml`
+the retired data file
 line 13 declares:
 
 ```
@@ -47,7 +47,7 @@ profile.representante_fiscal_nif is None".
 
 ### Predicate evaluator dispatch
 
-`src/aeat/application/modelo/_verification_actions.py` carries the
+the retired module carries the
 `_resolve_predicate_next_action` dispatcher that maps
 `m210-representante-fiscal-required` to its
 operator-facing next_action translation key
@@ -55,7 +55,7 @@ operator-facing next_action translation key
 
 ### Predicate test coverage
 
-`src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
+the retired test
 carries the full predicate truth table:
 
 - `test_representante_predicate_holds_for_eea_resident_without_representante`
@@ -81,7 +81,7 @@ gets the refusal LATE (at verify) rather than EARLY (at create).
 ## Closure interpretation
 
 The Step text "surface representante-fiscal-required refusal at
-modelo work create when fiscal_residency=NON_RESIDENT and
+modelo work create when fiscal_residency=NON_RESIDENT 
 ue_eee_status is False" is ambiguous between two readings:
 
 1. **Verify-pipeline interpretation**: ensure the predicate
@@ -93,7 +93,7 @@ ue_eee_status is False" is ambiguous between two readings:
    persisted, so the operator's mental model surfaces the
    refusal at the first opportunity. Today's create path does
    NOT do this; an early check would land at
-   `src/aeat/entrypoints/cli/_modelo_work_lifecycle_cli.py` or the
+   the retired module or the
    shared work-create policy layer.
 
 Reading 1 is more conservative; reading 2 is operator-UX
@@ -116,10 +116,10 @@ early gate is the work_create CLI verb.
 
 In-place verification pass 2026-06-03 against #627 W09.P41.S393.
 Cited file:line evidence:
-- `src/aeat/_data/registry/aeat/user_profile/schema.toml:360-386`
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/verification_expectations/0001-verification_predicates.toml:13-14`
-- `src/aeat/application/modelo/_verification_actions.py`
-- `src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
-- `src/aeat/entrypoints/cli/_modelo_work_lifecycle_cli.py` and
-  `src/aeat/application/modelo/_work_create_policy.py` (work_create
+- the retired data file
+- the retired data file
+- the retired module
+- the retired test
+- the retired module
+  the retired module (work_create
   policy sites for any early-check follow-up)

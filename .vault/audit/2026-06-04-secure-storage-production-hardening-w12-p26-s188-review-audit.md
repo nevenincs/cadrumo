@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:f90164e4c60d2ea5bd0f81c69eb8c0ecc01ef326c70a290133fef65410d8ee41'
+modified: '2026-10-03'
+body_hash: 'sha256:48d2337e3624814f8013ff13e62e7b1d6a8fb32f5e61d7a96df618f6e9314ac9'
 related: []
 ---
 
@@ -32,10 +32,10 @@ The added tests use `EphemeralMasterKeyProvider`, real SQLite engines, ORM metad
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_secure_objects.py src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py` passed with 45 tests and existing SQLAlchemy datetime-adapter warnings.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py src/aeat/locales/test_parity.py src/aeat/locales/test_locale_translation_honesty.py` passed.
+- the historical check passed with 45 tests and existing SQLAlchemy datetime-adapter warnings.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
-- `uv run --no-sync pytest -q src/aeat/locales/test_parity.py src/aeat/locales/test_locale_translation_honesty.py` passed with 18 tests.
+- the historical check passed with 18 tests.
 - The S188 hygiene scan found no env access, monkeypatches, fakes, stubs, mocks, suppressions, broad exception swallowing, or pragma shortcuts in the reviewed slice.
 
 Reviewer note: Noether review found no issues in the S188 slice. Residual risk is limited to the focused S188 file set in a broadly dirty shared worktree. Remaining plaintext diagnostic reasons yielded by `iter_records_with_failures` are typed per-row diagnostic outcomes, not thrown exceptions; they should still be revisited in a later operator-output pass if those reasons are rendered directly by CLI commands.

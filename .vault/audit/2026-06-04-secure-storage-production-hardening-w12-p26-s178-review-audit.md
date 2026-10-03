@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:cd87c6bd5210763b5c43368e3c4e00501d7323f35c04a5016c3097ca7038855b'
+modified: '2026-10-03'
+body_hash: 'sha256:87b526cf030ae79b2eb4ed0f1a93308f92aaab93fc136b5b9b66d419fcbbf400'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The focused tests assert real BIP-39 roundtrips, the canonical all-zero vector, 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_recovery.py src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py` passed with 32 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_recovery.py src/aeat/adapters/persistence/storage/master_key/test_recovery.py src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py` passed.
+- the historical check passed with 32 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Touched-surface hygiene scan found no broad exception suppressions, pragma/noqa/type-ignore suppressions, direct settings construction, naked environment access, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, or naked encoding literals.
 

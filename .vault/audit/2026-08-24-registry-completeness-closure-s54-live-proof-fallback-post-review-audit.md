@@ -3,17 +3,17 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:55c196c45e99c0630aecc01c3b27c35f25ec80cbde710cbd13643c95b18ae6b2'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:db58f46b97d698882d60a4132bc083915a3836cc87d4dc7f03f3509843b4e709'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `s54 live proof fallback post review`
 
 ## Scope
 
-Status: PASS. Independently reviewed `d125ec60ab` against the accepted closure decision, the active plan, the S54 execution record, and the S55 tracking audit. The only delivered source change is the integration regression in `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`; no production path or `.vault/` identifier was introduced into delivered source. `git diff --check d125ec60ab^ d125ec60ab` and targeted Ruff are clean. The current default marker selection deselects this integration module; an `-m integration` rerun was stopped after the 90-second shared-startup timebox without a result. The S54 record's contemporaneous focused integration run remains the recorded execution evidence, and the reviewed target surface has not changed since it landed.
+Status: PASS. Independently reviewed `d125ec60ab` against the accepted closure decision, the active plan, the S54 execution record, and the S55 tracking audit. `git diff --check d125ec60ab^ d125ec60ab` and targeted Ruff are clean. The current default marker selection deselects this integration module; an `-m integration` rerun was stopped after the 90-second shared-startup timebox without a result. The S54 record's contemporaneous focused integration run remains the recorded execution evidence, and the reviewed target surface has not changed since it landed.
 
 The review traced the complete live path: the test first admits a real encrypted connected proof through `LiveSourceConnectivityProofAuthority`, corrupts only the already-admitted in-memory entry, then invokes `compose_source_connectivity_coverage`. Composer revalidation calls `SourceConnectivityCensusEntry.validate_with_authority`, whose connected-row invariant raises Pydantic's generic `value_error` for the absent proof. `_connected_proof_failures` catches that `ValidationError`; `SourceConnectivityProofFailureCause.from_validation_error_type` converts the unknown type to `LIVE_PROOF_VALIDATION_FAILED`; and `_refused_connected_claim_limb` maps every non-digest cause to the fail-closed `missing_evidence` refusal.
 

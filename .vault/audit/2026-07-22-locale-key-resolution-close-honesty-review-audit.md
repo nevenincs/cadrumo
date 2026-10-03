@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#locale-key-resolution'
 date: '2026-07-22'
-modified: '2026-07-22'
-body_hash: 'sha256:6a0c5d70f0ac391f7bbdeb0eaa37a94d494aa80c7eb9d43634b3eec2001d73b0'
+modified: '2026-10-03'
+body_hash: 'sha256:afe0886e6632def34867329a1669191defa20de1ba7fe73239091d4902ab01a6'
 related:
   - "[[2026-07-21-locale-key-resolution-adr]]"
   - "[[2026-07-21-locale-key-resolution-research]]"
@@ -30,7 +30,7 @@ visibility on the production classifier path; two high findings remain open (S4,
 
 ### classifier-fallback-masking | critical | the campaign reduced the defect's visibility on the LLM hint path
 
-S1. `_category_hint` (`src/cadrumo/domain/transactions/_llm.py`) is pinned to
+S1. `_category_hint`  is pinned to
 `locale='es'` per the ADR, and Spanish is 0/86 authored. The classifier therefore
 receives `'Cuotas colegiales — [full_deductible] — Notes'`, where `Notes` is the
 humanize fallback of `categories.registry.cuotas_colegiales.notes`. Before the
@@ -62,7 +62,7 @@ green.
 S4. Catalogue honesty went NET NEGATIVE over the campaign: key-echo values (leaf value
 identical to its own dotted key) rose from 64 to 154 across the four catalogues,
 because scaffold inserted placeholders while the key-echo assertion that would detect
-them was never built. `src/cadrumo/tests/test_locale_translation_honesty.py` still
+them was never built. the retired test still
 loops `("ca","hu")` only and still asks only "identical to English?", never
 "identical to its own key?". Open.
 
@@ -118,5 +118,5 @@ Still open beyond this review's scope, tracked so closure cannot silently absorb
 them: 51 casillas blocked by the fragmented-locale CLI gap (M200 22, M100 29, 306
 leaf entries); the 81 AEAT citation quotes awaiting evidence sourcing with a legal
 reviewer (per the ADR's binding carve-out); the non-atomic `_write_translation_path`
-(`src/cadrumo/locales/_modelo_manager.py:529`); and M100 revisions 2020-2023 deferred
+; and M100 revisions 2020-2023 deferred
 by operator decision (6,005 casillas).

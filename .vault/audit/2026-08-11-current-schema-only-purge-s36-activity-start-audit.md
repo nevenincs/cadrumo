@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0fa79da90165319492b3c997cfc8e85834e0fb5b405ad5ff7f6dae4af209af7a'
+body_hash: 'sha256:933cfac488b796326dbcb578b92c1efdb19d14164cdb4ea51ddb983e623c2dd7'
 related:
   - "[[2026-06-13-first-filer-attestation-adr]]"
 ---
@@ -13,7 +13,7 @@ related:
 
 ## Scope
 
-Formally reviewed `W03.P07.S36` against the accepted `live-iva-compensation-wallet` and `first-filer-attestation` decisions. The audit covered the first-period predicate and lazy wallet reconciliation path in `src/cadrumo/application/modelo/_iva_wallet_gate.py`, the closed decision-reason identity in `IvaCompensationDecisionReason`, persistence through `IvaWalletDecisionRepository`, the direct real-behaviour proof in `test_iva_wallet_activity_start_advisory.py`, and the English, Spanish, Catalan, and Hungarian operator catalogues and CLI projection.
+Formally reviewed `W03.P07.S36` against the accepted `live-iva-compensation-wallet` and `first-filer-attestation` decisions. The audit covered the first-period predicate and lazy wallet reconciliation path in the retired module, the closed decision-reason identity in `IvaCompensationDecisionReason`, persistence through `IvaWalletDecisionRepository`, the direct real-behaviour proof in `test_iva_wallet_activity_start_advisory.py`, and the English, Spanish, Catalan, and Hungarian operator catalogues and CLI projection.
 
 The review specifically tested whether the advisory is narrowed to a zero grounded only by the declared activity-start fact; whether authority-backed zero decisions bypass that advisory; whether the stamped decision is created before persistence; whether an absent or invalid activity-start date still fails closed; whether the persisted reason is a closed locale-neutral identity; and whether every operator rendering resolves the identity through a locale key.
 

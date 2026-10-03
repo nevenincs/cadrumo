@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7e8ea8dcb1b5f0886162cb21cbc6aeb3bd24f2f33a38ee58f29bd68ce9a6496c'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 # `aeat-export-fragment-generator-authority` audit: `S02 typed record-design intermediate representation`
 

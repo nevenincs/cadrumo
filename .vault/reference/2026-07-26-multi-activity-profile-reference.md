@@ -3,11 +3,12 @@ tags:
   - '#reference'
   - '#multi-activity-profile'
 date: '2026-07-26'
-modified: '2026-08-03'
-body_hash: 'sha256:52f90e1b6b76c14e290a181fd54f797044210c270ab7d5ee39634688cb2f6af8'
+modified: '2026-10-03'
+body_hash: 'sha256:ef5f82e28f59dc82c0c671f2d35c7b9586e170729dcdef3c2eda1a1fc1639422'
 related:
   - "[[2026-07-26-censal-profile-autofill-campaign-close-honesty-review-audit]]"
 ---
+
 # `multi-activity-profile` reference: `What already ships for indexed profile rows, and where the declaration and the reader disagree`
 
 Code grounding for the multi-activity decision, read at `1f4cbe8284`. Sources are
@@ -23,13 +24,7 @@ nowhere else.
 
 ### The read side already ships, for one section
 
-`src/cadrumo/application/aggregation/_atribucion_member.py` is a complete
-profile-to-modelo bridge rather than merely a reader. It regex-enumerates indexed
-profile facts (`attribution_entity_socios.{index}.{field}`), groups them by row,
-checks a required-field set per row, sorts deterministically, stamps per-row
-provenance, and emits `Modelo184MemberRow` - the typed row model declared by the
-accepted `2026-05-27-multi-row-modelo-declaration-adr`. It registers as a
-calculation source resolver owning `BindingSourceKind.ATRIBUCION_MEMBER`.
+It regex-enumerates indexed profile facts (`attribution_entity_socios.{index}.{field}`), groups them by row, checks a required-field set per row, sorts deterministically, stamps per-row provenance, and emits `Modelo184MemberRow` - the typed row model declared by the accepted `2026-05-27-multi-row-modelo-declaration-adr`. It registers as a calculation source resolver owning `BindingSourceKind.ATRIBUCION_MEMBER`.
 
 So the chain *persisted indexed profile facts to indexed reader to typed modelo
 rows to calculation* exists, is accepted, and is in production for
@@ -111,12 +106,7 @@ only within its sección.
 
 ### The one indexed writer that ships is not a model for this
 
-`src/cadrumo/application/user_profile/_cotejo_apply.py` writes indexed paths, and
-its section is not repeatable - the rows sit inside an `object`-typed field of a
-non-repeatable section, addressed through a path convention the schema does not
-declare, with a hand-rolled index scan. It works for its case. Generalising it
-would put row structure outside the schema, which is the opposite of what the
-repeatable declaration exists to express.
+It works for its case. Generalising it would put row structure outside the schema, which is the opposite of what the repeatable declaration exists to express.
 
 ### Nothing writes indexed rows for a repeatable section
 

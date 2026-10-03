@@ -7,7 +7,7 @@ revision_id = "esquema-union"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "bd7e4960d45fdcce830f7c96ea98187c6ccf9fc1953bcd2f756fb48198e6ff38"
+source_state_digest = "bce744ed532d663e7701173a44b21d00632d394a01d9631d716e60dd2c547f46"
 design_sources = [
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },
 ]
@@ -889,13 +889,12 @@ blocks = [
 ]
 
 [[revisions.esquema-union.form_layouts.pages]]
-id = "modelo-369-union-envelope"
-official_ref = "modelo-369-union-envelope"
-heading_key = "modelo.schema.369.form.page.modelo-369-union-envelope.heading"
+id = "other-inputs"
+heading_key = "modelo.schema.369.form.page.other-inputs.heading"
 
 [[revisions.esquema-union.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.369.form.section.general.heading"
+id = "inputs"
+heading_key = "modelo.schema.369.form.section.inputs.heading"
 blocks = [
-    { kind = "field", id = "field", binding_id = "modelo-369-union-fichero.tipo-y-cierre" },
+    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["modelo-369-union-fichero.tipo-y-cierre"] },
 ]

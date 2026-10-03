@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#justificante-identity-matching'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cde567ea2bc917c0b0fa84e4d677a9516f6a573e52796cfefcf744c0ace0ea5a'
+body_hash: 'sha256:a0b1d54f76c5ef40f4d423de797119124ac3a5ba2a39c70c30798504e07dc33d'
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
-  - '[[2026-08-07-justificante-identity-matching-ledger]]'
-  - '[[2026-08-07-justificante-identity-matching-plan]]'
   - '[[2026-08-07-justificante-identity-matching-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#justificante-identity-matchi
 ### adr
 
 - `2026-08-07-justificante-identity-matching-adr` - `justificante-identity-matching` adr: `Justificante presentation_id namespace correction` | (**status:** `accepted`)
-
-### exec
-
-- `2026-08-07-justificante-identity-matching-ledger` - `justificante-identity-matching` ledger
-
-### plan
-
-- `2026-08-07-justificante-identity-matching-plan` - `justificante-identity-matching` plan
 
 ### reference
 

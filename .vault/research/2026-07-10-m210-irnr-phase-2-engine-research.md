@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m210-irnr-phase-2-engine'
 date: '2026-07-10'
-modified: '2026-08-15'
-body_hash: 'sha256:ccda161ab914c81fba85bf51c03c321de0993db546da32f32f7a2f4167e1f755'
+modified: '2026-10-03'
+body_hash: 'sha256:4ddafb33ec300f40464488d84d1ec94d9c8a7a8be9ea24e4f9c50c838c117f8d'
 related: []
 ---
 
@@ -20,9 +20,8 @@ The binding M210 design declares `tipo_renta`, `rendimientos_integros`,
 its formula resolves one scalar `base_imponible`.  There is no M210 detail-row
 variant in `ModeloDetailRow`, no M210 ledger binding, and verification consumes
 aggregate casilla/text mappings rather than a declared renta row set.  Sources:
-`src/aeat/_data/registry/aeat/modelos/210/revisions/2025/casillas/0001-casillas.toml`,
-`src/aeat/domain/modelos/_row_models.py`, and
-`src/aeat/application/modelo/_verification_predicates.py`.
+
+the former source file, and
 
 The statutory grouping facts are genuinely row-relative.  The bundled
 consolidated Orden EHA/3316/2010 says that grouped rentas must belong to one
@@ -31,7 +30,7 @@ arising from a bien/derecho, the same bien/derecho; the payer requirement is
 waived only for unwithheld rented/sublet property using code 35; grouped rentas
 never offset each other.  It also fixes the result-dependent quarterly/annual
 grouping windows.  Source:
-`src/aeat/_data/corpus/normatives/html/orden-eha-3316-2010.html:680-685`.
+
 Those facts cannot be reconstructed honestly from the existing scalar inputs.
 
 The accepted multi-row and 353 designs give useful but non-substitutable
@@ -49,10 +48,8 @@ emits only ES-source observations and reports foreign or unresolved rows as a
 typed issue containing the transaction id and rejected jurisdiction.  M210 has
 no counterpart in `BindingSourceKind` or the 2025 registry bindings, so its
 manual base cannot receive a provenance-preserving source-scope filter.  Sources:
-`src/aeat/application/aggregation/_impatriado_income_ledger.py`,
-`src/aeat/application/aggregation/_modelo_bindings.py`,
-`src/aeat/application/modelo/_calculation_actions.py:520-681`, and
-`src/aeat/core/aggregation.py:213-272`.
+
+the former source file, and
 
 The accepted source-jurisdiction decision and S16's classifier verdict remain
 sound: a per-row classifier, not a verification predicate, retains the source
@@ -73,7 +70,7 @@ Article 13.1.h's inmobiliaria example, while Article 25.1 is a rate rule, not a
 generic source-scope rule.  The M210 aggregation ADR therefore needs a bundled,
 authoritative Article 13 source before it defines generic ledger classification;
 it must not treat Article 25.1 as that authority.  Sources:
-`src/aeat/_data/corpus/normatives/html/trlirnr-rdleg-5-2004.html#a13-1-h`,
+`the former source file#a13-1-h`,
 `#a24`, and `#a25`; see also the corpus-grounding rule
 `legal-grounding-verifies-bundled-authoritative-corpus`.
 

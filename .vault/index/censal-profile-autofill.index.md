@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#censal-profile-autofill'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c33a0f002b6252cae0da9db247a3ac7503cc0a0e3466514c5d0b4167d4a31a6c'
+body_hash: 'sha256:1843dfeb40fe88291726b043533d08fce3e89cf080fa902ad6a7d69fc6b4b66a'
 related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'
-  - '[[2026-07-25-censal-profile-autofill-ledger]]'
-  - '[[2026-07-25-censal-profile-autofill-plan]]'
   - '[[2026-07-25-censal-profile-autofill-research]]'
   - '[[2026-07-25-censal-profile-autofill-tooling-honesty-audit]]'
   - '[[2026-07-26-censal-profile-autofill-adr]]'
@@ -34,14 +32,6 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-tooling-honesty-audit` - `censal-profile-autofill` audit: `tooling honesty`
 - `2026-07-26-censal-profile-autofill-campaign-close-honesty-review-audit` - `censal-profile-autofill` audit: `campaign close honesty review`
 - `2026-07-26-censal-profile-autofill-repeatable-required-field-emission-audit` - `censal-profile-autofill` audit: `repeatable required field emission`
-
-### exec
-
-- `2026-07-25-censal-profile-autofill-ledger` - `censal-profile-autofill` ledger
-
-### plan
-
-- `2026-07-25-censal-profile-autofill-plan` - `censal-profile-autofill` plan
 
 ### research
 

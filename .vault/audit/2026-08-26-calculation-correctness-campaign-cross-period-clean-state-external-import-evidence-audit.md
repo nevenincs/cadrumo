@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-26'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:a33464395e9df018cb3f71bd9c323abbf16e739961ada8e23a1c7b7a3760f813'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 
 # `calculation-correctness-campaign` audit: `cross period clean state suite red from the external import evidence refusal`

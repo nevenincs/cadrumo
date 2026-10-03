@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:d986cb91ecd0e9646391989533a5946173fa71893802724c8ad71894d85f544e'
-related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
+related: []
 ---
 
 # `reachability-burndown` audit: `S201 certificate secret protocol withdrawal review`

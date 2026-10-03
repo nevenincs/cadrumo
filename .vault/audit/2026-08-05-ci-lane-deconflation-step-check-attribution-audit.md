@@ -6,8 +6,7 @@ date: '2026-08-05'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1cd261585712b40e63ead5570c2d49b4b9c3381b14546fb36575dfb2780c7fb3'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 # `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
 

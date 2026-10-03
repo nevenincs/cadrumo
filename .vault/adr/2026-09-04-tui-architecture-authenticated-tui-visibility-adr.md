@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-09-04'
-modified: '2026-09-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:ea9edc06d3d1105818f1400af5fb09bd6ee0a261a8c99553db3d29f7dbecdc20'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - '[[2026-08-11-tui-architecture-research]]'
 ---
 # `tui-architecture` adr: `the authenticated TUI shows the operator their own data` | (**status:** `accepted`)

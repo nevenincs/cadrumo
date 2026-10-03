@@ -7,8 +7,8 @@ related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-04-bucket-sealed-archive-research]]"
 superseded_by: '2026-08-13-sealed-archive-transport-successor-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:096d06abe0ff20ae6f8dcfa7413d6bc3ba006d5487f9916f6f9460e80fda002c'
+modified: '2026-10-03'
+body_hash: 'sha256:9e63449f36b52130def1c03a869fa46bce45cd17adc00884dcf0d84ed3634492'
 ---
 # `bucket-sealed-archive` adr: `Sealed-archive format for bucket export/import` | (**status:** `superseded`)
 
@@ -24,7 +24,7 @@ implementation Step can open.
 
 The format must satisfy four constraints. (1) The plaintext header
 `ExportArchiveHeader` (already implemented at
-`src/cadrumo/adapters/persistence/storage/bucket/_export_header.py`)
+
 sits at a known archive position so an importer can validate the
 bucket identity and manifest digest before touching the encrypted
 payload. (2) The encrypted payload carries the serialised

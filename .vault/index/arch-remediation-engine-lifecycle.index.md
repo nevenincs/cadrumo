@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#arch-remediation-engine-lifecycle'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc3c49468070e02913afa8b30fbef00283b00a8ccf5f79da86620670d3744e60'
+body_hash: 'sha256:e135b6a99791c9a522e62758b72a12b32f928cd8eb51599892d06e9b13c6bea3'
 related:
   - '[[2026-07-02-arch-remediation-engine-lifecycle-adr]]'
-  - '[[2026-07-02-arch-remediation-engine-lifecycle-ledger]]'
-  - '[[2026-07-02-arch-remediation-engine-lifecycle-plan]]'
   - '[[2026-07-04-arch-remediation-engine-lifecycle-audit]]'
   - '[[2026-07-06-arch-remediation-engine-lifecycle-research]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#arch-remediation-engine-life
 ### audit
 
 - `2026-07-04-arch-remediation-engine-lifecycle-audit` - `arch-remediation-engine-lifecycle` audit: `campaign close honesty review`
-
-### exec
-
-- `2026-07-02-arch-remediation-engine-lifecycle-ledger` - `arch-remediation-engine-lifecycle` ledger
-
-### plan
-
-- `2026-07-02-arch-remediation-engine-lifecycle-plan` - `arch-remediation-engine-lifecycle` plan
 
 ### research
 

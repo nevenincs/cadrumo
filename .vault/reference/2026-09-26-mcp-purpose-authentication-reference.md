@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:baa6f9695e6ebae8674b7e42375082796b355b66733ef6637615789cb1fd4f84'
+body_hash: 'sha256:414b97569ee63496ae5081f593f4e0338025f37603b323a9c2fe88ee17ec0928'
 related: []
 ---
 # mcp-purpose-authentication reference: current authentication and process boundaries
@@ -28,13 +28,9 @@ The shared admission sequence reuses a bound session, resumes a receipt, then as
 
 The application already defines OperationSupervisor for durable execution, owner leases, interactions, reconciliation and settlement. OperationComposedServices and compose_operation_services expose the public submission, observation, result, response, cancellation and detach doors. OperationRegistry owns registered definition contracts; these are distinct from the recovery-action catalogue. Evidence: `src/cadrumo/application/operations/supervisor.py:108`, `src/cadrumo/application/operations/composition.py`, `src/cadrumo/application/operations/registry.py`.
 
-The production TUI OperationController submits and observes through those services and separately binds actor response authority. Observing an operation does not recover its apply/reject bearer. Evidence: `src/cadrumo/entrypoints/tui/operations/controller.py:48`. The persistence adapters already own journal, lease, secure-reference and financial-operand custody implementations under `src/cadrumo/adapters/persistence/operations/`. Generic operation metadata and canonical encrypted domain records have different retention contracts. A future local service can host these application services; source presence does not prove every existing executor is resumable or service-safe.
-
 The accepted 2026-08-11-tui-architecture-adr owns this operation platform. Its later amendments replace package facades with direct defining-module imports, retire code-resident governance receipts, and restrict CLI TUI launch to the opaque `aeat app tui` child process. Its canonical roll-up plan owns unfinished platform migration. This feature must distinguish new authentication integration from that existing work.
 
 ### CLI and TUI have concrete credential and session seams
-
-The installed TUI composes the shared profile-session admission service and its own credential screens; login, sign-out, handover and expiry are application outcomes around a fresh profile-inventory loop. Evidence: `src/cadrumo/entrypoints/tui/installed_session.py`, `src/cadrumo/entrypoints/tui/secret/login.py`. It is not a CLI command browser.
 
 The CLI custody command declarations reside in `src/cadrumo/entrypoints/cli/config/_custody_command_specs.py`, joined by `command_specs.py`. `src/cadrumo/entrypoints/cli/config/secure_input.py` owns explicit bounded strict-JSON stdin/descriptor input, conflict-before-read selection, one-shot descriptor closure and no-echo interactive prompts. Windows inherited handle-to-descriptor mapping is explicitly different from POSIX descriptor inheritance. These channels accept credential inputs, not general secret-bearing output; safe API-key delivery is new work.
 
@@ -42,25 +38,15 @@ These source seams provide no reviewed API-key enrollment/list/rotate/revoke or 
 
 ### The current MCP identity gate is an observation flag
 
-SessionIdentityState records only whether an identity read happened. It stores no authenticated principal, immutable target, grant, deadline or revocation generation. A local read may proceed without that observation; mutation and AEAT-reaching calls generally require it. Known identity-changing commands rearm it. This is useful historical intent, but is not a credential or a complete cross-process binding. Evidence: `src/cadrumo_harness/mcp/identity_gate.py:99`, 134; construction in `src/cadrumo_harness/mcp/server.py:798`.
-
 Application session publication is explicitly process-wide, with one unlocked profile per process. Target comparison is distinct from mere session presence, and the key accessor checks expiry. A service serving several profiles cannot adopt ambient process state as its routing authority. Evidence: `src/cadrumo/adapters/persistence/storage/master_key/active_session.py:95`, 117, 212.
 
 Logout closes the current process binding, revokes selected profile acceleration and clears the durable active selector. This code does not establish a service-wide registry of separately revocable agent grants. Evidence: `src/cadrumo/application/user_profile/login_session.py:409`.
 
 ### The MCP secret bootstrap conflicts with the desired custody boundary
 
-The launcher option --profile-secrets-file accepts a file containing a passphrase. The reader unlinks it, resumes the ambient profile, retains the passphrase in module globals and serializes it onto later CLI stdin. Unlinking a plaintext file does not make its creation compliant with the secure-storage-only rule; the retained Python string is also not proof of erasure. Evidence: `src/cadrumo_harness/mcp/main.py:111`; `src/cadrumo_harness/mcp/_profile_secret_channel.py:1`. This is a replacement requirement, not a recommended enrollment mechanism.
-
 ### Process provenance differs from older warm-runtime descriptions
 
 The installed entrypoint is cadrumo-mcp; serving uses the Python MCP SDK and stdio. `pyproject.toml:33` currently declares mcp>=2,<3, so older v1 advice is historical. `src/cadrumo_harness/mcp/server.py:1300` constructs one server and anchors it to the stdio client.
-
-Despite its name and stale warm-runtime prose, run_cli_in_process launches the installed CLI through run_captured. Thus a historical ADR or an inprocess telemetry label cannot prove execution was in the MCP process. Evidence: `src/cadrumo_harness/mcp/inprocess.py:125`; `src/cadrumo_harness/mcp/call_runtime.py:369`. The surrounding transport still has a thread timeout whose own documentation permits later background completion: `src/cadrumo_harness/mcp/_transport.py:452`. This source review did not exercise timeout outcomes.
-
-The stdio watchdog uses Windows pipe-owner/ancestor process handles and POSIX ancestor observations, with bounded pre-exit hooks. It protects a client-owned adapter lifetime; it is not authentication and is not the lifecycle owner a persistent service needs. Evidence: `src/cadrumo_harness/mcp/_stdio_lifetime.py:1`, 156.
-
-The MCP subprocess runner uses taskkill /T on Windows and process-group termination on POSIX; its Windows fallback can kill only the immediate child. Separately, custody contains supervised KDF process controls and Windows Job support. Neither source presence nor July audit completion proves current cross-platform containment. Evidence: `src/cadrumo_harness/mcp/call_runtime.py:133`; `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py:21`, 156.
 
 ### Published public authority is separate from private persistence
 
@@ -249,8 +235,6 @@ CLI `--profile-credential-ref UUID` is an alternative secure source only with `-
 Before the pending modelo rename/discard migration, traversing live `COMMAND_GRAPH` executable nodes and `_profile_authentication_gate._RUNTIME_PROFILE_KEYS` yields 322 executable commands: 25 runtime-bound, 2 runtime self-authenticating, 241 process-local resume fallbacks, 4 other self-authenticating, and 50 profile-free. The largest fallback families are ledger (82), modelo (71), and live (32). These are discovery observations, not fixed acceptance counts. The migration's next exact frontier is the two registered modelo metadata mutations plus their worker-owned selector read; the ambient catalogue selector and default actor must not bypass the bound profile.
 
 `entrypoints/tui/runtime_management.py::RuntimeManagementScreen` consumes `inspect_installed_runtime_management` through an injected asynchronous reader off the UI thread. It projects listener, manager availability/kind, provisioning, exact binding, login autostart and process state independently. Refresh reserves busy state before scheduling and checks screen liveness before touching widgets. Root app palette access is profile-free; login/restricted-shell entry points are owned by the requester integration.
-
-`adapters/local_runtime/service_definitions.py::linux_user_service` sends initial TERM only to the main process with `KillMode=mixed`, retains final group containment and allows 25 seconds for the runtime's bounded drain. `tests/test_linux_manager_stop_native.py` provisions an exact isolated synthetic disabled unit, exercises `LinuxUserManager` through an independent helper and removes only verified fixture artifacts. It does not provision the installed Cadrumo service.
 
 Registered modelo metadata now lives in `application/modelo/metadata_read_operation.py`, with strict projection in `metadata_projection.py` and canonical public period value in `application/operations/public_period.py`. The reader resolves exact/short/natural selectors inside immutable profile custody and derives period authority from the persisted unit. Rename request schema 2 binds observed name/time; rename/discard result schema 2 return the writer's committed WorkUnit snapshot. The CLI adapter consumes those registered contracts rather than reopening local profile custody. Public wire snapshots round-trip through canonical WorkUnit validation.
 
@@ -1239,7 +1223,7 @@ Actual 20261002T023536.524503Z-pytest-24908-722346b4: 29 focused query cases pas
 
 The latest full import retry 20261002T033103.226389Z-check-import-boundaries-57596-d5801363 fails with exit 7: 3388 production modules load, but a parallel harness-test import of dev.registry.pipeline.authority_publication breaks two contracts and four source inputs changed during execution. A reviewed scratch repair moves publication into a repository pytest fixture, retaining two real artifact publications and 29 assertions; shared-file ownership coordination is pending before application. Fourteen directly affected examples and two additional baseline-warning examples were canonically regenerated and reviewed; owning-page checks are in progress. Unit/native-source proof does not establish installed stdio, native desktop logout, complete custody release or full CLI/TUI/MCP recovery/parity. Plan remains 9/20, next S10; S11, S17, S19, S20 and Phase 3 remain open. No taxpayer access, live AEAT, commit, push or external publication by this session.
 
-Defining code: src/cadrumo/application/modelo/query_read_operation.py and src/cadrumo/application/modelo/mcp_query_operation.py; src/cadrumo/entrypoints/cli/runtime_modelo_query_read.py; src/cadrumo/adapters/local_runtime/linux_login.py; src/cadrumo/entrypoints/runtime/main.py; src/cadrumo/adapters/local_runtime/windows_manager.py. Receipts: .tmp/mcp-login-manager-repairs-statics-20261002T031235Z.json; .tmp/mcp-query-generation-tests-20261002T023532Z.json; .tmp/mcp-login-manager-repairs-tests-20261002T031318Z.json; .tmp/mcp-query-generation-schema-20261002T023343Z.json; .tmp/mcp-query-generation-import.json.
+Defining code: src/cadrumo/application/modelo/query_read_operation.py and src/cadrumo/application/modelo/mcp_query_operation.py; src/cadrumo/entrypoints/cli/runtime_modelo_query_read.py; src/cadrumo/adapters/local_runtime/linux_login.py; src/cadrumo/entrypoints/runtime/main.py. Receipts: .tmp/mcp-login-manager-repairs-statics-20261002T031235Z.json; .tmp/mcp-query-generation-tests-20261002T023532Z.json; .tmp/mcp-login-manager-repairs-tests-20261002T031318Z.json; .tmp/mcp-query-generation-schema-20261002T023343Z.json; .tmp/mcp-query-generation-import.json.
 
 ### S17 registered projection publication provenance repair, 2026-10-02
 

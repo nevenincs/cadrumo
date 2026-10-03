@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b6a6f4ad5b6f11b08120ef0265a3d766a0f8f9b2bf088b829d3b7ba85110c589'
+body_hash: 'sha256:891208d130721e2c4cb0deb65b9c53801ef32c5b5bf75b51f1ca4472bf03594d'
 related:
   - "[[2026-10-02-registry-health-repair-plan]]"
 ---
@@ -29,7 +29,6 @@ related:
 - `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
 - `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/verification_predicates/0001-declarations.toml`
 - `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
-- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/verification_predicates/0001-declarations.toml`
 - `S01` `verify:` `canonical 303 migration equivalence and minimality` -> `pass`
 - `S01` `verify:` `canonical installed source second conversion idempotence` -> `pass`
 - `S01` `verify:` `canonical discovery all live modelo minimality assessment` -> `pass`
@@ -164,10 +163,8 @@ related:
 - `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/0000-export-layout.toml`
 - `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/0001-record-modelo-216-page-01.toml`
 - `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/form_layouts/0001-complete-edition.toml`
-- `S13` `D` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export_layouts/0001-declarations.toml`
 - `S13` `verify:` `pipeline check 216 2024-y-siguientes aeat-dr-216-2024 2026 1T` -> `pass`
 - `S13` `verify:` `pipeline publish-target 216 2024-y-siguientes aeat-dr-216-2024 2026 1T` -> `pass`
-- `S13` `D` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/form_layouts/0001-form-layout.toml`
 - `S07` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
 - `S07` `verify:` `fresh target-current 115 2019-y-siguientes 2022 1T` -> `pass`
 - `S07` `verify:` `fresh target-current 117 2019-y-siguientes 2022 1T` -> `pass`
@@ -259,8 +256,6 @@ related:
 - `S08` `verify:` `270 both epochs full source render and supersession guard` -> `pass`
 - `S08` `verify:` `bootstrap data-file formatting` -> `pass`
 - `S18` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
-- `S18` `A` `src/cadrumo/application/filing/record_context_validation.py`
-- `S18` `M` `src/cadrumo/application/filing/_record_field_renderer.py`
 - `S18` `A` `src/cadrumo/application/filing/tests/test_m280_negative_imputation_context.py`
 - `S18` `verify:` `actual M280 application renderer and context guard focused 5 tests` -> `pass`
 - `S18` `verify:` `source owner Ruff format and ty focused touched production paths` -> `pass`
@@ -281,6 +276,79 @@ related:
 - `S18` `verify:` `source owner scoped Ruff format ty and whitespace gates for blank amount fix` -> `pass`
 - `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/export/0000-export-layout.toml`
 - `S01` `verify:` `fresh58modelo source fieldminimality stable inventory receipt current-field-minimality.json` -> `fail`
+- `S17` `M` `dev/registry/pipeline/render_profile_rules.py`
+- `S17` `M` `dev/registry/pipeline/tests/test_render_profile.py`
+- `S17` `M` `dev/registry/pipeline/tests/test_export_tree.py`
+- `S17` `verify:` `actual source/render profile174passed run20261003T085150.188512Z-pytest-25044-5b40f597` -> `pass`
+- `S17` `verify:` `actual profile and exterior369 regression66passed run20261003T085830.885799Z-pytest-78972-9cc7011e` -> `pass`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S18` `A` `dev/registry/pipeline/tests/test_signed_text_date_components.py`
+- `S18` `verify:` `signed components and text YYYYMMDD dates4passed run20261003T083426.087940Z-pytest-9648-6396389f` -> `pass`
+- `S18` `verify:` `independent bounded review current M280 HIGH resolved and LOW regression repaired` -> `pass`
+- `S25` `M` `dev/registry/registry_collapse_models.py`
+- `S25` `M` `dev/registry/registry_collapse_inputs.py`
+- `S25` `M` `dev/registry/registry_collapse_run.py`
+- `S25` `A` `dev/registry/tests/test_registry_collapse_input_stability.py`
+- `S25` `verify:` `fresh helper census and declared dynamic provider detector suite9passed run20261003T135246.563205Z-pytest-32960-0d8469e2` -> `pass`
+- `S25` `verify:` `dynamic provider and peer initializer detectors2passed run20261003T135323.630550Z-pytest-76236-ad9ce805` -> `pass`
+- `S25` `verify:` `existing fingerprint tests2passed run20261003T134334.497715Z-pytest-46580-03dd0b2a` -> `pass`
+- `S25` `verify:` `scoped Ruff format ty and whitespace gates for actual stability helpers` -> `pass`
+- `S25` `verify:` `independent corrective review1048paths includesall3declaredsnapshotproviders no silent missing-provider omission` -> `pass`
+- `S26` `M` `dev/registry/edition_delta_assessment_family_counts.py`
+- `S26` `A` `dev/registry/tests/test_edition_delta_family_byte_accounting.py`
+- `S26` `verify:` `uv run --no-sync pytest -q -n 0 --confcutdir=dev/registry/tests dev/registry/tests/test_edition_delta_family_byte_accounting.py` -> `pass`
+- `S26` `verify:` `independent integrated_review_sol S26 real loader aliases physical bytes scalar conservation and no keyed-field exemption` -> `pass`
+- `S26` `by:` `codex`
+- `S26` `verify:` `uv run --no-sync pytest -q -n 0 dev/registry/tests/test_edition_delta_migration_assessment.py` -> `pass`
+- `S27` `M` `dev/registry/registry_collapse_run.py`
+- `S27` `A` `dev/registry/tests/test_registry_collapse_snapshot_stability.py`
+- `S27` `verify:` `uv run --no-sync pytest -q -n 0 --confcutdir=dev/registry/tests dev/registry/tests/test_registry_collapse_snapshot_stability.py dev/registry/tests/test_registry_collapse_verification.py::test_scoped_verification_refuses_an_unknown_modelo` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -q -n 0 --confcutdir=dev/registry/tests dev/registry/tests/test_registry_collapse_snapshot_stability.py` -> `pass`
+- `S27` `verify:` `independent integrated_review_sol corrected snapshot and final dependency rediscovery review` -> `pass`
+- `S27` `verify:` `scoped Ruff check format ty and whitespace owner gates` -> `pass`
+- `S27` `by:` `codex`
+- `S21` `verify:` `uv run --no-sync python -m dev.corpus.sync_aeat_record_design_corpus` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -q -n 0 --confcutdir=dev/registry/tests dev/registry/tests/test_registry_collapse_verification.py -k not_real_modelo_131_snapshot_parity` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest -q -n 0 --confcutdir=dev/registry/tests dev/registry/tests/test_registry_collapse_verification.py -k "not real_modelo_131_snapshot_parity"` -> `pass`
+- `S09` `A` `.logs/audit-runs/2026-10-03/registry-health-repair/s09-export-placement-audit.json`
+- `S09` `A` `.logs/audit-runs/2026-10-03/registry-health-repair/s09-export-placement-adjudication.md`
+- `S09` `verify:` `canonical source loader and compiler-owned placement scan over 58 modelos and 160 revisions` -> `pass`
+- `S20` `verify:` `independent corrected S20 canonical frame and fail-closed second-read review` -> `pass`
+- `S20` `verify:` `owner scoped Ruff check format ty and diff checks for S20 ratchet` -> `pass`
+- `S27` `verify:` `uv run --no-sync pytest dev/registry/tests/test_registry_collapse_snapshot_stability.py -q --confcutdir=dev/registry/tests` -> `pass`
+- `S27` `verify:` `root independent final no-live-mutation completeness gate and same-size publication detector review` -> `pass`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions`
+- `S08` `verify:` `uv run --no-sync python .logs/audit-runs/2026-10-03/registry-health-repair/publication-receipt-integrity.py .logs/audit-runs/2026-10-03/registry-health-repair/publication-receipt-integrity-after-main-batch.json` -> `pass`
+- `S08` `by:` `codex`
+- `S28` `M` `dev/locales/casilla_source_inventory.py`
+- `S28` `M` `dev/locales/casilla_findings.py`
+- `S28` `M` `dev/locales/casilla_collapse_stages.py`
+- `S28` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S28` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S28` `M` `dev/locales/tests/test_binding_presentation_catalogue.py`
+- `S28` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S28` `M` `src/cadrumo/locales/es/modelo/schema/270.yml`
+- `S28` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S28` `M` `src/cadrumo/locales/en/modelo/schema/270.yml`
+- `S28` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S28` `M` `src/cadrumo/locales/ca/modelo/schema/270.yml`
+- `S28` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S28` `M` `src/cadrumo/locales/hu/modelo/schema/270.yml`
+- `S28` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S28` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S28` `M` `src/cadrumo/locales/en/modelo/schema/151.yml`
+- `S28` `M` `src/cadrumo/locales/hu/modelo/schema/151.yml`
+- `S28` `verify:` `uv run --no-sync pytest dev/locales/tests/test_modelo_casilla_catalogue.py dev/locales/tests/test_binding_presentation_catalogue.py -q --confcutdir=dev/locales/tests` -> `pass`
+- `S28` `verify:` `uv run --no-sync pytest dev/locales/tests/test_shipped_casilla_catalogue.py dev/locales/tests/test_modelo_casilla_catalogue.py::test_declared_binding_text_survives_casilla_collapse_but_unknown_binding_text_does_not dev/locales/tests/test_binding_presentation_catalogue.py::test_published_casilla_audit_retains_binding_presentation_keys -q -n 0 --confcutdir=dev/locales/tests` -> `pass`
+- `S28` `verify:` `uv run --no-sync pytest dev/locales/tests/test_binding_presentation_catalogue.py::test_published_casilla_audit_retains_binding_presentation_keys -q --confcutdir=dev/locales/tests` -> `pass`
+- `S28` `verify:` `uv run --no-sync python -m dev.locales casilla-audit --json` -> `pass`
+- `S28` `by:` `codex`
+- `S24` `M` `dev/registry/pipeline/candidate_staging.py`
+- `S24` `M` `dev/registry/pipeline/_tree_validation.py`
+- `S24` `A` `dev/registry/pipeline/generated_export_inheritance.py`
+- `S24` `A` `dev/registry/pipeline/generated_export_inheritance_model.py`
+- `S24` `A` `dev/registry/pipeline/tests/test_generated_export_inheritance.py`
+- `S10` `verify:` `read-only canonical unreferenced_binding_advisories and informational_binding_ids census against compiled_bundled_authority` -> `pass`
 
 ## Notes
 
@@ -324,3 +392,19 @@ related:
 - `S15` Source-frame contract acceptance is complete; final whole-authority adoption and unchanged existing generated-target currency are separate pending S10 boundaries. No capability promotion or arbitrary newest-source fallback.
 - `S18` LOW review finding repaired in current public split module. Actual focused run1passed5deselected in6.85s. Read run.json exit0 and original log; no rerun of unchanged five-test proof or invented receipt. Runtime acceptance does not claim generic adapter M280 support or live AEAT submission.
 - `S01` Measurement2026-10-03T125119Z has58discovered58assessed stable registry hash3073e417e82cbc8f9294a73228e50cba8abd33f3076881882973fc0803a23973. Fiftyseven minimal;1892025 has five redundant `export_layouts` fields equal to hydrated2024baseline. This newer diagnostic supersedes earlier all58pass measurement. Source normalization remains assigned to sole publication owner, with complete equivalence coverage secondnoop and target currency required; no waiver or live edit by root.
+- `S17` Independent reviewer verified source/render contract development complete. Root read original run.json and run.log: exit0,174callPASS and66callPASS,nofailedrows. Source-pinned complete profile and transport-choice refusals remain enforced. Named target lifecycle and retained binding-owner final authority are distinct S08/S10 boundaries; S24 structural storage change requires its own fresh detectors before final integrated acceptance. No Git commit or binding source edits.
+- `S18` Root verified original run.json exit0 and four passed call rows, no failures. These contract tests plus previously logged actual application zero/negative/missing/blank proofs establish scoped code behavior and preserve official widths and semantic types. Final source target generation and retained binding-owner runtime authority adoption remain S08/S10 work. This is not a live AEAT submission claim or generic M280 adapter parity.
+- `S25` Fixed35pathsample removed. Both boundaries independently discover non-test registry definitions and reachable local imports, including literal declared dynamic snapshot checks and parentinitializers; compare path size SHA. Changed added removed same-size and missing-provider cases have actual detector evidence. Stability and no-live-mutation semantics remain unchanged. Source publication and complete stable verifier remain open S08/S10/S24; no source or authority writes by stability owner, no finalcompaction claim.
+- `S26` Focused original receipt .logs/audit-runs/2026-10-03/registry-health-repair/s26-family-byte-accounting/run.json and run.log: exit 0, 2 passed in 4.21s. Existing assessment/family tests original receipt var/storage/development/.logs/test-runs/2026-10-03/20261003T141832.216171Z-pytest-48844-acea02b2: 23 passed. Development accounting fix only; full-inventory verification remains open under S10.
+- `S26` Correction to earlier S26 verify row: the combined `test_edition_delta_assessment.py` and `test_edition_family_delta.py` command was not run and is not acceptance evidence. The actual existing-suite receipt 20261003T141832.216171Z-pytest-48844-acea02b2 records `test_edition_delta_migration_assessment.py,` `exit_status` 0, 23 passed. The focused 2-pass accounting command remains valid.
+- `S27` Initial snapshot guard receipt s27-snapshot-stability records 7 passed. Independent review found additions-only evidence path-set evasion because final fingerprint reused the initial path list; that initial proof did not close S27. Corrected final rediscovery receipt s27-final-dependency-discovery records exit 0 and 10 passed in 4.88s, covering real `corpus/manual_corpus_text` additions, removals, same-size edits and copy guards. Root read both original receipts and independent corrective review PASS. Narrow development contract only; final settled whole-inventory rollout remains S10.
+- `S21` Fresh offline corpus owner check exit 0: 239 required official URLs and 58 manifests. The late-2026 M131 enrolled workbook and generated source pin are b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f, preserving the earlier capture. This is local identity, byte-hash and aggregate census integrity, not new live official discovery or final indexed authority adoption.
+- `S27` Actual root regression selection used pytest -k "not `real_modelo_131_snapshot_parity":` 33 passed, 1 deselected, 1 serializer warning in 26.81s, exit 0. The live M131 indexed parity case was deliberately excluded while publication writes are active and remains required in final settled verification. Console/tool evidence only; no fabricated run-directory receipt.
+- `S27` The preceding verify row spelling -k `not_real_modelo_131_snapshot_parity` was a ledger transcription error, not an executed pytest selector. This row records the actual quoted -k expression; the previous underscore spelling is superseded and must not be counted as verification. Actual result remains 33 passed and 1 deselected, exit 0.
+- `S09` Stable receipt observed at 2026-10-03T14:58:17Z: identical before/after registry fingerprint sha256:4593727caa32b87069c870a1581a37390bba0f3a51b3ba12f2497a1c841a7c49, zero load errors, 508 fixed-width records, 35460 placed spans, zero gaps and overlaps. Supported/historical/XML/no-layout categories are98/6/6/50; no no-layout row declares export capability. Eight known source-input gaps remain explicit. Binding-only row fields and retained aggregate inputs prevent treating raw `export_refs` subtraction as missing or extra official fields. Interim typed structural inspection only, not validated authority or target currency.
+- `S20` The ratchet now derives frames from registry-owned support floor/horizon and declared revision selectors, checks honest grade and exact selected revision, and asserts M1312026 early1T/2T plus late3T/4T. Only canonical ambiguous-date retry is allowed. Independent review found inherited second-read parser-error suppression; the owner changed it to an assertion with model/revision/layout/source context and reviewer confirmed resolution. Full normal-host ratchet execution remains pending with root after the publication batch and S24 code/source settle; this is scoped code review, not an executed ratchet result.
+- `S27` S27 was reopened after root found `no_live_mutation` was reported but not required by `_run_is_complete.` The corrected gate now refuses complete and `registry_rollout` when published authority changes, preserving otherwise passing source stability/readiness. Real same-size authority.current.json A-to-B fixture proves unchanged complete and changed incomplete; final persisted s27-no-live-mutation-final/run.json and run.log record exit0 and11passed in6.40s. Earlier11suite and tightened1case proofs were console-only, not invented receipt paths. Complete settled corpus invocation remains S10.
+- `S08` Stable 2026-10-03T15:44:10Z receipt confirms all43 persisted accepted target manifests, output hashes, source pins, form checks and exact bootstrap retirements. Two earlier console-only targets122/2017-y-siguientes and131/2026-late bring batch total45 but remain excluded from this receipt audit. Both repaired M180 fresh candidate checks and publications exit0 with0 stale forms. Original failed prechecks remain historical evidence. Only unsupported historical M490/2021 bootstrap remains. This checks physical recorded receipts; final regenerated target currency, S24 normalization, M390 replacement and retained-owner final authority remain pending.
+- `S28` Original scoped receipts s28-locale-tests59PASS, s28-locale-final-tests16PASS after270/303 and s28-m151-final-test1PASS prove declared binding provenance, unknown-binding refusal, both collapse passes, shared131 title and actual151 multilingual resolution. Final-after-M151 audit exit0 has empty purity families and0 unresolved Spanish. Remaining fallback occurrences ca135/en18/hu9 are recorded per source key as valid identical spellings or identifiers, not fabricated zero-count coverage. Exactly8 M270 leaves removed without resolution changes;8 M303 case-only values changed22 inherited occurrences per locale;131 sharedtitle authored all4;151 displayedlabel authored en/hu one occurrence each. Independent extended S28 reviewer PASS; no binding-source or authority writes. Runtime adoption against retained-owner final authority remains separate S10. The earlier shell ledger command failed its local-settings Git-protection probe before append; actual read-only Git checks confirm .vaultspec/.env is ignored and untracked. This canonical ledger-owner call retains the original check evidence without changing settings.
+- `S24` Independent S24 review HIGH: attested-pair staging deleted all continuity-evolution declarations and checked layouts only. M1892025 has no such directory; no live189 write occurred. Owner removed deletion, refuses evolution-bearing pairs and now compares whole hydrated baseline+child source facts; corrected detectors/review pending. Initial3PASS was before that guard and does not close S24. Final root whole58/equivalence/minimality/secondnoop/currentness remain required.
+- `S10` Current diagnostic binding-owner-current-census.json observed2026-10-03T16:21:58Z with equal registry SHA before/after and interpreting inputs stable. Actual152 unreferenced bindings:232140,3474,3693,7205; earlier179 is superseded as a count. Informational non-calculation rows remain separately visible:1301,2023,2104,7207. Authority currency is stale: recorded75ba33ce100ba17333211a397963a1a627bdade002168114dacf89d8dec8714c versus candidate7c0078417c8be66888e37e30dd07e30d8f0d377c0943d70eaa06fbda01853da0. This is read-only current scope, not final publication or whole-run acceptance. Retained binding owner still owns binding declarations/consumers and final authority despite absent prior live plan/ledger;33tui-bb findings remain excluded. No source or authority writes by root.

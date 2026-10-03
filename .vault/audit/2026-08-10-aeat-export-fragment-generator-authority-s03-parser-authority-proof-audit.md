@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:cfcbee620339e68b830634456988faa86823e72c4d2ba8b1078788acfe8d4044'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 # `aeat-export-fragment-generator-authority` audit: `S03 parser authority proof`
 

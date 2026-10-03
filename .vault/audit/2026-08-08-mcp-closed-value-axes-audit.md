@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#mcp-closed-value-axes'
 date: '2026-08-08'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:63183412f3f34e31cf8633bf05508ae5832bb89b6e49d1469f176c3c37abae81'
+body_hash: 'sha256:754325978e7bf84a3dca34ecf8e88f1c534e034281c776a7ef2259daedd46726'
 related: []
 ---
 
@@ -27,7 +27,7 @@ The CLI rule says a Typer parameter over a closed set declares that set's enum. 
 
 The MCP input schema is **derived** from the click parameter type. An option annotated `str` produces `{"type": "string"}` with no `enum`, so the agent reading the tool schema is told nothing about the accepted set and must guess. Hand-parsing the token inside the handler does not repair this: the refusal arrives *after* the guess, and the schema — the only thing the agent reads before calling — stays silent. Every site found here had exactly that shape: a `str` annotation, plus a hand-rolled parser raising a localised "must be one of" error that the schema never surfaces.
 
-The reusable point is that **the defect is invisible from the file being edited.** Nothing in the CLI module hints that a second consumer derives a contract from the annotation. `src/cadrumo/entrypoints/mcp/_input_schema.py:217` already knows this — its comment cites the architecture rule by name and unwraps Typer's `FuncParamType` to recover choices — but that knowledge lives in the schema builder, not where the annotations are written.
+The reusable point is that **the defect is invisible from the file being edited.** Nothing in the CLI module hints that a second consumer derives a contract from the annotation. the retired module already knows this — its comment cites the architecture rule by name and unwraps Typer's `FuncParamType` to recover choices — but that knowledge lives in the schema builder, not where the annotations are written.
 
 ### Measuring it: match the description against real enum value sets
 

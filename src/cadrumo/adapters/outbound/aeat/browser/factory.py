@@ -29,6 +29,7 @@ this module carries the concrete runtime wiring.
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
@@ -300,7 +301,7 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
     construction fails after Playwright starts, the partially opened runtime is
     stopped before the original failure is re-raised.
     """
-    playwright = await _start_playwright()
+    playwright = await _start_playwright(settings)
     runtime_owner = _SharedPlaywrightRuntimeOwner(playwright)
     try:
         session = BrowserSession(
@@ -386,7 +387,7 @@ async def opened_browser_page(
         )
 
 
-async def _start_playwright() -> Playwright:
+async def _start_playwright(settings: Settings | None = None) -> Playwright:
     """Start the single browser-base Playwright runtime.
 
     The single runtime chokepoint every browser session funnels through. Guard
@@ -408,6 +409,19 @@ async def _start_playwright() -> Playwright:
             ),
         ) from exc
     try:
+        from .....application.provisioning_browser import playwright_browsers_root
+        from .....core.config import load_settings
+        from .....core.storage_taxonomy import StorageCategory
+        from .....core.storage_taxonomy_locations import storage_path
+
+        resolved_settings = settings if settings is not None else load_settings()
+        browser_root = playwright_browsers_root(settings=resolved_settings)
+        temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=resolved_settings)
+        browser_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(browser_root)
+        for variable in ("TEMP", "TMP", "TMPDIR"):
+            os.environ[variable] = str(temporary_root)
         from playwright.async_api import async_playwright
 
         playwright_manager = async_playwright()

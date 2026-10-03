@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#code-dedup-sweep'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:266313fa60ac461e8cb90c60a1a2dd3ef3ddcb10872371e897228bc91c75bd16'
+body_hash: 'sha256:281473ec5664eee105435ac2fcc6ce06b3e0bfd3b3ceecadeee982b18705e0ec'
 related:
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
   - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
@@ -49,7 +49,6 @@ the standing dedup campaign already active on this feature tag.
 D1-1 claimed a dual binding-validation convention: a `-> None` raise-style function
 alongside the registered `-> list[str]` accumulator contract that
 `binding-validation-single-contract` mandates, naming four functions in
-`src/cadrumo/domain/calculations/registry/_ledger_bindings.py`
 (`validate_ledger_oss_aggregation_binding_definition`,
 `validate_ledger_iva_aggregation_binding_definition`,
 `validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition`,
@@ -64,7 +63,7 @@ unregistered, competing validation path.
 body, catches the raise, and returns the accumulated diagnostics as the `list[str]`
 contract requires. Each of those five wrapping functions is itself the one entry
 registered in `_BINDING_VALIDATOR_REGISTRY` for its `BindingSourceKind`
-(`src/cadrumo/domain/calculations/registry/_bindings.py:992`), confirmed by the
+, confirmed by the
 registry's own comment at line 286: "source family registers exactly one in
 `_BINDING_VALIDATOR_REGISTRY`."
 

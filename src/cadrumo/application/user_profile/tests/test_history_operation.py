@@ -11,6 +11,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -42,6 +43,7 @@ from ..access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OperationAccessRequest,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -177,6 +179,87 @@ def test_history_contract_requires_all_periods_and_exact_result_destination() ->
             ),
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def _history_context(
+    action: AccessAction,
+    *,
+    destination_id: UUID,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+    admitted: OperationAccessRequest | None = None,
+    authority: PinnedAuthorityOperation | None = None,
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=destination_id,
+        action=action,
+        frontend=frontend,
+        contract=_registry().lookup_public_contract(PROFILE_HISTORY_OPERATION_DEFINITION_ID),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted,
+        authority_operation=authority,
+    )
+
+
+@pytest.mark.parametrize(
+    "action", [AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.CANCEL, AccessAction.DETACH]
+)
+def test_history_replay_from_a_fresh_process_keeps_the_admitted_scope(action: AccessAction) -> None:
+    """A later session has a new destination; replay binds profile, definition and scope, not origin."""
+    admitted = resolve_profile_history_access(
+        _access_request(), _history_context(AccessAction.SUBMIT, destination_id=uuid4(), authority=_PIN)
+    ).request
+    fresh_destination = uuid4()
+
+    for frontend in OperationFrontendProjection:
+        replayed = resolve_profile_history_access(
+            _access_request(),
+            _history_context(action, destination_id=fresh_destination, frontend=frontend, admitted=admitted),
+        )
+        assert replayed.request.destination_id == fresh_destination
+        assert replayed.request.period_independent and replayed.request.action is action
+        assert all(item.destination_id == fresh_destination for item in replayed.policy.disclosures)
+
+    period_scoped = admitted.model_copy(
+        update={"periods": frozenset({Period.from_year_and_code(2026, "1T")}), "period_independent": False}
+    )
+    for foreign in (
+        admitted.model_copy(update={"profile_id": _OTHER}),
+        admitted.model_copy(update={"definition_id": "user-profile.other"}),
+        admitted.model_copy(update={"action": AccessAction.START}),
+        period_scoped,
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_profile_history_access(
+                _access_request(),
+                _history_context(action, destination_id=fresh_destination, admitted=foreign, authority=_PIN),
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME])
+def test_history_entry_actions_resolve_under_held_authority_not_the_admission(action: AccessAction) -> None:
+    period_scoped = OperationAccessRequest(
+        profile_id=_OTHER,
+        definition_id="user-profile.other",
+        action=AccessAction.SUBMIT,
+        frontend=OperationFrontendProjection.MCP,
+        periods=frozenset({Period.from_year_and_code(2026, "1T")}),
+        period_independent=False,
+        destination_id=uuid4(),
+    )
+    destination = uuid4()
+
+    fresh = resolve_profile_history_access(
+        _access_request(),
+        _history_context(action, destination_id=destination, admitted=period_scoped, authority=_PIN),
+    )
+    assert fresh.request.destination_id == destination and fresh.request.action is action
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_profile_history_access(
+            _access_request(), _history_context(action, destination_id=destination, admitted=period_scoped)
+        )
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
 @pytest.mark.parametrize("missing", [DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES, None])

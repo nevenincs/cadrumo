@@ -6,7 +6,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d2836fb925ef5a1fc73401a5278545037e938cc581e2a84df446c6abaf6d5961'
+body_hash: 'sha256:c9a529e8531211c521bf8c323d0ddf6b9bb26d050fd84467278fc453adc94271'
 related:
   - '[[2026-08-07-calculation-chain-integrity-activity-type-placement-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-adr]]'
@@ -14,9 +14,7 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-close-honesty-review-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit]]'
-  - '[[2026-08-07-calculation-chain-integrity-ledger]]'
   - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
-  - '[[2026-08-07-calculation-chain-integrity-plan]]'
 ---
 
 # `calculation-chain-integrity` feature index
@@ -36,14 +34,6 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-close-honesty-review-audit` - `calculation-chain-integrity` audit: close honesty review
 - `2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit` - `calculation-chain-integrity` audit: what is a modelled IVA settlement regimen, and what only looks like one
 - `2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit` - `calculation-chain-integrity` audit: `IVA subjection and M349 clave: two fragmented authorities`
-
-### exec
-
-- `2026-08-07-calculation-chain-integrity-ledger` - `calculation-chain-integrity` ledger
-
-### plan
-
-- `2026-08-07-calculation-chain-integrity-plan` - `calculation-chain-integrity` plan
 
 ### research
 

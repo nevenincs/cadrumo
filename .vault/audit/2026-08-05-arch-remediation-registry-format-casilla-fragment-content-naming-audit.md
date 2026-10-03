@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#arch-remediation-registry-format'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c5dd95937aaa31f705a291342bd9766608a4a8310a7acb987dd7bd8264e75cc4'
 related:
   - "[[2026-07-02-arch-remediation-registry-format-adr]]"
-  - "[[2026-07-02-arch-remediation-registry-format-plan]]"
   - "[[2026-07-03-arch-remediation-registry-format-audit]]"
 ---
 

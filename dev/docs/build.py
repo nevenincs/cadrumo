@@ -25,9 +25,10 @@ if not __package__:
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temporary_directory
 
 from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
+from .build_paths import docs_build_root, docs_html_root, pin_docs_build_root
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
 from .download_matrix import inject_download_matrix
@@ -160,12 +161,12 @@ def preview_doctree_dir(repo_root: Path, *, scope: str, language: OutputLanguage
 
     A stable directory lets Sphinx reload its pickled environment and re-read
     only the sources that changed, where a fresh directory re-read every page
-    on every preview. It lives under the gitignored ``var/`` tree because
-    ``docs/_build`` may hold nothing but the canonical HTML root. Scope and
+    on every preview. It lives under the configured docs build root, beside
+    the canonical HTML output. Scope and
     language change the Sphinx configuration, and a changed configuration
     invalidates the whole environment, so each keeps its own cache.
     """
-    return repo_root / "var" / "docs-preview" / f"{scope}-{language.value}" / "doctrees"
+    return docs_build_root(repo_root) / "doctrees" / f"{scope}-{language.value}"
 
 
 def _is_previewable_page(docs_root: Path, source: Path) -> bool:
@@ -277,7 +278,7 @@ def _full_build_source(docs_root: Path, *, isolated: bool) -> Iterator[Path]:
     if not isolated:
         yield docs_root
         return
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-", dir=prepare_temporary_directory()) as tmp:
         source_root = Path(tmp) / "docs"
         _copy_docs_source(docs_root, source_root)
         yield source_root
@@ -294,7 +295,7 @@ def ensure_isolated_storage_root() -> None:
     refusal must not red a docs build on a machine that carries retired
     ``aeat`` state. Callers that deliberately pin a storage root keep it.
     """
-    scratch = Path(tempfile.gettempdir()) / "cadrumo-docs-build-storage"
+    scratch = prepare_temporary_directory() / "cadrumo-docs-build-storage"
     os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
     Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
     ensure_private_diagnostic_log()
@@ -390,18 +391,17 @@ def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> in
     return removed
 
 
-def remove_noncanonical_build_entries(docs_root: Path) -> None:
-    """Remove stale noncanonical entries directly under ``docs/_build``."""
-    build_root = docs_root / "_build"
+def remove_noncanonical_build_entries(build_root: Path) -> None:
+    """Remove stale entries beside the canonical HTML and doctree trees."""
     if not build_root.exists():
         return
-    allowed = (build_root / "html").resolve()
+    allowed = {(build_root / "html").resolve(), (build_root / "doctrees").resolve()}
     for entry in scan_directory(build_root):
         resolved = entry.resolve()
-        if resolved == allowed:
+        if resolved in allowed:
             continue
         if build_root.resolve() not in resolved.parents:
-            raise SystemExit(f"Refusing to remove docs build entry outside docs/_build: {entry}")
+            raise SystemExit(f"Refusing to remove docs build entry outside the configured build root: {entry}")
         if entry.is_dir():
             shutil.rmtree(entry)
         else:
@@ -464,7 +464,7 @@ def sphinx_build_environment(
     env = {**base, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root), "CADRUMO_DOCS_SCOPE": scope}
     if strict:
         env["CADRUMO_DOCS_OFFLINE"] = "1"
-        if (docs_root / "_build" / "html" / "objects.inv").is_file():
+        if docs_html_root(repo_root, environ=base).joinpath("objects.inv").is_file():
             env["CADRUMO_DOCS_SELF_INVENTORY"] = "1"
     if not plan.full_build_required:
         env["CADRUMO_DOCS_OFFLINE"] = "1"
@@ -721,7 +721,9 @@ def build_docs(
 ) -> None:
     """Run Sphinx against the selected targets.
 
-    Full builds write the actual documentation output under ``docs/_build/html``.
+    Full builds write the actual documentation output under
+    ``CADRUMO_DOCS_BUILD_ROOT/html`` (defaulting beneath the configured storage
+    root).
     Targeted changed-page checks copy ``docs/`` to an OS temporary source tree
     and write temporary output there, so generated API/CLI sources and preview
     artifacts never pollute the repository. Previews (``single_page``, one page
@@ -740,8 +742,8 @@ def build_docs(
 
     ``output_root`` redirects a full build's HTML output (and its per-build
     Pagefind index, orphan sweep, and sitemap) to a chosen directory instead of
-    the canonical ``docs/_build/html``. The deploy publisher uses it to build each
-    localized site into a per-language subdirectory (``docs/_build/html/<lang>``)
+    the canonical HTML root. The deploy publisher uses it to build each
+    localized site into a per-language subdirectory
     without disturbing the English root. It applies only to a full build; the
     canonical-``_build`` cleanup is skipped when redirected so a language subdir
     build never clears the English root beside it.
@@ -750,7 +752,8 @@ def build_docs(
     (:func:`_full_build_source`), so several roots can build at once.
     """
     docs_root = repo_root / "docs"
-    canonical_html_root = docs_root / "_build" / "html"
+    build_root = pin_docs_build_root(repo_root)
+    canonical_html_root = build_root / "html"
     html_output_root = output_root if output_root is not None else canonical_html_root
     ensure_isolated_storage_root()
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs(os.environ)]
@@ -1035,7 +1038,7 @@ def _build_full_docs(
     isolated_source: bool,
 ) -> subprocess.CompletedProcess[bytes]:
     if output_root is None:
-        remove_noncanonical_build_entries(docs_root)
+        remove_noncanonical_build_entries(html_output_root.parent)
     html_output_root.mkdir(parents=True, exist_ok=True)
     with _full_build_source(docs_root, isolated=isolated_source) as source_root:
         result = subprocess.run(
@@ -1053,7 +1056,7 @@ def _build_full_docs(
 def _build_preview_docs(
     repo_root: Path, docs_root: Path, plan: DocBuildPlan, scope: str, command: list[str], env: dict[str, str]
 ) -> subprocess.CompletedProcess[bytes]:
-    remove_noncanonical_build_entries(docs_root)
+    remove_noncanonical_build_entries(docs_build_root(repo_root))
     doctree_dir = preview_doctree_dir(repo_root, scope=scope, language=docs_build_language(env))
     doctree_dir.mkdir(parents=True, exist_ok=True)
     print(PREVIEW_SEQUENCE_NOTICE, flush=True)
@@ -1062,7 +1065,7 @@ def _build_preview_docs(
             "-d",
             str(doctree_dir),
             str(docs_root),
-            str(docs_root / "_build" / "html"),
+            str(docs_html_root(repo_root)),
             *(target.relative_to(repo_root).as_posix() for target in plan.targets),
         ],
     )
@@ -1076,7 +1079,7 @@ def _build_changed_docs(
     generated_api_stubs = (
         _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-", dir=prepare_temporary_directory()) as tmp:
         temp_root = Path(tmp)
         temp_docs_root = temp_root / "docs-source"
         _copy_docs_source(docs_root, temp_docs_root)

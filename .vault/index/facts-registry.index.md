@@ -4,16 +4,14 @@ tags:
   - '#index'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f59c8cb4c8976f96d0549fc90301de7b74d0b772737a9f8166221b80a1abf58'
+body_hash: 'sha256:e15ef6f639a71c1bd70d0512f477ced7fc822ee12d0891ef8b3d20389747cceb'
 related:
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
   - '[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]'
-  - '[[2026-09-09-facts-registry-ledger]]'
-  - '[[2026-09-09-facts-registry-plan]]'
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
   - '[[2026-09-10-facts-registry-legal-parameter-consumer-migration-reference]]'
   - '[[2026-09-10-facts-registry-s64-consumer-migration-review-audit]]'
@@ -100,14 +98,6 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-s79-convenio-retirement-review-audit` - `facts-registry` audit: `S79 convenio adapter retirement review`
 - `2026-09-11-facts-registry-s80-iva-structured-table-classification-review-audit` - `facts-registry` audit: `S80 IVA structured-table classification review`
 - `2026-09-14-facts-registry-rc1-iva-classification-audit` - `facts-registry` audit: `RC1 IVA classification remediation review`
-
-### exec
-
-- `2026-09-09-facts-registry-ledger` - `facts-registry` ledger
-
-### plan
-
-- `2026-09-09-facts-registry-plan` - `facts-registry` plan
 
 ### reference
 

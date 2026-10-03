@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:965b337bce0ffbe40173884102840fde53d9f38471146c348421036890617062'
+body_hash: 'sha256:d3f659189c4c3e903c63092ead6a84021fc992e67f890f5dc3df601b5ddda097'
 related: []
 ---
 
@@ -21,7 +21,6 @@ The semantic map cannot express a `binding_rows` repeat. The registry can:
 | | `repeat` vocabulary |
 |---|---|
 | registry, `registry/schema_exports.py:645` | `Literal["binding_rows", "projection_rows"] \| None` |
-| generator map, `dev/registry/pipeline/_semantic_map.py:300` | `Literal["projection_rows"] \| None` |
 
 A generator whose input vocabulary is a strict subset of its output schema can
 emit a structurally WRONG tree while every individual step reports success.

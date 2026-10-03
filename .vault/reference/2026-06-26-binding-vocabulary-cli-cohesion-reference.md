@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-07-17'
-body_hash: 'sha256:4c900fa833d5460566de6a70e534ce60df208d1c7d5a7835f5acb2c40024a382'
+modified: '2026-10-03'
+body_hash: 'sha256:68acf5b1e2f1a94a3b9f283bf3436f13c1c6f9b6cbc84b91b2625b6d69bee4ba'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
@@ -24,26 +24,7 @@ Module(s): `aeat.entrypoints.cli`, `aeat.domain.calculations.registry`,
 `aeat.application.storage.calc_sheets`, `aeat.application.modelo`,
 `aeat.application.ledger`, `aeat.domain.iva_compensation`
 
-File(s):
-- `src/aeat/entrypoints/cli/_modelo_payloads.py`
-- `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`
-- `src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py`
-- `src/aeat/entrypoints/cli/_config/_google_sync_calc.py`
-- `src/aeat/domain/calculations/registry/_queries.py`
-- `src/aeat/domain/calculations/registry/_bindings.py`
-- `src/aeat/domain/calculations/registry/_schema.py`
-- `src/aeat/domain/calculations/registry/_schema_scalars.py`
-- `src/aeat/domain/calculations/registry/_schema_surfaces.py`
-- `src/aeat/domain/calculations/registry/_m232_row_bindings.py`
-- `src/aeat/domain/calculations/registry/_sources.py`
-- `src/aeat/application/aggregation/_source_mesh.py`
-- `src/aeat/application/aggregation/_service.py`
-- `src/aeat/application/calculations/_relation_prefill.py`
-- `src/aeat/application/calculations/_binding_prefill.py`
-- `src/aeat/application/storage/calc_sheets/_layout.py`
-- `src/aeat/application/modelo/_reconcile.py`
-- `src/aeat/application/ledger/_business_operation_invoice.py`
-- `src/aeat/domain/iva_compensation/_reconciliation.py`
+
 
 ## Summary
 
@@ -52,24 +33,7 @@ File(s):
 The ADR Problem Statement and the dispatch brief reference anchor sites that phases
 2.1-2.3 already collapsed at HEAD. Three drifts to correct in the 2.4 plan:
 
-1. `_registry_provider.py:102/133` no longer exists. Phase-2.2 (commit `52edec4b1`
-   `relocation:PerModeloRegistryBindingResolution`, plus `0d825d774` / `5620ed7f5`
-   folding profile+borrador onto one `CalculationSourceResolution`) retired the
-   `_registry_provider.py` module entirely. The resolve / provider / resolution tangle
-   now lives in `src/aeat/application/aggregation/_source_mesh.py`. Re-point the F6.3
-   anchor there (pinned as D1 below). The RAG index still surfaces the dead path because
-   it lags HEAD; trust the grep, not the RAG hit, for this one.
-2. The canonical resolver contract is settled. `ModeloSourceResolver` (the Protocol port,
-   `_source_mesh.py:344`), `CalculationSourceResolution` (the output envelope,
-   `_source_mesh.py:200`), and `merge_source_resolutions` (the aggregate) are the
-   phase-2.2 outputs F6.3 disambiguates. They are NOT to be renamed; the F6.3 work is to
-   rename the OTHER role-family ("provider") that still overloads this settled "resolver"
-   concept.
-3. `IvaCompensationAuthoritySourceKind` is a `type` alias, not a `StrEnum`. The brief
-   implies it is a class like the other two homonyms; at HEAD it is
-   `type IvaCompensationAuthoritySourceKind = Literal[...]`
-   (`src/aeat/domain/iva_compensation/_reconciliation.py:48`). Treat it as a type-alias
-   rename, not a class rename.
+1. `_registry_provider.py:102/133` no longer exists. Phase-2.2 (commit `52edec4b1`    `relocation:PerModeloRegistryBindingResolution`, plus `0d825d774` / `5620ed7f5`    folding profile+borrador onto one `CalculationSourceResolution`) retired the    `_registry_provider.py` module entirely. Re-point the F6.3    anchor there (pinned as D1 below). The RAG index still surfaces the dead path because    it lags HEAD; trust the grep, not the RAG hit, for this one. 2. The canonical resolver contract is settled. `ModeloSourceResolver` (the Protocol port,    `_source_mesh.py:344`), `CalculationSourceResolution` (the output envelope,    `_source_mesh.py:200`), and `merge_source_resolutions` (the aggregate) are the    phase-2.2 outputs F6.3 disambiguates. They are NOT to be renamed; the F6.3 work is to    rename the OTHER role-family ("provider") that still overloads this settled "resolver"    concept. 3. `IvaCompensationAuthoritySourceKind` is a `type` alias, not a `StrEnum`. Treat it as a type-alias    rename, not a class rename.
 
 All other ADR anchors hold at HEAD.
 
@@ -81,7 +45,6 @@ All other ADR anchors hold at HEAD.
 | A2 | CLI bindings-preview row payload | _modelo_payloads.py:882 | class BindingPreviewRowPayload(OutputSchema) | keep (already role-distinct; only bare BindingRow stem of A1 collides) | def + __all__ (:1206) + ModeloBindingsPreviewResult.bindings (:911) + _modelo_discovery_cli.py import (:38) + builder (:594). ~5 sites; likely no-op | F6 (BindingRow 2/4) | S(BindingRow rename) |
 | A3 | registry-query binding row | registry/_queries.py:243 | class ModeloBindingRow(BaseModel) | ModeloBindingQueryRow (registry-query projection) | def + tuple field (:328) + builder _binding_rows (:937,947) + __all__ (:989) + registry pkg __init__.py re-export (:241,490) + _schema.py:1016 docstring xref. ~7 sites incl. docstring-core-struct graph | F6 (BindingRow 3/4) | S(BindingRow rename) |
 | A4 | calc-sheets layout binding row | calc_sheets/_layout.py:77 | class _BindingRow(BaseModel) (module-private) | _EntradasBindingRow (calc-sheets ENTRADAS-tab layout row) | def + 5 uses in same module (:126,412,434,441,452). Module-private; blast radius is one file | F6 (BindingRow 4/4) | S(BindingRow rename) |
-| B1 | M232 row materialiser (false-friend IN registry binding pkg) | registry/_m232_row_bindings.py:1,31 | file _m232_row_bindings.py; fn materialize_m232_related_party_rows returns tuple[CasillaObservation,...] -- a CLI-row materialiser, NOT a DataBindingDefinition family | re-home OUT of registry binding pkg; rename file to drop _bindings (e.g. _m232_row_materialisation.py) toward domain/modelos row-model surface | only consumer is src/aeat/tests/test_storage_decimal_redaction_error_typing.py:347 (direct submodule import). NOT in registry __all__. ~2 sites | F6 (false-friend 1/2) | S(re-home false-friends) |
 | B2 | BOE corpus verifier (false-friend IN registry binding pkg) | registry/_sources.py:1,14 | file _sources.py; verify_source_file / verify_source_catalogue -- a BOE corpus-catalogue integrity verifier, unrelated to binding source KINDS | rename file to say corpus-catalogue (e.g. _corpus_catalogue.py); source here = a SourceReference corpus file, not BindingSourceKind | _validate.py:22, registry __init__.py re-export (:356,734), 3 test modules (test_catalogue_verification.py, test_censo_modelo_registry_data.py, test_modelo_145_source_catalogue.py). ~10+ sites incl. pkg __all__ | F6 (false-friend 2/2) | S(re-home false-friends) |
 | C1 | reconcile-transport source kind | application/modelo/_reconcile.py:35 | class ModeloReconciliationSourceKind(StrEnum) {JUSTIFICANTE, DECLARATION} | ModeloReconciliationEvidenceKind (reconcile transport / external-evidence kind) -- distinct axis, NOT folded into BindingSourceKind | 30 occurrences across 6 files: _modelo_reconcile_cli.py, application/modelo/__init__.py (re-export), _reconcile.py, _justificante.py, 2 test modules | F6 (SourceKind homonym 1/3) | S(reconcile SourceKind homonyms) |
 | C2 | invoice-direction source kind | application/ledger/_business_operation_invoice.py:53 | class BusinessOperationInvoiceSourceKind(StrEnum) {PAYABLE_INVOICE, COLLECTIBLE_INVOICE} | rename TYPE to BusinessOperationInvoiceDirection. NOTE: internal payable_invoice/collectible_invoice taxonomy load-bearing per aeat-spanish-stem-naming; rename ENUM TYPE, KEEP member string values | 31 occurrences across 6 files: _ledger_business_invoice_cli.py, invoices/_source_resolver.py, _business_operation_invoice.py, ledger/__init__.py (re-export), 2 test modules | F6 (SourceKind homonym 2/3) | S(reconcile SourceKind homonyms) |

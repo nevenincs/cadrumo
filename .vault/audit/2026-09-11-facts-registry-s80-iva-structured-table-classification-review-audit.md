@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:ffdacd0358c92a9def163afa318749741815b65f6635e24f7ed37c50f0970f69'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` audit: `S80 IVA structured-table classification review`
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:abd06fbe4d60e8f0349a251a73e696ec7dfd0055ca8d6b04769cb1f181123488'
+modified: '2026-10-03'
+body_hash: 'sha256:0af04bbdfd0ff7a4bc539c9c1c7e6d62cf8bac832cba5da61a5de02ee95b5fbd'
 related: []
 ---
 
@@ -12,10 +12,10 @@ related: []
 
 ## S290-001 | PASS | Settings remains the environment authority
 
-`src/aeat/core/config.py` is the project environment authority: AEAT-prefixed
+The retired module was the project environment authority: AEAT-prefixed
 configuration is declared as `Settings` fields and read through `load_settings()` or
 `override_settings()`. The S290 gate found one direct `AEAT_OUTPUT_LANGUAGE` write in
-`src/aeat/entrypoints/cli/_doc_reference.py`; that generator now pins English through
+The retired module; that generator now pins English through
 `override_settings(aeat_output_language="en")` before importing the CLI tree. The
 subprocess wrapper still passes environment to the child process as an explicit
 process boundary, not as in-process configuration wrangling.
@@ -56,9 +56,9 @@ No duplicate active bucket SQL route resolver or provider settings surface was f
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/config.py src/aeat/core/test_storage_route_classification.py src/aeat/core/errors/__init__.py src/aeat/core/errors/registry/_core.py src/aeat/core/errors/test_registry.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/tests/test_config.py src/aeat/core/test_config_override.py src/aeat/core/test_settings_single_surface_invariant.py src/aeat/adapters/persistence/storage/test_runtime.py src/aeat/adapters/outbound/storage/test_factory.py src/aeat/entrypoints/cli/_doc_reference.py src/aeat/entrypoints/cli/test_doc_reference_conformance.py`
-- `uv run --no-sync pytest -q src/aeat/core/test_storage_route_classification.py src/aeat/core/errors/test_registry.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/tests/test_config.py::TestDatabaseUrlDerivation src/aeat/core/test_config_override.py src/aeat/core/test_settings_single_surface_invariant.py src/aeat/adapters/persistence/storage/test_runtime.py::test_runtime_ready_when_route_and_active_session_match src/aeat/adapters/persistence/storage/test_runtime.py::test_runtime_reports_root_fallback_route_as_unready src/aeat/adapters/persistence/storage/test_runtime.py::test_runtime_reports_explicit_database_url_without_public_path_leak src/aeat/adapters/persistence/storage/test_runtime.py::test_default_route_repository_refuses_settings_scoped_active_profile_without_session src/aeat/adapters/persistence/storage/test_runtime.py::test_default_route_repository_refuses_pointer_scoped_active_profile_without_session src/aeat/adapters/outbound/storage/test_factory.py`
-- `uv run --no-sync pytest -q -m docs src/aeat/entrypoints/cli/test_doc_reference_drift.py::test_committed_cli_reference_matches_regenerated_output`
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "Settings active profile pointer database route root fallback debug log secure bucket config" --type code --port 8766 --max-results 8`
 - `uv run --no-sync vaultspec-rag search "aeat core config storage provider google drive secret store backend master key local storage root settings" --type code --port 8766 --max-results 8`

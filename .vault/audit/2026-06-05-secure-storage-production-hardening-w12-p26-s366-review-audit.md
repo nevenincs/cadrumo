@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:dab0421fc92cfaf1698131a5b85abc1e363d63abb5841576a01714280a0508bc'
+modified: '2026-10-03'
+body_hash: 'sha256:4f0b48eed057cd9b7762cd0067a136487688657c143d1facb95b2b0b433010d0'
 related: []
 ---
 
@@ -32,8 +32,8 @@ behavior remains test-covered and now also asserts the translated-message key.
 
 ## S366-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/transactions/_errors.py src/aeat/domain/transactions/_repository.py src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py` passed with 11 tests.
+- the historical check passed.
+- the historical check passed with 11 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "transactions _errors StoredTransactionDriftError LedgerStorageError AeatError registered error code structured context" --type code --port 8766 --max-results 8` returned the error hierarchy and registry evidence.
 - `uv run --no-sync vaultspec-rag search "StoredProfileDriftError stored data validation bucket_id original_exception translated_message context" --type code --port 8766 --max-results 8` returned the profile drift precedent used for the transaction drift shape.

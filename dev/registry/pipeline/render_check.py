@@ -61,11 +61,13 @@ from cadrumo.domain.calculations.registry.period_selector_match import selector_
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
+from dev._paths import prepare_temporary_directory
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._export_tree import render_complete_export_tree
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
+from .generated_export_inheritance import select_generated_export_inheritance
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from .record_design_intermediate import load_record_design_intermediate
 from .render_profile_evidence import RenderProfileSourceEvidence
@@ -636,9 +638,15 @@ def compare_revision_against_committed(
             would compare the wrong thing and report a match.
     """
     inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
+    inheritance = select_generated_export_inheritance(
+        authority,
+        bundled_path("registry", "aeat"),
+        modelo=modelo,
+        revision=revision,
+    )
 
     committed_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
-    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-") as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temporary_directory()) as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
             target,
@@ -649,6 +657,7 @@ def compare_revision_against_committed(
             render_profile=inputs.render_profile,
             render_profile_source_evidence=inputs.render_profile_source_evidence,
             source_defects=source_defects_for(str(inputs.transport_profile.source_ref)),
+            inheritance=inheritance,
         )
         return compare_export_tree_roots(
             modelo=modelo,

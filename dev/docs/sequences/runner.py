@@ -104,7 +104,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temporary_directory
 
 from .errors import SequenceExecutionError
 from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
@@ -627,7 +627,7 @@ def _sandbox_template() -> Path:
     template = _SANDBOX_TEMPLATES.get(identity)
     if template is not None:
         return template
-    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-")
+    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-", dir=prepare_temporary_directory())
     _SANDBOX_TEMPLATE_HOLDER.append(holder)
     template = Path(holder.name)
     dispose_engine()
@@ -1293,7 +1293,9 @@ def execute_sequence(
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
     # Engine handles on Windows can outlive the run despite the teardown's
     # dispose; ignore_cleanup_errors keeps a stale handle from failing the run.
-    with TemporaryDirectory(prefix="cli-sequence-", ignore_cleanup_errors=True) as tmp:
+    with TemporaryDirectory(
+        prefix="cli-sequence-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+    ) as tmp:
         return _execute_in_root(sequence, Path(tmp), fixtures_root)
 
 
@@ -1418,7 +1420,9 @@ def execute_page_sequences(
         return ()
     if sandbox_root is not None:
         return _execute_page_in_root(sequences, label, sandbox_root, fixtures_root)
-    with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
+    with TemporaryDirectory(
+        prefix="cli-sequence-page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+    ) as tmp:
         return _execute_page_in_root(sequences, label, Path(tmp), fixtures_root)
 
 

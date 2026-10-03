@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:5d77c0e82a141b35a24319b28e13565e9eccf70df391c75ed8664b8bac0e6fce'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 
 # `source-casilla-integration` audit: `s40 inventory enrollment review`

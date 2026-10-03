@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:365125094114cb20d5ef80631e80bb39f954aa0d6bdaa79bf29635937e23e72f'
 related:
-  - "[[2026-08-07-unstructured-document-ingestion-plan]]"
   - "[[2026-08-13-unstructured-document-ingestion-record-gap-close-audit]]"
 ---
 # `unstructured-document-ingestion` audit: `what the campaign closed without, read as an inheritor`

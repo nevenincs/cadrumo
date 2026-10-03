@@ -4,9 +4,8 @@ tags:
   - '#export-publication'
 date: '2026-07-24'
 modified: '2026-10-03'
-body_hash: 'sha256:fe36cc7007ed5c1baac2a36ca69c1403d0153a4ec023730af4256310fd744cc5'
+body_hash: 'sha256:35328c192b49b2c3d2b787b61204195ce4710a0b122178ab888dc45c3a40b77b'
 related:
-  - "[[2026-07-17-export-publication-plan]]"
   - "[[2026-07-17-export-publication-audit]]"
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
@@ -19,7 +18,7 @@ Fresh-context honesty review of the `export-publication` plan, which reports ele
 eleven steps complete. The plan collapses the two CLI-owned writers for portable
 profile export and the subject-access request onto one durable publication service
 (`prepare_profile_export`, `publish_prepared_export`, `reconcile_prepared_exports`) in
-`src/cadrumo/application/user_profile/_bundle_export.py` and its companion contract and
+The retired module and its companion contract and
 operation-state modules. This feature is GDPR-style profile-bundle portability and
 right-of-access export, not the AEAT modelo filing exporter.
 
@@ -28,13 +27,13 @@ particular attention go to `modelo-export-mirrors-official-structure` (offline
 xls/Sheets/fichero-BOE parity, the completeness-manifest value-presence gate) and
 `aeat-safety-legal-gates` (live AEAT submission prohibition), framing them as "the
 campaign's whole point," and asked this reviewer to independently confirm a reported gap
-in `dev/release/tests/test_publish_release_workflow.py`. Both are misdirected. Every one
+in the retired test. Both are misdirected. Every one
 of the eleven steps' scoped files sits under
 `src/cadrumo/application/user_profile/`, `src/cadrumo/entrypoints/cli/_config/`,
-`src/cadrumo/application/operator_surface/_risk_table.py`, or
+The retired module, or
 `docs/reference/import-export-and-evidence.md`; none touches the registry, the modelo
 export planner, the fichero-BOE writer, or any AEAT transport. `git log` for
-`dev/release/tests/test_publish_release_workflow.py` shows its most recent commit
+The retired test showed its most recent commit
 (`56d58d789b`, landed during this review) closes a finding named
 `publish-guardrail-lost-its-non-vacuity-proof` against a *different* campaign
 (`cli-authority-quality-backlog`); it is unrelated to profile-bundle export. This
@@ -58,7 +57,7 @@ read-only; no production file was modified.
 
 ### reconcile-safety-net-never-invoked | high | The crash-recovery mechanism S10/S11 built and proved is unreachable from any production caller
 
-`reconcile_prepared_exports` (`src/cadrumo/application/user_profile/_bundle_export.py:216`)
+`reconcile_prepared_exports`
 is the sole function that clears an orphaned `PREPARED` operation, emits an owed
 `PROFILE_EXPORTED` event for a durably-replaced-but-uncompleted bundle, and removes a
 leftover cleartext `.export-tmp` staged file. A project-wide grep for
@@ -67,7 +66,7 @@ facade re-export in `__init__.py`, and its two call sites in
 `test_bundle_export.py`/`test_bundle_export_recovery.py`. No CLI command, no
 application-service composition, no startup hook, and no maintenance verb calls it
 anywhere in `src/`. The two CLI commands that publish exports
-(`src/cadrumo/entrypoints/cli/_config/_profile_bundle.py:154` and `:331`) call only
+(the retired module and `:331`) call only
 `export_profile_bundle`, never reconcile.
 
 S10's own exec record already discloses this ("No production caller wires reconcile
@@ -95,14 +94,14 @@ S01 and S07 both claim `bundle_data_categories` derives categories "from the act
 bundle schema ... never a static list," explicitly framed as fixing the CLI's prior
 hand-maintained personal-data category list that could "silently drift from what the
 bundle actually contains." The implementation
-(`src/cadrumo/application/user_profile/_bundle_export_contracts.py:37-43,109-125`) does
+ does
 iterate the real `UserProfilePortableExport.model_fields` at call time (so a *removed*
 field cannot leave a stale category behind), but the field-to-label mapping itself,
 `_CATEGORY_BY_BUNDLE_FIELD`, is a hand-maintained five-entry `dict[str, str]` in the
 same module. A field present on the live schema but absent from that dict is silently
 dropped from the walrus comprehension (`if (category := _CATEGORY_BY_BUNDLE_FIELD.get(field_name)) is not None`)
 with no error, no warning, and no test failure. `UserProfilePortableExport`
-(`src/cadrumo/domain/user_profile/_portable_export.py:158-200`) currently has two
+ currently has two
 fields, `carried_objects` and `coverage_manifest`, that are *not* in the static map and
 are legitimately covered instead by the separate `coverage_manifest.carried_namespaces`
 derivation — so today's five financial-history fields happen to be exhaustively
@@ -114,7 +113,7 @@ change.
 
 The only test that touches this,
 `test_data_categories_are_derived_from_serialized_bundle_fields`
-(`src/cadrumo/application/user_profile/tests/test_bundle_export.py:166-184`), is
+, is
 tautological with respect to exhaustiveness: its comprehension at lines 178-182 is
 `{_CATEGORY_BY_BUNDLE_FIELD[field] for field in type(bundle).model_fields if field in
 _CATEGORY_BY_BUNDLE_FIELD}` — it filters to fields already in the map before checking
@@ -124,7 +123,7 @@ fields}` is a subset of `_CATEGORY_BY_BUNDLE_FIELD.keys()`.
 
 This raises the severity above a plain "static list" nit because the CLI notice this
 data feeds is a completeness claim to a GDPR data subject:
-`_build_sar_catalogue_notice` (`src/cadrumo/entrypoints/cli/_config/_profile_bundle.py:202-228`)
+`_build_sar_catalogue_notice`
 tells the subject-access requester "This archive holds every personal-data category
 kept for the profile. The exact categories are listed in the `data_categories` field of
 this response" (locale key `cli.config.profile.sar_catalogue_info`). If a future
@@ -149,9 +148,9 @@ rescoped successor plans rather than incidental to this one.
 
 ### s07-plan-step-cites-a-nonexistent-file | low | Step S07's scope path was never a real file and the plan text was never corrected
 
-Plan step `S07` cites `src/cadrumo/entrypoints/cli/_config/_profile_export.py` as its
+Plan step `S07` cites the retired module as its
 scoped file. That path does not exist; the substantive change landed in
-`src/cadrumo/entrypoints/cli/_config/_profile_bundle.py`. The exec record for S07
+The retired module. The exec record for S07
 honestly discloses the divergence and states it was "flagged to the coordinator," but
 the plan document itself (which an auditor reading only the plan, not every exec
 record, would trust) still names the wrong file. No functional gap: the real file was
@@ -179,7 +178,7 @@ Re-run at HEAD, sequentially, outside the default `-m unit` filter (these suites
 `os._exit(91)` and the real SQLite constraint-trigger event-failure proof — no mocks,
 stubs, or tautologies observed), `test_profile_bundle_flow.py` (13 passed),
 `test_classification_parity.py` (7 passed), `test_documented_command_conformance.py`
-(352 passed), and `src/cadrumo/tests/test_parity.py` (33 passed, locale catalogues,
+(352 passed), and the retired test (33 passed, locale catalogues,
 current working tree). `service-imports-via-top-level-reexports` holds: every
 cross-package caller of the export symbols goes through
 `cadrumo.application.user_profile`'s `__init__.py` facade; the only private

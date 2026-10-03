@@ -1,0 +1,1059 @@
+[[revisions.esquema-exterior.export_layouts]]
+id = 'modelo-369-exterior-fichero'
+
+[[revisions.esquema-exterior.export_layouts.records]]
+id = 'modelo-369-exterior-t36901'
+record_type = 't36901-ext'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-817-3-prestaciones-de-servicios-base-imponible-15'
+offset = 817
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-15'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-834-3-prestaciones-de-servicios-cuota-iva-15'
+offset = 834
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-15'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-851-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-16'
+offset = 851
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-16'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-853-3-prestaciones-de-servicios-tipo-de-iva-16'
+offset = 853
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-16'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-858-3-prestaciones-de-servicios-tipo-iva-16'
+offset = 858
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-16'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-859-3-prestaciones-de-servicios-base-imponible-16'
+offset = 859
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-16'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-876-3-prestaciones-de-servicios-cuota-iva-16'
+offset = 876
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-16'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-893-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-17'
+offset = 893
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-17'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-895-3-prestaciones-de-servicios-tipo-de-iva-17'
+offset = 895
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-900-3-prestaciones-de-servicios-tipo-iva-17'
+offset = 900
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-17'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-901-3-prestaciones-de-servicios-base-imponible-17'
+offset = 901
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-918-3-prestaciones-de-servicios-cuota-iva-17'
+offset = 918
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-935-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-18'
+offset = 935
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-18'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-937-3-prestaciones-de-servicios-tipo-de-iva-18'
+offset = 937
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-18'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-942-3-prestaciones-de-servicios-tipo-iva-18'
+offset = 942
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-18'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-943-3-prestaciones-de-servicios-base-imponible-18'
+offset = 943
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-18'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-960-3-prestaciones-de-servicios-cuota-iva-18'
+offset = 960
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-18'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-977-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-19'
+offset = 977
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-19'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-979-3-prestaciones-de-servicios-tipo-de-iva-19'
+offset = 979
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-19'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-984-3-prestaciones-de-servicios-tipo-iva-19'
+offset = 984
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-19'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-985-3-prestaciones-de-servicios-base-imponible-19'
+offset = 985
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-19'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1002-3-prestaciones-de-servicios-cuota-iva-19'
+offset = 1002
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-19'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1019-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-20'
+offset = 1019
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-20'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1021-3-prestaciones-de-servicios-tipo-de-iva-20'
+offset = 1021
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-20'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1026-3-prestaciones-de-servicios-tipo-iva-20'
+offset = 1026
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-20'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1027-3-prestaciones-de-servicios-base-imponible-20'
+offset = 1027
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-20'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1044-3-prestaciones-de-servicios-cuota-iva-20'
+offset = 1044
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-20'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1061-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-21'
+offset = 1061
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-21'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1063-3-prestaciones-de-servicios-tipo-de-iva-21'
+offset = 1063
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1068-3-prestaciones-de-servicios-tipo-iva-21'
+offset = 1068
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-21'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1069-3-prestaciones-de-servicios-base-imponible-21'
+offset = 1069
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1086-3-prestaciones-de-servicios-cuota-iva-21'
+offset = 1086
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1103-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-22'
+offset = 1103
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-22'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1105-3-prestaciones-de-servicios-tipo-de-iva-22'
+offset = 1105
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-22'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1110-3-prestaciones-de-servicios-tipo-iva-22'
+offset = 1110
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-22'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1111-3-prestaciones-de-servicios-base-imponible-22'
+offset = 1111
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-22'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1128-3-prestaciones-de-servicios-cuota-iva-22'
+offset = 1128
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-22'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1145-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-23'
+offset = 1145
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-23'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1147-3-prestaciones-de-servicios-tipo-de-iva-23'
+offset = 1147
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-23'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1152-3-prestaciones-de-servicios-tipo-iva-23'
+offset = 1152
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-23'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1153-3-prestaciones-de-servicios-base-imponible-23'
+offset = 1153
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-23'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1170-3-prestaciones-de-servicios-cuota-iva-23'
+offset = 1170
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-23'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1187-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-24'
+offset = 1187
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-24'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1189-3-prestaciones-de-servicios-tipo-de-iva-24'
+offset = 1189
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-24'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1194-3-prestaciones-de-servicios-tipo-iva-24'
+offset = 1194
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-24'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1195-3-prestaciones-de-servicios-base-imponible-24'
+offset = 1195
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-24'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1212-3-prestaciones-de-servicios-cuota-iva-24'
+offset = 1212
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-24'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1229-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-25'
+offset = 1229
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-25'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1231-3-prestaciones-de-servicios-tipo-de-iva-25'
+offset = 1231
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-25'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1236-3-prestaciones-de-servicios-tipo-iva-25'
+offset = 1236
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-25'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1237-3-prestaciones-de-servicios-base-imponible-25'
+offset = 1237
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-25'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1254-3-prestaciones-de-servicios-cuota-iva-25'
+offset = 1254
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-25'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1271-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-26'
+offset = 1271
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1273-3-prestaciones-de-servicios-tipo-de-iva-26'
+offset = 1273
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-26'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1278-3-prestaciones-de-servicios-tipo-iva-26'
+offset = 1278
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1279-3-prestaciones-de-servicios-base-imponible-26'
+offset = 1279
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-26'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1296-3-prestaciones-de-servicios-cuota-iva-26'
+offset = 1296
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-26'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1313-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-27'
+offset = 1313
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-27'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1315-3-prestaciones-de-servicios-tipo-de-iva-27'
+offset = 1315
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-27'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1320-3-prestaciones-de-servicios-tipo-iva-27'
+offset = 1320
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-27'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1321-3-prestaciones-de-servicios-base-imponible-27'
+offset = 1321
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-27'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1338-3-prestaciones-de-servicios-cuota-iva-27'
+offset = 1338
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-27'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1355-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-28'
+offset = 1355
+length = 2
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1357-3-prestaciones-de-servicios-tipo-de-iva-28'
+offset = 1357
+length = 5
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-28'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1362-3-prestaciones-de-servicios-tipo-iva-28'
+offset = 1362
+length = 1
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1363-3-prestaciones-de-servicios-base-imponible-28'
+offset = 1363
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-base-imponible-28'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'm369-exterior-01-1380-3-prestaciones-de-servicios-cuota-iva-28'
+offset = 1380
+length = 17
+kind = 'binding'
+binding = 'modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-28'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-t36901-1397-reservado'
+offset = 1397
+length = 17
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-t36901-1414-constante-t36901'
+offset = 1414
+length = 9
+kind = 'literal'
+literal = '</T36901>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-exterior.export_layouts.records.row_field_casilla_ids]

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:1e156e32c48e734f46dc80a48f4e382abadf70ec6699d1bfcb2b31ac0dfa28be'
+modified: '2026-10-03'
+body_hash: 'sha256:4c3126d78ece1d91665281f66935e49eb05dbd2dd0429a8ce7aa8bbe18660794'
 related:
   - '[[2026-06-02-emit-envelope-schema-burndown-adr]]'
   - '[[2026-06-01-envelope-conformance-gate-adr]]'
@@ -29,7 +29,7 @@ CLI?
 The `emit-envelope-schema-burndown` plan closed all 208 of 208 Steps. The
 current CLI surface carries 231 `_emit_envelope` call sites and 209
 `@register_schema` decorators, enforced by a **no-allowlist symmetric-diff
-conformance gate** (`src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`,
+conformance gate** (the former source file,
 `test_every_cli_leaf_has_a_registered_schema`): every CLI leaf must map to a
 registered `OutputSchema`, and every registry key must map to a reachable leaf.
 Only three documented `_emit` exemptions remain (help-prose, repair-report
@@ -43,14 +43,13 @@ docstring, not the current tree.
 
 Two unrelated shapes carry CLI results:
 
-- **Success** (`SchemaEnvelope`, `src/aeat/core/json_contract.py`): fields
+- **Success** (`SchemaEnvelope`, the former source file): fields
   `schema_version`, `command`, `result`, `warnings`. Emitted on stdout via
   `emit_json_success`.
-- **Failure** (`ErrorEnvelope`, `src/aeat/core/errors/_registry.py`): fields
+- **Failure** (`ErrorEnvelope`, the former source file): fields
   `schema_version`, `code`, `category`, `message`, `suggestion`, `retryable`,
   `runbook_id`, `context`, `trace_id`. Emitted on stderr, wrapped under
-  `{"error": {...}}`, via the error boundary in
-  `src/aeat/entrypoints/cli/_errors.py` (`render_error_json`).
+  `{"error": {...}}`, via the error boundary  (`render_error_json`).
 
 There is **no shared outer spine and no `status` field**. A machine consumer
 cannot read one contract; it must branch on stdout-vs-stderr to learn whether a
@@ -61,8 +60,7 @@ with no coordinated versioning.
 
 `SchemaEnvelope.warnings: list[str]` exists, but:
 
-- `_emit_envelope(ctx, *, command, result, lines)` in
-  `src/aeat/entrypoints/cli/_common.py` exposes **no `warnings` parameter** —
+- `_emit_envelope(ctx, *, command, result, lines)`  exposes **no `warnings` parameter** —
   the standard success helper cannot emit a warning at all.
 - `emit_json_success` *does* accept `warnings=`, but a repository sweep finds
   **zero** call sites passing it. The channel is unreachable in practice.
@@ -81,10 +79,10 @@ rather than a uniform channel:
 
 - `authorization_advisory: str | None` and
   `source_advisories: tuple[SourceAdvisoryPayload, ...]` on the calculate
-  result (`src/aeat/entrypoints/cli/_modelo_payloads.py:364-378`).
+  result .
 - `_work_calculate_source_advisory_output(...)` builds an advisory payload dict
   **and** a parallel set of text lines
-  (`src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py:386-403`), so the
+  , so the
   same advisory is encoded twice in two shapes.
 - The verify result carries `findings` inline; the obligation advisory is
   emitted as translated text lines
@@ -98,9 +96,9 @@ consumer reads "what non-blocking notices did this command raise".
 - **Error side (structured, good):** `ErrorEnvelope.suggestion` (single
   copy-paste command), per-`ErrorCode` `default_suggestion`, and `runbook_id`.
   Command-resolution "did you mean" synonyms are a separate but structured
-  surface (`src/aeat/entrypoints/cli/_command_suggestions.py`).
+  surface .
 - **Success side (scattered):** next-step guidance is modelled as bespoke
-  `next: str` payload fields (`src/aeat/entrypoints/cli/_config_payloads.py:499,509`),
+  `next: str` payload fields ,
   as workspace-state guidance text (`_overview.py` next-step helper), and as
   locale prose (`success.next_step`, `next_landing_command`,
   `next_modelo_work_command` in `src/aeat/locales/*.yml`). No typed channel
@@ -110,7 +108,7 @@ consumer reads "what non-blocking notices did this command raise".
 
 ### F6. A third, un-enveloped refusal shape still leaks
 
-`_active_profile_or_exit` (`src/aeat/entrypoints/cli/_common.py:148-162`) emits
+`_active_profile_or_exit`  emits
 a raw `{"error": ..., "next": ...}` dict through the legacy `_emit` helper and
 exits `2`, bypassing **both** `SchemaEnvelope` and `ErrorEnvelope`. It is not
 caught by the bare-emit gate because `_common.py` is the module that defines
@@ -120,7 +118,7 @@ typed structure.
 
 ### F7. Exit codes are already centralised and uniform
 
-`ExitCode` (`src/aeat/entrypoints/cli/_exit_codes.py`) and
+`ExitCode`  and
 `get_error_exit_code(category)` map one-to-one with `ErrorCategory`. The exit
 vocabulary is sound and is **not** part of the gap — the new `status` field
 should be derived from the same table so the JSON `status` and the shell exit

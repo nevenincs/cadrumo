@@ -4,9 +4,8 @@ tags:
   - '#ledger-evidence-atomicity'
 date: '2026-07-24'
 modified: '2026-10-03'
-body_hash: 'sha256:b24e14e87dbccda7c778f5ce95cabeb65d9cbeeed45d362d6ba010987203909f'
+body_hash: 'sha256:35ec9328d97530c7e8344084161956761ddc5a66f55028a030aa3a459ad77374'
 related:
-  - "[[2026-07-17-ledger-evidence-atomicity-plan]]"
   - "[[2026-07-17-ledger-evidence-atomicity-audit]]"
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
@@ -47,7 +46,7 @@ was modified; all verification was read-only plus live test execution.
 
 ### invoice-link-writer-not-atomic-on-success-path | high | The "single atomic invoice-only linkage writer" performs two independently-committed writes
 
-`link_manual_transaction_invoice` (`src/cadrumo/application/ledger/_actions_manual.py:259`)
+`link_manual_transaction_invoice`
 is the writer this campaign built and centralised: P01.S01's step text calls it "a single
 atomic invoice-only linkage writer" and its own docstring states "Every rejection fires
 before any catalogue write, so a refused link leaves the transaction, invoice catalogue,
@@ -55,7 +54,7 @@ and event history unchanged." That refusal-path claim is true and is proven by
 `test_failed_invoice_link_leaves_transaction_and_history_unchanged` and
 `test_invoice_linkage_does_not_mutate_evidence`. The success path is a different story: the
 writer delegates to `link_invoice_transaction_repositories`
-(`src/cadrumo/application/invoices/_linking.py:75`), whose persistence is
+, whose persistence is
 `invoices_repo.save(result.invoices)` followed by `transactions_repo.save(result.transactions)`
 — two calls, each opening its own independent `session_scope` (confirmed by reading
 `InvoiceCatalogueRepository.save` and `TransactionCatalogueRepository.save`, each committing
@@ -69,9 +68,9 @@ transaction whose evidence links, provenance, and event history disagree with ea
 No test forces a failure between the two saves to prove the success path is atomic, because
 it is not: only the pre-write refusal path is guarded. There is also no detection safety
 net — `verify_link_consistency` / `LinkInconsistency`
-(`src/cadrumo/domain/invoices/_service.py:236`) exists and is exercised in its own unit
+ exists and is exercised in its own unit
 tests, but no CLI verb calls `verify_invoice_repository_links`
-(`src/cadrumo/application/invoices/_queries.py:90`) anywhere in `src/cadrumo/entrypoints`;
+ anywhere in `src/cadrumo/entrypoints`;
 an operator has no way to discover a drifted link even after the fact. This two-write
 pattern in `_linking.py` predates the campaign (traced via `git log --follow` back through
 pre-relocation history) and the CLI's pre-campaign combined `link --invoice-id/--evidence-id`
@@ -82,7 +81,7 @@ alternate route to it, and mark the step complete without correcting or even sco
 atomicity claim to the refusal path only. The infrastructure to fix this already exists
 one file away: `_save_transaction_catalogue_and_events`'s sibling
 `_save_transaction_catalogue_invoices_and_events`
-(`src/cadrumo/application/ledger/_actions_common.py:829`) already composes a transaction
+ already composes a transaction
 catalogue, an invoice catalogue, and bucket events into one `apply_batch` using
 `to_secure_object_write()` on both repositories — the exact pattern this writer needs and
 does not use. One mitigating fact worth recording for balance: both `link_transaction`
@@ -95,7 +94,7 @@ crash happened and choose to retry, with no detection surface prompting them to.
 
 ### stale-docstring-describes-removed-split-then-patch-path | medium | apply_evidence_split's own docstring documents the atomicity model this campaign deleted
 
-`apply_evidence_split` (`src/cadrumo/application/ledger/_llm_classification.py:1210`) is the
+`apply_evidence_split`  is the
 production entry point P02 rewired onto the new atomic writer. Its docstring (lines
 1222-1228) still reads: "Composes the established single writers rather than
 re-implementing them ... first `split_transaction` redistributes the parent into children

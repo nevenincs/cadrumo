@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:84279fb6b90d2424d70dfca0728b697eac82ebf497b4b03b18d94b410a6638fe'
 related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
 ---
 # `registry-authority-artifact-boundary` audit: `typed runtime catalogues`

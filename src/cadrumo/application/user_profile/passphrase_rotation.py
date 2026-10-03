@@ -45,6 +45,7 @@ from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from .custody_ports import (
     create_profile_custody_registration_material,
+    default_profile_record_crypto_port,
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
     profile_custody_port,
@@ -61,8 +62,6 @@ if TYPE_CHECKING:
 
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from .custody_ports import ProfileCustodyEnvelopePort
-
-_ENVELOPE_KDF_SALT_BYTES = 16
 
 
 class ProfilePassphraseReplacementProof(StrEnum):
@@ -243,7 +242,7 @@ def rewrap_profile_passphrase_under_lock(
         # strands the committed sentinel and the enrolled recovery envelope,
         # silently.
         dek_epoch=current.dek_epoch,
-        salt=token_bytes(_ENVELOPE_KDF_SALT_BYTES),
+        salt=token_bytes(default_profile_record_crypto_port().passphrase_kdf_policy().salt_bytes),
         predecessor=current,
     ).envelope
 

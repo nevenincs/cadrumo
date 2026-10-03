@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:59ea2c5408df68ed70fbc06ff36b06b578e80cc1a278b4a7ee3c1772fac966d3'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `Final review P05 S143 immutable peer proof`

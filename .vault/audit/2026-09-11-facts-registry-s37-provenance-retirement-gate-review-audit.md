@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:00b2ebe65a97faa9efab8e3c68c10a74096aba40b83534876f7d1fe15ff87492'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` audit: `S37 provenance retirement gate review`
 

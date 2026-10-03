@@ -41,7 +41,12 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    refused_receipt_references_hold,
+    require_succeeded_terminal_receipt,
+)
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
@@ -447,27 +452,9 @@ def _attachment_refusal_receipt_matches(
         receipt.condition is OperationTerminalCondition.REFUSED
         and receipt.refusal_ref == LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE
         and receipt.refusal_detail_ref is not None
-        and receipt.result_ref is None
-        and receipt.failure_error_code is None
+        and refused_receipt_references_hold(receipt)
         and receipt.diagnostic_ref is None
         and receipt.effect is OperationEffect.NONE
-    )
-
-
-def _attachment_success_receipt_matches(
-    receipt: OperationTerminalReceipt,
-    projected: LedgerAttachmentOperationResult,
-    expected_effect: OperationEffect,
-) -> bool:
-    return (
-        receipt.condition is OperationTerminalCondition.SUCCEEDED
-        and receipt.result_ref is not None
-        and receipt.refusal_ref is None
-        and receipt.refusal_detail_ref is None
-        and receipt.failure_error_code is None
-        and receipt.diagnostic_ref is None
-        and projected.result is not None
-        and receipt.effect is expected_effect
     )
 
 
@@ -488,8 +475,16 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     expected_effect = (
         OperationEffect.UPDATED if projected.result and projected.result.bucket_event_ids else OperationEffect.NONE
     )
-    if not _attachment_success_receipt_matches(receipt, projected, expected_effect):
-        raise ValueError("ledger attachment success has an incompatible terminal receipt")
+    message = "ledger attachment success has an incompatible terminal receipt"
+    if projected.result is None:
+        raise ValueError(message)
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=projected.operation_id,
+        subject_ref=profile_operation_subject(str(projected.profile_id)),
+        effect=expected_effect,
+        message=message,
+    )
     return projected
 
 

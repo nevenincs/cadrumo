@@ -7,7 +7,7 @@ revision_id = "2021-2023"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "e1b1640326d70585345584894584ad0c5d0f44eaff6dc78b0f59c3f7f924fdee"
+source_state_digest = "76bea6d05cbba80062a28161303fc407cfc6e4726e87ffaac1999ffb5b6da74b"
 design_sources = [
     { source_ref = "aeat-dr-604-2021", sha256 = "892f64289c26a03630896ee2a5607ad92d138d23f72461f1d7609691745db6fe" },
 ]
@@ -16,7 +16,7 @@ placements = [
     { casilla_id = "compl.declaracion-complementaria", kind = "on_form" },
     { casilla_id = "compl.numero-justificante-anterior", kind = "on_form" },
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
-    { casilla_id = "decl.idioma", kind = "on_form" },
+    { casilla_id = "decl.idioma", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "decl.periodo", kind = "working_figure" },
     { casilla_id = "decl.tipo-autoliquidacion", kind = "on_form" },
     { casilla_id = "dom-es.bloque", kind = "on_form" },
@@ -55,18 +55,6 @@ placements = [
     { casilla_id = "sp.codigo-lei", kind = "on_form" },
     { casilla_id = "sp.persona-contacto", kind = "on_form" },
     { casilla_id = "sp.telefono-contacto", kind = "on_form" },
-]
-
-[[revisions.2021-2023.form_layouts.pages]]
-id = "pag-0"
-official_ref = "Pág. 0"
-heading_key = "modelo.schema.604.form.page.pag-0.heading"
-
-[[revisions.2021-2023.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.604.form.section.general.heading"
-blocks = [
-    { kind = "field", id = "field", casilla_id = "decl.idioma" },
 ]
 
 [[revisions.2021-2023.form_layouts.pages]]

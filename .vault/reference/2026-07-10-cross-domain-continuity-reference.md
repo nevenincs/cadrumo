@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#cross-domain-continuity'
 date: '2026-07-10'
-modified: '2026-08-15'
-body_hash: 'sha256:a63900af5226c396ab7148e0e3682bc078c4ec5d1195992b18aab0691006e300'
+modified: '2026-10-03'
+body_hash: 'sha256:9bec6dd21a466f586650411846b9d372a277a58f57f54b8ee203a628a8a91bf3'
 related:
   - "[[2026-06-03-iva-exemption-article-adr]]"
 ---
@@ -19,10 +19,7 @@ The reference source is the current consolidated Ley 37/1992 at https://www.boe.
 
 ## Blueprint
 
-- `src/aeat/domain/iva/_schema.py:180-211` contains the stale Article 20.Uno.26 full-deduction and casilla-61 statements. The member may remain only if it has a real, separately grounded future consumer; it has none today.
-- `src/aeat/application/calculations/_prorrata_regularizacion.py:150,500-509` is the sole active false route. Removing its special exemption set restores the ordinary `DOMESTIC_EXEMPT` path, which contributes only to the non-deductible prorrata volume.
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml:211-253` and `bindings/0000-bindings.toml:213-224` already carry the annual prorrata fields and casilla-44 regularisation surface. Do not change this registry for the correction.
-- `src/aeat/application/calculations/tests/test_prorrata_regularizacion.py` needs a real rollup proving Article 20 domestic-exempt volume increases total and non-deductible volume, never the deductible numerator. Retain category validation and propagation coverage in the IVA domain and aggregation suites.
+
 
 The accepted 2026-06-03 IVA exemption-article ADR is materially false on this route and must be superseded, not edited in place.
 
@@ -32,9 +29,7 @@ The bundled `ley-58-2003-art-27.html.extracted.md` distinguishes a deadline-only
 
 ### Current implementation and defect
 
-- `src/aeat/domain/deadlines/_recargo.py` counts completed months only. For a 2026-04-20 deadline, both 2027-04-20 and 2027-04-21 return twelve months; the existing registry therefore selects the 15-percent interest band for both dates. A numeric completed-month input alone cannot express the statutory boundary.
-- `src/aeat/application/modelo/_work_plazo.py` receives a `WorkUnit` and the current date only. It converts every late work unit into a recargo band even though neither fact establishes the actual presentation date, positive amount payable, or no-prior-requirement condition.
-- `src/aeat/entrypoints/cli/_modelo_rendering.py` then serialises that band and emits an imperative recargo notice on every overdue calculation. The existing JSON payload models a band, percentage, and interest boolean, not an assessment provenance or a monetary result.
+- `src/cadrumo/entrypoints/cli/_modelo_rendering.py` then serialises that band and emits an imperative recargo notice on every overdue calculation. The existing JSON payload models a band, percentage, and interest boolean, not an assessment provenance or a monetary result.
 
 ### Blueprint
 

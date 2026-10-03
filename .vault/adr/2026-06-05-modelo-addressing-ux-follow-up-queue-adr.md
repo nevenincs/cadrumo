@@ -8,7 +8,6 @@ body_hash: 'sha256:a267c9699fa572d894da4cf78bcfbd2617d58ad6527227a48eeb252c64f14
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'
-  - '[[2026-06-05-modelo-addressing-ux-plan]]'
 ---
 
 # Modelo Addressing UX Follow-Up ADR Queue | (**status:** `accepted`)

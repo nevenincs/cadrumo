@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1e17a5384f265d263b4860bcf6cb3ae0ecccd57e4c25936e16bddbc6687e3e3'
-related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
+body_hash: 'sha256:7974aebf15e80dd1378762d251200ecb7c4933f17a1f0e64bd1e4dd2321f6895'
+related: []
 ---
 
 # `secure-storage-performance-hardening` audit: `W01.P01.S49 ledger execution-policy review`
@@ -26,34 +25,11 @@ invocation behavior; and focused real-process and planted-negative gates.
 
 ### ledger-conditional-network-authority | high | Six callbacks under-declare reachable network or Google execution
 
-The callback-local shape is correct, but several declarations are not the
-required maximum conditional authority. `ledger_add` at
-`src/cadrumo/entrypoints/cli/_ledger.py:273` and `ledger_import` at
-`src/cadrumo/entrypoints/cli/_ledger_import_cli.py:184` both install the
-ECB-backed currency normalizer, whose production provider resolves non-euro
-rates over the network. `invoice_add` and `invoice_import` at
-`src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:389` and
-`:583` build invoices through the same ECB-backed conversion path; import also
-calls the model-backed column-role mapper. `evidence_confirm` at
-`src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py:522` builds the confirmed
-invoice through that same conditional foreign-currency path. All five carry
-`LEDGER_WRITE`, which declares no network authority or effect. Conversely,
-`ledger_doclink` at `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py:234`
-fetches Drive bytes through Google credentials and `resolve_document_link` but
-also carries only `LEDGER_WRITE`, omitting both Google and its implied network
-authority. A future import/effect gate would therefore either reject legitimate
-executions or be weakened around the very undeclared work this campaign exists
-to expose. Approval is withheld while this high-severity gap remains.
+The callback-local shape is correct, but several declarations are not the required maximum conditional authority. `ledger_add` at `src/cadrumo/entrypoints/cli/_ledger.py:273` and `ledger_import` at `src/cadrumo/entrypoints/cli/_ledger_import_cli.py:184` both install the ECB-backed currency normalizer, whose production provider resolves non-euro rates over the network. `invoice_add` and `invoice_import` at `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:389` and `:583` build invoices through the same ECB-backed conversion path; import also calls the model-backed column-role mapper. `evidence_confirm` at `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py:522` builds the confirmed invoice through that same conditional foreign-currency path. All five carry `LEDGER_WRITE`, which declares no network authority or effect. A future import/effect gate would therefore either reject legitimate executions or be weakened around the very undeclared work this campaign exists to expose. Approval is withheld while this high-severity gap remains.
 
 ### representative-policy-gate-gap | medium | Focused assertions do not exercise the under-declared external-I/O paths
 
-`test_ledger_risk_and_route_judgments_live_on_callbacks` in
-`src/cadrumo/entrypoints/cli/tests/test_ledger_execution_policy.py:53` covers
-classify, split, invoice wizard, evidence rederive, Google folder pull, and risk
-parity, but none of the six paths above. Exact-set presence proves only that a
-policy exists, not that it is semantically sufficient. The planted-negative
-node and real-process help checks are useful and passed, but neither would red
-if one of these external-I/O callbacks were downgraded to `LEDGER_WRITE` again.
+Exact-set presence proves only that a policy exists, not that it is semantically sufficient. The planted-negative node and real-process help checks are useful and passed, but neither would red if one of these external-I/O callbacks were downgraded to `LEDGER_WRITE` again.
 
 No additional critical or high issue was found. The live census contained a
 policy on every ledger node, including executable `participation` and inert

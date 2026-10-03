@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a39a532c0e12cdb990d43186126a95478d458a8757fdfc42ae2b5ffadd3766fd'
+body_hash: 'sha256:0e5afa384569a716cbf24eb2c4a0507eb14308b654e17a1dd8d66760872ecd41'
 related: []
 ---
 
@@ -211,8 +211,6 @@ unexamined backend question above.
 
 ## Sources
 
-- `dev/registry/tests/test_generated_export_trees.py`, `dev/registry/tests/test_generated_tree_publication.py`
-- `src/cadrumo/domain/calculations/registry/_cross_revision_divergence.py`
 - `dev/quality/types.py`, `pyproject.toml` (`[tool.pyrefly]`, `[tool.basedpyright]`)
 - `dev/registry/analysis/screens.py`, `dev/registry/analysis/type_convention_notes.py`
 - `dev/registry/pipeline/generated_tree_dispositions.toml`

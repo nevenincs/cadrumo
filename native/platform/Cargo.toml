@@ -9,6 +9,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [profile.release]
 panic = "abort"
 
+[profile.dev]
+panic = "abort"
+
 [[bin]]
 name = "platform-consumer"
 path = "src/consumer.rs"

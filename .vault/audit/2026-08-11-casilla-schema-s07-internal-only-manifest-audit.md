@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a2bb6b9611773eba782cb59d466ec9aea4afb6eeb692f12d1a1ed17b6dc41463'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-research]]"
 ---
 # `casilla-schema` audit: `S07 internal-only manifest reconciliation`

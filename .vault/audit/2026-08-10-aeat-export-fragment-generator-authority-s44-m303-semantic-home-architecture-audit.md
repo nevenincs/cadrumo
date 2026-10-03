@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:399e6c44e1e52595fc71a1b2b6ac63c56bca911fd019c3368e33ccade9592722'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-07-01-modelo-303-regimen-simplificado-adr]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"

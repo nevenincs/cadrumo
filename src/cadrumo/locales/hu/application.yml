@@ -1854,8 +1854,8 @@ application:
   overview:
     calendar:
       holiday_coverage:
-        calendar_unavailable: az ünnepnapi naptár nem érhető el; a hétvégék figyelembe
-          véve, az ünnepnapok nincsenek ellenőrizve
+        calendar_unavailable: az ünnepnapi naptár nem érhető el; az eredeti határidő
+          nincs ellenőrizve
         national_and_territory: országos és %{territory} ünnepnapok ellenőrizve; helyi
           ünnepnapok nincsenek ellenőrizve
         national_and_territory_without_name: országos és az alkalmazandó regionális
@@ -1870,7 +1870,7 @@ application:
           regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve
       shift:
         business_day: Munkanap
-        calendar_unavailable: Ünnepnapok nincsenek ellenőrizve
+        calendar_unavailable: Naptár nem elérhető
         domingo: Vasárnap
         modelo_exception: Nyomtatvány-kivétel
         sabado: Szombat

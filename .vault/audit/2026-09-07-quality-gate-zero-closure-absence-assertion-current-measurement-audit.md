@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:271ed127cedd59f22ba76cb3d52ba0889110758f66e94e968a3bf0a414a2bce2'
+body_hash: 'sha256:6dcca5c46ba5f51a9c1b59f58b78b42312982e9f13df3c29c7a91c8cbf0839a6'
 related:
   - "[[2026-08-04-canonical-storage-management-void-assertion-class-audit]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
 ---
 
 # `quality-gate-zero-closure` audit: `absence assertion current measurement`
@@ -85,12 +84,6 @@ for any literal-only candidate scan.
 ### absence-assertion-current-measurement | low | the declaration corpus has 32 live modules and retains the legacy shrink-only mechanism
 
 The immutable snapshot contains 32 AST-visible `PINNED_TAXONOMY_LITERALS` declarations.
-The declaration conformance implementation remains in
-`src/cadrumo/tests/test_pinned_taxonomy_literal_conformance.py`; that module also contains
-`PENDING_UNDECLARED`, its shrink-only test, `HOMONYM_EXCEPTIONS`, and
-`EMBEDDED_LITERAL_EXCEPTIONS`. `PENDING_UNDECLARED` is empty at the measured revision.
-A separate `HOMONYM_EXCEPTIONS` conformance mechanism exists in
-`src/cadrumo/tests/test_production_taxonomy_literal_duplication_gate.py`.
 
 Every count in this audit is a diagnostic floor and scoping context. None is a pass
 condition, threshold, baseline, debt allowance, or claim that the full void-assertion

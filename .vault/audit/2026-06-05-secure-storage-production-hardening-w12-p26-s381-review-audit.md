@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:12ef49199bd58f417d089b55d2ab1b48bf97cad35a08e755a83381bf3ed5205c'
+modified: '2026-10-03'
+body_hash: 'sha256:dd094bdaaa3c61258db2f9dc6716df0fcdb8696e57fb5a5a133cd9ebf2796cb9'
 related: []
 ---
 
@@ -15,43 +15,43 @@ related: []
 `command_error_boundary` forwards typed `AeatError` instances unchanged and has a dedicated stored-data drift branch before the broad AEAT branch. This keeps storage/runtime/master-key refusals on registered error codes and translated messages rather than generic internal failures.
 
 Evidence:
-- `src/aeat/entrypoints/cli/_errors.py:70`
-- `src/aeat/entrypoints/cli/_errors.py:104`
-- `src/aeat/entrypoints/cli/_errors.py:133`
-- `src/aeat/entrypoints/cli/_errors.py:176`
-- `src/aeat/entrypoints/cli/_errors.py:225`
-- `src/aeat/entrypoints/cli/_errors.py:235`
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
 
 ## S381-002 | PASS | Nested storage errors are unwrapped before fallback
 
 The unexpected-exception arm preserves Click/Typer control flow, then checks `_unwrap_aeat_error` before logging and wrapping as `CliUnexpectedBoundaryError`. `_unwrap_aeat_error` walks SQLAlchemy-style `orig` plus standard cause/context chains with a depth bound, so storage exceptions raised inside library machinery remain typed refusals.
 
 Evidence:
-- `src/aeat/entrypoints/cli/_errors.py:253`
-- `src/aeat/entrypoints/cli/_errors.py:268`
-- `src/aeat/entrypoints/cli/_errors.py:271`
-- `src/aeat/entrypoints/cli/_errors.py:431`
-- `src/aeat/entrypoints/cli/test_error_boundary_unwrap.py:41`
-- `src/aeat/entrypoints/cli/test_error_boundary_unwrap.py:55`
-- `src/aeat/entrypoints/cli/test_error_boundary_unwrap.py:68`
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired test
+- the retired test
+- the retired test
 
 ## S381-003 | PASS | Rendering remains centralized and redacted
 
 `_emit_error_and_exit` renders errors through the core registry JSON/text renderers, `write_stderr` redacts CLI output before writing, and `_errors.py` does not read environment variables or settings directly.
 
 Evidence:
-- `src/aeat/entrypoints/cli/_errors.py:338`
-- `src/aeat/entrypoints/cli/_errors.py:301`
-- `src/aeat/entrypoints/cli/test_errors_boundary.py:125`
-- `src/aeat/entrypoints/cli/test_root_fallback_write_guard.py:173`
+- the retired module
+- the retired module
+- the retired test
+- the retired test
 
 ## S381-004 | PASS | Validation and RAG grounding completed
 
 Validation passed for focused lint, CLI error-boundary coverage, root fallback write-guard coverage, and locale audit. Vaultspec RAG search confirmed the boundary unwrap tests, CLI error boundary implementation, and registered storage runtime refusals as the relevant surfaces.
 
 Commands:
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_errors.py src/aeat/entrypoints/cli/test_error_boundary_unwrap.py src/aeat/entrypoints/cli/test_error_boundary_integration.py src/aeat/entrypoints/cli/test_errors.py src/aeat/entrypoints/cli/test_errors_boundary.py src/aeat/entrypoints/cli/test_root_fallback_write_guard.py`
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/test_error_boundary_unwrap.py src/aeat/entrypoints/cli/test_error_boundary_integration.py src/aeat/entrypoints/cli/test_errors.py src/aeat/entrypoints/cli/test_errors_boundary.py src/aeat/entrypoints/cli/test_root_fallback_write_guard.py`
+- the historical check
+- the historical check
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "CLI error boundary unwrap AeatError StatementError NoActiveBucketSession master key storage runtime refusal" --type code --port 8766 --max-results 8`
 

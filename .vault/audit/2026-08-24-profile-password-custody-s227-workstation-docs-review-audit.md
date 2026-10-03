@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:20a8218628a0491809f9c5d0e090b90ac6928208e8af5cff7e295117bb358536'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+body_hash: 'sha256:c4746701852e0ef3f311d6a1ab64de05f7a218d565fea40ab119931e72c3dc28'
+related: []
 ---
+
 # `profile-password-custody` audit: `S227 workstation docs review`
 
 ## Scope
@@ -19,7 +19,7 @@ Reviewed accepted custody authority, S227's plan and execution record, corrected
 
 ### stale-agent-materialization-golden | medium | The unsupported materialization sequence remains as a committed success artifact
 
-The public workstation directive and private `install-agent-harness` contract were removed, and the live CLI has no `aeat app agent` verb. However, `docs/_sequences/workstation-setup/install-agent-harness.json` remains committed and still records `aeat --format json app agent --output ./operator-workspace` as a successful command with a materialized workspace result. The focused contract inventory does not detect orphan golden JSON, and its passing result therefore does not prove the sequence fully retired. S227's outcome says the sequence and command claim are absent, so evidence-only closure is not honest while this active generated evidence remains.
+The public workstation directive and private `install-agent-harness` contract were removed, and the live CLI has no `aeat app agent` verb. The focused contract inventory does not detect orphan golden JSON, and its passing result therefore does not prove the sequence fully retired. S227's outcome says the sequence and command claim are absent, so evidence-only closure is not honest while this active generated evidence remains.
 
 ### harness-agent-extra-language | low | Separate harness production text still names the retired base-package extra
 

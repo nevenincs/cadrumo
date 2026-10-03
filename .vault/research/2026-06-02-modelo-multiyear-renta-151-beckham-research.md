@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-multiyear-renta-151-beckham'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:b1efaa58f9c18993742ac6c4b1472707fe5be21dc5f4904ca8a642afc0b7ac82'
+modified: '2026-10-03'
+body_hash: 'sha256:876c0344493d6faba755d5c8df020ed7dea5f7485b2ce1ebb807b11f87c9eb01'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
@@ -36,7 +36,7 @@ parameter, the cuota formula, and a profile-driven eligibility gate from scratch
 
 ### F2. The legal corpus grounds Art. 93 and the six-year window — but NOT the bands
 
-`src/aeat/_data/registry/aeat/legal/irpf-impatriados.toml` declares
+the former source file declares
 `ley-35-2006:art-93` with a corpus HTML ref. Its notes confirm the régimen lets
 the taxpayer "tributar por IRNR durante el período impositivo del desplazamiento
 y los cinco siguientes" — i.e. the option year **plus five**, six tax periods

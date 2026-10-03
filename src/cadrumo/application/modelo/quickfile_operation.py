@@ -19,7 +19,6 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    OperationTerminalCondition,
     profile_operation_subject,
 )
 from ...core.period import Period
@@ -45,8 +44,7 @@ from ..operations.capabilities import (
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
 )
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -272,15 +270,13 @@ def project_quickfile_result(result: BaseModel, receipt: OperationTerminalReceip
     if not isinstance(result, QuickfileExecutionResult) or type(result) is not QuickfileExecutionResult:
         raise ValueError("invalid quickfile result")
     projection = result.projection
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=QUICKFILE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(projection.profile_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=projection.effect,
         message="quickfile result contradicts its terminal receipt",
     )
-    require_succeeded_receipt_references(receipt, message="quickfile result contradicts its terminal receipt")
     _require_quickfile_result_size(result)
     return projection
 

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:28ebfdfe04cc885b8b89224f370eea7d3d0e41c5b76274c89583057cccc9b503'
-related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
+related: []
 ---
 
 # `reachability-burndown` audit: `S209 default filing profile bridge withdrawal review`

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7ed4099bdaec766bce54092cd427d1f718e2b06a994ae3caf6ef018317475e33'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 
 # `profile-password-custody` audit: `S259 M220 grounding review`

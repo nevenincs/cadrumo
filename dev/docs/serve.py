@@ -33,7 +33,7 @@ Every rebuild is a whole-site build, so the generated references (the CLI
 reference, glossary, casilla and legal pages, and under full scope the API
 stubs) regenerate at ``builder-inited`` (see ``docs/conf.py``). Surfaces that
 the build itself rewrites are excluded from the watch set so a rebuild cannot
-trigger itself, and ``docs/_build`` is the output tree. Editing a docstring
+trigger itself, and the configured docs build root holds compiled output. Editing a docstring
 under ``src/cadrumo/`` rebuilds the affected autodoc page, and adding or
 removing a module regenerates its stub on the next rebuild.
 
@@ -65,10 +65,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
 from dev.first_party_source import PRODUCT_PACKAGE
 from dev.product_environment import ambient_product_settings_removed
 
+from .build_paths import docs_build_root, docs_html_root
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 _UTF_8: Final[str] = UTF_8
@@ -198,7 +199,7 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, 
         The full command vector, runnable with the current interpreter.
     """
     docs_root = repo_root / "docs"
-    out_dir = docs_root / "_build" / "html"
+    out_dir = docs_html_root(repo_root)
     command = [
         sys.executable,
         "-m",
@@ -211,7 +212,7 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, 
         "auto",
         # No --no-initial: the first serve builds the current tree before the
         # browser opens, so a review can never start on a stale snapshot of
-        # docs/_build/html left by an earlier session.
+        # canonical HTML output left by an earlier session.
     ]
     if scope != "user":
         # Full scope watches the autodoc source so a docstring edit rebuilds its
@@ -543,13 +544,17 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     kills every rebuild.
     """
     environment = ambient_product_settings_removed()
+    build_root = docs_build_root(repo_root)
     environment.update(
         {
             "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
+            "CADRUMO_DOCS_BUILD_ROOT": str(build_root),
             SEQUENCE_CHECK_SKIP_ENV: "1",
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_DOCS_SCOPE": scope,
-            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-"),
+            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(
+                prefix="cadrumo-docs-serve-", dir=prepare_temporary_directory()
+            ),
         }
     )
     return environment

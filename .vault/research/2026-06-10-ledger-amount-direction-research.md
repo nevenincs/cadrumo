@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-amount-direction'
 date: '2026-06-10'
-modified: '2026-08-11'
-body_hash: 'sha256:870209633e6a7cc5867ec990dd64382781028e182700ad51bd124fefcdf96b2b'
+modified: '2026-10-03'
+body_hash: 'sha256:16e8e3fd1753d28c69f0fb5678f3c4f071a88bfbdb9403404fb6539d3e313140'
 related: []
 ---
 
@@ -26,10 +26,10 @@ defines the non-negative-amount + direction contract that downstream clusters
 
 ### F1 — The store is a signed-amount + redundant-direction hybrid
 
-`RawTransaction.amount` (`src/aeat/domain/transactions/_raw_transaction.py`)
+`RawTransaction.amount`
 is a bare `Decimal` documented as "Signed", negative for an expense and
 positive for income. The wrapping `Transaction`
-(`src/aeat/domain/transactions/_models.py`) carries a separate closed
+ carries a separate closed
 `direction: TransactionDirection` (INCOMING / OUTGOING / INTERNAL_TRANSFER).
 Two fields encode one fact. Nothing structurally binds the sign of
 `raw.amount` to `direction` on the `Transaction` model: `Transaction` has
@@ -39,20 +39,20 @@ representations of flow that can drift apart.
 ### F2 — Sign↔direction consistency is enforced only on the manual path
 
 `ManualLedgerTransactionCommand._validate_direction_policy`
-(`src/aeat/application/ledger/_models.py`, around lines 173–185) is the
+(the former source file, around lines 173–185) is the
 **only** place that enforces agreement: it rejects a zero amount, requires a
 negative amount for OUTGOING, a positive amount for INCOMING, and a separate
 payload shape for INTERNAL_TRANSFER. Its coverage is verified by
-`src/aeat/application/ledger/tests/test_models.py` (around lines 136–153).
+the former source file (around lines 136–153).
 This validator lives on the *manual command*, not on the domain `Transaction`,
 so any path that builds a `Transaction` without going through the manual
 command escapes it.
 
 ### F3 — The import path derives direction from sign and skips the gate (zero-amount bug)
 
-`_direction_from_amount` (`src/aeat/application/ledger/_actions_common.py`,
+`_direction_from_amount` (the former source file,
 around line 127) returns `OUTGOING if raw.amount < 0 else INCOMING`. The
-import action (`src/aeat/application/ledger/_actions_import.py`, around lines
+import action (the former source file, around lines
 333 and 359) passes this resolver into both the dry-run preview and the
 persisting import. Two consequences: (a) the import path never invokes the
 manual validator, so its consistency is enforced only by construction, not by
@@ -65,9 +65,9 @@ import has no way to emit it.
 
 Aggregation everywhere takes the magnitude and routes on `direction`:
 
-- IVA aggregation (`src/cadrumo/application/aggregation/_iva_ledger.py`) routes purely
+- IVA aggregation  routes purely
   by `direction`.
-- Renta aggregation (`src/aeat/application/renta/_renta_ledger.py` and
+- Renta aggregation (the former source file and
   `_renta_income_ledger.py`) uses `abs()` on the amount.
 
 So the sign already carries no arithmetic information downstream — it is a
@@ -77,7 +77,7 @@ the sign loses nothing the calculation engines read.
 ### F5 — Evidence rows carry both signed amount and direction; value_in_eur is already non-negative
 
 `LedgerEvidenceRow`
-(`src/aeat/domain/modelos/_ledger_filing_snapshot.py`, around lines 144–168)
+(the former source file, around lines 144–168)
 carries both a signed `amount` and `direction` — the same redundancy at the
 evidence boundary. Notably `value_in_eur` is **already** stored non-negative
 on the live import path: `_actions_import.py` (around lines 134–137) stamps
@@ -85,7 +85,7 @@ on the live import path: `_actions_import.py` (around lines 134–137) stamps
 (`_models.py`) already rejects a negative `value_in_eur`. So the EUR
 projection is already absolute; only `raw.amount` and the evidence-row
 `amount` still carry a sign. The evidence roundtrip fixture
-(`src/aeat/domain/modelos/tests/test_ledger_filing_evidence_roundtrip.py`,
+
 around lines 40–68) hard-codes `amount=Decimal("-121.00")` and
 `value_in_eur=Decimal("-112.04")` — the fixture is the only place a negative
 evidence `value_in_eur` is constructed, and it must move to non-negative +
@@ -94,7 +94,7 @@ authoritative direction.
 ### F6 — The snapshot fingerprint depends on raw.amount
 
 The per-contributor fingerprint feeding `LedgerFilingSnapshot`
-(`src/aeat/domain/modelos/_ledger_filing_snapshot.py`) and the transaction id
+ and the transaction id
 itself (`derive_transaction_id`, `_models.py`, which hashes
 `canonical_decimal_string(raw.amount)`) both fold `raw.amount` into a content
 hash. Changing the stored amount from `-121.00` to `121.00` changes every
@@ -105,7 +105,7 @@ and ids are simply absent, never migrated.
 ### F7 — Split children must currently share the parent's sign
 
 `_validate_split_child_amounts`
-(`src/aeat/application/ledger/_actions_split_merge.py`, around lines 289–329)
+(the former source file, around lines 289–329)
 requires every child amount to be non-zero and to *share the parent's sign*
 (`(child.amount < 0) != parent_negative` raises). The `SplitChildCommand`
 docstring (`_models.py`, around lines 401–415) states "positive for INCOMING,
@@ -119,7 +119,7 @@ defined sign rule in the split path today.
 `docs/how-to/import-bank-statements.md` (around lines 72, 82, 88) instructs
 the operator to pass `--amount=-49.99` for an expense and `--amount 121.00`
 for income, pairing the sign with `--direction`. The CLI `add` command
-(`src/aeat/entrypoints/cli/_ledger.py`, around lines 376 and 443) accepts
+(the former source file, around lines 376 and 443) accepts
 `--amount` as a free `str` parsed by `_parse_required_decimal` with no
 non-negativity guard, so a negative magnitude flows straight through to the
 manual command's sign check.
@@ -129,8 +129,7 @@ manual command's sign check.
 Every ledger artefact already rides the per-profile encrypted Secure Storage
 backend: the transaction catalogue and bucket-event history persist through a
 bucket-scoped `SecureObjectRepository`
-(`secure_object_repository_for_bucket` in
-`src/aeat/application/ledger/_actions_common.py`), and the evidence /
+(`secure_object_repository_for_bucket` ), and the evidence /
 fingerprint snapshot rides inside the encrypted `CalculationRevision`
 envelope. This change alters *field values and validators* on those records;
 it does not introduce any new on-disk artefact and does not move any data

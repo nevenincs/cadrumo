@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#sync-control-surface'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b08b0ac0eae832d52ee71951e98d8d3acdb4ed289c7ac07fa7bbf137d0817f00'
+body_hash: 'sha256:01d402916f0fa1c87d665de78b8982be1627cbdfa0ff4b3a48a5e03c03dc75d5'
 related:
   - '[[2026-08-08-sync-control-surface-adr]]'
 ---
@@ -19,30 +19,13 @@ Google Sheets calculation export and the AEAT filed-history sweep.
 
 ## Google Sheets calculation sync
 
-CLI verbs live in `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`:
-`export` writes to Drive and Sheets; `verify` also creates a spreadsheet and
-writes cells under the same export capability; `pull` is read-back only;
-`compute` persists nothing and refuses on stale metadata.
 
-The pure plan is built in
-`src/cadrumo/application/storage/calc_sheets/_engine.py` by `build_export_plan`,
-which stamps an export instant onto `SheetExportMetadata` in the sibling
-`_records.py`.
 
-The adapter is `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py`.
-`apply_export_plan` documents idempotence at the spreadsheet level: applying the
-same plan twice updates the same spreadsheet rather than creating a duplicate,
-provided the per-period subfolder and spreadsheet title stay stable. The write
-mechanics are a batch clear over every managed tab range followed by a batch
-update — a destructive whole-surface overwrite, not a merge. Protected ranges
-are deleted and re-created. Foreign content is refused rather than adopted.
 
-What does not exist for this surface: no dry-run or preview on `export`; no
-scope narrower than modelo, period and year; no progress; no cancellation. A
-three-way local/Sheets/AEAT parity report DOES exist, built by
-`verify_modelo_parity` in
-`src/cadrumo/application/storage/calc_sheets/_parity_harness.py` and rendered as
-typed divergence rows — but it is attached to `verify`, not to `export`.
+
+The write mechanics are a batch clear over every managed tab range followed by a batch update — a destructive whole-surface overwrite, not a merge. Protected ranges are deleted and re-created. Foreign content is refused rather than adopted.
+
+What does not exist for this surface: no dry-run or preview on `export`; no scope narrower than modelo, period and year; no progress; no cancellation.
 
 Last-sync marking exists only inside the remote artefact: a managed
 developer-metadata key set written by the adapter, carrying engine version,
@@ -53,20 +36,9 @@ Nothing is recorded locally.
 
 ## AEAT filed-history sweep
 
-The CLI entry is `aeat app live filed pull-all` in
-`src/cadrumo/entrypoints/cli/_app_live.py`, whose only options are an output
-root and a result limit. Its siblings are `filed discover`, `filed pull` (which
-does carry modelo and year scope) and `filed pull-sources`. The TUI manager
-reaches the same action through
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
+The CLI entry is `aeat app live filed pull-all` in `src/cadrumo/entrypoints/cli/_app_live.py`, whose only options are an output root and a result limit. Its siblings are `filed discover`, `filed pull` (which does carry modelo and year scope) and `filed pull-sources`.
 
-The application layer is
-`src/cadrumo/application/live/_filed_data_capture.py`. `pull_filed_history`
-sequences discovery, bulk capture, the IVA wallet and notificaciones, collecting
-per-stage failures. Observations persist through
-`FiledDeclaracionObservationStore` in
-`src/cadrumo/adapters/outbound/aeat/sede/_observation_store.py`, content-
-addressed by SHA-256.
+
 
 **The sweep is not append-only.** The capture module states that a re-capture is
 an unconditional upsert; observations are keyed on modelo, ejercicio, period and
@@ -86,29 +58,13 @@ record.
 
 ## The censo cotejo precedent
 
-`src/cadrumo/entrypoints/cli/_config/_censo_file.py` implements preview by
-default with `--apply` as the commit door on both `censo file` and `censo pull`;
-the commit branch is the only branch that writes, and preview renders the same
-rows. A preview `Notice` carries the apply command as its suggestion. Three
-divergence notice classes are rendered: value disagreement, withheld or redacted
-values, and operator-cleared paths.
+A preview `Notice` carries the apply command as its suggestion. Three divergence notice classes are rendered: value disagreement, withheld or redacted values, and operator-cleared paths.
 
-The single apply authority is `apply_cotejo` in
-`src/cadrumo/application/user_profile/_cotejo_apply.py` — atomic clearing plus
-adopted plus fresh divergence rows through one write, then exactly one
-`CENSO_APPLIED` event. The typed row is `CensoDivergence`; the namespace is
-`censo.divergencia` with indexed subpaths; the standing warning is
-`censo_divergence_notice`, emitted on profile read from
-`src/cadrumo/entrypoints/cli/_config/_profile_inspect.py`.
+
 
 ## Last-sync provenance across the tree
 
-A search for last-synced, synced-at, last-pull and last-run naming across `src/`
-and `.vault/` returns nothing. What exists is per-record ingest stamps only: a
-capture instant per filed observation; an ingest instant on ledger raw
-provenance in `src/cadrumo/adapters/inbound/financial/providers/_base.py`; export
-instants on modelo and filing export records; an export instant on the portable
-profile bundle. No surface records that a sync ran.
+A search for last-synced, synced-at, last-pull and last-run naming across `src/` and `.vault/` returns nothing. No surface records that a sync ran.
 
 ## Prior decisions bearing on preview and dry-run
 

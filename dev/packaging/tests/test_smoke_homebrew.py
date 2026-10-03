@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import stat
 import sys
+from collections.abc import Callable
 from pathlib import Path
+from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
+from .. import acquire_homebrew, smoke_homebrew
 from ..smoke_homebrew import (
     CLEANUP_STATE_NAME,
     _assert_oracle_evidence,
+    _homebrew_storage_environment,
+    _new_run_root,
     _parser,
     _require_valid_tap_name,
     cleanup_state_document,
@@ -22,6 +29,78 @@ from ..smoke_homebrew import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.parametrize(
+    ("resolver", "volume_check"),
+    [
+        (_homebrew_storage_environment, smoke_homebrew._require_homebrew_temp_volume),
+        (acquire_homebrew._homebrew_storage_environment, acquire_homebrew._require_homebrew_temp_volume),
+    ],
+)
+def test_homebrew_storage_controls_resolve_refinements_under_the_local_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    resolver: Callable[..., dict[str, str]],
+    volume_check: Callable[..., None],
+) -> None:
+    """Both real Homebrew lanes honor root-relative and independent overrides."""
+    root = tmp_path / "local-storage"
+    prefix = tmp_path / "homebrew-prefix"
+    prefix.mkdir()
+    cache_relative = "development/cache/brew-custom"
+    log_absolute = tmp_path / "external-homebrew-logs"
+    temp_relative = "scratch/brew"
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "shared-storage"))
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_HOMEBREW_CACHE_DIR", cache_relative)
+    monkeypatch.setenv("CADRUMO_HOMEBREW_LOGS_DIR", str(log_absolute))
+    monkeypatch.setenv("CADRUMO_HOMEBREW_TEMP_DIR", temp_relative)
+
+    environment = resolver()
+    volume_check(environment=environment, brew_prefix=prefix)
+
+    assert Path(environment["HOMEBREW_CACHE"]) == root / cache_relative
+    assert Path(environment["HOMEBREW_LOGS"]) == log_absolute
+    assert Path(environment["HOMEBREW_TEMP"]) == root / temp_relative
+    assert all(Path(environment[name]).is_dir() for name in ("HOMEBREW_CACHE", "HOMEBREW_LOGS", "HOMEBREW_TEMP"))
+
+
+def test_homebrew_temp_refuses_a_different_filesystem(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The default controlled scratch path cannot silently violate brew's volume rule."""
+    prefix = tmp_path / "homebrew-prefix"
+    prefix.mkdir()
+    original_stat = Path.stat
+
+    def stat_with_different_prefix_device(path: Path, *args: object, **kwargs: object) -> os.stat_result:
+        result = original_stat(path, *args, **kwargs)  # type: ignore[arg-type]
+        if path == prefix:
+            return cast(os.stat_result, SimpleNamespace(st_dev=result.st_dev + 1))
+        return result
+
+    monkeypatch.setattr(Path, "stat", stat_with_different_prefix_device)
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "storage"))
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    monkeypatch.delenv("CADRUMO_HOMEBREW_TEMP_DIR", raising=False)
+    environment = _homebrew_storage_environment()
+    with pytest.raises((SystemExit, acquire_homebrew.AcquisitionError), match="share a filesystem"):
+        smoke_homebrew._require_homebrew_temp_volume(environment=environment, brew_prefix=prefix)
+
+
+def test_homebrew_smoke_relative_evidence_is_stored_under_configured_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+
+    run_root = _new_run_root(Path("development/releases/homebrew/evidence"))
+
+    assert run_root.is_relative_to(root)
 
 
 def _write_stub_brew(bin_dir: Path, state_dir: Path) -> Path:

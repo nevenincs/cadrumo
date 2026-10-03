@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:2fe8db9e45aa46ea62fdb9a4351067c3e46ee9c50bbd5bd767642d5f2574970c'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 
 # `profile-password-custody` audit: `S221 recovery matrix review`

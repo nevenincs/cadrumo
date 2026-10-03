@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-verb-profile-diagnostics'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a09a7409ff22c1f72b669b1aa54bdbfc3762067f1e153faa67d9a9345eab39f5'
-related:
-  - "[[2026-08-09-cli-verb-profile-diagnostics-plan]]"
+related: []
 ---
 
 # `cli-verb-profile-diagnostics` audit: `closure honesty review`

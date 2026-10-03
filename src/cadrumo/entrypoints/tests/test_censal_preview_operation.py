@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.live.tests.unopened_live_ports import (
@@ -29,6 +31,7 @@ from cadrumo.application.user_profile.censal_preview_operation import (
     build_censal_preview_operation_definition,
     build_censal_preview_operation_registration,
 )
+from cadrumo.application.user_profile.censal_readback import read_latest_censal_observation
 from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_effective_facts
@@ -40,9 +43,11 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from . import test_registered_executor_conformance as conformance
+from .test_censal_operation_operand import _operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,7 +100,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
     acquisition_task_names: list[str] = []
     acquisition_scopes: list[bool] = []
     pinned_operations: list[PinnedAuthorityOperation] = []
-    observation = conformance._observation()
+    observation = _operand().observation
 
     def browser_resources_factory() -> _PreviewBrowserResources:
         resource = _PreviewBrowserResources()
@@ -189,6 +194,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
             )
             assert isinstance(preview, CensalPreviewOperationResult)
             assert preview.profile_id == profile_id
+            assert preview.observation == observation
             assert preview.applied is False
             assert preview.source_url == observation.source_url
             assert tuple(item.path for item in preview.adopted) == (
@@ -199,6 +205,28 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
             assert all(item.source == CENSO_SOURCE_TAG for item in preview.adopted)
             assert not preview.unchanged
             assert not preview.divergences
+
+            # Fresh adapter instances must recover the complete capture from
+            # the settled journal and encrypted result, without another pull.
+            for _ in range(2):
+                stored = asyncio.run(
+                    read_latest_censal_observation(
+                        profile_id,
+                        journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                        operands=operation_secure_reference_repository(),
+                    )
+                )
+                assert stored == observation
+            assert (
+                asyncio.run(
+                    read_latest_censal_observation(
+                        uuid4(),
+                        journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                        operands=operation_secure_reference_repository(),
+                    )
+                )
+                is None
+            )
 
             record_after = repository.load(profile_id)
             history_after = ProfileRecordStore(session=repository.session).history()

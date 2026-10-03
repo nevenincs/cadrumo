@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:30e734e2b70b582fb63c37eb9c103b79c1b33128cdf274cbce6d8d983a85691d'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S55 DP30301 scalar-owner review`

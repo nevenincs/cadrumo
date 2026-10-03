@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#iva-franquicia-2026-scope'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:dd79d88555fb9319219db8f2ca9fef8c391c7893bdb26cdbd5a61b7667b177d3'
+modified: '2026-10-03'
+body_hash: 'sha256:894231b8c7397eb3b56d61ae574ff8100c861933021325993db6705c4058b1ac'
 related:
   - "[[2026-07-01-iva-franquicia-2026-scope-adr]]"
 ---
@@ -25,11 +25,11 @@ says, and how bounded the first slice is.
 RAG + grep + read across `domain/iva/`, `domain/deadlines/`, the M303 registry, and
 `--type vault` returned zero franquicia implementation. Confirmed absences:
 
-- `IVARegime` (`src/aeat/domain/deadlines/_models.py:30`) enumerates
+- `IVARegime`  enumerates
   `{GENERAL, SIMPLIFICADO, RECARGO_EQUIVALENCIA, REAGP, EXENTO}` — no `FRANQUICIA`
   member. `EXENTO` is a different concept (art. 20 activity exemption:
   education/health), not a turnover-based election, and must not be conflated.
-- `IvaCategory` (`src/aeat/domain/iva/_schema.py:38`) has 18 members
+- `IvaCategory`  has 18 members
   (`DOMESTIC_*`, `INTRA_COMMUNITY_*`, `EXPORT_*`, `IMPORT_*`, `RECARGO_EQUIVALENCIA`,
   `REGIMEN_SIMPLIFICADO`) — no franquicia member.
 - `TaxpayerProfile` (`_models.py:390`) carries a required `iva_regime: IVARegime`
@@ -53,7 +53,7 @@ the campaign that revisits that deferral.
 ### F3 — The applicability engine already has the exact lever the first slice needs
 
 `ModeloApplicabilityRule.applicable_iva_regimes`
-(`src/aeat/domain/calculations/registry/_applicability.py:287,331`) gates a modelo
+ gates a modelo
 NOT_APPLICABLE for any profile whose `iva_regime` is outside the rule's set. Both
 Modelo 303 (`:1463`) and Modelo 390 (`:1434`) are gated on
 `_IVA_SELF_ASSESSMENT_REGIMES = {GENERAL, SIMPLIFICADO}` (`:620`). A new
@@ -67,7 +67,7 @@ file M303/390".
 
 The regimen simplificado already carries a regime-specific bypass:
 `_raise_if_ledger_preflight_blocks_calculation`
-(`src/aeat/application/modelo/_calculation_actions.py`), pinned by
+, pinned by
 `test_simplificado_ledger_bypass.py` with an anti-tautology GENERAL-regime control.
 The enrolment surface is the `--iva-regime` CLI axis + wizard SELECT validator
 (`docs/how-to/profile-setup.md:202`), which already lists GENERAL / SIMPLIFICADO /

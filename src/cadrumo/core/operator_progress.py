@@ -1,27 +1,25 @@
-"""Layer-neutral schema for operator-visible progress updates."""
+"""Layer-neutral operator-progress schema and the context-scoped channel that carries it.
+
+The channel lives in core so that whichever layer owns the operator's view can
+arm it: the operation supervisor forwards each update's ``notice_code`` into
+the operation's public notice events, and the CLI routes in-process updates to
+stderr. An emitter running with no sink armed only records to its own log.
+"""
 
 from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 from pydantic import BaseModel, Field
 
 from .models import STRICT_FROZEN_CONFIG
 
+type OperatorProgressSink = Callable[[OperatorProgress], Awaitable[None]]
+
 
 class OperatorProgress(BaseModel):
-    """Actionable progress text plus an optional live countdown duration."""
+    """Actionable progress text plus a stable notice code and optional live countdown.
 
-    model_config = STRICT_FROZEN_CONFIG
-
-    message: str = Field(min_length=1)
-    timeout_seconds: int | None = Field(default=None, gt=0)
-
-    def render(self, *, remaining_seconds: int | None = None) -> str:
-        """Render the update for a frontend that cannot animate a timer."""
-        seconds = self.timeout_seconds if remaining_seconds is None else remaining_seconds
-        if seconds is None:
-            return self.message
-        minutes, remainder = divmod(max(0, seconds), 60)
-        return f"{self.message} Time remaining {minutes}:{remainder:02d}."
-
-
-__all__ = ["OperatorProgress"]
+    ``notice_code`` is the only part that cros

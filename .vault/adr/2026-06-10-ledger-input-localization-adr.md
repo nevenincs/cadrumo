@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-08-04'
-body_hash: 'sha256:12e2454eb269e9fde3d101b1131e5617f743d505682e0716373aca474807c839'
+modified: '2026-10-03'
+body_hash: 'sha256:0f0e5a68a0b12c6d765a89a2fbda7ecca772f57ce6fa13efc6d0e6e1eb89ccf7'
 related:
   - "[[2026-06-10-ledger-input-localization-research]]"
   - '[[2026-08-04-decimal-notation-under-declaration-research]]'
@@ -86,8 +86,7 @@ fields use the non-negative variant once C1 lands (see Constraints), genuinely
 signed fields use the signed variant.
 
 **Single shared helper.** Consolidate the six duplicated `_parse_decimal` /
-`_parse_required_decimal` copies into one owning helper in
-`src/cadrumo/entrypoints/cli/_common.py` (which already owns `_parse_iso_date`),
+`_parse_required_decimal` copies into one owning helper  (which already owns `_parse_iso_date`),
 enforcing the regex + finite guard exactly once. The six modules import the
 shared helper rather than re-deriving it; per `service-imports-via-top-level-reexports`
 and the architecture-boundary rules, the canonical helper has one home and is

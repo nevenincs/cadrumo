@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5482dfae750497cf5e6fc4c3293e9a7ecfdabcb68c1e50f066f3ec64043c23bb'
+body_hash: 'sha256:bc9360c8cef2a92e282279551d86d63388185adcaa0bb4013ba7fb2785f65096'
 related:
   - "[[2026-08-12-aeat-export-fragment-generator-authority-dp30302-projection-declaration-deficit-audit]]"
 ---
@@ -128,14 +128,7 @@ identifiers are what casillas, bindings and projection endpoint declarations cit
 `legal_refs`, and which the semantic-map validator resolves against. An endpoint declaration can
 only cite an identifier that exists here.
 
-The second is the annual Orden extraction. The Modelo 303 annual Orden authority already carries
-genuinely grounded module data: 49 activities per ejercicio for 2023 through 2026, each with an
-activity code, an IAE epígrafe, per-module order and coefficient as exact decimals, a cuota
-mínima percentage, and per-module `legal_refs` of the form
-`orden-hac-1425-2025:anexo-ii-iva:<digest>` together with a source content digest. That data is
-read from `src/cadrumo/_data/corpus/normatives/html/orden-hac-1425-2025.html.extracted.json` and
-its siblings, through `src/cadrumo/core/_orden_anual_html.py` and
-`src/cadrumo/domain/calculations/registry/_m303_orden_anual.py`.
+The second is the annual Orden extraction. The Modelo 303 annual Orden authority already carries genuinely grounded module data: 49 activities per ejercicio for 2023 through 2026, each with an activity code, an IAE epígrafe, per-module order and coefficient as exact decimals, a cuota mínima percentage, and per-module `legal_refs` of the form `orden-hac-1425-2025:anexo-ii-iva:<digest>` together with a source content digest.
 
 The `anexo-ii-iva` identifiers appear nowhere in the legal catalogue. So the refs that already
 ground the module coefficients cannot be cited by an endpoint declaration, even though they are

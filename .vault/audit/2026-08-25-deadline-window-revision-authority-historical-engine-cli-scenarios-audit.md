@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:47bad6f266f2136e94d6d38d73a22a95d4a8b84170a9ce63bbc7d69a5b97f61f'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 # `deadline-window-revision-authority` audit: `historical engine CLI scenarios`
 

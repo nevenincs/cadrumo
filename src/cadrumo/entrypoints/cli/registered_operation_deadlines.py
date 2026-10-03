@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass
 
 from ...application.runtime.deadline_budget import bounded_deadline_after
+from ...core.config import load_settings
 
 #: Longest a command waits for an admitted operation to settle; each exchange keeps its own timeout.
 MAX_OPERATION_SETTLEMENT_SECONDS = 3600.0
@@ -44,6 +45,18 @@ class RegisteredOperationDeadline:
             if bounded - time.monotonic() >= MIN_SETTLED_OPERATION_READ_SECONDS
             else time.monotonic() + self.timeout
         )
+
+
+def provider_login_settlement_seconds(*, after_login: float = 0.0) -> float:
+    """Return a settlement wait that outlasts a fresh AEAT provider login, then ``after_login``.
+
+    Entry navigation, AEAT's whole approval window, the post-approval landing and the
+    representation gate each spend their own budget. A command that stops waiting earlier
+    disconnects, which retires its lease and the worker's key custody mid-login.
+    """
+    settings = load_settings()
+    login = (settings.cadrumo_clave_movil_timeout_ms + 3 * settings.cadrumo_browser_navigation_timeout_ms) / 1000
+    return login + after_login
 
 
 def operation_settlement_deadline(timeout: float, settlement_timeout: float | None) -> float:

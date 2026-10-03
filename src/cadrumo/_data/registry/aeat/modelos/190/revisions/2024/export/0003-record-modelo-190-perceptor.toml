@@ -1,0 +1,206 @@
+[[revisions.2024.export_layouts]]
+id = 'modelo-190-fichero-boe'
+
+[[revisions.2024.export_layouts.records]]
+id = 'modelo-190-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-especie-repercutidos'
+offset = 309
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-repercutidos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-complemento-ayuda-infancia'
+offset = 322
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-complemento-ayuda-infancia'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-estatal'
+offset = 323
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-estatal'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-navarra'
+offset = 336
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-navarra'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-araba'
+offset = 349
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-araba'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-gipuzkoa'
+offset = 362
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-gipuzkoa'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-bizkaia'
+offset = 375
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-bizkaia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-excesos-acciones-emergentes'
+offset = 388
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-excesos-acciones-emergentes'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-42.3.f',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-190-perc-blancos-389'
+offset = 389
+length = 112
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1432-2024:art-unico',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2024']
+
+[revisions.2024.export_layouts.records.row_field_casilla_ids]

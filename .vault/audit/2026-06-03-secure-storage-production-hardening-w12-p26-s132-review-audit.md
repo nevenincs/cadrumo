@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:db3dc2885c63369218f0c33fcb71b0237b6c344d61d1d81f3700c8e108fee352'
+modified: '2026-10-03'
+body_hash: 'sha256:2d468331dc7ab2064d9536b14c228e7bcecab2c4e8dbb56afbdf92acfa9b210a'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Failure surfaces use typed `GoogleAuthError` subclasses rooted at `AeatError`, w
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_records.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed with 24 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_oauth_flow.py src/aeat/adapters/outbound/google/_errors.py src/aeat/adapters/outbound/google/test_records.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed.
+- the focused test run passed with 24 tests.
+- the focused test run passed.
 - A source scan found no naked environment reads, DB route setup, secure-object repository constructors, local storage provider constructors, or direct local file read/write calls in `_oauth_flow.py`.
 
 Disposition: close `AFR-030` as `remote-mirror`. The live OAuth browser consent probe remains opt-in live evidence and is not counted as this offline ledger closure.
@@ -47,5 +47,5 @@ Resolution: missing active-profile bucket manifests and missing profile aggregat
 Validation:
 
 - `test_oauth_flow.py` covers a missing bucket manifest and a real isolated active-bucket runtime whose profile aggregate is absent.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_oauth_flow.py` passed.
+- the focused test run passed.
 - Targeted Ruff passed for `_oauth_flow.py` and `test_oauth_flow.py`.

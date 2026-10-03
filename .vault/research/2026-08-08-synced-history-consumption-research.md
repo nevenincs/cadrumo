@@ -6,8 +6,7 @@ date: '2026-08-08'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:d2c8ac20e06d23fc950aefaa15f4d86dc61dfbde2950cca2afa22f1e20819264'
-related:
-  - "[[2026-08-07-history-onboarding-plan]]"
+related: []
 ---
 
 # `synced-history-consumption` research: who consumes pulled AEAT filing history

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:e416a8664f15d75c81dbea817d80eb14838a06565ff3eb025f488030854af311'
+modified: '2026-10-03'
+body_hash: 'sha256:fc103acaaaa4ee9e0681d075ee9597d82091befa2dc19dc2e3834e1ee5998cf1'
 related:
   - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s347-review-audit]]'
   - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s355-review-audit]]'
@@ -21,7 +21,7 @@ schema verification. No production code or test code changed in this step.
 
 ## S347-CR-002 | PASS | Runtime classification is coherent
 
-The reviewed evidence supports `remote-mirror`: `src/aeat/domain/iva/_schema.py`
+The reviewed evidence supports `remote-mirror`: the retired module
 contains strict domain schema and external legal citation fields, but no persistence,
 runtime bucket resolution, SQL route, secret handling, or environment access. No
 runtime-default enrollment gap was found for this slice.
@@ -62,7 +62,7 @@ is a strict data-model surface, not a storage runtime owner.
 
 ## S354-CR-002 | PASS | Repository remediation remains correctly tracked
 
-The audit explicitly leaves `src/aeat/domain/modelos/_filing_repository.py` to
+The audit explicitly leaves the retired module to
 `W12.P26.S355`. This avoids masking the repository's runtime and localized-error work
 inside a manifest-discovery row.
 
@@ -171,7 +171,7 @@ read settings, inspect environment variables, or perform filesystem IO.
 ## S359-CR-002 | PASS | Storage ownership is not duplicated
 
 The encrypted `WorkUnitCatalogue` repository remains
-`src/aeat/domain/modelos/_repository.py`, already closed under S356 as
+The retired module, already closed under S356 as
 `runtime-default`. S359 therefore correctly closes as `manifest-discovery` without
 adding a second storage abstraction.
 
@@ -387,7 +387,7 @@ tests, and `python -m aeat.locales audit` passed after the localized refusal cha
 
 Reviewed the S380 scope as `vaultspec-code-reviewer`. `AFR-278` and `W12.P26.S380`
 still referenced `_profile_census.py`, which no longer exists after the censo rename.
-The plan now tracks `src/aeat/entrypoints/cli/_config/_profile_censo.py` and closes the
+The plan now tracks the retired module and closes the
 register entry against the live implementation.
 
 ## S380-CR-002 | FIXED | Censo event history used ambient active-bucket repository construction
@@ -645,7 +645,7 @@ resolver test and `.env.example`/`Settings` alignment tests passed.
 
 ## S442-CR-001 | PASS | Modelo projection stays a delegated manifest-discovery surface
 
-Reviewed `src/aeat/application/modelo/_projection.py` as the S442 scope. The module
+Reviewed the retired module as the S442 scope. The module
 does not construct secure-object repositories, inspect bucket manifests, open SQL
 routes, read environment variables, or persist files directly. It delegates active
 profile-derived inputs to `resolve_profile_sourced_bindings()` and existing modelo
@@ -688,14 +688,14 @@ integration tests, modelo projection integration tests, error-registry tests, an
 
 ## S443-CR-001 | PASS | Modelo selectors stay delegated
 
-Reviewed `src/aeat/application/modelo/_selectors.py` as the S443 scope. The selector
+Reviewed the retired module as the S443 scope. The selector
 surface resolves explicit or active bucket context and delegates to work-unit and
 calculation-revision repositories. It does not construct secure storage, inspect
 manifest files, open SQL connections, read environment variables, or persist data.
 
 ## S444-CR-001 | PASS | Modelo work addressing stays an application facade
 
-Reviewed `src/aeat/application/modelo/_work_addressing.py` as the S444 scope. The
+Reviewed the retired module as the S444 scope. The
 module normalizes operator-visible targets, resolves registry revisions through the
 bundled registry API, and delegates runtime work lookup to selectors/actions. Registry
 parse failures are converted to typed `ModeloError` descendants instead of being
@@ -703,35 +703,35 @@ swallowed.
 
 ## S445-CR-001 | PASS | Modelo create policy uses centralized settings
 
-Reviewed `src/aeat/application/modelo/_work_create_policy.py` as the S445 scope. The
+Reviewed the retired module as the S445 scope. The
 M210 live-engine gate uses `load_settings()`, and profile applicability checks delegate
 to workflow/profile services. The module has no direct storage, manifest, raw
 environment, or filesystem persistence authority.
 
 ## S446-CR-001 | FIXED | Plazo recargo fallback narrowed and logged
 
-Reviewed `src/aeat/application/modelo/_work_plazo.py` as the S446 scope. The recargo
+Reviewed the retired module as the S446 scope. The recargo
 fallback no longer catches all exceptions; it now catches only `DeadlineValidationError`,
 logs the recoverable registry failure at debug level with exception information, and
 allows unexpected defects to propagate.
 
 ## S447-CR-001 | PASS | IVA wallet seed delegates profile and wallet custody
 
-Reviewed `src/aeat/application/modelo/_iva_wallet_seed.py` as the S447 scope. The module
+Reviewed the retired module as the S447 scope. The module
 resolves taxpayer identity through the bucket/profile taxpayer service and delegates
 wallet persistence to the IVA compensation application service. Seed refusals derive
 from `ModeloError` and carry locale keys.
 
 ## S448-CR-001 | PASS | Modelo projection CLI stays localized and delegated
 
-Reviewed `src/aeat/entrypoints/cli/_modelo_projection_cli.py` as the S448 scope. The
+Reviewed the retired module as the S448 scope. The
 CLI registrar requires active profile context through its callback, delegates projection
 and comparison to application services, uses `tr()` for user-facing text, and emits
 typed payload envelopes without owning storage routes.
 
 ## S449-CR-001 | PASS | IVA wallet CLI stays localized and delegated
 
-Reviewed `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py` as the S449 scope. The
+Reviewed the retired module as the S449 scope. The
 CLI registrar uses the active bucket callback, delegates wallet balance and seed
 operations to application services, localizes help and refusal text through `tr()`, and
 refuses conflicts rather than overwriting existing wallet state.

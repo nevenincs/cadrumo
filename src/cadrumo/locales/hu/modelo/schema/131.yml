@@ -218,6 +218,11 @@ modelo:
             label: Korábbi önadózásokból befizetendő eredmény
           retenciones-ingresos-a-cuenta:
             label: Forrásadó és részletfizetés
+      construct:
+        modelo-131-objective-estimation-instalment:
+          field:
+            title: 'Modelo 131 nyomtatvány: negyedéves előlegfizetés az objektív becslés
+              rendszerében'
       field:
         official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
           és szakemberek. Részletfizetés.

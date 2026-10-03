@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:c69943969ce17b0b5618e5b54ebd76f478e03fa515211d41cb09a0554ab6b81f'
+modified: '2026-10-03'
+body_hash: 'sha256:c474059839f6d5d1d4a7ae4eb436ff57b82652e8df166d4a49dd495c02e4742a'
 related: []
 ---
 
@@ -24,8 +24,8 @@ related: []
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py` passed with 14 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py` passed.
+- the historical check passed with 14 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the known `PLAN022` ordering warning.
 

@@ -3,11 +3,12 @@ tags:
   - '#reference'
   - '#unfalsifiable-test-sweep'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f74e345c2297f331598640b692fb9cc25cc6135c70358148077b220c27ab1959'
+body_hash: 'sha256:5f127a297907179a0e187eb7492cda32d7b25d5f6774004d759f2b2d5917378e'
 related: []
 ---
+
 # `unfalsifiable-test-sweep` reference: `Census of tests that cannot fail`
 
 ## Summary
@@ -48,16 +49,11 @@ That is the useful reduction: the screen's own over-reporting is confirmed as
 over-reporting, and the worklist that actually needs reading is four modules
 rather than one hundred and sixty-nine.
 
-The four are `dev/docs/tests/test_docs_build_full_scope.py`,
-`dev/docs/tests/test_docs_build_localized.py`,
-`src/cadrumo/tests/test_dev_dotenv_bridge.py` and
-`src/cadrumo/tests/test_utf8_enrollment_inventory.py`.
+
 
 ## The finding that survived reading
 
-`src/cadrumo/tests/test_utf8_enrollment_inventory.py` walks two corpora through
-module-local accessors. Neither is floored anywhere in the repository: nothing
-asserts either walk returns a single file.
+Neither is floored anywhere in the repository: nothing asserts either walk returns a single file.
 
 The module carries three tests. Two scan for bare UTF-8 literals and raise only
 when they find one. The third checks that no ratchet entry has gone inert.

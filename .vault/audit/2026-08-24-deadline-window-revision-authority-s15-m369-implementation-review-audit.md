@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:eee9e5babb10af948c76a1adcd620ad58c7a2b296c64608539dc7da38cd27c18'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 
 # `deadline-window-revision-authority` audit: `S15 Modelo 369 implementation review`

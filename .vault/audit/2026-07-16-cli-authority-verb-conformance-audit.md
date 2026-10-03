@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance'
 date: '2026-07-16'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_hash: 'sha256:d1c1811b996cd9b0b45003c11a49eaa84d6dedbb6cfdc9899acb8a64bce3325f'
-related:
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
+related: []
 ---
 # `cli-authority-verb-conformance` audit: `S43 auth logout preservation review`
 

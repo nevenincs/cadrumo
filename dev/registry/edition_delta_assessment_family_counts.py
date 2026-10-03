@@ -9,12 +9,19 @@ from cadrumo.domain.calculations.registry.keyed_families import CASILLAS_FAMILY
 
 from . import edition_delta_payload as payload
 from . import edition_delta_source as source
+from .compiler.export_fragment_grammar import revision_section_for_directory
 from .edition_delta_assessment_state import FamilyRun
 
 
 def _family_bytes(family: FamilyRun) -> int:
-    family_dir = family.run.modelo_dir / "revisions" / family.revision_id / family.spec.section
-    return sum(path.stat().st_size for path in family_dir.rglob("*") if path.is_file())
+    revision_dir = family.run.modelo_dir / "revisions" / family.revision_id
+    return sum(
+        path.stat().st_size
+        for section_dir in revision_dir.iterdir()
+        if section_dir.is_dir() and revision_section_for_directory(section_dir.name) == family.spec.section
+        for path in section_dir.rglob("*")
+        if path.is_file()
+    )
 
 
 def _count_authored_payload(family: FamilyRun, authored: tuple[Mapping[str, object], ...]) -> None:

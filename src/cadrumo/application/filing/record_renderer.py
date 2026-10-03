@@ -186,34 +186,12 @@ def _single_record_render_row(
     if record.record_type == "t3690-estruc-gral":
         return (RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
     if (
-        _record_omitted_when_empty(record)
+        record.binding_record is not None
         and not _record_has_binding_value(record, binding_values)
         and not _record_has_casilla_value(record, casilla_values)
     ):
         return ()
     return (RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
-
-
-def _record_omitted_when_empty(record: ExportRecordDefinition) -> bool:
-    """Whether a non-repeating record declares that it may be left out of the fichero.
-
-    A record deriving fields from a ``binding_record`` declares it through that
-    link. An optional record carrying operator fields but no binding record has
-    ``required = false`` as its only declaration: Modelo 347's inmueble record
-    is filed only by a lessor of business premises, and an occurrence with no
-    operator value would file a lease that does not exist. A record with
-    projection fields is excluded, because its content arrives through the
-    projection channel this check does not see, and a record of producer headers
-    alone has no operator field to judge.
-    """
-    if record.binding_record is not None:
-        return True
-    if record.required:
-        return False
-    kinds = {field.kind for field in record.fields}
-    return CasillaFieldKind.PROJECTION not in kinds and bool(
-        kinds & {CasillaFieldKind.CASILLA, CasillaFieldKind.BINDING}
-    )
 
 
 def _binding_record_render_rows(

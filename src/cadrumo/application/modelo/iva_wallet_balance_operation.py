@@ -14,7 +14,7 @@ from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva_compensation.balance import CompensationExpiryYear, IvaWalletBalanceReport
@@ -26,8 +26,7 @@ from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
@@ -129,15 +128,13 @@ def project_modelo_iva_wallet_balance_result(
         raise ValueError("invalid IVA wallet balance operation result")
     report = ModeloIvaWalletBalanceOperationReport.model_validate(result.model_dump(mode="python"), strict=True)
     projection = report.projection
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(projection.profile_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )
-    require_succeeded_receipt_references(receipt, message=_RECEIPT_CONTRADICTION)
     _require_balance_projection_size(projection)
     return projection
 

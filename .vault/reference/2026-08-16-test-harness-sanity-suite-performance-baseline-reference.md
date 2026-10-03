@@ -5,10 +5,11 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:68fc6f4d6070dad497a0441176ab77882612aea93202bfa413c60dd8feab860e'
+body_hash: 'sha256:04f799555231063fc8268ffc5ebc97622c9f0b1ed78564de17ccaea9b0402ebe'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
 ---
+
 ## Summary
 
 This reference preserves a reproducible measured performance baseline for the test harness, so a later profile can compare against known costs instead of repeating the same diagnosis.
@@ -50,12 +51,7 @@ Full `src/cadrumo` run, 6 workers, `--dist=loadfile`, quiet box:
 
 Slowest files (the ranking a `--durations` run should reproduce):
 
-    169.0s  entrypoints/cli/tests/test_config_custody_profile_lifecycle.py
-    127.3s  application/user_profile/tests/test_login_handover.py
-    121.9s  tests/test_acceptance_wall_catalogue.py
-    102.5s  entrypoints/cli/tests/test_cli_workflow_verification.py
-    101.6s  entrypoints/cli/tests/test_ledger_corpus_batch_transform.py
-     95.3s  tests/test_wheel_content_boundary.py
+
 
 Other roots: `src/cadrumo-harness` ~93s after the descriptor memo (was 143s);
 `dev` ~1,840s; `dev/packaging/tests/test_installed_oracles.py` ~244s.

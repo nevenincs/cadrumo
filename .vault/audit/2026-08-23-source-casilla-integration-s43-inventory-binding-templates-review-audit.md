@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:d227d009a8ff8c8480168b560175ba8e744874ab680253da82aeec738191a07d'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 
 # `source-casilla-integration` audit: `source-casilla-integration audit: s43 inventory binding templates review`

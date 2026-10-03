@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:376db7d4bb326270ac36eab60634f12f99352d0cc6c61012cbba6d32ecaadb67'
+body_hash: 'sha256:b4829e432815c93c06cbd28c98be1f19d8121d02d4d94975648b663912fa0c7c'
 related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-08-13-secure-storage-hardening-successor-adr]]'
@@ -52,7 +52,7 @@ read:
   already in `model_fields_set`; `ensure_storage_tree`
   (`src/cadrumo/core/config.py:1370`) materialises exactly this dict and
   nothing else.
-- **Namespace registry.** `src/cadrumo/adapters/persistence/storage/_namespace_registry.py:31`
+- **Namespace registry.** the former source file
   declares bare string constants: `BUCKETS_DIRNAME = "buckets"`,
   `BUCKET_DB_DIRNAME = "db"`, `BUCKET_BLOBS_DIRNAME = "blobs"`,
   `BUCKET_AUDIT_DIRNAME = "audit"`, `BUCKET_MANIFEST_FILENAME = "manifest.toml"`,
@@ -62,35 +62,33 @@ read:
   `PROFILE_SESSION_FILENAME = "session.v1.json"`,
   `LOGIN_THROTTLE_FILENAME = "login-throttle.json"`,
   `CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"`. These resolve through
-  `bucket_paths` (`src/cadrumo/adapters/persistence/storage/bucket/_layout.py:47`)
+  `bucket_paths`
   and `keystore_path`
-  (`src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py:22`).
+
   `buckets/` and `keystore/` are real top-level directories under the storage
   root, structurally peer to `tokens/` and `secrets/`, with no settings field,
   no environment override, and no `ensure_storage_tree` coverage. That absence
   of an override is deliberate, not an oversight: an operator must not be able
   to relocate a keystore out from under the bucket it unlocks.
-- **Module-local constants.** `src/cadrumo/application/corpus_search/_runtime.py:28`
+- **Module-local constants.** the former source file
   declares `_INDEX_SUBDIR = "corpus-search"` and resolves
   `cadrumo_local_storage_root / _INDEX_SUBDIR`;
-  `src/cadrumo/entrypoints/mcp/_telemetry.py:44` declares
+  the former source file declares
   `_TELEMETRY_DIRNAME = "telemetry"` and resolves it the same way;
-  `src/cadrumo/core/_bucket_pointer_io.py:42` declares
+  the former source file declares
   `_POINTER_FILENAME = "active-profile"` for the top-level pointer file. Each is
   root-anchored (so no escape), each is invisible to every gate and to the
   operator's override surface.
 - **Inline literals duplicating the registry — three copies, not two.**
   `src/cadrumo/core/config.py:1088` builds
   `cadrumo_local_storage_root / "buckets" / bucket_id / "db" / PRODUCT_DATABASE_FILENAME`
-  from bare strings; `src/cadrumo/core/_config_storage_route.py:127` matches
+  from bare strings; the former source file matches
   `parts[0] == "buckets" and parts[2:] == ("db", PRODUCT_DATABASE_FILENAME)`;
   and `src/cadrumo/core/tests/test_storage_route_classification.py` restates the
   same two names in five separate assertions (lines 25, 51, 81, 98, 120),
   confirmed by direct grep. None references the namespace-registry constants,
   and none would catch the other two drifting. The contrast is
-  `CONFIG_RESET_JOURNAL_DIRNAME`, whose deliberate duplicate in
-  `src/cadrumo/application/_config_reset_repository.py:27` **is** pinned at
-  `src/cadrumo/tests/test_persisted_format_enrollment.py:143` — the shipped
+  `CONFIG_RESET_JOURNAL_DIRNAME`, whose deliberate duplicate  **is** pinned  — the shipped
   precedent for a parity gate.
 
 Consequence for the option space: an authority scoped to "the settings fields"
@@ -179,7 +177,7 @@ prefix." A uniform structural prefix would move every non-cache directory on
 disk — a far larger blast radius than typing the representation, and a change
 the ADR must take deliberately rather than as a side effect of tidying.
 
-`src/cadrumo/domain/calculations/registry/_loader_cache.py:230` independently
+the former source file independently
 hand-writes `storage_root / "cache" / "registry"` as its production branch,
 honouring the prefix convention without drawing it from the table.
 
@@ -191,7 +189,7 @@ the root, and they differ in *why*:
 - **Bundled read-only package resources.** `aeat_manuals_root`,
   `aeat_normatives_root`, `cadrumo_iva_catalogue_root`
   (`src/cadrumo/core/config.py:522`) resolve through `bundled_path`
-  (`src/cadrumo/core/resources/_boundary.py:65`) into the installed package.
+   into the installed package.
   Read-only, shipped, never written.
 - **Operator-supplied inputs.** `cadrumo_certificate_path` — a credential the
   operator owns and names; the application reads it and never chooses its
@@ -219,7 +217,7 @@ frozenset editing.
 
 `cadrumo_storage_backup_dir` (`backups`) has no production consumer:
 `rg` across the non-test tree returns only its own field declaration, the
-taxonomy table entry, and `src/cadrumo/core/observability/_fingerprint.py`,
+taxonomy table entry, and the former source file,
 which *excludes* it from a content fingerprint. No backup-writing code path
 exists. `cadrumo_inbox_dir` and `cadrumo_inbox_pdf_dir` likewise have no
 production reader; only review-module test fixtures reference them.
@@ -257,7 +255,7 @@ evidence is that there are none, which is itself worth recording so a future
 reader does not hunt for one.
 
 `cadrumo.core.COMPATIBILITY_REGIME` is `PRE_RELEASE`
-(`src/cadrumo/core/compatibility_lifecycle.py:53`), so `no-legacy-compatibility`
+, so `no-legacy-compatibility`
 governs in full: an on-disk layout change may strand pre-existing local data,
 delete-not-migrate applies, and no read-tolerance of an older layout may be
 added. This is permission, not obligation — the ADR still owes an explicit
@@ -272,7 +270,7 @@ one profile's encrypted state as a portable artefact and deliberately exclude
 caches, logs, and exports.
 
 A generic contract already governs mutating noun-groups:
-`src/cadrumo/application/operator_surface/_crud_contract.py` defines the
+the former source file defines the
 five-verb spine (`add`/`remove`/`update`/`view`/`list`) and three documented
 exception kinds — `STRICT_CRUD`, `KEY_VALUE_AS_RECORD`, and
 `LIFECYCLE_OPERATIONS_ONLY`. `_crud_registry.py` registers five noun-groups;
@@ -294,8 +292,7 @@ CLI.
 ### F10 — A pre-existing red test sits on this axis
 
 `test_relative_env_paths_resolve_from_project_root` and
-`test_relative_audit_flagged_paths_resolve_under_project_root` in
-`src/cadrumo/tests/test_config.py` asserted that a relative environment
+`test_relative_audit_flagged_paths_resolve_under_project_root`  asserted that a relative environment
 override anchors under the repository root, while `_relative_path_anchor`
 (`src/cadrumo/core/paths.py:42`) deliberately carries no source-checkout arm and
 anchors to the platform user-data root instead. The tests were not updated when
@@ -434,7 +431,7 @@ rather than by inventory.
 
 ### F18 — No derivation reproduces the fingerprint-exclusion set, and the shipped set has a proven gap
 
-`data_root_cache_exclusions` (`src/cadrumo/core/observability/_fingerprint.py:163`)
+`data_root_cache_exclusions`
 returns 8 resolved directories that `_hash_tree` prunes during the walk. Its
 docstring states the semantic axis: the excluded locations are regenerable,
 self-referential, or non-canonical duplicates, and carry no taxpayer state a
@@ -488,7 +485,7 @@ The two lifecycle-classified fields outside the taxonomy behave differently
 against the choose-and-write questions:
 
 - `cadrumo_registry_disk_cache_dir` — when unset, the application itself picks
-  `<root>/cache/registry` (`src/cadrumo/domain/calculations/registry/_loader_cache.py:230`)
+  `<root>/cache/registry`
   and writes the compiled pickle there. It chooses **and** writes, so it is not
   an escape. Its `None` default is an override affordance, not an absence of an
   application-chosen location. Note the constraint: the three-branch resolver
@@ -516,8 +513,7 @@ practice was not investigated — only that the digest demonstrably moves.
 
 ### F11 — The duplicate literals are a layering symptom, and they foreclose the obvious fix
 
-The canonical bucket-layout constants live in
-`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:31`. All three
+The canonical bucket-layout constants live . All three
 unpinned copies live in `src/cadrumo/core/`. "Just import the constants" would
 make **core import from adapters**, inverting the hexagonal direction
 `aeat-architecture-boundaries` mandates. That is almost certainly why the
@@ -551,7 +547,7 @@ Two measured cross-cuts defeat it:
   would still pass**, which is why this must be ruled explicitly rather than
   left to the implementer.
 - **An independent third axis.** `data_root_cache_exclusions`
-  (`src/cadrumo/core/observability/_fingerprint.py:163`) selects 8 fields by
+   selects 8 fields by
   name for exclusion from the drift fingerprint. That set equals neither
   retention, nor retention united with TTL, nor any other existing
   classification: it drops `cadrumo_registry_disk_cache_dir` and
@@ -583,7 +579,7 @@ mid-flight, and an edit over it would collide with work already in progress.
 ### F14 — The taxonomy governs the top of a category, not what is written beneath it
 
 Production code nests further ad-hoc subdirectories under enrolled categories:
-`src/cadrumo/application/live/_iva_remote_state.py:677,736` writes
+the former source file writes
 `cadrumo_audit_dir / "live" / "iva-wallet"` and `… / "live" / "iva-remote-state"`;
 the rotation planner reaches `"amendments"` and `"amendment-results"` under
 submissions and `"manifests"` under attachments. None is a taxonomy entry.
@@ -599,7 +595,7 @@ Each was real at HEAD and each is now corrected in the working tree, verified
 by diffing HEAD against the working copy:
 
 - **Review-package staging.** At HEAD both
-  `src/cadrumo/application/modelo/_review_package.py:270` and
+  the former source file and
   `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py:287` call
   `TemporaryDirectory` with no `dir=`, staging plaintext fichero-BOE bytes, the
   full calculation revision JSON, and the ledger filing evidence JSON in the OS
@@ -631,7 +627,7 @@ participate and 28 `dev/` files reference the storage root.
 and the conflation misdirects the migration:
 
 *Tier one — collection-time bootstrapping, exempt.*
-`src/cadrumo/tests/_collection_storage_root.py` derives a per-process root under
+the former source file derives a per-process root under
 the OS temp directory; the repo-root conftest applies it with `overwrite=False`
 before anything can resolve settings, and `src/cadrumo/conftest.py:41` re-applies
 it with `overwrite=True`. Verified directly: the module imports **only stdlib**
@@ -822,25 +818,25 @@ surface, not a new surface plus bridges to the old one.
 - `src/cadrumo/core/config.py:1370` — `ensure_storage_tree`
 - `src/cadrumo/core/config.py:1414` — the `_path` suffix file/directory branch
 - `src/cadrumo/core/paths.py:42` — `_relative_path_anchor`
-- `src/cadrumo/core/_config_state_root.py:157` — platform user-data resolution
-- `src/cadrumo/core/_config_storage_route.py:127` — the route classifier literal
-- `src/cadrumo/core/_bucket_pointer_io.py:42` — the `active-profile` pointer name
-- `src/cadrumo/core/compatibility_lifecycle.py:53` — the compatibility regime
-- `src/cadrumo/core/resources/_boundary.py:65` — `bundled_path`
-- `src/cadrumo/core/observability/_fingerprint.py` — backup-dir fingerprint exclusion
+- the former source file — platform user-data resolution
+- the former source file — the route classifier literal
+- the former source file — the `active-profile` pointer name
+- the former source file — the compatibility regime
+- the former source file — `bundled_path`
+- the former source file — backup-dir fingerprint exclusion
 - `src/cadrumo/core/tests/test_settings_lifecycle_gate.py` — the lifecycle and literal gates
-- `src/cadrumo/adapters/persistence/storage/_namespace_registry.py:31` — the second authority
-- `src/cadrumo/adapters/persistence/storage/bucket/_layout.py:47` — `bucket_paths`
-- `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py:22` — `keystore_path`
-- `src/cadrumo/application/corpus_search/_runtime.py:28` — `corpus-search`
+- the former source file — the second authority
+- the former source file — `bucket_paths`
+- the former source file — `keystore_path`
+- the former source file — `corpus-search`
 - `src/cadrumo/application/provisioning.py:162` — the Playwright browser root
-- `src/cadrumo/application/_config_reset_repository.py:27` — the pinned duplicate
-- `src/cadrumo/application/operator_surface/_crud_contract.py` — the CRUD contract
-- `src/cadrumo/application/operator_surface/_crud_registry.py` — the registered catalogue
-- `src/cadrumo/entrypoints/mcp/_telemetry.py` — the `telemetry` directory
-- `src/cadrumo/domain/calculations/registry/_loader_cache.py:230` — the registry cache branch
-- `src/cadrumo/tests/test_config.py` — the two red relative-path tests
-- `src/cadrumo/tests/test_persisted_format_enrollment.py:143` — the reset-journal parity pin
+- the former source file — the pinned duplicate
+- the former source file — the CRUD contract
+- the former source file — the registered catalogue
+- the former source file — the `telemetry` directory
+- the former source file — the registry cache branch
+- the former source file — the two red relative-path tests
+- the former source file — the reset-journal parity pin
 - `2026-07-13-data-output-standardization-adr` — the accepted prior decision
 
 ## Correction 2026-10-03: storage decision citation

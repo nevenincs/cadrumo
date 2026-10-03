@@ -24,6 +24,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .core.storage_environment import TOOL_STORAGE_LOCATIONS, prepare_temporary_directory, tool_storage_environment
+
+if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
+    _tool_environment = tool_storage_environment()
+    for _native_variable, (_refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
+        os.environ[_refinement_variable] = _tool_environment[_native_variable]
+    os.environ.update(_tool_environment)
+    sys.pycache_prefix = _tool_environment["PYTHONPYCACHEPREFIX"]
+
 if TYPE_CHECKING:
     from .domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -50,6 +59,14 @@ if TYPE_CHECKING:
 # here (mirroring `_collection_storage_root.collection_storage_root`'s own
 # `<gettempdir()>/cadrumo-pytest-<pid>`) removes the dependency on either
 # package staying import-light for this one safety-critical line.
+if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
+    # Standalone/installed pytest consumers may not load the repository conftest.
+    # In that case establish the canonical temp root before child conftests import
+    # application modules. Repository runs already have a narrower run scratch.
+    _temporary_root = prepare_temporary_directory()
+    os.environ.update({"TEMP": str(_temporary_root), "TMP": str(_temporary_root), "TMPDIR": str(_temporary_root)})
+    tempfile.tempdir = str(_temporary_root)
+
 _COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""

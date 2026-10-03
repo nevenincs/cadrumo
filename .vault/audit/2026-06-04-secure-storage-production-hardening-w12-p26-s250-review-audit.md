@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:83f1aa1a89a8c40db53c5d13a07bab7fc327313d9b6573184a9215b1911a9be4'
+modified: '2026-10-03'
+body_hash: 'sha256:dbf1afa210ccc4d3336b829d9bf135bcb669894851b0002e873c0c753814dbaf'
 related: []
 ---
 
@@ -16,12 +16,12 @@ related: []
 
 ## S250-002 | PASS | Parser remains storage-free
 
-`src/aeat/application/review/_edit.py` does not read or write files or instantiate storage repositories. It parses `--set KEY=VALUE` tokens into strict Pydantic models and returns typed `Path` objects without checking the filesystem; consuming use cases remain responsible for storage handling.
+The retired module does not read or write files or instantiate storage repositories. It parses `--set KEY=VALUE` tokens into strict Pydantic models and returns typed `Path` objects without checking the filesystem; consuming use cases remain responsible for storage handling.
 
 ## S250-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/review/_errors.py src/aeat/application/review/_edit.py src/aeat/application/review/test_edit.py src/aeat/application/review/test_edit_helpers.py src/aeat/application/review/test_edit_iva_rate_boundary.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/review/test_edit.py src/aeat/application/review/test_edit_helpers.py src/aeat/application/review/test_edit_iva_rate_boundary.py` passed with 100 tests.
+- the historical check passed.
+- the historical check passed with 100 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-148` as `plaintext-exception` with the rendered plaintext leak fixed.

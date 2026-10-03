@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#export-required-flag-default'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:76c56bd4ee5edcea9f2936776d7650c2519143517fc2819b4de278f7db53081b'
+body_hash: 'sha256:3f58f0fecd5d3afac46f98882fb5afd4fbfda268ae30793bec001a249f8ce983'
 related: []
 ---
 
@@ -14,7 +14,7 @@ related: []
 ## Scope
 
 An uncommitted change to `_render_absent_numeric` in
-`src/cadrumo/domain/calculations/registry/_fixed_width_codec.py` converted an absent
+The retired module converted an absent
 optional numeric export slot from refusing the whole export into zero-filling it, gated
 entirely on the registry export field's `required` boolean. A grounding finding raised
 the concern that `required` is a default-false-shaped field while the BOE-published

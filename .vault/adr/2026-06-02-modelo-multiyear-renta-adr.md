@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-09-07'
-body_hash: 'sha256:21ae70efa926b9ef0209da2e11540088e71499bd83da462ab56ba2de4bfa742b'
+modified: '2026-10-03'
+body_hash: 'sha256:28113dd25d01f3403e49bfe163406fd2d92571b3dbac1e586223f161732af0c2'
 related:
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]'
@@ -88,7 +88,7 @@ A four-layer gate spine, each layer derived from the one above it so no layer ca
 from the source of truth.
 
 **(a) Declarative manifest.** A single TOML file
-`src/cadrumo/_data/registry/aeat/authorization.toml` is the sole source of authorization
+ is the sole source of authorization
 truth. It is fingerprinted into the registry cache as a first-class registry input.
 Default state is UNAUTHORIZED by **absence**: a modelo not listed is not authorized, and
 an empty manifest authorizes zero modelos. Each entry declares, at minimum, the modelo

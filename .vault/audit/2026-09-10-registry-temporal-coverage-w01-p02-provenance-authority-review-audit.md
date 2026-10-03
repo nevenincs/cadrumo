@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c84f7e0c2e930b90a104096b63a1966e3e7ca54259976aa73b53b2eb5ee3e254'
-related:
-  - "[[2026-09-10-registry-temporal-coverage-plan]]"
+related: []
 ---
 # `registry-temporal-coverage` audit: `Provenance authority review`
 

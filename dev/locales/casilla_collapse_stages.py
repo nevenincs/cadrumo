@@ -22,7 +22,7 @@ def _remove_casilla_structural_leaf(
     self: ModeloCasillaCatalogue, locale: str, key: str, value: str | None, working: Values, plan: CollapsePlan
 ) -> None:
     """Remove casilla structural leaf."""
-    if self._undeclared_revision(key):
+    if self._undeclared_revision(key) or key in self.binding_presentation_keys:
         return
     if key not in self.dependents:
         plan.remove(locale, key, "orphan")

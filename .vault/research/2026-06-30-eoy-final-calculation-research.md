@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#eoy-final-calculation'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:51ec21405bc255d3d15427efa298306997034070d45a959eac13f4ce9d3dc360'
+modified: '2026-10-03'
+body_hash: 'sha256:6bec1490db0639012d8cad04556a5895d740f4adf320349fdab58a0ee429cda0'
 related:
   - "[[2026-06-22-eoy-final-calculation-adr]]"
   - "[[2026-06-22-eoy-final-calculation-plan]]"
@@ -32,8 +32,8 @@ items from live calculation defects before closing the plan.
   annual period `0A`. The first-slice routing table is still closed to those
   four targets, so non-first-slice expenses remain advisory/manual by design.
 - Focused M303/M200 verification passed:
-  `uv run --no-sync pytest -q --tb=short src/aeat/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding_exports_recargo.py src/aeat/application/calculations/tests/test_modelo_200_202_pagos_fraccionados_fold.py`
+Historical command omitted; its target file was removed.
   reported 13 passed.
 - Focused M100/M390 annual verification passed:
-  `uv run --no-sync pytest -q --tb=short src/aeat/domain/renta/tests/test_first_slice_routing.py src/aeat/domain/calculations/registry/tests/test_ledger_renta_expense_binding.py src/aeat/application/modelo/tests/test_e2e_ledger_m130_quarters_to_m100_annual.py src/aeat/application/modelo/tests/test_modelo_100_pagos_fraccionados_fold_in_live.py src/aeat/application/modelo/tests/test_modelo_100_2025_expense_inspection_live.py src/aeat/application/modelo/tests/test_modelo_390_303_fold_in_live.py`
+Historical command omitted; its target file was removed.
   reported 21 passed.

@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:e868b1115feac8bc6b9f9d562ba4c5edc23799dfec135ec90a8d8c81bf82f190'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
 ---
 
 # `quality-gate-zero-closure` audit: `never emitted decidability measurement`

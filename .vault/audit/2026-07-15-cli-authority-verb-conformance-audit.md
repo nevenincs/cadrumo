@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-15'
-body_hash: 'sha256:506e761adeac367f260b5200d20749a627ce3be8ac510463f8979208eeef230f'
-related:
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:1f26a48a2af6abcd393e360d1b7c77bcc98e2269f13699092007a3fa0d66db25'
+related: []
 ---
 
 # `cli-authority-verb-conformance` audit: `Wave W01 atomic Step reviews`
@@ -21,7 +20,7 @@ The review was grounded with `vaultspec-rag search "import-linter root package c
 
 S01 has no actionable finding. Verdict: **PASS**. No CRITICAL, HIGH, MEDIUM, or LOW issue was identified, and S02 is not blocked.
 
-The commit changes only `.importlinter:2` from the nonexistent `aeat` package root to the real `cadrumo` package root and adds its Step Record. The commit tree contains `src/cadrumo/__init__.py`, contains no `src/aeat/__init__.py`, and contains exactly one tracked `.importlinter`. Packaging-smoke copies under `var` are ignored generated artifacts, not alternate authorities. The change adds no alias, fallback, compatibility parser, or second declaration.
+The commit changes only `.importlinter:2` from the nonexistent `aeat` package root to the real `cadrumo` package root and adds its Step Record. The commit tree contains `src/cadrumo/__init__.py`, contains no the retired module, and contains exactly one tracked `.importlinter`. Packaging-smoke copies under `var` are ignored generated artifacts, not alternate authorities. The change adds no alias, fallback, compatibility parser, or second declaration.
 
 An uncached review run constructed the live 3,421-file graph. The focused registry, domain-to-application, and domain-to-adapters contracts remained kept; the core contract reported only the helper-mediated path from `cadrumo.core.tests.test_isolation_fixture_state_root_coverage` through `cadrumo.tests.secure_sql`. The complete contract run stopped on the two expected unmatched entries for `cadrumo.application.live._censo` and `cadrumo.application.user_profile._censo_sync`. At the reviewed commit, the first source module is absent and the second has no adapter import, so those entries are correctly assigned to S02 and S03; the exact test-helper route is correctly assigned to S04.
 
@@ -41,11 +40,11 @@ Commit `5695c6a0335ce7f63d5827c2ee56fc63b907e8a4` changes only the concrete invo
 
 The review was grounded with `vaultspec-rag search "modelo verification invoice repository protocol OSS IOSS resolver" --type code`, which returned the legacy Modelo 369 resolver call and all four Protocol-typed boundaries. Exact caller and symbol searches confirmed that verification only forwards the injected value through its finding collectors into `OssIossLedgerSourceResolver`. The runtime-checkable public Protocol declares `bucket_id`, `exists`, `load`, and `save`, and the concrete encrypted `InvoiceCatalogueRepository` implements those same members with compatible signatures, so existing concrete callers remain structurally valid without runtime coercion or a compatibility wrapper. Focused Ruff passed, and the real encrypted-storage dormant Modelo 369 suite passed five tests.
 
-The only retained OSS/IOSS concrete composition edge is `oss_ioss_candidates_from_repositories` in `src/cadrumo/application/aggregation/_oss_ioss.py`, where one fallback constructs `InvoiceCatalogueRepository` when no repository is injected. Its helper, aggregate wrapper, and resolver constructor still carry concrete annotations but converge on that single fallback; production calculation and legacy verification both feed the same resolver path. S10 therefore owns the complete receiving-annotation widening while deliberately retaining that sole default construction authority.
+The only retained OSS/IOSS concrete composition edge is `oss_ioss_candidates_from_repositories` in the retired module, where one fallback constructs `InvoiceCatalogueRepository` when no repository is injected. Its helper, aggregate wrapper, and resolver constructor still carry concrete annotations but converge on that single fallback; production calculation and legacy verification both feed the same resolver path. S10 therefore owns the complete receiving-annotation widening while deliberately retaining that sole default construction authority.
 
 S02 has no actionable finding. Verdict: **PASS**. No CRITICAL, HIGH, MEDIUM, or LOW issue was identified, and S03 is not blocked.
 
-Commit `69469505fe45ae786c01f7bcf0a9a8ae4b711ca3` removes exactly the single `cadrumo.application.live._censo -> cadrumo.adapters.**` layered-contract waiver and adds only the S02 Step Record, its plan closure, and regenerated feature-index links. The `.importlinter` diff changes no contract declaration, wildcard, neighboring ignore, root package, or `unmatched_ignore_imports_alerting = error` setting. Commit-scoped tree and symbol searches found no tracked `src/cadrumo/application/live/_censo.py`, import edge, lazy registration, `import_module`, `__import__`, or `find_spec` caller. The Spanish-stem rule example and UTF-8 debt-ratchet string naming the absent path are declarative text, not runtime or import-graph consumers.
+Commit `69469505fe45ae786c01f7bcf0a9a8ae4b711ca3` removes exactly the single `cadrumo.application.live._censo -> cadrumo.adapters.**` layered-contract waiver and adds only the S02 Step Record, its plan closure, and regenerated feature-index links. The `.importlinter` diff changes no contract declaration, wildcard, neighboring ignore, root package, or `unmatched_ignore_imports_alerting = error` setting. Commit-scoped tree and symbol searches found no tracked the retired module, import edge, lazy registration, `import_module`, `__import__`, or `find_spec` caller. The Spanish-stem rule example and UTF-8 debt-ratchet string naming the absent path are declarative text, not runtime or import-graph consumers.
 
 The review was grounded with `vaultspec-rag search "stale live censo import-linter ignore no source module" --type code`, followed by commit-scoped `git show`, `git grep`, `git ls-tree`, `git ls-files`, `fd`, and targeted `rg`. A fresh full uncached import-linter invocation no longer reports the removed S02 waiver and stops only on the unmatched `cadrumo.application.user_profile._censo_sync -> cadrumo.adapters.**` entry owned by S03. A focused uncached four-contract run analyzed 3,421 files and 16,152 dependencies: the registry and both domain contracts were kept, while the core contract was broken only by `core.tests.test_isolation_fixture_state_root_coverage -> tests.secure_sql -> adapters`, the exact helper-mediated route owned by S04.
 
@@ -161,7 +160,7 @@ Independent S18 review verdict: **PASS**. No CRITICAL, HIGH, MEDIUM, or LOW find
 
 Commit `64de1dbcde7051d92445d79d04a6ede46f2f0b7b` changes no source, test, or import-linter configuration. Its tree contains only the S18 execution record, the canonical plan closure, and regenerated feature-index links. The record names the exact serial command and states that the live inventories were derived by importing the codebase `_ignore_edges` helper rather than by copying its parser.
 
-Fresh live code RAG preceded exact commit and sole-parser searches. Independent execution of `uv run --no-sync pytest -q -n 0 src/cadrumo/tests/test_importlinter_ledger.py` passed all five tests in `1.24s`, consistent with the recorded `1.19s` outcome. Importing `_ignore_edges` and filtering its returned records reproduced exactly `265` total, `229` layered, `199` application-to-adapter, `78` application-source wildcard, two layered domain-to-adapter, and zero production-domain counts. Repository-wide source search finds one tracked ledger test, one `_IGNORE_EDGE_RE`, and one `_ignore_edges`; no evidence-only duplicate parser was introduced. The record, checked plan row, generated index link, `18`-of-`220` plan status, and annotations are truthful and clean.
+Fresh live code RAG preceded exact commit and sole-parser searches. Independent execution of the historical check passed all five tests in `1.24s`, consistent with the recorded `1.19s` outcome. Importing `_ignore_edges` and filtering its returned records reproduced exactly `265` total, `229` layered, `199` application-to-adapter, `78` application-source wildcard, two layered domain-to-adapter, and zero production-domain counts. Repository-wide source search finds one tracked ledger test, one `_IGNORE_EDGE_RE`, and one `_ignore_edges`; no evidence-only duplicate parser was introduced. The record, checked plan row, generated index link, `18`-of-`220` plan status, and annotations are truthful and clean.
 
 Independent S19 review verdict: **PASS**. No CRITICAL, HIGH, MEDIUM, or LOW finding was identified, and S20 is not blocked.
 

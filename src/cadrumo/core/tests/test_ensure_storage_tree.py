@@ -18,16 +18,29 @@ from __future__ import annotations
 
 import os
 import stat
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ..config import load_settings, override_settings
+from ...tests.env_scope import isolated_aeat_env
+from ..config import Settings, load_settings, override_settings, settings_override
 from ..directory_scan import iter_directory
 from ..errors.hierarchy import CoreValidationError
 from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def unoverridden_settings(tmp_path: Path) -> Iterator[None]:
+    """Exercise unset category settings independently of the runner's explicit paths."""
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "state")):
+        token = settings_override.set(Settings(cadrumo_profile_kdf_measure_calibration=False))
+        try:
+            yield
+        finally:
+            settings_override.reset(token)
 
 
 def test_settings_and_derived_path_reads_do_not_materialise_storage(tmp_path: Path) -> None:

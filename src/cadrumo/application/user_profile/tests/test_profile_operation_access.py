@@ -9,7 +9,11 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    OperationAccessContext,
+    resolve_operation_access,
+)
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -18,6 +22,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
+    OperationAccessRequest,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
@@ -42,6 +47,7 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewOperationRequest,
     ProfileViewPageKind,
 )
+from cadrumo.core.period import Period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -184,3 +190,120 @@ def test_profile_route_refuses_foreign_payload_before_profile_identity(route: st
         with pytest.raises(ProfileAccessRefusedError) as mismatch:
             resolver(mismatched, _context(registry, request, AccessAction.RESULT))
         assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def _admitted(registry: OperationRegistry, request: OperationRequest[BaseModel]) -> OperationAccessRequest:
+    """Return the access request the real resolver admitted for this submission."""
+    return resolve_operation_access(
+        registry=registry, request=request, context=_context(registry, request, AccessAction.SUBMIT)
+    ).request
+
+
+def _replay(
+    registry: OperationRegistry,
+    request: OperationRequest[BaseModel],
+    action: AccessAction,
+    admitted: OperationAccessRequest,
+    *,
+    destination_id: UUID = _DESTINATION,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=destination_id,
+        action=action,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(request.definition_id),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted,
+    )
+
+
+def _changed(admitted: OperationAccessRequest, **update: object) -> OperationAccessRequest:
+    return OperationAccessRequest.model_validate({**dict(admitted), **update})
+
+
+@pytest.mark.parametrize("action", sorted(ADMISSION_REPLAY_ACTIONS))
+@pytest.mark.parametrize("route", _ROUTES)
+def test_same_origin_replay_of_the_admitted_submission_is_bound(route: str, action: AccessAction) -> None:
+    registry = _registry()
+    request = _request(route)
+    fresh = resolve_operation_access(registry=registry, request=request, context=_context(registry, request, action))
+
+    replayed = resolve_operation_access(
+        registry=registry, request=request, context=_replay(registry, request, action, _admitted(registry, request))
+    )
+
+    assert replayed == fresh
+
+
+@pytest.mark.parametrize("action", sorted(ADMISSION_REPLAY_ACTIONS))
+@pytest.mark.parametrize("route", _ROUTES)
+def test_replay_from_another_destination_and_frontend_discloses_only_to_the_caller(
+    route: str, action: AccessAction
+) -> None:
+    """Observation is caller-independent; the caller's own disclosure scope still governs output."""
+    registry = _registry()
+    request = _request(route)
+    caller = UUID("5aa00000-0000-4000-8000-0000000000b4")
+
+    replayed = resolve_operation_access(
+        registry=registry,
+        request=request,
+        context=_replay(
+            registry,
+            request,
+            action,
+            _admitted(registry, request),
+            destination_id=caller,
+            frontend=OperationFrontendProjection.TUI,
+        ),
+    )
+
+    assert replayed.request.destination_id == caller
+    assert replayed.request.frontend is OperationFrontendProjection.TUI
+    assert replayed.policy.disclosures
+    assert {item.destination_id for item in replayed.policy.disclosures} == {caller}
+
+
+_ADMITTED_MISMATCHES = ("profile", "definition", "action", "periods")
+
+
+@pytest.mark.parametrize("mismatch", _ADMITTED_MISMATCHES)
+@pytest.mark.parametrize("action", sorted(ADMISSION_REPLAY_ACTIONS))
+@pytest.mark.parametrize("route", _ROUTES)
+def test_replay_refuses_an_admission_that_is_not_this_profiles_period_independent_submission(
+    route: str, action: AccessAction, mismatch: str
+) -> None:
+    registry = _registry()
+    request = _request(route)
+    admitted = _admitted(registry, request)
+    other_definition = next(item for item in _ROUTES if item != route)
+    changed = {
+        "profile": {"profile_id": _OTHER_PROFILE},
+        "definition": {"definition_id": _request(other_definition).definition_id},
+        "action": {"action": AccessAction.START},
+        "periods": {"periods": frozenset({Period.from_year_and_code(2026, "1T")}), "period_independent": False},
+    }[mismatch]
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=_replay(registry, request, action, _changed(admitted, **changed)),
+        )
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("route", _ROUTES)
+def test_profile_mismatch_precedes_a_mismatched_replay(route: str) -> None:
+    registry = _registry()
+    request = _request(route)
+    foreign_admission = _changed(_admitted(registry, request), profile_id=_OTHER_PROFILE)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _RESOLVERS[route](
+            _request(route, subject=_OTHER_PROFILE),
+            _replay(registry, request, AccessAction.RESULT, foreign_admission),
+        )
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH

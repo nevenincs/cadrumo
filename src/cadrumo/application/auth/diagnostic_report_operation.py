@@ -23,7 +23,7 @@ from ..operations.access_resolution import (
     require_declared_frontend_and_action,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import (
@@ -138,13 +138,10 @@ def project_auth_diagnostic_report_result(result: BaseModel, receipt: OperationT
 
 
 def _require_diagnostic_success_receipt(receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("diagnostic success has incompatible terminal evidence")
+    message = "diagnostic success has incompatible terminal evidence"
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_diagnostic_absence_receipt(receipt: OperationTerminalReceipt) -> None:
@@ -258,7 +255,6 @@ def _require_auth_diagnostic_report_request(
         definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
         payload_type=AuthDiagnosticReportRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
 
 

@@ -1888,8 +1888,8 @@ application:
   overview:
     calendar:
       holiday_coverage:
-        calendar_unavailable: calendario de festivos no disponible; fines de semana
-          aplicados, festivos sin comprobar
+        calendar_unavailable: calendario de festivos no disponible; el plazo original
+          no se ha comprobado
         national_and_territory: festivos nacionales y de %{territory} comprobados;
           festivos locales sin comprobar
         national_and_territory_without_name: festivos nacionales y autonómicos aplicables
@@ -1903,7 +1903,7 @@ application:
           autonómico aplicable no está verificado; los festivos locales no se comprueban
       shift:
         business_day: Día hábil
-        calendar_unavailable: Festivos sin comprobar
+        calendar_unavailable: Calendario no disponible
         domingo: Domingo
         modelo_exception: Excepción del modelo
         sabado: Sábado

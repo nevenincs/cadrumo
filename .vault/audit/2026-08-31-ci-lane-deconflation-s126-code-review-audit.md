@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e1037a47d4253cabb1241b729bc53ee37055bd7a24139d0cf1cce3668baaa0b'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+body_hash: 'sha256:3fbe5daee71d0e1ab71f47bbc851e05f5c108e72bf1360a9db38529464fe151b'
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `P05 S126 code review`
@@ -32,4 +31,4 @@ Commit `da44af7946219213037317cd92afcfa003561cca` changes only the S126 executio
 
 No additional P05.S126 corrective work is required.
 
-The source extraction is otherwise sound: all 38 resolver namespace keys remain present, `_natural_key_resolvers` retains its private aggregation role, the four split helpers are private implementation details rather than a new facade, and the public custody port continues to call only `collect_profile_custody_carry` and `restore_profile_custody_carry`. The referenced tests use real encrypted SQLite adapters and cover bound-resolver/rekey behaviour. The target measures 545 lines, below the 1,250 ceiling; neither source commit changes `dev/audit/size_budget_baseline.json`. The companion changes only the generated CI-lane feature index, adding current S120 through S126 records and their audits.
+The source extraction is otherwise sound: all 38 resolver namespace keys remain present, `_natural_key_resolvers` retains its private aggregation role, the four split helpers are private implementation details rather than a new facade, and the public custody port continues to call only `collect_profile_custody_carry` and `restore_profile_custody_carry`. The referenced tests use real encrypted SQLite adapters and cover bound-resolver/rekey behaviour. The companion changes only the generated CI-lane feature index, adding current S120 through S126 records and their audits.

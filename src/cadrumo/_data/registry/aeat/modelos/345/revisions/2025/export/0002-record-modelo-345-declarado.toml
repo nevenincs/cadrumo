@@ -1,0 +1,510 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-345-fichero'
+
+[[revisions.2025.export_layouts.records]]
+id = 'modelo-345-declarado'
+record_type = 'declarado'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '345'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-ejercicio'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-4',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-nif-declarante'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-2',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-nif-declarado'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'declarado-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-823-2022:art-2',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-representante-legal-nif'
+offset = 27
+length = 9
+kind = 'casilla'
+casilla_id = 'representante-legal-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-nombre-declarado'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'declarado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-823-2022:art-2',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-anio-nacimiento'
+offset = 76
+length = 4
+kind = 'casilla'
+casilla_id = 'anio-nacimiento'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-codigo-provincia'
+offset = 80
+length = 2
+kind = 'casilla'
+casilla_id = 'codigo-provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-clave'
+offset = 82
+length = 1
+kind = 'casilla'
+casilla_id = 'clave'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-528-2023:art-unico',
+    'orden-hac-1504-2024:art-octavo',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2024-amendment-hac-1504',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-subclave'
+offset = 83
+length = 2
+kind = 'casilla'
+casilla_id = 'subclave'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hfp-528-2023:art-unico',
+    'orden-hfp-1397-2023:art-sexto',
+    'orden-hac-1504-2024:art-octavo',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2023-amendment-hfp-1397',
+    'boe-modelo-345-2024-amendment-hac-1504',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-beneficiario-nif'
+offset = 85
+length = 9
+kind = 'casilla'
+casilla_id = 'beneficiario-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-importe-entero'
+offset = 94
+length = 11
+kind = 'casilla'
+casilla_id = 'importe'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-importe-decimal'
+offset = 105
+length = 2
+kind = 'casilla'
+casilla_id = 'importe'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-plan-pensiones-denominacion'
+offset = 107
+length = 40
+kind = 'casilla'
+casilla_id = 'plan-pensiones-denominacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = [
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-528-2023:art-unico',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-fondo-pensiones-numero-registro'
+offset = 147
+length = 5
+kind = 'casilla'
+casilla_id = 'fondo-pensiones-numero-registro'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = [
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-528-2023:art-unico',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-fondo-pensiones-nif'
+offset = 152
+length = 9
+kind = 'casilla'
+casilla_id = 'fondo-pensiones-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = [
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-528-2023:art-unico',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-datos-adicionales-d'
+offset = 161
+length = 9
+kind = 'casilla'
+casilla_id = 'entidad-aseguradora-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-pias-fecha-primera-prima'
+offset = 170
+length = 8
+kind = 'casilla'
+casilla_id = 'pias-fecha-primera-prima'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+value_policy = 'yyyymmdd'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-pias-importe-acumulado'
+offset = 178
+length = 12
+kind = 'casilla'
+casilla_id = 'pias-importe-acumulado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-datos-adicionales-m'
+offset = 190
+length = 81
+kind = 'casilla'
+casilla_id = 'datos-adicionales-clave-m'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-rendimientos-superiores-60000'
+offset = 271
+length = 1
+kind = 'casilla'
+casilla_id = 'rendimientos-trabajo-superiores-60000'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-528-2023:art-unico',
+    'orden-hac-1504-2024:art-octavo',
+    'orden-hac-1430-2025:art-septimo',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2024-amendment-hac-1504',
+    'boe-modelo-345-2025-amendment-hac-1430',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-empleador-nif'
+offset = 272
+length = 9
+kind = 'casilla'
+casilla_id = 'empleador-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-empleador-nombre'
+offset = 281
+length = 40
+kind = 'casilla'
+casilla_id = 'empleador-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-devoluciones-excesos'
+offset = 321
+length = 1
+kind = 'casilla'
+casilla_id = 'devoluciones-excesos'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-345-t2-blancos'
+offset = 322
+length = 179
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

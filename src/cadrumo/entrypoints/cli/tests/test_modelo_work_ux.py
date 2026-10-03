@@ -34,6 +34,7 @@ from ....core.i18n.render import tr
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....tests.cli_envelope import require_error_document
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
@@ -1042,3 +1043,59 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(seed_profile: 
     # The diagnostic must name the casilla and its non-numeric data_type.
     assert "0001" in result.output
     assert "text" in result.output
+
+
+def test_work_calculate_value_free_published_iban_refusal(seed_profile: ProfileSeeder) -> None:
+    """The published M100 IBAN input refusal keeps its typed identity but withholds the value."""
+
+    seed_profile(label="operator", facts=operator_profile_facts())
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "100", "--year", "2021", "--period", "0A",
+            "--revision", "2021",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    raw_value = " es00-synthetic-123456 "
+    forbidden_values = (
+        raw_value,
+        "es00-synthetic-123456",
+        "ES00SYNTHETIC123456",
+    )
+    calculate_args = [
+        "app", "modelo", "work", "calculate", work_unit_id,
+        "--casilla", f"1780={raw_value}",
+    ]  # fmt: skip
+    json_result = _invoke(["--format", "json", "--language", "en", *calculate_args])
+    text_result = _invoke(["--language", "en", *calculate_args])
+
+    assert json_result.exit_code != 0, json_result.output
+    assert text_result.exit_code != 0, text_result.output
+    error = require_error_document(json_result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_CALCULATE_TEXT_INPUT", json_result.output
+    context = error["context"]
+    assert isinstance(context, dict), json_result.output
+    assert context["key"] == "1780", json_result.output
+    assert context["data_type"] == "iban", json_result.output
+    assert "value" not in context, json_result.output
+    error_message = str(error["message"])
+    assert error_message in text_result.output
+
+    public_messages = (error_message, str(context), json_result.output, text_result.output)
+    for public_message in public_messages:
+        for forbidden_value in forbidden_values:
+            assert forbidden_value not in public_message
+
+    for result in (json_result, text_result):
+        exception = result.exception
+        seen: set[int] = set()
+        while exception is not None and id(exception) not in seen:
+            seen.add(id(exception))
+            exception_text = str(exception)
+            for forbidden_value in forbidden_values:
+                assert forbidden_value not in exception_text
+            exception = exception.__cause__ or exception.__context__

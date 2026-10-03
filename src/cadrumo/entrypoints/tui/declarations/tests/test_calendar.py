@@ -396,6 +396,6 @@ async def test_unavailable_holiday_calendar_is_visible_in_words_not_tokens() -> 
         await pilot.pause()
         detail = str(screen.query_one("#declarations-calendar-detail", Static).render())
 
-    assert "Ajuste: Festivos sin comprobar" in detail
-    assert "Festivos: calendario de festivos no disponible; fines de semana aplicados, festivos sin comprobar" in detail
+    assert "Ajuste: Calendario no disponible" in detail
+    assert "Festivos: calendario de festivos no disponible; el plazo original no se ha comprobado" in detail
     assert "calendar_unavailable" not in detail

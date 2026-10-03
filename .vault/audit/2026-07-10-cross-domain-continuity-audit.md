@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-07-10'
-modified: '2026-08-15'
-body_hash: 'sha256:89486e651488d18e2b5afdedb78e0633eb47a1185fe8edebc6caa1005d0f94f0'
+modified: '2026-10-03'
+body_hash: 'sha256:710a3f17c7b84f15df0414a22e06d52f58d059b98d47ca03c7e7ecd4de8d36a0'
 related: []
 ---
 
@@ -194,7 +194,7 @@ A fully declared Catalunya pensioner/landlord with no activity validates ready, 
 
 ### s419-direct-estimation-scenario-regression | high | activity predicate is absent from real direct-estimation scenarios
 
-S419 adds `renta-2025-profile-has-economic-activity` as the first operand of formula 0075, but the live registry scenarios still supply only the direct-estimation modality binding. `pytest src/aeat/domain/calculations/registry/tests/test_registry_scenarios.py` now fails on the normal direct-estimation scenario: casilla 0224 is not calculated, so its expected provenance and the downstream 0235 provenance are both absent. Add the derived predicate explicitly to every direct-estimation scenario with value `1`, retain it as `0` for non-business rental scenarios, and add a direct assertion that an economic-activity profile still requires the modality binding. This is necessary before S419 can be credited.
+S419 adds `renta-2025-profile-has-economic-activity` as the first operand of formula 0075, but the live registry scenarios still supply only the direct-estimation modality binding. the historical check now fails on the normal direct-estimation scenario: casilla 0224 is not calculated, so its expected provenance and the downstream 0235 provenance are both absent. Add the derived predicate explicitly to every direct-estimation scenario with value `1`, retain it as `0` for non-business rental scenarios, and add a direct assertion that an economic-activity profile still requires the modality binding. This is necessary before S419 can be credited.
 
 ### s419-non-business-tariff-resolution | low | activity predicate preserves both Renta calculation branches
 

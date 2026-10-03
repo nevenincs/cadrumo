@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-workbook-parity-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:1a0bc9e226a76683f6cc9498b250cb66854254e73a46bc80c5709f801c23ef48'
+modified: '2026-10-03'
+body_hash: 'sha256:db0c423e9ded171c618bcb5993a77659dab99acd47ceaa9eb467481c07518163'
 related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-workbook-parity-boundary-audit]]"
 ---
 
@@ -16,7 +15,7 @@ related:
 
 No issue found. The slice-owned diff records the extraction assessment
 and closes P04.S24 while leaving
-`src/aeat/domain/calculations/registry/_workbook_parity.py` untouched.
+the retired module untouched.
 
 ## WORKBOOK-PARITY-S24-002 | PASS | External runner behavior is protected
 

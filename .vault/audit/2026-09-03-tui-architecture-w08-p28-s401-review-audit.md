@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f620d9a1afe68f99d7d728ab52cf01d6d23d68f024a0a37e595d0eed587e0e1'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:f659317f663123c33274a6187c726897423f726eedfddf1272a74cc5aa779547'
+related: []
 ---
 
 # `tui-architecture` audit: `w08 p28 s401 review`
@@ -38,6 +37,6 @@ Resolution: S401 now owns the coordinator and its focused state-machine proof. T
 
 ## Verification
 
-Initial focused result: `uv run --no-sync pytest -q -n0 src/cadrumo/application/user_profile/tests/test_workbench_bootstrap.py src/cadrumo/entrypoints/tui/tests/test_bootstrap.py` passed: 8 tests in 2.31 seconds. Initial scoped Ruff check passed. Re-review after the coordinator addition: the same focused command passed 13 tests in 3.24 seconds and the scoped Ruff check passed. Final concurrent-inventory re-review: the same focused command passed 16 tests in 3.72 seconds and the scoped Ruff check passed. The re-review found the coordinator carries no raw passphrase or custody material, uses the canonical profile-summary authority, imports neither CLI nor dev fixtures, and has no network call. The root's external-provider refusal remains outside S401 because root and account host composition are separately planned in S384 and S403.
+Initial scoped Ruff check passed. Re-review after the coordinator addition: the same focused command passed 13 tests in 3.24 seconds and the scoped Ruff check passed. Final concurrent-inventory re-review: the same focused command passed 16 tests in 3.72 seconds and the scoped Ruff check passed. The re-review found the coordinator carries no raw passphrase or custody material, uses the canonical profile-summary authority, imports neither CLI nor dev fixtures, and has no network call. The root's external-provider refusal remains outside S401 because root and account host composition are separately planned in S384 and S403.
 
 Final result: **APPROVE**. The prior HIGH finding is resolved; no S401-owned HIGH or CRITICAL finding remains.

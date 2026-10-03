@@ -24,17 +24,53 @@
 # recipe does from one machine to the next.
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-CommandWithArgs", '''$global:LASTEXITCODE = 0; . ([scriptblock]::Create($args[0] + [Environment]::NewLine + 'if (-not $?) { exit $(if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }) }'))''']
 
-# ── Dev-loop storage root ────────────────────────────────────────────────────
-# Keep a developer's state inside the checkout instead of the platform
-# user-data directory. This is DEV CONFIGURATION, not product behaviour: the
-# application always defaults to the platform directory and never inspects the
-# filesystem for a `pyproject.toml` or `.git` marker to decide otherwise. A
-# tax-filing product does not classify its own installation, so the dev loop
-# opts in through the ordinary override channel like any operator would.
-export CADRUMO_LOCAL_STORAGE_ROOT := env_var_or_default(
-    "CADRUMO_LOCAL_STORAGE_ROOT",
-    justfile_directory() / "var" / "storage",
-)
+# ── Shared application and development storage root ─────────────────────────
+storage_root_override := trim(env_var_or_default("CADRUMO_STORAGE_ROOT", ""))
+export CADRUMO_STORAGE_ROOT := if storage_root_override == "" { justfile_directory() / "var" / "storage" } else { storage_root_override }
+
+# Bootstrap exports bind tools before Python imports the shared resolver.
+local_storage_root := trim(env_var_or_default("CADRUMO_LOCAL_STORAGE_ROOT", ""))
+resolved_storage_root := absolute_path(if local_storage_root == "" { CADRUMO_STORAGE_ROOT } else { local_storage_root })
+docs_build_root_override := trim(env_var_or_default("CADRUMO_DOCS_BUILD_ROOT", ""))
+export CADRUMO_DOCS_BUILD_ROOT := if docs_build_root_override == "" { resolved_storage_root / "development/build/docs" } else if docs_build_root_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { docs_build_root_override } else { resolved_storage_root / docs_build_root_override }
+uv_cache_dir_override := trim(env_var_or_default("CADRUMO_UV_CACHE_DIR", ""))
+export UV_CACHE_DIR := if uv_cache_dir_override == "" { resolved_storage_root / "development/cache/uv" } else if uv_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_cache_dir_override } else { resolved_storage_root / uv_cache_dir_override }
+uv_python_install_dir_override := trim(env_var_or_default("CADRUMO_UV_PYTHON_DIR", ""))
+export UV_PYTHON_INSTALL_DIR := if uv_python_install_dir_override == "" { resolved_storage_root / "development/python" } else if uv_python_install_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_python_install_dir_override } else { resolved_storage_root / uv_python_install_dir_override }
+uv_tool_dir_override := trim(env_var_or_default("CADRUMO_UV_TOOL_DIR", ""))
+export UV_TOOL_DIR := if uv_tool_dir_override == "" { resolved_storage_root / "development/tools/uv" } else if uv_tool_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_tool_dir_override } else { resolved_storage_root / uv_tool_dir_override }
+npm_config_cache_override := trim(env_var_or_default("CADRUMO_NPM_CACHE_DIR", ""))
+export npm_config_cache := if npm_config_cache_override == "" { resolved_storage_root / "development/cache/npm" } else if npm_config_cache_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { npm_config_cache_override } else { resolved_storage_root / npm_config_cache_override }
+cargo_target_dir_override := trim(env_var_or_default("CADRUMO_CARGO_TARGET_DIR", ""))
+export CARGO_TARGET_DIR := if cargo_target_dir_override == "" { resolved_storage_root / "development/build/cargo" } else if cargo_target_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { cargo_target_dir_override } else { resolved_storage_root / cargo_target_dir_override }
+pythonpycacheprefix_override := trim(env_var_or_default("CADRUMO_PYTHON_CACHE_DIR", ""))
+export PYTHONPYCACHEPREFIX := if pythonpycacheprefix_override == "" { resolved_storage_root / "development/cache/pycache" } else if pythonpycacheprefix_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { pythonpycacheprefix_override } else { resolved_storage_root / pythonpycacheprefix_override }
+xdg_cache_home_override := trim(env_var_or_default("CADRUMO_TOOL_CACHE_DIR", ""))
+export XDG_CACHE_HOME := if xdg_cache_home_override == "" { resolved_storage_root / "development/cache/tools" } else if xdg_cache_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_cache_home_override } else { resolved_storage_root / xdg_cache_home_override }
+
+uv_tool_bin_dir_override := trim(env_var_or_default("CADRUMO_UV_TOOL_BIN_DIR", ""))
+export UV_TOOL_BIN_DIR := if uv_tool_bin_dir_override == "" { resolved_storage_root / "development/tools/bin" } else if uv_tool_bin_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_tool_bin_dir_override } else { resolved_storage_root / uv_tool_bin_dir_override }
+pip_cache_dir_override := trim(env_var_or_default("CADRUMO_PIP_CACHE_DIR", ""))
+export PIP_CACHE_DIR := if pip_cache_dir_override == "" { resolved_storage_root / "development/cache/pip" } else if pip_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { pip_cache_dir_override } else { resolved_storage_root / pip_cache_dir_override }
+cargo_home_override := trim(env_var_or_default("CADRUMO_CARGO_HOME", ""))
+export CARGO_HOME := if cargo_home_override == "" { resolved_storage_root / "development/cache/cargo" } else if cargo_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { cargo_home_override } else { resolved_storage_root / cargo_home_override }
+
+xdg_config_home_override := trim(env_var_or_default("CADRUMO_TOOL_CONFIG_DIR", ""))
+export XDG_CONFIG_HOME := if xdg_config_home_override == "" { resolved_storage_root / "development/config/tools" } else if xdg_config_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_config_home_override } else { resolved_storage_root / xdg_config_home_override }
+xdg_data_home_override := trim(env_var_or_default("CADRUMO_TOOL_DATA_DIR", ""))
+export XDG_DATA_HOME := if xdg_data_home_override == "" { resolved_storage_root / "development/data/tools" } else if xdg_data_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_data_home_override } else { resolved_storage_root / xdg_data_home_override }
+xdg_state_home_override := trim(env_var_or_default("CADRUMO_TOOL_STATE_DIR", ""))
+export XDG_STATE_HOME := if xdg_state_home_override == "" { resolved_storage_root / "development/state/tools" } else if xdg_state_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_state_home_override } else { resolved_storage_root / xdg_state_home_override }
+ruff_cache_dir_override := trim(env_var_or_default("CADRUMO_RUFF_CACHE_DIR", ""))
+export RUFF_CACHE_DIR := if ruff_cache_dir_override == "" { resolved_storage_root / "development/cache/ruff" } else if ruff_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { ruff_cache_dir_override } else { resolved_storage_root / ruff_cache_dir_override }
+
+# Homebrew's mutable tool state uses the same canonical bootstrap bindings.
+homebrew_cache_override := trim(env_var_or_default("CADRUMO_HOMEBREW_CACHE_DIR", ""))
+export HOMEBREW_CACHE := if homebrew_cache_override == "" { resolved_storage_root / "development/cache/homebrew" } else if homebrew_cache_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_cache_override } else { resolved_storage_root / homebrew_cache_override }
+homebrew_logs_override := trim(env_var_or_default("CADRUMO_HOMEBREW_LOGS_DIR", ""))
+export HOMEBREW_LOGS := if homebrew_logs_override == "" { resolved_storage_root / "development/logs/homebrew" } else if homebrew_logs_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_logs_override } else { resolved_storage_root / homebrew_logs_override }
+homebrew_temp_override := trim(env_var_or_default("CADRUMO_HOMEBREW_TEMP_DIR", ""))
+export HOMEBREW_TEMP := if homebrew_temp_override == "" { resolved_storage_root / "tmp/homebrew" } else if homebrew_temp_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_temp_override } else { resolved_storage_root / homebrew_temp_override }
 
 # Direct product commands use the same published generation as the developer
 # tooling. Blank overrides are unset, as they are in the product settings.
@@ -1376,7 +1412,7 @@ docs-synonyms-maintain OBSERVATIONS:
 [doc('Build one localized documentation root into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-lang LANG:
-    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir docs/_build/html/{{LANG}}
+    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir "{{CADRUMO_DOCS_BUILD_ROOT}}/html/{{LANG}}"
 
 # Build the user-scope documentation for every translation language, each into
 # its own root beside the English one. These are plain local builds: for the

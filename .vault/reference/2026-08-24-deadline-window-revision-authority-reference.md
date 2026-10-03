@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2f2ad09999613b029d0c843105554bc8c2aef9f752c7cf91700521c5bf1e97e'
+body_hash: 'sha256:a025111b56c977f175c1320b3b5801b6d54016df8fd1290253652059f8e4f356'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-research]]'
 ---
@@ -14,11 +14,7 @@ related:
 
 ## Summary
 
-The canonical resolver is `select_revision` in
-`src/cadrumo/domain/calculations/registry/_temporal.py`; snapshot construction and
-deadline ownership use it. `deadline_windows(year)` in `_authority.py` validates and
-projects only the law-selected containing revision, preserving every owned qualified row
-without downstream deduplication.
+
 
 Validation is assembled under `domain/calculations/registry/_validate.py`; ownership,
 semantic uniqueness, and periodic completeness belong there. The deadline coordinate is

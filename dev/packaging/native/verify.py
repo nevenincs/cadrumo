@@ -7,7 +7,9 @@ import json
 import os
 import shutil
 from pathlib import Path
+from uuid import uuid4
 
+from cadrumo.core.storage_environment import storage_directory
 from dev._paths import REPO_ROOT
 
 from ..command_execution import CommandResult, run_command
@@ -38,11 +40,13 @@ assert PIL.Image.new('RGB', (2,2)).size == (2,2)
 child = subprocess.check_output([sys.executable, '-c',
     'import json,sys,pikepdf; print(json.dumps([sys.executable,sys.flags.isolated]))'], text=True)
 assert json.loads(child) == [sys.executable, 1]
-user = pathlib.Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).parent.resolve()
+user = pathlib.Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve()
 import win32com
-assert pathlib.Path(win32com.__gen_path__).resolve().is_relative_to(user / 'cache')
+cache_root = pathlib.Path(os.environ['XDG_CACHE_HOME']).resolve()
+assert pathlib.Path(win32com.__gen_path__).resolve().is_relative_to(cache_root / 'pywin32' / 'gen_py')
 assert all(pathlib.Path(p).resolve().is_relative_to(root) for p in win32com.__path__)
-assert pathlib.Path(tempfile.gettempdir()).resolve() == user / 'tmp'
+temporary_root = pathlib.Path(os.environ['TEMP']).resolve()
+assert pathlib.Path(tempfile.gettempdir()).resolve() == temporary_root
 writes = []
 def audit(event, args):
     if event == 'open' and isinstance(args[0], (str,bytes)):
@@ -52,24 +56,51 @@ def audit(event, args):
 sys.addaudithook(audit)
 with tempfile.NamedTemporaryFile() as temporary:
     temporary.write(b'native interpreter verification')
-assert writes and all(pathlib.Path(p).resolve().is_relative_to(user) for p in writes)
+assert writes and all(pathlib.Path(p).resolve().is_relative_to(temporary_root) for p in writes)
 print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': sys.version, 'origins': origins,
-                  'child': json.loads(child), 'python_audit_writes': writes, 'user_root': str(user)}))
+                  'child': json.loads(child), 'python_audit_writes': writes, 'user_root': str(user),
+                  'temporary_root': str(temporary_root), 'cache_root': str(cache_root)}))
 """
 
 
-def verify(package: Path, destination: Path, *, product: bool = False) -> None:
-    """Copy and verify a fresh artifact, restoring intentional failure injections."""
+def _verification_destination(
+    destination: Path | None,
+    build_root: Path,
+    *,
+    repository_root: Path = REPO_ROOT,
+) -> Path:
+    candidate = destination or Path("verification") / f"package-{uuid4().hex}"
+    if destination is not None and candidate.is_absolute():
+        resolved = candidate.resolve()
+        if resolved.is_relative_to(repository_root.resolve()) or resolved.exists():
+            raise ValueError("An explicit absolute verification destination must be fresh and outside the checkout")
+        return resolved
+    resolved = (build_root / candidate).resolve()
+    root = build_root.resolve()
+    if resolved == root or not resolved.is_relative_to(root) or resolved.exists():
+        raise ValueError("Verification needs a fresh destination beneath CADRUMO_NATIVE_BUILD_ROOT")
+    return resolved
+
+
+def verify(package: Path, destination: Path | None = None, *, product: bool = False) -> None:
+    """Copy and verify an artifact in a fresh isolated staging directory."""
     package = package.resolve(strict=True)
-    destination = destination.resolve()
-    if destination.is_relative_to(REPO_ROOT) or destination.exists():
-        raise ValueError("Verification needs a fresh destination outside the checkout")
+    build_root = storage_directory("CADRUMO_NATIVE_BUILD_ROOT", "development/build/native")
+    build_root.mkdir(parents=True, exist_ok=True)
+    destination = _verification_destination(destination, build_root)
+    destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(package, destination)
     cwd = destination.parent / (destination.name + " unrelated cwd")
     cwd.mkdir()
     (cwd / "python313.dll").write_bytes(b"host DLL must not load")
     (cwd / "pikepdf.py").write_text("raise RuntimeError('ambient import')", encoding="utf-8")
     environment = dict(os.environ)
+    for name in tuple(environment):
+        if name.upper().startswith("CADRUMO_"):
+            environment.pop(name)
+    storage_root = cwd / "storage"
+    temporary_root = cwd / "temporary"
+    cache_root = cwd / "cache"
     environment.update(
         {
             "PYTHONHOME": str(cwd),
@@ -78,7 +109,10 @@ def verify(package: Path, destination: Path, *, product: bool = False) -> None:
             "VIRTUAL_ENV": str(cwd),
             "CONDA_PREFIX": str(cwd),
             "PATH": str(cwd) + os.pathsep + environment.get("PATH", ""),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(cwd / "forbidden"),
+            "CADRUMO_STORAGE_ROOT": str(cwd / "canonical-storage"),
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_TEMP_DIR": str(temporary_root),
+            "CADRUMO_TOOL_CACHE_DIR": str(cache_root),
         }
     )
     exe = destination / "python.exe"
@@ -176,8 +210,8 @@ def verify(package: Path, destination: Path, *, product: bool = False) -> None:
     after = {p.relative_to(destination).as_posix(): digest(p) for p in destination.rglob("*") if p.is_file()}
     if before != after:
         raise AssertionError("Interpreter modified its installed package")
-    if (cwd / "forbidden").exists():
-        raise AssertionError("Ambient storage setting escaped native policy")
+    if not storage_root.is_dir() or not temporary_root.is_dir() or not cache_root.is_dir():
+        raise AssertionError("Native bootstrap did not prepare the configured storage overrides")
     evidence.update(
         {
             "refusals": refused,
@@ -185,7 +219,8 @@ def verify(package: Path, destination: Path, *, product: bool = False) -> None:
             "write_trace_scope": "Python audit events; native/OS writes require process tracing",
         }
     )
-    output = REPO_ROOT / ".artifacts/native/verification.json"
+    output = build_root / "verification.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
     print(f"Verified {destination}; evidence: {output}")
 
@@ -193,7 +228,7 @@ def verify(package: Path, destination: Path, *, product: bool = False) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", type=Path, required=True)
-    parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--destination", type=Path)
     parser.add_argument("--product", action="store_true")
     arguments = parser.parse_args()
     verify(arguments.package, arguments.destination, product=arguments.product)

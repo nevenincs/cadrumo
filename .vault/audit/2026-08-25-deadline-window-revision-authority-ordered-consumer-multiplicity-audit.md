@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1ecf0bb72db6b6e9fb36045568a279d3a8aade192e52e6e45d848877dcf70fea'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 # `deadline-window-revision-authority` audit: `ordered consumer multiplicity`
 

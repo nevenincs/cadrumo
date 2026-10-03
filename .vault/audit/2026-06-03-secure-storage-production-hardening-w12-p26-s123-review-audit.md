@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:88c62ed8d150223587afa777fb372177d39bc2ffd9c65ffe83737961a022be61'
+modified: '2026-10-03'
+body_hash: 'sha256:ba0d4778148c6a8e60ff41a5a0afc3a2861b322e801bd9b77424ab0ee8e89d4c'
 related: []
 ---
 
@@ -25,8 +25,8 @@ The file's user-facing live navigation/auth failures use `tr()` translated messa
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/sede/test_declarations.py::TestDeclaracionPdfObservation src/aeat/adapters/outbound/aeat/sede/test_declarations.py::TestReadOperationGuard` passed with 12 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/aeat/sede/_declarations.py src/aeat/adapters/outbound/aeat/sede/test_declarations.py` passed.
+- the historical check passed with 12 tests.
+- the historical check passed.
 - Source scans found no secure-object repository construction, storage-provider selection, SQL route setup, naked environment reads, or direct durable file writes in the reviewed module.
 
 Disposition: close `AFR-021` as `remote-mirror`. The temporary PDF scratch path is accepted as parser scratch, not durable sensitive storage, only after the continuation remediation replaced `NamedTemporaryFile(delete=False)` with the private-fd `_temporary_sensitive_pdf_path()` helper, wrapped scratch failures in the central Sede/Aeat exception hierarchy without retaining chained OS exceptions, redacted parser labels, and added focused unlink plus no-chained-exception coverage. The consolidated `S121-S128` review records this as `S123-001 | MEDIUM | closed`.

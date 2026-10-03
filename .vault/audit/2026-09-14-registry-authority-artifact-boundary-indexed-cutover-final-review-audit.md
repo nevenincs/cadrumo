@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:bd13183b13b15581fc3e2eac6a059ad4ea6c9841ec139f728d95756f0e4d9962'
 related:
-  - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]"
 ---

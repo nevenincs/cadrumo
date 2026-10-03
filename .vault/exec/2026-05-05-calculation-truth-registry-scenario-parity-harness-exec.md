@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-08-15'
-body_hash: 'sha256:c50c290310b52209606d18d2a88b4bcf5c926bf17a8c5fe7ec4394f2053ef942'
+modified: '2026-10-03'
+body_hash: 'sha256:324450e9dd2dddefea3af6c16f98ebe757d56951515cba8d5ae04f856f5147d8'
 related: []
 ---
 
@@ -14,15 +14,6 @@ Added and restored a manual-first scenario/tape parity harness so registry
 calculation checks can be stored, replayed, and compared against the current
 runtime.
 
-- Created: `src/aeat/domain/calculations/registry/_parity_tapes.py`
-- Created: `src/aeat/domain/calculations/registry/test_parity_tapes.py`
-- Created: `src/aeat/entrypoints/cli/test_registry_parity_cli.py`
-- Updated: `src/aeat/domain/calculations/registry/__init__.py`
-- Updated: `src/aeat/entrypoints/cli/registry.py`
-- Updated: `src/aeat/locales/en.yml`
-- Updated: `src/aeat/locales/es.yml`
-- Updated: `src/aeat/locales/ca.yml`
-- Updated: `src/aeat/locales/hu.yml`
 
 ## Description
 

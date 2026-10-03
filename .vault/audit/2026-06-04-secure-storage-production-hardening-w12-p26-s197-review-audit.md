@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:51031c7773e8f20a7b500af03da63bf373ce47db6410ca9786ae39672334af09'
+modified: '2026-10-03'
+body_hash: 'sha256:b1f87005129178cbc8966b2b33acf339a13404f9a43e126e0f6e97489e5d1d8a'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S197-001 | PASS | Auth diagnostics stay active-profile runtime-bound
 
-`src/aeat/application/auth/_diagnostics.py` retrieves encrypted diagnostics via
+The retired module retrieves encrypted diagnostics via
 `secure_object_repository_for_active_bucket()`. It does not construct
 `SecureObjectRepository` directly, read environment variables, or bypass the
 storage runtime.
@@ -38,9 +38,9 @@ focused `auth_diagnostics` cases after the encoding cleanup.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/auth/_diagnostics.py src/aeat/application/auth/test_diagnostics.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/auth/test_diagnostics.py` passed with 5 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "migrated_runtime_defaults_refuse and auth_diagnostics"` passed with 2 selected tests.
+- the historical check passed.
+- the historical check passed with 5 tests.
+- the historical check passed with 2 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit

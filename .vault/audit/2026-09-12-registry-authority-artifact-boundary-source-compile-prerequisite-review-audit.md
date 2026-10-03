@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:fee6689dd7f445e221ae86c246a88d0956ce120ace893020f00a826cc92e46a9'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 
 # `registry-authority-artifact-boundary` audit: `source compile prerequisite review`

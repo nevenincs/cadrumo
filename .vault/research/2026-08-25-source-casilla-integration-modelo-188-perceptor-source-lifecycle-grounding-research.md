@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:06ae4b074091c0732477e2f829253a0ce7516cbac09c136c46da3358c0616ff5'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:66555f76ad517c8cf80520135508784ec2994349d448e9ed21c6208a4e8059b4'
+related: []
 ---
 # `source-casilla-integration` research: `modelo 188 perceptor source lifecycle grounding`
 
@@ -53,9 +52,6 @@ A later source-connectivity step may reopen only after all of the following are 
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_188/manifest.json`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md`
 - `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/revision.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/casillas/c01__c05.toml`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_187_188_194_registry.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_188_resumen_matches_its_design.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
+
 - `.vault/reference/2026-08-24-registry-completeness-closure-modelo-188-design-era-coverage-reference.md`
 - `.vault/audit/2026-08-25-registry-temporal-coverage-s46-m188-design-era-review-audit.md`

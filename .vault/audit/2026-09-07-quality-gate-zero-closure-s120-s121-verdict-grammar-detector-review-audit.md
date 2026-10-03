@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c06adcd69665e8b64de6eb3ca4b4998e0a4e698c878fe05774d59deb8cedc6d7'
 related:
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
 ---
 # quality-gate-zero-closure audit: S120 S121 verdict grammar detector review

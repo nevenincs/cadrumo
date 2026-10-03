@@ -313,7 +313,11 @@ class SupervisorExecutionMixin(SupervisorHost):
         if snapshot.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE:
             if self._operands is None:
                 raise ValueError("secure-reference request storage requires an operand store")
-            return await self._operands.resolve(snapshot.request_reference, definition.request_type)
+            # The store is a port: an executor relies on the exact registered
+            # type, so a store that resolves any other type is refused here.
+            payload = await self._operands.resolve(snapshot.request_reference, definition.request_type)
+            self._validate_request_payload(payload, definition.request_type)
+            return payload
         raw = snapshot.credential_free_request_json
         if raw is None:
             raise ValueError("credential-free operation request is absent")

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:324bf77845bb2d6c4e2da34d8b93d2129fd320d55dcd6f990fb72c3205b07f3c'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 # `deadline-window-revision-authority` audit: `consumer canonical API`
 

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#pension-rescate-dt12-classification'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:a5fcd72cb7a33ffeac8f7c121935c7ef0f381b6aa428afdffe6c8b7e5952aa13'
+modified: '2026-10-03'
+body_hash: 'sha256:39223e66e6dec8505ea943543dfa31711f474999f9b60ef2caf38edf9376b188'
 related:
   - '[[2026-07-01-pension-rescate-dt12-classification-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
@@ -27,11 +27,11 @@ the ADR can decide the classification axis, the gate, and its blocking posture.
 
 ### F1 - The 40% reduccion core is modelled; the eligibility gate is not
 
-`compute_dt12_reduccion_plan_pensiones` (`src/aeat/domain/modelos/_dt12_reduccion.py`)
+`compute_dt12_reduccion_plan_pensiones`
 computes `pre_2007 / totales * gross_rescate * 0.40`, rounds to cents, and guards
 three preconditions: `totales > 0`, non-negative inputs, and `pre_2007 <= totales`
 (the apartado-2 subset invariant). The rate `DT12_RESCATE_REDUCCION_RATE = Decimal("0.40")`
-lives in `src/aeat/core/external_constants.py:624`. The function is pure and
+lives . The function is pure and
 unconditional: given a valid split it always yields the 40% reduccion. There is no
 contingencia-year or rescate-year (percepcion-year) parameter, hence no apartado-4
 window evaluation anywhere in the codebase (confirmed by RAG + grep: the only DT12
@@ -43,9 +43,9 @@ verify-time advisory).
 The three amounts enter through `work calculate` flags
 (`--rescate-plan-pensiones-capital`, `--rescate-plan-pensiones-aportaciones-pre-2007`,
 `--rescate-plan-pensiones-aportaciones-totales`,
-`src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py:169-198`). They are parsed to
+the former source file). They are parsed to
 `Decimal | None` and threaded through `build_work_calculate_input_bundle` into
-`apply_calculation_shortcut_inputs` (`src/aeat/application/modelo/_calculate_input.py:649`).
+`apply_calculation_shortcut_inputs` .
 That function enforces the all-or-none co-requirement, calls the domain compute, and
 writes the result into the unique-semantic-role casilla
 (`_REDUCCION_TRABAJO_SEMANTIC_ROLE`). It returns `(casilla_values, binding_values)` only
@@ -59,12 +59,12 @@ hard block on a fact-dependent eligibility:
 
 - Calculate-time: `CalculationSourceDiagnostic` rows (the `source_advisories` /
   `ADVISORY:` line), fanned out by `collect_bucket_aggregation_advisory_diagnostics`
-  (`src/aeat/application/modelo/_calculation_diagnostics.py`) after the revision is
+   after the revision is
   computed. These read the revision structure and the computed casilla map.
 - Verify-time: `ModeloVerificationFinding` with
-  `ModeloVerificationFindingKind.ADVISORY` (`src/aeat/domain/modelos/_verification_report.py:76-90`),
+  `ModeloVerificationFindingKind.ADVISORY` ,
   appended in `_collect_revision_verification_findings`
-  (`src/aeat/application/modelo/_verification_actions.py:1485-1497`). The existing DT12
+  . The existing DT12
   advisory (`_dt12_advisory.py`) and the art-20 advisory (`_art20_advisory.py`) both
   live here and read only `casilla_values` keyed by semantic role.
 
@@ -90,7 +90,7 @@ injection, not on the verify path.
 
 ### F5 - Apartado-4 window rule (bundled-corpus verbatim)
 
-Bundled consolidated LIRPF `src/aeat/_data/corpus/normatives/html/ley-35-2006.html`,
+Bundled consolidated LIRPF the former source file,
 `#dtduodecima` block (lines 12701-12708). Apartado 4 (added by Ley 26/2014 art. 1.86,
 `BOE-A-2014-12327`) decoded to a date-arithmetic rule over `contingencia_year` (year
 the contingencia -- retirement, disability, death -- occurred) and `rescate_year` (year
@@ -135,7 +135,7 @@ spanning several filing years) is a larger surface than this issue needs.
 ### F7 - Legal catalogue entry exists and is grounded; window text not yet asserted
 
 `ley-35-2006:dt-12` is already in the catalogue
-(`src/aeat/_data/registry/aeat/legal/irpf.toml:2631`), `evidence_tier =
+, `evidence_tier =
 "legal_authority"`, `corpus_ref = "...ley-35-2006.html#dtduodecima"`, `document_id =
 BOE-A-2006-20764`, `reviewed_by = "codex"`, `reviewed_at = 2026-06-28`. Its
 `required_text` asserts apartado-1/2 phrases but not the apartado-4 window text.

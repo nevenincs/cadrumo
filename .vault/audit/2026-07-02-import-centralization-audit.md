@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:773c573c8015b7c2222c3e6543ed5c864dae757dd1f26ef45c45db480a008864'
+modified: '2026-10-03'
+body_hash: 'sha256:5012e3f8661d62b85956c49ec2d99b1e740a9b6cdd552b99f59957a2a90e60d3'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-research]]'
-  - '[[2026-07-01-import-centralization-plan]]'
 ---
 
 # `import-centralization` audit: `closeout synthesis of the structural code review and the fresh-context honesty review`
@@ -31,9 +30,9 @@ coordinator correction once live file contention was discovered; this document m
 plan-file edits and its author committed no changes to
 `.vault/plan/2026-07-01-import-centralization-plan.md`.
 
-Live re-verification performed for this closeout: `python dev/import_hygiene_scan.py`
+Live re-verification performed for this closeout: the historical check
 (production Family-1 = 5, exactly the documented cycle-break baseline; test-only Family-1 =
-54, exactly the documented test-debt allowlist); `pytest src/aeat/tests/test_import_hygiene_gate.py`
+54, exactly the documented test-debt allowlist); the historical check
 (9/9 green); `pytest --collect-only -q src/aeat` (11731/14196 collected cleanly, 2465
 intentionally deselected, zero import errors — a first attempt mid-session hit a transient
 2-file collection error from concurrent peer-worktree churn that did not reproduce on
@@ -53,7 +52,7 @@ umbrella-RETIRE Steps (`W03.P88`) removed all 7 named symbols from `application.
 the `_withholding_observations_repository.py` -> `_percepciones_observations_repository.py`
 Spanish-stem rename (`23f5e6f409`, `W03.P87.S389`) landed cleanly with module, tests, and
 consumers swept in one atomic `relocation:` commit, the CI gate
-(`dev/import_hygiene_scan.py` + `test_import_hygiene_gate.py`) is a real ratchet with a
+(the retired module + `test_import_hygiene_gate.py`) is a real ratchet with a
 genuine anti-tautology proof (a corrupted baseline entry fails the gate), and the scanner's
 annotated-`__all__` handling (the fix in `7bb8b2a3ac`, `W04.P89.S378`) correctly discovers
 facades built with augmented/computed `__all__` lists rather than only literal lists.
@@ -82,8 +81,8 @@ baseline. This is exactly the ratchet gate's designed failure mode — it caught
 regression rather than silently absorbing it. Per `aeat-swarm-orchestration`'s "absorb
 in-scope regressions" discipline, the campaign fixed the regression in `07d5fc6239` (restore
 baseline to the 5 documented cycle-break sites) and `416969aeb5` (W06 restoration to the
-same floor). Re-verified at HEAD: `python dev/import_hygiene_scan.py` reports exactly 5
-production sites, matching `dev/import_hygiene_baseline.json` byte-for-byte in site count.
+same floor). Re-verified at HEAD: the historical check reports exactly 5
+production sites, matching the retired data file byte-for-byte in site count.
 Status: **RESOLVED**, closed by the two named commits.
 
 ### honesty-review-2-no-audit-doc | medium | RESOLVED by this document
@@ -102,7 +101,7 @@ This is the class of drift `plan-closure-requires-exec-records` exists to preven
 **IN PROGRESS, peer-owned.** A concurrent peer agent is actively reconciling
 `.vault/plan/2026-07-01-import-centralization-plan.md` in this shared worktree during this
 same closeout window. This audit pass independently verified, via the live
-`dev/import_hygiene_scan.py` scanner and the gate test suite, that the underlying work
+The retired module scanner and the gate test suite, that the underlying work
 behind every Step in Waves W01, W02 (except the 3 documented cycle-break files), W03, W04,
 and W05 is functionally complete at HEAD — but this document deliberately does NOT apply or
 commit any checkbox mutation to the plan file itself, to avoid colliding with the peer's
@@ -113,7 +112,7 @@ Plan-checkbox reconciliation is left entirely to the peer's in-flight pass.
 
 The Wave W05 test-only sweep's residual (54 sites) was, at the time of the honesty review,
 not yet pinned to a named, gate-enforced allowlist — meaning a regression in the test-only
-tail would not fail CI. Status: **RESOLVED** — `dev/import_hygiene_test_debt.json` now
+tail would not fail CI. Status: **RESOLVED** — the retired data file now
 carries 54 named, reasoned entries (one per site, each stamped with an explanation of why
 the private reach is a deliberate white-box test rather than a promotion candidate,
 per ADR Ruling 3's per-symbol disposition rule), and `test_import_hygiene_gate.py` carries
@@ -205,7 +204,7 @@ appropriately-scoped follow-up (or the plan's peer executor) to triage ownership
 
 The plan's own Verification section and Step `W06.P90.S399` define completion as the
 scanner reporting **zero** production Family-1 violations with the ratchet gate flipped to
-**hard-zero mode** (`dev/import_hygiene_baseline.json`'s `sites` list emptied to `[]`) —
+**hard-zero mode** (the retired data file's `sites` list emptied to `[]`) —
 i.e., the `application.review` <-> `application.workflow` cycle-break itself structurally
 removed, not merely documented and pinned. This has NOT happened: the baseline still carries
 the 5 documented cycle-break sites, and the gate remains in ratchet mode (fails only on
@@ -354,9 +353,9 @@ behavior-changing residual found.
 The 2026-07-02 finding recorded the ratchet gate as still in 5-site ratchet mode, with
 `W06.P90.S399`, `W02.P51.S248`, `W02.P52.S252`, and `W02.P52.S254` genuinely open against the
 plan's literal hard-zero criterion. This is now RESOLVED: the cycle-break structurally removed
-the 5 documented sites, `dev/import_hygiene_baseline.json`'s production Family-1 `sites` list is
+the 5 documented sites, the retired data file's production Family-1 `sites` list is
 permanently `[]`, and the gate carries a dedicated `test_production_family1_baseline_is_hard_zero`
-assertion. Re-verified at HEAD: `dev/import_hygiene_scan.py` reports zero distinct production
+assertion. Re-verified at HEAD: the retired module reported zero distinct production
 files with a cross-package private import and zero production Family-1 sites; the three production
 Family-1 gate assertions plus the Family-4 hard-zero assertion pass sequentially. The four
 Steps' acceptance criteria are met and they are closed in this pass, each with its own Step
@@ -378,7 +377,7 @@ pre-existing hits stay disposed.
 
 ### closeout-new-1-test-debt-family1-regression | medium | peer-owned, formally deferred
 
-The import-hygiene gate's SEPARATE test-only debt family (`dev/import_hygiene_test_debt.json`)
+The import-hygiene gate's SEPARATE test-only debt family
 regressed from 54 to 57 test-only Family-1 reaches: five new undocumented test-only private
 imports were introduced by unrelated peer campaigns after the test-debt allowlist was captured —
 `application/corpus_search/tests/test_errors_registration.py` (`ErrorCategory` from

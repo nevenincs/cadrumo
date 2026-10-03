@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:0860eeaeadff8a154e30c1e49e634a6231815189fc45f53c748ef859387fef62'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+related: []
 ---
 # S33 two-channel export proof decision review
 

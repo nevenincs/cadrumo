@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-13'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:0e81fe6142e78f4d07218b735340226d852e6fad9f7987bfc99eee98404ecf64'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `S73 annual Orden regulatory axes code review`

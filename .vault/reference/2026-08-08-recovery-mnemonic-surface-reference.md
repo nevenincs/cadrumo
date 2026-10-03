@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#recovery-mnemonic-surface'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:59ae56ac9479f6caac89fbf149d690e52b0fdd58cd540af1f5cd8daa9dfcf105'
+body_hash: 'sha256:ee9392ddd2407aecae1af9b75d103206963fb67c7dc2bdb4a3ddb177eb90064c'
 related:
   - '[[2026-08-08-recovery-mnemonic-surface-adr]]'
 ---
@@ -19,31 +19,18 @@ on a TUI full-screen surface.
 
 ## The recovery application layer
 
-`src/cadrumo/application/user_profile/_custody.py` owns the lifecycle:
-`create_recovery_code` and `rotate_recovery_code` (both delegating to a shared
-`_enroll_recovery_code` taking a `confirm` callback), `verify_recovery_code`
-taking a mnemonic and returning a verification record, `recover_secret_store`
-taking a mnemonic and a new passphrase — the forgotten-passphrase path —
-`inspect_recovery_status`, and `change_passphrase`.
+
 
 The result records carry only a recovery path, a non-secret recovery
 fingerprint, and booleans. The module states that the candidate mnemonic is
 never held on the result record and that the plaintext words are never persisted
 or returned; the `confirm` callback displayed them during enrollment.
 
-`src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py` is the
-storage-side facade. The single point where plaintext words leave the module is
-the `confirm(candidate.mnemonic)` call; the module records that the mnemonic is
-never returned, that none of the operations serialize the mnemonic or the master
-key, and that the confirm call is an unbounded interactive pause after which
-enrollment preconditions are re-asserted.
+The single point where plaintext words leave the module is the `confirm(candidate.mnemonic)` call; the module records that the mnemonic is never returned, that none of the operations serialize the mnemonic or the master key, and that the confirm call is an unbounded interactive pause after which enrollment preconditions are re-asserted.
 
 ## The CLI verbs
 
-`src/cadrumo/entrypoints/cli/_config/_custody_secret.py` registers
-`aeat config recovery status`, `create`, `rotate` and `verify`, the flat
-`aeat config recover` forgotten-passphrase verb, and `aeat config passphrase
-change`.
+
 
 The display helper is `_confirm_candidate_on_terminal`, which records that the
 words reach only the terminal device — never stdout, the JSON envelope, or a log
@@ -102,19 +89,8 @@ and the literal CLI command strings for create, rotate and verify.
 
 ## The leak gates and their blind spot
 
-`src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery.py`
-carries a no-secret-serialization class asserting the persisted envelope never
-contains the plaintext mnemonic or master key, and that a failed recover's error
-envelope excludes the wrong mnemonic and each of its words.
 
-`src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py` proves the
-lifecycle round-trips without a serialized mnemonic, that create and rotate
-refuse without an interactive terminal, and that the verbs accept no mnemonic on
-argv.
 
-`src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py` carries the
-render gate asserting a masked field never paints its secret: it sets sentinel
-values into every masked input across enrolled surfaces and asserts absence from
-an exported screenshot. Its own docstring records the boundary — it cannot see a
-secret collected inside a MODAL the base screen pushes only on a button press,
-because it does not drive navigation into nested screens.
+
+
+Its own docstring records the boundary — it cannot see a secret collected inside a MODAL the base screen pushes only on a button press, because it does not drive navigation into nested screens.

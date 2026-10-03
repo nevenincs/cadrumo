@@ -1,0 +1,109 @@
+[[revisions.esquema-union.export_layouts]]
+id = 'modelo-369-union-fichero'
+
+[[revisions.esquema-union.export_layouts.records]]
+id = 'modelo-369-union-t36909'
+record_type = 't36909-un'
+order = 6
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-1-inicio-del-identificador-de-modelo-y-pag'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-3-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '369'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-6-pagina'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '09'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-8-fin-de-identificador-de-modelo'
+offset = 8
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-9-complementaria'
+offset = 9
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-10-reservado'
+offset = 10
+length = 5785
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36909-5795-constante-t36909'
+offset = 5795
+length = 9
+kind = 'literal'
+literal = '</T36909>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-union.export_layouts.records.row_field_casilla_ids]

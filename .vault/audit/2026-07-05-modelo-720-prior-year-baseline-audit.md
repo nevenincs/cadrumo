@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
-modified: '2026-07-17'
-body_hash: 'sha256:c425f36cc710c7552c6c299c50ab78c9c9e61ff1d0e615a223e6fccf835dd083'
+modified: '2026-10-03'
+body_hash: 'sha256:709df5ab91285e2c44d792d5f03f7f5f5908d80fc9d83a5ecf6bae312674df28'
 related:
-  - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"
   - "[[2026-07-05-modelo-720-prior-year-baseline-adr]]"
   - '[[2026-07-05-modelo-720-row-carrier-adr]]'
 ---
@@ -14,7 +13,7 @@ related:
 
 Audited the W02.P03 Modelo 720 taxonomy implementation against the W02 plan, the M720 taxonomy ADR, BOE-grounded class-code intent, and the touched source/test files.
 
-Audited implementation files: `src/aeat/core/aggregation.py`, `src/aeat/core/_foreign_asset_obligation.py`, `src/aeat/core/__init__.py`, `src/aeat/application/aggregation/_foreign_assets.py`, `src/aeat/core/tests/test_foreign_asset_obligation.py`, and `src/aeat/application/aggregation/tests/test_foreign_assets.py`.
+Audited implementation files: the retired module, the retired module, the retired module, the retired module, the retired test, and the retired test.
 
 Audited W03.P05.S13 source-mesh row-carrier implementation against the row-carrier ADR and the S13 plan row. The review covered the new row-binding carrier, merge ownership rules, JSON serialization shape, source-mesh readiness behavior, and the focused source-mesh tests.
 
@@ -28,7 +27,7 @@ Audited W03.P06.S16 and the campaign close as a fresh inherited surface against 
 
 ### import-boundary | medium | cross-package private import regressed the production import-hygiene gate
 
-The first review pass found `src/aeat/application/aggregation/_foreign_assets.py` importing the new Modelo 720 class-code map and obligation helpers directly from `aeat.core._foreign_asset_obligation`. The focused runtime tests passed, but the repository import-hygiene gate proved this was a new production Family-1 violation. Resolution: `src/aeat/core/__init__.py` now exposes the foreign-asset obligation primitives from their owning source module, and `_foreign_assets.py` imports them from `aeat.core`. The real source remains `core._foreign_asset_obligation`; the facade is required only to satisfy the enforced package boundary.
+The first review pass found the retired module importing the new Modelo 720 class-code map and obligation helpers directly from `aeat.core._foreign_asset_obligation`. The focused runtime tests passed, but the repository import-hygiene gate proved this was a new production Family-1 violation. Resolution: the retired module now exposes the foreign-asset obligation primitives from their owning source module, and `_foreign_assets.py` imports them from `aeat.core`. The real source remains `core._foreign_asset_obligation`; the facade is required only to satisfy the enforced package boundary.
 
 ### vault-trace | low | plan relation omitted the taxonomy ADR that governs W02.P03
 

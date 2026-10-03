@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:591daa1387619d9b5333535ac7e032f0474d9e3f4934f6fa59df3861ddc4b329'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
-  - '[[2026-08-03-canonical-storage-management-plan]]'
   - '[[2026-08-03-canonical-storage-management-self-duplication-review-audit]]'
   - '[[2026-08-03-canonical-storage-management-honesty-review-audit]]'
   - '[[2026-08-03-canonical-storage-management-dormancy-burndown-audit]]'

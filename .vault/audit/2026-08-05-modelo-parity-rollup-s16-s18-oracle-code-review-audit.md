@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a1b7029be3cb978e3c3894aef8584167ce57171ae242a2f6705bdf5efc90d542'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit]]"
   - "[[2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research]]"
   - "[[2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research]]"

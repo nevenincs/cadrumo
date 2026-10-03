@@ -158,7 +158,6 @@ def build_modelo_history_timeline_registration(
             request,
             definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
             payload_type=ModeloHistoryTimelineRequest,
-            exact_type=True,
         )
         periods = frozenset[Period]()
         if payload.year is not None and payload.period is not None:

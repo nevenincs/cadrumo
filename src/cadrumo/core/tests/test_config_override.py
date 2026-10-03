@@ -19,24 +19,37 @@ itself.
 from __future__ import annotations
 
 import os
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from ...tests.env_scope import isolated_aeat_env
 from ..config import (
     Settings,
     load_settings,
     override_settings,
     reset_settings_cache,
+    settings_override,
 )
 from ..config_support import coerce_output_language_setting
 from ..external_constants import OutputLanguage
-from ..paths import resolve_project_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def unoverridden_settings(tmp_path: Path) -> Iterator[None]:
+    """Exercise unset category settings independently of the runner's explicit paths."""
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "state")):
+        token = settings_override.set(Settings(cadrumo_profile_kdf_measure_calibration=False))
+        try:
+            yield
+        finally:
+            settings_override.reset(token)
+
 
 # Synthetic in-test path prefix. Never written or read on disk; the
 # tests only assert how the override helper carries Path values through
@@ -57,7 +70,7 @@ def _expected_path(*parts: str) -> Path:
     validator normalises every configured path (drive-anchored,
     resolved), so assertions stay portable across POSIX and Windows."""
 
-    return resolve_project_path(Path(_NONEXISTENT_PATH_PREFIX, *parts))
+    return (load_settings().cadrumo_local_storage_root / _NONEXISTENT_PATH_PREFIX / Path(*parts)).resolve()
 
 
 def test_override_settings_swaps_scalar_field_inside_block() -> None:

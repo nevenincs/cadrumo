@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:12728200cd37b9f5704a97373efcf9e382a852793d831b8772b6997f6ee4bf07'
+modified: '2026-10-03'
+body_hash: 'sha256:bd238acd06f91b74d188c23be0f061c91eec1e3483a8d98b14c37b092868d506'
 related:
-  - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-m210-categorical-conditional-predicate-adr]]"
 ---
@@ -124,7 +123,7 @@ Resolved deferrals and remaining follow-ups from this closeout:
   used instead). Committed `d10662573`. 2 tests pass.
 - `DFR-M210-TEXT-INPUT-LOCALE-PARITY`: RESOLVED — the text-input empty
   refusal in `_calculate_input.py` now resolves through the runtime YAML
-  catalogues (`src/aeat/locales/en.yml`, `es.yml`, `ca.yml`, and `hu.yml`) for
+  catalogues (the retired data file, `es.yml`, `ca.yml`, and `hu.yml`) for
   `application.modelo.errors.calculate_text_input_empty`. The entries were
   provisioned through the sanctioned locale CLI
   (`python -m aeat.locales set`). `test_calculate_input_error_localization.py`

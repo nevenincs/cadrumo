@@ -39,6 +39,7 @@ from cadrumo.core.storage_taxonomy_locations import (
     storage_path,
     storage_tree_targets,
 )
+from cadrumo.tests.env_scope import isolated_aeat_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -353,6 +354,7 @@ def test_a_root_override_re_derives_every_non_overridden_category(tmp_path: Path
     second = tmp_path / "second-root"
 
     with (
+        isolated_aeat_env(),
         override_settings(cadrumo_local_storage_root=first),
         override_settings(cadrumo_local_storage_root=second) as rebuilt,
     ):

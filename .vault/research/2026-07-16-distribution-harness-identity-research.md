@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#distribution-harness-identity'
 date: '2026-07-16'
-modified: '2026-07-17'
-body_hash: 'sha256:f2614c657fdc42eb52d5070174986a8175aa9f7093959d3fbd58a382ce8e1b4a'
+modified: '2026-10-03'
+body_hash: 'sha256:3ea041942f0749702dc80f0dcdf37d68caa430ad2068e5a068400e0d38b57d93'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
@@ -35,7 +35,7 @@ and name authority as the harness evolves.
 
 The relevant source locations are `src/cadrumo/_data/agent/personas`,
 `src/cadrumo/_data/agent/skills`, `src/cadrumo/_data/agent/rules`, and
-`src/cadrumo/agent/_workspace.py:269-282`, `297-372`, `608-634`. Existing generation
+the former source file, `297-372`, `608-634`. Existing generation
 tests assert source-name equality, so they prove faithful copying but do not prove a
 Cadrumo namespace. Generic installed names can collide with harness components supplied
 by a user, another plugin, or the host.
@@ -45,8 +45,8 @@ by a user, another plugin, or the host.
 The plugin name, MCP server name, executable, MCPB name, and MCPB display name already
 derive from or spell the Cadrumo identity. The protocol server is created from
 `PRODUCT_IDENTITY.mcp_server`. Generated plugin configuration uses the same canonical
-source. These files define the values: `src/cadrumo/agent/_workspace.py:64-89`,
-`401-417`, `src/cadrumo/entrypoints/mcp/_server.py:793`, and
+source. These files define the values: the former source file,
+`401-417`, the former source file, and
 `packaging/mcpb/manifest.json:4-7`.
 
 The namespace is not complete in generated prompt and resource identifiers. Prompt
@@ -59,7 +59,7 @@ bundled harness identifier is distinguishable.
 The plugin generator has an English-only `_PLUGIN_DESCRIPTION`, the marketplace has an
 English-only `_MARKETPLACE_DESCRIPTION`, and the MCPB manifest has English-only
 `description` and `long_description` product copy. The relevant locations are
-`src/cadrumo/agent/_workspace.py:70-78`, `128`, and
+the former source file, `128`, and
 `packaging/mcpb/manifest.json:7-8`.
 
 The formats expose plain string fields rather than one canonical description source.

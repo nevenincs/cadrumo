@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:92f12cd1564956657fcdecfb95234d5749f6a724d235e01433542a26a82160c3'
+modified: '2026-10-03'
+body_hash: 'sha256:b02180910f87c263e1885db36e3e01c0585469730ef7c43f7ec05d8eb87375d4'
 related: []
 ---
 
@@ -32,9 +32,9 @@ The independent review found no critical or high issues, but flagged medium test
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_factory.py src/aeat/adapters/outbound/storage/test_foundation.py -k "factory or public_surface"` passed with 8 selected tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_factory.py` passed with 7 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_factory.py src/aeat/adapters/outbound/storage/test_factory.py` passed.
+- the focused test run passed with 8 selected tests.
+- the focused test run passed with 7 tests.
+- the focused test run passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Source scan found no direct `Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, `# noqa`, pragma, `type: ignore`, broad exception catches, monkeypatching, fakes/stubs, skips, or xfails in the S142 files.
 

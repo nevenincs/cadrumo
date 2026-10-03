@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:f914571dac4d2cf3269bbe1e909a9ea4cfb2ca72ad0ba9a4cd618ed20dd55cb3'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-27-calculation-correctness-campaign-modelo-347-nonresident-counterparty-silent-exclusion-audit]]"
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 ---

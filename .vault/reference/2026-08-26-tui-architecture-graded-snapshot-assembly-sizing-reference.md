@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:7f7b16e649522c60dca78acb691f65dc226771354bc340c038d70c4f07519fe2'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
 ---
 

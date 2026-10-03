@@ -114,6 +114,7 @@ def check_generated_export_tree(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
         source_defects=source_defects,
+        inheritance=context.validation.inheritance,
     )
     prepare_generated_form_layout_companion(context.validation, temporary_root=context.temporary_root)
     candidate = validate_generated_export_tree(
@@ -143,6 +144,14 @@ def check_generated_export_tree(
     published_layout = _load_exact_published_layout(
         published_modelo_root,
         target=context.validation.target,
+        baseline_revisions=(
+            tuple(revision_id for revision_id, _digest in context.validation.inheritance.pinned_ancestors)
+            if context.validation.inheritance is not None
+            else ()
+        ),
+        baseline_layout=(
+            context.validation.inheritance.baseline_layout if context.validation.inheritance is not None else None
+        ),
     )
     published_manifest = verify_export_fragment_provenance_manifest(
         export_root=published_export_root,
@@ -153,6 +162,9 @@ def check_generated_export_tree(
         field_derivations=rendered.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=(
+            context.validation.inheritance.attestation if context.validation.inheritance is not None else None
+        ),
     )
     refuse_repeat_the_candidate_would_drop(published_layout, candidate.layout)
     semantic_drift = loader_semantic_drift(
@@ -249,6 +261,8 @@ def _load_exact_published_layout(
     published_modelo_root: Path,
     *,
     target: ExportFragmentTarget,
+    baseline_revisions: tuple[str, ...] = (),
+    baseline_layout: ExportLayoutDefinition | None = None,
 ) -> ExportLayoutDefinition:
     """Load exactly one target layout from a published single-revision staging."""
     modelo_id = str(target.modelo)
@@ -263,11 +277,16 @@ def _load_exact_published_layout(
         raise RegistryValidationError(
             f"generated check published modelo loads {definition.id!r}, expected {modelo_id!r}",
         )
-    if tuple(definition.revisions) != (revision_id,):
+    expected = (*baseline_revisions, revision_id)
+    if tuple(definition.revisions) != expected:
         raise RegistryValidationError(
-            f"generated check published modelo must load exactly revision {revision_id!r}, "
+            f"generated check published modelo must load exactly revisions {expected!r}, "
             f"got {tuple(definition.revisions)!r}",
         )
+    if baseline_revisions and (
+        baseline_layout is None or definition.revisions[baseline_revisions[-1]].export_layouts != (baseline_layout,)
+    ):
+        raise RegistryValidationError("generated check published inheritance baseline layout changed")
     layouts = definition.revisions[revision_id].export_layouts
     if len(layouts) != 1:
         raise RegistryValidationError("generated check published revision must have exactly one export layout")

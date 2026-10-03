@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:68367b6842bdef4d0249e5224aaf4a45375f4f968fe3781bb70aafa6b77d2c27'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 # `profile-password-custody` audit: `s240 result frame expectation review`
 

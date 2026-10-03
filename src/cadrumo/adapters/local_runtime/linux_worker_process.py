@@ -211,7 +211,7 @@ class LinuxProcessScope:
     ) -> LinuxOwnedProcess:
         """Register systemd containment before its first child executes code."""
         arguments, directory = _validated_launch_inputs(self, executable, arguments, directory, environment)
-        command = _guardian_launch_command(self, executable, arguments, directory)
+        command = _guardian_launch_command(self, executable, arguments, directory, environment)
         # A lost manager acknowledgement may still have started this exact
         # unit. Retain the stop obligation before asking the manager.
         self._started = True
@@ -273,7 +273,12 @@ def _validated_launch_inputs(
     if scope._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     selected_arguments = validated_linux_worker_arguments(arguments, worker_script=scope._worker_script)
-    if environment != {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}:
+    from ...core.config import Settings
+
+    baseline = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
+    allowed_storage = Settings.storage_env_var_names() | {"TEMP", "TMP", "TMPDIR"}
+    extras = set(environment) - set(baseline)
+    if any(environment.get(name) != value for name, value in baseline.items()) or not extras <= allowed_storage:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
     # Keep the venv interpreter path: resolving its symlink changes Python's
     # pyvenv.cfg discovery and can launch without the installed package.
@@ -283,13 +288,17 @@ def _validated_launch_inputs(
 
 
 def _guardian_launch_command(
-    scope: LinuxProcessScope, executable: Path, arguments: tuple[str, ...], directory: Path
+    scope: LinuxProcessScope,
+    executable: Path,
+    arguments: tuple[str, ...],
+    directory: Path,
+    environment: Mapping[str, str],
 ) -> tuple[str, ...]:
     parent_pid = os.getpid()
     start_identity = linux_process_start_identity(parent_pid)
     # `env -i` gives the guardian and worker an explicit noncredential
     # environment, independently of the user manager's inherited state.
-    clean = ("PATH=/usr/bin:/bin", "LANG=C", "LC_ALL=C", "PYDANTIC_DISABLE_PLUGINS=__all__")
+    clean = tuple(f"{name}={value}" for name, value in sorted(environment.items()))
     script_selection = ("--worker-script", str(scope._worker_script)) if scope._worker_script is not None else ()
     return (
         "--user",

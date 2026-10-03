@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#m303-carry-reconciliation'
 date: '2026-08-10'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:56e7c729dd84d56ffd0eb221840aeb52bdb1d717a6c40a96bc4a01f2458bcd29'
 related:
-  - "[[2026-08-07-m303-carry-reconciliation-plan]]"
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
 ---
 

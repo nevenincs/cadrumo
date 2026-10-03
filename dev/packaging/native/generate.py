@@ -8,6 +8,7 @@ from pathlib import Path
 
 from cadrumo.core.config import Settings
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 
@@ -19,14 +20,18 @@ def generate(root: Path, destination: Path) -> None:
     if not version.startswith((root / ".python-version").read_text().strip() + "."):
         raise ValueError("Exact CPython build must belong to the development minor")
     fields = sorted(name.upper() for name in Settings.model_fields)
-    storage_envs = {"CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TOOL_CACHE_DIR"}
+    tool_cache_env, tool_cache_default = TOOL_STORAGE_LOCATIONS["XDG_CACHE_HOME"]
+    storage_envs = set(Settings.storage_env_var_names())
+    if tool_cache_env not in storage_envs:
+        raise ValueError(f"Tool storage environment name is missing from Settings contract: {tool_cache_env}")
     for location in STORAGE_TAXONOMY.values():
         field = location.settings_field
         if field is None:
             continue
         if field not in Settings.model_fields:
             raise ValueError(f"Storage taxonomy field is missing from Settings: {field}")
-        storage_envs.add(field.upper())
+        if field.upper() not in storage_envs:
+            raise ValueError(f"Storage taxonomy environment name is missing from Settings contract: {field.upper()}")
     temporary = STORAGE_TAXONOMY[StorageCategory.TEMPORARY_FILES]
     if temporary.settings_field is None:
         raise ValueError("Temporary storage must declare its Settings field")
@@ -41,7 +46,8 @@ def generate(root: Path, destination: Path) -> None:
         "AUTHORITY_ENV": "cadrumo_authority_root".upper(),
         "TEMPORARY_ENV": temporary.settings_field.upper(),
         "TEMPORARY_DEFAULT": temporary.relative_path().as_posix(),
-        "TOOL_CACHE_ENV": "CADRUMO_TOOL_CACHE_DIR",
+        "TOOL_CACHE_ENV": tool_cache_env,
+        "TOOL_CACHE_DEFAULT": tool_cache_default,
     }
     for name in ("cadrumo_local_storage_root", "cadrumo_authority_root"):
         if name not in Settings.model_fields:
@@ -51,6 +57,7 @@ def generate(root: Path, destination: Path) -> None:
     rust.append(
         "pub const STORAGE_ENV_ALLOWLIST: &[&str] = &[" + ",".join(map(json.dumps, sorted(storage_envs))) + "];"
     )
+    rust.append("pub const PACKAGE_ENV_ALLOWLIST: &[&str] = &[" + ",".join(map(json.dumps, layout["overrides"])) + "];")
     (destination / "contract.rs").write_text("\n".join(rust) + "\n", encoding="utf-8")
     (destination / "contract.h").write_text(
         f'#define CADRUMO_PYTHON_VERSION "{version}"\n#define CADRUMO_PLATFORM_ABI {layout["abi"]}\n',

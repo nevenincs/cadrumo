@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:9e776efc018ccbdd78ebb187012457e5d888f5cc95b65929931861dc8a640270'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-s31-render-profile-audit]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `s32 render profile integration`

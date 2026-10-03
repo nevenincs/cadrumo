@@ -8,8 +8,7 @@ from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.models import (
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
     terminal_receipt_matches,
 )
 from .invoice_withholding_capture_contracts import (
@@ -64,15 +63,13 @@ def _require_success_receipt(
     receipt: OperationTerminalReceipt,
 ) -> None:
     message = "invoice-withholding capture contradicts its terminal receipt"
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(report.projection.profile_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE,
         message=message,
     )
-    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_public_result_size(projection: ModeloInvoiceWithholdingCaptureProjection) -> None:

@@ -6,8 +6,7 @@ date: '2026-08-05'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:792fa33af85ac2a473da6e5bc19878a85a115f0e898da4fe37c610484ef9ba35'
-related:
-  - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
+related: []
 ---
 # `ledger-invoice-decomposition` audit: `loader fingerprint format trap`
 

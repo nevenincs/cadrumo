@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:4439e4fe0c5a3adfdd3f40c363cec8552bb363e50b42787352534858a670adab'
+modified: '2026-10-03'
+body_hash: 'sha256:eac603b6b49bfabae4380d8901a3f2e93f5c74190ea4545f1abf7224f97f4cea'
 related: []
 ---
 
@@ -32,8 +32,8 @@ Transaction catalogue load does not silently swallow integrity or schema failure
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/application/aggregation/test_iva_ledger.py src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py` passed with 33 tests.
-- `uv run --no-sync ruff check src/aeat/application/aggregation/_iva_ledger.py src/aeat/application/aggregation/test_iva_ledger.py src/aeat/domain/transactions/_repository.py src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py` passed.
+- the historical check passed with 33 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - The S190 hygiene scan found no env access, monkeypatches, fakes, stubs, mocks, suppressions, broad exception swallowing, or runtime pragma shortcuts in the reviewed slice. The only match was an existing `TYPE_CHECKING` import-cycle guard in the transaction repository.
 

@@ -2376,6 +2376,7 @@ cli:
         view_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.
       censo:
+        show_help: Llegeix totes les dades censals desades sense connectar amb l'AEAT.
         apply_help: Registra les dades censals analitzades al perfil actiu (per defecte
           només previsualitza).
         divergencia_leaf_artefact_value: valor de l'AEAT

@@ -14,12 +14,12 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.config import override_settings
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
 
 from .. import linux_gnome_lock, linux_login, linux_logind_native
@@ -264,16 +264,13 @@ def test_a_complete_lock_unlock_between_polls_cannot_reactivate_attended_authori
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="Native passwd and no-follow filesystem primitives")
-def test_insecure_home_ancestor_refuses_before_any_bus_call(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import pwd
-
+def test_insecure_storage_ancestor_refuses_before_any_bus_call(tmp_path: Path) -> None:
     writable_ancestor = tmp_path / "writable-ancestor"
     writable_ancestor.mkdir()
     os.chmod(writable_ancestor, 0o777)  # noqa: S103 - deliberately unsafe refusal fixture
-    home = writable_ancestor / "home"
-    home.mkdir(mode=0o700)
-    assert writable_ancestor in home.parents and writable_ancestor.stat().st_mode & 0o022
-    monkeypatch.setattr(pwd, "getpwuid", lambda _uid: SimpleNamespace(pw_dir=str(home)))
-    with pytest.raises(RuntimeRefusalError) as refused:
-        linux_gnome_lock.require_gnome_login_producer(os.getuid())
+    root = writable_ancestor / "storage"
+    assert writable_ancestor in root.parents and writable_ancestor.stat().st_mode & 0o022
+    with override_settings(cadrumo_local_storage_root=root):
+        with pytest.raises(RuntimeRefusalError) as refused:
+            linux_gnome_lock.require_gnome_login_producer(os.getuid())
     assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE

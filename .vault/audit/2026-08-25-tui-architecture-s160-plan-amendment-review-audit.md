@@ -3,17 +3,17 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ae41f7b882c052f21e03fc40899eebb6738855b09f8f64fe93c053f896d69237'
+body_hash: 'sha256:20a40d68ac17816c04cd4ee7021e840e1f2df290a5c7ade819d23bcf2e9bea57'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]"
   - "[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]"
   - "[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]"
   - "[[2026-08-25-tui-architecture-s128-workspace-projection-composition-reference]]"
 ---
+
 # `tui-architecture` audit: `S160 plan amendment review`
 
 ## Scope
@@ -28,13 +28,13 @@ The CLI plan checker reports only `PLAN022`: canonical IDs are not monotonic in 
 
 ### pointer-cutover-scope | high | S168 omits the strict pointer-record owner, core facade, and an exact consumer inventory
 
-The durable transition revision and absent tombstone change the current on-disk pointer grammar, whose strict schema and deterministic TOML serializer live in `src/cadrumo/core/_bucket_pointer.py:47`, `:50`, `:74`, and `:77`. S168 names only `_bucket_pointer_io.py`, the application transaction/facade, generic "production pointer consumers," and tests. It does not name the schema owner or `src/cadrumo/core/__init__.py`, which must atomically promote the new core record/coordinate surface. Implementing a second record parser in IO would create the forbidden parallel grammar; leaving the v1 record untouched cannot persist an absent selection plus monotonic revision.
+S168 names only `_bucket_pointer_io.py`, the application transaction/facade, generic "production pointer consumers," and tests. It does not name the schema owner or `src/cadrumo/core/__init__.py`, which must atomically promote the new core record/coordinate surface. Implementing a second record parser in IO would create the forbidden parallel grammar; leaving the v1 record untouched cannot persist an absent selection plus monotonic revision.
 
-The exact direct-reader census also reaches `src/cadrumo/core/config.py:1009`, `src/cadrumo/application/storage_write_policy.py:42`, `src/cadrumo/application/config_reset.py:10`, and `src/cadrumo/application/auth/_operator_scope.py:85`. Transaction-shape consumers occur in `src/cadrumo/application/workflow/_profile_health.py:541`, `src/cadrumo/application/config_reset.py:102`, `src/cadrumo/application/user_profile/_login_session.py:664`, `src/cadrumo/application/user_profile/_lifecycle.py:206`, `src/cadrumo/application/user_profile/_custody_service.py:641`, `src/cadrumo/application/user_profile/_custody_repository.py:196`, and `src/cadrumo/entrypoints/cli/_config/_profile_delete.py:135`. The generic phrase in the row is not an exact one-step/one-commit scope and can silently omit a reader while still claiming "zero dual mutation paths."
+The generic phrase in the row is not an exact one-step/one-commit scope and can silently omit a reader while still claiming "zero dual mutation paths."
 
 ### revision-assertion-teardown | high | S174 cannot delete the raw-loader helper within its listed files
 
-S174 lists `_calculation_helpers.py`, `_work_addressing.py`, `work_review_projection.py`, and `_calculate_input.py`, but the live helper is imported and invoked by `src/cadrumo/application/modelo/_external_import_actions.py:93` and `:222`, `src/cadrumo/application/modelo/_quickfile.py:64` and `:254`, and `src/cadrumo/application/modelo/_work_lifecycle.py:410` and `:412`. It is also exported by the canonical facade at `src/cadrumo/application/modelo/__init__.py:547` and `:986`.
+It is also exported by the canonical facade at `src/cadrumo/application/modelo/__init__.py:547` and `:986`.
 
 S170 may converge the external-import selector, but it precedes the S173 registry-coordinate correction and S174 pure assertion and does not authorize migrating revision identity. Quickfile, work lifecycle, and the facade appear in none of S168-S174. Therefore deleting `resolve_registry_revision_for_work_target` in S174 either breaks live imports, leaves a forbidden raw-loader/compatibility bridge, or expands the commit beyond its declared file scope.
 

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:eb837bd9f213e85ad84faeff3c67de608f2c3d01a70bdf273887d16dbf95837c'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `s46 typed producer snapshot`

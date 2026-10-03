@@ -7,12 +7,16 @@ from datetime import date
 
 from ...iva.schema import IvaCashAccountingTreatment
 from .errors import RegistryValidationError
-from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import (
+    UNIQUE_REFERENCES_REQUIREMENT,
+    optional_unique_mapping_tokens,
+    required_mapping_entry,
+    unique_mapping_tokens,
+)
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .iva_schema_vocabulary_source import (
     SCHEMA_VOCABULARY_SUBJECT,
     UNIQUE_TOKENS_REQUIREMENT,
-    csv_legal_references,
     resolve_scoped_schema_projections,
 )
 
@@ -89,7 +93,12 @@ def resolve_iva_cash_accounting_catalogue(
             IvaCashAccountingTreatmentDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=SCHEMA_VOCABULARY_SUBJECT),
-                legal_refs=csv_legal_references(entries, f"{prefix}.legal_refs", required=False),
+                legal_refs=optional_unique_mapping_tokens(
+                    entries,
+                    f"{prefix}.legal_refs",
+                    subject=SCHEMA_VOCABULARY_SUBJECT,
+                    requirement=UNIQUE_REFERENCES_REQUIREMENT,
+                ),
             ),
         )
     catalogue = IvaCashAccountingTreatmentCatalogue(

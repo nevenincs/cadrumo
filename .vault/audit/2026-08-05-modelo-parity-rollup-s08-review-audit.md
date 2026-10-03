@@ -3,14 +3,14 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d0290ae92832def1a1bf4f9380a6be4db55222d87a17feb8e5c6d30a6b40befb'
+body_hash: 'sha256:74ab5f3ac97dd18cd663b80d1af7c00cfce59da1d13149c1f7b34cb888922682'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
 ---
+
 ## Scope
 
 Reviewed W01.P05.S08 against the accepted five-domain parity contract, the denominator research, the S07 construct-evidence fold, and the vaultspec-rag discovery results for the application conformance surface. The bounded change covers the application profile projection and a real bundled-registry projection test. The dev-side renderer remains a separate consumer boundary and was not changed because its file already carries peer work.
@@ -42,9 +42,9 @@ The application conformance profile is now the source of truth for the two new a
 
 ## Verification
 
-- `uv run --no-sync pytest -q src/cadrumo/application/registry/tests/test_conformance_profile.py` â€” 25 passed in 43.50s.
-- `uv run --no-sync pytest -q src/cadrumo/application/registry/tests/test_conformance_provenance_projection.py` â€” 2 passed in 34.44s.
+- the historical check â€” 25 passed in 43.50s.
+- the historical check â€” 2 passed in 34.44s.
 - `uv run --no-sync ruff check` on the two application projection modules and the new test â€” all checks passed.
 - `uv run --no-sync ruff format --check` on the same three files â€” 3 files already formatted.
-- `uv run --no-sync basedpyright src/cadrumo/application/registry/tests/test_conformance_provenance_projection.py` â€” 0 errors, 0 warnings, 0 notes.
+- the historical check â€” 0 errors, 0 warnings, 0 notes.
 - `git diff --check` on the S08-owned files â€” clean.

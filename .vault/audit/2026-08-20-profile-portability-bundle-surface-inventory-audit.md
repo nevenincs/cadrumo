@@ -5,10 +5,9 @@ tags:
 date: '2026-08-20'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6685a71f168d8d6503818d8a5e6a8a493c12cc8acba8ab4d08aeac118bad1e70'
+body_hash: 'sha256:ba5f6094469ff65e3b49ed594c8c959b82d27d91e71db2cdb9b0d9ce862dc621'
 related: []
 ---
-
 # `profile-portability` audit: `bundle surface inventory`
 
 ## Scope
@@ -22,7 +21,7 @@ reviewer refuted several claims the first pass made.
 
 ### The export half is live and reachable; the import half is not
 
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py` registers an export action that
+The code registers an export action that
 calls the live bundle export service with portable-transfer purpose and
 passphrase-encrypted transport. It is reachable from a bare interactive
 `aeat config profile edit`. On the read side, `decrypt_profile_bundle_with_passphrase`
@@ -45,7 +44,7 @@ code is not self-executing; this wants implementing rows, not further analysis.
 ### Orphaned surfaces left by the cutover
 
 Three result schemas remain registered with no producing verb: the export, import and
-subject-access results in `src/cadrumo/entrypoints/cli/_config_payloads.py`. The
+subject-access results. The
 `SUBJECT_ACCESS` member of the export-purpose enum has zero references tree-wide - a dead
 branch of a closed taxonomy. The census disposition data in `dev/quality` carries roughly
 two dozen rows whose path is a module the cutover deleted, each quoting a locator that no

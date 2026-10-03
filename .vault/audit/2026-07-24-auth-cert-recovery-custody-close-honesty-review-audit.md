@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#auth-cert-recovery-custody'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:f140c1a4818ccba709e8db70141f5408defce3843875c296bdaaec32c2f1a381'
+modified: '2026-10-03'
+body_hash: 'sha256:e5edc4cb0d4189f11588c8b600b6bf96a86d3a197cc392f2e08e750022fea1b6'
 related:
-  - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-17-auth-cert-recovery-custody-adr]]"
   - "[[2026-07-17-auth-cert-recovery-custody-audit]]"
 ---
@@ -25,7 +24,7 @@ Gates were re-run rather than trusted: `test_override_seam_singularity.py` (10 p
 
 ### p04-door-never-independently-reviewed | high | The passphrase/recovery CLI door — the campaign's highest-sensitivity surface — never received its own safety or code review
 
-`P05`/`P07` (the certificate-secret CLI door) received a dedicated, independent, fresh-context safety review (`2026-07-17-auth-cert-recovery-custody-audit.md`, verdict PASS, one Low finding since closed by `P08.S44`). `P04` (the passphrase and recovery CLI door — `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`) received no equivalent review, despite being the more sensitive surface of the two: it displays a 24-word BIP-39 recovery mnemonic once, writes it directly to the controlling terminal device (bypassing stdout), and requires a full no-echo retype before committing an enrollment or rotation. Grepping every audit and commit message for a code-review pass over `_custody_secret.py` or `_secure_input.py` in the relevant window returns nothing.
+`P05`/`P07` (the certificate-secret CLI door) received a dedicated, independent, fresh-context safety review (`2026-07-17-auth-cert-recovery-custody-audit.md`, verdict PASS, one Low finding since closed by `P08.S44`). `P04` (the passphrase and recovery CLI door — the retired module) received no equivalent review, despite being the more sensitive surface of the two: it displays a 24-word BIP-39 recovery mnemonic once, writes it directly to the controlling terminal device (bypassing stdout), and requires a full no-echo retype before committing an enrollment or rotation. Grepping every audit and commit message for a code-review pass over `_custody_secret.py` or `_secure_input.py` in the relevant window returns nothing.
 
 The originating master plan (`2026-07-15-cli-authority-verb-conformance-plan.md`) explicitly named this gap as `W06.P18.S179` ("Run auth and certificate suites") and `W06.P20.S209` ("Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality") — both still unchecked in that superseded plan, and neither was re-created as a step in this successor plan when the rescope carved it out. The successor's own `Verification` section restates the intent in prose ("Passphrases, mnemonics, and secret-input values are absent from help and examples") but that is a narrower claim than a safety review: it does not audit the terminal-write bypass, the retype-verification logic, or the crash/cancel-leaves-prior-envelope-intact guarantee for adversarial or malformed input the way the certificate-door review did for its surface. This review's own re-verification (re-reading `write_to_controlling_terminal` and the recovery-envelope preservation logic in `_recovery.py`) found the code sound, but that is exactly the kind of confirmation a dedicated review, not a general-purpose close audit, should have produced and recorded before the campaign closed.
 

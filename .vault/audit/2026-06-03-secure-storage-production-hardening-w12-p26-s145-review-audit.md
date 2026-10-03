@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:cd6a9aa4572aa464a572922f709577a7026db4280011411cedd8022513af156e'
+modified: '2026-10-03'
+body_hash: 'sha256:947084b338e3b723a1020604eb2eb973a6c472464a73114ff2ae302de2e0377d'
 related: []
 ---
 
@@ -32,8 +32,8 @@ The new foundation test inspects the real `StorageProvider` Protocol signatures 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_foundation.py src/aeat/adapters/outbound/storage/test_local.py src/aeat/adapters/outbound/storage/test_google_drive.py` passed with 42 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_protocol.py src/aeat/adapters/outbound/storage/test_foundation.py` passed.
+- the focused test run passed with 42 tests.
+- the focused test run passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - The touched-file source scan found no direct settings construction, project-root wrangling, environment access, print/typer output, suppressing pragmas, monkeypatch/fake/stub markers, skipped/xfail tests, or broad exception catches.
 

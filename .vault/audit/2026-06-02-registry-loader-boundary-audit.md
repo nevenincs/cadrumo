@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#registry-loader-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:936551733c4dd5801f4d7bd31a393df03d91cd9665268448b1a7af4b8089a60f'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:59e396f1d9cafc50d65c21621b4e1cca027fb00f7bb8ae4c76f2b3c26f39c82a'
+related: []
 ---
 
 # `registry-loader-boundary` audit: `loader fragment compiler extraction boundary audit`
 
 ## Scope
 
-Assessed `src/aeat/domain/calculations/registry/_loader.py` for the
+Assessed the retired module for the
 `P04.S19` fragment-compiler extraction boundary. The file is dirty in the
 shared worktree with formatting-only changes, so this slice records extraction
 shape only and does not edit loader code.
@@ -27,12 +26,12 @@ shape only and does not edit loader code.
   This cluster compiles directory-mode revision fragments into the same raw
   `revisions` map accepted by single-file mode.
 - **Keep in loader:** `load_modelo_file`, `load_modelo_directory`,
-  `load_modelo_path`, `load_modelo_source`, `load_registry_tree`, and
+  `load_modelo_path`, `load_modelo_source`, `load_registry_tree`, 
   `discover_modelo_sources` should remain the public loader spine. Moving those
   names would create avoidable public API churn.
 - **Keep in loader:** Shared catalogue loading and registry-tree cache
   fingerprinting should stay with the root loader until a separate cache
-  boundary audit exists. Those helpers own legal catalogue merge semantics and
+  boundary audit exists. Those helpers own legal catalogue merge semantics 
   authorization-fragment cache invalidation, not TOML fragment compilation.
 - **Extraction module shape:** The safe next module is a private helper such as
   `_loader_fragments.py` exporting only the fragment compiler functions needed

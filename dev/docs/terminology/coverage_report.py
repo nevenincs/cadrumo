@@ -47,9 +47,9 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.test_runs.paths import allocate_run_directory
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from ._miss_rate import load_committed_relevance
 from .casilla_projection import project_casilla_search_records
@@ -317,7 +317,10 @@ def coverage_report_path() -> Path:
     report and each run's measurement remains attributable. The parent
     directory is not created here; the writer creates it.
     """
-    return allocate_run_directory(REPO_ROOT, family="audit-runs", label="terminology-coverage") / "coverage-report.json"
+    return (
+        allocate_run_directory(test_log_root(), family="audit-runs", label="terminology-coverage")
+        / "coverage-report.json"
+    )
 
 
 def legal_provision_ids(authority: ValidatedRegistryAuthority) -> tuple[str, ...]:

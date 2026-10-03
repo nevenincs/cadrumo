@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance'
 date: '2026-07-16'
-modified: '2026-07-16'
-body_hash: 'sha256:e750f9a14e60ae737c172ce552d78a42765fc70b0840b21f7dcb88f6a295fc3b'
+modified: '2026-10-03'
+body_hash: 'sha256:81508d717c1f9b6bc977ba24870ec8d96a26b16923a41fb4aa28785c830757bb'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
 ---
 
 # `cli-authority-verb-conformance` audit: `S37 auth logout/reset cutover review`
@@ -84,7 +83,7 @@ released or represented as single-authority auth reset until those Steps land.
 The executable application and CLI registrations no longer contain
 `clear_operator_auth`, `AuthClearResult`, or `config.auth.clear`, and the live
 CLI correctly rejects `auth clear`. However,
-`src/cadrumo/_data/terminology/evaluation/coverage-report.json`, generated
+The retired data file, generated
 static/build documentation, `dev/docs/cli_reference.py`, and the
 revision-bound CLI authority reference still contain the removed spelling.
 Fresh Vaultspec-RAG semantic search consequently returns the old

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-714-patrimonio-engine'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:958e2bb9322b818156ef36b48b7c0b958526693cdb2761c3f6d628dfb44a1e09'
+modified: '2026-10-03'
+body_hash: 'sha256:140217ffea9910029e4a92aa114d9b0539594b88fc15158b0d3de59075506964'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
@@ -26,8 +26,7 @@ findings are superseded in the current tree:
 
 - The bundled legal corpus now carries Ley 19/1991 art. 4.Nueve, art. 28,
   art. 30, and art. 31 under `src/aeat/_data/corpus/normatives/html/`, with
-  reviewed legal catalogue entries in
-  `src/aeat/_data/registry/aeat/legal/patrimonio.toml` (`BOE-A-1991-14392`).
+  reviewed legal catalogue entries  (`BOE-A-1991-14392`).
 - The 714 registry revision `2021-y-siguientes` is no longer an empty scaffold.
   It has casillas, constructs, application links, a completeness manifest, the
   BOE-grounded state-scale parameter `patrimonio-escala-estatal`, and formulas

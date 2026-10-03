@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9881d06cfb61a5a88cd386c90c535690c6fa5bb36ef37da1e0f7a0d1b4f30aac'
+body_hash: 'sha256:d0b21fa36d5206e85174419cb4c2f9e97314518ac296095396e88f4f974314dd'
 related: []
 ---
 
@@ -13,13 +13,7 @@ related: []
 
 ## Scope
 
-Reviewed `dev/quality/object_name_manifest.py` for `W01.P02.S03` against the
-accepted research, repository reference, ADR, plan, and naming, path-safety,
-fail-closed, architecture, and local-execution rules. The review covered strict
-TOML loading, schema validation, disposition and lifecycle semantics, finding
-and declaration binding, locator/path consistency, target claims, exact-byte
-preconditions, generated-owner declarations, execution selection, and manifest
-digesting. No implementation or test file was changed.
+The review covered strict TOML loading, schema validation, disposition and lifecycle semantics, finding and declaration binding, locator/path consistency, target claims, exact-byte preconditions, generated-owner declarations, execution selection, and manifest digesting. No implementation or test file was changed.
 
 Ruff lint and formatting checks passed. The canonical `ty` checker passed for
 the module, and importing the live module succeeded. Dedicated detector-teeth
@@ -104,13 +98,7 @@ module derived from the target path. The main ambiguity in
 
 ### module-target-suffix | medium | Module targets may still leave the Python module domain
 
-`_safe_source_path` constrains paths to `src/` or `dev/` but does not require a
-`.py` suffix. The operation model accepts a reviewed module move from
-`src/cadrumo/old.py` to `src/cadrumo/renamed.txt`, and the new canonical locator
-derivation also accepts it because module-name derivation removes any suffix.
-Such intent can pass target path/locator validation even though the destination
-will no longer be enrolled as a Python module. The accepted manifest boundary
-must refuse this destructive domain change before transformation.
+`_safe_source_path` constrains paths to `src/` or `dev/` but does not require a `.py` suffix. Such intent can pass target path/locator validation even though the destination will no longer be enrolled as a Python module. The accepted manifest boundary must refuse this destructive domain change before transformation.
 
 Re-review checks passed: Ruff lint, Ruff formatting, canonical `ty` checking,
 and live import. No critical or high finding remains. One medium finding remains
@@ -118,12 +106,7 @@ open; no low finding remains.
 
 ## Final resolution evidence
 
-The module-operation model now refuses every `new_path` whose
-`PurePosixPath.suffix` is not `.py`, and live inventory validation independently
-requires both old and new module paths to be Python files. Re-running the exact
-previous counterexample confirmed that `src/cadrumo/old.py` to
-`src/cadrumo/renamed.txt` raises validation with the expected refusal. This
-closes `module-target-suffix`.
+The module-operation model now refuses every `new_path` whose `PurePosixPath.suffix` is not `.py`, and live inventory validation independently requires both old and new module paths to be Python files. This closes `module-target-suffix`.
 
 Final checks passed: Ruff lint, Ruff formatting, canonical `ty` checking, live
 import, and the focused non-Python-target refusal probe. No critical, high,

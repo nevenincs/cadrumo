@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#m200-grupo-mercantil-wiring'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9da804e13ed7fe1c1199a382dd32f629df4b85e7389a8f30e3618867b9e05f06'
+body_hash: 'sha256:f94dbf2755fead09efcf8c81d07cd16bda407a693f0f9b34a9311e0104883176'
 related:
   - "[[2026-08-07-m200-export-nif-misbinding-adr]]"
-  - "[[2026-08-07-m200-export-nif-misbinding-plan]]"
   - "[[2026-08-07-m200-export-nif-misbinding-reference]]"
 ---
 
@@ -33,12 +32,10 @@ this document most needs a reader to act on.
 
 ### A second live slot-semantics divergence: M200's envelope-open tag
 
-`src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`
 declares field `modelo-200-page-000-draft-filing_year-pos-1` at `offset = 1`,
 `length = 17`, `kind = "draft"`, `draft_attribute = "filing_year"`, on record
 `modelo-200-page-000` (`record_type = "page_000"`, `order = 0`) -- the first
-record emitted. `_draft_value` in
-`src/cadrumo/application/filing/_export.py` resolves `filing_year` to
+record emitted. `_draft_value`  resolves `filing_year` to
 `str(draft.period.filing_year)`, four characters.
 
 Driving the real export for a 2024 `0A` Modelo 200 draft through
@@ -50,7 +47,7 @@ b'2024                    '
 
 Seventeen bytes at position 1 is the width of the whole envelope-open tag, not
 of a year. Modelo 111 composes exactly that width from seven fields in
-`src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/export/0010-record-envelope-header.toml`
+
 -- literal `<T` at 1 (2), literal `111` at 3 (3), literal `0` at 6 (1), a
 `filing_year` draft at 7 (4), a `period` draft at 11 (2), literal `0000>` at 13
 (5) -- summing to 17. M200 collapses all of it into the single `filing_year`
@@ -74,7 +71,7 @@ obviously less serious than the first.
 
 The gate rules per draft attribute in
 `_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS`
-(`src/cadrumo/domain/calculations/registry/_validate_exports.py`), and it
+, and it
 abstains on `filing_year`. The abstention is deliberate and is recorded at the
 mapping, but it is worth stating plainly what it costs: gating `filing_year` at
 4 would catch the divergence above at registry-build time, and the only reason
@@ -152,12 +149,6 @@ corpus that does not exist yet.
 
 ## Sources
 
-- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0003-modelo-200-page-001b.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/export/0010-record-envelope-header.toml`
-- `src/cadrumo/application/filing/_export.py`
-- `src/cadrumo/domain/calculations/registry/_validate_exports.py`
-- `src/cadrumo/core/identity/_tax_id.py`
 - AEAT `DR200e25.xls` ("Diseño de registro", Modelo 200, vers. 1.02, ejercicio
   2025), sheets `DP200001` and `DP200001B`, at
   https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls

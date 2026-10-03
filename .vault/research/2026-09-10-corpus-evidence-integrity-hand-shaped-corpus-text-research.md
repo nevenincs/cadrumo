@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#corpus-evidence-integrity'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b94b7fac01d9929a82f576e91c39f3d3984a90549c0c5801cf8a1e90366e67f4'
+body_hash: 'sha256:8c7aa7e078b2ec7312ee7890b92f536dc798478671e09b2500227e361662d93b'
 related:
   - '[[2026-08-28-corpus-evidence-integrity-corpus-editorial-gloss-hazard-audit]]'
   - '[[2026-08-28-corpus-evidence-integrity-corpus-anchor-resolvability-audit]]'
@@ -186,7 +186,7 @@ classified — a different tree with a different provenance convention.
 - `src/cadrumo/domain/calculations/registry/legal.py:180` — `_PROVISION_SUFFIXED_FILENAME`
 - `src/cadrumo/domain/calculations/registry/legal.py:182-186` — `_validate_corpus_tier_declaration` and the stale coverage docstring
 - `src/cadrumo/domain/calculations/registry/legal.py:213` — the provision-suffixed early return
-- `src/cadrumo/domain/calculations/registry/corpus_catalogue.py:83` — the accurate `SourceReference`-scoped parallel claim
+- the former source file — the accurate `SourceReference`-scoped parallel claim
 - `src/cadrumo/domain/calculations/registry/schema_references.py:526` — why `SourceReference` has no resolved-anchor read
 - `src/cadrumo/_data/registry/aeat/legal/irpf.toml:3340-3358` — the `ley-35-2006:art-48` entry
 - `src/cadrumo/_data/registry/aeat/legal/censo.toml`, `irnr.toml`, `iva.toml` — the remaining citations of hand-shaped text

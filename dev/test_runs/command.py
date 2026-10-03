@@ -13,12 +13,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 from dev._paths import REPO_ROOT
 
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
 from .import_boundaries_signal import _IMPORT_BOUNDARIES_SIGNAL, _ImportBoundariesProcessor
 from .locales_status_signal import _LOCALES_STATUS_SIGNAL, _LocalesStatusSignalProcessor
-from .paths import allocate_run_directory, allocate_scratch_directory, scratch_environment
+from .paths import allocate_run_directory, allocate_scratch_directory, scratch_environment, test_log_root
 from .pytest_summary_signal import _PYTEST_SUMMARY_SIGNAL, _PytestSummaryProcessor
 from .registry_health_signal import _BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL, _RegistryHealthProcessor
 from .signal_values import _UTF_8
@@ -153,6 +154,7 @@ def run(
     command: tuple[str, ...],
     *,
     repository: Path,
+    run_log_root: Path | None = None,
     family: str,
     label: str,
     signal: str | None = None,
@@ -162,7 +164,7 @@ def run(
     if not command:
         raise ValueError("a command is required")
     started = datetime.now(tz=UTC)
-    run_dir = allocate_run_directory(repository, family=family, label=label, now=started)
+    run_dir = allocate_run_directory(run_log_root or repository, family=family, label=label, now=started)
     artifacts = run_dir / "artifacts"
     cache = run_dir / "cache"
     artifacts.mkdir(parents=True)
@@ -211,7 +213,12 @@ def run(
     environment["CADRUMO_DEV_ARTIFACTS_DIR"] = str(artifacts)
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
-    # Tool caches such as uv's keep their own homes; only temporary files move.
+    # Reassert the Cadrumo-controlled shared caches for children, even if a
+    # caller changed a native tool variable such as XDG_CACHE_HOME in-process.
+    tool_environment = tool_storage_environment()
+    for native_variable, (refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
+        environment[refinement_variable] = tool_environment[native_variable]
+    environment.update(tool_environment)
     environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=_UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")
@@ -303,6 +310,7 @@ def main() -> int:
     return run(
         command,
         repository=REPO_ROOT,
+        run_log_root=test_log_root(),
         family=args.family,
         label=args.label,
         signal=args.signal,

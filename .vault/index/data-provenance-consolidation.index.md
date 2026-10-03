@@ -6,13 +6,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0117b538dfac1019e12ce54c68933a9b985193aee903318020f4f8fed234701e'
+body_hash: 'sha256:0cee150eb1e5ba2dbb12a9ae3eb1e0fdd28ee3688815ae78851325ffda65ea12'
 related:
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
-  - '[[2026-09-10-data-provenance-consolidation-ledger]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
-  - '[[2026-09-10-data-provenance-consolidation-plan]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s01-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s02-adapter-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s03-compiler-review-audit]]'
@@ -75,14 +73,6 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w04-p08-s25-sync-verification-review-audit` - `data-provenance-consolidation` audit: `w04 p08 s25 sync verification review`
 - `2026-09-11-data-provenance-consolidation-authority-publication-import-boundary-audit` - `data-provenance-consolidation` audit: `authority-publication and import-boundary review`
 - `2026-09-11-data-provenance-consolidation-consumer-boundary-reconciliation-audit` - `data-provenance-consolidation` audit: `consumer boundary reconciliation`
-
-### exec
-
-- `2026-09-10-data-provenance-consolidation-ledger` - `data-provenance-consolidation` ledger
-
-### plan
-
-- `2026-09-10-data-provenance-consolidation-plan` - `data-provenance-consolidation` plan
 
 ### reference
 

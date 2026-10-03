@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-07-27'
-modified: '2026-07-27'
+modified: '2026-10-03'
 body_hash: 'sha256:600b81beec6f2562e39ff0dfa73635452f69c99796ee873619ecd0fa5576c23f'
 related:
-  - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - "[[2026-07-26-modelo-100-parser-glyph-merge-adr]]"
 ---

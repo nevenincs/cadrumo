@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:ffeb76694f216e257aef4ccc2301bcda6a6d3bb5292e2e88227f291a92e634d0'
+modified: '2026-10-03'
+body_hash: 'sha256:12baced54f8b518d9dc060a8f5ee743de832277aa6fcbf393045ee14ae04d167'
 related: []
 ---
 
@@ -42,10 +42,10 @@ xfails, or mirrored business logic were added.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/auth/_apoderado.py src/aeat/application/auth/test_apoderado.py src/aeat/adapters/persistence/storage/envelope/_secure_repository.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/auth/test_apoderado.py` passed with 13 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/envelope/test_secure_bound_repository.py` passed with 9 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed with 79 tests.
+- the historical check passed.
+- the historical check passed with 13 tests.
+- the historical check passed with 9 tests.
+- the historical check passed with 79 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit

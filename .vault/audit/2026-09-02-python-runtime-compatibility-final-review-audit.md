@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:23607a78183a76b1e4de49c1467f1cb8bd5a4830764b825c376f9cc4aca66e12'
+body_hash: 'sha256:4f228449ad11f571c92cce5e5e586f4de66ea2d0b007b76773478cf90edad1d2'
 related:
   - "[[2026-09-02-python-runtime-compatibility-adr]]"
-  - "[[2026-09-02-python-runtime-compatibility-plan]]"
   - "[[2026-09-02-python-runtime-compatibility-research]]"
 ---
 
@@ -38,7 +37,7 @@ The inventory declares `3.15.0-rc.2`, while the supplied source evidence uses se
 
 ### future-directive-reachability | medium | The future-import policy is not part of the normal compatibility or per-push gate
 
-`_future_directive_violations` in `dev/tests/test_import_hygiene_scan.py` correctly permits only `annotations`, and the live scan is green. However, `test-dev-ci` does not collect `dev/tests`, and the dedicated runtime workflow does not invoke this test or a future-statement scanner; the broader `test-dev-tooling` lane is dispatch-only and currently configured as non-blocking. A new unsupported `from __future__ import ...` directive can therefore evade the ordinary push/runtime compatibility verdict even though the policy exists. Wire the AST check into a blocking lane that runs on compatibility-relevant changes.
+However, `test-dev-ci` does not collect `dev/tests`, and the dedicated runtime workflow does not invoke this test or a future-statement scanner; the broader `test-dev-tooling` lane is dispatch-only and currently configured as non-blocking. A new unsupported `from __future__ import ...` directive can therefore evade the ordinary push/runtime compatibility verdict even though the policy exists. Wire the AST check into a blocking lane that runs on compatibility-relevant changes.
 
 ### mcp-surface-unprobed | medium | Dedicated source and binary rows do not smoke the declared `cadrumo-mcp` entry point
 

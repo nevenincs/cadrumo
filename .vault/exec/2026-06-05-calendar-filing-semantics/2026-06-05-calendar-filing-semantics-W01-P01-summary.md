@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calendar-filing-semantics'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:d2d8576ae36e762cb48d4310d513851b9abce0b5cfebdd20d13c2b56644d1210'
+modified: '2026-10-03'
+body_hash: 'sha256:15c92c3a88f2c991a49d8e154d3bf3f04db0a022c1a08149d5dcf28feef7e2cc'
 related:
   - '[[2026-06-05-calendar-filing-semantics-plan]]'
 ---
@@ -13,10 +13,6 @@ related:
 
 Implemented the typed calendar evidence model and CLI storage wiring for local filing readiness, AEAT submitted evidence, and justificante verification.
 
-- Modified: `src/aeat/application/overview/__init__.py`
-- Modified: `src/aeat/entrypoints/cli/_overview.py`
-- Modified: `src/aeat/entrypoints/cli/_overview_payloads.py`
-- Modified: `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`
 
 ## Description
 

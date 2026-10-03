@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:20e7c7630a0e926fbecbbf79cef40ec6dbafaf9531a5feb6797361fb821c5df6'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S02]]'
+modified: '2026-10-03'
+body_hash: 'sha256:4c81e0b45b11dc07735245ee124567c68ecf5cbefe402f0cb0d40bb260918ef1'
+related: []
 ---
 
 # P01.S02 Review
@@ -25,16 +23,16 @@ casilla-count smoke check.
 ## Residual Risk
 
 The split reduces the largest M100 2024 fragment from 1706 lines to 600 lines.
-The same completeness-manifest pressure remains for M100 2023, 2022, 2021, and
+The same completeness-manifest pressure remains for M100 2023, 2022, 2021, 
 2020 and is tracked by `P01.S03` through `P01.S06`.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_directory_mode_merges_completeness_manifest_casilla_fragments -q`
+- the historical check
   - Result: 1 passed in 0.64s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 14.92s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_tree_loads_directory_modelos -q`
+- the historical check
   - Result: 1 passed in 120.71s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_directory_source_inventory_lists_every_revision_fragment_toml -q`
+- the historical check
   - Result: 1 passed in 87.87s.

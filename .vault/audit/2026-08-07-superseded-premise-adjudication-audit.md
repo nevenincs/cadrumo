@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#superseded-premise-adjudication'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0ad57b8957a04a1129d5846310a4c040ad0b605af2971de2f5e599c49a4be533'
+body_hash: 'sha256:16e54a7f5a39e390729c5b2c00e608ccc3c5842106809ed24ae1d18fead7f9bf'
 related: []
 ---
 # `superseded-premise-adjudication` audit: `Adjudicating the four unresolved superseded-premise findings`
@@ -53,7 +53,7 @@ expressiveness gap — were already closed with real, HEAD-verified adjudication
 text by the time this pass began, even though the sweep that flagged them as
 needing adjudication had been written against an earlier state of the board.
 Both findings' own text cited a closing change (`core.ExportExemptionReason`,
-declared in `src/cadrumo/core/_export_exemption_reason.py`) and the two
+declared in the retired module) and the two
 commits that shipped it; both commits were confirmed ancestors of HEAD before
 trusting the citation.
 
@@ -98,7 +98,7 @@ treat the two counts as comparable because they came from different
 extractions of "the boxes in a design." It also flagged, unprompted, the one
 number it had inherited that had NOT been re-derived and should be treated as
 stale. The landed commit and the docstring it cites in
-`src/cadrumo/domain/calculations/registry/_record_design_coverage.py` were
+The retired module were
 both confirmed present at HEAD. The finding's reasoning is current; only its
 task-board status field was wrong, which is bookkeeping rather than a
 premise problem.
@@ -108,7 +108,6 @@ premise problem.
 A finding on three byte-identical Modelo 390 record-design PDFs proposed
 deleting them as duplicates, and a fuller measurement found the real defect
 was upstream: three consumer functions in
-`src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
 each collapse a year to one design, silently discarding a second design AEAT
 published mid-year. That fuller measurement's own follow-up finding recorded
 what landed (a widened attribution function, confirmed present at HEAD

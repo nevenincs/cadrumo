@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:11786ff8556139301e606d5e6337291244dde0dc9aa5ea7997fcb243ef08b67f'
+modified: '2026-10-03'
+body_hash: 'sha256:fff6fdbbb6308a1cfeaaf8fd04048af77a8a60c8bc4bd780d54abe8e2391fe8b'
 related:
-  - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-research]]"
 ---
@@ -25,7 +24,7 @@ re-verifies the research's rejection of both edges against the live registry
 tree at HEAD (`src/aeat/_data/registry/aeat/modelos/714/revisions/2021-y-siguientes/`),
 the bundled authoritative corpus for Ley 19/1991 arts. 28/30/31, and the closed
 operator set in `KNOWN_VERIFICATION_PREDICATE_OPERATORS`
-(`src/aeat/domain/calculations/registry/_schema.py:1011`), and records why
+, and records why
 neither edge can be authored as a false-positive-free `implies_nonzero`
 ADVISORY without further calculation-modelling work that is out of scope for a
 registry-authoring-only plan. Per `no-silent-under-declaration` and the
@@ -134,7 +133,6 @@ filing alongside every genuine omission. **Decision: documented non-guard
 - The Wave `W01` `cuota-integra -> total-cuota-integra` ADVISORY
   (`modelo-714-cuota-integra-implica-total-cuota-integra`) and the
   `test_modelo_714_riskier_edges_remain_unguarded` regression in
-  `src/aeat/domain/calculations/registry/tests/test_modelo_714_registry.py`
   remain the enforcement surface: the test asserts the absence of
   `modelo-714-base-imponible-implica-base-liquidable` and
   `modelo-714-total-cuota-integra-implica-cuota-a-ingresar` predicate ids and

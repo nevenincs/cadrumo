@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f6e3a9abee9f968701585a38459a5a6576426e392b24c3ed17fa176c88f338ac'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 
 # `deadline-window-revision-authority` audit: `S09 warm cache and verdict review`

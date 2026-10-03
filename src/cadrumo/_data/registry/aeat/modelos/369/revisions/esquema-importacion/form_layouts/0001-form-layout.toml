@@ -7,7 +7,7 @@ revision_id = "esquema-importacion"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "bc3e17854b7422e44fef516929b0f5124498f3c2d8152dfbf763190334630067"
+source_state_digest = "36c7dbffcb2edfff9d8e18fa5aa404bc11bd673ccfad3edc55773f69ece69e34"
 design_sources = [
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },
 ]
@@ -336,13 +336,12 @@ blocks = [
 ]
 
 [[revisions.esquema-importacion.form_layouts.pages]]
-id = "modelo-369-importacion-envelope"
-official_ref = "modelo-369-importacion-envelope"
-heading_key = "modelo.schema.369.form.page.modelo-369-importacion-envelope.heading"
+id = "other-inputs"
+heading_key = "modelo.schema.369.form.page.other-inputs.heading"
 
 [[revisions.esquema-importacion.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.369.form.section.general.heading"
+id = "inputs"
+heading_key = "modelo.schema.369.form.section.inputs.heading"
 blocks = [
-    { kind = "field", id = "field", binding_id = "modelo-369-importacion-fichero.tipo-y-cierre" },
+    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["modelo-369-importacion-fichero.tipo-y-cierre"] },
 ]

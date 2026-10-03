@@ -9,8 +9,8 @@ related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
 superseded_by: '2026-08-13-secure-storage-hardening-successor-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:c9efa12a2f869fae5edfe341808ecc4f7245f3b6ef69ec7b25660722735522ea'
+modified: '2026-10-03'
+body_hash: 'sha256:a5695237b4f9a26f44420dd1cd7a358057469aec4d25fcb9f4774b9454833a8c'
 ---
 # `bucket-custody-completeness` adr: `full per-bucket export/import custody` | (**status:** `superseded`)
 
@@ -20,7 +20,7 @@ Per-bucket export/import does not round-trip the full durable bucket. Both
 custody transports — the cleartext `aeat config profile export`/`import` and the
 sealed recovery-archive `BucketMaintenanceService.export`/`import_` — share one
 payload builder, `serialize_profile_bundle`
-(`src/cadrumo/application/user_profile/_bundle.py:47-88`), that carries exactly five
+, that carries exactly five
 categories (profile, work units, ledger transactions, calculation revisions,
 filing records). Every other durable per-bucket secure-object store is silently
 dropped. A "restore" therefore returns a structurally-incomplete profile:
@@ -54,7 +54,7 @@ only the decided shape and the resolution of four open questions.
 
 **The canonical namespace registry is the design lever.** Every secure-object
 namespace is declared once in `STORAGE_NAMESPACE_REGISTRY`
-(`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:865`) with a
+ with a
 `scope` field (`PROFILE_LOCAL`/`BUCKET_LOCAL`/`PROCESS_LOCAL`). That field
 authoritatively answers "is this store keyed by `{bucket_id}`?" and is the
 natural enumeration source for both the carry set and a coverage gate. The
@@ -120,7 +120,7 @@ bucket id is out of scope.
   invariant and the meaning of the trail. Rejected.
 - **Chosen — preserve original event ids and timestamps verbatim.**
   `derive_bucket_event_id` content-addresses the id over seven fields
-  (`src/cadrumo/domain/buckets/_event.py:213-233`) and `_enforce_derived_id`
+   and `_enforce_derived_id`
   (`:269-282`) rejects any id that does not match its content, so an event can
   only be carried *with* its original fields; the catalogue merge is idempotent
   by id and nothing references ids as foreign keys. The import's own

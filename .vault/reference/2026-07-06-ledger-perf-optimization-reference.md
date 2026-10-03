@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#ledger-latency-budget'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:322388764ca2f46d6e567e22cff3638398905f75a1bc133d847b6c1d88b0c6f4'
+modified: '2026-10-03'
+body_hash: 'sha256:2a6d45411139dc14a40dfc0aa242b1148e4c392c10ab105000ab011c3646a87f'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
 ---
@@ -131,11 +131,11 @@ read / write / registry paths. Rolling: subsequent sweeps append surfaces here.
 ### HEAD reconciliation - 2026-07-06 planning pass
 
 Semantic search plus exact-symbol confirmation found that the current worktree already
-contains the accepted O2 partition mechanism in `src/aeat/adapters/persistence/profile/transactions.py`.
+contains the accepted O2 partition mechanism in `src/cadrumo/adapters/persistence/profile/transactions.py`.
 The residual batch-read finding remains because both `load_for_date_range` and
 `partition_by_date_range` still call `SecureObjectRepository.load` once per selected
 transaction id. The secure-object implementation in
-`src/aeat/adapters/persistence/storage/sql/secure_objects.py` has no targeted multi-load
+`src/cadrumo/adapters/persistence/storage/sql/secure_objects.py` has no targeted multi-load
 API today.
 
 The double-parse finding should be treated as partially mitigated. The timestamp witness
@@ -150,10 +150,7 @@ hash-based reconciliation mean unchanged rows are not encrypted or upserted. How
 single-row mutations still have an O(n) CPU/hash/index residual. Treat dirty-set writes
 as a follow-up decision, not part of the read-path ADR.
 
-Registry TTL should not be planned as a first implementation slice on this branch. Prior
-performance work and `src/aeat/domain/calculations/registry/tests/test_authority.py`
-already cover authority caching and invalidation. Keep it as a confirmation gate after
-the ledger-specific residuals are measured.
+Registry TTL should not be planned as a first implementation slice on this branch. Keep it as a confirmation gate after the ledger-specific residuals are measured.
 
 ### W01.P01.S01 execution confirmation - 2026-07-06
 

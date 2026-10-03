@@ -10,8 +10,13 @@ import stat
 import sys
 from pathlib import Path
 from typing import Never
+from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.hashing import sha256_hex
+from ...core.storage_environment import storage_directory
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from .posix import (
     _accept_socket,
     _lock_exclusive,
@@ -132,19 +137,28 @@ class PosixRuntimeEndpoint:
     _path: Path
     _name: str
 
-    def __init__(self, *, storage_root: Path, namespace: Path | None = None, create_namespace: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        storage_root: Path,
+        namespace: Path | None = None,
+        create_namespace: bool = True,
+        worker_namespace: UUID | None = None,
+    ) -> None:
         """Pin an owner-only namespace; passive probes never create it."""
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         self.storage_identity = posix_storage_identity(storage_root)
-        # TMPDIR can differ between clients and login contexts. Ownership must
-        # converge for one OS owner/root, and Darwin's per-user temporary paths
-        # can exceed the Unix socket path limit after adding the endpoint name.
-        namespace = namespace or Path("/").joinpath("tmp", f"cdr-{posix_owner_uid()}")
+        namespace = namespace or storage_directory(
+            "CADRUMO_RUNTIME_SOCKET_DIR", storage_location(StorageCategory.RUNTIME_SOCKETS).subpath, root=storage_root
+        )
         self._create_namespace = create_namespace
         self._closed = False
         self._directory, self._directory_fd = _open_namespace(namespace, create=create_namespace)
-        self._name = self.storage_identity[:32] + ".sock"
+        endpoint_identity = self.storage_identity
+        if worker_namespace is not None:
+            endpoint_identity = sha256_hex(f"{endpoint_identity}:{worker_namespace.hex}".encode("ascii"))
+        self._name = endpoint_identity[:32] + ".sock"
         self._path = self._directory / self._name
         self._lock_fd: int | None = None
         self._listener: socket.socket | None = None

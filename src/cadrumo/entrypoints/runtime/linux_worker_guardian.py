@@ -62,12 +62,17 @@ def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: select.p
 
 
 def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
+    from ...core.config import Settings
+
     environment = {
         "PATH": "/usr/bin:/bin",
         "LANG": "C",
         "LC_ALL": "C",
         "PYDANTIC_DISABLE_PLUGINS": "__all__",
     }
+    storage_names = Settings.storage_env_var_names()
+    environment.update({name: value for name, value in os.environ.items() if name in storage_names})
+    environment.update({name: os.environ[name] for name in ("TEMP", "TMP", "TMPDIR") if name in os.environ})
     try:
         return subprocess.Popen(  # noqa: S603 - fixed interpreter and verified worker arguments
             (sys.executable, *worker_arguments),

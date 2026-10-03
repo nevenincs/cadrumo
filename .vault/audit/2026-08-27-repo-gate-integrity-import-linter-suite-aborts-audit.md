@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b760f8d0701bf63bf20cd046c1187dffa01a70c6b56790c94ea920cc7d03fa88'
+body_hash: 'sha256:66a06f1f4fb208a2faa50c3c999956b55c59e64923efa03e4961976126acb7aa'
 related: []
 ---
 # `repo-gate-integrity` audit: `the import-linter suite aborts, hiding five broken contracts`
@@ -48,7 +48,7 @@ None of this surfaces today, because the abort happens first.
 
 ### Why the ledger gates drift
 
-`src/cadrumo/tests/test_importlinter_ledger.py` reads `.importlinter` and
+The retired test read `.importlinter` and
 reasons about its ignore edges. It is currently red on two counts: one
 production module (`cadrumo.application.auth.apoderado_service`) pins an
 adapters edge without being enrolled, and 31 reconciled entries no longer pin

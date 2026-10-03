@@ -402,7 +402,6 @@ def resolve_m036_operation_access(
         definition_id=expected,
         payload_type=M036RecordRequest if recording else M036ReadRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     frontends, access_profile = _m036_access_policy(recording=recording, query=query)
     require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#tax-domain-taxonomy-extension'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:f5ec9967563d9d123a939c76da06c5d2b2b6d200f04f4346e819e924582988e6'
+modified: '2026-10-03'
+body_hash: 'sha256:5baf84d85e365f024723676c319d3381a9b8503965023208b5b5febe3bdaf26a'
 related:
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'
   - '[[2026-06-30-obligation-coverage-completeness-research]]'
@@ -29,7 +29,7 @@ Transacciones Financieras (M604), the Impuesto sobre actividades de juego
 `ModeloDefinition.tax_domain` hydrates the closed `TaxDomain` StrEnum at
 registry load (`_schema.py`, `BeforeValidator`), their manifests could not
 compile without extending the enum. The coordinator extended
-`src/cadrumo/core/_tax_domain.py` with five per-tax members (`idsd`, `itf`,
+the former source file with five per-tax members (`idsd`, `itf`,
 `juego`, `plastico`, `iedmt`) under time pressure, in the same commits as
 the registry promotion. This ADR ratifies that taxonomy decision after the
 fact, records the alternatives it displaced, and fixes the extension
@@ -110,7 +110,7 @@ convention for future new-tax modelos.
 
 ## Implementation
 
-Already landed. `TaxDomain` (`src/cadrumo/core/_tax_domain.py`) carries the
+Already landed. `TaxDomain` carries the
 five new members with docstrings naming the modelo and the full Spanish tax
 name; the five modelo manifests declare the matching stored tokens; loader
 hydration validates them at registry load; the discovery CLI's `--domain`

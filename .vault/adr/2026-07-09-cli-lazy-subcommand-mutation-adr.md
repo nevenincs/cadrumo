@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cli-lazy-subcommand-mutation'
 date: '2026-07-09'
-modified: '2026-07-17'
-body_hash: 'sha256:22851c7dd5ff0c5e0837063c0f2a01125298265fd4114c047bdf1ee270b43d96'
+modified: '2026-10-03'
+body_hash: 'sha256:dc9580c1900a16a5e2348e97783a5cc6cb740c1ce2ffe797c8b7a7be1405b25e'
 related:
   - '[[2026-07-10-cli-lazy-subcommand-mutation-research]]'
 ---
@@ -25,15 +25,14 @@ mutation is a latent fragility, so this ADR is a design-smell decision, not an
 incident fix.
 
 The mechanism, verified empirically against the live tree. Heavy sub-command
-groups register a `LazySubcommand` (in
-`src/cadrumo/entrypoints/cli/_command_suggestions.py`) instead of an
+groups register a `LazySubcommand` () instead of an
 eagerly-imported Typer instance, so constructing the `aeat` app object never
 pays the roughly 0.6 s registry parse that every leaf command module pulls
 transitively. `AeatTyperGroup.get_command` triggers `LazySubcommand.load` on
 first dispatch into a subtree. `load` calls its `decorate` hook —
-`decorate_typer_app` in `src/cadrumo/entrypoints/cli/_errors.py` — on the factory's
+`decorate_typer_app` — on the factory's
 return value, which for the `config` subtree is the module-level `config_app`
-object re-exported from `src/cadrumo/entrypoints/cli/_config/__init__.py`.
+object re-exported.
 `decorate_typer_app` walks the Typer tree recursively (`_decorate_typer_node`)
 and REPLACES every `registered_callback.callback`,
 `registered_commands[i].callback`, and `registered_groups[i].callback` in place
@@ -179,12 +178,12 @@ Fourth, regardless of A or C, codify the convention that tests and any embedder
 invoke the CLI through the root `aeat` app, not a sub-app Typer object directly —
 the durable, cross-session half of the lesson.
 
-Concrete code-surface footprint: `src/cadrumo/entrypoints/cli/_command_suggestions.py`
-(`LazySubcommand.load`, the `decorate` hook call); `src/cadrumo/entrypoints/cli/_errors.py`
+Concrete code-surface footprint: the former source file
+(`LazySubcommand.load`, the `decorate` hook call); the former source file
 (`decorate_typer_app` / `_decorate_typer_node`, and a new Click-tree walker);
 `src/cadrumo/entrypoints/cli/__init__.py` (the `_lazy` wiring that passes
 `decorate=_decorate_typer_app`); the shared sub-app objects are
-`src/cadrumo/entrypoints/cli/_config/__init__.py` (`config_app`) and its peers; the
+the former source file (`config_app`) and its peers; the
 reproducing test lands under `src/cadrumo/entrypoints/cli/tests/`. No change to
 `config_app`'s definition or to any command body.
 

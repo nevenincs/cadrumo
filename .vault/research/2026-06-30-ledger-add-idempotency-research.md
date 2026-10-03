@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-08-15'
-body_hash: 'sha256:6bd7830b8a8443f6afcd0eccba20629bfff95b47017f3a8daca81eeccd42f298'
+modified: '2026-10-03'
+body_hash: 'sha256:d1102661cdcc23c28e6def578decaa272d4f29caee40776a0ea9bd6f20894cce'
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'
   - '[[2026-06-10-ledger-amount-direction-adr]]'
@@ -28,13 +28,13 @@ All findings confirmed at HEAD (`git log -1` clean on the three touched files; n
 
 ### F1 - Manual add identity folds the wall clock; the default keyless retry double-writes (CRITICAL)
 
-`create_manual_transaction` (`src/aeat/application/ledger/_actions_manual.py:106-148`) performs
+`create_manual_transaction`  performs
 **no existence/dedup check**. It builds a `LEDGER_TRANSACTION_CREATED` event, then
-unconditionally `_upsert_transaction` (`src/aeat/application/ledger/_actions_common.py:571-574`,
+unconditionally `_upsert_transaction` (the former source file,
 keyed on `transaction.transaction_id`).
 
 When no `idempotency_key` is supplied (the default - `idempotency_key: str | None = None`,
-`src/aeat/application/ledger/_models.py:102`), the id is wall-clock-derived:
+the former source file), the id is wall-clock-derived:
 
 - `_provider_transaction_id` (`_actions_manual.py:1053-1056`) returns
   `manual:{bucket_id}:{occurred_at.isoformat()}:{_source_sha256(...)}`.
@@ -51,7 +51,7 @@ silently corrupts every modelo aggregation that sums it.
 ### F2 - The `idempotency_key` substrate is half-built: deterministic id, but no guarded no-op
 
 A caller-supplied `idempotency_key` already exists end-to-end at HEAD - CLI option
-`--idempotency-key` (`src/aeat/entrypoints/cli/_ledger.py:244-248`, threaded at `:318`), command
+`--idempotency-key` (the former source file, threaded at `:318`), command
 field (`_models.py:102`), and a deterministic id branch
 (`_provider_transaction_id`, `_actions_manual.py:1054-1055`):
 `manual:{bucket_id}:{idempotency_key}` (clock-free). It is also folded into `_source_sha256`'s
@@ -62,7 +62,7 @@ But the hook is incomplete. With a stable key the transaction_id is deterministi
 `create_manual_transaction` still:
 
 - emits a **fresh** `LEDGER_TRANSACTION_CREATED` event each retry - `derive_bucket_event_id`
-  (`src/aeat/domain/buckets/_event.py:213-233`) folds `occurred_at`, so the event_id differs
+   folds `occurred_at`, so the event_id differs
   per retry and a new event appends (content-addressed natural idempotency, `_event.py:240-243`,
   holds only for byte-identical bodies; the differing `occurred_at` defeats it);
 - **re-stamps** `created_at`/`modified_at` to the new `now` (`_transaction_from_command`,
@@ -77,9 +77,9 @@ guard, a same-key/different-content conflict refusal, and a typed no-op notice.
 
 ### F3 - The import path is the retry-safe template: content-only fingerprint, intra-batch keep
 
-`derive_import_fingerprint` (`src/aeat/domain/transactions/_models.py:118-151`) is **content-only**:
+`derive_import_fingerprint`  is **content-only**:
 amount magnitude, currency, direction, normalised narrative, effective date - **no timestamp**.
-`_evaluate_import_rows` (`src/aeat/application/ledger/_actions_import.py:153-234`) sends an
+`_evaluate_import_rows`  sends an
 already-present fingerprint to `skipped_refs` (`:201-203`), so re-importing the same statement is
 idempotent. Crucially, an **intra-batch** fingerprint collision is deliberately **kept** (two
 genuine same-day identical movements) and distinguished by a row-index-bearing transaction_id
@@ -90,9 +90,9 @@ manual path lacks.
 
 ### F4 - `create_work_unit` already implements the recommended guarded-no-op shape
 
-`create_work_unit` (`src/aeat/application/modelo/_work_lifecycle.py:51-124`) derives a deterministic
+`create_work_unit`  derives a deterministic
 id (`derive_work_unit_id`, content-addressed over the four-axis key,
-`src/aeat/domain/modelos/_work_unit.py`), and **"if the derived work-unit id already exists, the
+the former source file), and **"if the derived work-unit id already exists, the
 existing record is returned without emitting another creation event"** (`:73-75`, `:122-124`). This
 is the in-project `idempotent_guarded` template the manual-add fix should mirror - no parallel
 write path, no second lifecycle event. `work classify` operates on an existing transaction by
@@ -102,12 +102,12 @@ retry-safe, no change needed.
 
 ### F5 - Verify persists one report per wall-clock attempt; non-granting retries accumulate
 
-`verify_modelo_revision` (`src/aeat/application/modelo/_verification_actions.py:823-966`) computes
+`verify_modelo_revision`  computes
 `report_id = derive_verification_report_id(calculation_revision_id, run_at=now, verified_by)`
 (`:927-932`). `derive_verification_report_id`
-(`src/aeat/domain/modelos/_verification_report.py:117-129`) folds `run_at` into the content hash,
+ folds `run_at` into the content hash,
 and the report is persisted **"regardless of outcome"** via `upsert_verification_report`
-(`:964-966`; `src/aeat/domain/modelos/_verification_repository.py:186-197`, keyed on
+(`:964-966`; the former source file, keyed on
 `verification_report_id`). A first verify that **grants** flips the revision out of `BORRADOR`, so a
 re-verify refuses before persisting - already safe. But a **non-granting** verify (blocking
 findings, revision stays `BORRADOR`) derives a fresh time-stamped id on every retry, so each retry

@@ -1,0 +1,280 @@
+[[revisions.2020-y-siguientes.export_layouts]]
+id = 'modelo-349-fichero'
+
+[[revisions.2020-y-siguientes.export_layouts.records]]
+id = 'modelo-349-operador'
+record_type = 'operador'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = false
+repeat = 'binding_rows'
+binding_record = 'operador'
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '349'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-declarante-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-blancos-18'
+offset = 18
+length = 58
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-codigo-pais'
+offset = 76
+length = 2
+kind = 'binding'
+binding = 'iva-349-operador-row-codigo-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-nif-comunitario'
+offset = 78
+length = 15
+kind = 'binding'
+binding = 'iva-349-operador-row-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-apellidos'
+offset = 93
+length = 40
+kind = 'binding'
+binding = 'iva-349-operador-row-apellidos'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-clave'
+offset = 133
+length = 1
+kind = 'binding'
+binding = 'iva-349-operador-row-clave'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-base-integer'
+offset = 134
+length = 11
+kind = 'binding'
+binding = 'iva-349-operador-row-base'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-base-fractional'
+offset = 145
+length = 2
+kind = 'binding'
+binding = 'iva-349-operador-row-base'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-blancos-147'
+offset = 147
+length = 32
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-sustituto-nif'
+offset = 179
+length = 17
+kind = 'casilla'
+casilla_id = 'sustituto.nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-sustituto-apellidos'
+offset = 196
+length = 40
+kind = 'casilla'
+casilla_id = 'sustituto.apellidos-razon-social'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-349-op-blancos-236'
+offset = 236
+length = 265
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-769-2010:art-1',
+    'orden-hac-174-2020:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-349-2020-current']
+
+[revisions.2020-y-siguientes.export_layouts.records.row_field_casilla_ids]
+base_imponible = 'op.base-imponible'
+clave = 'op.clave-operacion'
+country_code = 'op.codigo-pais'
+party_legal_name = 'op.apellidos-razon-social'
+party_tax_id = 'op.nif-comunitario'
+
+[revisions.2020-y-siguientes.export_layouts.records.discriminator]
+offset = 147
+length = 32
+requires = 'blank'

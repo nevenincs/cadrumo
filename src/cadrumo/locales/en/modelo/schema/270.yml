@@ -148,10 +148,5 @@ modelo:
           field:
             label: Modelo 270 (Order HAP/2368/2013), tax years 2013 to 2022
         2023-y-siguientes:
-          casilla:
-            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
-              label: City of birth
-            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
-              label: Country code of birth
           field:
             label: Modelo 270 (Order HAP/2368/2013), tax years 2023 to 2024

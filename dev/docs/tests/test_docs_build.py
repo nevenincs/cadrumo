@@ -25,7 +25,6 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
-from dev.source_tree import repository_files
 
 from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from ..build import (
@@ -38,6 +37,7 @@ from ..build import (
     resolve_preview_targets,
     sphinx_build_environment,
 )
+from ..build_paths import docs_build_root, docs_html_root, pin_docs_build_root
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
@@ -58,16 +58,12 @@ _SUBPROCESS_TIMEOUT_S = 1200
 
 _REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
-_DOCS_BUILD = _DOCS / "_build"
+_DOCS_BUILD = docs_build_root(_REPO_ROOT)
 _CANONICAL_BUILD_ROOT = "html"
-_DOCS_BUILD_LITERAL_RE = re.compile(r"docs[/\\]_build[/\\]([A-Za-z0-9_.-]+)")
-_PATH_BUILD_ROOT_RE = re.compile(r"[\"']_build[\"']\s*/\s*[\"']([^\"']+)[\"']")
-_BUILD_ROOT_SCAN_PREFIXES = ("src/", "dev/", ".github/")
-_BUILD_ROOT_SCAN_FILES = {"justfile", "pyproject.toml", "docs/conf.py"}
 
 
 def _docs_build_entries() -> set[str]:
-    """Return entry names currently present directly under ``docs/_build``."""
+    """Return entry names currently present directly under the configured docs build root."""
     if not _DOCS_BUILD.exists():
         return set()
     return {path.name for path in scan_directory(_DOCS_BUILD)}
@@ -166,33 +162,52 @@ def test_changed_source_the_generator_excludes_plans_nothing() -> None:
 
 
 def test_docs_build_directory_contains_only_canonical_html() -> None:
-    """The repository docs build directory must not contain preview/test output."""
+    """The configured docs build root must not contain preview/test output."""
     entries = _docs_build_entries()
     extra = sorted(entries - {_CANONICAL_BUILD_ROOT})
     assert not extra, (
-        "docs/_build must contain only the actual canonical HTML build root. "
+        "CADRUMO_DOCS_BUILD_ROOT must contain only the actual canonical HTML build root. "
         "Tests and changed-page validation must write to tmp_path or an OS temp "
         f"directory, not docs/_build. Extra entries: {extra}"
     )
+
+
+def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    storage_root = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "compiled/docs")
+
+    resolved = pin_docs_build_root(_REPO_ROOT)
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "isolated-product-state"))
+
+    assert resolved == storage_root / "compiled" / "docs"
+    assert docs_build_root(_REPO_ROOT) == resolved
+    assert docs_html_root(_REPO_ROOT) == resolved / "html"
 
 
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
     """Canonical docs builds clear stale preview files from their build root."""
     from ..build import remove_noncanonical_build_entries
 
-    docs_root = tmp_path / "docs"
-    build_root = docs_root / "_build"
+    build_root = tmp_path / "storage" / "development" / "build" / "docs"
     html_root = build_root / _CANONICAL_BUILD_ROOT
+    doctree_root = build_root / "doctrees"
     preview_dir = build_root / "index-preview"
     preview_file = build_root / "md-preview.html"
     html_root.mkdir(parents=True)
+    doctree_root.mkdir()
+    (doctree_root / "cache.pickle").write_bytes(b"doctree cache")
     preview_dir.mkdir()
     preview_file.write_text("<title>preview</title>\n", encoding="utf-8")
 
-    remove_noncanonical_build_entries(docs_root)
+    remove_noncanonical_build_entries(build_root)
 
-    assert sorted(path.name for path in scan_directory(build_root)) == [_CANONICAL_BUILD_ROOT]
+    assert sorted(path.name for path in scan_directory(build_root)) == ["doctrees", _CANONICAL_BUILD_ROOT]
     assert html_root.is_dir()
+    assert (doctree_root / "cache.pickle").is_file()
 
 
 def test_an_isolated_full_build_reads_a_private_copy_it_discards(tmp_path: Path) -> None:
@@ -497,12 +512,13 @@ def test_previews_skip_sequence_execution_and_full_builds_keep_it() -> None:
     assert SEQUENCE_CHECK_SKIP_ENV not in changed_env
 
 
-def test_the_preview_doctree_cache_is_stable_and_outside_the_build_root() -> None:
-    """The cache path depends only on its inputs, sits under var/, and separates configurations."""
+def test_the_preview_doctree_cache_is_stable_and_outside_the_html_root() -> None:
+    """The cache path depends only on its inputs and separates configurations."""
     english_user = preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
 
     assert english_user == preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
-    assert english_user.relative_to(_REPO_ROOT).parts[0] == "var"
+    assert english_user.is_relative_to(docs_build_root(_REPO_ROOT))
+    assert not english_user.is_relative_to(docs_html_root(_REPO_ROOT))
     assert english_user != preview_doctree_dir(_REPO_ROOT, scope="full", language=OutputLanguage.EN)
     assert english_user != preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.ES)
 
@@ -540,7 +556,7 @@ def _run_fixture_preview(repo_root: Path, storage: Path) -> str:
     return output
 
 
-def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) -> None:
+def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The preview keeps its doctree cache between runs, so an unchanged tree reads nothing."""
     repo_root = tmp_path / "repo"
     docs_root = repo_root / "docs"
@@ -550,6 +566,8 @@ def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) ->
     (docs_root / "guide" / "one.rst").write_text("One\n===\n", encoding="utf-8")
     (docs_root / "guide" / "two.rst").write_text("Two\n===\n", encoding="utf-8")
     storage = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(storage))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
 
     first = _run_fixture_preview(repo_root, storage)
     cache = preview_doctree_dir(repo_root, scope="user", language=OutputLanguage.EN)
@@ -563,28 +581,23 @@ def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) ->
     (docs_root / "guide" / "two.rst").write_text("Two\n===\n\nEdited.\n", encoding="utf-8")
     third = _run_fixture_preview(repo_root, storage)
     assert _environment_update(third) == (0, 1, 0), third
-    assert (docs_root / "_build" / "html" / "guide" / "one.html").is_file()
+    assert (docs_build_root(repo_root) / "html" / "guide" / "one.html").is_file()
 
 
-def test_tracked_sources_do_not_name_noncanonical_docs_build_roots() -> None:
-    """Tracked code must not introduce preview/test output roots under ``docs/_build``."""
-    violations: list[str] = []
-    for raw_path in repository_files(_REPO_ROOT):
-        if not (raw_path in _BUILD_ROOT_SCAN_FILES or raw_path.startswith(_BUILD_ROOT_SCAN_PREFIXES)):
-            continue
-        path = _REPO_ROOT / raw_path
-        if not path.is_file() or "docs/_build" in raw_path:
-            continue
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        roots = [*_DOCS_BUILD_LITERAL_RE.findall(text), *_PATH_BUILD_ROOT_RE.findall(text)]
-        for root in roots:
-            if root != _CANONICAL_BUILD_ROOT:
-                violations.append(f"{raw_path}: docs/_build/{root}")
-
-    assert not violations, (
-        "Only docs/_build/html is an allowed repository-local docs build root. "
-        "Use tmp_path or an OS temporary directory for validation/previews:\n  " + "\n  ".join(sorted(set(violations)))
-    )
+def test_docs_compiled_output_consumers_share_the_canonical_root() -> None:
+    consumers = {
+        _REPO_ROOT / "dev" / "docs" / "build.py": ("pin_docs_build_root", "docs_html_root"),
+        _REPO_ROOT / "dev" / "docs" / "serve.py": ("docs_html_root", "CADRUMO_DOCS_BUILD_ROOT"),
+        _REPO_ROOT / "dev" / "deploy" / "docs_site_build.py": ("docs_html_root", "CADRUMO_DOCS_BUILD_ROOT"),
+        _REPO_ROOT / "docs" / "conf.py": ("dev.docs.build_paths", "_DOCS_HTML_ROOT"),
+    }
+    missing = [
+        f"{path.relative_to(_REPO_ROOT)}: {marker}"
+        for path, markers in consumers.items()
+        for marker in markers
+        if marker not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, "compiled docs outputs diverged from the shared storage root:\n  " + "\n  ".join(missing)
 
 
 def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:

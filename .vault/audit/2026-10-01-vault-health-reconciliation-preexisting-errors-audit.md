@@ -3,21 +3,13 @@ tags:
   - '#audit'
   - '#vault-health-reconciliation'
 date: '2026-10-01'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:907f6f204acd0bcb3ea59cb2a115f1edc67189af56418db39f3bdaf41030a2fe'
 related:
   - "[[2026-08-28-test-reconciliation-sweep-adr]]"
   - "[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]"
-  - "[[2026-06-09-justfile-redesign-plan]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
-  - "[[2026-08-11-tui-interface-plan]]"
-  - "[[2026-08-28-semantic-consolidation-plan]]"
-  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
   - "[[2026-09-09-registry-edition-authoring-plan]]"
-  - "[[2026-09-09-registry-generator-plan]]"
-  - "[[2026-09-11-binding-schema-plan]]"
   - "[[2026-09-24-retenciones-workflow-plan]]"
   - '[[2026-08-26-cli-root-verb-homes-close-honesty-audit]]'
   - '[[2026-08-31-tui-interface-audit]]'

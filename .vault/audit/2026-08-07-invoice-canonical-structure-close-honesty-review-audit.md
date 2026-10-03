@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a34e4d792a4c8d6227e3827ac0787034708f1b8ddc174f45ee398fe7c32ef194'
 related:
-  - "[[2026-08-06-invoice-canonical-structure-plan]]"
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
 ---
 # `invoice-canonical-structure` audit: `Close honesty review: what a fresh inheritor finds behind the 38/38`

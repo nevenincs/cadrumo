@@ -1354,3 +1354,67 @@ async def test_every_comparison_surface_shows_both_values_or_neither(screen_type
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"{type(screen).__name__} at {width} columns shows half a comparison: {sorted(keys)}"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 120])
+async def test_complete_census_evidence_survives_reopen_and_selected_value_is_readable(width: int) -> None:
+    """Operate the real evidence table after serialized workspace readback."""
+    from .....application.user_profile.censal_observation import (
+        CensalCell,
+        CensalConsultation,
+        CensalObservation,
+        CensalObservationAddress,
+        CensalObservationIdentity,
+        CensalRow,
+        CensalSection,
+    )
+
+    long_value = "Valor censal completo " * 20
+    observation = CensalObservation(
+        identity=CensalObservationIdentity(nif="00000001R", apellidos_y_nombre="Persona Sintética"),
+        domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=_T2,
+        source_url="https://sede.agenciatributaria.gob.es/censo",
+        consultations=(
+            CensalConsultation(
+                kind="obligaciones",
+                source_url="https://sede.agenciatributaria.gob.es/obligaciones",
+                sections=(
+                    CensalSection(
+                        title="Mis Obligaciones",
+                        rows=(
+                            CensalRow(
+                                label="Obligación sintética",
+                                cells=(CensalCell(role="value", column="Nueva columna AEAT", text=long_value),),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+    serialized = _projection().model_copy(update={"census_observation": observation}).model_dump_json()
+    for _ in range(2):
+        restored = AeatSyncWorkspaceProjectionV1.model_validate_json(serialized)
+        screen = AeatSyncCensusScreen(
+            AeatSyncWorkspaceController(
+                TuiScreenContextV1(destination="workbench.aeat_sync"),
+                restored,
+            )
+        )
+        async with ScreenHostApp[None](screen).run_test(size=(width, 30)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-census-evidence", DataTable)
+            assert table.row_count > 1
+            table.focus()
+            table.move_cursor(row=table.row_count - 1)
+            await pilot.press("enter")
+            await pilot.pause()
+            detail = str(screen.query_one("#aeat-sync-census-value", Static).render())
+            assert long_value in detail
+            assert "Nueva columna AEAT" in detail
+            assert "Mis Obligaciones" in detail
+            assert table.max_scroll_x == 0
+            assert restored.census_observation == observation

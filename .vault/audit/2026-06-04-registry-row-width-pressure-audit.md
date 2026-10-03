@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-row-width-pressure'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:fe513f092e6ecc9bed221b1bff3cba1441b0b83eebd5a75839a03d953378eb8d'
-related:
-  - '[[2026-06-04-registry-row-width-pressure-plan]]'
+related: []
 ---
 
 # `registry-row-width-pressure` audit: `row inventory`

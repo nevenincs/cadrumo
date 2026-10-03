@@ -6,7 +6,7 @@ tags:
 date: '2026-08-18'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ddcceb99c39794570ab3ff6931f7eea1b4ff4c5d26083b9a4c22f70a8ced1f8a'
+body_hash: 'sha256:59542eeabccfe9c701eb86aebb9f2b0a7e836fcc7e681810a18cac3341225f00'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -19,8 +19,6 @@ related:
   - '[[2026-08-14-aeat-design-relayout-boundary-modelo-200-verification-reconciliation-audit]]'
   - '[[2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit]]'
   - '[[2026-08-18-aeat-design-relayout-boundary-audit]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-ledger]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-plan]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-research]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-m200-qualified-identity-admission-reference]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w02-p03-source-rebind-review-audit]]'
@@ -51,14 +49,6 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-09-03-aeat-design-relayout-boundary-w02-p03-source-rebind-review-audit` - `modelo-200-semantic-crosswalk` audit: `W02.P03 source-rebind review`
 - `2026-09-03-aeat-design-relayout-boundary-w02-p04-identity-review-audit` - `modelo-200-semantic-crosswalk` audit: `W02 P04 identity review`
 - `2026-09-03-aeat-design-relayout-boundary-w03-p05-legal-review-audit` - `aeat-design-relayout-boundary` audit: `w03 p05 legal review`
-
-### exec
-
-- `2026-09-02-aeat-design-relayout-boundary-ledger` - `aeat-design-relayout-boundary` ledger
-
-### plan
-
-- `2026-09-02-aeat-design-relayout-boundary-plan` - `modelo-200-semantic-crosswalk` plan
 
 ### reference
 

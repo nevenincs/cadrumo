@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-16'
-body_hash: 'sha256:b40f58d20df8cbce07fd3d2748ec4daf197dc7db276bff98d6c494040ebe930f'
+modified: '2026-10-03'
+body_hash: 'sha256:44310985ea552c1b471258a850f1ad91d294b2f62090225f25bfa5c6d1a3a6cf'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
@@ -31,7 +31,6 @@ Use these locations according to the information needed:
 | S37 implementation provenance | `.vault/exec/2026-07-15-cli-authority-verb-conformance/2026-07-15-cli-authority-verb-conformance-W02-P06-S37.md` |
 | Independent S37 findings | `.vault/audit/2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit.md` |
 | Current public application authority | `src/cadrumo/application/auth/__init__.py` |
-| Current CLI entrypoint | `src/cadrumo/entrypoints/cli/_config/_auth.py` |
 
 Authentication custody terms have the following meanings in this reference:
 
@@ -85,18 +84,11 @@ config profile logout --------+       +--> _clear_active_profile_pointer
 
 Source locations:
 
-- `src/cadrumo/entrypoints/cli/_config/_custody_secret.py:56-91`
-- `src/cadrumo/entrypoints/cli/_config/__init__.py:928-964`
-- `src/cadrumo/application/user_profile/_orchestration.py:441-447`
+
 
 Pointer writes are split across:
 
-- `src/cadrumo/application/user_profile/_orchestration.py:124-140`
-- `src/cadrumo/application/user_profile/_orchestration.py:255-268`
-- `src/cadrumo/application/user_profile/_orchestration.py:450-489`
-- `src/cadrumo/application/user_profile/_profile_repository.py:629-662`
-- `src/cadrumo/application/user_profile/_profile_repository.py:881-914`
-- `src/cadrumo/application/workflow/_profile_health.py:228-245`
+
 
 Selection uses the atomic core `write_pointer`; rollback restoration and clear
 have independent direct filesystem implementations.  The target authority is
@@ -156,7 +148,6 @@ Duplicate mutation owners remain outside core:
 - `_profile_health.py` owns another direct unlink path.
 - `ProfileRepository` invokes these paths during create, delete, and select.
 - Command-line interface (CLI) tests import private orchestration helpers. The
-  imports remain recorded in `dev/import_hygiene_test_debt.json` at lines
   273-289.
 
 S24 adds this minimal API:
@@ -238,15 +229,7 @@ directory fails, it logs and suppresses the error. Python on Windows doesn't
 expose `os.O_DIRECTORY`, so S24 doesn't claim cross-platform directory
 durability.
 
-`reset_config(PROFILE|ALL)` at
-`src/cadrumo/application/config_reset.py:165-218` deletes profile lifecycle rows
-and bucket directories without clearing the active pointer and without using
-`BucketMaintenanceService.delete`.  The canonical deletion policy at
-`src/cadrumo/application/bucket_maintenance/_service.py:267-353` owns active
-bucket refusal, retention-floor assessment and override, tombstone and manifest
-updates, and ordered `PROFILE_TOMBSTONED`/`BUCKET_DELETED` events.  A real
-storage probe confirmed that PROFILE reset can leave the pointer naming a
-deleted bucket.
+`reset_config(PROFILE|ALL)` at `src/cadrumo/application/config_reset.py:165-218` deletes profile lifecycle rows and bucket directories without clearing the active pointer and without using `BucketMaintenanceService.delete`. A real storage probe confirmed that PROFILE reset can leave the pointer naming a deleted bucket.
 
 Required real-behavior tests: create/switch/logout across a fresh process;
 failed-create byte-exact pointer rollback; active and inactive delete/reset;
@@ -255,12 +238,7 @@ pointer; interruption-safe pointer replacement.
 
 ### Sandbox selection
 
-`config switch` at `src/cadrumo/entrypoints/cli/_config/_custody.py:16-68` and
-`config profile sandbox use` at
-`src/cadrumo/entrypoints/cli/_config/_sandbox.py:215-265` both call
-`select_profile_with_lifecycle_span`.  The latter adds a sandbox prefix and
-namespace check.  `switch` is the accepted selector; add an explicit sandbox
-short-name resolution contract if required, then remove sandbox `use`.
+The latter adds a sandbox prefix and namespace check.  `switch` is the accepted selector; add an explicit sandbox short-name resolution contract if required, then remove sandbox `use`.
 
 ### Authentication logout and reset authority
 
@@ -272,8 +250,6 @@ exist.
 
 | Operator command | Public application service | Preserved state | Removed state | Target and provider scope | Durable events | Implementation location | Verification location | Release status |
 |---|---|---|---|---|---|---|---|---|
-| `aeat config auth logout [--provider PROVIDER\|--all]` | `logout_operator_auth` | Provider configuration, certificate path and sources, certificate secrets, acquisition locks, unrelated providers, and every unrelated bucket | Persisted sessions in scope; current authenticated timestamp and subject when the versioned configured provider remains the cleanup target | CLI resolves the active bucket. The application service also accepts `target_bucket_id` without changing the active pointer. Provider scope is explicit, all known providers, or the configured provider. | `auth.session.cleared`; `AUTH_SESSION_CLEARED` | `src/cadrumo/application/auth/_operator.py`, `src/cadrumo/application/auth/_operator_scope.py`, `src/cadrumo/application/auth/_sessions.py`, and `src/cadrumo/application/auth/_mutation.py` | `src/cadrumo/application/auth/tests/test_operator_storage_session.py`, `src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`, and `src/cadrumo/application/tests/test_cli_workflow_verification.py` | S37 accepted. The full campaign plan governs release; S37 audit-derived gates include `config_reset.py` composition and certificate-secret event recovery. |
-| `aeat config auth reset [--provider PROVIDER\|--all] --yes` | `reset_operator_auth` | Unrelated provider configuration, unrelated certificate custody, non-auth bucket state, the active-profile pointer, and every unrelated bucket | Provider configuration in scope, persisted sessions, acquisition locks, certificate path, targeted certificate-source registrations, and their canonical secure-storage secrets | CLI requires `--yes` and resolves the active bucket. The application service accepts `target_bucket_id`. Certificate sources and secrets are reset only when certificate custody is in scope. | `auth.provider.cleared`, `auth.session.cleared`, `auth.lock.cleared`, and `auth.certificate_source.removed`; typed `AUTH_PROVIDER_CLEARED`, `AUTH_SESSION_CLEARED`, `AUTH_LOCK_CLEARED`, `AUTH_CERTIFICATE_SOURCE_REMOVED`, and `AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED` | `src/cadrumo/application/auth/_operator.py`, `src/cadrumo/application/auth/_operator_scope.py`, `src/cadrumo/application/auth/_sessions.py`, `src/cadrumo/application/auth/_acquisition_lock.py`, `src/cadrumo/application/auth/_certificate_sources_operator.py`, and `src/cadrumo/application/auth/_mutation.py` | `src/cadrumo/application/auth/tests/test_operator_storage_session.py`, `src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`, `src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py`, and `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py` | S37 accepted. The full campaign plan governs release; S37 audit-derived gates include S62-S64 composition and certificate-secret event recovery. |
 
 #### Custody and persistence boundaries
 
@@ -351,10 +327,7 @@ The verification map is:
 | Logout preserves provider and certificate custody while clearing real sessions | `src/cadrumo/application/auth/tests/test_operator_storage_session.py` |
 | Reset removes scoped provider state, sessions, locks, registrations, and secure-storage secrets | `src/cadrumo/application/auth/tests/test_operator_storage_session.py` |
 | Explicit target operations preserve unrelated bucket state and ambient sessions | `src/cadrumo/application/auth/tests/test_operator_storage_session.py` and `src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py` |
-| Cleanup survives real repository failure and appends events once | `src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py` |
 | Acquisition-lock cleanup is target-scoped and idempotent | `src/cadrumo/application/auth/tests/test_acquisition_lock.py` |
-| CLI verbs, provider help, payloads, and destructive confirmation match the backend | `src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py` and `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py` |
-| Workflow projection order is configure, logout, then reset | `src/cadrumo/application/tests/test_cli_workflow_verification.py` |
 | Revision-aware secure-object persistence rejects stale writes | `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py` |
 
 Current-source duplicate checks cover:
@@ -418,11 +391,7 @@ AeatAuthenticator
 
 Sources:
 
-- `src/cadrumo/application/auth/_certificate_sources_operator.py`
-- `src/cadrumo/application/auth/_certificate_secret_backend.py`
-- `src/cadrumo/application/auth/_operator.py`
-- `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py`
-- `src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py`
+
 
 The sole-backend and durable mutation direction is current: commits
 `f5273bda59`, `27d8bc5404`, and `84c435bb94` deleted the certificate keyring
@@ -464,7 +433,6 @@ config repair quarantine ------+
 Sources:
 
 - `src/cadrumo/application/config_reset.py:196-203`
-- `src/cadrumo/entrypoints/cli/_config/_repair_cli.py:77-162`
 - `src/cadrumo/application/diagnostics.py:1108-1175`
 
 The diagnostics quarantine service remains canonical.  Remove DATA reset; ALL
@@ -488,11 +456,6 @@ ledger link --evidence-id
 
 Sources:
 
-- `src/cadrumo/application/ledger/_actions_manual.py:177-240`
-- `src/cadrumo/application/ledger/_actions_manual.py:457-524`
-- `src/cadrumo/application/ledger/_actions_manual.py:618-694`
-- `src/cadrumo/application/ledger/_actions_manual.py:899-936`
-- `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py:134-171`
 - `src/cadrumo/entrypoints/cli/_ledger.py:925-1026`
 
 `attach_manual_transaction_evidence` owns evidence policy.  `ledger link`
@@ -507,9 +470,7 @@ all-or-nothing combined mutation.
 
 ### Modelo audit check and replay
 
-`EvidenceBundleService.replay` at
-`src/cadrumo/application/evidence/_service.py:380-397` is exactly
-`return self.check(...)`.  CLI handlers only wrap the same result differently:
+CLI handlers only wrap the same result differently:
 
 - `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py:94-133`
 - `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py:195-234`
@@ -525,13 +486,8 @@ replay event only for actual replay.
 
 ### Profile export and subject access
 
-One serializer already exists at
-`src/cadrumo/application/user_profile/_bundle.py:159-216`, but the CLI duplicates
-session scope, resolution, serialization, event emission, directory creation,
-and cleartext output:
 
-- subject access: `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py:68-173`
-- portable export: `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py:202-333`
+
 - near-identical closures: lines `118-148` and `275-305`
 
 Create one application `export_profile_bundle` service with a typed purpose and
@@ -545,24 +501,9 @@ partial target, and reconcile the subject-access catalogue to actual fields.
 
 ### Custody passphrase and recovery
 
-`rekey_secret_store` and `recover_secret_store` at
-`src/cadrumo/application/user_profile/_custody.py:163-213` share a final rewrap
-primitive but are not duplicates.  The former authenticates with current
-custody, the latter with the recovery mnemonic.  Preserve distinct authorization
-and, if useful, extract only a small rewrap helper.
+The former authenticates with current custody, the latter with the recovery mnemonic. Preserve distinct authorization and, if useful, extract only a small rewrap helper.
 
-The current CLI registration lives at
-`src/cadrumo/entrypoints/cli/_config/_custody_secret.py:94-275`.
-`show-recovery` is overloaded: it reports status, creates recovery material when
-missing, and rotates it under `--rotate`.  The target family separates
-`recovery status`, `recovery create`, `recovery rotate`, and `recovery verify`;
-the already accurate flat `recover` action remains.  Create/rotate stage and
-display a candidate, require no-echo full confirmation, and commit only after
-verification so the previous recovery envelope survives failure.  Verify and
-recover accept no mnemonic argv value; they use a no-echo prompt or an explicit
-stdin automation mode.  `rekey` becomes `passphrase change` because the master
-key is preserved, and file custody is a typed precondition for all passphrase
-and mnemonic operations.
+The target family separates `recovery status`, `recovery create`, `recovery rotate`, and `recovery verify`; the already accurate flat `recover` action remains. Create/rotate stage and display a candidate, require no-echo full confirmation, and commit only after verification so the previous recovery envelope survives failure. Verify and recover accept no mnemonic argv value; they use a no-echo prompt or an explicit stdin automation mode.  `rekey` becomes `passphrase change` because the master key is preserved, and file custody is a typed precondition for all passphrase and mnemonic operations.
 
 Required tests prove current-passphrase authorization for change, mnemonic
 authorization for recovery, preservation of master-key fingerprint and stored
@@ -578,12 +519,7 @@ infrastructure before the CLI authority work began. The live configuration now
 declares `root_package = cadrumo`, retains all five architecture contracts, and
 contains no broad exemption added for the auth remediation.
 
-`src/cadrumo/tests/test_importlinter_ledger.py` now parses `cadrumo.*` edges,
-requires both the complete and layered ledgers to be non-empty, verifies that
-referenced modules resolve on disk, and ratchets the reconciled ceilings at
-199 application-to-adapter edges, 78 application-source wildcard edges, and 2
-test-only domain-to-adapter edges. Those ceilings may decrease but may not be
-raised.
+Those ceilings may decrease but may not be raised.
 
 The latest S37 corrective run analyzed 3,427 files and 16,219 dependencies:
 all five contracts were kept and zero were broken. The S37 remediation removed
@@ -597,8 +533,7 @@ Canonical implementation: `src/cadrumo/core/hashing.py:32-40`.
 
 Residual exact implementations:
 
-- `src/cadrumo/entrypoints/mcp/_telemetry.py:79-81`
-- `src/cadrumo/application/modelo/_review_package_recipient_registry.py:108-110`
+
 
 Both consumers may import core without violating layer direction.  Delegate the
 telemetry wrapper to `sha256_hex` and replace the recipient fingerprint body

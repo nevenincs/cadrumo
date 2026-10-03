@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc6b6584affe119b469f891726238216b160d05b29ce3b0442ef2747ab428219'
+body_hash: 'sha256:32e9ac926cf9ad4a9911eff0f66a92656f64df5d031439f50750ee77d062d23c'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -564,7 +564,7 @@ substitute mocks, prose, or a proposed record for an unmet predecessor:
 
 | Cohort | Required entrance receipts | Canonical exit artifact, schema, and validator | Required proof |
 |---|---|---|---|
-| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
+| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; the former source file | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
 | C1 — bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
 | C2 — complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
 | C3 — staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f49c00916171b9840c6edf8b571a84e3e478c3648b460438ed79baf98b92c07'
+body_hash: 'sha256:c12d3db7c3f5039217ec71262fd86a2004e15d2a8c3882605a6a9ae8f627263e'
 related:
   - "[[2026-10-03-live-verification-session-plan]]"
 ---
@@ -14,21 +14,6 @@ related:
 
 ## Changes
 
-- `S12` `A` `dev/acceptance/live_request_capture/__init__.py`
-- `S12` `A` `dev/acceptance/live_request_capture/__main__.py`
-- `S12` `A` `dev/acceptance/live_request_capture/capture_runtime.py`
-- `S12` `A` `dev/acceptance/live_request_capture/context_observation.py`
-- `S12` `A` `dev/acceptance/live_request_capture/guard_verdicts.py`
-- `S12` `A` `dev/acceptance/live_request_capture/live_flows.py`
-- `S12` `A` `dev/acceptance/live_request_capture/request_capture.py`
-- `S12` `A` `dev/acceptance/live_request_capture/request_redaction.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/__init__.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/synthetic_identity.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/test_capture_command.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/test_context_observation.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/test_guard_worklist.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/test_isolated_login_capture.py`
-- `S12` `A` `dev/acceptance/live_request_capture/tests/test_request_redaction.py`
 - `S12` `verify:` `uv run --no-sync ruff check dev/acceptance/live_request_capture` -> `pass`
 - `S12` `verify:` `uv run --no-sync ruff format --check dev/acceptance/live_request_capture` -> `pass`
 - `S12` `verify:` `uv run --no-sync ty check --python-platform {linux,win32,darwin} dev/acceptance/live_request_capture` -> `pass`

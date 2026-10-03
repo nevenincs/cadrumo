@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#m200-export-envelope-tag'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a70d0867e9cb294ffd66bc08ea4425d89196b1dc2caf8efff41001eefaf3065'
+body_hash: 'sha256:182c3d9a7de191f2199b2165e52250cd8c85be24b970411868c63be06e7ed4cb'
 related:
   - '[[2026-08-08-m200-export-envelope-tag-adr]]'
-  - '[[2026-08-08-m200-export-envelope-tag-ledger]]'
-  - '[[2026-08-08-m200-export-envelope-tag-plan]]'
   - '[[2026-08-08-m200-export-envelope-tag-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#m200-export-envelope-tag`.
 ### adr
 
 - `2026-08-08-m200-export-envelope-tag-adr` - `m200-export-envelope-tag` adr: `reconstruct the M200 fichero-BOE envelope open/close tags` | (**status:** `accepted`)
-
-### exec
-
-- `2026-08-08-m200-export-envelope-tag-ledger` - `m200-export-envelope-tag` ledger
-
-### plan
-
-- `2026-08-08-m200-export-envelope-tag-plan` - `m200-export-envelope-tag` plan
 
 ### reference
 

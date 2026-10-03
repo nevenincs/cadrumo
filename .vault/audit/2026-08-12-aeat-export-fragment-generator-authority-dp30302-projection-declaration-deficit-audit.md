@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:66719998a9f69bdd635200bbfa750f1c35454ea088b71e01e453a27ce621f515'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `dp30302 projection declaration deficit`

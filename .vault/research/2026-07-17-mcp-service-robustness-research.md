@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#mcp-service-robustness'
 date: '2026-07-17'
-modified: '2026-07-17'
-body_hash: 'sha256:38cfa391e0af24491a03e8ba9d454f4d0d0af7cb31d22e7a1b45aab20f336aeb'
+modified: '2026-10-03'
+body_hash: 'sha256:5b2bd58cd1d691e95c61b5968d6f50f1a6d4c6cc9a429510b6051d663779ae17'
 related:
   - '[[2026-07-17-mcp-service-robustness-audit]]'
-  - '[[2026-07-15-distribution-installation-readiness-plan]]'
 ---
 
 # `mcp-service-robustness` research: `MCP serving-path robustness defects`
@@ -56,7 +55,7 @@ thrashes CPU/RAM on the host. Remedy belongs with the F2 decision.
 
 ### F4 (medium, open): MCPB session start runs `uv run` resolution every launch
 
-The MCPB manifest launches `uv run --directory ${__dirname} src/server.py`;
+The MCPB manifest launches `uv run --directory ${__dirname} the former source file`;
 each client session pays a UV resolve/sync check before the server accepts the
 initialize handshake, adding connect latency and occasional startup stalls on
 the Desktop/Cowork surface. Candidate remedy: pre-provisioned environment with

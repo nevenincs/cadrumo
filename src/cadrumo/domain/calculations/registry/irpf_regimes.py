@@ -27,6 +27,7 @@ from .governed_fact_scope import (
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IRPF regime vocabulary"
+_FILING_MODELOS_REQUIREMENT: Final = "must contain unique filing models"
 
 _FACT_ID = "irpf-regime-vocabulary"
 _ESTIMATION_ORDER_KEY = "irpf_estimation_regime.order"
@@ -128,17 +129,6 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
     return value.strip()
 
 
-def _modelos(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IRPF regime vocabulary {key!r} must contain unique filing models")
-    return values
-
-
 def _window_years(entries: Mapping[str, str], key: str) -> int | None:
     raw = _optional(entries, key)
     if raw is None:
@@ -187,7 +177,12 @@ def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
-                filing_modelos=_modelos(entries, f"{prefix}filing_modelos"),
+                filing_modelos=unique_mapping_tokens(
+                    entries,
+                    f"{prefix}filing_modelos",
+                    subject=_ENTRY_SUBJECT,
+                    requirement=_FILING_MODELOS_REQUIREMENT,
+                ),
                 legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
@@ -204,7 +199,12 @@ def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
-                filing_modelos=_modelos(entries, f"{prefix}filing_modelos"),
+                filing_modelos=unique_mapping_tokens(
+                    entries,
+                    f"{prefix}filing_modelos",
+                    subject=_ENTRY_SUBJECT,
+                    requirement=_FILING_MODELOS_REQUIREMENT,
+                ),
                 window_years=_window_years(entries, f"{prefix}window_years"),
                 legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),

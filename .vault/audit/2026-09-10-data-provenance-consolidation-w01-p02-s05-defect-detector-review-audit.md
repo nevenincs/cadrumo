@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#data-provenance-consolidation'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:f9c6cb5547cc9e445fb17f4b10b2f6e67a72d8cb8d1a07207dfc22b4d1bc303a'
-related:
-  - "[[2026-09-10-data-provenance-consolidation-plan]]"
+related: []
 ---
 
 # `data-provenance-consolidation` audit: `w01 p02 s05 defect detector review`

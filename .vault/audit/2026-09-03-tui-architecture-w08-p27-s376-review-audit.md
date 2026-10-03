@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:42cba5aa391b2e199120e80246f7582ef54beaa45f48ba04fac68c4a9b1fe74d'
 related:
-  - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 ---
 # `tui-architecture` audit: `W08.P27.S376 host-neutral Modelo route review`

@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:1e2d7cd69b23954a7cc8e1e98ba579c345945bcc1ec5f2607b6da05e5e358bd8'
 related:
   - "[[2026-07-05-cpdefix-followup-allgreen-research]]"
   - "[[2026-07-05-cpdefix-followup-allgreen-audit]]"
   - "[[2026-07-05-cpdefix-followup-allgreen-adr]]"
-  - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"
 ---
 
 # `cpdefix-followup-allgreen` adr: `campaign disposition tracker` | (**status:** `accepted`)

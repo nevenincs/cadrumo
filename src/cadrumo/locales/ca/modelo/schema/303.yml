@@ -78,13 +78,13 @@ modelo:
           dr303-155:
             label: IVA meritat, règim general nou tipus tram 2 - quota
           dr303-156:
-            label: Recàrrec d'equivalència a l'1,75% - Base imposable
+            label: Recàrrec d'equivalència a l'1,75% - base imposable
           dr303-157:
             label: Recàrrec d'equivalència a l'1,75% - Tipus (%)
           dr303-158:
-            label: Recàrrec d'equivalència a l'1,75% - Quota
+            label: Recàrrec d'equivalència a l'1,75% - quota
           dr303-16:
-            label: Recàrrec d'equivalència - Base imposable
+            label: Recàrrec d'equivalència - base imposable
           dr303-165:
             label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
           dr303-166:
@@ -102,7 +102,7 @@ modelo:
           dr303-170:
             label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
           dr303-18:
-            label: Recàrrec d'equivalència - Quota
+            label: Recàrrec d'equivalència - quota
           dr303-19:
             label: Recàrrec d'equivalència al 1,4% - base imposable
           dr303-20:

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:66b1afc123c451f4bc740b5ce70d60ada3d29a01114ab43bfe2768cb4dc1b99a'
+modified: '2026-10-03'
+body_hash: 'sha256:a91f72a63b9bc3ae14209530f37cb1e4847a335d8e53b59728cfb5a51cb4bb94'
 related: []
 ---
 
@@ -18,7 +18,7 @@ This is a `runtime-default` boundary, not an alternate provider implementation. 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_session_store_roundtrip.py src/aeat/adapters/outbound/google/test_records.py` passed.
+- the focused test run passed.
 - The broader focused Google adapter suite passed with 131 tests.
 - `uv run --no-sync ruff check` over the Google adapter production/test slice passed.
 

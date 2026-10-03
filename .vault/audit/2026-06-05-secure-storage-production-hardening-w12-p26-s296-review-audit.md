@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:bc1934b642c20acd410debaaed0c3fbf0c95a0b894682f6ffd674650dcd25e03'
+modified: '2026-10-03'
+body_hash: 'sha256:83904504c70df2ce9fa1e515ae94def82029cacd56f89c9caf97de6bc1c04b4b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S296-001 | PASS | External constants are a read-only remote-mirror registry
 
-`src/aeat/core/external_constants.py` centralizes public third-party hostnames, AEAT
+The retired module centralizes public third-party hostnames, AEAT
 routes, OAuth scopes, MIME strings, encodings, and other externally defined constants.
 The only file I/O is TOML read/parse from the packaged registry or an explicit path
 parameter. The module does not write files, persist operator data, open secure-storage
@@ -46,8 +46,8 @@ this surface does not need enrollment in the secure runtime management interface
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/external_constants.py src/aeat/core/test_external_constants.py src/aeat/test_hardcoded_constants_inventory.py src/aeat/test_enum_constant_extraction_inventory.py src/aeat/test_latin1_encoding_constant_enrollment.py`
-- `uv run --no-sync pytest -q src/aeat/core/test_external_constants.py src/aeat/test_hardcoded_constants_inventory.py src/aeat/test_enum_constant_extraction_inventory.py src/aeat/test_latin1_encoding_constant_enrollment.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "external_constants TOML remote provider constants Settings.external_constants secure storage runtime" --type code --port 8766 --max-results 8`
 - `uv run --no-sync vaultspec-rag search "external constants registry centralizes AEAT URLs OAuth scopes remote API endpoints literal scan" --type code --port 8766 --max-results 8`

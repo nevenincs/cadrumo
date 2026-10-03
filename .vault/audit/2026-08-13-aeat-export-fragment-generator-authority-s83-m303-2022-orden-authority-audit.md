@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1afb69209220831f9f28dae4dc5675cc45ac73073c1d48421badf99f28a20057'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 # `aeat-export-fragment-generator-authority` audit: `s83 m303 2022 orden authority`
 

@@ -31,6 +31,9 @@ if not __package__:
     __package__ = "dev.packaging"
 
 REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
+_STORAGE_ENVIRONMENT = importlib.import_module("cadrumo.core.storage_environment")
+resolve_storage_path = _STORAGE_ENVIRONMENT.resolve_storage_path
+tool_storage_environment = _STORAGE_ENVIRONMENT.tool_storage_environment
 _COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
 CommandResult = _COMMAND_EXECUTION.CommandResult
 run_command = _COMMAND_EXECUTION.run_command
@@ -167,12 +170,42 @@ def localize_formula(
 
 
 def _new_run_root(evidence_dir: Path) -> Path:
-    evidence = evidence_dir.resolve()
+    evidence = resolve_storage_path(evidence_dir)
     evidence.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
     run_root = evidence / f"run-{run_id}"
     run_root.mkdir()
     return run_root
+
+
+def _homebrew_storage_environment() -> dict[str, str]:
+    """Bind Homebrew caches, logs and build scratch beneath Cadrumo storage."""
+    locations = {
+        name: Path(value)
+        for name, value in tool_storage_environment().items()
+        if name in {"HOMEBREW_CACHE", "HOMEBREW_LOGS", "HOMEBREW_TEMP"}
+    }
+    for path in locations.values():
+        path.mkdir(parents=True, exist_ok=True)
+    return {name: str(path) for name, path in locations.items()}
+
+
+def _require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
+    """Refuse a Homebrew temp path on a different filesystem from its prefix.
+
+    Homebrew requires its build temporary directory to share a filesystem with
+    the active prefix so it can move built files into the Cellar atomically.
+    The override remains available for installations whose checkout and prefix
+    live on different volumes; in that case the default fails before brew can
+    stage files somewhere uncontrolled.
+    """
+    temporary_root = Path(environment["HOMEBREW_TEMP"])
+    if temporary_root.stat().st_dev != brew_prefix.stat().st_dev:
+        raise SystemExit(
+            "Homebrew build temporary storage must share a filesystem with its prefix; "
+            "set CADRUMO_HOMEBREW_TEMP_DIR to a writable directory on the Homebrew volume "
+            f"(prefix={brew_prefix}, temp={temporary_root})",
+        )
 
 
 def _installed_python(prefix: Path) -> Path:
@@ -281,6 +314,16 @@ def run_homebrew_smoke(
     run_root = _new_run_root(evidence_dir)
     logs = run_root / "logs"
     logs.mkdir()
+    homebrew_environment = _homebrew_storage_environment()
+    os.environ.update(homebrew_environment)
+    prefix_text = _run(
+        [str(brew), "--prefix"],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-prefix-root",
+    ).stdout.strip()
+    brew_prefix = Path(prefix_text).resolve(strict=True)
+    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
     tap_repo = run_root / "tap"
     formula_dir = tap_repo / "Formula"
     formula_dir.mkdir(parents=True)

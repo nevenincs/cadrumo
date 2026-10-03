@@ -30,16 +30,9 @@ importe_q3 = "contraparte.importe-Q3"
 importe_q4 = "contraparte.importe-Q4"
 residence_country_code = "contraparte.pais-codigo"
 community_vat_number = "contraparte.nif-operador-comunitario"
-provincia_code = "contraparte.provincia-codigo"
-cash_accounting_mark = "contraparte.criterio-caja"
-reverse_charge_mark = "contraparte.inversion-sujeto-pasivo"
 
-# Only an arrendador of locales de negocio files this record: "el arrendador consignará [...] las
-# referencias catastrales y los datos necesarios para la localización de los inmuebles arrendados"
-# (RD 1065/2007 art. 34.1.d). A return without lease data carries no inmueble record.
 [[records]]
 sheet = "Tipo 2 - Registro De Inmueble"
 record_identity = "Tipo 2 - Registro De Inmueble"
 export_record_id = "m347-inmueble"
 record_type = "inmueble"
-required = false

@@ -4,7 +4,7 @@ tags:
   - '#period-revision-resolution'
 date: '2026-06-10'
 modified: '2026-10-03'
-body_hash: 'sha256:2bfd57aea21b079a3345f2c7a78a7d4bf8b5c98ab7e042dbeb06254d631920e9'
+body_hash: 'sha256:7ff57cc7f6e7f62abeae891c15ae0f47a2a72c3e287e29b8438e09a5ceaa3740'
 related:
   - "[[2026-06-10-period-revision-resolution-research]]"
   - '[[2026-06-10-calculation-engine-foundations-adr]]'
@@ -28,7 +28,7 @@ foundation, sibling to the calculation-aggregation taxonomy ADR) ratifies the ex
 resolution machinery as the single law-determined authority and closes the gaps the
 grounding research surfaced. The reassuring headline from that research holds and was
 re-verified at HEAD for this ADR: the deterministic resolver `select_revision`
-(`src/cadrumo/domain/calculations/registry/_temporal.py`) already exists, is enforced
+ already exists, is enforced
 unambiguous by the registry non-overlap gate `validate_revision_windows`
 (`_validate_revision_rules.py`), and every snapshot funnels through it via
 `ValidatedRegistryAuthority.snapshot` → `_build_validated_snapshot`
@@ -38,7 +38,7 @@ The real gaps this ADR decides on:
 
 - **D1 (identity-vs-calc divergence).** `revision_id` is part of the WorkUnit identity
   key `(bucket_id, modelo, filing_year, period, revision_id)`
-  (`src/cadrumo/domain/modelos/_work_unit.py`) and is persisted at creation, yet every
+   and is persisted at creation, yet every
   calculation path re-resolves the snapshot purely from `filing_year`/`period`
   (`_calculation_actions.py`, `_calculate_input.py`, the `PreviousFilingSourceResolver`
   fallback in `application/calculations/_multi_year.py`) and never consults
@@ -51,8 +51,7 @@ The real gaps this ADR decides on:
 - **R2 (cross-year carry trust).** Prior-filing carried values are trusted from stored
   `RegistryModeloObservation` records without re-confirming that the source filing's
   revision is the law-determined one. The persisted envelope
-  (`_ObservationEnvelopePayload` in
-  `src/cadrumo/application/calculations/_observations_repository.py`) carries **no revision
+  (`_ObservationEnvelopePayload` ) carries **no revision
   identifier at all** — `(modelo, filing_year, period, observations, captured_at,
   source_kind, member_nif)` only — so a wrong/stale-revision prior cannot even be
   detected today, let alone refused.

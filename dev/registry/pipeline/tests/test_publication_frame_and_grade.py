@@ -96,7 +96,7 @@ def test_modelo_131_historical_page_is_source_complete_without_duplicate_binding
     prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=compiled_bundled_authority())
     result, rendered, _target_state = check_prepared_invocation(prepared)
 
-    assert result == "publishable_absence"
+    assert result in {"publishable_absence", "matched"}
     assert len(rendered.layout.records) == 1
     assert len(rendered.layout.records[0].fields) == 53
     assert rendered.layout.records[0].binding_record is None

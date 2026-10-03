@@ -720,7 +720,7 @@ async def test_unpageable_success_refuses_before_any_result_storage(monkeypatch:
     )
 
     async def reader(
-        _context: OperationExecutorContext, _payload: WorkbenchGenerationOperationRequest
+        _identity: OperationIdentity, _payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
         return _generation()
 
@@ -741,9 +741,9 @@ async def test_executor_stores_actual_generation_and_none_effect_only_after_read
     calls: list[object] = []
 
     async def reader(
-        context: OperationExecutorContext, payload: WorkbenchGenerationOperationRequest
+        identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
-        assert context.identity.subject_ref == request.subject_ref
+        assert identity.subject_ref == request.subject_ref
         assert payload == request.payload
         calls.append("read")
         return generated

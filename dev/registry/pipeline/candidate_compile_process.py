@@ -23,6 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from dev._paths import prepare_temporary_directory
+
 __all__ = [
     "CANDIDATE_COMPILER_MODULE",
     "PARENT_EXITED_EXIT_CODE",
@@ -82,7 +84,7 @@ def run_candidate_compiler(
     ]
     if eager_baseline_path is not None:
         command.extend(("--eager-baseline", str(eager_baseline_path)))
-    with tempfile.TemporaryFile() as diagnostics:
+    with tempfile.TemporaryFile(dir=prepare_temporary_directory()) as diagnostics:
         with subprocess.Popen(
             command,
             cwd=_REPOSITORY_ROOT,

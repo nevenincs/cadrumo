@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:04820112b09a01fd206e5ee9816d90aab1716d465699f7bdd1b8416185aaf069'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 
 # `facts-registry` audit: `S64 legal-parameter consumer migration`

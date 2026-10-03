@@ -13,9 +13,9 @@ related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 supersedes:
   - '2026-09-10-registry-authority-artifact-boundary-adr'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d98a4bce0974c5ea6c951c94b2575aeae52a9436a112dd19db605edf24f1f270'
+body_hash: 'sha256:b1916137ea1a8008a9ccb6e38fb6b45c977bd32f2708ad81fc2cbc61dca069e8'
 ---
 
 # `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
@@ -120,7 +120,7 @@ Decision: the manifest persists the source-identity, compiler-identity and compo
 
 Accepted 2026-09-23 under the operator's standing pre-approval of routine work, relayed by the tui-modelo coordinator after the first republish that recorded build receipts.
 
-Compiler identity. `authority_compiler_identity` (`dev/registry/compiler/build_identity.py`) hashed every non-test module under `core/`, `domain/` and `application/`, about 1,460 files, although a complete validation loads 303 product modules: 131 in `core`, 168 in `domain` and 4 in `application`. Any application edit therefore reported compiler drift, and the currency gate stayed stale in a shared worktree. Nothing recorded the broad scope as a decision. Decision: the publisher records the observed closure (every product and registry-tooling source file loaded by the complete compile, with its content digest) in the published database, and the compiler identity is the digest of that closure together with the interpreter and dependency manifests. The currency check re-hashes exactly the recorded closure. A new import can enter the closure only through an edit to a file already in it, and a deleted file is caught as missing, so narrowing cannot produce a false current; edits outside the closure no longer produce false staleness. This changes the published schema, so the database format advances to `cadrumo-authority-sqlite-v3`, under the same refusal and republication rule as v2.
+Compiler identity. `authority_compiler_identity` hashed every non-test module under `core/`, `domain/` and `application/`, about 1,460 files, although a complete validation loads 303 product modules: 131 in `core`, 168 in `domain` and 4 in `application`. Any application edit therefore reported compiler drift, and the currency gate stayed stale in a shared worktree. Nothing recorded the broad scope as a decision. Decision: the publisher records the observed closure (every product and registry-tooling source file loaded by the complete compile, with its content digest) in the published database, and the compiler identity is the digest of that closure together with the interpreter and dependency manifests. The currency check re-hashes exactly the recorded closure. A new import can enter the closure only through an edit to a file already in it, and a deleted file is caught as missing, so narrowing cannot produce a false current; edits outside the closure no longer produce false staleness. This changes the published schema, so the database format advances to `cadrumo-authority-sqlite-v3`, under the same refusal and republication rule as v2.
 
 Descriptor versioning. `cadrumo-authority-descriptor-v1` versions the descriptor document's own members (database name, size, digest and logical generation), which neither v2 nor v3 changes. The store format is carried by the database manifest and checked at admission; a runtime that meets a newer store format refuses it. The descriptor format advances only when its own members change.
 

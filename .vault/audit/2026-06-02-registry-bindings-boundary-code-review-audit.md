@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-bindings-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:138f73ae317bc559f01f917c533e1a569d06ad288f40141ce6e63536934da850'
+modified: '2026-10-03'
+body_hash: 'sha256:be2319c5b32dfab2ac61eb1d81e971573428b466968d0fbdfd19cb0f95a88760'
 related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-bindings-boundary-audit]]"
 ---
 
@@ -16,7 +15,7 @@ related:
 
 No issue found. The slice-owned diff adds a bindings boundary audit,
 adds the P04.S20 step record, and closes P04.S20 in the plan. It does
-not stage or edit `src/aeat/domain/calculations/registry/_bindings.py`,
+not stage or edit the retired module,
 which is the correct outcome while that file contains active peer WIP
 around `per_grupo_member` previous-filing aggregation.
 
@@ -24,7 +23,7 @@ around `per_grupo_member` previous-filing aggregation.
 
 No issue found. The audit identifies row-set families as the safest
 first extraction, defers previous-filing because of peer WIP and the
-`_formula_runtime.py` private selector dependency, and treats invoice and
+`_formula_runtime.py` private selector dependency, and treats invoice 
 counterpart as coupled rather than independent split candidates.
 
 ## BINDINGS-S20-003 | PASS | Vault artifact hygiene

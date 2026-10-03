@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.storage_environment import storage_directory
 from ...core.type_guards import is_object_collection, is_object_dict
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
@@ -244,25 +245,21 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
 
     keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL")
     saved = {key: os.environ.get(key) for key in keys}
-    # Declared exception to the "every tempfile call passes dir=" storage
-    # provenance discipline: there is no "destination" to anchor on here.
-    # This scope exists so a --help/--version invocation runs against a
-    # throwaway root instead of the operator's real one, which may be
-    # retired or broken -- isolation FROM a root, not production NEAR one.
-    # Anchoring dir= on anything derived from the real root (even a pure,
-    # no-I/O computation like the platform user-data directory) reintroduces
-    # the dependency this scope exists to sever, and could break --help on
-    # exactly the broken-root case it is meant to survive. The OS-default
-    # temp root is the correct home, not a gap. The FILENAME joined onto it
-    # is a different axis: `storage_location` is a pure dict lookup with no
-    # settings/I-O dependency, and `cadrumo.core` is already fully imported
-    # above (`_PRODUCT_IDENTITY`), so reading the taxonomy's declared
-    # root-fallback-database subpath here costs nothing extra and tracks a
-    # future rename instead of drifting from it.
+    # Metadata commands still isolate themselves from the operator's active
+    # database, while their throwaway files follow the configured Cadrumo temp
+    # directory instead of the OS-wide temp directory.
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import storage_location
 
-    with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
+    temporary_location = storage_location(StorageCategory.TEMPORARY_FILES)
+    if temporary_location.settings_field is None:
+        raise RuntimeError("temporary storage location must declare its environment setting")
+    temporary_base = storage_directory(
+        temporary_location.settings_field.upper(),
+        temporary_location.relative_path(),
+    )
+    temporary_base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with TemporaryDirectory(prefix="cadrumo-cli-metadata-", dir=temporary_base) as temporary_root:
         root = Path(temporary_root)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
         database_filename = storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath

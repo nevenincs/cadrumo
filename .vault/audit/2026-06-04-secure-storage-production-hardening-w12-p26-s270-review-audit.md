@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d7c9b7e760c9e1ed9ca9f4124d42c971c9ad74836760298ebe68590794f6abb7'
+modified: '2026-10-03'
+body_hash: 'sha256:77fac9f13b1cc41a1a998f3262bef81666bfee2dd7deb25756d9f2510f8bdeb7'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The output-language cache invalidation path narrows import fallback to `ImportEr
 
 ## S270-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_repository.py src/aeat/application/user_profile/test_repository.py src/aeat/application/user_profile/test_repository_anti_tautology.py src/aeat/application/user_profile/test_repository_roundtrip.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_repository.py src/aeat/application/user_profile/test_repository_anti_tautology.py src/aeat/application/user_profile/test_repository_roundtrip.py`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 
 ## S270-006 | PASS | Delegated review finding resolved

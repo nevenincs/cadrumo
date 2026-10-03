@@ -100,9 +100,7 @@ class SupervisorHost:
         _cleanup_tasks: dict[OperationId, asyncio.Task[None]]
 
         @staticmethod
-        def _validate_request_payload[RequestPayloadT: BaseModel](
-            request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
-        ) -> None: ...
+        def _validate_request_payload(payload: BaseModel, request_type: type[BaseModel]) -> None: ...
 
         def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease: ...
 

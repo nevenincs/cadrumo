@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:ea740b09ddd5c4c7bb8a900ca40a3d74253449924c338f6cda0d64f134492a8a'
+modified: '2026-10-03'
+body_hash: 'sha256:38968da07627143350aa5a4338dc9f4ffdc80c314bb778af44e40895d43c85b8'
 related: []
 ---
 
@@ -29,7 +29,7 @@ drifted +3 to +16 lines.
 
 `completeness_manifest` is referenced **nowhere** in `application/filing/` or
 `application/modelo/` (confirmed by search). The `.boe` export path
-(`export_draft` in `src/aeat/application/filing/_export.py`, currently
+(`export_draft` , currently
 `:279`-`:342`) resolves the layout, calls `_raise_if_export_layout_not_renderable`
 (a layout-**shape** gate, not value content), renders bytes via
 `_render_export_layout`, computes `casilla_provenance` at `:327`, writes bytes at
@@ -63,8 +63,7 @@ verdict is honest about coverage precisely because a match is partial.
 
 ### F3 — The reusable authority already exists (workbook gate + manifest)
 
-The workbook parity gate lives in
-`src/aeat/application/storage/calc_sheets/tests/test_modelo_export_parity.py`. Its
+The workbook parity gate lives . Its
 core assertion (`test_export_plan_covers_completeness_manifest`) is the pattern to
 reuse:
 
@@ -77,7 +76,7 @@ The comparison is **one-directional** (`required ⊆ emitted`), not equality. Th
 snapshot is obtained by a fresh authority load
 (`resources().modelos.authority.snapshot(modelo, filing_year=..., period=..., on=...)`).
 
-`CalculationCompletenessManifest` (`src/aeat/domain/calculations/registry/_schema_surfaces.py:398`)
+`CalculationCompletenessManifest`
 is the AEAT Diseño de Registros projection the calculation engine already uses. It
 enumerates a modelo's **calculation closure** only — formula targets, casillas
 referenced in formulas, binding/relation endpoints, verification operands — and
@@ -117,7 +116,7 @@ casillas are excluded so the gate does not false-fire.
 `export_draft` receives only a `RegistrySchemaAccessor` and resolves a
 `RegistryModeloSubview` via `provider.get_subview(draft.modelo)`. That subview is a
 **narrow projection** built by `_subview_from_snapshot`
-(`src/aeat/application/filing/runtime.py:588`-`:608`); it copies `export_layouts`,
+(the former source file-`:608`); it copies `export_layouts`,
 `reconciliation_total_casilla_ids`, and a fixed field list, but **does not project
 `completeness_manifest`**, and the underlying `RegistrySnapshot` is discarded after
 the subview is built. So the render choke point cannot see the manifest today.
@@ -137,7 +136,7 @@ Three ways to bridge, for the ADR to choose:
 - **(c) Thread the `RegistrySnapshot` down from a caller that has it.** Signature
   change through `export_draft` and its callers.
 
-`export_modelo_revision` (`src/aeat/application/modelo/_export.py:930`-`:1086`) is
+`export_modelo_revision` (the former source file-`:1086`) is
 the modelo-level orchestration verb; it holds a `CalculationRevision` and builds
 the schema provider before delegating. Note a naming collision the ADR must flag:
 that domain `CalculationRevision` is **not** the registry `ModeloRevision` that

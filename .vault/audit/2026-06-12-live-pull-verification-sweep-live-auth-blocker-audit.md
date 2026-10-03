@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
-modified: '2026-07-17'
-body_hash: 'sha256:2875ddb58c010f4790be1fb0c38486c4b11fbb9429b39fee029c0d0419a5a334'
-related:
-  - '[[2026-06-12-live-pull-verification-sweep-plan]]'
-  - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:5242f7f111ff6f2be3e8f66e84a97a69847075bcafce45f77f8d617334ee21df'
+related: []
 ---
 
 # `live-pull-verification-sweep` audit: W02.P03 live auth blocker
@@ -149,7 +147,7 @@ After each timeout, `config auth test --provider clave_movil` reported
 
 The focused pytest probe then ran:
 
-`uv run pytest src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py::test_clave_movil_playwright_entrypoint_reaches_live_selector src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py::test_clave_movil_provider_probes_persisted_session_with_central_playwright -m aeat_live -q -rs`
+the historical check
 
 Result on both attempts: 1 passed, 1 skipped. The selector probe passed, and
 the persisted-session probe skipped because no persisted encrypted Cl@ve Movil
@@ -176,7 +174,7 @@ been rerun to no-skip green acceptance.
 The focused live auth lane was then run with explicit opt-in only for the
 process:
 
-`uv run pytest src/aeat/adapters/outbound/aeat/auth/tests/test_authenticator_live.py src/aeat/adapters/outbound/aeat/auth/tests/test_certificate_live.py src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py -m aeat_live -q -rs`
+the historical check
 
 Result: 1 passed, 5 skipped in 6.35 seconds.
 
@@ -203,13 +201,13 @@ operator-assisted retry recorded in this audit.
 
 The storage substrate portion was verified with the existing real-behavior test:
 
-`uv run pytest src/aeat/adapters/outbound/aeat/auth/tests/test_session_store_roundtrip.py -q`
+the historical check
 
 Result: 1 passed in 0.70 seconds.
 
 The test uses a real isolated active profile-bucket runtime and
 `SecureObjectRepository`, saves a Playwright-shaped `storage_state`, loads it
-back through `src/aeat/adapters/outbound/aeat/auth/_session_store.py`, verifies
+back through the retired module, verifies
 the `SESSION` classification and schema version, verifies the object key is not
 stored as the plaintext logical path, and verifies that no plaintext
 `storage_state` file or sidecar is created.
@@ -471,15 +469,9 @@ the central Playwright backend.
 
 Fresh opt-in checks then passed:
 
-- `AEAT_LIVE_TESTS_ENABLED=1 AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH=1
-  AEAT_CLAVE_PREFER_NON_QR=true AEAT_BROWSER_HEADLESS=false uv run pytest
-  src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py::test_clave_movil_provider_full_login_with_central_playwright_when_explicitly_enabled
-  -m aeat_live -q -rs --tb=short`: 1 passed in 28.65 seconds.
-- `AEAT_LIVE_TESTS_ENABLED=1 AEAT_BROWSER_HEADLESS=true uv run pytest
-  src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py::test_clave_movil_playwright_entrypoint_reaches_live_selector
-  -m aeat_live -q -rs --tb=short`: 1 passed in 1.85 seconds.
-- `uv run ruff check
-  src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py`:
+- the historical check: 1 passed in 28.65 seconds.
+- the historical check: 1 passed in 1.85 seconds.
+- the historical check:
   passed.
 
 This closes the Cl@ve path for `W02.P03.S09`: the focused opt-in lane now has
@@ -616,16 +608,13 @@ The authenticated live session still did not complete:
 The scoped non-live regression gates were rerun and passed after this live
 attempt:
 
-- `uv run pytest src/aeat/application/modelo/tests/test_import_flow.py
-  src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py -q`
+- the historical check
   passed 36 tests.
-- `uv run pytest src/aeat/application/overview/tests/test_calendar_filing_evidence.py
-  src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -q` selected
+- the historical check selected
   40 application tests under default marker filtering and passed them.
-- `uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -q`
+- the historical check
   passed 19 CLI calendar tests.
-- `uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py
-  src/aeat/entrypoints/cli/tests/test_registry_cli.py -q` passed 81 command
+- the historical check passed 81 command
   surface tests and preserves the `pull`-only/no-`pull-all` guard.
 
 ## Update 2026-06-13 - Visible live-auth runner did not advance past passphrase prompt

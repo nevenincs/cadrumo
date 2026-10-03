@@ -349,7 +349,6 @@ def resolve_ledger_llm_diagnostics_access(
         definition_id=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
         payload_type=LedgerLlmDiagnosticsRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
     require_period_independent_replay_or_authority(

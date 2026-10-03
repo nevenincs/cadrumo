@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#iva-workflow'
 date: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:589f28c76668b17099d724c630146b13a1316fa49b77b9c8da77123e8952e66c'
+body_hash: 'sha256:e0ecf651ff5d09ff8388504e3e7ae6e6018a5449b695d55a3834950647483b17'
 related:
   - "[[2026-09-23-iva-workflow-plan]]"
 ---
@@ -43,7 +43,6 @@ related:
 - `S04` `verify:` `M303 CLI, quickfile and dependent CLI tests; dev.locales audit ok in four locales` -> `pass`
 - `S05` `M` `src/cadrumo/entrypoints/tui/modelo/m303_evidence.py`
 - `S05` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
-- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
 - `S05` `M` `src/cadrumo/entrypoints/tui/launcher.py`
 - `S05` `M` `src/cadrumo/locales/en/common.yml`
 - `S05` `M` `src/cadrumo/locales/es/common.yml`

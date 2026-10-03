@@ -6,13 +6,10 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a91ed972974f293df64a052f3932d2dddf28d9d47ce97cfd01550b76ae0a1dd'
+body_hash: 'sha256:4701ac08f754aa91c7a40e648a0eee7fed81888b8f449680d3993a9271e46251'
 related:
-  - '[[2026-06-04-registry-row-width-pressure-P03-summary]]'
   - '[[2026-06-04-registry-row-width-pressure-audit]]'
   - '[[2026-06-04-registry-row-width-pressure-code-review-audit]]'
-  - '[[2026-06-04-registry-row-width-pressure-ledger]]'
-  - '[[2026-06-04-registry-row-width-pressure-plan]]'
   - '[[2026-06-04-registry-row-width-pressure-research]]'
   - '[[2026-06-04-registry-row-width-pressure-verification-blocker-audit]]'
 ---
@@ -28,15 +25,6 @@ Auto-generated index of all documents tagged with `#registry-row-width-pressure`
 - `2026-06-04-registry-row-width-pressure-audit` - `registry-row-width-pressure` audit: `row inventory`
 - `2026-06-04-registry-row-width-pressure-code-review-audit` - `registry-row-width-pressure` Code Review
 - `2026-06-04-registry-row-width-pressure-verification-blocker-audit` - `registry-row-width-pressure` audit: `verification blocker`
-
-### exec
-
-- `2026-06-04-registry-row-width-pressure-P03-summary` - `registry-row-width-pressure` `P03` summary
-- `2026-06-04-registry-row-width-pressure-ledger` - `registry-row-width-pressure` ledger
-
-### plan
-
-- `2026-06-04-registry-row-width-pressure-plan` - `registry-row-width-pressure` `implementation` plan
 
 ### research
 

@@ -605,7 +605,6 @@ def _resolve_access(
         definition_id=definition_id,
         payload_type=request_type,
         access_profile_id=context.profile_id,
-        exact_type=True,
     ).profile_id
     actions = {
         AccessAction.SUBMIT,

@@ -4,7 +4,7 @@ tags:
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:a3a1b87246ce764f6b08ca555ca1124425c251dfbf872069e7efd6318f90dca0'
+body_hash: 'sha256:21f965c07d7bb4ed12e7f0df8f0cb9af99ecf076f2d605914809592f86b84e77'
 related:
   - "[[2026-06-03-m303-cross-period-carry-continuity-research]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
@@ -18,7 +18,7 @@ related:
 
 ## Problem Statement
 
-Three tests in `src/cadrumo/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`
+Three tests
 are red on HEAD after the primitive-encoding commit (`6e5a316a6`). The
 in-period engine-recomputation correctness gate
 (`test_verification_chain.py`, 47/47 green) does not exercise the
@@ -31,7 +31,7 @@ The carry chain is fully wired in the registry: relation
 `iva.compensacion-disponible-fin-periodo`, target_binding =
 `modelo-303-compensacion-pendiente-anteriores`, offset = -1,
 period_alignment = previous_quarter) feeds binding-side casilla 110.
-The relation resolver in `src/cadrumo/application/calculations/_relation_prefill.py`
+The relation resolver
 pulls the saldo from the prior observation by exact casilla-id match.
 What broke is **not the wiring** — that was unchanged by `6e5a316a6`
 — but the **upstream production of `iva.compensacion-disponible-fin-periodo`**:

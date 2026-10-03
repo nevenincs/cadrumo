@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-08-15'
-body_hash: 'sha256:63217304a1e7296934b9c560dffd06d54db141a7e5a198ebdd4d957b17c7a8b7'
+modified: '2026-10-03'
+body_hash: 'sha256:b11933b168791e23dab20b6c6d0d7d3ea18857bea2c5106d3334bc681c93f0d2'
 related: []
 ---
 
@@ -13,7 +13,6 @@ related: []
 Added the first Modelo 100 scenario/tape parity coverage over the restored
 parity harness.
 
-- Created: `src/aeat/domain/calculations/registry/test_modelo_100_parity_tapes.py`
 
 ## Description
 

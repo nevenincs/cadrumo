@@ -9,7 +9,11 @@ from pydantic import BaseModel
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import (
+    OperationTerminalReceipt,
+    refused_receipt_references_hold,
+    require_succeeded_terminal_receipt,
+)
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_manual import ledger_transaction_result_payload
@@ -158,27 +162,9 @@ def _lifecycle_refusal_receipt_matches(receipt: OperationTerminalReceipt) -> boo
         receipt.condition is OperationTerminalCondition.REFUSED
         and receipt.refusal_ref == LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE
         and receipt.refusal_detail_ref is not None
-        and receipt.result_ref is None
-        and receipt.failure_error_code is None
+        and refused_receipt_references_hold(receipt)
         and receipt.diagnostic_ref is None
         and receipt.effect is OperationEffect.NONE
-    )
-
-
-def _lifecycle_success_receipt_matches(
-    projected: LedgerLifecycleOperationResult,
-    receipt: OperationTerminalReceipt,
-    expected_effect: OperationEffect,
-) -> bool:
-    return (
-        receipt.condition is OperationTerminalCondition.SUCCEEDED
-        and receipt.result_ref is not None
-        and receipt.refusal_ref is None
-        and receipt.refusal_detail_ref is None
-        and receipt.failure_error_code is None
-        and receipt.diagnostic_ref is None
-        and projected.result is not None
-        and receipt.effect is expected_effect
     )
 
 
@@ -193,8 +179,16 @@ def project_lifecycle_operation_result(result: BaseModel, receipt: OperationTerm
         if not _lifecycle_refusal_receipt_matches(receipt):
             raise ValueError("lifecycle refusal has an incompatible terminal receipt")
         return projected
-    if not _lifecycle_success_receipt_matches(projected, receipt, OperationEffect.UPDATED):
-        raise ValueError("lifecycle success has an incompatible terminal receipt")
+    message = "lifecycle success has an incompatible terminal receipt"
+    if projected.result is None:
+        raise ValueError(message)
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=projected.operation_id,
+        subject_ref=profile_operation_subject(str(projected.profile_id)),
+        effect=OperationEffect.UPDATED,
+        message=message,
+    )
     return projected
 
 

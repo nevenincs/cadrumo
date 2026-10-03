@@ -14,6 +14,7 @@ from ...application.live.notifications_capture_operation import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_deadlines import provider_login_settlement_seconds
 from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
 from .runtime_registered_operation import run_registered_operation
@@ -40,6 +41,7 @@ def read_notifications_capture_for_cli(ctx: typer.Context, *, profile_id: UUID) 
         request_version=1,
         result_version=1,
         timeout=120,
+        settlement_timeout=provider_login_settlement_seconds(after_login=120),
     )
     try:
         projection = completed.projection

@@ -333,7 +333,9 @@ def test_production_composition_imports_only_public_operation_defining_modules()
     assert {node.module for node in operation_imports} == {
         "application.operations.authorization",
         "application.operations.composition",
+        "application.operations.operation_definition",
         "application.operations.registry",
+        "application.operations.registry_schema_validation",
     }
 
 

@@ -4,35 +4,13 @@ tags:
   - '#index'
   - '#schema-hardening'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f0007b8543f5a1665208b1e610ac289b3510a39e02b584a4353bc8c7a7c95db'
+body_hash: 'sha256:0af0cefc00fe0e1e14697752e00c385eaf5f139b20ebf675a306685bc016039b'
 related:
-  - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'
-  - '[[2026-05-27-schema-hardening-m100-marriage-citation-repair-exec]]'
-  - '[[2026-05-27-schema-hardening-m100-validation-repair-exec]]'
-  - '[[2026-05-27-schema-hardening-m180-legal-ref-drift-repair-exec]]'
-  - '[[2026-05-27-schema-hardening-m200-estado-share-binding-repair-exec]]'
-  - '[[2026-05-27-schema-hardening-m202-label-drift-repair-exec]]'
-  - '[[2026-05-27-schema-hardening-non-overlap-drift-inventory-exec]]'
-  - '[[2026-05-27-schema-hardening-placeholder-eradication-exec]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
   - '[[2026-06-02-registry-hardening-m200-export-pressure-audit]]'
   - '[[2026-06-02-registry-hardening-m303-fragment-pressure-audit]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S01]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S02]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S03]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S04]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S05]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S06]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S07]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S08]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S09]]'
-  - '[[2026-06-02-registry-hardening-next-work-P02-S10]]'
-  - '[[2026-06-02-registry-hardening-next-work-P02-S11]]'
-  - '[[2026-06-02-registry-hardening-next-work-P02-S12]]'
-  - '[[2026-06-02-registry-hardening-next-work-P02-S13]]'
-  - '[[2026-06-02-registry-hardening-next-work-P02-S14]]'
   - '[[2026-06-02-registry-hardening-next-work-health-audit]]'
   - '[[2026-06-02-registry-hardening-next-work-p01-s01-review-audit]]'
   - '[[2026-06-02-registry-hardening-next-work-p01-s02-review-audit]]'
@@ -48,14 +26,9 @@ related:
   - '[[2026-06-02-registry-hardening-next-work-p02-s12-review-audit]]'
   - '[[2026-06-02-registry-hardening-next-work-p02-s13-review-audit]]'
   - '[[2026-06-02-registry-hardening-next-work-p02-s14-review-audit]]'
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-06-02-schema-hardening-P05-summary]]'
   - '[[2026-06-02-schema-hardening-audit]]'
-  - '[[2026-06-02-schema-hardening-ledger]]'
   - '[[2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research]]'
   - '[[2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research]]'
-  - '[[2026-06-03-schema-hardening-P03-summary]]'
-  - '[[2026-06-03-schema-hardening-ledger]]'
   - '[[2026-06-03-validator-decomposition-boundary-audit]]'
   - '[[2026-06-03-validator-decomposition-code-review-audit]]'
   - '[[2026-06-04-registry-reviewability-gate-code-review-audit]]'
@@ -97,39 +70,6 @@ Auto-generated index of all documents tagged with `#schema-hardening`.
 - `2026-06-04-registry-reviewability-gate-code-review-audit` - `schema-hardening` Code Review
 - `2026-06-04-registry-reviewability-gate-headroom-audit` - `schema-hardening` audit: `Registry reviewability gate headroom`
 - `2026-06-04-registry-validator-baseline-audit` - `schema-hardening` audit: `Validator module reviewability baseline`
-
-### exec
-
-- `2026-05-27-schema-hardening-label-artifact-inventory-exec` - `schema-hardening` `label-artifact-inventory`
-- `2026-05-27-schema-hardening-m100-marriage-citation-repair-exec` - `schema-hardening` `m100-marriage-citation-repair`
-- `2026-05-27-schema-hardening-m100-validation-repair-exec` - `schema-hardening` `m100-validation-repair`
-- `2026-05-27-schema-hardening-m180-legal-ref-drift-repair-exec` - `schema-hardening` `m180-legal-ref-drift-repair`
-- `2026-05-27-schema-hardening-m200-estado-share-binding-repair-exec` - `schema-hardening` `m200-estado-share-binding-repair`
-- `2026-05-27-schema-hardening-m202-label-drift-repair-exec` - `schema-hardening` `m202-label-drift-repair`
-- `2026-05-27-schema-hardening-non-overlap-drift-inventory-exec` - `schema-hardening` `non-overlap-drift-inventory`
-- `2026-05-27-schema-hardening-placeholder-eradication-exec` - `schema-hardening` `placeholder-eradication`
-- `2026-06-02-registry-hardening-next-work-P01-S01` - P01.S01 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S02` - P01.S02 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S03` - P01.S03 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S04` - P01.S04 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S05` - P01.S05 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S06` - P01.S06 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S07` - P01.S07 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S08` - P01.S08 Execution Record
-- `2026-06-02-registry-hardening-next-work-P01-S09` - P01.S09 Execution Record
-- `2026-06-02-registry-hardening-next-work-P02-S10` - P02.S10 Execution Record
-- `2026-06-02-registry-hardening-next-work-P02-S11` - P02.S11 Execution Record
-- `2026-06-02-registry-hardening-next-work-P02-S12` - P02.S12 Execution Record
-- `2026-06-02-registry-hardening-next-work-P02-S13` - P02.S13 Execution Record
-- `2026-06-02-registry-hardening-next-work-P02-S14` - P02.S14 Execution Record
-- `2026-06-02-schema-hardening-P05-summary` - `schema-hardening` `P05` summary
-- `2026-06-02-schema-hardening-ledger` - `schema-hardening` ledger
-- `2026-06-03-schema-hardening-P03-summary` - `registry-construct-pressure` `P03` summary
-- `2026-06-03-schema-hardening-ledger` - `schema-hardening` ledger
-
-### plan
-
-- `2026-06-02-registry-hardening-next-work-plan` - `schema-hardening` `registry hardening next work` plan
 
 ### research
 

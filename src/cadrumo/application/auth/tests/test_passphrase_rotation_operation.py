@@ -160,8 +160,8 @@ def test_rotation_persists_typed_result_and_finalizes_in_same_commit_task() -> N
         assert kwargs["new_passphrase"] == _INPUT["new_passphrase"]
         return _outcome(request.payload.profile_id)
 
-    async def finalize(bound: OperationExecutorContext, result: ProfilePassphraseRotationOutcome) -> None:
-        assert bound is context
+    async def finalize(identity: OperationIdentity, result: ProfilePassphraseRotationOutcome) -> None:
+        assert identity == context.identity
         assert commit.active and asyncio.current_task() is commit.owner
         assert operands.written is result
         trace.append(("finalizer", result.password_generation))
@@ -311,7 +311,7 @@ def test_cancellation_waits_for_blocking_write_result_and_finalizer() -> None:
         assert release.wait(3)
         return _outcome(request.payload.profile_id)
 
-    async def finalize(_context: OperationExecutorContext, _result: ProfilePassphraseRotationOutcome) -> None:
+    async def finalize(_identity: OperationIdentity, _result: ProfilePassphraseRotationOutcome) -> None:
         assert commit.active and asyncio.current_task() is commit.owner
         trace.append(("finalizer", "done"))
 

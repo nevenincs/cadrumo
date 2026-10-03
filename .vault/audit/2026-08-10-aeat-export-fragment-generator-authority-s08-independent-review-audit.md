@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f3ea296ed478574af9b928fd27161041f578dd1d23d9c26c478a6104e0afc99e'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+body_hash: 'sha256:0c4e1f7f398c0421cee4a172a9ec22636fdb31465563506d5ce4d1f63bafbd38'
+related: []
 ---
 # `aeat-export-fragment-generator-authority` audit: `S08 independent review`
 
@@ -24,7 +23,7 @@ loader roundtrip expectations.
 
 The hash-pinned `aeat-dr-200-2025` intermediate contains 77 sheets and 6,808
 fields. Every sheet lacks a declared total, and 5,676 of 5,996 numeric fields
-lack content metadata. `dev/registry/_export_tree.py` refuses both missing
+lack content metadata. the retired module refused both missing
 declared totals and numeric fields without content, so the implementation
 cannot render the complete real target required by S08. The focused synthetic
 suite does not exercise this authority boundary.
@@ -48,7 +47,7 @@ pass.
 
 ### architecture-boundary | medium | The renderer crosses a private production boundary
 
-`dev/registry/_export_tree.py` imports `ENCODING_ALIAS_MAP` from the private
+The retired module imported `ENCODING_ALIAS_MAP` from the private
 `cadrumo.domain.calculations.registry._record_spec` module instead of the owning
 public facade. The test likewise imports the private loader although
 `load_modelo_directory` is publicly exported.

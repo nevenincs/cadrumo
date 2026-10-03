@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:427dfc58d93cfe0ad0bb294a1e03a6b253fae1f86d7e306087fe923431319a5a'
+body_hash: 'sha256:4ff3adbe8df3c3e2cc63487956067d97e05faf57a239fe427cd6191d8e7839b6'
 related:
   - "[[2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research]]"
   - "[[2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research]]"
   - "[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]"
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
 # `modelo-parity-rollup` audit: `S16 S18 third SOL adjudication`
 
@@ -34,7 +33,7 @@ SOL decision: `0613` remains manual/open. The smallest next gate is a 2025-speci
 
 ### S18 / 1481 | high | activity oracle does not prove M100 transfer
 
-The new Luna test `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_2025_activity_oracle.py` runs the real 2025 M131 engine for epigraphs `972.1` and `721.2` in all four quarters. It preserves separate activity keys and reproduces `22,473.79` and `8,987.09` annual-base values. It deliberately creates no aggregate and no M100 relation.
+The new Luna test runs the real 2025 M131 engine for epigraphs `972.1` and `721.2` in all four quarters. It preserves separate activity keys and reproduces `22,473.79` and `8,987.09` annual-base values. It deliberately creates no aggregate and no M100 relation.
 
 SOL decision: `1481` remains manual/open. The smallest next gate is a legally grounded 2025 mapping identifying source values, activity/period identity, annualization and aggregation semantics, plus an independent expected M100 `1481` value.
 

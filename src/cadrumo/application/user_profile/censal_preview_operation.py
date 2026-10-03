@@ -86,7 +86,7 @@ _CENSAL_PREVIEW_PHASES = (
     CENSAL_PREVIEW_PHASE_SETTLEMENT,
 )
 _CENSAL_PREVIEW_MAX_VALUE_LENGTH = 4_096
-_CENSAL_PREVIEW_RESULT_MAX_BYTES = min(48 * 1024, PROJECTION_DOCUMENT_MAX_BYTES - 4_096)
+_CENSAL_PREVIEW_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _CensalPath = Annotated[str, Field(min_length=3, max_length=160)]
 _CensalValue = Annotated[str, Field(max_length=_CENSAL_PREVIEW_MAX_VALUE_LENGTH)]
@@ -145,6 +145,7 @@ class CensalPreviewOperationResult(BaseModel):
     adopted: tuple[CensalPreviewFactProjection, ...] = ()
     unchanged: tuple[CensalPreviewFactProjection, ...] = ()
     divergences: tuple[CensalPreviewDivergenceProjection, ...] = ()
+    observation: CensalObservation | None = None
 
     @model_validator(mode="after")
     def _validate_partition(self) -> CensalPreviewOperationResult:
@@ -247,6 +248,7 @@ def _build_preview_result(
         adopted=adopted,
         unchanged=unchanged,
         divergences=divergences,
+        observation=observation,
     )
 
 

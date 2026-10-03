@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:e3850bb8b68d9614ac56a7a954a4d3f9f89da42df6c9124719f538c33ef535c1'
+modified: '2026-10-03'
+body_hash: 'sha256:3854d2899a73266dcd186e06d60b6e5768876546747938c8ce0e55056651016b'
 related: []
 ---
 
@@ -34,9 +34,9 @@ contract instead of relying on `str(exc)` text.
 
 ## S365-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/submission/_repository.py src/aeat/domain/submission/test_repository.py src/aeat/domain/submission/test_secure_storage_roundtrip.py src/aeat/adapters/persistence/storage/test_submission_repository.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/submission/test_repository.py src/aeat/domain/submission/test_secure_storage_roundtrip.py src/aeat/adapters/persistence/storage/test_submission_repository.py` passed with 41 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "submission or SubmissionRepository"` passed with 2 tests and 91 deselected.
+- the historical check passed.
+- the historical check passed with 41 tests.
+- the historical check passed with 2 tests and 91 deselected.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with the known PLAN022 warning.
 - `uv run --no-sync vaultspec-rag search "SubmissionRepository SecureBoundRepository iter_submissions iter_records_with_failures AUDIT runtime-default secure-bound" --type code --port 8766 --max-results 8` returned the repository and shared secure-bound iterator contract evidence.

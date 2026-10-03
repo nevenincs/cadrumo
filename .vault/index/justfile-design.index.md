@@ -4,16 +4,14 @@ tags:
   - '#index'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e77a0f3dafd482b45bb2b8fd53c7780679bfac01c2c8d2b6b70cc0655e61c836'
+body_hash: 'sha256:93e898fa997236545e2fe5c56bf61450700c2c055acda2c12b25f0d620dbad1b'
 related:
   - '[[2026-09-11-justfile-design-adr]]'
   - '[[2026-09-11-justfile-design-audit]]'
   - '[[2026-09-11-justfile-design-lane1-code-review-audit]]'
   - '[[2026-09-11-justfile-design-lane3-review-audit]]'
-  - '[[2026-09-11-justfile-design-ledger]]'
-  - '[[2026-09-11-justfile-design-plan]]'
   - '[[2026-09-11-justfile-design-reference]]'
   - '[[2026-09-11-justfile-design-research]]'
   - '[[2026-09-11-justfile-design-w02-code-review-audit]]'
@@ -41,14 +39,6 @@ Auto-generated index of all documents tagged with `#justfile-design`.
 - `2026-09-11-justfile-design-w04-review-audit` - `justfile-design` audit: `W04 documentation and domain recipe review`
 - `2026-09-12-justfile-design-registry-test-signal-review-audit` - `justfile-design` audit: `registry test signal review`
 - `2026-09-14-justfile-design-pre-commit-repair-review-audit` - `justfile-design` audit: `pre commit repair review`
-
-### exec
-
-- `2026-09-11-justfile-design-ledger` - `justfile-design` ledger
-
-### plan
-
-- `2026-09-11-justfile-design-plan` - `justfile-design` plan
 
 ### reference
 

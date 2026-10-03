@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:69a0f0bd351f0793e8bd4cccc3855004821efc25a91a6f4ae46b3216147fe441'
+modified: '2026-10-03'
+body_hash: 'sha256:a86adf7d7e39f51ef41b038440cb7f4d171c5da90df3ff1b998d9092d3615bd4'
 related: []
 ---
 
@@ -34,9 +34,9 @@ The review pass noted that low-level OS exceptions could carry raw path strings 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_local.py src/aeat/adapters/outbound/storage/test_factory.py -k "local or factory"` passed with 28 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_local.py` passed with 21 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_local.py src/aeat/adapters/outbound/storage/test_local.py` passed.
+- the focused test run passed with 28 tests.
+- the focused test run passed with 21 tests.
+- the focused test run passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed after removing stale `cli.ledger.link.*` extras through `python -m aeat.locales remove`.
 
 Disposition: close `AFR-042` as `remote-mirror`.
