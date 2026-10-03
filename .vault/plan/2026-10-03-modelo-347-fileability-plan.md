@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:9a50681a5ecb7c0c28c1ed05c3a7d0cc41b7d112f1339db53dd784cd1cc7c5d6'
+body_hash: 'sha256:d1f74ecca21029c280fdd8341b9e314a54faf268be40c305a5d040be4d45c6ed'
 ---
 
 # `modelo-347-fileability` plan
@@ -71,6 +71,7 @@ Surface the remaining ambiguities as advisories and prove fileability end to end
 
 - [x] `P05.S13` - Surface advisories for ledger expenses without an invoice, received-invoice dating, the 2014-2024 edition grounding gap and tipo de soporte, and apply the weekend deadline shift without a holiday calendar; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml, src/cadrumo/domain/deadlines/festivos.py`.
 - [ ] `P05.S14` - Prove 347 fileability end to end from synthetic ledgers to byte-checked ficheros for 2025, confirm no new duplication with audit-dead-weight, publish the authority and refresh affected goldens; `src/cadrumo/application/invoices/tests/, docs/_sequences/`.
+- [ ] `P05.S19` - Fix the fileability defects the acceptance test exposed: draft annual-basis rows with absent quarters, a real resident provincia per declarado, the type 1 declarant name, contact person, declaration number and complementaria fields per the 2025 diseño, and land the acceptance test; `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py, src/cadrumo/application/filing/, dev/registry/mappings/modelo_347/, src/cadrumo/entrypoints/tests/profile_persistence/`.
 
 ## Parallelization
 
