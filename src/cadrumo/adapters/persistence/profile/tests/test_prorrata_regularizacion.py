@@ -28,7 +28,7 @@ from .....application.calculations.prorrata_regularizacion import (
 )
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.revision_persistence import persist_filed_revision
-from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
+from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed_from_observations
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -504,9 +504,9 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
             )
 
             settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)
-            seed_evaluation = evaluate_carried_prior_definitiva_seed(
+            seed_evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
                 ejercicio=_CARRY_YEAR,
-                observation_repository=observation_repository,
+                observations=tuple(observation_repository.iter_modelo(Modelo("303").value)),
                 operation=_authority_operation_for_test,
             )
 

@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-    from ._command_parameter_contracts import ParameterSpec
     from ._command_secret_contracts import RecoveryHandoffSpec
-    from ._command_shared_contracts import LazyBinding
+    from .command_parameter_contracts import ParameterSpec
+    from .command_shared_contracts import LazyBinding
     from .command_spec import CommandSpec, CommandSpecNode, InvocationSpec
 
 

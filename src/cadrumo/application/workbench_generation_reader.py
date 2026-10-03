@@ -99,19 +99,19 @@ from .user_profile.censal_observation import CensalObservation
 from .user_profile.projections import record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
 from .workbench_generation_calendar import (
+    CalendarMemo,
     RevisionedCatalogueStore,
-    _CalendarMemo,
-    _declarations_observation,
-    _declared_tax_id,
-    _read_workbench_calendar_inputs,
-    _unbound_calendar_aeat_evidence,
-    _WorkbenchCalendarInputs,
+    WorkbenchCalendarInputs,
+    declarations_observation,
+    declared_tax_id,
+    read_workbench_calendar_inputs,
+    unbound_calendar_aeat_evidence,
 )
 from .workbench_generation_contracts import (
     ProfileRecordReadRepositoryV1,
     WorkbenchGenerationInputsV1,
 )
-from .workbench_generation_home import _build_workbench_generation_inputs
+from .workbench_generation_home import build_workbench_generation_inputs
 
 WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
@@ -245,7 +245,7 @@ def _read_declarations_workspace(
             reason_code="workbench.declarations.lifecycle_reader_unavailable",
         )
         if lifecycle_facts is None
-        else _declarations_observation(DeclarationsWorkspaceZone.FILING_HISTORY, observed_at)
+        else declarations_observation(DeclarationsWorkspaceZone.FILING_HISTORY, observed_at)
     )
     try:
         return project_declarations_portfolio(
@@ -257,8 +257,8 @@ def _read_declarations_workspace(
             lifecycle_facts=() if lifecycle_facts is None else lifecycle_facts,
             result_casilla_reader=result_casilla_reader,
             zone_observations=(
-                _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
-                _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
+                declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
+                declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
                 history_observation,
             ),
         )
@@ -382,7 +382,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         )
         modelo = self._read_modelo(work_units)
         aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
-            _declared_tax_id(raw_values),
+            declared_tax_id(raw_values),
             observed_at=observed_at,
             filings=tuple(filings.records.values()),
             custody_count=custody_count,
@@ -403,7 +403,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             census_observation=census_observation,
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
-        return _build_workbench_generation_inputs(
+        return build_workbench_generation_inputs(
             observed_at=observed_at,
             account_session=account_session,
             calendar_inputs=calendar_inputs,
@@ -484,10 +484,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
-    ) -> _WorkbenchCalendarInputs:
+    ) -> WorkbenchCalendarInputs:
         aeat_evidence = (
-            _unbound_calendar_aeat_evidence()
-            if self.calendar_aeat_reader is None or _declared_tax_id(raw_values) is None
+            unbound_calendar_aeat_evidence()
+            if self.calendar_aeat_reader is None or declared_tax_id(raw_values) is None
             else self.calendar_aeat_reader()
         )
         aeat_projection = build_calendar_evidence_projection(
@@ -496,9 +496,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 value=LocalCalendarEvidenceSources(),
             ),
             aeat=aeat_evidence,
-            expected_tax_id=_declared_tax_id(raw_values),
+            expected_tax_id=declared_tax_id(raw_values),
         )
-        return _read_workbench_calendar_inputs(
+        return read_workbench_calendar_inputs(
             record=record,
             raw_values=raw_values,
             as_of=as_of,
@@ -508,7 +508,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             operation=operation,
             aeat_evidence=aeat_evidence,
             invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
-            memo=_CalendarMemo(
+            memo=CalendarMemo(
                 memory=self.capture_memory,
                 key=WorkbenchCalendarMemoKey(
                     profile_content_digest=record.content_digest,

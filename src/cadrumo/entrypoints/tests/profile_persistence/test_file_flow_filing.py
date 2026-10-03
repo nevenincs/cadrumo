@@ -12,11 +12,10 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionStateError,
-    ModeloRecordNotFoundError,
     ModeloWorkflowGateError,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
-from cadrumo.application.modelo.filing_actions import file_modelo_revision, get_filing_record, list_filing_records
+from cadrumo.application.modelo.filing_actions import file_modelo_revision, list_filing_records
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.workflow.abort import WorkflowAbortReason
@@ -33,6 +32,7 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecordStatus,
 )
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
@@ -537,7 +537,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
     assert refreshed_revision_two.state is CalculationRevisionState.PRESENTADO
 
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
-    refreshed_filing_one = get_filing_record(
+    refreshed_filing_one = persisted_filing_record(
         filing_one.filing_record_id,
         ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
@@ -804,16 +804,3 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
     )
 
     assert tuple(record.modelo for record in listed) == (ModeloCode("100"),)
-
-
-def test_get_filing_record_raises_on_missing_id(repos: Repos) -> None:
-    _, _, fr_repo, _, _ = repos
-    with pytest.raises(ModeloRecordNotFoundError) as excinfo:
-        get_filing_record(
-            "0" * 64,
-            ports=replace(
-                build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
-                filing_repository=fr_repo,
-            ),
-        )
-    assert excinfo.value.translated_message == "application.modelo.errors.filing_record_not_found"

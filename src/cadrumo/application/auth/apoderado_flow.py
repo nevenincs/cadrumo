@@ -27,7 +27,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ..flows.definition import locale_copy_ref as _locale_ref
-from .apoderado_service import ApoderadoConfiguration, ApoderadoService
 
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input
@@ -189,28 +188,6 @@ def apoderado_answers_from_state(state: FlowState) -> tuple[str, tuple[str, ...]
     return represented_nif, scope_tokens
 
 
-def run_apoderado_flow(
-    service: ApoderadoService,
-    *,
-    bucket_id: str,
-    input: Input | None = None,
-    output: Output | None = None,
-) -> ApoderadoConfiguration:
-    """Drive one apoderado door and persist its reviewed answer atomically.
-
-    The CLI supplies the real service and leaves prompt devices unbound for an
-    operator terminal. Headless callers bind real prompt-toolkit devices; the
-    same line frontend, flow validators, and service writer then execute with
-    no callback substitute or post-flow persistence step.
-    """
-    represented_nif, scope_tokens = collect_apoderado_flow_answers(service.catalogue, input=input, output=output)
-    return service.configure(
-        bucket_id=bucket_id,
-        represented_nif=represented_nif,
-        scope_tokens=scope_tokens,
-    )
-
-
 def collect_apoderado_flow_answers(
     catalogue: ApoderamientosCatalogue,
     *,
@@ -234,5 +211,4 @@ __all__ = [
     "apoderado_answers_from_state",
     "build_apoderado_flow_definition",
     "collect_apoderado_flow_answers",
-    "run_apoderado_flow",
 ]

@@ -21,7 +21,7 @@ from typing import Final
 
 import pytest
 
-from .._command_shared_contracts import (
+from ..command_shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,

@@ -224,16 +224,6 @@ def accepted_filing_period_codes() -> tuple[str, ...]:
     return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {AD_HOC_PERIOD_CODE}))
 
 
-def accepted_filing_period_patterns() -> tuple[str, ...]:
-    """Return human-readable patterns for the periods a :class:`Period` accepts."""
-    return (
-        "StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
-        "Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
-        "Ad-hoc (AD-HOC)",
-        "Event-driven (EVENT-N where N is an event-number integer, e.g. EVENT-3)",
-    )
-
-
 def _format_accepted_filing_period_set() -> str:
     """Format the filing-scoped accepted period set for error messages."""
     standard = sorted(_STANDARD_PERIOD_SET)
@@ -573,7 +563,6 @@ __all__ = [
     "RegistryPeriodCode",
     "StandardPeriodCode",
     "accepted_filing_period_codes",
-    "accepted_filing_period_patterns",
     "is_administrative_period_token",
     "is_filing_period_token",
     "is_symbolic_event_selector",

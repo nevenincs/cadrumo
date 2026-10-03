@@ -14,7 +14,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt
 from .bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportResult,
@@ -493,14 +493,3 @@ class ProfileLogoutOperationRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
-
-
-def build_profile_logout_operation_request(
-    profile_id: UUID,
-) -> OperationRequest[ProfileLogoutOperationRequest]:
-    """Build the sole typed strong-close request for an active profile."""
-    return OperationRequest(
-        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-        subject_ref=_profile_subject(str(profile_id)),
-        payload=ProfileLogoutOperationRequest(profile_id=profile_id),
-    )

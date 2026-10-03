@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from threading import get_ident
@@ -13,6 +14,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -220,43 +222,76 @@ def test_real_registry_compiles_and_request_threshold_keeps_legacy_bounds() -> N
             LedgerLlmDiagnosticsRequest(profile_id=_PROFILE, low_confidence_threshold=PublicDecimal(decimal=threshold))
 
 
-@pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT])
-def test_later_actions_replay_only_from_the_submitting_destination_and_frontend(action: AccessAction) -> None:
-    """Observing or reading a submission is bound to the origin that admitted it."""
-    registry = _registry()
-    destination = uuid4()
-    admitted = OperationAccessRequest(
-        profile_id=_PROFILE,
-        definition_id=_OPERATION_ID,
-        action=AccessAction.SUBMIT,
+def _submitted(
+    *,
+    profile_id: UUID = _PROFILE,
+    definition_id: str = _OPERATION_ID,
+    action: AccessAction = AccessAction.SUBMIT,
+    periods: frozenset[Period] = frozenset(),
+) -> OperationAccessRequest:
+    return OperationAccessRequest(
+        profile_id=profile_id,
+        definition_id=definition_id,
+        action=action,
         frontend=OperationFrontendProjection.MCP,
-        periods=frozenset(),
-        period_independent=True,
-        destination_id=destination,
+        periods=periods,
+        period_independent=not periods,
+        destination_id=uuid4(),
     )
 
-    def context(frontend: OperationFrontendProjection, destination_id: UUID) -> OperationAccessContext:
-        return OperationAccessContext(
-            profile_id=_PROFILE,
-            destination_id=destination_id,
-            action=action,
-            frontend=frontend,
-            contract=registry.lookup_public_contract(_OPERATION_ID),
-            published_authority=Availability.AVAILABLE,
-            admitted_request=admitted,
-        )
 
-    resolved = resolve_ledger_llm_diagnostics_access(
-        _access_request(), context(OperationFrontendProjection.MCP, destination)
+def _llm_context(
+    action: AccessAction, *, frontend: OperationFrontendProjection, admitted: OperationAccessRequest
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=action,
+        frontend=frontend,
+        contract=_registry().lookup_public_contract(_OPERATION_ID),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted,
     )
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+
+
+@pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT])
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.CLI])
+def test_later_actions_replay_the_admission_from_a_fresh_session_and_any_frontend(
+    action: AccessAction, frontend: OperationFrontendProjection
+) -> None:
+    """A later session has a new destination and may use another frontend; observation stays available."""
+    fresh = _llm_context(action, frontend=frontend, admitted=_submitted())
+    assert fresh.admitted_request is not None and fresh.admitted_request.destination_id != fresh.destination_id
+
+    resolved = resolve_ledger_llm_diagnostics_access(_access_request(), fresh)
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.destination_id == fresh.destination_id
+    assert resolved.policy.disclosures
+    assert all(item.destination_id == fresh.destination_id for item in resolved.policy.disclosures)
     for foreign in (
-        context(OperationFrontendProjection.CLI, destination),
-        context(OperationFrontendProjection.MCP, uuid4()),
+        _submitted(profile_id=_OTHER),
+        _submitted(definition_id="ledger.other"),
+        _submitted(action=AccessAction.START),
+        _submitted(periods=frozenset({Period.from_year_and_code(2026, "1T")})),
     ):
         with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_ledger_llm_diagnostics_access(_access_request(), foreign)
+            resolve_ledger_llm_diagnostics_access(
+                _access_request(), replace(fresh, admitted_request=foreign, authority_operation=_PIN)
+            )
         assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START])
+def test_entry_actions_need_held_authority_even_with_a_matching_admission(action: AccessAction) -> None:
+    context = _llm_context(action, frontend=OperationFrontendProjection.MCP, admitted=_submitted())
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_ledger_llm_diagnostics_access(_access_request(), context)
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    held = replace(context, authority_operation=_PIN)
+    assert resolve_ledger_llm_diagnostics_access(_access_request(), held).request.action is action
 
 
 def test_result_release_rejects_foreign_subject_and_terminal_effect() -> None:

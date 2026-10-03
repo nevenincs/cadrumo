@@ -27,8 +27,8 @@ from ....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from .._command_parameter_contracts import ArgumentSpec, OptionSpec
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
 from ..command_specs import COMMAND_GRAPH
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope

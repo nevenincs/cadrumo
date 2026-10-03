@@ -240,8 +240,6 @@ class VolatileEnrollmentRecipient:
                     return None
                 self._condition.wait(min(left, _CLOCK_RECHECK_SECONDS))
                 pending = self._pending
-            if pending is None:
-                raise AutomationCustodyError(AutomationCustodyCode.INVALID)
             pending.borrowed = True
             return pending.work
 

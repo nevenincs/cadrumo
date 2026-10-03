@@ -2,6 +2,10 @@
 
 from pathlib import Path
 from types import SimpleNamespace
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from playwright.async_api import Playwright
 
 import psutil
 import pytest
@@ -114,7 +118,7 @@ async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, m
             return SimpleNamespace(browser=FakeBrowser())
 
     session = BrowserSession(
-        playwright=SimpleNamespace(chromium=FakeChromium()),
+        playwright=cast("Playwright", SimpleNamespace(chromium=FakeChromium())),
         settings=Settings(
             cadrumo_local_storage_root=storage_root,
             cadrumo_chromium_data_root=managed_root,

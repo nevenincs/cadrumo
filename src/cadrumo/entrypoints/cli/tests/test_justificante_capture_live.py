@@ -30,9 +30,9 @@ from cadrumo.entrypoints.justificante_composition import (
 )
 
 from ....application.live.errors import LiveApplicationInputError
-from ....application.live.expedientes import capture_expedientes
+from ....application.live.expedientes import capture_expedientes_with_outcome
 from ....application.live.justificante import (
-    capture_justificante_snapshot,
+    capture_justificante_snapshot_outcome,
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....application.live.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
@@ -61,7 +61,7 @@ async def _fixture_persistence_guard() -> AsyncIterator[None]:
 async def _discover_filed_period(
     *, bucket_id: str, modelo: str, year: int, authority_operation: PinnedAuthorityOperation
 ) -> Period | None:
-    snapshot = await capture_expedientes(
+    outcome = await capture_expedientes_with_outcome(
         bucket_id=bucket_id,
         modelo=modelo,
         year=year,
@@ -72,7 +72,7 @@ async def _discover_filed_period(
         authority_operation=authority_operation,
         effect_guard=_fixture_persistence_guard,
     )
-    for declaration in snapshot.declarations:
+    for declaration in outcome.snapshot.declarations:
         if declaration.modelo == modelo:
             period = declaration.period
             assert period is None or isinstance(period, Period)
@@ -105,8 +105,8 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
             )
 
         try:
-            persisted = asyncio.run(
-                capture_justificante_snapshot(
+            outcome = asyncio.run(
+                capture_justificante_snapshot_outcome(
                     bucket_id=bucket_id,
                     modelo=_LIVE_MODELO,
                     year=year,
@@ -123,6 +123,7 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
             )
         except LiveApplicationInputError as exc:
             pytest.fail(f"live justificante capture could not resolve/pull the receipt: {exc}")
+    persisted = outcome.snapshot
 
     # Structural / relational assertions only.
     assert persisted.modelo == _LIVE_MODELO

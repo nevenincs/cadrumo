@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core.aggregation import BindingSourceKind
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.ids import (
     LegalRefId,
@@ -24,7 +25,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
 )
-from .verification_finding_contracts import ABSENT_FACT, OSS_AGGREGATION_SOURCE
+from .verification_finding_contracts import ABSENT_FACT
 
 if TYPE_CHECKING:
     pass
@@ -32,7 +33,9 @@ if TYPE_CHECKING:
 
 def m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ...]:
     """Select the revision’s declared OSS aggregation bindings."""
-    return tuple(binding for binding in snapshot.revision.bindings if binding.source is OSS_AGGREGATION_SOURCE)
+    return tuple(
+        binding for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+    )
 
 
 def m369_source_issue_finding(
@@ -45,11 +48,11 @@ def m369_source_issue_finding(
     unrouted_issues = tuple(
         issue
         for issue in target.source_issues
-        if issue.binding_source is OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
+        if issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
     )
     if unrouted_issues:
         return unrouted_oss_source_finding(unrouted_issues, legal_refs=legal_refs, source_refs=source_refs)
-    if any(ref.resolved_binding_source is OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
+    if any(ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for ref in target.source_provenance):
         return None
     return missing_oss_evidence_finding(legal_refs=legal_refs, source_refs=source_refs)
 

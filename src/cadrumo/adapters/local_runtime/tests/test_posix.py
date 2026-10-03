@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import os
 import socket
+import stat
 import struct
 import sys
 import tempfile
@@ -22,7 +23,10 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
+from cadrumo.core.config import load_settings
 from cadrumo.core.storage_environment import storage_directory
+from cadrumo.core.storage_materialization import ensure_storage_tree
+from cadrumo.tests.env_scope import derived_storage_settings
 
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
 from ..posix import posix_storage_identity
@@ -121,6 +125,53 @@ def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, n
     namespace.symlink_to(tmp_path, target_is_directory=True)
     with pytest.raises(RuntimeRefusalError):
         PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+
+
+def test_materialized_storage_admits_a_real_private_endpoint(namespace: Path) -> None:
+    """Fresh public storage materialization produces a usable native namespace."""
+    root = namespace.parent / "state"
+    assert not root.exists()
+    with derived_storage_settings(root):
+        settings = load_settings()
+        ensure_storage_tree(settings)
+        runtime_namespace = settings.cadrumo_runtime_socket_dir
+        assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o700
+        endpoint = PosixRuntimeEndpoint(storage_root=root, namespace=runtime_namespace)
+        try:
+            endpoint.listen()
+            client = endpoint.connect()
+            server = endpoint.accept()
+            try:
+                assert client.peer.os_owner_id == server.peer.os_owner_id
+                assert client.peer.process_id == server.peer.process_id == os.getpid()
+            finally:
+                client.close()
+                server.close()
+        finally:
+            endpoint.close()
+
+
+@pytest.mark.parametrize("explicit_override", [False, True])
+def test_materialization_preserves_an_insecure_namespace_for_native_refusal(
+    namespace: Path, explicit_override: bool
+) -> None:
+    """Provisioning never chmods a preexisting namespace into being trusted."""
+    root = namespace.parent / "state"
+    runtime_namespace = namespace if explicit_override else root / "runtime"
+    runtime_namespace.mkdir(parents=True, mode=0o755)
+    runtime_namespace.chmod(0o755)
+    sentinel = runtime_namespace / "operator-state"
+    sentinel.write_bytes(b"preserve")
+    with derived_storage_settings(root):
+        settings = load_settings()
+        if explicit_override:
+            settings = settings.model_copy(update={"cadrumo_runtime_socket_dir": runtime_namespace})
+        ensure_storage_tree(settings)
+        assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o755
+        assert sentinel.read_bytes() == b"preserve"
+        with pytest.raises(RuntimeRefusalError) as refused:
+            PosixRuntimeEndpoint(storage_root=root, namespace=runtime_namespace)
+        assert refused.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
 
 
 @pytest.mark.parametrize("substitution", ["namespace", "socket"])

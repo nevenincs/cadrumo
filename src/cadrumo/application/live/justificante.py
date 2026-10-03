@@ -1052,35 +1052,6 @@ class JustificanteCaptureOutcome:
         return self.filing_record.filing_record_id if self.filing_record is not None else None
 
 
-async def capture_justificante_snapshot(
-    *,
-    bucket_id: str,
-    modelo: str,
-    year: int,
-    period: Period,
-    service: JustificanteCaptureSnapshotService,
-    read_port: JustificanteLiveReadPort,
-    registration_ports: JustificanteRegistrationPorts,
-    verifier: JustificanteAuthenticityVerifierPort,
-    effect_guard: FiledEffectGuard | None = None,
-    authority_operation: PinnedAuthorityOperation | None = None,
-) -> JustificanteCaptureSnapshot:
-    """Capture and persist the official justificante for one filed work unit."""
-    outcome = await capture_justificante_snapshot_outcome(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        service=service,
-        read_port=read_port,
-        registration_ports=registration_ports,
-        verifier=verifier,
-        effect_guard=effect_guard,
-        authority_operation=authority_operation,
-    )
-    return outcome.snapshot
-
-
 async def capture_justificante_snapshot_outcome(
     *,
     bucket_id: str,
@@ -1138,7 +1109,6 @@ __all__ = [
     "JustificanteCaptureSnapshotNotFoundError",
     "JustificanteCaptureSnapshotRepository",
     "JustificanteCaptureSnapshotService",
-    "capture_justificante_snapshot",
     "capture_justificante_snapshot_outcome",
     "derive_justificante_capture_snapshot_id",
     "justificante_capture_snapshot_object_key",

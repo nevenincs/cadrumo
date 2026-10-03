@@ -31,7 +31,6 @@ from .....adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_GROUP_LENGTH,
     RECOVERY_CODE_SEPARATOR,
 )
-from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     profile_custody_recovery_envelope_path,
@@ -40,8 +39,9 @@ from .....application.user_profile.recovery_custody import profile_recovery_stat
 from .....core.bucket_pointer import require_active_bucket_id
 from .....core.i18n.render import tr
 from ... import command_specs as _command_specs
-from ..._command_parameter_contracts import ArgumentSpec
+from ...command_parameter_contracts import ArgumentSpec
 from ...tests.cli_runner import invoke_cached_cli
+from ...tests.runtime_profile_cli_fixture import native_cli_profile_scope, native_cli_profile_server
 from ...tests.scripted_registration_channels import scripted_registration_descriptors
 from ...verb_input_schema import build_verb_input_schemas, project_recovery_handoff_contract
 
@@ -50,6 +50,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 _ROTATED_CREDENTIAL_INPUT = "a-replacement-passphrase-after-reset"
 _PROFILE = "Recovery Operator"
+
+
+@contextmanager
+def _runtime_profile_storage(*, tmp_path: Path) -> Iterator[Path]:
+    """Isolate storage and serve a native runtime worker so login and custody verbs are admitted."""
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.storage_root.mkdir(parents=True, exist_ok=True)
+        fixture.scope.enter_context(native_cli_profile_server(fixture.storage_root))
+        yield fixture.storage_root
 
 
 def _creation_payload(credential: str = _CREDENTIAL_INPUT) -> str:
@@ -195,7 +204,7 @@ def _capturing_descriptors(
 
 def test_create_never_asks_a_machine_caller_about_recovery(tmp_path: Path) -> None:
     """A scripted create reports the skipped enrolment; the console offer never appears."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         created = _create_profile()
         document = json.loads(created.stdout)
         codes = [notice["code"] for notice in document["notices"]]
@@ -207,7 +216,7 @@ def test_create_never_asks_a_machine_caller_about_recovery(tmp_path: Path) -> No
 
 
 def test_headless_enable_persists_enrolment_after_verified_handoff(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         assert _status()["enrolled"] is False
 
@@ -225,7 +234,7 @@ def test_headless_enable_persists_enrolment_after_verified_handoff(tmp_path: Pat
 
 
 def test_a_second_enable_refuses_while_recovery_is_enrolled(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with scripted_registration_descriptors() as (handoff, verification):
             assert _enable(handoff, verification).exit_code == 0
@@ -241,7 +250,7 @@ def test_a_second_enable_refuses_while_recovery_is_enrolled(tmp_path: Path) -> N
 
 
 def test_enable_hands_over_a_grouped_code_that_never_reaches_the_streams(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             enabled = _enable(handoff, verification)
@@ -261,7 +270,7 @@ def test_enable_refuses_a_wrong_possession_proof_without_enrolling(tmp_path: Pat
         parsed["recovery_code"] = RECOVERY_CODE_SEPARATOR.join(groups)
         return json.dumps(parsed).encode() + b"\n"
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors(respond=swap_first_two_groups) as (handoff, verification, codes):
             refused = _enable(handoff, verification)
@@ -274,7 +283,7 @@ def test_enable_refuses_a_wrong_possession_proof_without_enrolling(tmp_path: Pat
 
 
 def test_enable_refuses_a_wrong_passphrase_before_handing_anything_over(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             refused = _enable(handoff, verification, credential="not-the-operator-passphrase")
@@ -289,7 +298,7 @@ def test_enable_refuses_a_wrong_passphrase_before_handing_anything_over(tmp_path
 
 def test_headless_enable_without_descriptors_refuses_without_enrolling(tmp_path: Path) -> None:
     """With no terminal and no descriptor pair there is nowhere safe to show the code."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         refused = invoke_cached_cli(
             ("--format", "json", "config", "profile", "recovery", "enable", "--secrets-stdin"),
@@ -322,7 +331,7 @@ def test_headless_enable_without_descriptors_refuses_without_enrolling(tmp_path:
 def test_descriptor_preflight_refuses_before_any_secret_is_read(
     tmp_path: Path, extra: tuple[str, ...], message_key: str
 ) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         refused = invoke_cached_cli(
             ("--format", "json", "config", "profile", "recovery", "enable", "--secrets-stdin", *extra),
@@ -338,7 +347,7 @@ def test_the_passphrase_descriptor_may_not_double_as_a_recovery_descriptor(tmp_p
     os.write(writer, json.dumps({"passphrase": _CREDENTIAL_INPUT}).encode())
     os.close(writer)
     try:
-        with isolated_profile_storage_root(tmp_path=tmp_path):
+        with _runtime_profile_storage(tmp_path=tmp_path):
             _create_profile()
             refused = invoke_cached_cli(
                 (
@@ -371,7 +380,7 @@ def test_unwritable_handoff_closes_both_descriptors_without_enrolling(tmp_path: 
     verification_reader, verification_writer = os.pipe()
     os.close(handoff_writer)
     os.close(verification_writer)
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         refused = _enable(handoff_reader, verification_reader)
         assert refused.exit_code != 0
@@ -382,7 +391,7 @@ def test_unwritable_handoff_closes_both_descriptors_without_enrolling(tmp_path: 
 
 
 def test_disable_removes_the_enrolment_and_is_idempotent(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with scripted_registration_descriptors() as (handoff, verification):
             assert _enable(handoff, verification).exit_code == 0
@@ -403,7 +412,7 @@ def test_disable_removes_the_enrolment_and_is_idempotent(tmp_path: Path) -> None
 
 
 def test_disable_refuses_a_wrong_passphrase_and_keeps_the_enrolment(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with scripted_registration_descriptors() as (handoff, verification):
             assert _enable(handoff, verification).exit_code == 0
@@ -418,7 +427,7 @@ def test_disable_refuses_a_wrong_passphrase_and_keeps_the_enrolment(tmp_path: Pa
 
 def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: Path) -> None:
     """The whole point of the code: a reset proved by it opens the profile under the new passphrase."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             assert _enable(handoff, verification).exit_code == 0
@@ -460,7 +469,7 @@ def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: 
 
 
 def test_reset_accepts_the_code_with_cosmetic_spacing_and_case_differences(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             assert _enable(handoff, verification).exit_code == 0
@@ -473,7 +482,7 @@ def test_reset_accepts_the_code_with_cosmetic_spacing_and_case_differences(tmp_p
 
 
 def test_reset_refuses_a_wrong_code_and_keeps_the_current_passphrase(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             assert _enable(handoff, verification).exit_code == 0
@@ -492,7 +501,7 @@ def test_reset_refuses_a_wrong_code_and_keeps_the_current_passphrase(tmp_path: P
 
 
 def test_reset_refuses_a_malformed_code_without_touching_the_capsule(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with scripted_registration_descriptors() as (handoff, verification):
             assert _enable(handoff, verification).exit_code == 0
@@ -505,7 +514,7 @@ def test_reset_refuses_a_malformed_code_without_touching_the_capsule(tmp_path: P
 
 
 def test_reset_refuses_a_profile_without_recovery(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         refused = _reset(_PROFILE, code="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA-AAAAA")
         assert refused.exit_code != 0
@@ -517,7 +526,7 @@ def test_reset_refuses_a_profile_without_recovery(tmp_path: Path) -> None:
 
 
 def test_reset_refuses_a_mismatched_confirmation_without_consulting_the_code(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             assert _enable(handoff, verification).exit_code == 0
@@ -541,7 +550,7 @@ def test_reset_refuses_a_mismatched_confirmation_without_consulting_the_code(tmp
 
 
 def test_reset_refuses_an_unknown_profile_before_reading_the_payload(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         _create_profile()
         refused = _reset("No Such Profile", code="AAAAA-AAAAA-AAAAA-AAAAA-AAAAA-AAAAA")
         assert refused.exit_code != 0
@@ -549,7 +558,7 @@ def test_reset_refuses_an_unknown_profile_before_reading_the_payload(tmp_path: P
 
 
 def test_recovery_verbs_refuse_without_an_active_profile(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with _runtime_profile_storage(tmp_path=tmp_path):
         status = invoke_cached_cli(("--format", "json", "config", "profile", "recovery", "status"))
         assert status.exit_code != 0
         assert json.loads(status.stderr)["error"]["message"] == tr("cli.config.errors.no_active_profile")

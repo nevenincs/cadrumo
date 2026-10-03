@@ -1342,3 +1342,56 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
     )
     with pytest.raises(InternalInvariantError, match="changed during capture"):
         door.read_workbench_generation_inputs()
+
+
+def test_a_resident_s_holiday_territory_survives_the_registered_result_round_trip(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A resident's calendar names its territory and still crosses the operation boundary.
+
+    The registered read projects the generation, stores it as JSON and the
+    frontend restores it with no pinned authority; a calendar row carrying the
+    territory must survive both legs with its meaning intact.
+    """
+    from uuid import UUID
+
+    from ..workbench_generation_projection import (
+        WorkbenchGenerationOperationProjection,
+        project_workbench_generation,
+        restore_workbench_generation,
+    )
+
+    record = create_user_profile_record(
+        context=authority_operation.profile_create_context(),
+        profile_id=_PROFILE_ID,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+        ),
+    )
+    generation = InstalledWorkbenchGenerationProviderV1(
+        _plain_generation_door(authority_operation, profile=_Repository(record))
+    )()
+    calendar = generation.declarations_calendar.projection
+    assert calendar is not None
+    assert "ES-MD" in {row.holiday_territory for row in calendar.entries}
+
+    public = project_workbench_generation(UUID(_PROFILE_ID), generation)
+    decoded = WorkbenchGenerationOperationProjection.model_validate_json(public.model_dump_json(), strict=True)
+    restored = restore_workbench_generation(decoded)
+
+    assert restored == generation
+    assert restored.declarations_calendar.projection is not None
+    assert restored.declarations_calendar.projection.entries == calendar.entries

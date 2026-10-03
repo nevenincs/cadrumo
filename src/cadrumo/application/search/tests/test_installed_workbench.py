@@ -64,7 +64,7 @@ from ...modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceResolvedTargetV1,
 )
-from ..installed_workbench import InstalledWorkbenchSearchInputsV1, assemble_installed_workbench_search_snapshot
+from ..installed_workbench import assemble_installed_workbench_search_snapshot
 from ..workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
@@ -261,7 +261,7 @@ def _modelo() -> ModeloWorkspaceProjectionV1:
 
 def test_snapshot_has_one_redacted_document_per_current_searchable_projection() -> None:
     """Current workspace rows become safe documents without retaining private IDs."""
-    inputs = InstalledWorkbenchSearchInputsV1(
+    snapshot = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),
         aeat_sync=_aeat_sync(),
@@ -270,7 +270,6 @@ def test_snapshot_has_one_redacted_document_per_current_searchable_projection() 
         declarations_admission=_admission("workbench.declarations"),
         aeat_sync_admission=_admission("workbench.aeat_sync"),
     )
-    snapshot = inputs.snapshot()
 
     assert tuple(document.kind for document in snapshot.documents) == (
         WorkbenchSearchKind.LEDGER_ENTRY,
@@ -355,7 +354,7 @@ def test_an_entry_is_findable_by_the_words_the_operator_would_actually_recall() 
     addressing, nobody types 64 hex characters, and it remains a secret
     identity basis excluded from serialization.
     """
-    inputs = InstalledWorkbenchSearchInputsV1(
+    service = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),
         aeat_sync=_aeat_sync(),
@@ -363,8 +362,7 @@ def test_an_entry_is_findable_by_the_words_the_operator_would_actually_recall() 
         ledger_admission=_admission("workbench.ledger"),
         declarations_admission=_admission("workbench.declarations"),
         aeat_sync_admission=_admission("workbench.aeat_sync"),
-    )
-    service = inputs.snapshot().service()
+    ).service()
 
     for query in ("Suministros Delta SL", "Material de oficina", "1250.00"):
         response = service.search(WorkbenchSearchRequest(query=query))

@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -35,7 +36,6 @@ from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from .preconditions import ModeloPreconditionFailure
 from .verification_finding_contracts import (
-    OSS_AGGREGATION_SOURCE,
     REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
     REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
 )
@@ -236,7 +236,7 @@ def append_oss_verification_finding(
     unrouted_issue_count = sum(
         1
         for issue in target.source_issues
-        if issue.binding_source is OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
+        if issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
     )
     is_unrouted = unrouted_issue_count > 0
     failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(

@@ -102,7 +102,7 @@ def resolve_irpf_income_category_catalogue(
     """Resolve all six income categories from fact 0128."""
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     definitions: list[IrpfIncomeCategoryDefinition] = []
-    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, refuse_empty=False):
+    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IrpfIncomeCategory(raw_token, _registry_validated=True)
         prefix = f"{_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:

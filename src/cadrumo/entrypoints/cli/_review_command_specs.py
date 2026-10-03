@@ -7,8 +7,8 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     DeferredTarget,
@@ -18,7 +18,7 @@ from ._command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from ._command_shared_contracts import translation_key as _key
+from .command_shared_contracts import translation_key as _key
 from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)

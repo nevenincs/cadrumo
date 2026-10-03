@@ -304,22 +304,6 @@ def require_bien_inversion_disposal_regime(
     ).require_disposal_regime(value)
 
 
-def bien_inversion_disposal_regime_choices(
-    *,
-    effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-) -> tuple[BienInversionDisposalRegime, ...]:
-    """Return disposal-regime choices in registry order.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
-    """
-    return resolve_bienes_inversion_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).disposal_regime_choices
-
-
 def minimum_bien_inversion_acquisition_year(
     *,
     effective_date: date | None = None,
@@ -382,7 +366,6 @@ __all__ = [
     "BienInversionCatalogue",
     "BienInversionDisposalRegimeDefinition",
     "BienInversionKindDefinition",
-    "bien_inversion_disposal_regime_choices",
     "is_bien_inversion_disposal_regime",
     "is_bien_inversion_kind",
     "minimum_bien_inversion_acquisition_year",

@@ -25,7 +25,8 @@ from ....domain.calculations.registry.governed_fact_scope import (
     outside_governed_fact_validation,
 )
 from .._command_runtime import GOVERNED_FACT_SCOPE_CAPABILITIES, build_command_app, runs_in_governed_fact_scope
-from .._command_shared_contracts import (
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import (
     Capability,
     DeferredTarget,
     LazyBinding,
@@ -34,7 +35,6 @@ from .._command_shared_contracts import (
     SchemaState,
     TranslationKey,
 )
-from ..command_graph import CommandSpecGraph
 from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ..command_specs import COMMAND_GRAPH
 

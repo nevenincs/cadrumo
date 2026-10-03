@@ -19,7 +19,7 @@ from .iva_schema_vocabulary_source import (
     UNIQUE_TOKENS_REQUIREMENT,
     resolve_scoped_schema_entries,
 )
-from .iva_schema_vocabulary_tokens import _require_token
+from .iva_schema_vocabulary_tokens import require_token
 
 _REGIME_ORDER_KEY = "iva_regime.order"
 
@@ -69,7 +69,7 @@ class IvaRegimeCatalogue:
 
     def require(self, value: object) -> IVARegime:
         """Validate and return one registry-declared IVA regime."""
-        return _require_token(value, IVARegime, self.all_regimes, "IVA regime")
+        return require_token(value, IVARegime, self.all_regimes, "IVA regime")
 
     def definition(self, value: object) -> IvaRegimeDefinition:
         """Return the registry definition for one IVA regime."""

@@ -272,7 +272,12 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         else:
             review.update("")
         log_widget = self.query_one("#operation-modal-log", Static)
-        log_widget.update("\n".join(tr(row.code) for row in self._log_view.rows))
+        log_widget.update(
+            "\n".join(
+                f"{tr(row.code)}: {row.display_code}" if row.display_code is not None else tr(row.code)
+                for row in self._log_view.rows
+            )
+        )
         self.query_one("#btn-operation-cancel", Button).disabled = not view_model.cancel_control_enabled
         self.query_one("#btn-operation-detach", Button).disabled = not view_model.detach_control_enabled
         apply_enabled = isinstance(interaction, OperationModalReviewInteractionV1) and interaction.apply_enabled

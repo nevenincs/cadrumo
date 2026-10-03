@@ -66,7 +66,7 @@ from .overview.home import (
 )
 from .overview.next_actions import declare_next_action
 from .search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
-from .workbench_generation_calendar import _WorkbenchCalendarInputs
+from .workbench_generation_calendar import WorkbenchCalendarInputs
 from .workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
@@ -399,11 +399,11 @@ def _source_admission(
     return _generation_admission(destination, WorkbenchDestinationAdmissionState.AVAILABLE)
 
 
-def _build_workbench_generation_inputs(
+def build_workbench_generation_inputs(
     *,
     observed_at: UtcInstant,
     account_session: HomeAccountSession,
-    calendar_inputs: _WorkbenchCalendarInputs,
+    calendar_inputs: WorkbenchCalendarInputs,
     ledger: LedgerWorkspaceProjectionV1 | None,
     declarations: DeclarationsWorkspaceProjectionV1 | None,
     aeat_sync: AeatSyncWorkspaceProjectionV1 | None,
@@ -412,6 +412,7 @@ def _build_workbench_generation_inputs(
     work_units: WorkUnitCatalogue,
     verification: VerificationReportCatalogue | None,
 ) -> WorkbenchGenerationInputsV1:
+    """Assemble measured workspace projections into the canonical generation input."""
     return WorkbenchGenerationInputsV1(
         assembled_at=observed_at,
         home=WorkbenchGenerationSourceResultV1[HomeProjectionInput].available(

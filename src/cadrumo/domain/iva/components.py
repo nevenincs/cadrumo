@@ -27,13 +27,13 @@ from ..calculations.registry.iva_category_catalogue import (
     resolve_iva_category_catalogue,
 )
 from ._component_fact_projection import (
-    _component_vocabulary_from_entries,
-    _cuota_settlement_catalogue_from_entries,
-    _resolve_component_catalogue_entries,
+    component_vocabulary_from_entries,
+    cuota_settlement_catalogue_from_entries,
+    resolve_component_catalogue_entries,
 )
 from ._component_row_projection import (
-    _category_projection_from_entries,
-    _project_component_catalogue,
+    category_projection_from_entries,
+    project_component_catalogue,
 )
 from .classification import InvoiceKind
 from .errors import IvaValidationError
@@ -536,14 +536,14 @@ def registry_cuota_settlement_catalogue(
         raise IvaValidationError(
             "IVA cuota-settlement catalogue requires an explicit authority operation or scope",
         )
-    entries = _resolve_component_catalogue_entries(
+    entries = resolve_component_catalogue_entries(
         effective_date=selected_date,
         authority=authority,
     )
-    return _cuota_settlement_catalogue_from_entries(entries)
+    return cuota_settlement_catalogue_from_entries(entries)
 
 
-def _component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
+def component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
     entries: Mapping[str, str],
     *,
     key: str,
@@ -575,11 +575,11 @@ def registry_component_vocabulary(
         raise IvaValidationError(
             "IVA component vocabulary requires an explicit authority operation or scope",
         )
-    entries = _resolve_component_catalogue_entries(
+    entries = resolve_component_catalogue_entries(
         effective_date=selected_date,
         authority=authority,
     )
-    return _component_vocabulary_from_entries(entries)
+    return component_vocabulary_from_entries(entries)
 
 
 def registry_component_presence_token(
@@ -639,11 +639,11 @@ def registry_category_projection(
         raise IvaValidationError(
             "IVA category projection requires an explicit authority operation or scope",
         )
-    entries = _resolve_component_catalogue_entries(
+    entries = resolve_component_catalogue_entries(
         effective_date=selected_date,
         authority=authority,
     )
-    return _category_projection_from_entries(
+    return category_projection_from_entries(
         entries,
         projection,
         resolve_iva_category_catalogue(effective_date=selected_date, authority=authority),
@@ -667,7 +667,7 @@ def registry_component_catalogue(
         raise IvaValidationError(
             "IVA component catalogue requires an explicit authority operation or scope",
         )
-    return _project_component_catalogue(effective_date=selected_date, authority=authority)
+    return project_component_catalogue(effective_date=selected_date, authority=authority)
 
 
 def category_components(

@@ -853,11 +853,13 @@ sheets:
       ascendants_under_75_whole: Ascendientes < 75 años (enteros)
       asset_class_code: Clave del bien
       asset_identifier: Identificación del bien
+      asset_ref: Referencia interna del bien
       base_imponible: Base imponible
       base_imponible_assigned: Base imponible atribuida
       base_retenciones: Base de retenciones e ingresos a cuenta
       block: Bloque
       cadastral_reference: Referencia catastral
+      cash_accounting_mark: Criterio de caja
       clave: Clave
       clave_codigo: Clave código
       clave_declarado: Clave de titularidad del inmueble
@@ -866,6 +868,7 @@ sheets:
       codigo_cuenta: Código cuenta valores / n.º operación préstamo
       codigo_emisor: Código emisor
       codigo_provincia: Código de provincia
+      community_vat_number: NIF del operador comunitario
       compensaciones: Compensaciones
       complement: Complemento del domicilio
       complemento_infancia_clave: Complemento de ayuda a la infancia
@@ -877,6 +880,7 @@ sheets:
       counterparty_tax_id: NIF de la contraparte
       country_code: Código de país
       currency_code: Código de divisa
+      declarado_tax_id: NIF del declarado
       deduction_percentage: Porcentaje de deducción
       descendants_disabled_33_65_total: Descendientes con discapacidad 33-65% (total)
       descendants_disabled_33_65_whole: Descendientes con discapacidad 33-65% (enteros)
@@ -973,6 +977,7 @@ sheets:
       portal: Portal
       postal_code: Código postal
       province_code: Provincia
+      provincia_code: Código de provincia
       recipient_province_code: Código de provincia del perceptor
       rectified_base_previous: Base imponible anterior (rectificación)
       rectified_period: Periodo rectificado
@@ -987,8 +992,10 @@ sheets:
       rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
       representative_nif: NIF del representante
       representative_tax_id: NIF del representante legal
+      residence_country_code: Código de país de residencia
       retencion_amount: Importe de la retención
       retencion_practicada: Retención practicada
+      reverse_charge_mark: Inversión del sujeto pasivo
       second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
       situacion_inmueble: Situación del inmueble
@@ -1010,6 +1017,8 @@ sheets:
       transfer_pricing_method_code: Método de valoración
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
       valuation_amount: Valoración
+      valuation_event: Evento de valoración
+      valuation_event_date: Fecha del evento de valoración
       withholding_percentage: Porcentaje de retención
 topic:
   authentication:

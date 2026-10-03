@@ -36,7 +36,6 @@ from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
@@ -304,7 +303,9 @@ class OverviewCalendarEntry(BaseModel):
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
     jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
     holiday_coverage: _DeadlineHolidayCoverage
-    holiday_territory: _CalendarCCAA | None = None
+    # Text of the already-projected calendar territory: the CLI and TUI restore
+    # this row from its snapshot without a pinned authority to re-project it.
+    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None

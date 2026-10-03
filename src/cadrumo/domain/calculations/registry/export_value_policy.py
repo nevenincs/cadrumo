@@ -346,10 +346,14 @@ def _project_full_year(value: object) -> str:
         raw = f"{value.year:04d}"
     elif isinstance(value, int):
         raw = str(value)
+    elif isinstance(value, Decimal) and value.is_finite() and value == value.to_integral_value():
+        raw = str(int(value))
     elif isinstance(value, str):
         raw = value
     else:
-        raise RegistryValidationError("four-digit-year export value must be an integer or ASCII digit string")
+        raise RegistryValidationError(
+            "four-digit-year export value must be an integer, an integral Decimal or an ASCII digit string",
+        )
     _validate_full_year(raw)
     return raw
 

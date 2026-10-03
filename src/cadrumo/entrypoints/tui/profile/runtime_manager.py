@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 
@@ -14,9 +15,13 @@ from ....adapters.local_runtime.profile_mutations import (
 )
 from ....application.auth.operation_definitions import AuthConfigureOperationRequest
 from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
+from ....application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
 from ....application.operations.registry import OperationFrontendProjection
+from ....application.operator_actions.models import ActionReference
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
+from ....application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
+from ....application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
 from ....application.user_profile.completeness import AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH
 from ....application.user_profile.overview import ProfileOverview
 from ....application.user_profile.profile_operation_contracts import (
@@ -37,9 +42,15 @@ from ....application.user_profile.profile_operation_contracts import (
 )
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from ....core.config import load_settings
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
+from ....core.operations import OperationTerminalCondition
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
+from ..aeat_sync.models import AeatSyncOperationRequestV1
+from ..aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
+from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .overview import ProfileManagerScreen
 from .runtime_auth_configuration import configure_runtime_auth
 from .runtime_errors import ProfileManagerCompletedViewUnavailableError
@@ -333,6 +344,57 @@ class RuntimeProfileManagerComposition:
         """Read the first overview before the screen enters Textual's event loop."""
         return self.compose_from_overview(self._overview())
 
+    async def _launch_source(self, source: ProfileAcquisitionSourceV1) -> None:
+        """Run onboarding acquisition through the same admitted workbench doors."""
+        self._pin()
+        screen = self.screen
+        if screen is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if source.key is ProfileAcquisitionSourceKey.CENSAL_REVIEW:
+            request = AeatSyncOperationRequestV1(
+                action=ActionReference(action_id="operator.profile.edit"),
+                operation=CENSAL_OPERATION_DEFINITION_ID,
+            )
+        else:
+            request = AeatSyncOperationRequestV1(
+                action=ActionReference(action_id="operator.live.filed.pull_all"),
+                operation=FILED_HISTORY_OPERATION_DEFINITION_ID,
+            )
+        screen.disabled = True
+        try:
+            handoff, _ = await asyncio.to_thread(
+                compose_runtime_aeat_sync_handoff,
+                self.client,
+                output_root=load_settings().cadrumo_filed_declarations_dir,
+            )
+            self._pin()
+            if handoff is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            controller = await handoff(request)
+            screen.app.push_screen(OperationModal(controller), self._source_settled)
+        except Exception:
+            # Runtime diagnostics can carry private provider evidence.
+            screen.notify(tr("tui.aeat_sync.operation.failed"), severity="error")
+        finally:
+            screen.disabled = False
+
+    async def _source_settled(self, outcome: OperationModalOutcomeV1 | None) -> None:
+        """Read persisted profile facts again after a successful acquisition."""
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        screen = self.screen
+        if screen is None:
+            return
+        if outcome.view_model.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+            screen.notify(outcome.error_explanation or tr("tui.aeat_sync.operation.failed"), severity="error")
+            return
+        try:
+            updated = await asyncio.to_thread(self._overview)
+            self._pin()
+            await screen._apply_overview(updated)
+        except Exception:
+            screen.notify(tr("tui.aeat_sync.operation.failed"), severity="error")
+
     def compose_from_overview(self, overview: ProfileOverview) -> ProfileManagerScreen:
         """Bind an already read exact-profile overview without blocking the UI."""
         self._pin()
@@ -348,21 +410,12 @@ class RuntimeProfileManagerComposition:
             list_plantilla_media=self._list_plantilla_media,
             set_plantilla_media=self._set_plantilla_media,
             remove_plantilla_media=self._remove_plantilla_media,
+            launch_source=self._launch_source,
         )
         self.screen = screen
         return screen
 
 
-def compose_runtime_profile_manager(
-    client: RuntimeFrontendClient, *, profile_label: str, output_language: OutputLanguage
-) -> ProfileManagerScreen:
-    """Compose an exact-session manager before entering the Textual loop."""
-    return RuntimeProfileManagerComposition(
-        client, profile_label=profile_label, output_language=output_language
-    ).compose()
-
-
 __all__ = [
     "RuntimeProfileManagerComposition",
-    "compose_runtime_profile_manager",
 ]

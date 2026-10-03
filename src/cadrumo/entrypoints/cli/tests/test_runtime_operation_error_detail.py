@@ -44,6 +44,8 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
+    OperationPublicEventV1,
+    OperationPublicNoticeEventV1,
     OperationPublicPhaseEventV1,
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
@@ -51,7 +53,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus, PublicReplayStatus
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
@@ -68,6 +70,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.entrypoints.cli.errors import (
     CliOperationStillRunningError,
@@ -75,7 +78,9 @@ from cadrumo.entrypoints.cli.errors import (
     CliRecordedOperationError,
     CliUnexpectedBoundaryError,
 )
+from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationProgress
 from cadrumo.entrypoints.cli.registered_operation_errors import submitted_operation_error
+from cadrumo.entrypoints.cli.registered_operation_observations import wait_registered_settlement
 from cadrumo.entrypoints.cli.runtime_registered_operation import run_registered_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -324,3 +329,129 @@ def test_a_record_fault_detail_keeps_the_outbound_payload_classification() -> No
     assert error.context is not None
     assert error.context["failing_record"] == "BucketEvent"
     assert error.terminal_precondition_verdict is None
+
+
+def _notice(sequence: int, notice_code: str, display_code: str | None = None) -> OperationPublicNoticeEventV1:
+    return OperationPublicNoticeEventV1(
+        revision=2,
+        sequence=sequence,
+        timestamp=_NOW,
+        code=notice_code,
+        notice_code=notice_code,
+        display_code=display_code,
+    )
+
+
+class _NoticeWire:
+    """A runtime observation port that answers each poll with one scripted event page."""
+
+    session_id = _SESSION
+
+    def __init__(self) -> None:
+        self.public_contract = _contract()
+        self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
+        self.requested_cursors: list[int] = []
+        # (requested cursor, anchor, status, events, restart cursor, terminal)
+        self.script: list[tuple[int, int, PublicReplayStatus, tuple[OperationPublicEventV1, ...], int | None, bool]] = [
+            (
+                0,
+                2,
+                OperationReplayStatus.PAGE,
+                (_notice(1, "operation.started"), _notice(2, "auth.clave-movil.approval-pending", "YLL")),
+                None,
+                False,
+            ),
+            (2, 2, OperationReplayStatus.CAUGHT_UP, (), None, False),
+            # Sequence 3 was compacted away; the CLI resumes at the restart cursor and never sees it.
+            (2, 4, OperationReplayStatus.COMPACTED, (), 3, False),
+            (
+                3,
+                5,
+                OperationReplayStatus.PAGE,
+                (_notice(4, "auth.clave-movil.qr-scan-pending"), _notice(5, "auth.clave-movil.unregistered")),
+                None,
+                True,
+            ),
+        ]
+
+    def __call__(self, request: RuntimeOperationRequest) -> RuntimeOperationReply:
+        assert isinstance(request, RuntimeOperationObserve)
+        self.requested_cursors.append(request.observation.after_cursor)
+        requested, anchor, status, events, restart, terminal = self.script.pop(0)
+        assert request.observation.after_cursor == requested
+        projection = OperationPublicProjectionV1(
+            operation_id=_OPERATION,
+            definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            subject_ref=_WORK_UNIT,
+            revision=3 if terminal else 2,
+            anchor_cursor=anchor,
+            definition_contract=self.public_contract,
+            contract_set_digest=self.contract_set_digest,
+            lifecycle=OperationLifecycle.TERMINAL if terminal else OperationLifecycle.RUNNING,
+            terminal_condition=OperationTerminalCondition.SUCCEEDED if terminal else None,
+            effect=OperationEffect.NONE,
+            phase_code=None,
+            started_at=_NOW,
+            updated_at=_NOW,
+            progress=None,
+            close_policy=self.public_contract.close_policy,
+            cancellation=self.public_contract.cancellation,
+            cancellable_now=False,
+            cancellation_requested=False,
+            cancellation_acknowledged=False,
+            execution_deadline_at=None,
+            cleanup_deadline_at=None,
+            pending_interaction=OperationNoPendingInteractionV1(),
+            result_ref="sha256:" + "e" * 64 if terminal else None,
+            refusal_ref=None,
+            failure_error_code=None,
+            diagnostic_ref=None,
+        )
+        next_cursor = events[-1].sequence if events else (restart if restart is not None else anchor)
+        page = OperationPublicEventPageV1(
+            operation_id=_OPERATION,
+            anchor_cursor=anchor,
+            requested_cursor=requested,
+            status=status,
+            events=events,
+            next_cursor=next_cursor,
+            restart_cursor=restart,
+        )
+        return RuntimeOperationObserved(
+            request_id=request.request_id,
+            runtime_boot_id=_PROFILE,
+            connection_id=_SESSION,
+            observation=OperationObservationSuccessV1(projection=projection, event_page=page),
+        )
+
+
+def test_settlement_wait_prompts_each_known_operation_notice_once_on_stderr(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The worker's Cl@ve prompt reaches the operator; unknown notices and stdout stay silent."""
+    monkeypatch.setattr("cadrumo.entrypoints.cli.registered_operation_observations.time.sleep", lambda _s: None)
+    wire = _NoticeWire()
+    state, review = wait_registered_settlement(
+        cast(RuntimeFrontendClient, wire),
+        _OPERATION,
+        _PROFILE,
+        _SESSION,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        _WORK_UNIT,
+        wire.public_contract,
+        float("inf"),
+        None,
+        RegisteredOperationProgress(),
+        None,
+        wire,
+    )
+
+    assert review is None
+    assert state.lifecycle is OperationLifecycle.TERMINAL
+    assert wire.requested_cursors == [0, 2, 2, 3]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    approval = tr("cli.common.operation_notices.clave_movil_approval_pending_with_code", code="YLL")
+    scan = tr("cli.common.operation_notices.clave_movil_qr_scan_pending")
+    assert "YLL" in approval
+    assert captured.err == f"{approval}\n{scan}\n"

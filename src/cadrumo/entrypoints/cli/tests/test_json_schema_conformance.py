@@ -30,7 +30,7 @@ from typing import Final
 import pytest
 
 from ....core.json_contract import SchemaEnvelope
-from .._command_shared_contracts import SchemaState
+from ..command_shared_contracts import SchemaState
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -119,7 +119,7 @@ def test_every_parameter_annotation_is_a_deferred_target() -> None:
     Derived from the live graph rather than a list of the specs that were
     wrong, so a spec added tomorrow is covered without anyone extending it.
     """
-    from .._command_shared_contracts import DeferredTarget
+    from ..command_shared_contracts import DeferredTarget
     from ..command_specs import COMMAND_GRAPH
 
     specs = COMMAND_GRAPH.by_key()

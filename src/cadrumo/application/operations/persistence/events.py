@@ -12,6 +12,7 @@ from ....core.hex import Hex64Str
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEffect, OperationEventKind
+from ....core.operator_progress import OperatorDisplayCode
 from ....core.time.utc import validate_utc_aware
 from ..events import OperationEventCode, OperationEventSequence, OperationLogSeverity
 from ..models import (
@@ -79,10 +80,16 @@ class OperationEffectEvent(_OperationEventBase):
 
 
 class OperationNoticeEvent(_OperationEventBase):
-    """Stable notice identity; localized message text is a projection."""
+    """Stable notice identity; localized message text is a projection.
+
+    ``display_code`` is the one non-identity value a notice may carry: a short
+    code the operator compares against another screen, typed so it cannot hold
+    free text.
+    """
 
     kind: Literal[OperationEventKind.NOTICE] = OperationEventKind.NOTICE
     notice_code: OperationEventCode
+    display_code: OperatorDisplayCode | None = None
 
 
 class OperationReconciliationEvent(_OperationEventBase):

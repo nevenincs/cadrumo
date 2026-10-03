@@ -45,7 +45,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.invoice_bindings import CollectibleInvoiceProvider
+from ...domain.calculations.registry.invoice_bindings import M349IntracommunityOperationProvider
 from ...domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
@@ -513,11 +513,11 @@ def drop_row_field_template_outputs(
 
 
 def _detail_summary_bindings(revision: ModeloRevision) -> dict[tuple[str, str], BindingId]:
-    """Select collectible invoice summary providers in declaration order."""
+    """Select the M349 intra-community summary providers in declaration order."""
     summary_bindings: dict[tuple[str, str], BindingId] = {}
     for binding in revision.bindings:
         provider = binding.provider
-        if not isinstance(provider, CollectibleInvoiceProvider):
+        if not isinstance(provider, M349IntracommunityOperationProvider):
             continue
         if provider.record is not None:
             continue

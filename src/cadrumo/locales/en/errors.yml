@@ -981,6 +981,10 @@ errors:
       available catalogue.
     refused_application_live_input: The live AEAT read request cannot be executed
       with the input provided.
+    refused_application_live_nif_iva_certificate_required: 'AEAT only answers NIF-IVA
+      checks for certificate logins, and Cadrumo can''t log in with a certificate
+      for this check yet. Check the NIF-IVA in the European Commission''s VIES service:
+      https://ec.europa.eu/taxation_customs/vies/'
     refused_auth_certificate_source_not_found: The named certificate source is not
       registered.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does

@@ -52,8 +52,9 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from dev._paths import AUTHORITY_ROOT_ENV, prepare_temporary_directory
+from dev._paths import AUTHORITY_ROOT_ENV
 from dev.product_environment import ambient_product_settings_removed
 
 from ._locale_chrome import docs_chrome
@@ -210,7 +211,7 @@ def _rst_heading(text: str, char: str) -> str:
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
-    from cadrumo.entrypoints.cli._command_parameter_contracts import ArgumentSpec
+    from cadrumo.entrypoints.cli.command_parameter_contracts import ArgumentSpec
     from cadrumo.entrypoints.cli.command_spec import CommandSpec
 
     if not isinstance(spec, CommandSpec):

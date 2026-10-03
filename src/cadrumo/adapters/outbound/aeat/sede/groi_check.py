@@ -35,25 +35,22 @@ samples captured 2026-05-07.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from playwright.async_api import Page
 
-from pydantic import AnyUrl, Field
+from pydantic import Field
 
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError
 from .....core.identity_check_verdict import IdentityCheckVerdictValue
 from .....core.logging import get_logger
-from .....domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
-    RemoteOperation,
     RemoteStateGuardPolicy,
 )
 from .....domain.calculations.registry.schema_base import EvidenceTier
@@ -67,8 +64,6 @@ from ._adapter_utils import (
     assert_read_landing,
     extract_marker_verdict,
     make_locate_helper,
-    nif_check_operation_tail,
-    registry_failure_message,
     require_playwright_page,
 )
 from ._browser_constants import (
@@ -192,116 +187,6 @@ class GroiResult(_SedeCheckerModel):
     """Aggregate live-driver result across every declared Spanish NIF."""
 
     observations: tuple[GroiNifVerdict, ...] = ()
-
-
-class GroiSedeDriver:
-    """Live AEAT GROI driver backed by the central BrowserSession surface.
-
-    The driver navigates directly to the form servlet (the surface is
-    reachable post cl@ve-movil auth without an intermediate sede entry
-    page) and queries each declared NIF in alphabetical order. Verdict
-    parsing keys off the AEAT certification phrases captured live.
-    """
-
-    def __init__(self, *, settings: Settings | None = None) -> None:
-        """Initialise the driver with optional ``Settings`` override.
-
-        Args:
-            settings: If ``None``, the driver resolves :class:`Settings`
-                from the default load path when the session is created.
-        """
-        self._settings = settings
-
-    @property
-    def mode(self) -> Literal[CheckerDriverMode.LIVE]:
-        """Always ``"live"`` — the driver requires a real Playwright session."""
-        return CheckerDriverMode.LIVE
-
-    def planned_operations(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]:
-        """Return the ordered list of :class:`RemoteOperation` entries planned for this driver run.
-
-        Builds the sequence: GET the GROI URL, open the form, then one
-        ``check-nif-<NIF>`` browser action per declared NIF (sorted
-        alphabetically), and finally ``discard-session``.  At least one
-        entry in ``expected`` is required; raises
-        :class:`RegistryValidationError` otherwise.
-        """
-        del payload
-        if not expected:
-            raise RegistryValidationError("GroiSedeDriver.planned_operations requires at least one expected NIF")
-        operations: list[RemoteOperation] = [
-            RemoteOperation(
-                kind="http",
-                method="GET",
-                url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check),
-            ),
-            RemoteOperation(kind="browser_action", action="open-groi-form"),
-        ]
-        # Normalise to match GroiOracle._expected_values so the operation
-        # labels the guard pre-flight sees (driverless oracle path) match
-        # what the live driver emits.
-        return (*operations, *nif_check_operation_tail(expected))
-
-    def collect(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-        timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
-    ) -> GroiResult:
-        """Run the async GROI driver synchronously and return a :class:`GroiResult`.
-
-        Wraps :meth:`collect_async` in ``asyncio.run``.
-        :class:`SedeError`, :class:`SiteHealthError`, and
-        :class:`BrowserError` are re-raised as
-        :class:`RegistryValidationError` for the registry oracle layer.
-        """
-        try:
-            return asyncio.run(self.collect_async(payload, expected=expected, timeout_ms=timeout_ms))
-        except (SedeError, SiteHealthError, BrowserError) as exc:
-            raise RegistryValidationError(registry_failure_message(exc)) from exc
-
-    async def collect_async(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-        timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
-    ) -> GroiResult:
-        """Async entry point returning :class:`GroiResult` — delegates to :func:`collect_groi_observations`."""
-        return await collect_groi_observations(
-            payload,
-            expected=expected,
-            settings=self._settings,
-            timeout_ms=timeout_ms,
-        )
-
-    def collect_observation(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> CheckerObservation:
-        """Return the canonical checker observation from the per-NIF result.
-
-        Drives the live GROI form via :meth:`collect`, then collapses the
-        per-NIF observations into a flat ``{nif: verdict}`` mapping that
-        the GROI oracle wrapper compares against the caller's expected
-        verdicts.
-        """
-        result = self.collect(payload, expected=expected)
-        values: dict[str, str] = {
-            observation.nif.upper(): str(observation.verdict) for observation in result.observations
-        }
-        evidence_locator: str | None = None
-        if result.observations:
-            evidence_locator = result.observations[0].raw_evidence_locator
-        return CheckerObservation(values=values, raw_evidence_locator=evidence_locator)
 
 
 async def collect_groi_observations(
@@ -490,6 +375,5 @@ __all__ = [
     "DEFAULT_GROI_TIMEOUT_MS",
     "GroiNifVerdict",
     "GroiResult",
-    "GroiSedeDriver",
     "collect_groi_observations",
 ]

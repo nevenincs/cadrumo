@@ -9,21 +9,19 @@ from ...application.operator_surface.command_ports import (
     ParameterKind,
 )
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ._command_parameter_validation import require_coherent_transport as _require_coherent_transport
-from ._command_parameter_validation import require_identifier as _require_identifier
-from ._command_parameter_validation import require_token as _require_token
 from ._command_parameter_validation import (
-    validate_machine_secret_option_channel as _validate_machine_secret_option_channel,
+    require_coherent_transport,
+    require_identifier,
+    require_token,
+    validate_machine_secret_option_channel,
+    validate_option_declarations,
+    validate_option_environment,
+    validate_option_flags,
+    validate_profile_secret_option_channel,
+    validate_secret_channel_scope,
 )
-from ._command_parameter_validation import validate_option_declarations as _validate_option_declarations
-from ._command_parameter_validation import validate_option_environment as _validate_option_environment
-from ._command_parameter_validation import validate_option_flags as _validate_option_flags
-from ._command_parameter_validation import (
-    validate_profile_secret_option_channel as _validate_profile_secret_option_channel,
-)
-from ._command_parameter_validation import validate_secret_channel_scope as _validate_secret_channel_scope
 from ._command_secret_contracts import MachineSecretChannelKind, ProfileSecretChannelKind
-from ._command_shared_contracts import (
+from .command_shared_contracts import (
     LiteralValue,
     ParameterConstraint,
     ParameterDefault,
@@ -55,10 +53,10 @@ class ArgumentSpec:
 
     def __post_init__(self) -> None:
         """Validate the argument's name, metavar, and transport coherence, or raise."""
-        _require_identifier(self.name, field="argument name")
+        require_identifier(self.name, field="argument name")
         if self.metavar is not None:
-            _require_token(self.metavar, field="argument metavar")
-        _require_coherent_transport(
+            require_token(self.metavar, field="argument metavar")
+        require_coherent_transport(
             self.transport_locus,
             self.transport_shape,
             self.transport_role,
@@ -97,14 +95,14 @@ class OptionSpec:
 
     def __post_init__(self) -> None:
         """Validate the option's declarations, flags, secret channels, and transport coherence, or raise."""
-        _require_identifier(self.name, field="option name")
-        _validate_option_declarations(self.declarations, self.metavar)
-        _validate_option_flags(self.count, self.is_flag, self.multiple, self.flag_value)
-        _validate_option_environment(self.envvar)
-        _validate_machine_secret_option_channel(self.machine_secret_channel, self.value.annotation)
-        _validate_secret_channel_scope(self.machine_secret_channel, self.profile_secret_channel)
-        _validate_profile_secret_option_channel(self.profile_secret_channel, self.value.annotation)
-        _require_coherent_transport(
+        require_identifier(self.name, field="option name")
+        validate_option_declarations(self.declarations, self.metavar)
+        validate_option_flags(self.count, self.is_flag, self.multiple, self.flag_value)
+        validate_option_environment(self.envvar)
+        validate_machine_secret_option_channel(self.machine_secret_channel, self.value.annotation)
+        validate_secret_channel_scope(self.machine_secret_channel, self.profile_secret_channel)
+        validate_profile_secret_option_channel(self.profile_secret_channel, self.value.annotation)
+        require_coherent_transport(
             self.transport_locus,
             self.transport_shape,
             self.transport_role,

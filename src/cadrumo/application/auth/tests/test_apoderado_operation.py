@@ -3,27 +3,32 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessDenialCode
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import apoderado_execution as apoderado_execution_module
 from ..apoderado_contracts import (
     APODERADO_CHECK_OPERATION_DEFINITION_ID,
+    APODERADO_CLEAR_OPERATION_DEFINITION_ID,
     APODERADO_CONFIGURE_OPERATION_DEFINITION_ID,
     APODERADO_REPRESENTED_NIF_SECRET_KIND,
     APODERADO_STATUS_OPERATION_DEFINITION_ID,
+    ApoderadoClearRequest,
     ApoderadoConfigureRequest,
     ApoderadoOperationProjection,
     ApoderadoStatusRequest,
@@ -73,6 +78,127 @@ def test_apoderado_definitions_bind_the_real_public_graph_and_one_use_identity_s
         OperationFrontendProjection.MCP in registry.lookup(APODERADO_CHECK_OPERATION_DEFINITION_ID).permitted_frontends
     )
     assert OperationFrontendProjection.MCP not in configure.permitted_frontends
+
+
+_PIN = cast(PinnedAuthorityOperation, object())
+_PERIOD = Period.from_year_and_code(2026, "1T")
+
+
+def _registry() -> OperationRegistry:
+    definitions = build_apoderado_operation_definitions(_unused_factory)
+    return OperationRegistry(
+        definitions=definitions, public_registrations=build_apoderado_operation_registrations(definitions)
+    )
+
+
+def _apoderado_request(definition_id: str) -> OperationRequest[BaseModel]:
+    payload = (
+        ApoderadoClearRequest(profile_id=_PROFILE)
+        if definition_id == APODERADO_CLEAR_OPERATION_DEFINITION_ID
+        else ApoderadoStatusRequest(profile_id=_PROFILE)
+    )
+    return OperationRequest[BaseModel](
+        definition_id=definition_id, subject_ref=profile_operation_subject(str(_PROFILE)), payload=payload
+    )
+
+
+def _submitted(
+    definition_id: str,
+    *,
+    profile_id: UUID = _PROFILE,
+    action: AccessAction = AccessAction.SUBMIT,
+    periods: frozenset[Period] = frozenset(),
+) -> OperationAccessRequest:
+    return OperationAccessRequest(
+        profile_id=profile_id,
+        definition_id=definition_id,
+        action=action,
+        frontend=OperationFrontendProjection.CLI,
+        periods=periods,
+        period_independent=not periods,
+        destination_id=uuid4(),
+    )
+
+
+def _apoderado_context(
+    registry: OperationRegistry,
+    definition_id: str,
+    action: AccessAction,
+    *,
+    frontend: OperationFrontendProjection,
+    admitted: OperationAccessRequest | None,
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=action,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(definition_id),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted,
+    )
+
+
+@pytest.mark.parametrize(
+    ("definition_id", "action"),
+    [
+        (APODERADO_STATUS_OPERATION_DEFINITION_ID, AccessAction.OBSERVE),
+        (APODERADO_STATUS_OPERATION_DEFINITION_ID, AccessAction.RESULT),
+        (APODERADO_CLEAR_OPERATION_DEFINITION_ID, AccessAction.OBSERVE),
+        (APODERADO_CLEAR_OPERATION_DEFINITION_ID, AccessAction.RESULT),
+        (APODERADO_CLEAR_OPERATION_DEFINITION_ID, AccessAction.COMMIT),
+    ],
+)
+def test_apoderado_replay_from_a_fresh_session_binds_the_admission_not_its_origin(
+    definition_id: str, action: AccessAction
+) -> None:
+    """A later session has a new destination and frontend; profile, definition, action and scope still bind."""
+    registry = _registry()
+    request = _apoderado_request(definition_id)
+    fresh = _apoderado_context(
+        registry, definition_id, action, frontend=OperationFrontendProjection.TUI, admitted=_submitted(definition_id)
+    )
+    assert fresh.admitted_request is not None and fresh.admitted_request.destination_id != fresh.destination_id
+
+    resolved = resolve_operation_access(registry=registry, request=request, context=fresh)
+
+    assert resolved.request.destination_id == fresh.destination_id
+    assert resolved.request.frontend is OperationFrontendProjection.TUI
+    assert (action is AccessAction.COMMIT) is not bool(resolved.policy.disclosures)
+    assert all(item.destination_id == fresh.destination_id for item in resolved.policy.disclosures)
+    for foreign in (
+        _submitted(definition_id, profile_id=_OTHER),
+        _submitted(APODERADO_CHECK_OPERATION_DEFINITION_ID),
+        _submitted(definition_id, action=AccessAction.START),
+        _submitted(definition_id, periods=frozenset({_PERIOD})),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_operation_access(
+                registry=registry,
+                request=request,
+                context=replace(fresh, admitted_request=foreign, authority_operation=_PIN),
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START])
+def test_apoderado_entry_actions_need_held_authority_even_with_a_matching_admission(action: AccessAction) -> None:
+    registry = _registry()
+    request = _apoderado_request(APODERADO_CLEAR_OPERATION_DEFINITION_ID)
+    context = _apoderado_context(
+        registry,
+        APODERADO_CLEAR_OPERATION_DEFINITION_ID,
+        action,
+        frontend=OperationFrontendProjection.CLI,
+        admitted=_submitted(APODERADO_CLEAR_OPERATION_DEFINITION_ID),
+    )
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(registry=registry, request=request, context=context)
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    held = replace(context, authority_operation=_PIN)
+    assert resolve_operation_access(registry=registry, request=request, context=held).request.action is action
 
 
 def test_apoderado_public_status_is_complete_and_rejects_a_foreign_profile() -> None:

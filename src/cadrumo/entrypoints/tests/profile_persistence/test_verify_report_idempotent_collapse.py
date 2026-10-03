@@ -20,12 +20,12 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filing_actions import list_verification_reports
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.tests.filing_record_read_support import persisted_verification_reports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     T1,
     T2,
@@ -154,7 +154,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
 
         # The catalogue collapsed: exactly ONE report for this revision, carrying
         # the last-seen run_at (T3 from the upsert), not two accumulated rows.
-        stored = list_verification_reports(
+        stored = persisted_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
             ports=_filing_ports_for_test(repos, operation=_authority_operation_for_test),
             operation=_authority_operation_for_test,
@@ -197,7 +197,7 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
         # verified_by is part of the outcome identity, so the two reports do NOT
         # collapse: distinct ids, both retained.
         assert by_b.verification_report_id != by_a.verification_report_id
-        stored = list_verification_reports(
+        stored = persisted_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
             ports=_filing_ports_for_test(repos, operation=_authority_operation_for_test),
             operation=_authority_operation_for_test,

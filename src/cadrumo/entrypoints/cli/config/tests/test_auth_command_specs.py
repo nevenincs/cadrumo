@@ -7,7 +7,7 @@ import inspect
 
 import pytest
 
-from ..._command_shared_contracts import BindingState, DefaultKind, SchemaState
+from ...command_shared_contracts import BindingState, DefaultKind, SchemaState
 from .._auth_command_specs import AUTH_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -542,19 +542,6 @@ def _assemble_withholding296_row(
         raise _row_assembly_refusal(row_index, exc) from exc
 
 
-def _coerce_flag(value: Decimal | str | None) -> bool:
-    """Parse a row-set boolean-flag cell (``"1"``/``"0"``) into a real bool.
-
-    Accepts the ``"1"`` / ``"0"`` string convention used by row-set boolean
-    columns and maps it to the observation model's real boolean field.
-    """
-    if value is None:
-        return False
-    if isinstance(value, Decimal):
-        return value != Decimal("0")
-    return value.strip() == "1"
-
-
 def _assemble_withholding_row(
     row_index: int,
     row: Mapping[str, Decimal | str | None],

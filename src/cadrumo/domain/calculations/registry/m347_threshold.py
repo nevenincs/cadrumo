@@ -219,7 +219,7 @@ def resolve_m347_threshold_buckets(
     _refuse_undeclared_bucket_entries(entries, frozenset(tokens))
     buckets = tuple(_bucket(entries, token, effective_date=effective_date, authority=selected) for token in tokens)
     assigned = [clave for bucket in buckets for clave in bucket.claves]
-    if len(assigned) != len(set(assigned)) or set(assigned) != M347_OPERATION_CLAVES:
+    if len(assigned) != len(set(assigned)) or frozenset(assigned) != M347_OPERATION_CLAVES:
         raise RegistryValidationError(
             f"{_M347_THRESHOLD_BUCKETS_SUBJECT} must assign every clave in "
             f"{sorted(M347_OPERATION_CLAVES)} to exactly one bucket, got {sorted(assigned)}",

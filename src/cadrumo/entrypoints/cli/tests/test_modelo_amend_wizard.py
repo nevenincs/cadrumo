@@ -59,7 +59,6 @@ from ....application.modelo.calculation_actions import get_calculation_revision
 from ....application.modelo.calculation_projection import ModeloCalculationSnapshot
 from ....application.modelo.calculation_repository import calculation_revision_catalogue_repository
 from ....application.modelo.external_import_actions import import_external_filing_evidence
-from ....application.modelo.filing_actions import get_filing_record
 from ....application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from ....application.modelo.filing_repository import modelo_record_catalogue_repository
 from ....application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
@@ -88,6 +87,7 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from ...tests.filing_record_read_support import persisted_filing_record
 from .._modelo_amend_wizard_cli import (
     _ACTIVE_RUNS,
     _KIND_PAGE_ID,
@@ -100,8 +100,7 @@ from .._modelo_amend_wizard_cli import (
     _value_page_id,
     _values_kind_reason_definition,
 )
-from .._modelo_behavior_support import resolve_work_unit_for_cli as _resolve_work_unit_for_cli
-from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
+from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit, load_work_unit_by_id
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 from .native_profile_cli_support import reauthenticate_native_profile
@@ -418,10 +417,10 @@ def _scripted_amend(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
         with bundled_indexed_authority().operation() as operation:
-            baseline = get_filing_record(
+            baseline = persisted_filing_record(
                 unit.current_filing_record_id,
                 ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
             )
@@ -532,10 +531,10 @@ def _permitted_kind_choice_values(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
         with bundled_indexed_authority().operation() as operation:
-            baseline = get_filing_record(
+            baseline = persisted_filing_record(
                 unit.current_filing_record_id,
                 ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
             )
@@ -924,10 +923,10 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
         with bundled_indexed_authority().operation() as operation:
-            baseline = get_filing_record(
+            baseline = persisted_filing_record(
                 unit.current_filing_record_id,
                 ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
             )

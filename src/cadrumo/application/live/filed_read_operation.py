@@ -39,7 +39,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     track_capture_session,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_read_access
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .remote_state_models import FiledDataCaptureFailureRow
 
 FILED_LIST_DEFINITION_ID = "live.filed-list"
@@ -423,8 +423,8 @@ def _project_discover(result: BaseModel, receipt: OperationTerminalReceipt) -> B
 def resolve_filed_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require whole-profile authority for the register row range."""
-    return resolve_whole_profile_read_access(
+    """Require whole-profile authority for the register row range, plus COMMIT for a provider-session save."""
+    return resolve_whole_profile_capture_access(
         request, context, definition_id=FILED_LIST_DEFINITION_ID, payload_type=FiledListRequest
     )
 
@@ -432,8 +432,8 @@ def resolve_filed_list_access(
 def resolve_filed_discover_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require whole-profile authority for profile expectation disclosure."""
-    return resolve_whole_profile_read_access(
+    """Require whole-profile authority for expectation disclosure, plus COMMIT for a provider-session save."""
+    return resolve_whole_profile_capture_access(
         request, context, definition_id=FILED_DISCOVER_DEFINITION_ID, payload_type=FiledDiscoverRequest
     )
 

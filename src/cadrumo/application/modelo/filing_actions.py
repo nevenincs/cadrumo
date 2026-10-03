@@ -60,13 +60,11 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
-from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
-from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
 from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
 from ._required_binding_gate import (
@@ -76,8 +74,6 @@ from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloPreconditionErrorMixin,
-    ModeloRecordNotFoundError,
-    VerificationReportNotFoundError,
     WorkUnitNotFoundError,
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
@@ -601,71 +597,3 @@ def list_filing_records(
             key=lambda r: (r.bucket_id, r.filing_year, str(r.modelo), r.period.registry_token, r.filed_at),
         ),
     )
-
-
-def get_filing_record(
-    filing_record_id: str,
-    *,
-    ports: FilingActionPorts,
-) -> ModeloRecord:
-    """Return the :class:`ModeloRecord` for the given id, or raise."""
-    catalogue = ports.filing_repository.load()
-    record = catalogue.get(filing_record_id)
-    if record is None:
-        raise ModeloRecordNotFoundError(
-            translated_message="application.modelo.errors.filing_record_not_found",
-            context={"filing_record_id": filing_record_id},
-        )
-    return record
-
-
-def list_verification_reports(
-    *,
-    ports: FilingActionPorts,
-    calculation_revision_id: CalculationRevisionId | None = None,
-    operation: PinnedAuthorityOperation,
-) -> tuple[VerificationReport, ...]:
-    """List :class:`VerificationReport` records.
-
-    Optionally filtered to one
-    :class:`CalculationRevision`. The
-    :class:`VerificationReportCatalogueRepositoryProtocol`
-    supplies the persisted report catalogue. Results are sorted by
-    ``(calculation_revision_id, run_at)``.
-    """
-    catalogue = require_verification_report_coordinates_current(
-        ports.verification_repository.load(operation=operation),
-        operation=operation,
-    )
-    reports = tuple(
-        r
-        for r in catalogue.reports.values()
-        if calculation_revision_id is None or r.calculation_revision_id == calculation_revision_id
-    )
-    return tuple(sorted(reports, key=lambda r: (r.calculation_revision_id, r.run_at)))
-
-
-def get_verification_report(
-    verification_report_id: str,
-    *,
-    ports: FilingActionPorts,
-    operation: PinnedAuthorityOperation,
-) -> VerificationReport:
-    """Return one :class:`VerificationReport` by id, or raise.
-
-    The optional
-    :class:`VerificationReportCatalogueRepositoryProtocol`
-    supplies the persisted report catalogue for tests or alternate storage
-    boundaries.
-    """
-    catalogue = require_verification_report_coordinates_current(
-        ports.verification_repository.load(operation=operation),
-        operation=operation,
-    )
-    report = catalogue.get(verification_report_id)
-    if report is None:
-        raise VerificationReportNotFoundError(
-            translated_message="application.modelo.errors.verification_report_not_found",
-            context={"verification_report_id": verification_report_id},
-        )
-    return report

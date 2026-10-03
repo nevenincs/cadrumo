@@ -34,8 +34,6 @@ from pydantic import ValidationError
 
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
-    modelo_reconcile,
-    reconcile_parsed_justificante,
 )
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
@@ -66,6 +64,7 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
+from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 

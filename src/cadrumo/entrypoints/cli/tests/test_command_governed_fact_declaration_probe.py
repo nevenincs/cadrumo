@@ -76,7 +76,8 @@ from ....domain.calculations.registry.governed_fact_scope import (
 from ....domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from .._command_runtime import build_command_app, runs_in_governed_fact_scope
-from .._command_shared_contracts import (
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import (
     BindingState,
     DeferredTarget,
     LazyBinding,
@@ -84,7 +85,6 @@ from .._command_shared_contracts import (
     SchemaState,
     TranslationKey,
 )
-from ..command_graph import CommandSpecGraph
 from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ..command_specs import COMMAND_GRAPH
 from ._command_drive_support import (

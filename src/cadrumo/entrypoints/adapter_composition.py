@@ -25,8 +25,6 @@ from typing import TYPE_CHECKING, override
 if TYPE_CHECKING:
     from decimal import Decimal
 
-    from google.auth.credentials import Credentials
-
     from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
     from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -108,8 +106,6 @@ if TYPE_CHECKING:
         ProrrataRegisterServiceRepositoryProtocol,
     )
     from ..application.state_projection_ports import StateProjectionReadPorts
-    from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
-    from ..application.storage.calc_sheets.records import SheetExportPlan
     from ..application.user_profile.automation_custody_port import AutomationSecretStore
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort, ProfileCustodyPort
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
@@ -392,31 +388,6 @@ def build_censal_fetch_port() -> CensalFetchPort:
     return fetch
 
 
-def build_calc_sheets_parity_apply_port() -> CalcSheetsParityApplyPort:
-    """Bind the Google workbook writer to the application parity capability."""
-    from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan
-    from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyResult
-
-    def apply(
-        plan: SheetExportPlan,
-        *,
-        credentials: Credentials,
-        root_folder_id: str,
-    ) -> CalcSheetsParityApplyResult:
-        """Translate the concrete Google apply record at the outer boundary."""
-        applied = apply_export_plan(
-            plan,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-        )
-        return CalcSheetsParityApplyResult(
-            spreadsheet_id=applied.spreadsheet_id,
-            spreadsheet_url=applied.spreadsheet_url,
-        )
-
-    return apply
-
-
 def build_modelo_export_ports(
     *,
     bucket_id: str,
@@ -543,7 +514,7 @@ def build_diagnostics_ports(*, bucket_id: str | None = None) -> DiagnosticsPorts
     """Compose diagnostics for an exact bucket or the current operator route."""
     from ..adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
     from ..adapters.persistence.storage.runtime_repository import (
-        secure_object_repository_for_active_bucket_or_default_route,
+        secure_object_repository_for_active_bucket,
         secure_object_repository_for_bucket,
     )
     from ..application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
@@ -555,7 +526,7 @@ def build_diagnostics_ports(*, bucket_id: str | None = None) -> DiagnosticsPorts
         def _repository() -> SecureObjectRepository:
             if bucket_id is not None:
                 return secure_object_repository_for_bucket(bucket_id)
-            return secure_object_repository_for_active_bucket_or_default_route()
+            return secure_object_repository_for_active_bucket()
 
         @staticmethod
         def _translate(row: SecureObjectNamespaceIntegrity) -> DiagnosticSecureObjectNamespace:
@@ -1510,7 +1481,6 @@ __all__ = [
     "build_amendment_action_ports",
     "build_bienes_inversion_repository",
     "build_borrador_100_snapshot_repository",
-    "build_calc_sheets_parity_apply_port",
     "build_calculation_action_ports",
     "build_censal_fetch_port",
     "build_diagnostics_ports",
@@ -1605,7 +1575,7 @@ def _transaction_catalogue_repository(*, bucket_id: str) -> TransactionCatalogue
     return TransactionCatalogueRepository(bucket_id=bucket_id)
 
 
-def _calculation_revision_catalogue_repository(
+def calculation_revision_catalogue_repository(
     *, bucket_id: str, operation: PinnedAuthorityOperation | None
 ) -> CalculationRevisionCatalogueRepository:
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -1731,7 +1701,7 @@ def profile_adapter_composition(
         )
         composition.enter_context(bind_usage_ratio_censo_guard_loader(_load_usage_ratios_with_censo_guard))
         composition.enter_context(
-            bind_calculation_revision_catalogue_repository_factory(_calculation_revision_catalogue_repository)
+            bind_calculation_revision_catalogue_repository_factory(calculation_revision_catalogue_repository)
         )
         composition.enter_context(bind_modelo_record_catalogue_repository_factory(_modelo_record_catalogue_repository))
         composition.enter_context(bind_justificante_repository_factory(_justificante_repository))

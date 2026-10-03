@@ -11,8 +11,8 @@ from cadrumo.tests.audited_process import run_audited_process
 
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, next_action
 from ....application.operator_surface.command_ports import SchemaResolutionError
-from .._command_shared_contracts import SchemaState
 from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import SchemaState
 from ..command_specs import COMMAND_GRAPH
 from ..operator_surface_reconciliation import (
     current_operator_surface_reconciliation,

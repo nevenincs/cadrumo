@@ -6,8 +6,12 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_6,
 )
-from ._command_parameter_contracts import OptionSpec
-from ._command_shared_contracts import (
+from .app_ledger_inventory_common_command_parameters import (
+    INVENTORY_ACTIVIDAD_ID_OPTION,
+    INVENTORY_YEAR_OPTION,
+)
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -16,10 +20,6 @@ from ._command_shared_contracts import (
     SchemaState,
     TranslationKey,
     ValueContract,
-)
-from .app_ledger_inventory_common_command_parameters import (
-    INVENTORY_ACTIVIDAD_ID_OPTION,
-    INVENTORY_YEAR_OPTION,
 )
 from .command_spec import CommandSpec, InvocationSpec
 

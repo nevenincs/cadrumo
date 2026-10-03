@@ -147,6 +147,25 @@ required_text = ["modelo 303"]
 [revisions.2022.bindings.aggregation]
 op = "sum"
 
+# The 0,5 % super-reducido recargo (LIVA art. 161) feeds the first rung, [18].
+# The 2022 design (aeat-dr-303-2022, campos 40-48) prints three recargo rungs
+# with a free Tipo %, and [21] and [24] already carry the 1,4 % and 5,2 % rates,
+# so [18] is the remaining rung; the successor design (aeat-dr-303-2023, campo 50)
+# fixes that same box's Tipo [17] to "00050". Without this binding the ledger's
+# super-reducido recargo would reach no box and [27] would under-declare it.
+[[revisions.2022.bindings]]
+id = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
 # Casilla 59, base-only informativa for exempt entregas intracomunitarias
 # (LIVA art. 25). The official box is titled "Entregas intracomunitarias de
 # bienes y servicios", but the selector deliberately admits ONLY

@@ -1057,6 +1057,10 @@ errors:
       el catálogo disponible.
     refused_application_live_input: La solicitud de lectura en vivo a la AEAT no se
       puede ejecutar con los datos indicados.
+    refused_application_live_nif_iva_certificate_required: 'La AEAT solo responde
+      a la comprobación de NIF-IVA si accedes con certificado electrónico, y Cadrumo
+      aún no puede acceder con certificado para esta comprobación. Comprueba el NIF-IVA
+      en el servicio VIES de la Comisión Europea: https://ec.europa.eu/taxation_customs/vies/'
     refused_auth_certificate_source_not_found: El origen de certificado indicado no
       está registrado.
     refused_auth_configure_dangling_active_profile: El puntero de perfil activo no

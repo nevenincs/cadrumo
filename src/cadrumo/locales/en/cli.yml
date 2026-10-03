@@ -1769,6 +1769,19 @@ cli:
       period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T
         (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
         --period 1T --year 2024).'
+    operation_notices:
+      clave_movil_approval_pending: 'Cl@ve Móvil: open the Cl@ve app now and approve
+        the pending AEAT request before it expires in about two minutes.'
+      clave_movil_approval_pending_with_code: 'Cl@ve Móvil: open the Cl@ve app now
+        and approve the pending AEAT request before it expires in about two minutes.
+        Check that the code %{code} matches in the app.'
+      clave_movil_qr_scan_pending: 'Cl@ve Móvil: open the Cl@ve app now, scan the
+        QR code shown in the browser window and approve the AEAT request before it
+        expires in about two minutes.'
+      clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: open the Cl@ve app now,
+        scan the QR code shown in the browser window and approve the AEAT request
+        before it expires in about two minutes. Check that the code %{code} matches
+        in the app.'
   config:
     app_help: Set up and repair the local profile, credentials, storage and Google
       link.
@@ -2211,7 +2224,6 @@ cli:
         view_help: Show the resolved state of every service capability for the active
           profile.
       censo:
-        show_help: Read the complete saved census snapshot without contacting AEAT.
         apply_help: Enroll the parsed censal facts onto the active profile (default
           is preview only).
         divergencia_leaf_artefact_value: AEAT value
@@ -2240,6 +2252,7 @@ cli:
         pull_withheld_notice: 'The values for {count} field(s) are withheld from output:
           {axes}. Compare them yourself against the census authority; this tool will
           not print them.'
+        show_help: Read the complete saved census snapshot without contacting AEAT.
       complete_setup:
         already_complete: The profile was already declared ready; nothing was written.
         completed: Profile declared ready to file from.

@@ -43,7 +43,6 @@ from pydantic import (
     ConfigDict,
     Field,
     RootModel,
-    TypeAdapter,
     ValidationError,
     field_serializer,
     field_validator,
@@ -626,76 +625,6 @@ def validate_registered_result(command: str, result: object) -> OutputSchema | O
         ) from error
 
 
-def validate_registered_envelope_document(
-    document: object,
-    schema: RegisteredSchema | None,
-) -> dict[str, object]:
-    """Strictly validate one emitted CLI success or error JSON document."""
-    if not isinstance(document, dict):
-        raise OutputSchemaError("operator JSON envelope must be an object")
-    raw_document = cast("dict[object, object]", document)
-    if not all(isinstance(key, str) for key in raw_document):
-        raise OutputSchemaError("operator JSON envelope keys must be strings")
-    typed_document: dict[str, object] = {key: value for key, value in raw_document.items() if isinstance(key, str)}
-    if typed_document.get("status") == EnvelopeStatus.ERROR.value:
-        return _validated_error_envelope(typed_document)
-    if schema is None:
-        raise OutputSchemaError("operator JSON success envelope requires its authored result schema")
-    return _validated_success_envelope(typed_document, schema)
-
-
-def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, object]:
-    from .errors.error_codes import ErrorEnvelope
-
-    required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
-    if set(typed_document) != required_keys:
-        raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
-    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
-        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-    command = typed_document.get("command")
-    active_profile = typed_document.get("active_profile")
-    if command is not None and (not isinstance(command, str) or not command):
-        raise OutputSchemaError("operator JSON error envelope has an invalid command")
-    if active_profile is not None and not isinstance(active_profile, str):
-        raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
-    # A parsed document is JSON, validated as JSON, as the success envelope is:
-    # strict Python-mode validation rejects the lists and plain strings that
-    # JSON carries for the envelope's tuples and enums, so every error that
-    # names a recovery action failed here while plain errors passed.
-    try:
-        ErrorEnvelope.model_validate_json(json.dumps(typed_document["error"]))
-        TypeAdapter(list[Notice]).validate_json(json.dumps(typed_document["notices"]))
-    except ValidationError as error:
-        raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
-    return typed_document
-
-
-def _validated_success_envelope(
-    typed_document: dict[str, object],
-    schema: RegisteredSchema,
-) -> dict[str, object]:
-    command = typed_document.get("command")
-    if not isinstance(command, str) or not command:
-        raise OutputSchemaError("operator JSON envelope has no usable command")
-    required_keys = {"schema_version", "command", "active_profile", "status", "result", "notices"}
-    if set(typed_document) != required_keys:
-        raise OutputSchemaError("operator JSON success envelope has an invalid outer shape")
-    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
-        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-    # CAST-RATIONALE-ENVELOPE-GENERIC: __class_getitem__ returns a bare `type`
-    # at runtime; `schema` is an OutputSchema subclass, so the parameterized generic is
-    # exactly SchemaEnvelope[OutputSchema].
-    envelope_model = cast("type[SchemaEnvelope[OutputSchema]]", SchemaEnvelope.__class_getitem__(schema))
-    try:
-        validated = envelope_model.model_validate_json(json.dumps(typed_document))
-    except ValidationError as error:
-        raise OutputSchemaError("operator JSON success envelope failed strict validation") from error
-    # CAST-RATIONALE-ENVELOPE-DUMP: model_dump(mode="json") is typed
-    # dict[str, Any] by pydantic; the envelope's own strict schema already
-    # constrains every value to JSON-safe scalars/containers.
-    return cast(dict[str, object], validated.model_dump(mode="json"))
-
-
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
     "ActionConditionEvidence",
@@ -713,7 +642,6 @@ __all__ = [
     "derive_status",
     "emit_json_success",
     "strict_round_trip",
-    "validate_registered_envelope_document",
     "validate_registered_result",
 ]
 

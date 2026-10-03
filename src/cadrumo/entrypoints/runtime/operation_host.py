@@ -82,6 +82,7 @@ if TYPE_CHECKING:
     from ...application.operations.supervisor import OperationSupervisor
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+_PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 
 
 class ProfileWorkerOperationHost:
@@ -444,7 +445,13 @@ class ProfileWorkerOperationHost:
             invocation = await self._stored_invocation(operation_id)
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
             async with execution.guard_binding(invocation.identity, action, binding) as authorization:
-                if invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID:
+                # The full-owner workbench projection is released only to the
+                # human session that generated it; observing its lifecycle
+                # discloses operation metadata alone and stays caller-independent.
+                if (
+                    action in _PRIVATE_RESULT_RELEASE_ACTIONS
+                    and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+                ):
                     execution.require_owner(operation_id, session_id, frontend=frontend)
                 yield authorization
         finally:

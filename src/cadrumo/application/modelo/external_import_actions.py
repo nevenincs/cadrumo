@@ -252,36 +252,6 @@ def _validate_external_source_registry_values(
         )
 
 
-def _validate_external_source_requirements(
-    *,
-    source: ExternalFilingBaselineSource,
-    bucket_id: str,
-    filing_instance_evidence: FilingInstanceEvidence | None,
-    actor: str,
-    justificante_repository: JustificanteRepositoryProtocol | None,
-) -> JustificanteRepositoryProtocol:
-    """Validate actor/evidence requirements and return the receipt repository."""
-    if source.modelo == Modelo("303").value and filing_instance_evidence is None:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
-        )
-    if not actor.strip():
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_source_actor_blank",
-        )
-    resolved_justificante_repository = justificante_repository or resolve_justificante_repository(bucket_id=bucket_id)
-    require_bound_justificante_artifact(
-        evidence_kind=source.evidence_kind,
-        evidence_reference_id=source.evidence_reference_id.strip(),
-        modelo=source.modelo,
-        filing_year=source.filing_year,
-        period=source.period,
-        expected_tax_id=source.tax_id,
-        justificante_repository=resolved_justificante_repository,
-    )
-    return resolved_justificante_repository
-
-
 def _select_external_source_work_unit(
     target: ExternalFilingTarget,
     *,
@@ -386,70 +356,6 @@ def external_filing_source_casillas(
         lexical_values=lexical_values,
     )
     return lexical_values, decimal_values
-
-
-def import_external_filing_source(
-    source: ExternalFilingBaselineSource,
-    *,
-    bucket_id: str,
-    work_lifecycle_ports: WorkLifecyclePorts,
-    operation: PinnedAuthorityOperation,
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    declared_kind: FilingDeclarationKind | None = None,
-    actor: str = "aeat-import",
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepositoryProtocol | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    clock: datetime | None = None,
-) -> ExternalFilingImportResult:
-    """Resolve or create the target work unit and reconcile an amendable baseline.
-
-    Source lexical tokens are retained verbatim on the revision input snapshot;
-    their independently parsed Decimal values feed the filing baseline.
-    """
-    lexical_values, decimal_values = external_filing_source_casillas(source)
-    resolved_justificante_repository = _validate_external_source_requirements(
-        source=source,
-        bucket_id=bucket_id,
-        filing_instance_evidence=filing_instance_evidence,
-        actor=actor,
-        justificante_repository=justificante_repository,
-    )
-
-    wu_repo = work_lifecycle_ports.work_unit_repository
-    work_unit = resolve_external_filing_work_unit(
-        ExternalFilingTarget(
-            modelo=source.modelo,
-            filing_year=source.filing_year,
-            period=source.period,
-            registry_revision_id=source.registry_revision_id,
-        ),
-        bucket_id=bucket_id,
-        actor=actor,
-        ports=work_lifecycle_ports,
-        operation=operation,
-        clock=clock,
-    )
-    return import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
-        casilla_values=decimal_values,
-        source_lexical_values_by_casilla_id=lexical_values,
-        evidence_kind=source.evidence_kind,
-        evidence_reference_id=source.evidence_reference_id,
-        filing_instance_evidence=filing_instance_evidence,
-        declared_kind=declared_kind,
-        actor=actor,
-        work_unit_repository=wu_repo,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-        bucket_event_repository=work_lifecycle_ports.bucket_event_repository,
-        justificante_repository=resolved_justificante_repository,
-        observation_repository=observation_repository,
-        expected_tax_id=source.tax_id,
-        clock=clock,
-        operation=operation,
-    )
 
 
 def _load_external_import_target[CasillaKey](

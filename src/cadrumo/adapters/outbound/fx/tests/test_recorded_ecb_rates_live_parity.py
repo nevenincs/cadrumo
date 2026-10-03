@@ -22,8 +22,11 @@ def test_every_recorded_answer_matches_the_live_series() -> None:
     answers = recorded_ecb_answers()
     assert answers, "the recording is empty"
 
-    drifted = [
-        url for url, body in answers.items() if _parse_observations(_https_fetch(url)) != _parse_observations(body)
-    ]
+    drifted: list[str] = []
+    for url, body in answers.items():
+        live_body = _https_fetch(url)
+        assert live_body is not None, f"the recorded ECB series is no longer published: {url}"
+        if _parse_observations(live_body) != _parse_observations(body):
+            drifted.append(url)
 
     assert not drifted, f"{len(drifted)} recorded ECB answers no longer match the live series: {drifted[:3]}"

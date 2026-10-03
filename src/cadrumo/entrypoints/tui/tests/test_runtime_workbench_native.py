@@ -29,12 +29,12 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.workbench_generation import read_workbench_generation
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
@@ -525,6 +525,32 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         WorkbenchGenerationOperationProjection
                     ].model_validate_json(canonical_json_bytes(document))
                     assert restore_workbench_generation(decoded.projection).contract_version == 1
+                    fresh_observe = RuntimeOperationObserve(
+                        request_id=uuid4(),
+                        profile_id=profile_id,
+                        session_id=second.session_id,
+                        observation=OperationObservationRequestV1(
+                            operation_id=operation_id, after_cursor=0, page_limit=32
+                        ),
+                    )
+                    fresh_observed = second_raw.operation(fresh_observe, deadline=time.monotonic() + 5)
+                    assert isinstance(fresh_observed, RuntimeOperationObserved)
+                    assert isinstance(fresh_observed.observation, OperationObservationSuccessV1)
+                    assert fresh_observed.observation.projection.revision == revision
+                    assert (
+                        fresh_observed.observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                    )
+                    mcp_observed = mcp_raw.operation(
+                        changed(fresh_observe, request_id=uuid4(), session_id=mcp.session_id),
+                        deadline=time.monotonic() + 5,
+                    )
+                    # The key-authenticated MCP session is neither human nor on a
+                    # declared frontend; either refusal keeps the operation private.
+                    assert isinstance(mcp_observed, RuntimeAccessRefusal)
+                    assert mcp_observed.code in {
+                        AccessDenialCode.HUMAN_AUTHORITY_REQUIRED,
+                        AccessDenialCode.FRONTEND_DENIED,
+                    }
                     other = second_raw.operation(
                         changed(owner_page, request_id=uuid4(), session_id=second.session_id),
                         deadline=time.monotonic() + 5,

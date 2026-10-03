@@ -15,7 +15,6 @@ import pytest
 from pydantic import SecretBytes, ValidationError
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import generate_api_key
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     NOW,
@@ -24,6 +23,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService

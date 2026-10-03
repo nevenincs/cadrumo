@@ -7,13 +7,8 @@ disagreement structurally impossible, so the corpus-wide transposition test
 below is the load-bearing one - it would fail the moment either direction grew
 a predicate the other did not.
 
-The gate at the end is deliberately NOT an assertion that no casilla anywhere
-declares a binding while non-BOUND. Fifty do, all in M232's 2018 revision, all
-``informational``. An emptiness assertion would therefore red on its first run
-and invite an M232 carve-out. What actually matters to the callers is narrower
-and is what is asserted: no revision the rate-box derivation reads may contain
-such a casilla, because there the dual's drop would silently remove a box's
-money from the mapping.
+A casilla that is not BOUND cannot carry a binding at all: the canonical schema
+refuses it at construction, so the join never has to drop one.
 """
 
 from __future__ import annotations
@@ -23,7 +18,6 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import validated_casilla_id
 from ..binding_targets import bound_casilla_binding_ids, casillas_by_binding
 from ..schema import ModeloRevision
@@ -35,12 +29,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL = ("ley-37-1992:art-91",)
 _SOURCE = ("aeat-dr-390-2025",)
-
-# The SAME member ``_ledger_iva_bindings_by_partition_key`` filters on, referenced
-# rather than re-derived. A string heuristic over BindingSourceKind resolves to this
-# one member today and would silently widen the day a second ledger-IVA kind is added,
-# scoping this gate over revisions the rate-box derivation never reads.
-_RATE_BOX_SOURCE = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
 
 def _casilla(
@@ -90,20 +78,6 @@ def test_schema_refuses_a_bound_casilla_that_declares_no_binding() -> None:
             input_kind="bound",
             binding=None,
         )
-
-
-def test_a_non_bound_casilla_carrying_a_binding_contributes_nothing() -> None:
-    """The documented drop, pinned so it cannot become a silent inclusion.
-
-    Fifty such casillas exist in the corpus (M232 2018, all ``informational``),
-    so this is live behaviour and not a hypothetical.
-    """
-    informational = validated_casilla_id("02", surface="test.dual.informational")
-    revision = _revision(
-        (_casilla(informational, number="02", input_kind="informational", binding="m232-vinculada-1-nif"),)
-    )
-
-    assert casillas_by_binding(revision) == {}
 
 
 def test_schema_refuses_a_primary_binding_repeated_as_an_alternate() -> None:
@@ -169,44 +143,3 @@ def test_the_dual_transposes_the_forward_primitive_across_the_whole_corpus() -> 
         "assertion passed vacuously over a truncated corpus rather than proving the transposition"
     )
     assert checked_pairs > 0, "no bound casilla was reached at all, so the comparison proved nothing"
-
-
-def test_no_ledger_iva_revision_declares_a_binding_on_a_non_bound_casilla() -> None:
-    """The invariant the rate-box retarget actually rests on.
-
-    ``derive_rate_box_partitions`` and ``rate_box_unscreened_groups`` read only
-    ledger-IVA bindings, and they now read the strict dual, which drops any
-    non-BOUND casilla carrying a binding. So a casilla that went
-    ``informational``-with-a-binding inside a revision those functions reach
-    would silently vanish from the mapping and understate a rate box.
-
-    Scoped to the revisions the derivation reads rather than asserted over the
-    whole corpus, because the whole-corpus population is not empty: M232's 2018
-    revision declares fifty of them. An emptiness assertion would red here on
-    its first run and the cheapest repair would be an M232 allowlist.
-    """
-    offenders: list[str] = []
-    ledger_iva_revisions = 0
-
-    for definition in bundled_registry_tree()[0]:
-        modelo_id = definition.id
-        for revision in definition.revisions.values():
-            if not any(binding.source is _RATE_BOX_SOURCE for binding in revision.bindings):
-                continue
-            ledger_iva_revisions += 1
-            for casilla in revision.casillas:
-                declares_binding = casilla.binding is not None or bool(casilla.alternate_bindings)
-                if declares_binding and not bound_casilla_binding_ids(casilla):
-                    offenders.append(
-                        f"M{modelo_id}/{revision.id} casilla {casilla.id!r} "
-                        f"input_kind={casilla.input_kind!r} declares a binding"
-                    )
-
-    assert not offenders, (
-        "a revision the rate-box derivation reads declares a binding on a non-BOUND casilla, "
-        "so the canonical join drops it and the rate-box mapping understates: " + "; ".join(offenders)
-    )
-    assert ledger_iva_revisions > 0, (
-        "no revision carrying ledger-IVA bindings was found, so this gate asserted nothing; "
-        "the source-kind filter is wrong, not the corpus"
-    )

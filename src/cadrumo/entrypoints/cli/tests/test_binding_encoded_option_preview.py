@@ -13,31 +13,18 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from .._modelo_bindings_payloads import BindingEncodedOptionPayload
-from .._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
+from .._modelo_rendering import binding_encoded_option_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_ESTIMACION_OPTIONS = (
-    BooleanBindingEncodedValue(encoded_value="1", boolean_meaning=True, registry_value="N"),
-    BooleanBindingEncodedValue(encoded_value="0", boolean_meaning=False, registry_value="S"),
-)
-
-
-def test_encoded_option_payloads_mirror_the_registry_encoding() -> None:
-    """The CLI payload carries each accepted decimal, its meaning, and casilla token."""
-    payloads = binding_encoded_option_payloads(_ESTIMACION_OPTIONS)
-
-    assert payloads == (
-        BindingEncodedOptionPayload(encoded_value="1", boolean_meaning=True, registry_value="N"),
-        BindingEncodedOptionPayload(encoded_value="0", boolean_meaning=False, registry_value="S"),
-    )
 
 
 def test_encoded_option_text_line_enumerates_the_mapping() -> None:
     """The listing hint names the binding and its decimal-to-meaning mapping."""
-    payloads = binding_encoded_option_payloads(_ESTIMACION_OPTIONS)
+    payloads = (
+        BindingEncodedOptionPayload(encoded_value="1", boolean_meaning=True, registry_value="N"),
+        BindingEncodedOptionPayload(encoded_value="0", boolean_meaning=False, registry_value="S"),
+    )
 
     lines = binding_encoded_option_lines("renta-modelo-100-estimacion-directa-es-normal", payloads)
 

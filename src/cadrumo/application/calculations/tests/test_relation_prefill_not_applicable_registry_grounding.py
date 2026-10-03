@@ -123,10 +123,9 @@ class TestCandidateSetIsRegistryGrounded:
     def test_candidate_set_excludes_every_source_the_taxpayer_never_files(self, filing_year: int) -> None:
         """A ``taxpayer_files_source = false`` source is never eligible for the zero-resolution.
 
-        This is the load-bearing exclusion. Those sources are the suffered
-        retenciones the payer files; their value is a real credit the taxpayer
-        must declare, so the leg must stay unresolved rather than fold in as
-        zero.
+        This is the load-bearing exclusion. Another party files those sources;
+        the figure they attribute to the taxpayer is real and must be declared,
+        so the leg must stay unresolved rather than fold in as zero.
         """
         snapshot = _m100_snapshot(filing_year)
         payer_filed = frozenset(
@@ -137,9 +136,9 @@ class TestCandidateSetIsRegistryGrounded:
         candidates = _economic_activity_conditional_source_modelos(snapshot)
 
         assert not (candidates & payer_filed), (
-            f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are filed by the "
-            "PAYER, so folding their relation in as zero would strip the taxpayer's retención "
-            "credit from the declaration"
+            f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are filed by "
+            "another party, so folding their relation in as zero would strip the figure they "
+            "attribute to the taxpayer from the declaration"
         )
 
     def test_the_exclusion_is_not_vacuous_for_modelo_100(self) -> None:

@@ -20,7 +20,7 @@ from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ObligationStatus
 from ...domain.modelos.codes import ModeloCode
 from ..operator_actions.models import DeclaredNextAction
@@ -118,7 +118,9 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: CalendarCCAA | None = None
+    # Text of the already-projected calendar territory: a frontend restores this
+    # projection without a pinned authority, so it cannot re-project the token.
+    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -368,7 +370,7 @@ def _project_calendar_row(
         adjusted_closes_on=entry.adjusted_closes_on,
         shift_reason=entry.shift_reason,
         holiday_coverage=entry.holiday_coverage,
-        holiday_territory=entry.holiday_territory,
+        holiday_territory=None if entry.holiday_territory is None else str(entry.holiday_territory),
         payment_cutoff_on=entry.payment_cutoff_on,
         evaluated_on=entry.evaluated_on,
         days_overdue=entry.days_overdue,

@@ -1879,6 +1879,21 @@ cli:
       period_unrecognised: 'Ismeretlen időszak: ''{raw}''. Használj AEAT tokent: 1T-4T
         (negyedévek), 0A (éves), 01-12 (hónapok), és add meg az évet a --year kapcsolóval
         (pl. --period 1T --year 2024).'
+    operation_notices:
+      clave_movil_approval_pending: 'Cl@ve Móvil: nyisd meg most a Cl@ve alkalmazást,
+        és hagyd jóvá a függőben lévő AEAT-kérést, mielőtt nagyjából két perc múlva
+        lejár.'
+      clave_movil_approval_pending_with_code: 'Cl@ve Móvil: nyisd meg most a Cl@ve
+        alkalmazást, és hagyd jóvá a függőben lévő AEAT-kérést, mielőtt nagyjából
+        két perc múlva lejár. Ellenőrizd, hogy az alkalmazásban is a(z) %{code} kód
+        látszik-e.'
+      clave_movil_qr_scan_pending: 'Cl@ve Móvil: nyisd meg most a Cl@ve alkalmazást,
+        olvasd be a böngészőablakban megjelenő QR-kódot, és hagyd jóvá az AEAT-kérést,
+        mielőtt nagyjából két perc múlva lejár.'
+      clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: nyisd meg most a Cl@ve
+        alkalmazást, olvasd be a böngészőablakban megjelenő QR-kódot, és hagyd jóvá
+        az AEAT-kérést, mielőtt nagyjából két perc múlva lejár. Ellenőrizd, hogy az
+        alkalmazásban is a(z) %{code} kód látszik-e.'
   config:
     app_help: A helyi profil, a hitelesítő adatok, a tárolás és a Google-kapcsolat
       beállítása és javítása.
@@ -2363,7 +2378,6 @@ cli:
         view_help: Megjeleníti az aktív profil minden szolgáltatási képességének feloldott
           állapotát.
       censo:
-        show_help: A teljes mentett nyilvántartási pillanatkép megjelenítése AEAT-kapcsolat nélkül.
         apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
           csak előnézet).'
         divergencia_leaf_artefact_value: AEAT-érték
@@ -2393,6 +2407,8 @@ cli:
         pull_withheld_notice: 'A(z) {count} mező értéke ki van takarva a kimenetben:
           {axes}. Hasonlítsd össze őket a népesség-nyilvántartó hatóság adataival;
           ez az eszköz nem írja ki őket.'
+        show_help: A teljes mentett nyilvántartási pillanatkép megjelenítése AEAT-kapcsolat
+          nélkül.
       complete_setup:
         already_complete: A profil már készként volt nyilvántartva; semmi nem került
           mentésre.

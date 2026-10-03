@@ -6,8 +6,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -19,9 +17,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .._modelo_rendering import (
-    calculation_observation_lines,
-    calculation_revision_lines,
-    calculation_revision_payload,
     work_unit_lines,
     work_unit_list_lines,
     work_unit_payload,
@@ -97,25 +92,6 @@ def _work_unit(*, filed_revision_id: str | None = None) -> WorkUnit:
         updated_at=_NOW,
         current_calculation_revision_id=_draft_revision().calculation_revision_id,
         filed_calculation_revision_id=filed_revision_id,
-    )
-
-
-def test_calculation_revision_text_lines_render_human_state_label_but_payload_keeps_token(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    revision = _verified_revision()
-
-    with override_settings(cadrumo_output_language="en"):
-        lines = calculation_revision_lines(revision, include_result_summary=False, operation=operation)
-        observation_lines = calculation_observation_lines(revision, operation=operation)
-
-    assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in lines
-    assert "state\tchecked and complete" in lines
-    assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in observation_lines
-    assert "state\tchecked and complete" in observation_lines
-    assert (
-        calculation_revision_payload(revision, include_result_summary=False, operation=operation).state
-        == CalculationRevisionState.VERIFICADO_COMPLETO.value
     )
 
 

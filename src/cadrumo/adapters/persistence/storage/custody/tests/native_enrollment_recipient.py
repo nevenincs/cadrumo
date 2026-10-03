@@ -1,8 +1,8 @@
-"""Client-side native delivery endpoint for an authenticated local channel.
+"""Native-store enrollment recipient for tests.
 
-The server must reach this endpoint through a transport-verified recipient port.
-Constructing a server-side instance does not prove a remote client's possession.
-Only opaque references escape this boundary; native records never enter backups.
+Backs an exact client connection's delivery endpoint with an eligible native
+credential store, so tests can drive enrollment delivery and possession checks
+against a real store without the production client transport.
 """
 
 from __future__ import annotations
@@ -11,16 +11,17 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
-from .....application.user_profile.access_contracts import ProfileAccessBinding
-from .....application.user_profile.automation_administration import enrollment_review_digest
-from .....application.user_profile.automation_custody_port import (
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
+from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
+from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
     AutomationSecretStore,
     NativeSecretBackend,
 )
-from .....application.user_profile.automation_enrollment import EnrollmentRecord, EnrollmentRequester
-from .automation_client_credentials import NativeClientCredentialStore
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentRecord, EnrollmentRequester
+
+from ..automation_client_credentials import NativeClientCredentialStore
 
 
 class NativeEnrollmentRecipient:

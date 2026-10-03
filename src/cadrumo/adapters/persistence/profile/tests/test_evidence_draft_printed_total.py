@@ -7,14 +7,14 @@ disagree, the disagreement is reported rather than discarded.
 
 Builds real text-bearing PDFs in memory (reportlab), stores them through the
 real encrypted evidence path, and confirms them through
-:func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`. No mocks.
+:func:`~application.ledger.invoice_confirmation.prepare_invoice_confirmation_from_evidence`. No mocks.
 
 See Also:
     :class:`~application.ledger.evidence_draft.PrintedTotalDiscrepancy`
         The record describing a printed-vs-recorded total disagreement.
     :func:`~application.ledger.evidence_draft.printed_total_discrepancy`
         The comparison this module exercises.
-    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.prepare_invoice_confirmation_from_evidence`
         Confirm step that carries the discrepancy on its result.
 """
 
@@ -29,7 +29,6 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.confirmation_gate import FindingResolution, confirmation_blockers
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
 from cadrumo.core.confirmation_gate import FindingResolutionAction
@@ -50,6 +49,7 @@ from ._invoice_confirmation_test_support import (
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]

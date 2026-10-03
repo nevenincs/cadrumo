@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, Protocol, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
@@ -21,8 +21,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.type_guards import is_object_list_or_tuple
 
 if TYPE_CHECKING:
-    from ...core.json_contract import RegisteredSchema
-    from .manifest import CommandSchemaRef
+    pass
 
 #: ``defer_build`` keeps these records out of the import cost every process
 #: pays: only the surface manifest, the reconciliation projection and the verb
@@ -228,12 +227,6 @@ class CommandPolicyMetadata:
     live_write: bool
 
 
-def _require_execution_policy(condition: bool, message: str) -> None:
-    """Refuse one capability/policy contradiction with its existing message."""
-    if not condition:
-        raise ValueError(message)
-
-
 @dataclass(frozen=True, slots=True)
 class CommandRegistrationMetadata:
     """One command registration projected without an entrypoint object."""
@@ -261,70 +254,6 @@ class CommandRegistrationMetadata:
     def parameters(self) -> dict[str, tuple[CommandParameterMetadata, ...] | None]:
         """Return the language-indexed parameter projection."""
         return dict(self.parameters_by_language)
-
-
-@dataclass(frozen=True, slots=True)
-class LiveNodeRegistrationMetadata:
-    """One live command-tree node projected by an outer graph adapter."""
-
-    path: tuple[str, ...]
-    kind: CommandNodeKind
-    loader_owner: str | None
-    handler_owner: str
-    source_sha256: str | None
-    policy: CommandPolicyMetadata | None
-
-
-@dataclass(frozen=True, slots=True)
-class CommandRegistrationProjection:
-    """Complete registration projection shared by outer consumers."""
-
-    commands: tuple[CommandRegistrationMetadata, ...]
-    nodes: tuple[LiveNodeRegistrationMetadata, ...]
-    profile_authentication_contract: ProfileAuthenticationContractMetadata
-
-
-@dataclass(frozen=True, slots=True)
-class CommandExecutionPolicy:
-    """Validated immutable execution policy returned by the command port."""
-
-    classification: CommandCapabilityClass
-    write_route: CommandWriteRouteValue
-    destructive: bool = False
-    handoff: bool = False
-    live_write: bool = False
-
-    def __post_init__(self) -> None:
-        """Reject policy flags that contradict the declared capabilities."""
-        _require_execution_policy(
-            self.write_route == CommandWriteRoute.NONE or "local-state" in self.classification.side_effects,
-            "a command write-route scope requires the local-state side effect",
-        )
-        _require_execution_policy(
-            self.write_route == CommandWriteRoute.NONE
-            or "profile-custody" in self.classification.expanded_capabilities,
-            "a command storage write-route scope requires the profile-custody capability",
-        )
-        _require_execution_policy(
-            not self.destructive or "local-state" in self.classification.side_effects,
-            "a destructive command requires the local-state side effect",
-        )
-        _require_execution_policy(
-            not self.handoff or "filing" in self.classification.expanded_capabilities,
-            "a filing handoff requires the filing capability",
-        )
-        _require_execution_policy(
-            not self.handoff or "local-state" in self.classification.side_effects,
-            "a filing handoff requires the local-state side effect",
-        )
-        _require_execution_policy(
-            not self.live_write or "network" in self.classification.expanded_capabilities,
-            "a live write requires the network capability",
-        )
-        _require_execution_policy(
-            not self.live_write or bool(self.classification.side_effects.intersection({"network", "browser"})),
-            "a live write requires a network or browser side effect",
-        )
 
 
 class RecoveryHandoffContract(BaseModel):
@@ -487,60 +416,6 @@ def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> li
     return ["--format", "json", *schema.cli_path, *positional, *options]
 
 
-class CommandSchemaPort(Protocol):
-    """Application boundary for an outer command graph's schema projection."""
-
-    def command_schema_refs(self) -> tuple[CommandSchemaRef, ...]:
-        """Return every registered result-schema identity."""
-        ...
-
-    def command_schema_type(self, command: str) -> RegisteredSchema:
-        """Return the registered result schema for one command identity."""
-        ...
-
-    def command_schema_types(self) -> Mapping[str, RegisteredSchema]:
-        """Return the immutable command-to-result-schema projection."""
-        ...
-
-    def command_registration_projection(self) -> CommandRegistrationProjection:
-        """Return the complete registration metadata projection."""
-        ...
-
-    def build_verb_input_schemas(self, command_keys: tuple[str, ...]) -> Mapping[str, VerbInputSchema]:
-        """Build input schemas for the requested command identities."""
-        ...
-
-
-class CommandMetadataPort(Protocol):
-    """Application boundary for command identity and exposure metadata."""
-
-    def cli_path_for_command_key(self, command_key: str) -> tuple[str, ...]:
-        """Resolve one command identity to its canonical path."""
-        ...
-
-    def is_exposable_command(self, command_key: str) -> bool:
-        """Return whether an identity is callable on the external surface."""
-        ...
-
-    def command_search_terms(self, command_key: str) -> tuple[str, ...]:
-        """Return graph-authored semantic search terms for one command."""
-        ...
-
-    def global_flags(self) -> frozenset[str]:
-        """Return root options accepted alongside every command path."""
-        ...
-
-
-class CommandPolicyPort(Protocol):
-    """Application boundary for policy lookup by canonical command path."""
-
-    def command_execution_policy_for_cli_path(self, cli_path: tuple[str, ...]) -> CommandExecutionPolicy: ...
-
-
-class CommandSurfacePort(CommandSchemaPort, CommandMetadataPort, CommandPolicyPort, Protocol):
-    """Complete read-only command surface consumed by the retained harness."""
-
-
 def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:
     """Raise one typed error when an outer adapter cannot project a leaf."""
     if resolution_errors:
@@ -550,20 +425,14 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 __all__ = [
     "Capability",
     "CommandCapabilityClass",
-    "CommandExecutionPolicy",
-    "CommandMetadataPort",
     "CommandNodeKind",
     "CommandParameterDefault",
     "CommandParameterMetadata",
     "CommandPolicyMetadata",
     "CommandRegistrationMetadata",
-    "CommandRegistrationProjection",
-    "CommandSchemaPort",
-    "CommandSurfacePort",
     "CommandWriteRoute",
     "CommandWriteRouteValue",
     "JsonType",
-    "LiveNodeRegistrationMetadata",
     "MachineSecretFieldMetadata",
     "MachineSecretPayloadMetadata",
     "MachineSecretPresence",

@@ -4,8 +4,9 @@ from typing import Final
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ._command_parameter_contracts import OptionSpec
-from ._command_shared_contracts import (
+from ._modelo_nonwork_command_spec_policies import _REGISTRY_MODEL_READ
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -15,7 +16,6 @@ from ._command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ._modelo_nonwork_command_spec_policies import _REGISTRY_MODEL_READ
 from .command_spec import CommandSpec, InvocationSpec
 
 _MODELO_OPTION: Final[OptionSpec] = OptionSpec(

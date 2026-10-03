@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._command_parameter_contracts import OptionSpec
-from ..._command_shared_contracts import BindingState, SchemaState
+from ...command_parameter_contracts import OptionSpec
+from ...command_shared_contracts import BindingState, SchemaState
 from .._google_command_specs import GOOGLE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

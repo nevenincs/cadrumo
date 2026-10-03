@@ -818,11 +818,13 @@ sheets:
       ascendants_under_75_whole: Ascendants under 75 (whole)
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
+      asset_ref: Internal asset reference
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
       block: Block
       cadastral_reference: Cadastral reference
+      cash_accounting_mark: Cash accounting
       clave: Clave
       clave_codigo: Code key
       clave_declarado: Property ownership key
@@ -831,6 +833,7 @@ sheets:
       codigo_cuenta: Securities account / loan operation no.
       codigo_emisor: Issuer code
       codigo_provincia: Province code
+      community_vat_number: EU operator VAT number
       compensaciones: Compensations
       complement: Address complement
       complemento_infancia_clave: Child support supplement
@@ -842,6 +845,7 @@ sheets:
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
+      declarado_tax_id: Declared party tax ID
       deduction_percentage: Deduction percentage
       descendants_disabled_33_65_total: Disabled descendants 33-65% (total)
       descendants_disabled_33_65_whole: Disabled descendants 33-65% (whole)
@@ -936,6 +940,7 @@ sheets:
       portal: Entrance
       postal_code: Postal code
       province_code: Province
+      provincia_code: Province code
       recipient_province_code: Recipient province code
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
@@ -950,8 +955,10 @@ sheets:
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
       representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
+      residence_country_code: Residence country code
       retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
+      reverse_charge_mark: Reverse charge
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
       situacion_inmueble: Property location status
@@ -971,6 +978,8 @@ sheets:
       transfer_pricing_method_code: Transfer pricing method
       unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation
+      valuation_event: Valuation event
+      valuation_event_date: Valuation event date
       withholding_percentage: Withholding rate
 topic:
   authentication:

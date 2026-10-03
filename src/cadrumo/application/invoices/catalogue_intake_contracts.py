@@ -21,11 +21,6 @@ INVOICE_IMPORT_OPERATION_DEFINITION_ID = "ledger.invoice.import"
 INVOICE_WIZARD_OPERATION_DEFINITION_ID = "ledger.invoice.wizard"
 type _Text = Annotated[str, Field(max_length=16384)]
 
-INVOICE_IMPORT_OPERATION_DEFINITION_ID = "ledger.invoice.import"
-
-
-INVOICE_WIZARD_OPERATION_DEFINITION_ID = "ledger.invoice.wizard"
-
 
 class InvoiceImportRequest(BaseModel):
     """Secure reference to the original file, checked before parsing or mapping."""

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.modelos.verification_report import (
@@ -71,15 +70,6 @@ CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS: tuple[str, ...] = (
     "ley-37-1992:art-164",
     "rd-1624-1992:art-71",
 )
-
-
-OSS_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_OSS_AGGREGATION
-
-
-IVA_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_IVA_AGGREGATION
-
-
-IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
 
 
 #: The ``source_ref`` form a ledger IVA source issue names its row by.

@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from ...core.async_cleanup import AsyncCloseable, async_cleanup_failures
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
+from ...core.operator_progress import OperatorDisplayCode
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity
 from .financial_operand_submission import OperationFinancialOperandContextAccess
@@ -100,8 +101,13 @@ class OperationEventEmitter(Protocol):
         """Publish the executor's current truthful effect fact."""
         ...
 
-    async def notice(self, notice_code: OperationEventCode) -> None:
-        """Publish a stable notice identity for frontend projection."""
+    async def notice(
+        self,
+        notice_code: OperationEventCode,
+        *,
+        display_code: OperatorDisplayCode | None = None,
+    ) -> None:
+        """Publish a stable notice identity, with an optional operator comparison code, for frontend projection."""
         ...
 
     async def diagnostic(self, diagnostic_ref: OperationDiagnosticReference) -> None:

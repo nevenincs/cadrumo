@@ -8,7 +8,7 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRouteValue,
 )
 
-from .._command_shared_contracts import (
+from ..command_shared_contracts import (
     Capability,
     PerformanceClass,
     ResultSchemaSpec,

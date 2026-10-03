@@ -138,26 +138,21 @@ def require_period_independent_admission(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def require_same_origin_admission(admitted: OperationAccessRequest, context: OperationAccessContext) -> None:
-    """Require a later action to come from the destination and frontend that submitted."""
-    if admitted.destination_id != context.destination_id or admitted.frontend is not context.frontend:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-
 def require_period_independent_replay_or_authority(
     context: OperationAccessContext, *, profile_id: UUID, definition_id: str
 ) -> None:
     """Require a replayed period-independent admission, or held authority for fresh work.
 
     Every action outside ``ADMISSION_ENTRY_ACTIONS`` on an admitted submission must
-    replay this profile's period-independent admission of the operation from the
-    destination and frontend that submitted it. Any other action, and any action
+    replay this profile's period-independent admission of the operation. The
+    replay binds no destination or frontend: a later session always has a new
+    destination, its disclosures name that destination, and COMMIT is held to the
+    originally approved scope by the host. Any other action, and any action
     without an admission, resolves against the host's held authority operation.
     """
     admitted = context.admitted_request
     if admitted is not None and context.action not in ADMISSION_ENTRY_ACTIONS:
         require_period_independent_admission(admitted, profile_id=profile_id, definition_id=definition_id)
-        require_same_origin_admission(admitted, context)
     elif context.authority_operation is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 

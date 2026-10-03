@@ -34,11 +34,13 @@ exists to catch.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Final, NamedTuple
 
 import pytest
 
+from ...tests.env_scope import derived_storage_settings
 from ..config import override_settings
 from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 from ..storage_taxonomy import (
@@ -49,6 +51,13 @@ from ..storage_taxonomy import (
 from ..storage_taxonomy_locations import FINGERPRINT_EXCLUDED_STORAGE_FIELDS, STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def derived_storage_baseline(tmp_path: Path) -> Iterator[None]:
+    """Derive every category from the root under test, not from the runner's explicit paths."""
+    with derived_storage_settings(tmp_path / "ambient-storage"):
+        yield
 
 
 class ExclusionExpectation(NamedTuple):

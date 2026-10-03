@@ -13,6 +13,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
+from ...core.operator_progress import OperatorDisplayCode
 from ...core.time.utc import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
@@ -510,10 +511,11 @@ class OperationPublicEffectEventV1(_OperationPublicEventBase):
 
 
 class OperationPublicNoticeEventV1(_OperationPublicEventBase):
-    """Public projection of one localized-notice identity event."""
+    """Public projection of one localized-notice identity event and its optional comparison code."""
 
     kind: Literal[OperationEventKind.NOTICE] = OperationEventKind.NOTICE
     notice_code: OperationEventCode
+    display_code: OperatorDisplayCode | None = None
 
 
 class OperationPublicReconciliationEventV1(_OperationPublicEventBase):

@@ -38,7 +38,6 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
 )
 from cadrumo.application.modelo.reconciliation import (
     ReconciliationDeclaracionSourceUnsupportedError,
-    reconcile_parsed_declaracion,
 )
 from cadrumo.application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
@@ -62,6 +61,8 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+
+from .reconciliation_persist_support import reconcile_parsed_declaracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

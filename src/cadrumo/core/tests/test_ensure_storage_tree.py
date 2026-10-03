@@ -141,6 +141,38 @@ def test_existing_explicit_directory_is_preserved_while_defaults_are_created(tmp
     assert (root / "cache" / "llm-cache").is_dir()
 
 
+def test_missing_explicit_runtime_namespace_is_not_provisioned(tmp_path: Path) -> None:
+    """The private default policy does not take ownership of an operator override."""
+    root = tmp_path / "state"
+    namespace = tmp_path / "operator-runtime"
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_runtime_socket_dir=namespace),
+        pytest.raises(CoreValidationError) as refusal,
+    ):
+        ensure_storage_tree()
+    assert refusal.value.context is not None
+    assert refusal.value.context["state_directory_target"] == str(namespace)
+    assert refusal.value.context["explicit_override"] is True
+    assert not namespace.exists()
+    assert not root.exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX directory permission contract")
+def test_fresh_runtime_namespace_is_private_and_existing_permissions_are_preserved(tmp_path: Path) -> None:
+    """Fresh defaults admit a private endpoint; old insecure state stays visible to its guard."""
+    root = tmp_path / "state"
+    with override_settings(cadrumo_local_storage_root=root):
+        ensure_storage_tree()
+        namespace = root / "runtime"
+        assert stat.S_IMODE(namespace.stat().st_mode) == 0o700
+        namespace.chmod(0o755)
+        sentinel = namespace / "sentinel"
+        sentinel.write_bytes(b"operator state")
+        ensure_storage_tree()
+        assert stat.S_IMODE(namespace.stat().st_mode) == 0o755
+        assert sentinel.read_bytes() == b"operator state"
+
+
 def test_a_file_valued_setting_gets_its_parent_not_a_directory(tmp_path: Path) -> None:
     """One entry in the taxonomy names a JSON file, not a directory.
 

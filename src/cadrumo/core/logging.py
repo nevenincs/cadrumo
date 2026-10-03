@@ -932,7 +932,7 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     with any handler no longer reaches.
     """
 
-    _configuring = False
+    configuring = False
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
@@ -946,13 +946,13 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
 
 
 def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
-    if record.levelno < logging.WARNING or _configured or _configuration_deferred or type(handler)._configuring:
+    if record.levelno < logging.WARNING or _configured or _configuration_deferred or type(handler).configuring:
         return
-    type(handler)._configuring = True
+    type(handler).configuring = True
     try:
         configure_logging()
     finally:
-        type(handler)._configuring = False
+        type(handler).configuring = False
 
 
 def _defer_record_if_placeholder(

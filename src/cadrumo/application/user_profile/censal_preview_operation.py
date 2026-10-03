@@ -29,7 +29,7 @@ from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
 from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter, active_verified_session
 from ..operations.access_resolution import (
-    OPERATION_LIFECYCLE_ACTIONS,
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
 )
@@ -434,7 +434,7 @@ def resolve_censal_preview_operation_access(
     """Resolve exact-profile preview access; the bound worker checks provider readiness."""
     _validated_censal_preview_request(request, context)
     return bind_whole_profile_censal_access(
-        request, context, actions=OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
+        request, context, actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
     )
 
 

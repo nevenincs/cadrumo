@@ -3,8 +3,8 @@ from __future__ import annotations
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ._app_ledger_command_spec_policies import _POLICY_5
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,

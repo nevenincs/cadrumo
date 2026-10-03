@@ -19,9 +19,6 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.modelo.reconciliation import (
-    reconcile_parsed_justificante,
-)
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
@@ -55,6 +52,7 @@ from ...storage.tests.active_profile_isolated_backend_fixture import (
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
+from .reconciliation_persist_support import reconcile_parsed_justificante
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 

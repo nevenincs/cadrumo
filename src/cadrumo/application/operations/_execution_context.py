@@ -10,6 +10,7 @@ from datetime import datetime
 from ...core.async_cleanup import AsyncCloseable
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationLifecycle
+from ...core.operator_progress import OperatorDisplayCode
 from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError
@@ -219,7 +220,12 @@ class _DefinitionBoundEvents:
         )
         await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,), effect=effect)
 
-    async def notice(self, notice_code: OperationEventCode) -> None:
+    async def notice(
+        self,
+        notice_code: OperationEventCode,
+        *,
+        display_code: OperatorDisplayCode | None = None,
+    ) -> None:
         event = OperationNoticeEvent(
             identity=self._context.identity,
             revision=0,
@@ -227,6 +233,7 @@ class _DefinitionBoundEvents:
             timestamp=self._context.clock(),
             code=notice_code,
             notice_code=notice_code,
+            display_code=display_code,
         )
         await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
 

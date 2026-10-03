@@ -53,8 +53,10 @@ from ..verification_report_read_contracts import (
     ModeloVerificationReportViewRequest,
 )
 from ..verification_report_read_operation import (
-    build_modelo_verification_report_read_definitions,
-    build_modelo_verification_report_read_registrations,
+    build_modelo_verification_report_list_definition,
+    build_modelo_verification_report_list_registration,
+    build_modelo_verification_report_view_definition,
+    build_modelo_verification_report_view_registration,
 )
 from ..verification_report_read_projection import (
     ModeloVerificationReportListProjection,
@@ -192,14 +194,24 @@ def _bundle(
     )
 
 
+def _read_definitions_and_registrations(factory):
+    """Build both report-read definitions and registrations as the composition root does."""
+    list_definition = build_modelo_verification_report_list_definition(factory)
+    view_definition = build_modelo_verification_report_view_definition(factory)
+    registrations = (
+        build_modelo_verification_report_list_registration(list_definition, factory),
+        build_modelo_verification_report_view_registration(view_definition, factory),
+    )
+    return (list_definition, view_definition), registrations
+
+
 def _setup(bundle):
     def factory(profile_id: str, *, operation: PinnedAuthorityOperation):
         assert profile_id == str(_PROFILE)
         assert operation is not None
         return bundle
 
-    definitions = build_modelo_verification_report_read_definitions(factory)
-    registrations = build_modelo_verification_report_read_registrations(definitions, factory)
+    definitions, registrations = _read_definitions_and_registrations(factory)
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
     return factory, definitions, registrations, registry
 
@@ -470,8 +482,7 @@ def test_view_projection_rejects_mismatched_receipt_and_schema_binds() -> None:
         del operation
         raise AssertionError("schema binding must not resolve profile repositories")
 
-    definitions = build_modelo_verification_report_read_definitions(schema_factory)
-    registrations = build_modelo_verification_report_read_registrations(definitions, schema_factory)
+    definitions, registrations = _read_definitions_and_registrations(schema_factory)
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
 
     assert registry.lookup(MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID).result_type is (

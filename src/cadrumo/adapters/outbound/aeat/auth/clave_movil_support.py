@@ -29,11 +29,10 @@ from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex
 from .....core.identity.documents import IdentityDocument, IdentityError
 from .....core.logging import get_logger
-from .....core.operator_progress import OperatorProgress
+from .....core.operator_progress import OPERATOR_DISPLAY_CODE_PATTERN, OperatorProgress, emit_operator_progress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
 from .....domain.calculations.registry.tax_id_runtime import validate_runtime_identity
-from ..operator_progress import emit_operator_progress
 from .errors import AuthConfigurationError
 
 if TYPE_CHECKING:
@@ -275,7 +274,7 @@ def diagnostic_fingerprint(value: object) -> str:
     return f"sha256:{digest}"
 
 
-def render_progress_banner(
+async def render_progress_banner(
     *,
     verification_code: str | None,
     timeout_seconds: int,
@@ -285,23 +284,33 @@ def render_progress_banner(
 
     Always records the banner to the runtime log. When an operator progress
     sink is armed for the current context (see
-    :func:`~cadrumo.adapters.outbound.aeat.operator_progress.operator_progress_sink`),
-    the same banner is additionally handed to that sink so a headless operator
-    sees the verification code during the wait rather than having to read the
-    log file.
+    :func:`~cadrumo.core.operator_progress.operator_progress_sink`), the same
+    banner is additionally handed to that sink so the operator is prompted
+    during the approval window rather than having to read the log file. Only
+    the route's notice code and, when the page showed one in the comparison-code
+    shape, the verification code cross a frontend contract; the free-text
+    banner stays with the log and in-process sinks.
     """
     if used_non_qr_fallback:
+        notice_code = "auth.clave-movil.approval-pending"
         instruction = "Open the Cl@ve app and confirm the pending AEAT request; a push notification may not appear"
     else:
+        notice_code = "auth.clave-movil.qr-scan-pending"
         instruction = "Scan the QR code in the visible browser with the Cl@ve app and confirm the AEAT request"
+    display_code: str | None = None
     if verification_code:
         instruction = f"{instruction}. Verify that code {verification_code} matches in both places"
+        candidate = verification_code.strip().upper()
+        if re.fullmatch(OPERATOR_DISPLAY_CODE_PATTERN, candidate):
+            display_code = candidate
     progress = OperatorProgress(
+        notice_code=notice_code,
+        display_code=display_code,
         message=f"Cl@ve Movil: {instruction}.",
         timeout_seconds=timeout_seconds,
     )
     log.info("auth.waiting_banner banner=%r", progress.render())
-    emit_operator_progress(progress)
+    await emit_operator_progress(progress)
 
 
 __all__ = [

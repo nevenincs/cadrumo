@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core.aggregation import BindingSourceKind
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.iva.deduction_facts import deduction_evidence_authority_for_row
@@ -27,8 +28,6 @@ from .action_errors import (
 from .preconditions import ModeloPreconditionFailure
 from .verification_finding_contracts import (
     ABSENT_FACT,
-    IVA_AGGREGATION_SOURCE,
-    IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE,
     LEDGER_TRANSACTION_SOURCE_REF_PREFIX,
     UNRECORDABLE_DEDUCTION_SCENARIOS,
 )
@@ -45,7 +44,8 @@ def iva_selected_scope_evidence_issues(target: CalculationRevision) -> tuple[Cal
     return tuple(
         issue
         for issue in target.source_issues
-        if issue.binding_source is IVA_AGGREGATION_SOURCE and issue.reason == "iva_selected_scope_evidence_failure"
+        if issue.binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+        and issue.reason == "iva_selected_scope_evidence_failure"
     )
 
 
@@ -226,7 +226,7 @@ def iva_compensation_annual_source_evidence_finding(
     issues = tuple(
         issue
         for issue in target.source_issues
-        if issue.binding_source is IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE
+        if issue.binding_source is BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
         and issue.reason == "iva_compensation_annual_source_evidence_failure"
     )
     if not issues:

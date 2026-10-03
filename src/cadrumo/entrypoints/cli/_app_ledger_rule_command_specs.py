@@ -11,8 +11,8 @@ from ._app_ledger_rule_ratio_command_spec_support import (
     _LEDGER_RULE_RATIO_LEAF_INVOCATION,
     _RULE_ACTOR_OPTION,
 )
-from ._command_parameter_contracts import OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,

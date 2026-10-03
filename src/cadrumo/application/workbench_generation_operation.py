@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from functools import cache
 from uuid import UUID
@@ -84,8 +85,16 @@ class WorkbenchGenerationExecutor:
             generation = await reader(context.identity, request.payload)
             if type(generation) is not WorkbenchGenerationV1:
                 raise TypeError("workbench reader returned an invalid generation")
-            projection = project_workbench_generation(request.payload.profile_id, generation)
-            _require_pageable_result(projection)
+
+            def project() -> WorkbenchGenerationOperationProjection:
+                projection = project_workbench_generation(request.payload.profile_id, generation)
+                _require_pageable_result(projection)
+                return projection
+
+            # Mirroring and validating the full workspace can be CPU-heavy.
+            # Keep the worker loop available to observations and lease renewal
+            # while the cancellation-owned capture retains this thread's work.
+            projection = await asyncio.to_thread(project)
             result_ref = await context.operands.put(projection, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return result_ref

@@ -25,6 +25,7 @@ from typing import ClassVar, override
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
@@ -40,7 +41,6 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.ledger import invoice_confirmation
 from ....application.ledger.confirmation_gate import ConfirmationBlockedError, confirmation_blockers
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
-from ....application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period

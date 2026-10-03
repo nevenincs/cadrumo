@@ -52,6 +52,7 @@ from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from ....application.ledger.notices import stale_finalized_revision_notices
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
@@ -302,8 +303,6 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(
     # returns the discarded unit, stranding the target permanently. The advisory
     # must therefore never point at either. Asserted on the notice's structured
     # suggestion, not on localized prose.
-    from ....application.ledger.notices import stale_finalized_revision_notices
-
     blocker = LedgerRemovalBlocker(
         work_unit_id="ab" * 32,
         calculation_revision_id="cd" * 32,

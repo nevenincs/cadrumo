@@ -6,8 +6,8 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_5,
 )
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,

@@ -843,11 +843,13 @@ sheets:
       ascendants_under_75_whole: Ascendents < 75 anys (sencers)
       asset_class_code: Clau del bé
       asset_identifier: Identificació del bé
+      asset_ref: Referència interna del bé
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
       block: Bloc
       cadastral_reference: Referència cadastral
+      cash_accounting_mark: Criteri de caixa
       clave: Clau
       clave_codigo: Clau codi
       clave_declarado: Clau de titularitat de l'immoble
@@ -856,6 +858,7 @@ sheets:
       codigo_cuenta: Codi compte valors / n.º operació préstec
       codigo_emisor: Codi emissor
       codigo_provincia: Codi de província
+      community_vat_number: NIF de l'operador comunitari
       compensaciones: Compensacions
       complement: Complement del domicili
       complemento_infancia_clave: Complement d'ajuda a la infància
@@ -867,6 +870,7 @@ sheets:
       counterparty_tax_id: NIF de la contrapart
       country_code: Codi de país
       currency_code: Codi de divisa
+      declarado_tax_id: NIF del declarat
       deduction_percentage: Percentatge de deducció
       descendants_disabled_33_65_total: Descendents amb discapacitat 33-65% (total)
       descendants_disabled_33_65_whole: Descendents amb discapacitat 33-65% (sencers)
@@ -963,6 +967,7 @@ sheets:
       portal: Portal
       postal_code: Codi postal
       province_code: Província
+      provincia_code: Codi de província
       recipient_province_code: Codi de província del perceptor
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
@@ -977,8 +982,10 @@ sheets:
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
       representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
+      residence_country_code: Codi del país de residència
       retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
+      reverse_charge_mark: Inversió del subjecte passiu
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
       situacion_inmueble: Situació de l'immoble
@@ -1000,6 +1007,8 @@ sheets:
       transfer_pricing_method_code: Mètode de valoració
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració
+      valuation_event: Esdeveniment de valoració
+      valuation_event_date: Data de l'esdeveniment de valoració
       withholding_percentage: Percentatge de retenció
 topic:
   authentication:

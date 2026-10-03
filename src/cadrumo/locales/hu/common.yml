@@ -838,11 +838,13 @@ sheets:
       ascendants_under_75_whole: Felmenők 75 alatt (egészben)
       asset_class_code: Eszközosztály kód
       asset_identifier: Eszközazonosító
+      asset_ref: Eszköz belső hivatkozása
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
       block: Tömb
       cadastral_reference: Kataszteri azonosító
+      cash_accounting_mark: Pénzforgalmi elszámolás
       clave: Kulcs
       clave_codigo: Kódkulcs
       clave_declarado: Az ingatlan tulajdonjogi kódja
@@ -851,6 +853,7 @@ sheets:
       codigo_cuenta: Értékpapírszámla / kölcsönügylet száma
       codigo_emisor: Kibocsátó kódja
       codigo_provincia: Tartomány kódja
+      community_vat_number: Közösségi adószám
       compensaciones: Kompenzációk
       complement: Címkiegészítés
       complemento_infancia_clave: Gyermeknevelési kiegészítés
@@ -862,6 +865,7 @@ sheets:
       counterparty_tax_id: Szerződő fél adóazonosítója
       country_code: Országkód
       currency_code: Pénznemkód
+      declarado_tax_id: Bejelentett fél adóazonosítója
       deduction_percentage: Levonási százalék
       descendants_disabled_33_65_total: Fogyatékos leszármazottak 33-65% (összes)
       descendants_disabled_33_65_whole: Fogyatékos leszármazottak 33-65% (egészben)
@@ -956,6 +960,7 @@ sheets:
       portal: Bejárat
       postal_code: Irányítószám
       province_code: Tartomány
+      provincia_code: Tartomány kódja
       recipient_province_code: Kedvezményezett tartománykódja
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
@@ -970,8 +975,10 @@ sheets:
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
       representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
+      residence_country_code: Lakóhely országkódja
       retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
+      reverse_charge_mark: Fordított adózás
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
       situacion_inmueble: Az ingatlan elhelyezkedési státusza
@@ -992,6 +999,8 @@ sheets:
       transfer_pricing_method_code: Transzferár-módszer
       unit_convivencia_titular_clave: Együttélési egység vezetője
       valuation_amount: Értékelés
+      valuation_event: Értékelési esemény
+      valuation_event_date: Értékelési esemény dátuma
       withholding_percentage: Visszatartási kulcs
 topic:
   authentication:

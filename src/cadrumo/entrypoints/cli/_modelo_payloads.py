@@ -243,7 +243,7 @@ class CalculationRevisionPayload(OutputSchema):
     """Shared JSON projection of a persisted :class:`CalculationRevision`.
 
     Built by
-    :func:`calculation_revision_payload`.
+    :func:`~cadrumo.entrypoints.cli.runtime_modelo_calculation.calculation_snapshot_payload`.
     ``casilla_values`` is the flat convenience table keyed by
     :obj:`CasillaId`, while
     ``observations`` carries joinable :class:`ObservationPayload` rows projected

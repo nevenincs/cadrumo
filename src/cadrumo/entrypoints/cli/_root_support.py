@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from ._command_parameter_contracts import OptionSpec
+    from .command_parameter_contracts import OptionSpec
     from .command_spec import CommandSpec
 
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
@@ -25,7 +25,7 @@ from .common import (
 
 def _root_profile_secret_options(root: CommandSpec) -> tuple[OptionSpec, ...]:
     """Root profile secret options."""
-    from ._command_parameter_contracts import OptionSpec
+    from .command_parameter_contracts import OptionSpec
 
     channels = tuple(
         parameter
@@ -42,7 +42,7 @@ def _root_profile_secret_options(root: CommandSpec) -> tuple[OptionSpec, ...]:
 
 def _root_named_options(root: CommandSpec, name: str) -> tuple[OptionSpec, ...]:
     """Keep the declared order of root options matching one exact parameter name."""
-    from ._command_parameter_contracts import OptionSpec
+    from .command_parameter_contracts import OptionSpec
 
     return tuple(
         parameter for parameter in root.parameters if isinstance(parameter, OptionSpec) and parameter.name == name

@@ -15,9 +15,6 @@ from datetime import datetime
 from typing import Literal
 
 from ...application.calculations.observations_repository import (
-    ObservationEnvelopePayload,
-    ObservationLayers,
-    ObservationOverride,
     ObservationSourceKind,
 )
 from ...application.modelo.filing_chain_reconciliation import (
@@ -263,44 +260,6 @@ def filing_reconciliation_notices(
             notices.append(_contradiction_notice(result))
         notices.extend(_reconciliation_notice(result, notice) for notice in result.notices)
     return notices
-
-
-def _layer_payload(envelope: ObservationEnvelopePayload | None) -> ObservationLayerPayload | None:
-    if envelope is None:
-        return None
-    return ObservationLayerPayload(
-        source_kind=envelope.source_kind,
-        official_evidence=envelope.source_kind.is_official_aeat,
-        captured_at=envelope.captured_at,
-        stamped_revision_id=envelope.stamped_revision_id,
-        casilla_values={
-            casilla_id: str(value) for casilla_id, value in sorted(envelope.observation.casilla_values.items())
-        },
-    )
-
-
-def _override_payload(override: ObservationOverride | None) -> ObservationOverridePayload | None:
-    if override is None:
-        return None
-    return ObservationOverridePayload(
-        actor=override.actor,
-        reason=override.reason,
-        recorded_at=override.recorded_at,
-        replaced_source_kind=override.replaced_source_kind,
-        replaced_values={casilla_id: str(value) for casilla_id, value in sorted(override.replaced_values.items())},
-    )
-
-
-def observation_layers_payload(layers: ObservationLayers) -> ObservationLayersPayload:
-    """Project both observation layers and the pending layer's override audit."""
-    pending = layers.pending_local
-    effective = layers.effective
-    return ObservationLayersPayload(
-        official=_layer_payload(layers.official),
-        pending_local=_layer_payload(pending),
-        effective_source_kind=effective.source_kind if effective is not None else None,
-        override=_override_payload(pending.override if pending is not None else None),
-    )
 
 
 def _layer_lines(name: str, layer: ObservationLayerPayload | None) -> list[str]:

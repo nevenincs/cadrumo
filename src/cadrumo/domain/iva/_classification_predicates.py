@@ -121,7 +121,7 @@ class _ClassificationPredicateContext:
     third_country: IvaTerritorialScope
 
 
-def _compile_classification_predicate(
+def compile_classification_predicate(
     expression: str,
     *,
     vocabulary: IvaClassificationCatalogue,

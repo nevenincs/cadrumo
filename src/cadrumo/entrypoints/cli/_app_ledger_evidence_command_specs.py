@@ -26,8 +26,8 @@ from ._app_ledger_command_spec_support import (
     _required_text_argument,
     _required_text_option,
 )
-from ._command_parameter_contracts import ArgumentSpec, OptionSpec
-from ._command_shared_contracts import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,

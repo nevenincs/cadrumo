@@ -15,7 +15,6 @@ from ._command_policy_validation import validate_machine_secret_condition as _va
 from ._command_policy_validation import validate_machine_secret_field as _validate_machine_secret_field
 from ._command_policy_validation import validate_machine_secret_variant as _validate_machine_secret_variant
 from ._command_policy_validation import validate_profile_secret as _validate_profile_secret
-from ._command_shared_contracts import DeferredTarget
 from ._command_structure_validation import validate_recovery_bootstrap as _validate_recovery_bootstrap
 from ._command_structure_validation import validate_recovery_directions as _validate_recovery_directions
 from ._command_structure_validation import validate_recovery_json_fields as _validate_recovery_json_fields
@@ -24,6 +23,7 @@ from ._command_structure_validation import validate_recovery_parameters as _vali
 from ._command_structure_validation import (
     validate_recovery_reserved_descriptors as _validate_recovery_reserved_descriptors,
 )
+from .command_shared_contracts import DeferredTarget
 
 
 class MachineSecretChannelKind(Enum):

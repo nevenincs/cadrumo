@@ -15,11 +15,9 @@ than a convenience:
   2025 layout has zero records and its row bindings feed the inventory casillas
   0177, 0181 and 0182 rather than export rows, so requiring consumption there
   would assert a structure the revision does not have.
-* Consumption does not require a repeat. Modelo 232 declares six row bindings and
-  no repeat at all, consuming them through 140 explicit binding fields across two
-  records, because its diseño lays operations out as fixed numbered slots. A gate
-  demanding ``binding_rows`` specifically would refuse correct content -- an
-  earlier draft of this check did exactly that.
+* Consumption does not require a repeat. A diseño that lays rows out as fixed
+  numbered slots consumes its row bindings through explicit binding fields, so a
+  gate demanding ``binding_rows`` specifically would refuse correct content.
 
 Known-defective revisions are ENROLLED below with a stated reason rather than
 excluded silently, so fixing one reds this test until its entry is removed.
@@ -93,13 +91,12 @@ def test_every_enrolled_defect_is_still_unconsumed() -> None:
     )
 
 
-@pytest.mark.parametrize(("modelo_id", "revision_id"), [("347", "2011-2024"), ("232", "2018-y-siguientes")])
-def test_both_consumption_shapes_are_present_in_the_corpus(modelo_id: str, revision_id: str) -> None:
-    """The control: both ways of consuming a row binding really occur here.
+@pytest.mark.parametrize(("modelo_id", "revision_id"), [("347", "2011-2024")])
+def test_a_consuming_revision_is_present_in_the_corpus(modelo_id: str, revision_id: str) -> None:
+    """The control: a revision that declares and consumes row bindings really occurs here.
 
     Without this the check above could pass by never encountering a consuming
-    revision at all. Modelo 347 consumes through repeat='binding_rows'; modelo
-    232 consumes through explicit binding fields and declares no repeat.
+    revision at all. Modelo 347 consumes through repeat='binding_rows'.
     """
     revision = bundled_modelo_components(modelo_id)[0].revisions[revision_id]
     row_bindings = [binding for binding in revision.bindings if getattr(binding.provider, "fact", None) == "row_field"]

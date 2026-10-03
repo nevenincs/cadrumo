@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING
 from ...core.type_guards import is_object_list, is_str_keyed_dict
 from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
 from ._component_fact_projection import (
-    _CATEGORY_PROJECTION_NAMES,
-    _component_vocabulary_from_entries,
-    _cuota_settlement_catalogue_from_entries,
-    _ordered_component_rows,
-    _resolve_component_catalogue_entries,
+    CATEGORY_PROJECTION_NAMES,
+    component_vocabulary_from_entries,
+    cuota_settlement_catalogue_from_entries,
+    ordered_component_rows,
+    resolve_component_catalogue_entries,
 )
 from .classification import InvoiceKind
 from .errors import IvaValidationError
@@ -32,13 +32,13 @@ if TYPE_CHECKING:
     )
 
 
-def _category_projection_from_entries(
+def category_projection_from_entries(
     entries: Mapping[str, str],
     projection: CategoryProjectionName,
     category_catalogue: IvaCategoryCatalogue,
 ) -> frozenset[IvaCategory]:
     """Project one explicit category membership mapping from fact 0084."""
-    if projection not in _CATEGORY_PROJECTION_NAMES:
+    if projection not in CATEGORY_PROJECTION_NAMES:
         raise IvaValidationError(f"unknown IVA category projection {projection!r}")
     members = _category_projection_members(entries, projection, category_catalogue)
     declared_categories = _declared_component_categories(entries)
@@ -76,7 +76,7 @@ def _category_projection_members(
 
 def _declared_component_categories(entries: Mapping[str, str]) -> set[str]:
     declared_categories: set[str] = set()
-    for row_key in _ordered_component_rows(entries):
+    for row_key in ordered_component_rows(entries):
         category_text, separator, kind_text = row_key.partition("|")
         if not separator or not category_text or not kind_text:
             raise IvaValidationError(f"invalid IVA component catalogue row key {row_key!r}")
@@ -84,17 +84,17 @@ def _declared_component_categories(entries: Mapping[str, str]) -> set[str]:
     return declared_categories
 
 
-def _project_component_catalogue(
+def project_component_catalogue(
     *,
     effective_date: date,
     authority: GovernedFactSource,
 ) -> ComponentCatalogue:
     """Project the selected registry mapping fact into typed component rows."""
-    entries = _resolve_component_catalogue_entries(effective_date=effective_date, authority=authority)
+    entries = resolve_component_catalogue_entries(effective_date=effective_date, authority=authority)
     category_catalogue = resolve_iva_category_catalogue(effective_date=effective_date, authority=authority)
-    ordered_keys = _ordered_component_rows(entries)
-    component_vocabulary = _component_vocabulary_from_entries(entries)
-    cuota_settlement_catalogue = _cuota_settlement_catalogue_from_entries(entries)
+    ordered_keys = ordered_component_rows(entries)
+    component_vocabulary = component_vocabulary_from_entries(entries)
+    cuota_settlement_catalogue = cuota_settlement_catalogue_from_entries(entries)
 
     # Keep the conversion helper as the narrow mechanical boundary. The helper
     # is imported lazily because it imports this module for the row model.

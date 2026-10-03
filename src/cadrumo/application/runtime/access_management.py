@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -76,10 +76,6 @@ type RuntimeAccessManagementRequest = Annotated[
 """Closed management request union; identifiers never prove human authority."""
 
 
-class RuntimeAccessManagementRequestEnvelope(RootModel[RuntimeAccessManagementRequest]):
-    """Validate one complete management request document."""
-
-
 class _RuntimeAccessManagementReplyIdentity(BaseModel):
     """Common verified native reply coordinates without a bearer."""
 
@@ -133,7 +129,3 @@ type RuntimeAccessManagementReply = Annotated[
     Field(discriminator="kind"),
 ]
 """Closed nonsecret management reply union."""
-
-
-class RuntimeAccessManagementReplyEnvelope(RootModel[RuntimeAccessManagementReply]):
-    """Validate one complete management reply document."""

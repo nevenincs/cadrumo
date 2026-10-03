@@ -11,7 +11,6 @@ from pydantic import ValidationError
 
 from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 
-from .._command_parameter_contracts import OptionSpec
 from .._command_secret_contracts import MachineSecretChannelKind, MachineSecretFieldSpec, ProfileSecretChannelKind
 from .._profile_authentication_contract import (
     ProfileAuthenticationMethod,
@@ -21,6 +20,7 @@ from .._profile_authentication_contract import (
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
+from ..command_parameter_contracts import OptionSpec
 from ..command_schema import command_registration_metadata, command_registration_projection
 from ..command_specs import COMMAND_GRAPH
 from ..config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel, select_profile_secret_channel

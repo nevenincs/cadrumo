@@ -73,7 +73,7 @@ class ModeloReconcileResult(OutputSchema):
 
     Both verbs share
     :class:`ModeloReconciliationReport` from
-    :func:`modelo_reconcile` or :func:`modelo_reconcile_bytes`: a work-unit-level
+    :func:`prepare_modelo_reconcile` or :func:`prepare_modelo_reconcile_bytes`: a work-unit-level
     :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
     :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
     :class:`ModeloReconciliationDiffPayload` list, an aware ``reconciled_at``

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.type_guards import is_object_mapping
-from ._classification_predicates import _compile_classification_predicate
+from ._classification_predicates import compile_classification_predicate
 from .errors import IvaRateNotFoundError, IvaValidationError
 from .place_of_supply import place_of_supply_rule
 from .schema import spanish_eu_member_state
@@ -57,7 +57,7 @@ def _requires_reverse_charge(flags: Mapping[str, bool], category: IvaCategory) -
     return flag
 
 
-def _resolve_rate_category_mapping(
+def resolve_rate_category_mapping(
     entries: Mapping[str, str],
     rate_catalogue: IvaRateKindCatalogue,
     category_catalogue: IvaCategoryCatalogue,
@@ -79,15 +79,15 @@ def _resolve_rate_category_mapping(
     return rate_categories
 
 
-def _resolve_rate_territories(
+def resolve_rate_territories(
     entries: Mapping[str, str],
     vocabulary: IvaClassificationCatalogue,
 ) -> frozenset[IvaTerritorialScope]:
-    from .classification import _required_classification_entry
+    from .classification import required_classification_entry
 
     rate_territories = frozenset(
         vocabulary.require_territorial_scope(raw_value)
-        for raw_value in _required_classification_entry(entries, "rate_territories").split(",")
+        for raw_value in required_classification_entry(entries, "rate_territories").split(",")
         if raw_value.strip()
     )
     if not rate_territories:
@@ -95,7 +95,7 @@ def _resolve_rate_territories(
     return rate_territories
 
 
-def _resolve_classification_rules(
+def resolve_classification_rules(
     entries: Mapping[str, str],
     *,
     vocabulary: IvaClassificationCatalogue,
@@ -104,11 +104,11 @@ def _resolve_classification_rules(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaClassificationRule, ...]:
-    from .classification import _classification_csv
+    from .classification import classification_csv
 
     reverse_charge_by_category = _registry_reverse_charge_by_category(operation)
     rules: list[IvaClassificationRule] = []
-    for rule_id in _classification_csv(entries, "rule_order"):
+    for rule_id in classification_csv(entries, "rule_order"):
         rules.append(
             _resolve_classification_rule(
                 rule_id,
@@ -135,16 +135,16 @@ def _resolve_classification_rule(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationRule:
-    from .classification import IvaClassificationRule, _required_classification_entry
+    from .classification import IvaClassificationRule, required_classification_entry
 
     prefix = f"rule.{rule_id}"
-    expression = _required_classification_entry(entries, f"{prefix}.predicate")
-    raw_category = _required_classification_entry(entries, f"{prefix}.category")
+    expression = required_classification_entry(entries, f"{prefix}.predicate")
+    raw_category = required_classification_entry(entries, f"{prefix}.category")
     category = None if raw_category == "rate_categories[rate_tier]" else category_catalogue.require(raw_category)
     consumes = _rule_party_facts(entries.get(f"{prefix}.consumes"), rule_id)
     return IvaClassificationRule(
         rule_id=rule_id,
-        predicate=_compile_classification_predicate(
+        predicate=compile_classification_predicate(
             expression,
             vocabulary=vocabulary,
             kind_catalogue=kind_catalogue,
@@ -152,7 +152,7 @@ def _resolve_classification_rule(
             operation=operation,
         ),
         category=category,
-        description=_required_classification_entry(entries, f"{prefix}.label"),
+        description=required_classification_entry(entries, f"{prefix}.label"),
         consumes=consumes,
         requires_reverse_charge=(
             category is not None and _requires_reverse_charge(reverse_charge_by_category, category)
@@ -174,7 +174,7 @@ def _rule_party_facts(raw_consumes: str | None, rule_id: str) -> frozenset[Party
         raise IvaValidationError(f"IVA classification rule {rule_id!r} names an unknown party fact") from exc
 
 
-def _registry_iva_classification_catalogue(
+def registry_iva_classification_catalogue(
     effective_date: date,
     *,
     operation: GovernedFactSource,
@@ -195,7 +195,7 @@ def _registry_iva_classification_catalogue(
     return resolved
 
 
-def _first_matching_classification(
+def first_matching_classification(
     rules: tuple[IvaClassificationRule, ...],
     criteria: IvaInvoiceClassificationCriteria,
     *,
@@ -281,7 +281,7 @@ def _matched_rule_category(
         raise IvaValidationError("registry rate/category mapping has no matched rate tier") from exc
 
 
-def _fallback_classification(
+def fallback_classification(
     rules: tuple[IvaClassificationRule, ...],
     criteria: IvaInvoiceClassificationCriteria,
     category_catalogue: IvaCategoryCatalogue,

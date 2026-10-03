@@ -21,7 +21,7 @@ from .._command_policy import (
     CommandExecutionPolicy,
 )
 from .._command_runtime import refuse_declared_live_write
-from .._command_shared_contracts import Capability, SideEffect
+from ..command_shared_contracts import Capability, SideEffect
 from ..command_spec import ExecutionPolicySpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

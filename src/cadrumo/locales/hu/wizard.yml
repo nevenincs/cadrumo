@@ -96,7 +96,7 @@ wizard:
           65-plus:
             description: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.
             label: Fogyatékossági fokozat 65% vagy magasabb
-          assistance-or-mobility:
+          assistance-or-reduced-mobility:
             description: Igazolt harmadik személy segítségének szükségessége vagy
               csökkent mozgásképesség - asszisztencia-növekményt ad.
             label: Harmadik személy segítsége vagy korlátozott mozgásképesség
@@ -607,8 +607,11 @@ wizard:
       irpf-special-regime:
         choices:
           general:
+            description: Az IRPF általános rendszere szerint adózol (Modelo 100).
             label: Általános adózási rend
           impatriado:
+            description: A LIRPF 93. cikke szerinti különleges rendszert választottad
+              (Modelo 151).
             label: Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)
         help: A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első
           6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.

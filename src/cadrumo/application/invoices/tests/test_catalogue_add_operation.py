@@ -243,7 +243,7 @@ class _Events:
     async def log(self, **_kwargs: object) -> None:
         raise AssertionError("invoice creation does not publish logs")
 
-    async def notice(self, notice_code: str) -> None:
+    async def notice(self, notice_code: str, *, display_code: str | None = None) -> None:
         raise AssertionError("invoice creation does not publish notices")
 
     async def diagnostic(self, diagnostic_ref: str) -> None:

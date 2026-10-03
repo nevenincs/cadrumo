@@ -79,10 +79,8 @@ from .work_form_field_projection import project_casilla_field
 from .work_form_inspection import (
     build_inspection_only_form,
     project_aeat_data,
-    project_calculation_notes,
     project_filing_summary,
     project_settlement_result,
-    project_verification_issues,
     result_casilla_ids,
 )
 from .work_form_layout import LayoutWalker
@@ -98,7 +96,7 @@ from .work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
-from .work_form_notes import collect_note_sources
+from .work_form_notes import collect_note_sources, project_calculation_notes, project_verification_issues
 from .work_review import ModeloWorkReview
 
 

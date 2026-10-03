@@ -22,6 +22,7 @@ from ...application.live import verify_capture_operation as capture_module
 from ...application.live.verify import VerifyObservation, VerifySurface
 from ...application.live.verify_capture_operation import (
     VERIFY_NIF_IVA_CAPTURE_DEFINITION_ID,
+    VERIFY_TGVI_CAPTURE_DEFINITION_ID,
     VerifyCapturePublicResultV1,
     VerifyCaptureRequest,
     VerifyLiveObservation,
@@ -142,6 +143,33 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
+def _supervisor(
+    *,
+    tmp_path: Path,
+    registry: OperationRegistry,
+    profile_repository: Any,
+    authority: PinnedAuthorityOperation,
+    execution_authority: _ExecutionAuthority,
+) -> tuple[OperationSupervisor, OperationJournalRepository, Any]:
+    durable_root = tmp_path / "operations"
+    journal = OperationJournalRepository(storage_root=durable_root)
+    operands = operation_secure_reference_repository(objects=profile_repository)
+    supervisor = OperationSupervisor(
+        authority_operation=authority,
+        registry=registry,
+        journal=journal,
+        event_stream=journal,
+        leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
+        operands=operands,
+        owner_id="1" * 64,
+        lease_token_factory=lambda: "2" * 64,
+        clock=lambda: _NOW,
+        lease_duration=timedelta(minutes=5),
+        execution_authority=execution_authority,
+    )
+    return supervisor, journal, operands
+
+
 def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_effects(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -187,7 +215,7 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
             )
 
         definition = build_verify_capture_definition(
-            VerifySurface.NIF_IVA,
+            VerifySurface.TGVI,
             persistence_factory=lambda bucket_id: (
                 persistence if bucket_id == profile.bucket_id else pytest.fail("wrong profile persistence scope")
             ),
@@ -198,7 +226,7 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         registration = build_verify_capture_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
         request = OperationRequest(
-            definition_id=VERIFY_NIF_IVA_CAPTURE_DEFINITION_ID,
+            definition_id=VERIFY_TGVI_CAPTURE_DEFINITION_ID,
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=VerifyCaptureRequest(
                 profile_id=profile_id,
@@ -223,20 +251,11 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         assert admitted.policy.requires_all_periods
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
+        supervisor, journal, operands = _supervisor(
+            tmp_path=tmp_path,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            profile_repository=profile.repository,
+            authority=authority,
             execution_authority=execution_authority,
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
@@ -244,7 +263,7 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
             terminal = await _run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(VERIFY_NIF_IVA_CAPTURE_DEFINITION_ID)
+            contract = registry.lookup_public_contract(VERIFY_TGVI_CAPTURE_DEFINITION_ID)
             assert contract.result_schema is not None
             result = await result_service.resolve(
                 OperationResultProjectionRequestV1(
@@ -284,7 +303,7 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
     assert isinstance(second_result, VerifyCapturePublicResultV1)
     assert first_result.bucket_id == second_result.bucket_id == profile.bucket_id
     assert first_result.observation_id == second_result.observation_id
-    assert first_result.surface is second_result.surface is VerifySurface.NIF_IVA
+    assert first_result.surface is second_result.surface is VerifySurface.TGVI
     assert first_result.nif == _NIF
     assert first_result.expected is IdentityCheckVerdict.VALID
     assert first_result.matched_expectation is True
@@ -292,8 +311,8 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
     assert _RAW_EVIDENCE_LOCATOR not in first_result.model_dump_json()
 
     assert acquisitions == [
-        (VerifySurface.NIF_IVA, _NIF, IdentityCheckVerdict.VALID),
-        (VerifySurface.NIF_IVA, _NIF, IdentityCheckVerdict.VALID),
+        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
+        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
     ]
     assert events.count("observation-save") == 1
     assert events.count("remote-acquire") == 2
@@ -310,6 +329,49 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
     assert wrong_scope_terminal.terminal_receipt.refusal_ref is not None
     assert events.count("remote-acquire") == 2
     assert events.count("observation-save") == 1
+
+
+def test_nif_iva_check_refuses_before_any_browser_or_provider_work(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AEAT's lookup is certificate-only, so the check settles refused with its registered code."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
+        events: list[str] = []
+        monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
+        definition = build_verify_capture_definition(
+            VerifySurface.NIF_IVA,
+            persistence_factory=lambda _bucket_id: pytest.fail("a refused check must not persist"),
+            acquire=lambda _surface, _nif, _expected, _authority: pytest.fail("a refused check must not acquire"),
+            browser_resources_factory=lambda: pytest.fail("a refused check must not own a browser"),
+            provider_preflight=lambda _profile_id, _authority: events.append("provider-preflight"),
+        )
+        registry = OperationRegistry(
+            definitions=(definition,), public_registrations=(build_verify_capture_registration(definition),)
+        )
+        supervisor, _journal, _operands = _supervisor(
+            tmp_path=tmp_path,
+            registry=registry,
+            profile_repository=profile.repository,
+            authority=authority,
+            execution_authority=_ExecutionAuthority(events),
+        )
+        request = OperationRequest(
+            definition_id=VERIFY_NIF_IVA_CAPTURE_DEFINITION_ID,
+            subject_ref=profile_operation_subject(profile.bucket_id),
+            payload=VerifyCaptureRequest(profile_id=UUID(profile.bucket_id), nif=_NIF),
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            return await _run_to_terminal(supervisor, await supervisor.submit(request, operation_id="6" * 64))
+
+        terminal = asyncio.run(run())
+
+    assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert terminal.effect is OperationEffect.NONE
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.refusal_ref == "REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED"
+    assert "provider-preflight" not in events
 
 
 def test_capture_access_refuses_a_foreign_profile_subject() -> None:
