@@ -130,7 +130,7 @@ class _Repository[ValueT]:
     def exists(self) -> bool:
         return True
 
-    def load(self) -> ValueT:
+    def load(self, *, operation: object | None = None) -> ValueT:
         return self.value
 
     def load_revisioned(self, *, operation: PinnedAuthorityOperation | None = None) -> tuple[ValueT, str]:

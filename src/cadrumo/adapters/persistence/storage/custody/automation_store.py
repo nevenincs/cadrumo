@@ -9,7 +9,6 @@ not session admission: the application must separately enforce current policy.
 from __future__ import annotations
 
 import base64
-import hashlib
 import os
 import secrets
 import sys
@@ -43,7 +42,7 @@ from .....application.user_profile.automation_lifecycle import (
     ProfileGlobalLockState,
 )
 from .....core.base64_codec import b64_decode_canonical
-from .....core.hashing import canonical_json_bytes
+from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.time.utc import UtcInstant
 from .automation_crypto import (
     MAX_CONTROL_BYTES,
@@ -84,7 +83,7 @@ CLIENT_NAMESPACE = f"{AUTOMATION_NAMESPACE_PREFIX}client-key.v1"
 
 def _native_account(root: Path, installation_id: UUID, profile_id: UUID) -> str:
     """Name one profile's native credentials, scoped to the storage root they belong to."""
-    root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
+    root_digest = sha256_hex(str(root.resolve()).encode("utf-8"))
     return f"{root_digest}/{installation_id}/{profile_id}"
 
 
@@ -264,7 +263,7 @@ class AutomationControlStore:
     def _load(self, anchor: ProtectedControlAnchor) -> tuple[AutomationRecordHeader, AutomationControlPayload]:
         witness = anchor.witness
         raw = self._read_file(f"{witness.record_id}.json")
-        if raw is None or not secrets.compare_digest(hashlib.sha256(raw).hexdigest(), witness.digest):
+        if raw is None or not secrets.compare_digest(sha256_hex(raw), witness.digest):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
         sealed = parse_record(SealedAutomationControl, raw)
         header = sealed.header
@@ -434,9 +433,7 @@ class AutomationControlStore:
                 header=header, ciphertext=seal_automation(canonical_record(payload), control_key, self._aad(header))
             )
             raw = canonical_record(sealed)
-            witness = ControlWitness(
-                record_id=header.record_id, revision=header.revision, digest=hashlib.sha256(raw).hexdigest()
-            )
+            witness = ControlWitness(record_id=header.record_id, revision=header.revision, digest=sha256_hex(raw))
             intent = ControlPublicationIntent(
                 predecessor=None if previous is None else previous.witness,
                 successor=witness,

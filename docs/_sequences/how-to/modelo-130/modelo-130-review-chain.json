@@ -198,7 +198,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
@@ -389,7 +397,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -417,7 +425,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.revision",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
@@ -599,7 +615,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -658,6 +674,13 @@
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
             "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],

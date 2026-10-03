@@ -8,9 +8,10 @@ import math
 import subprocess
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from threading import Lock
+from typing import cast
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
@@ -152,7 +153,9 @@ class WindowsOwnedProcess:
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
         if result != win32event.WAIT_OBJECT_0:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        return win32process.GetExitCodeProcess(self._handle)
+        # pywin32 reports the DWORD as a signed C long, so NTSTATUS-style
+        # crash codes such as 0xC0000005 would otherwise read as negative.
+        return win32process.GetExitCodeProcess(self._handle) & 0xFFFFFFFF
 
     def close(self) -> None:
         """Attempt both handles, retaining each until its native release succeeds."""
@@ -216,12 +219,17 @@ class WindowsProcessScope:
             if not job:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
             self._job = int(job)
-            win32api.SetHandleInformation(self._job, 1, 0)
-            information = win32job.QueryInformationJobObject(self._job, win32job.JobObjectExtendedLimitInformation)
-            information["BasicLimitInformation"]["LimitFlags"] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-            win32job.SetInformationJobObject(self._job, win32job.JobObjectExtendedLimitInformation, information)
-            actual = win32job.QueryInformationJobObject(self._job, win32job.JobObjectExtendedLimitInformation)
-            if actual["BasicLimitInformation"]["LimitFlags"] != win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE:
+            set_handle_flags = cast("Callable[[int, int, int], None]", win32api.SetHandleInformation)
+            query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+            set_job = cast("Callable[[int, int, object], None]", win32job.SetInformationJobObject)
+            set_handle_flags(self._job, 1, 0)
+            information = cast("dict[str, object]", query_job(self._job, win32job.JobObjectExtendedLimitInformation))
+            basic_limits = cast("dict[str, object]", information["BasicLimitInformation"])
+            basic_limits["LimitFlags"] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            set_job(self._job, win32job.JobObjectExtendedLimitInformation, information)
+            actual = cast("dict[str, object]", query_job(self._job, win32job.JobObjectExtendedLimitInformation))
+            actual_limits = cast("dict[str, object]", actual["BasicLimitInformation"])
+            if actual_limits["LimitFlags"] != win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
         except BaseException as error:
             primary = (
@@ -290,8 +298,10 @@ class WindowsProcessScope:
             failures: list[BaseException] = []
             if self._job is not None and not self._terminated:
                 try:
-                    win32job.TerminateJobObject(self._job, 1)
-                    while win32job.QueryInformationJobObject(self._job, win32job.JobObjectBasicAccountingInformation)[
+                    terminate_job = cast("Callable[[int, int], None]", win32job.TerminateJobObject)
+                    query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+                    terminate_job(self._job, 1)
+                    while cast("dict[str, object]", query_job(self._job, win32job.JobObjectBasicAccountingInformation))[
                         "ActiveProcesses"
                     ]:
                         if time.monotonic() >= deadline:
@@ -364,10 +374,35 @@ class WindowsProcessScope:
                 raise RuntimeRefusalError(self._termination_failure)
             if self._job is None:
                 return ()
-            members: object = win32job.QueryInformationJobObject(self._job, win32job.JobObjectBasicProcessIdList)
-            if not isinstance(members, tuple) or any(not isinstance(pid, int) or pid <= 0 for pid in members):
+            query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+            members: object = query_job(self._job, win32job.JobObjectBasicProcessIdList)
+            if not isinstance(members, tuple):
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-            return tuple(int(pid) for pid in members)
+            values = cast("tuple[object, ...]", members)
+            if any(not isinstance(pid, int) or pid <= 0 for pid in values):
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            validated = cast("tuple[int, ...]", values)
+            return tuple(int(pid) for pid in validated)
+
+    def contains_process(self, process_handle: int) -> bool:
+        """Corroborate a retained live native process against this exact Job."""
+        if sys.platform != "win32":
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        import win32event
+
+        with self._lock:
+            if self._launch_fenced or self._job is None or self._termination_failure is not None:
+                return False
+            if win32event.WaitForSingleObject(process_handle, 0) != win32event.WAIT_TIMEOUT:
+                return False
+            kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+            observe = kernel.IsProcessInJob
+            observe.argtypes = (wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL))
+            observe.restype = wintypes.BOOL
+            belongs = wintypes.BOOL()
+            if not observe(process_handle, self._job, ctypes.byref(belongs)):
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+            return bool(belongs.value)
 
     async def close(self) -> None:
         """Settle through OperationCleanupOwner without blocking its event loop."""

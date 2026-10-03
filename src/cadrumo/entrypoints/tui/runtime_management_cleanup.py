@@ -8,9 +8,9 @@ from ...adapters.local_runtime.framing import RuntimeTransportCleanup
 from ...core.async_cleanup import (
     AsyncCloseable,
     AsyncResourceCleanupError,
+    async_cleanup_failures,
     close_async_resources,
     direct_cleanup_owners,
-    retain_merged_cleanup,
 )
 from ..runtime_management import RuntimeStopConsent
 
@@ -48,17 +48,34 @@ class RuntimeManagementCleanup:
         self._consent = consent
 
     def retain(self, error: BaseException) -> None:
-        """Adopt canonical owners directly, without adding an aggregate retry owner."""
-        self._retain_resources(error)
-        retained = retain_merged_cleanup(error)
-        if retained is not None:
-            self._retain_failure(error, retained)
+        """Adopt canonical owners directly, without adding an aggregate retry owner.
 
-    def _retain_resources(self, error: BaseException) -> None:
-        for owner in direct_cleanup_owners(error):
+        Owners carried by a wrapped body failure are adopted too, so a cleanup
+        that failed beneath the screen's own error is still released later.
+        """
+        owners = async_cleanup_failures(error)
+        self._retain_resources(owners)
+        retained = self._merged_owner(owners)
+        if retained is None:
+            return
+        if retained is not error:
+            error.__dict__["async_cleanup_error"] = retained
+            if isinstance(error.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+                error.__dict__["cleanup_error"] = retained
+        self._retain_failure(error, retained)
+
+    def _retain_resources(self, owners: tuple[AsyncResourceCleanupError, ...]) -> None:
+        for owner in owners:
             for resource in owner.resources:
                 if self._is_retained_resource(resource):
                     self._resources[id(resource)] = resource
+
+    @staticmethod
+    def _merged_owner(owners: tuple[AsyncResourceCleanupError, ...]) -> AsyncResourceCleanupError | None:
+        merged: AsyncResourceCleanupError | None = None
+        for owner in owners:
+            merged = owner if merged is None else merged.merged_with(owner)
+        return merged
 
     def _is_retained_resource(self, resource: AsyncCloseable) -> bool:
         if self._retired.get(id(resource)) is resource:

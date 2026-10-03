@@ -33,6 +33,7 @@ _MISSING = {0x80070002, 0x8004130F}
 # Every explicit non-default value, duplicate or unknown field is retained.
 _OMITTED_NATIVE_DEFAULTS = {
     "Principal": {"RunLevel": "LeastPrivilege"},
+    "LogonTrigger": {"Enabled": "true"},
     "Settings": {
         "AllowHardTerminate": "true",
         "StartWhenAvailable": "false",
@@ -163,7 +164,7 @@ def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:
         tag = _XML_NAMESPACE + name
         if tag not in present:
             children.append((tag, value, (), ()))
-    if local_name in {"Principal", "Settings", "RestartOnFailure"}:
+    if local_name in {"Principal", "Settings", "RestartOnFailure", "LogonTrigger"}:
         children.sort(key=lambda child: child[0])
     return (
         element.tag,
@@ -171,6 +172,59 @@ def _definition_shape(element: ElementTree.Element) -> _TaskXmlShape:
         tuple(sorted(element.attrib.items())),
         tuple(children),
     )
+
+
+def _native_account_identity(expected_sid: str) -> tuple[str, str] | None:
+    """Resolve only the bound SID and roundtrip its trusted qualified account."""
+    if sys.platform != "win32":
+        return None
+    import pywintypes
+    import win32security
+
+    try:
+        sid = win32security.ConvertStringSidToSid(expected_sid)
+        name, domain, account_type = win32security.LookupAccountSid(None, sid)
+        if account_type != win32security.SidTypeUser or any(
+            not value or len(value) > 256 or "\\" in value or any(ord(char) < 32 for char in value)
+            for value in (name, domain)
+        ):
+            return None
+        qualified = domain + "\\" + name
+        # LookupAccountSid can resolve SIDhistory. Roundtrip only its trusted
+        # returned name, never the account text from registered task XML.
+        current_sid, _current_domain, current_type = win32security.LookupAccountName(None, qualified)
+        if current_type != win32security.SidTypeUser:
+            return None
+        return qualified, win32security.ConvertSidToStringSid(current_sid)
+    except (pywintypes.error, ValueError):
+        return None
+
+
+def _normalize_logon_trigger_owner(actual: ElementTree.Element, expected: ElementTree.Element) -> bool:
+    """Accept only the exact expected SID or its verified current qualified name."""
+    trigger_tag, owner_tag = _XML_NAMESPACE + "LogonTrigger", _XML_NAMESPACE + "UserId"
+    if len(actual) != 1 or len(expected) != 1 or actual[0].tag != trigger_tag or expected[0].tag != trigger_tag:
+        return False
+    found, wanted = actual[0].findall(owner_tag), expected[0].findall(owner_tag)
+    if len(found) != 1 or len(wanted) != 1:
+        return False
+    if any(len(owner) or owner.attrib or not owner.text for owner in (found[0], wanted[0])):
+        return False
+    actual_owner, expected_owner = found[0].text, wanted[0].text
+    if actual_owner is None or expected_owner is None:
+        return False
+    if actual_owner == expected_owner:
+        return True
+    if actual_owner.count("\\") != 1:
+        return False
+    identity = _native_account_identity(expected_owner)
+    if identity is None:
+        return False
+    qualified, current_sid = identity
+    if current_sid != expected_owner or actual_owner != qualified:
+        return False
+    found[0].text = expected_owner
+    return True
 
 
 def _task_xml_definition_matches(actual_xml: str, expected_xml: str) -> bool:
@@ -201,8 +255,13 @@ def _task_xml_definition_matches(actual_xml: str, expected_xml: str) -> bool:
         if wanted is None:
             if len(found) > 1 or (found and (len(found[0]) or found[0].attrib or (found[0].text or "").strip())):
                 return False
-        elif len(found) != 1 or _definition_shape(found[0]) != _definition_shape(wanted):
+        elif len(found) != 1:
             return False
+        else:
+            if section == "Triggers" and len(wanted) > 0 and not _normalize_logon_trigger_owner(found[0], wanted):
+                return False
+            if _definition_shape(found[0]) != _definition_shape(wanted):
+                return False
     registrations = actual.findall(_XML_NAMESPACE + "RegistrationInfo")
     wanted_registration = expected.find(_XML_NAMESPACE + "RegistrationInfo")
     if len(registrations) != 1 or wanted_registration is None:

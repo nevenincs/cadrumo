@@ -174,7 +174,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -206,7 +214,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -257,6 +265,13 @@
               "source_kind": "operator_casilla_input"
             },
             "message": "The value in box 06 is the one you entered, not the one Cadrumo worked out.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
@@ -473,7 +488,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.revision",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
@@ -655,7 +678,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

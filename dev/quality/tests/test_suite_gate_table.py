@@ -70,7 +70,6 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         "check-code",
         "check-repository",
         "check-workflows",
-        "check-gate-contracts",
         "check-hooks",
         "check-dependency-vulnerabilities",
         "check-rag",

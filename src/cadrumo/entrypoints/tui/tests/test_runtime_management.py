@@ -29,7 +29,7 @@ from cadrumo.application.runtime.management_status import (
     RuntimeManagementSnapshot,
     RuntimeManagerAvailability,
 )
-from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
@@ -645,3 +645,82 @@ async def test_stop_collector_explicit_aggregate_primary_public_retry_discards_r
     await primary.retry_cleanup()
     assert first.calls == 2 and second.closed
     assert second.calls == (3 if second_failures == 2 else 2)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["refusal", "native-cancellation", "caller-cancellation"])
+async def test_start_refresh_retains_exact_primary_and_actual_cleanup_beyond_screen(
+    mode: str,
+) -> None:
+    resource = _AsyncRelease(failures=2)
+    primary = (
+        asyncio.CancelledError("native-management-action-cancellation")
+        if mode == "native-cancellation"
+        else RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    )
+    entered = Event()
+    proceed = Event()
+    if mode != "caller-cancellation":
+        proceed.set()
+    cleanup = RuntimeManagementCleanup()
+    calls = 0
+
+    async def read() -> RuntimeManagementSnapshot:
+        return _available()
+
+    async def start() -> RuntimeManagementSnapshot:
+        nonlocal calls
+        calls += 1
+        entered.set()
+        assert await asyncio.to_thread(proceed.wait, 3)
+        await close_async_resources(resource, task_name="management-action-fault", primary_error=primary)
+        raise primary
+
+    screen = RuntimeManagementScreen(reader=read, starter=start, cleanup=cleanup)
+    app = ScreenHostApp(screen)
+    refreshing: asyncio.Task[None] | None = None
+    try:
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _until(pilot, lambda: not screen._busy and screen.is_mounted)
+            if mode == "caller-cancellation":
+                refreshing = asyncio.create_task(screen._refresh(start))
+                assert await asyncio.to_thread(entered.wait, 2)
+                refreshing.cancel("caller-management-action-cancellation")
+                await asyncio.sleep(0)
+                assert not refreshing.done() and resource.calls == 0
+                proceed.set()
+                with pytest.raises(asyncio.CancelledError) as failed:
+                    await refreshing
+                assert failed.value.args == ("caller-management-action-cancellation",)
+                assert cleanup.failure is failed.value
+            else:
+                screen.query_one("#runtime-management-start", Button).press()
+                await _until(pilot, lambda: calls == 1 and not screen._busy)
+                assert cleanup.failure is primary
+            assert cleanup.pending and resource.calls == 1
+            assert tr("tui.runtime_management.refused") in str(
+                screen.query_one("#runtime-management-status", Static).content
+            )
+            assert "synthetic asynchronous release failure" not in str(
+                screen.query_one("#runtime-management-status", Static).content
+            )
+        assert cleanup.pending and resource.calls == 1
+        failure = cleanup.failure
+        assert failure is not None
+        retained = async_cleanup_failures(failure)
+        assert retained and all(item.resources == (resource,) for item in retained)
+        with pytest.raises(type(failure)) as retry_failed:
+            await cleanup.release()
+        assert retry_failed.value is failure and resource.calls == 2 and cleanup.pending
+        try:
+            await cleanup.release(primary_error=failure)
+        except asyncio.CancelledError as cancellation:
+            assert cancellation is failure
+        assert resource.closed and resource.calls == 3 and not cleanup.pending
+        await cleanup.release()
+        assert resource.calls == 3 and calls == 1
+    finally:
+        proceed.set()
+        if refreshing is not None and not refreshing.done():
+            await refreshing

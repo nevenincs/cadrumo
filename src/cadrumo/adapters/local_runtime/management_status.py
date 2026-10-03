@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from uuid import uuid4
 
@@ -9,7 +10,8 @@ from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalC
 from ...application.runtime.deadline_budget import require_finite_budget
 from ...application.runtime.management_status import RuntimeListenerState
 from ...application.runtime.transport import RuntimeStatusRequest
-from .framing import VerifiedRuntimeConnection
+from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, has_async_cleanup_failure
+from .framing import RuntimeTransportCleanup, VerifiedRuntimeConnection, close_runtime_transport_after_failure
 from .startup import RuntimeEndpointConnector
 
 
@@ -21,14 +23,22 @@ def probe_runtime_listener(
     if endpoint.storage_identity != expected.storage_identity:
         return RuntimeListenerState.REFUSED
     deadline = time.monotonic() + timeout
-    channel = None
-    connection = None
+    connection: VerifiedRuntimeConnection | None = None
     try:
         channel = endpoint.connect(timeout=timeout)
         connection = VerifiedRuntimeConnection(channel, expected=expected, deadline=deadline)
         status = connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=deadline)
-        return RuntimeListenerState.READY if status.accepting_connections else RuntimeListenerState.DRAINING
-    except RuntimeRefusalError as error:
+    except BaseException as error:
+        # Framing already retires failed handshakes/exchanges and retains their
+        # original owner. A pre-dispatch deadline also needs one release attempt.
+        if connection is not None:
+            close_runtime_transport_after_failure(connection, error)
+        if has_async_cleanup_failure(error):
+            raise
+        if not isinstance(error, (RuntimeRefusalError, OSError)):
+            raise
+        if isinstance(error, OSError):
+            return RuntimeListenerState.UNKNOWN
         if error.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY:
             return RuntimeListenerState.UNAVAILABLE
         if error.reason in {
@@ -40,13 +50,22 @@ def probe_runtime_listener(
         }:
             return RuntimeListenerState.REFUSED
         return RuntimeListenerState.UNKNOWN
-    except OSError:
-        return RuntimeListenerState.UNKNOWN
-    finally:
-        if connection is not None:
-            connection.close()
-        elif channel is not None:
-            channel.close()
+    owner = RuntimeTransportCleanup(connection)
+    try:
+        owner.close_now()
+    except BaseException as error:
+        cleanup = AsyncResourceCleanupError(
+            (owner,), (error,), retry_task_name="runtime-status-probe-release", close_attempts=1
+        )
+        for previous in async_cleanup_failures(error):
+            cleanup = previous.merged_with(cleanup)
+        if isinstance(error, asyncio.CancelledError):
+            error.__dict__["async_cleanup_error"] = cleanup
+            if isinstance(error.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+                error.__dict__["cleanup_error"] = cleanup
+            raise
+        raise cleanup from error
+    return RuntimeListenerState.READY if status.accepting_connections else RuntimeListenerState.DRAINING
 
 
 __all__ = ["probe_runtime_listener"]

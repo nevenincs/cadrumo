@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor, wait
 from threading import BoundedSemaphore, Event, RLock
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import UUID, uuid4
 
 from ...application.runtime.access_management import (
@@ -52,6 +52,7 @@ from ...application.runtime.profile_access import (
 )
 from ...application.runtime.transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
 from ...core.async_cleanup import AsyncResourceCleanupError, attach_async_cleanup_error
+from ...core.logging import LogExtra, get_logger
 from ...core.time.clock import now
 from .framing import (
     RuntimeTransportCleanup,
@@ -62,6 +63,31 @@ from .framing import (
     write_profile_status,
 )
 from .login import capture_runtime_login
+
+_LOGGER = get_logger(__name__)
+
+
+def _log_listener_phase(
+    transition: Literal["enter", "leave"],
+    elapsed: float,
+    *,
+    primary_error: BaseException | None = None,
+) -> None:
+    """Keep fixed listener timing diagnostic failures outside product authority."""
+    try:
+        _LOGGER.info(
+            "runtime_startup phase=listener_listen transition=%s elapsed_seconds=%.6f",
+            transition,
+            elapsed,
+            extra=LogExtra(
+                {"startup_phase": "listener_listen", "transition": transition, "elapsed_seconds": elapsed}
+            ).for_logging(),
+        )
+    except Exception:
+        return
+    except BaseException:
+        if primary_error is None:
+            raise
 
 
 class RuntimeListener(Protocol):
@@ -366,7 +392,17 @@ class RuntimeTransportServer:
         incomplete = Event()
         primary_error: BaseException | None = None
         try:
-            self.listener.listen()
+            started = time.monotonic()
+            listen_primary: list[BaseException] = []
+            _log_listener_phase("enter", 0.0)
+            try:
+                self.listener.listen()
+            except BaseException as error:
+                listen_primary.append(error)
+                raise
+            finally:
+                elapsed = time.monotonic() - started
+                _log_listener_phase("leave", elapsed, primary_error=listen_primary[0] if listen_primary else None)
             workers = ThreadPoolExecutor(max_workers=32, thread_name_prefix="cadrumo-ipc")
             try:
                 self.ready.set()

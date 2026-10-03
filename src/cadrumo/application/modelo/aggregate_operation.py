@@ -270,6 +270,10 @@ class ModeloAggregateProjection(BaseModel):
                 raise ValueError("withholding aggregate requires its exact window readback")
             if (self.clave_breakdown or self.absent_source_families) and self.calculation_revision_id is None:
                 raise ValueError("calculation rows require the revision they were read for")
+            if self.modelo in _WITHHOLDING_MODELOS and (
+                self.clave_breakdown or self.calculation_revision_id is not None or self.absent_source_families
+            ):
+                raise ValueError("periodic withholding aggregate cannot carry annual detail metadata")
         elif self.refusal_reason is None or any(value is not None for value in aggregate_fields):
             raise ValueError("refused result requires only a bounded refusal reason")
         elif self.withholding_window is not None or self.calculation_revision_id is not None:

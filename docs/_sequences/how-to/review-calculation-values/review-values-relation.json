@@ -185,6 +185,13 @@
             },
             "message": "Some information this figure depends on is missing or could not be used.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {

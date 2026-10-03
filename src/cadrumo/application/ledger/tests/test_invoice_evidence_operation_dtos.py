@@ -32,12 +32,15 @@ from cadrumo.application.ledger.invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
 )
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     ConfirmedEstablishmentProjectionV1,
     CounterpartyEstablishmentProjectionV1,
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
+    LabelReadingFallbackProjectionV1,
 )
 from cadrumo.application.ledger.structured_invoice_ports import (
     StructuredInvoiceClassification,
@@ -262,6 +265,24 @@ def test_invoice_draft_projection_carries_all_fields_and_private_facturae_class(
     assert projected.discrepancies[0].observed == PublicDecimal(decimal="166.08")
     assert projected.provenance[1].derived_from == ("lines.taxable_base",)
     assert projected.provenance[0].role_evidence == "Proveedor A58818501"
+
+
+@pytest.mark.parametrize("cause", list(LabelReadingFallbackCause))
+def test_invoice_projection_preserves_label_fallback_across_json(cause: LabelReadingFallbackCause) -> None:
+    fallback = LabelReadingFallback(
+        cause=cause,
+        unread_fields=("invoice_date", "supplier_tax_id"),
+        reader_error_type="ReaderAdmissionRefusedError",
+        failed_condition_id="llm.inference_slot",
+    )
+    source = _draft().with_label_reading_fallback(fallback)
+    assert source.label_reading_fallback is not None
+    projected = LabelReadingFallbackProjectionV1.from_fallback(source.label_reading_fallback)
+    decoded = LabelReadingFallbackProjectionV1.model_validate_json(projected.model_dump_json())
+
+    assert decoded.to_fallback() == fallback
+    # The fallback travels beside the reviewed draft, so it never moves the review digest.
+    assert InvoiceDraftProjectionV1.from_draft(source) == InvoiceDraftProjectionV1.from_draft(_draft())
 
 
 @pytest.mark.parametrize("created", [True, False])

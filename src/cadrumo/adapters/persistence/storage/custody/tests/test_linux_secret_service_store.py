@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import socket
 import stat
 import sys
@@ -29,6 +30,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     NativeSecretBackend,
 )
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 
 pytestmark = [
     pytest.mark.unit,
@@ -495,3 +497,328 @@ def test_native_socket_deadline_covers_authentication_and_hello(tmp_path: Path, 
         listener.close()
     assert not server.is_alive()
     assert not failures
+
+
+class _ConsumedSocketClosePort:
+    """Explicit socket port whose first native close consumes its capability."""
+
+    def __init__(self, primary: BaseException, cleanup: BaseException) -> None:
+        self.primary = primary
+        self.cleanup = cleanup
+        self.closed = False
+        self.close_calls = 0
+
+    def settimeout(self, timeout: float) -> None:
+        del timeout
+
+    def connect(self, path: str) -> None:
+        del path
+        raise self.primary
+
+    def close(self) -> None:
+        if not self.closed:
+            self.closed = True
+            self.close_calls += 1
+            raise self.cleanup
+
+
+@pytest.mark.parametrize("stage", ["parser", "connect"])
+@pytest.mark.parametrize("mode", ["typed", "cancel", "native"])
+def test_native_bus_constructor_preserves_primary_when_socket_close_fails(
+    monkeypatch: pytest.MonkeyPatch, stage: str, mode: str
+) -> None:
+    if sys.platform != "linux":
+        pytest.skip("Linux native Unix socket contract")
+    import jeepney
+
+    primary: BaseException = (
+        AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
+        if mode == "typed"
+        else asyncio.CancelledError("synthetic constructor cancellation")
+        if mode == "cancel"
+        else OSError("synthetic native construction failure")
+    )
+    cleanup = OSError("synthetic consumed socket close failure")
+    port = _ConsumedSocketClosePort(primary, cleanup)
+    monkeypatch.setattr(
+        native,
+        "socket",
+        SimpleNamespace(AF_UNIX=socket.AF_UNIX, SOCK_STREAM=socket.SOCK_STREAM, socket=lambda *_: port),
+    )
+    if stage == "parser":
+
+        def failed_parser() -> None:
+            raise primary
+
+        monkeypatch.setattr(jeepney, "Parser", failed_parser)
+    with pytest.raises(BaseException) as caught:
+        native._DeadlineBus(Path("/synthetic/bus"), time.monotonic() + 1)
+    assert caught.value is primary
+    assert caught.value.__dict__["cleanup_error"] is cleanup
+    assert port.closed and port.close_calls == 1
+    port.close()
+    assert port.close_calls == 1
+
+
+def _failing_bus_close(monkeypatch: pytest.MonkeyPatch, replies: _ProtocolReplies, cleanup: BaseException) -> None:
+    consumed = False
+
+    def close() -> None:
+        nonlocal consumed
+        if not consumed:
+            consumed = True
+            replies.closed += 1
+            raise cleanup
+
+    monkeypatch.setattr(replies, "close", close)
+
+
+@pytest.mark.parametrize("mode", ["typed", "cancel", "native"])
+def test_native_bus_body_failure_preserves_primary_and_close_diagnostic(
+    monkeypatch: pytest.MonkeyPatch, replies: _ProtocolReplies, mode: str
+) -> None:
+    primary: BaseException = (
+        AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        if mode == "typed"
+        else asyncio.CancelledError("synthetic operation cancellation")
+        if mode == "cancel"
+        else OSError("synthetic native operation failure")
+    )
+    cleanup = OSError("synthetic consumed socket close failure")
+
+    def fail(*args: object, **kwargs: object) -> tuple[Any, ...]:
+        del args, kwargs
+        raise primary
+
+    monkeypatch.setattr(replies, "call", fail)
+    _failing_bus_close(monkeypatch, replies, cleanup)
+    with pytest.raises(BaseException) as caught:
+        LinuxSecretServiceAutomationSecretStore().delete(_NAMESPACE, _ACCOUNT)
+    if mode == "native":
+        assert isinstance(caught.value, AutomationCustodyError)
+        assert caught.value.reason is AutomationCustodyCode.UNAVAILABLE
+        assert "synthetic native operation failure" not in str(caught.value)
+    else:
+        assert caught.value is primary
+    assert caught.value.__dict__["cleanup_error"] is cleanup
+    assert replies.closed == 1
+    replies.close()
+    assert replies.closed == 1
+
+
+def test_successful_native_delete_refuses_when_socket_close_fails(
+    monkeypatch: pytest.MonkeyPatch, replies: _ProtocolReplies
+) -> None:
+    cleanup = OSError("synthetic consumed socket close failure")
+    _failing_bus_close(monkeypatch, replies, cleanup)
+    with pytest.raises(AutomationCustodyError) as caught:
+        LinuxSecretServiceAutomationSecretStore().delete(_NAMESPACE, _ACCOUNT)
+    assert caught.value.reason is AutomationCustodyCode.UNAVAILABLE
+    assert replies.closed == 1
+    assert any(method == "SearchItems" for _, _, method in replies.calls)
+    assert "synthetic consumed socket close failure" not in str(caught.value)
+
+
+class _EarlierBusCleanupOwner:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.failing = True
+
+    async def close(self) -> None:
+        self.calls += 1
+        if self.failing:
+            raise OSError("synthetic earlier owner failure")
+
+
+@pytest.mark.parametrize("mode", ["typed", "cancel", "aliased"])
+def test_bus_close_failure_keeps_only_the_earlier_actual_retry_owner(
+    monkeypatch: pytest.MonkeyPatch, replies: _ProtocolReplies, mode: str
+) -> None:
+    owner = _EarlierBusCleanupOwner()
+    primary: BaseException = (
+        asyncio.CancelledError("synthetic operation cancellation")
+        if mode == "cancel"
+        else AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+    )
+    try:
+        asyncio.run(close_async_resources(owner, task_name="earlier-bus-cleanup", primary_error=primary))
+    except asyncio.CancelledError as caught:
+        assert caught is primary
+    field = "cleanup_error" if mode == "cancel" else "async_cleanup_error"
+    previous = primary.__dict__[field]
+    assert isinstance(previous, AsyncResourceCleanupError)
+    if mode == "aliased":
+        primary.__dict__["cleanup_error"] = previous
+
+    def fail(*args: object, **kwargs: object) -> tuple[Any, ...]:
+        del args, kwargs
+        raise primary
+
+    monkeypatch.setattr(replies, "call", fail)
+    cleanup = OSError("synthetic consumed socket close failure")
+    _failing_bus_close(monkeypatch, replies, cleanup)
+    with pytest.raises(BaseException) as caught:
+        LinuxSecretServiceAutomationSecretStore().replace(_NAMESPACE, _ACCOUNT, SecretBytes(b"synthetic-value"))
+    assert caught.value is primary
+    retained = caught.value.__dict__[field]
+    assert isinstance(retained, AsyncResourceCleanupError)
+    assert retained.resources == (owner,)
+    if mode == "typed":
+        assert retained is previous
+        assert caught.value.__dict__["cleanup_error"] is cleanup
+    else:
+        assert retained.__cause__ is cleanup
+    if mode == "aliased":
+        assert caught.value.__dict__["cleanup_error"] is retained
+    owner.failing = False
+    asyncio.run(retained.retry_cleanup())
+    assert owner.calls == 2
+    assert replies.closed == 1
+
+
+def test_bus_close_failure_preserves_an_earlier_raw_cancellation_diagnostic(
+    monkeypatch: pytest.MonkeyPatch, replies: _ProtocolReplies
+) -> None:
+    primary = asyncio.CancelledError("synthetic operation cancellation")
+    previous = OSError("synthetic earlier cleanup diagnostic")
+
+    async def failed_cleanup() -> None:
+        raise previous
+
+    with pytest.raises(asyncio.CancelledError) as prepared:
+        asyncio.run(
+            await_cancellation_complete(failed_cleanup(), task_name="earlier-bus-diagnostic", cancellation=primary)
+        )
+    assert prepared.value is primary
+    assert primary.__dict__["cleanup_error"] is previous
+
+    def fail(*args: object, **kwargs: object) -> tuple[Any, ...]:
+        del args, kwargs
+        raise primary
+
+    monkeypatch.setattr(replies, "call", fail)
+    cleanup = OSError("synthetic consumed socket close failure")
+    _failing_bus_close(monkeypatch, replies, cleanup)
+    with pytest.raises(asyncio.CancelledError) as caught:
+        LinuxSecretServiceAutomationSecretStore().read(_NAMESPACE, _ACCOUNT)
+    assert caught.value is primary
+    retained = caught.value.__dict__["cleanup_error"]
+    assert isinstance(retained, BaseExceptionGroup)
+    assert retained.exceptions == (previous, cleanup)
+    assert replies.closed == 1
+
+
+def test_native_bus_preserves_an_escaping_canonical_cleanup_aggregate(
+    monkeypatch: pytest.MonkeyPatch, replies: _ProtocolReplies
+) -> None:
+    owner = _EarlierBusCleanupOwner()
+    with pytest.raises(AsyncResourceCleanupError) as prepared:
+        asyncio.run(close_async_resources(owner, task_name="earlier-bus-aggregate", primary_error=None))
+    primary = prepared.value
+
+    def fail(*args: object, **kwargs: object) -> tuple[Any, ...]:
+        del args, kwargs
+        raise primary
+
+    monkeypatch.setattr(replies, "call", fail)
+    cleanup = OSError("synthetic consumed socket close failure")
+    _failing_bus_close(monkeypatch, replies, cleanup)
+    with pytest.raises(AsyncResourceCleanupError) as caught:
+        LinuxSecretServiceAutomationSecretStore().read(_NAMESPACE, _ACCOUNT)
+    assert caught.value is primary
+    assert primary.resources == (owner,)
+    assert primary.__dict__["cleanup_error"] is cleanup
+    owner.failing = False
+    asyncio.run(primary.retry_cleanup())
+    assert owner.calls == 2
+    assert replies.closed == 1
+
+
+class _FailingSessionClose:
+    """Actual encrypted negotiation with an explicit terminal close-failure port."""
+
+    def __init__(self, failure: BaseException) -> None:
+        self.failure = failure
+        self.calls: list[str] = []
+
+    def call(
+        self, path: str, interface: str, method: str, signature: str = "", body: tuple[Any, ...] = ()
+    ) -> tuple[Any, ...]:
+        self.calls.append(method)
+        if method == "OpenSession":
+            assert path == native._ROOT and interface == native._SERVICE_IFACE
+            assert signature == "sv" and body[0] == native._ALGORITHM
+            assert body[1][0] == "ay" and len(body[1][1]) == 128
+            return (("ay", b"\x04"), _SESSION)
+        assert method == "Close" and path == _SESSION and interface == native._SESSION_IFACE
+        raise self.failure
+
+
+@pytest.mark.parametrize("mode", ["typed", "cancel", "clean"])
+def test_encrypted_session_close_preserves_body_primary_and_wipes_keys(mode: str) -> None:
+    primary: BaseException | None = (
+        AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        if mode == "typed"
+        else asyncio.CancelledError("synthetic original session cancellation")
+        if mode == "cancel"
+        else None
+    )
+    cleanup = (
+        OSError("synthetic session close failure")
+        if primary is None
+        else asyncio.CancelledError("synthetic terminal session close cancellation")
+    )
+    bus = _FailingSessionClose(cleanup)
+    captured: list[Any] = []
+    with pytest.raises(BaseException) as caught, native._session(cast(native._DeadlineBus, bus)) as session:
+        captured.append(session)
+        assert session.aes_key is not None and session.my_private_key != 0
+        if primary is not None:
+            raise primary
+    assert caught.value is (cleanup if primary is None else primary)
+    if primary is not None:
+        assert primary.__dict__["cleanup_error"] is cleanup
+    assert bus.calls == ["OpenSession", "Close"]
+    assert captured[0].aes_key is None and captured[0].my_private_key == 0
+
+
+@pytest.mark.parametrize("kind", ["aliased", "aggregate", "raw"])
+def test_encrypted_session_close_retains_previous_cleanup_identity(kind: str) -> None:
+    owner = _EarlierBusCleanupOwner()
+    with pytest.raises(AsyncResourceCleanupError) as prepared:
+        asyncio.run(close_async_resources(owner, task_name="earlier-session-cleanup", primary_error=None))
+    previous = prepared.value
+    primary: BaseException = previous if kind == "aggregate" else AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+    raw = OSError("synthetic earlier session diagnostic")
+    if kind == "aliased":
+        primary.__dict__["cleanup_error"] = previous
+        primary.__dict__["async_cleanup_error"] = previous
+    elif kind == "raw":
+        primary.__dict__["cleanup_error"] = raw
+        primary.__dict__["async_cleanup_error"] = previous
+    cleanup = asyncio.CancelledError("synthetic terminal session close cancellation")
+    bus = _FailingSessionClose(cleanup)
+    captured: list[Any] = []
+    with pytest.raises(BaseException) as caught, native._session(cast(native._DeadlineBus, bus)) as session:
+        captured.append(session)
+        raise primary
+    assert caught.value is primary
+    retained = primary.__dict__["cleanup_error"]
+    if kind == "aliased":
+        assert isinstance(retained, AsyncResourceCleanupError)
+        assert primary.__dict__["async_cleanup_error"] is retained
+        assert retained.resources == (owner,) and retained.__cause__ is cleanup
+    elif kind == "raw":
+        assert isinstance(retained, BaseExceptionGroup)
+        assert retained.exceptions == (raw, cleanup)
+        assert primary.__dict__["async_cleanup_error"] is previous
+        retained = previous
+    else:
+        assert isinstance(primary, AsyncResourceCleanupError)
+        assert retained is cleanup and primary.resources == (owner,)
+        retained = primary
+    owner.failing = False
+    asyncio.run(retained.retry_cleanup())
+    assert owner.calls == 2
+    assert bus.calls == ["OpenSession", "Close"]
+    assert captured[0].aes_key is None and captured[0].my_private_key == 0

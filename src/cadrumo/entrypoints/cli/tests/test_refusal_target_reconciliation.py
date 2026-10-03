@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 
-from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, next_action
 from ....application.operator_surface.command_ports import SchemaResolutionError
 from .._command_shared_contracts import SchemaState
 from ..command_graph import CommandSpecGraph
@@ -101,6 +101,41 @@ def test_single_input_schema_equals_the_full_projection_for_every_catalogue_targ
 
     for target in targets:
         assert build_verb_input_schema(target) == full[target], target
+
+
+def test_an_argument_free_catalogue_claim_is_true_of_the_live_verb() -> None:
+    """``materialisable_without_arguments`` must match the live required inputs.
+
+    The flag lets :func:`next_action` ship a bare verb for an entry that
+    declares argument sources. That is only honest while the live target
+    requires none of them: otherwise the operator receives a command the
+    parser rejects. The claim is checked here, against the real command
+    surface, rather than trusted from the catalogue literal.
+    """
+    waived = tuple(entry for entry in OPERATOR_ACTION_CATALOGUE.entries if entry.materialisable_without_arguments)
+
+    assert waived, "no entry claims argument-free materialisation; this gate would hold over nothing"
+    for entry in waived:
+        required = tuple(
+            parameter.name for parameter in build_verb_input_schema(entry.target_command_key).required_inputs
+        )
+        assert not required, (
+            f"{entry.action_id} claims it materialises without arguments, but "
+            f"{entry.target_command_key} requires {required}. Either bind them at every producer "
+            "and drop the claim, or make the live inputs optional."
+        )
+
+
+def test_an_unwaived_entry_with_arguments_still_refuses_a_bare_notice_action() -> None:
+    """The waiver is opt-in: an addressed action must not degrade to a bare verb."""
+    addressed = next(
+        entry
+        for entry in OPERATOR_ACTION_CATALOGUE.entries
+        if entry.argument_specifications and not entry.materialisable_without_arguments
+    )
+
+    with pytest.raises(ValueError, match="requires materialised argument bindings"):
+        next_action(addressed.action_id)
 
 
 def test_single_input_schema_refuses_an_unknown_identity() -> None:

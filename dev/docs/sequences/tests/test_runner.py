@@ -36,8 +36,9 @@ from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     unlock_profile_custody_password,
 )
+from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.redaction.rules import redact_structured_for_cli_output
+from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
@@ -122,6 +123,7 @@ def test_sandbox_publishes_a_profile_capsule(tmp_path: Path) -> None:
     with sequence_sandbox(sequence_id="canonical-capsule-runtime", sandbox_root=tmp_path / "scope") as sandbox:
         assert sandbox.profile_id == SANDBOX_PROFILE_ID
         assert (sandbox.storage_root / "buckets" / SANDBOX_PROFILE_ID).is_dir()
+        assert read_pointer_selection(sandbox.storage_root).bucket_id == SANDBOX_PROFILE_ID
 
 
 def test_sandbox_password_custody_authenticates_and_decrypts_each_template_clone(tmp_path: Path) -> None:
@@ -279,10 +281,10 @@ def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_pa
 
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
-    from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-
     assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert _envelope_result(transcript.frames[0].envelope)["already_logged_out"] is False
     assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
+    assert read_pointer_selection(Path(transcript.storage_root)).bucket_id is None
     assert not (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).exists()
 
 

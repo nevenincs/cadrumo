@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
@@ -35,7 +36,6 @@ from cadrumo_harness.mcp import authority_query as authority_tool
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-from dev.registry.pipeline.authority_publication import install_validated_authority_database
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -201,14 +201,17 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
 
 @pytest.mark.anyio
 async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    publish_authority_artifact: Callable[[AuthorityArtifact], AuthorityDescriptor],
 ) -> None:
     with bundled_indexed_authority().operation() as packaged:
         profile_schema = packaged.profile_schema()
+        directory = packaged.modelo_directory("130")
     modelo = minimal_modelo(minimal_revision()).model_copy(
         update={
-            "title_localization_key": "modelo.schema.130.field.title",
-            "official_name_localization_key": "modelo.schema.130.field.official_name",
+            "title_localization_key": directory.modelo.title_localization_key,
+            "official_name_localization_key": directory.modelo.official_name_localization_key,
         }
     )
     first_artifact = AuthorityArtifact(
@@ -218,7 +221,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         profile_schema=profile_schema,
     )
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
-    first = install_validated_authority_database(first_artifact, destination=tmp_path, require_current=lambda: None)
+    first = publish_authority_artifact(first_artifact)
     authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
     canonical_query = authority_tool.registry_support_matrix
     with authority.operation() as initial:
@@ -227,9 +230,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
 
     def cut_over_and_query(*, operation: PinnedAuthorityOperation) -> object:
         assert operation.pin() == first_pin
-        second = install_validated_authority_database(
-            second_artifact, destination=tmp_path, require_current=lambda: None
-        )
+        second = publish_authority_artifact(second_artifact)
         assert second.logical_generation != first.logical_generation
         assert operation.profile_decode_context().generation == first_pin
         return canonical_query(operation=operation)

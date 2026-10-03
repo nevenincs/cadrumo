@@ -98,26 +98,26 @@ def normalize_ambient_profile(ctx: typer.Context) -> None:
         ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
-def _enforce_write_policy(
+def _inspect_write_policy(
     *,
-    common: Any,
-    leaf: RequestedCliLeaf,
     spec: CommandSpec,
     target_bucket_id: str | None,
     inspect_storage_write_policy: Callable[..., Any],
-) -> None:
-    """Refuse a disallowed profile-bound write before session activation."""
+) -> Any:
+    """Return the write-policy decision for a profile-bound leaf, or ``None``."""
     policy = spec.policy
     if policy.write_route != "profile-bound":
-        return
+        return None
     from ...core.config import load_settings, settings_for_active_profile_bucket
 
     settings = load_settings()
     if target_bucket_id is not None and "cadrumo_database_url" not in settings.model_fields_set:
         settings = settings_for_active_profile_bucket(target_bucket_id, settings)
-    write_policy = inspect_storage_write_policy(policy.write_route, settings=settings)
-    if write_policy.allowed:
-        return
+    return inspect_storage_write_policy(policy.write_route, settings=settings)
+
+
+def _write_policy_refusal(*, common: Any, leaf: RequestedCliLeaf, write_policy: Any) -> Exception:
+    """Build the boundary error carrying one refusing write-policy verdict."""
     if write_policy.verdict is None:
         raise InternalInvariantError("root write-policy refusal is missing its verdict")
     projection = common.project_cli_policy_refusal(requested_leaf=leaf, verdict=write_policy.verdict)
@@ -127,13 +127,72 @@ def _enforce_write_policy(
         for key, value in evidence.values.items()
         if key.endswith("_setting")
     }
-    raise common.attach_cli_policy_refusal_projection(
+    refusal = common.attach_cli_policy_refusal_projection(
         CliRefusedBoundaryError(
             write_policy.render_refusal_message(),
             context=context or None,
         ),
         projection=projection,
     )
+    if not isinstance(refusal, Exception):
+        raise InternalInvariantError("write-policy refusal projection did not return a raisable error")
+    return refusal
+
+
+def _enforce_write_policy(
+    *,
+    common: Any,
+    leaf: RequestedCliLeaf,
+    spec: CommandSpec,
+    target_bucket_id: str | None,
+    inspect_storage_write_policy: Callable[..., Any],
+) -> None:
+    """Refuse a disallowed profile-bound write before session activation."""
+    write_policy = _inspect_write_policy(
+        spec=spec,
+        target_bucket_id=target_bucket_id,
+        inspect_storage_write_policy=inspect_storage_write_policy,
+    )
+    if write_policy is None or write_policy.allowed:
+        return
+    raise _write_policy_refusal(common=common, leaf=leaf, write_policy=write_policy)
+
+
+def enforce_explicit_database_route(
+    *,
+    spec: CommandSpec,
+    command_path: tuple[str, ...],
+    target_bucket_id: str | None,
+) -> None:
+    """Refuse an operator-pinned database URL before a runtime leaf admits a profile.
+
+    The runtime admission path owns its own no-active-profile refusal, and that
+    one is the better answer for a cold start: it separates an operator who has
+    registered nothing from one who is merely logged out. It has no equivalent
+    for an explicitly pinned ``cadrumo_database_url``. Creating or selecting a
+    profile does not move that route, so answering a pinned route with "create
+    a profile" sends the operator down a recovery that cannot succeed. The
+    write policy's closed outcome is the honest one, and it is reached here so
+    the runtime and local routes refuse the same pinned route the same way.
+
+    Only that one decision is applied. The write policy's root-fallback branch
+    is deliberately left to the runtime path's richer refusal.
+    """
+    from ...application.storage_write_policy import StorageWritePolicyCode, inspect_storage_write_policy
+
+    write_policy = _inspect_write_policy(
+        spec=spec,
+        target_bucket_id=target_bucket_id,
+        inspect_storage_write_policy=inspect_storage_write_policy,
+    )
+    if write_policy is None or write_policy.code is not StorageWritePolicyCode.REFUSED_EXPLICIT_DATABASE_URL:
+        return
+    common = _common()
+    leaf = common.RequestedCliLeaf(
+        subject_leaf_key=spec.result_schema.identity or spec.key,
+        canonical_cli_path=command_path,
+    )
+    raise _write_policy_refusal(common=common, leaf=leaf, write_policy=write_policy)
 
 
 def _posture_skips_session(posture: ProfileAuthenticationPosture) -> bool:

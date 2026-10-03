@@ -213,6 +213,13 @@
             },
             "message": "The value in box 06 is the one you entered, not the one Cadrumo worked out.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {

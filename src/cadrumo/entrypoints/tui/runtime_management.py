@@ -15,6 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.management import RuntimeManagerKind, RuntimeManagerProcessState
 from ...application.runtime.management_status import (
     RuntimeListenerState,
@@ -34,6 +35,7 @@ from ..runtime_management import (
     preview_installed_runtime_stop,
     start_installed_runtime_management,
 )
+from .components.theme import tokenised
 from .runtime_management_cleanup import RuntimeManagementCleanup
 
 type RuntimeManagementReader = Callable[[], Awaitable[RuntimeManagementSnapshot]]
@@ -96,12 +98,16 @@ class RuntimeStopConfirmationScreen(ModalScreen[bool]):
     """Require an explicit acknowledgement of the global runtime scope."""
 
     AUTO_FOCUS = "#runtime-stop-cancel"
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeStopConfirmationScreen { align: center middle; }
     #runtime-stop-confirm-body {
-        width: 100%; height: auto; border: round $warning; padding: 1 2; background: $surface;
+        width: $cadrumo-modal-width;
+        height: auto;
+        border: $cadrumo-radius-overlay $warning;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
     }
-    """
+    """)
 
     @override
     def compose(self) -> ComposeResult:
@@ -124,11 +130,17 @@ class RuntimeManagementScreen(ModalScreen[None]):
     """Inspect and explicitly manage the local runtime without profile proof."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeManagementScreen { align: center middle; }
-    #runtime-management-body { width: 100%; height: auto; border: round $accent; padding: 1 2; background: $surface; }
-    #runtime-management-status { height: 2; }
-    """
+    #runtime-management-body {
+        width: $cadrumo-modal-width;
+        height: auto;
+        border: $cadrumo-radius-overlay $accent;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
+    #runtime-management-status { height: auto; }
+    """)
 
     def __init__(
         self,
@@ -240,20 +252,47 @@ class RuntimeManagementScreen(ModalScreen[None]):
             button.disabled = True
         self._clear()
         self.query_one("#runtime-management-status", Static).update(tr("tui.runtime_management.busy"))
+        failures: list[BaseException] = []
+
+        def read_outcome() -> RuntimeManagementSnapshot | None:
+            try:
+                return _read_off_loop(self._reader, action)
+            except BaseException as error:
+                failures.append(error)
+                return None
+
         try:
-            observed = await await_cancellation_complete(
-                asyncio.to_thread(_read_off_loop, self._reader, action), task_name="tui-runtime-management-status"
-            )
+            try:
+                observed = await await_cancellation_complete(
+                    asyncio.to_thread(read_outcome), task_name="tui-runtime-management-status"
+                )
+            except asyncio.CancelledError as cancellation:
+                if failures:
+
+                    async def failed_read() -> None:
+                        raise failures[0]
+
+                    await await_cancellation_complete(
+                        failed_read(), task_name="tui-runtime-management-status-failure", cancellation=cancellation
+                    )
+                raise
+            if failures:
+                raise failures[0]
+            if observed is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
             snapshot = RuntimeManagementSnapshot.model_validate(observed.model_dump(mode="python"), strict=True)
             if self._active():
                 self._render_snapshot(snapshot)
                 self.query_one("#runtime-management-status", Static).update(self._stop_status())
-        except (Exception, asyncio.CancelledError):
+        except (Exception, asyncio.CancelledError) as error:
+            self._cleanup.retain(error)
             if self._active():
                 self._clear()
                 self.query_one("#runtime-management-status", Static).update(
                     self._stop_status() or tr("tui.runtime_management.refused")
                 )
+            if isinstance(error, asyncio.CancelledError):
+                raise
         finally:
             self._busy = False
             if self._active():

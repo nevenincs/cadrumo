@@ -1,10 +1,14 @@
-"""Explicit in-memory native-port fault injection for synthetic custody tests."""
+"""Explicit synthetic custody fault ports and exact native-item cleanup ownership."""
+
+import asyncio
+from dataclasses import dataclass
 
 from pydantic import SecretBytes
 
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
+    AutomationSecretStore,
     NativeSecretBackend,
 )
 
@@ -39,3 +43,24 @@ class MemoryNativePort:
         if self.unavailable or self.fail_delete:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         self.items.pop((namespace, account), None)
+
+
+@dataclass
+class TrackedWindowsItemCleanup:
+    """Retain one exact synthetic item until native deletion and absence succeed."""
+
+    native: AutomationSecretStore
+    namespace: str
+    account: str
+    released: bool = False
+
+    def _release(self) -> None:
+        if not self.released:
+            self.native.delete(self.namespace, self.account)
+            if self.native.read(self.namespace, self.account) is not None:
+                raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+            self.released = True
+
+    async def close(self) -> None:
+        """Keep synchronous native calls off the cleanup event loop."""
+        await asyncio.to_thread(self._release)

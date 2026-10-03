@@ -18,6 +18,7 @@
         "command": "modelo.describe",
         "notices": [],
         "result": {
+          "authority_grade": "filing",
           "binding_count": 52,
           "bound_casilla_count": 52,
           "cadence": "quarterly",

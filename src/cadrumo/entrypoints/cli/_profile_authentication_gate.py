@@ -709,6 +709,7 @@ def preflight_parsed_leaf(
         method,
         credential_reference,
         runtime_profile_client,
+        node.path[1:],
     ):
         return
     _activate_parsed_profile_session(
@@ -874,6 +875,7 @@ def _activate_runtime_leaf(
     method: ProfileAuthenticationMethod,
     credential_reference: UUID | None,
     runtime_profile_client: bool,
+    command_path: tuple[str, ...],
 ) -> bool:
     """Apply special runtime routes before the ordinary session gate."""
     if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
@@ -912,8 +914,14 @@ def _activate_runtime_leaf(
         )
         return True
     if runtime_profile_client:
+        from ._profile_session_gate import enforce_explicit_database_route
         from .runtime_profile_admission import activate_runtime_profile
 
+        enforce_explicit_database_route(
+            spec=spec,
+            command_path=command_path,
+            target_bucket_id=explicit_target,
+        )
         _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)
         activate_runtime_profile(
             ctx,

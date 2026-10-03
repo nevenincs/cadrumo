@@ -1200,3 +1200,26 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
                 assert owner.released is True
 
         asyncio.run(run())
+
+
+def test_canonical_composition_retains_cartesian_only_planning_refusals(tmp_path: Path) -> None:
+    """Actual planning preserves every refusal without adding discovery signals."""
+    first = _composition_pair("100")
+    second = FiledHistoryDiscoveryPair(
+        modelo="303",
+        ejercicio=2001,
+        signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
+    )
+    run = _run_composition(first, second, tmp_path=tmp_path, dry_run=True)
+
+    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [("100", 2000), ("303", 2001)]
+    assert len(run.refused_pairs) == 2 and all(pair.failure_type == "LiveApplicationInputError" for pair in run.pairs)
+    assert all(pair.signals == (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,) for pair in run.pairs)
+    # The same real rectangular planner refuses the two additional coordinates.
+    # Their facts must survive the discovery-only join without fabricated rows.
+    assert run.stage_failures == (
+        "filed_capture: modelo 100 ejercicio 2001: LiveApplicationInputError",
+        "filed_capture: modelo 303 ejercicio 2000: LiveApplicationInputError",
+    )
+    assert run.reached_count == 0 and run.captured_count == 0 and run.sync_run_ref is None
+    assert settled_filed_history_effect(run) is OperationEffect.NONE

@@ -798,7 +798,7 @@ class LedgerEvidenceReviewViewExecutor:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             if len(stored.evidence_reference) > 64 or len(stored.extractor) > 2_048:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            draft = stored.draft
+            draft = stored.draft.with_label_reading_fallback(stored.label_reading_fallback)
             with validating_governed_facts(context.authority_operation):
                 period = default_invoice_extraction_period()
                 legends = resolve_regime_legends(

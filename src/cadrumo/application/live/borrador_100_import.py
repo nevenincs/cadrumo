@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from hashlib import sha256
 from pathlib import Path
 from types import MappingProxyType
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -59,7 +59,7 @@ def prepare_borrador_100_import(
         raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_profile_unresolved")
     profile = profiles[0]
     pdf_bytes = source_path.read_bytes()
-    digest = sha256(pdf_bytes).hexdigest()
+    digest = sha256_hex(pdf_bytes)
     observation = parser.parse(pdf_bytes, filing_year=filing_year, extraction_profile=profile)
     if observation.ejercicio != str(filing_year):
         raise LiveApplicationInputError(

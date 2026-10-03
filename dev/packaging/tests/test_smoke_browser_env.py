@@ -20,7 +20,6 @@ def test_browser_smoke_environment_reaches_canonical_settings(tmp_path: Path) ->
         (
             "from cadrumo.core.config import load_settings",
             "settings = load_settings()",
-            "assert settings.cadrumo_browser_channel == 'chromium'",
             "assert settings.cadrumo_browser_headless is True",
             "print('canonical-browser-env-ok')",
         )

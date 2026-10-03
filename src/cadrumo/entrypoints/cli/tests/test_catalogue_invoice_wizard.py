@@ -31,10 +31,19 @@ def test_wizard_help_keeps_the_complete_noninteractive_field_surface() -> None:
 
 
 def test_wizard_without_required_inputs_returns_usage_without_prompting() -> None:
+    """A bare invocation is a usage error, not an interactive prompt.
+
+    ``--kind`` is declared first among the wizard's required options (see
+    ``INVOICE_INTAKE_WIZARD_CORE_OPTIONS`` in
+    ``app_ledger_invoice_common_command_parameters.py``), so click reports it
+    as the missing option before any of the others, including
+    ``--counterparty-nif``. The empty stdin (``input=""``) is what proves
+    non-interactivity: a command that tried to prompt would hang or raise.
+    """
     result = invoke_cached_cli(["app", "ledger", "invoice", "wizard"], input="")
     assert result.exit_code == 2
     assert "Usage:" in result.output
-    assert "--counterparty-nif" in result.output
+    assert "--kind" in result.output
 
 
 def test_wizard_output_schema_keeps_noop_and_extended_record_fields() -> None:

@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
@@ -67,7 +68,7 @@ class LedgerAddRequest(BaseModel):
     iva_category: _AddIvaCategory = None
     deduction_fact_kind: Annotated[str, Field(max_length=128)] | None = None
     investment_asset_id: _AddOptionalId = None
-    counterparty_country: Annotated[str, Field(max_length=16)] | None = None
+    counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: _AddEUMemberState = None
     recargo_amount: _AddOptionalDecimalText = None
     irpf_category: _AddOptionalText = None

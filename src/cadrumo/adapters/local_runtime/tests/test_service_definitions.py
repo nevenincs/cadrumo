@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import plistlib
+from types import SimpleNamespace
 from xml.etree import ElementTree
 
 import pytest
@@ -11,6 +12,7 @@ from defusedxml.ElementTree import fromstring
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.management import RuntimeServiceBinding
 
+from .. import windows_manager
 from ..service_definitions import (
     linux_user_service,
     macos_agent_plist,
@@ -32,7 +34,6 @@ _REGISTERED_WINDOWS_TASK = """<Task version="1.3" xmlns="http://schemas.microsof
     <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
     <ExecutionTimeLimit>PT0S</ExecutionTimeLimit><Hidden>true</Hidden>
     <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <RestartOnFailure><Count>3</Count><Interval>PT1M</Interval></RestartOnFailure>
     <IdleSettings><StopOnIdleEnd>true</StopOnIdleEnd><RestartOnIdle>false</RestartOnIdle></IdleSettings>
     <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
   </Settings>
@@ -278,3 +279,146 @@ def test_upgrades_keep_one_owner_name_and_change_the_expected_version() -> None:
 def test_untrusted_xml_entities_refuse_without_expansion() -> None:
     xml = '<!DOCTYPE Task [<!ENTITY fake "synthetic">]><Task>&fake;</Task>'
     assert not windows_task_binding_matches(xml, _binding(windows=True), login_autostart=False)
+
+
+@pytest.mark.parametrize("owner_form", ["sid", "qualified"])
+def test_windows_logon_trigger_native_default_and_verified_owner_match(
+    monkeypatch: pytest.MonkeyPatch, owner_form: str
+) -> None:
+    """Native omission/order and a proved current account retain exact ownership."""
+    binding = _binding(windows=True)
+    document = _native_registered_windows_document(binding)
+    triggers = document.find(_NAMESPACE + "Triggers")
+    assert triggers is not None
+    trigger = ElementTree.SubElement(triggers, _NAMESPACE + "LogonTrigger")
+    qualified = r"WORKSTATION\synthetic-owner"
+    ElementTree.SubElement(trigger, _NAMESPACE + "UserId").text = (
+        binding.os_owner_id if owner_form == "sid" else qualified
+    )
+    looked_up: list[str] = []
+
+    def resolve(expected_sid: str) -> tuple[str, str]:
+        looked_up.append(expected_sid)
+        return qualified, binding.os_owner_id
+
+    monkeypatch.setattr(windows_manager, "_native_account_identity", resolve)
+    xml = ElementTree.tostring(document, encoding="unicode")
+    assert windows_task_binding_matches(xml, binding, login_autostart=True)
+    assert not windows_task_binding_matches(xml, binding, login_autostart=False)
+    assert looked_up == ([] if owner_form == "sid" else [binding.os_owner_id])
+    # Explicit true after UserId is also the same singleton schema meaning.
+    ElementTree.SubElement(trigger, _NAMESPACE + "Enabled").text = "true"
+    assert windows_task_binding_matches(
+        ElementTree.tostring(document, encoding="unicode"), binding, login_autostart=True
+    )
+
+
+@pytest.mark.parametrize("lookup_failure", ["unresolved", "changed_sid"])
+def test_windows_logon_trigger_owner_lookup_requires_exact_current_sid(
+    monkeypatch: pytest.MonkeyPatch, lookup_failure: str
+) -> None:
+    """Unresolved accounts and SIDhistory substitution cannot authorize a trigger."""
+    binding = _binding(windows=True)
+    document = fromstring(windows_task_xml(binding, login_autostart=True))
+    owner = document.find(f"{_NAMESPACE}Triggers/{_NAMESPACE}LogonTrigger/{_NAMESPACE}UserId")
+    assert owner is not None
+    qualified = r"WORKSTATION\synthetic-owner"
+    owner.text = qualified
+    looked_up: list[str] = []
+
+    def resolve(expected_sid: str) -> tuple[str, str] | None:
+        looked_up.append(expected_sid)
+        return None if lookup_failure == "unresolved" else (qualified, "S-1-5-21-1-2-3-1002")
+
+    monkeypatch.setattr(windows_manager, "_native_account_identity", resolve)
+    assert not windows_task_binding_matches(
+        ElementTree.tostring(document, encoding="unicode"), binding, login_autostart=True
+    )
+    assert looked_up == [binding.os_owner_id]
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "foreign_sid",
+        "foreign_qualified",
+        "unqualified",
+        "disabled",
+        "duplicate_enabled",
+        "duplicate_trigger",
+        "unknown",
+    ],
+)
+def test_windows_logon_trigger_native_normalization_keeps_refusals(
+    monkeypatch: pytest.MonkeyPatch, change: str
+) -> None:
+    """Only an exact supported singleton trigger receives native normalization."""
+    binding = _binding(windows=True)
+    document = fromstring(windows_task_xml(binding, login_autostart=True))
+    triggers = document.find(_NAMESPACE + "Triggers")
+    assert triggers is not None
+    trigger = triggers[0]
+    owner, enabled = trigger.find(_NAMESPACE + "UserId"), trigger.find(_NAMESPACE + "Enabled")
+    assert owner is not None and enabled is not None
+    qualified = r"WORKSTATION\synthetic-owner"
+    owner.text = qualified
+    looked_up: list[str] = []
+
+    def resolve(expected_sid: str) -> tuple[str, str]:
+        looked_up.append(expected_sid)
+        return qualified, binding.os_owner_id
+
+    monkeypatch.setattr(windows_manager, "_native_account_identity", resolve)
+    if change == "foreign_sid":
+        owner.text = "S-1-5-21-1-2-3-1002"
+    elif change == "foreign_qualified":
+        owner.text = r"FOREIGN\other-owner"
+    elif change == "unqualified":
+        owner.text = "synthetic-owner"
+    elif change == "disabled":
+        enabled.text = "false"
+    elif change == "duplicate_enabled":
+        ElementTree.SubElement(trigger, _NAMESPACE + "Enabled").text = "true"
+    elif change == "duplicate_trigger":
+        ElementTree.SubElement(triggers, _NAMESPACE + "LogonTrigger")
+    else:
+        ElementTree.SubElement(trigger, _NAMESPACE + "Unknown").text = "true"
+    assert not windows_task_binding_matches(
+        ElementTree.tostring(document, encoding="unicode"), binding, login_autostart=True
+    )
+    assert all(expected_sid == binding.os_owner_id for expected_sid in looked_up)
+    if change in {"foreign_sid", "unqualified", "duplicate_trigger"}:
+        assert looked_up == []
+
+
+def test_windows_logon_trigger_native_lookup_is_unavailable_off_windows(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unsupported platforms refuse alias lookup before importing native APIs."""
+    monkeypatch.setattr(windows_manager, "sys", SimpleNamespace(platform="linux"))
+    assert windows_manager._native_account_identity(_binding(windows=True).os_owner_id) is None
+
+
+def test_windows_task_matcher_preserves_exact_empty_expected_triggers() -> None:
+    """Exact empty sections stay equal, while an added trigger is refused."""
+    document = fromstring(windows_task_xml(_binding(windows=True), login_autostart=False))
+    triggers = ElementTree.SubElement(document, _NAMESPACE + "Triggers")
+    expected = ElementTree.tostring(document, encoding="unicode")
+    assert windows_manager._task_xml_definition_matches(expected, expected)
+    trigger = ElementTree.SubElement(triggers, _NAMESPACE + "LogonTrigger")
+    ElementTree.SubElement(trigger, _NAMESPACE + "UserId").text = _binding(windows=True).os_owner_id
+    assert not windows_manager._task_xml_definition_matches(
+        ElementTree.tostring(document, encoding="unicode"), expected
+    )
+
+
+def test_windows_native_outer_restart_policy_refuses() -> None:
+    """A second native retry owner is drift from the current exact definition."""
+    binding = _binding(windows=True)
+    document = _native_registered_windows_document(binding)
+    settings = document.find(_NAMESPACE + "Settings")
+    assert settings is not None
+    restart = ElementTree.SubElement(settings, _NAMESPACE + "RestartOnFailure")
+    ElementTree.SubElement(restart, _NAMESPACE + "Count").text = "3"
+    ElementTree.SubElement(restart, _NAMESPACE + "Interval").text = "PT1M"
+    assert not windows_task_binding_matches(
+        ElementTree.tostring(document, encoding="unicode"), binding, login_autostart=False
+    )

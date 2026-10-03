@@ -384,6 +384,11 @@ def _evidence_extract_payload(
         "draft_review_sha256": projection.draft_review_sha256,
         "consent_audit_effect": projection.consent_audit_effect,
         **_draft_payload(projection.draft),
+        "label_reading_fallback": (
+            None
+            if projection.label_reading_fallback is None
+            else projection.label_reading_fallback.model_dump(mode="json")
+        ),
         "off_host_provider": projection.off_host_provider,
         "off_host_acknowledged_surface": (
             f"runtime:{LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID}"

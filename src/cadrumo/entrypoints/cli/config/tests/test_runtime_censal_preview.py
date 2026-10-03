@@ -130,3 +130,22 @@ def test_preview_bridge_refuses_profile_or_effect_mismatch_with_operation_identi
         "effect": effect.value,
         "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
     }
+
+
+def test_preview_bridge_accepts_the_live_session_write_the_read_commits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``updated`` is a settled outcome of this read, not a frame mismatch.
+
+    The executor combines its live-session write receipt with
+    ``OperationEffect.NONE`` before settling, so an authenticated census read
+    that drove an AEAT session reports ``updated`` while committing nothing of
+    the operator's. The refused half above therefore uses ``unknown``, the
+    extent the executor publishes while the browser phase is still open.
+    """
+    ctx, _client, _baseline, _captured, projection = _install_bridge(
+        monkeypatch,
+        effect=OperationEffect.UPDATED,
+    )
+
+    assert runtime_censal_preview.preview_censal_with_runtime(ctx) is projection

@@ -51,6 +51,7 @@ from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_
 
 from .errors import SequenceGoldenMismatchError
 from .golden_store import (
+    SANDBOX_WORKDIR_PLACEHOLDER,
     GoldenFrame,
     SequenceGolden,
     mask_host_conditional_details,
@@ -327,6 +328,9 @@ def _evaluate_assertion(
     assertion: ExpectAssertion, execution: FrameExecution, transcript: SequenceTranscript, at: str, problems: list[str]
 ) -> None:
     """Evaluate assertion."""
+    explicit_sandbox_path = isinstance(assertion.expected, str) and assertion.expected.startswith(
+        SANDBOX_WORKDIR_PLACEHOLDER + "/",
+    )
     expected = _resolved_expect_literal(assertion, transcript)
     rendered = json.dumps(expected)
     if assertion.json_path == _EXIT_CODE_PATH:
@@ -343,6 +347,23 @@ def _evaluate_assertion(
         )
         return
     found, value = _resolve_json_path(execution.envelope, assertion.json_path)
+    if explicit_sandbox_path and found:
+        if isinstance(value, str) and value.startswith(
+            (SANDBOX_WORKDIR_PLACEHOLDER + "/", SANDBOX_WORKDIR_PLACEHOLDER + "\\"),
+        ):
+            problems.append(
+                f"{at}: @expect {assertion.json_path} == {rendered} failed — "
+                "live output must report a native destination, not a sandbox token",
+            )
+            return
+        # Only the authored literal enables normalization; captures remain raw.
+        # The known workdir comes from the runner, independently of live output.
+        envelope = normalise_document_paths(
+            execution.envelope,
+            storage_root=transcript.storage_root,
+            workdir=transcript.workdir,
+        )
+        found, value = _resolve_json_path(envelope, assertion.json_path)
     if not found:
         problems.append(
             f"{at}: @expect path {assertion.json_path!r} is missing from the live "

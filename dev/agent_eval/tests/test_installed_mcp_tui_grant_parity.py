@@ -174,7 +174,7 @@ def _record(value: object) -> dict[str, object]:
 
 def _status(value: object, profile_id: UUID) -> ProfileAccessStatus:
     document = _record(value)
-    assert document["outcome"] == "status"
+    assert document["outcome"] == "status" and "status" in document, document
     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(document["status"]))
     assert status.profile_id == profile_id
     assert status.connected and status.credential_authenticated and status.profile_bound

@@ -97,7 +97,7 @@ def submit_prorrata_list(
     ctx: typer.Context,
     request: BaseModel,
 ) -> RegisteredOperationCompletion[ProrrataListProjection]:
-    """Submit the all-period list operation with its exact registered schema."""
+    """Submit the all-period list operation and project it as ``ProrrataListProjection``."""
     return submit_prorrata_operation(
         ctx,
         request,

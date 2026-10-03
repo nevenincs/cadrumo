@@ -24,6 +24,7 @@ from ....application.user_profile.automation_enrollment import (
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ..bound_session import BoundSession
+from ..components.theme import tokenised
 from .automation_inventory_decisions import AutomationInventoryDecisionMixin
 from .automation_inventory_view import AutomationInventoryViewMixin
 
@@ -52,13 +53,22 @@ class RuntimeAutomationInventoryScreen(
     """Borrow one TUI session; the runtime remains the sole inventory authority."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     RuntimeAutomationInventoryScreen { align: center middle; }
-    #automation-inventory-body { width: 100%; height: 38; border: round $accent; padding: 1 2; background: $surface; }
+    #automation-inventory-body {
+        width: $cadrumo-modal-width;
+        height: $cadrumo-modal-height;
+        border: $cadrumo-radius-overlay $accent;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        background: $surface;
+    }
     #automation-inventory-content { height: 1fr; }
-    #automation-inventory-grants, #automation-inventory-keys, #automation-inventory-requests { height: 5; }
+    #automation-inventory-grants, #automation-inventory-keys, #automation-inventory-requests {
+        height: auto;
+        max-height: $cadrumo-log-max-height;
+    }
     #automation-inventory-details { height: 1fr; }
-    """
+    """)
 
     def __init__(self, client: RuntimeFrontendClient) -> None:
         """Pin one admitted TUI connection without assuming inventory privilege."""

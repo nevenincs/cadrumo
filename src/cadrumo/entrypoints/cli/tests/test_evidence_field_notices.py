@@ -485,8 +485,8 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
     from .. import _ledger_evidence_cli
 
     source = Path(_ledger_evidence_cli.__file__).read_text(encoding="utf-8")
-    extract_calls = source.count("notices.extend(field_degradation_notices(draft.provenance))")
-    confirm_calls = source.count("notices.extend(field_degradation_notices(result.draft.provenance))")
+    extract_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(projection.draft)))")
+    confirm_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(result.draft)))")
 
     assert extract_calls == 1, "the extract surface must emit per-field degradation notices"
     assert confirm_calls == 1, "the confirm surface must emit per-field degradation notices"
@@ -526,7 +526,7 @@ def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_
         "failed_condition_id": "provisioning.load_headroom.measurable",
     }
     assert "currency, supplier_name" in notice.message
-    assert "headroom" in notice.message
+    assert "enough free memory" in notice.message
     assert derive_status([notice]).value == "warning"
 
 

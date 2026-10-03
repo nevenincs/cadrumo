@@ -16,7 +16,7 @@ import struct
 import sys
 import time
 from collections.abc import Generator
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -29,6 +29,7 @@ from .....application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     NativeSecretBackend,
 )
+from .....core.async_cleanup import AsyncResourceCleanupError
 from .automation_secret_target import require_automation_secret_target
 from .gnome_collection_protection import require_protected_gnome_collection
 
@@ -122,10 +123,10 @@ class _DeadlineBus:
 
         self.deadline = deadline
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.parser = Parser()
-        self.serial = 0
-        self.owner: str | None = None
         try:
+            self.parser = Parser()
+            self.serial = 0
+            self.owner: str | None = None
             self.sock.settimeout(self.remaining())
             self.sock.connect(str(path))
             peer = self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i"))
@@ -147,8 +148,8 @@ class _DeadlineBus:
             (name,) = _body(hello, 1)
             if not isinstance(name, str) or not name.startswith(":"):
                 raise _invalid()
-        except BaseException:
-            self.close()
+        except BaseException as error:
+            _close_native_after_failure(self, error)
             raise
 
     def remaining(self) -> float:
@@ -237,6 +238,33 @@ class _DeadlineBus:
         self.owner = owner
 
 
+def _close_native_after_failure(bus: _DeadlineBus, primary: BaseException, *, session_path: str | None = None) -> None:
+    """Retain close diagnostics; the bus disconnect owns final session settlement."""
+    try:
+        if session_path is None:
+            bus.close()
+        else:
+            bus.call(session_path, _SESSION_IFACE, "Close")
+    except BaseException as cleanup:
+        previous = primary.__dict__.get("cleanup_error")
+        if isinstance(previous, AsyncResourceCleanupError):
+            diagnostic = AsyncResourceCleanupError(
+                (), (cleanup,), retry_task_name="linux-secret-store-cleanup", close_attempts=1
+            )
+            retained = previous.merged_with(diagnostic)
+            retained.__cause__ = cleanup
+            primary.__dict__["cleanup_error"] = retained
+            if primary.__dict__.get("async_cleanup_error") is previous:
+                primary.__dict__["async_cleanup_error"] = retained
+        elif isinstance(previous, BaseException) and previous is not cleanup:
+            primary.__dict__["cleanup_error"] = BaseExceptionGroup(
+                "Linux secret store cleanup failed", (previous, cleanup)
+            )
+        elif cleanup is not primary:
+            primary.__dict__["cleanup_error"] = cleanup
+        primary.add_note("Secret-store close also failed; no native retry was retained")
+
+
 @contextmanager
 def _native_bus() -> Generator[_DeadlineBus]:
     try:
@@ -245,14 +273,27 @@ def _native_bus() -> Generator[_DeadlineBus]:
             bus.verify_owner()
             yield bus
             bus.verify_owner()
-        finally:
+        except BaseException as error:
+            _close_native_after_failure(bus, error)
+            raise
+        else:
             bus.close()
-    except AutomationCustodyError:
+    except (AutomationCustodyError, AsyncResourceCleanupError):
         raise
-    except (ValueError, TypeError, IndexError, KeyError, OverflowError):
-        raise _invalid() from None
-    except Exception:
-        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+    except (ValueError, TypeError, IndexError, KeyError, OverflowError) as error:
+        primary = _invalid()
+        for name in ("async_cleanup_error", "cleanup_error", "body_error"):
+            previous = error.__dict__.get(name)
+            if isinstance(previous, BaseException):
+                primary.__dict__[name] = previous
+        raise primary from None
+    except Exception as error:
+        primary = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        for name in ("async_cleanup_error", "cleanup_error", "body_error"):
+            previous = error.__dict__.get(name)
+            if isinstance(previous, BaseException):
+                primary.__dict__[name] = previous
+        raise primary from None
 
 
 def _property(bus: _DeadlineBus, path: str, interface: str, name: str, signature: str) -> Any:
@@ -322,9 +363,13 @@ def _session(bus: _DeadlineBus) -> Generator[Any]:
         try:
             session.set_server_public_key(server_key)
             yield session
-        finally:
-            with suppress(Exception):
-                bus.call(session.object_path, _SESSION_IFACE, "Close")
+        except BaseException as primary:
+            _close_native_after_failure(bus, primary, session_path=session.object_path)
+            raise
+        else:
+            # A failed mutation may already have committed. Surface close failure
+            # without replay; the enclosing bus disconnect closes this session.
+            bus.call(session.object_path, _SESSION_IFACE, "Close")
     finally:
         session.aes_key = None
         session.my_private_key = 0

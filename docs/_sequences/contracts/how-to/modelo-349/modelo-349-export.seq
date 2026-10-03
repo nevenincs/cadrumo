@@ -5,5 +5,5 @@
 @step Export the checked declaration to a local file for upload through the AEAT channel.
 @result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
 @expect result.format == "fichero-boe"
-@expect result.output_path == "modelo-349.boe"
+@expect result.output_path == "<sandbox-workdir>/modelo-349.boe"
 @expect exit_code == 0

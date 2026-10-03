@@ -18,7 +18,7 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.runtime.contracts import (
@@ -44,6 +44,7 @@ from cadrumo.entrypoints.runtime_management import (
     inspect_installed_runtime_management,
     inspect_runtime_management,
     preview_installed_runtime_stop,
+    start_installed_runtime_management,
 )
 
 from ...application.runtime.management_status import RuntimeManagementSnapshot
@@ -557,7 +558,7 @@ async def test_installed_inspection_composes_passive_endpoint_after_admission(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_installed_start_wires_manager_and_closes_probe_before_endpoint(
+async def test_installed_start_wires_manager_and_holds_probe_through_inspect(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     events: list[tuple[object, ...]] = []
@@ -597,11 +598,11 @@ async def test_installed_start_wires_manager_and_closes_probe_before_endpoint(
     assert door[0] == "door.construct" and door[1] is endpoint and door[3] is manager
     expected = cast("RuntimeClientHello", door[2])
     assert expected.product_version == "management-test" and expected.storage_identity == _IDENTITY
-    assert events[5:7] == [("door.open", 10), ("connection.close",)]
-    inspected = events[7]
+    assert events[5] == ("door.open", 75)
+    inspected = events[6]
     assert inspected[0] == "inspect" and inspected[1] is endpoint and inspected[3] is manager
     assert inspected[4:] == (RuntimeManagerAvailability.UNAVAILABLE, 3)
-    assert events[8:] == [("endpoint.close",)]
+    assert events[7:] == [("connection.close",), ("endpoint.close",)]
     assert manager.starts == manager.stops == 0
 
 
@@ -878,3 +879,176 @@ def test_installed_snapshot_passively_observes_existing_runtime(tmp_path: Path) 
                 stop.set()
                 running.result(timeout=10)
                 endpoint.close()
+
+
+class _StartChannel(StopChannel):
+    """Use real framing with an explicit initial native-read barrier."""
+
+    def __init__(self, *, failures: int, blocked: bool = False) -> None:
+        super().__init__(failures=failures)
+        self.read_entered = Event()
+        self.read_release = Event()
+        self.blocked = blocked
+        if not blocked:
+            self.read_release.set()
+
+    @override
+    def read_exact(self, count: int, *, deadline: float) -> bytes:
+        if self.blocked:
+            self.read_entered.set()
+            assert self.read_release.wait(max(0.0, deadline - time.monotonic()))
+            self.blocked = False
+        return super().read_exact(count, deadline=deadline)
+
+
+class _StartEndpoint(StopEndpoint):
+    """Own the connection and endpoint release ports independently."""
+
+    def __init__(self, channel: _StartChannel, *, failures: int) -> None:
+        super().__init__(failures)
+        self.channel = channel
+        self.connects = 0
+
+    def connect(self, *, timeout: float) -> RuntimeByteChannel:
+        assert 0 < timeout <= 0.5
+        self.connects += 1
+        return self.channel
+
+
+def _install_start_ports(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, endpoint: _StartEndpoint) -> None:
+    """Substitute only installed composition; keep the actual launch door."""
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.effective_storage_root", lambda: tmp_path)
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.version", lambda _name: "stop-test")
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.WindowsRuntimeEndpoint", lambda **_kwargs: endpoint)
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.PosixRuntimeEndpoint", lambda **_kwargs: endpoint)
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.installed_runtime_manager", lambda **_kwargs: None)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_installed_start_retains_both_native_release_owners_after_verified_readiness(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    channel = _StartChannel(failures=2)
+    endpoint = _StartEndpoint(channel, failures=1)
+    _install_start_ports(monkeypatch, tmp_path, endpoint)
+    observations = 0
+
+    async def observe(**_kwargs: object) -> RuntimeManagementSnapshot:
+        nonlocal observations
+        observations += 1
+        assert channel.close_calls == 0 and endpoint.close_calls == 0
+        return RuntimeManagementSnapshot(
+            listener=RuntimeListenerState.READY, manager_availability=RuntimeManagerAvailability.UNAVAILABLE
+        )
+
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.inspect_runtime_management", observe)
+    with pytest.raises(AsyncResourceCleanupError) as failed:
+        await start_installed_runtime_management()
+    connection_owner, endpoint_owner = failed.value.resources
+    assert isinstance(connection_owner, RuntimeTransportCleanup)
+    assert isinstance(connection_owner.resource, VerifiedRuntimeConnection)
+    assert isinstance(endpoint_owner, RuntimeTransportCleanup) and endpoint_owner.resource is endpoint
+    assert channel.close_calls == endpoint.close_calls == observations == endpoint.connects == 1
+    with pytest.raises(AsyncResourceCleanupError) as retry_failed:
+        await failed.value.retry_cleanup()
+    assert retry_failed.value.resources == (connection_owner,)
+    assert channel.close_calls == endpoint.close_calls == 2
+    await retry_failed.value.retry_cleanup()
+    await retry_failed.value.retry_cleanup()
+    assert channel.close_calls == 3 and endpoint.close_calls == 2
+    assert observations == endpoint.connects == 1
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cancelled", [False, True], ids=["typed-primary", "native-cancellation"])
+async def test_installed_start_preserves_post_launch_primary_and_all_release_owners(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, cancelled: bool
+) -> None:
+    channel = _StartChannel(failures=1)
+    endpoint = _StartEndpoint(channel, failures=1)
+    _install_start_ports(monkeypatch, tmp_path, endpoint)
+    primary = (
+        asyncio.CancelledError("native-start-status-cancellation")
+        if cancelled
+        else RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+    )
+
+    async def observe(**_kwargs: object) -> RuntimeManagementSnapshot:
+        raise primary
+
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.inspect_runtime_management", observe)
+    with pytest.raises(type(primary)) as failed:
+        await start_installed_runtime_management()
+    assert failed.value is primary
+    retained = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(retained, AsyncResourceCleanupError) and len(retained.resources) == 2
+    assert channel.close_calls == endpoint.close_calls == endpoint.connects == 1
+    await retained.retry_cleanup()
+    await retained.retry_cleanup()
+    assert channel.close_calls == endpoint.close_calls == 2 and endpoint.connects == 1
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_installed_start_cancelled_open_retires_the_exact_returned_connection(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    channel = _StartChannel(failures=1, blocked=True)
+    endpoint = _StartEndpoint(channel, failures=1)
+    _install_start_ports(monkeypatch, tmp_path, endpoint)
+    opening = asyncio.create_task(start_installed_runtime_management(timeout=5))
+    try:
+        assert await asyncio.to_thread(channel.read_entered.wait, 2)
+        opening.cancel("caller-start-cancellation")
+        await asyncio.sleep(0)
+        assert not opening.done() and channel.close_calls == endpoint.close_calls == 0
+        channel.read_release.set()
+        with pytest.raises(asyncio.CancelledError) as failed:
+            await opening
+        assert failed.value.args == ("caller-start-cancellation",)
+        retained = failed.value.__dict__.get("async_cleanup_error")
+        assert isinstance(retained, AsyncResourceCleanupError) and len(retained.resources) == 2
+        connection_owner, endpoint_owner = retained.resources
+        assert isinstance(connection_owner, RuntimeTransportCleanup)
+        assert isinstance(connection_owner.resource, VerifiedRuntimeConnection)
+        assert isinstance(endpoint_owner, RuntimeTransportCleanup) and endpoint_owner.resource is endpoint
+        assert channel.close_calls == endpoint.close_calls == endpoint.connects == 1
+        await retained.retry_cleanup()
+        assert channel.close_calls == endpoint.close_calls == 2 and endpoint.connects == 1
+    finally:
+        channel.read_release.set()
+        if not opening.done():
+            await opening
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cancelled", [False, True], ids=["typed-primary", "native-cancellation"])
+async def test_installed_status_keeps_exact_probe_primary_when_endpoint_release_fails(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, cancelled: bool
+) -> None:
+    channel = _StartChannel(failures=0)
+    endpoint = _StartEndpoint(channel, failures=1)
+    _install_start_ports(monkeypatch, tmp_path, endpoint)
+    primary = (
+        asyncio.CancelledError("native-status-cancellation")
+        if cancelled
+        else RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    )
+
+    def probe(*_args: object, **_kwargs: object) -> RuntimeListenerState:
+        raise primary
+
+    monkeypatch.setattr("cadrumo.entrypoints.runtime_management.probe_runtime_listener", probe)
+    with pytest.raises(type(primary)) as failed:
+        await inspect_installed_runtime_management()
+    assert failed.value is primary and endpoint.close_calls == 1 and endpoint.connects == 0
+    retained = primary.__dict__.get("async_cleanup_error")
+    assert isinstance(retained, AsyncResourceCleanupError)
+    (owner,) = retained.resources
+    assert isinstance(owner, RuntimeTransportCleanup) and owner.resource is endpoint
+    await retained.retry_cleanup()
+    await retained.retry_cleanup()
+    assert endpoint.close_calls == 2

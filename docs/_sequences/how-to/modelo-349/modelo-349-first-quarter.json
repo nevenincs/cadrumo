@@ -94,7 +94,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -126,7 +134,7 @@
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -155,7 +163,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
@@ -351,7 +367,7 @@
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -374,7 +390,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.verify",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "calculation_revision_id": "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551",
           "completeness_status": "complete",
@@ -404,7 +428,7 @@
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

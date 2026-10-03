@@ -239,7 +239,9 @@ def test_catalogue_remove_refuses_linked_invoice(authority_operation: PinnedAuth
         assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
 
 
-def test_catalogue_create_refuses_an_omitted_country_code(active_profile_isolated_backend) -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_an_omitted_country_code(tmp_path: Path) -> None:
     """``--country-code`` is mandatory, because it routes both informativas.
 
     Both canonical entry verbs used to default it to ``ES``. The slim verb they
@@ -256,8 +258,8 @@ def test_catalogue_create_refuses_an_omitted_country_code(active_profile_isolate
     design, since the tax id already IS the NIF-IVA for a non-ES country -- so
     the honest remedy is to require the operator to state it.
     """
-    result = invoke_cached_cli(
-        [
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
@@ -265,8 +267,8 @@ def test_catalogue_create_refuses_an_omitted_country_code(active_profile_isolate
             "--invoice-number", "2026-NOCOUNTRY-001",
             "--invoice-date", "2026-03-10",
             "--taxable-base", "100.00", "--iva-rate", "21",
-        ],
-    )  # fmt: skip
+            output_format="text",
+        )  # fmt: skip
 
     assert result.exit_code != 0, result.output
     # Names the missing option rather than failing generically, so the operator
@@ -343,17 +345,17 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
         assert _line_value(result.output, "grand_total") == "1262.00"
 
 
-def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_set(
-    active_profile_isolated_backend,
-) -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_set(tmp_path: Path) -> None:
     """A closed axis must instruct on parse failure, never fail bare.
 
     The option is typed on the enum so click renders the accepted set rather
     than leaving the operator to guess, which is the CLI boundary's job for
     every closed value set.
     """
-    result = invoke_cached_cli(
-        [
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
             "--counterparty-nif", "B12345674",
@@ -363,8 +365,8 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--invoice-class", "no-such-class",
-        ],
-    )  # fmt: skip
+            output_format="text",
+        )  # fmt: skip
 
     assert result.exit_code != 0
     assert "RECTIFICATIVA" in result.output

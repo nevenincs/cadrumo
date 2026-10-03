@@ -6,7 +6,6 @@ import os
 import shutil
 import sys
 
-from cadrumo.core.config import Settings
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
@@ -33,31 +32,19 @@ def _install(*arguments: str, system: bool = False) -> int:
 
 
 def provision_browsers() -> int:
-    """Reuse launchable channels and repair missing binaries or Linux libraries.
-
-    Bundled Chromium is the default AEAT channel and the browser tests launch
-    directly. An operator who configures a system channel such as ``chrome``
-    gets that channel checked as well. A real headless launch verifies both
-    the executable and its shared libraries.
-    """
-    channels = dict.fromkeys(("chromium", Settings().cadrumo_browser_channel))
-    for channel in channels:
-        if run_doctor(channel=channel) == 0:
-            print(f"browser-setup: reusing provisioned {channel}")
-            continue
-        result = _install("install", channel, system=channel in {"chrome", "msedge"})
-        if result:
-            return result
-        if run_doctor(channel=channel) == 0:
-            continue
-        if sys.platform != "linux":
-            return 1
-        result = _install("install-deps", channel, system=True)
-        if result:
-            return result
-        if run_doctor(channel=channel):
-            return 1
-    return 0
+    """Reuse launchable bundled Chromium and repair missing binaries or Linux libraries."""
+    if run_doctor() == 0:
+        print("browser-setup: reusing provisioned chromium")
+        return 0
+    result = _install("install", "chromium")
+    if result:
+        return result
+    if run_doctor() == 0:
+        return 0
+    if sys.platform != "linux":
+        return 1
+    result = _install("install-deps", "chromium", system=True)
+    return result if result else run_doctor()
 
 
 def main() -> int:

@@ -123,14 +123,24 @@ def _discover_report(projection: FiledDiscoverPublicResultV1) -> FiledHistoryDis
     )
 
 
-def _require_settled_none(
+#: Effects a filed read may settle with. The read itself commits nothing, but
+#: reaching the register drives a live AEAT session whose server-side state the
+#: executor reports through its session write receipt, so ``UPDATED`` is a real
+#: outcome of a successful read. ``UNKNOWN`` and ``PARTIAL`` are not: a read
+#: that cannot say what it left behind has no settled receipt to trust.
+_SETTLED_READ_EFFECTS: frozenset[OperationEffect] = frozenset(
+    {OperationEffect.NONE, OperationEffect.UPDATED},
+)
+
+
+def _require_settled_read(
     completed: RegisteredOperationCompletion[FiledListPublicResultV1]
     | RegisteredOperationCompletion[FiledDiscoverPublicResultV1],
 ) -> None:
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in _SETTLED_READ_EFFECTS
     ):
         raise ValueError("filed read result disagrees with its settled receipt")
 
@@ -166,7 +176,7 @@ def read_filed_list_for_cli(
         if not isinstance(projection, FiledListPublicResultV1):
             raise ValueError("filed-list projection has an invalid type")
         rows, failures = _read_list_projection(projection, request=request)
-        _require_settled_none(completed)
+        _require_settled_read(completed)
     except Exception:
         raise invalid_completion_error(completed) from None
     return FiledListRead(completion=completed, projection=projection, rows=rows, failures=failures)
@@ -192,7 +202,7 @@ def read_filed_discover_for_cli(ctx: typer.Context) -> FiledDiscoverRead:
         if not isinstance(projection, FiledDiscoverPublicResultV1):
             raise ValueError("filed-discover projection has an invalid type")
         report = _discover_report(projection)
-        _require_settled_none(completed)
+        _require_settled_read(completed)
     except Exception:
         raise invalid_completion_error(completed) from None
     return FiledDiscoverRead(completion=completed, projection=projection, report=report)

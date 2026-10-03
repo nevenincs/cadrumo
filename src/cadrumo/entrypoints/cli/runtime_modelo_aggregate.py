@@ -52,6 +52,7 @@ def run_modelo_aggregate(
     try:
         if not isinstance(projection, ModeloAggregateProjection):
             raise ValueError("modelo aggregate result has an unexpected type")
+        projection = ModeloAggregateProjection.model_validate(projection.model_dump(mode="python"), strict=True)
         if (
             projection.profile_id != client.profile_id
             or projection.modelo != command.modelo

@@ -8,6 +8,8 @@ Usage::
 
 Provisioning actions mutate only the checkout's managed environment. The
 initialization runner owns the dependency checks that precede provisioning.
+``setup`` materializes ``env/.env`` and ports the values set in the main
+worktree's copy; ``workstation-tools`` provisions workstation CLIs.
 """
 
 from __future__ import annotations

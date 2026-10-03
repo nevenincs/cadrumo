@@ -59,7 +59,7 @@ import gc
 import os
 import sys
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -140,6 +140,9 @@ temporary_env = import_module("cadrumo.tests.env").temporary_env
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
+
+    from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
+    from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
@@ -256,6 +259,17 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     if not hasattr(config, "workerinput"):
         _release_shared_registry_authority()
     _run_logging.restate(config)
+
+
+@pytest.fixture
+def publish_authority_artifact(tmp_path: Path) -> Callable[[AuthorityArtifact], AuthorityDescriptor]:
+    """Publish real synthetic artifacts only within the requesting test's root."""
+    from dev.registry.pipeline.authority_publication import install_validated_authority_database
+
+    def publish(artifact: AuthorityArtifact) -> AuthorityDescriptor:
+        return install_validated_authority_database(artifact, destination=tmp_path, require_current=lambda: None)
+
+    return publish
 
 
 @pytest.fixture(scope="session", autouse=True)

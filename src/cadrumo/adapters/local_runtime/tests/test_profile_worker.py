@@ -13,7 +13,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel, SecretBytes, TypeAdapter
+from pydantic import BaseModel, ConfigDict, SecretBytes, TypeAdapter
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
@@ -510,4 +510,130 @@ async def test_admitted_worker_browser_descendants_end_on_owner_death(tmp_path: 
         await close_async_resources(
             owner, task_name="windows-admitted-browser-fixture-close", primary_error=sys.exception()
         )
+    assert owner.stderr == b""
+
+
+class _WindowsHostRetirement(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    runtime_pid: int
+    worker_pid: int
+    owner_lost: bool
+    profile_removed: bool
+    server_running: bool
+    stop_requested: bool
+
+
+@pytest.mark.asyncio
+async def test_idle_admitted_worker_death_retires_browser_without_frontend_request(tmp_path: Path) -> None:
+    """The real host poll retires an idle lost worker; native objects die before cleanup."""
+    import psutil
+    import win32api
+    import win32con
+    import win32event
+    import win32process
+
+    owner = _WindowsBrowserFixture(
+        await asyncio.create_subprocess_exec(
+            sys.executable,
+            *fixture_arguments(
+                "cadrumo.entrypoints.runtime.tests.windows_worker_parent_fixture",
+                "host-browser-owner",
+                str(tmp_path),
+            ),
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=fixture_environment(),
+        )
+    )
+    primary: BaseException | None = None
+    try:
+        assert owner.process.stdout is not None
+        encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=40)
+        assert 0 < len(encoded) <= 4096
+        parent = _WindowsBrowserParent.model_validate_json(encoded)
+        assert parent.runtime_pid > 0
+        assert parent.runtime_pid == owner.process.pid or psutil.Process(parent.runtime_pid).ppid() == owner.process.pid
+        rights = win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ
+        owner.handles[parent.runtime_pid] = win32api.OpenProcess(
+            rights | win32con.PROCESS_TERMINATE, False, parent.runtime_pid
+        )
+        owner.runtime_pid = parent.runtime_pid
+        parent_handle = owner.handles[parent.runtime_pid]
+        assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32process.GetProcessTimes(parent_handle)["CreationTime"].isoformat() == parent.created
+        ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=100)
+        assert ready in (b"ready\n", b"ready\r\n"), "real profile lease was not acknowledged"
+        admission = await _windows_fixture_record(
+            tmp_path / "windows-worker-admitted.json", _WindowsBrowserAdmission, owner
+        )
+        # Keep the selected installed interpreter even when its Windows venv
+        # launcher retains an intermediate parent. Base Python would discard
+        # the isolated private worker's installed environment.
+        assert admission.runtime_pid == parent.runtime_pid
+        assert admission.worker_pid > 0 and admission.worker_pid != admission.runtime_pid
+        assert admission.buffer_wiped is True
+        for pid in (admission.runtime_pid, admission.worker_pid):
+            if pid not in owner.handles:
+                owner.handles[pid] = win32api.OpenProcess(
+                    rights | (win32con.PROCESS_TERMINATE if pid == admission.worker_pid else 0), False, pid
+                )
+            assert win32event.WaitForSingleObject(owner.handles[pid], 0) == win32event.WAIT_TIMEOUT
+        # The owner acknowledges custody first; this explicit test barrier then
+        # allows its already-contained worker to create real browser descendants.
+        (tmp_path / "windows-start-browser").write_text("start", encoding="ascii")
+        browser = await _windows_fixture_record(tmp_path / "windows-worker-browser.json", _WindowsBrowserReady, owner)
+        assert browser.worker_pid == admission.worker_pid and browser.title == "synthetic containment"
+        selected_executable = browser.executable.resolve(strict=True)
+        assert selected_executable.is_file()
+        members = await _windows_job_members(owner)
+        assert admission.worker_pid in members and admission.runtime_pid not in members
+        browser_roles: set[str] = set()
+        for pid, created in members.items():
+            if pid not in owner.handles:
+                owner.handles[pid] = win32api.OpenProcess(rights, False, pid)
+            handle = owner.handles[pid]
+            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+            assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == created
+            executable = Path(win32process.GetModuleFileNameEx(handle, 0)).resolve(strict=True)
+            if executable == selected_executable:
+                arguments = psutil.Process(pid).cmdline()
+                if "--type=renderer" in arguments:
+                    browser_roles.add("renderer")
+                elif "--remote-debugging-pipe" in arguments and not any(
+                    argument.startswith("--type=") for argument in arguments
+                ):
+                    browser_roles.add("browser")
+            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert browser_roles == {"browser", "renderer"}
+        # A second exact-Job observation ties the held, live objects and their
+        # native creation times to the owner rather than trusting reused PIDs.
+        assert await _windows_job_members(owner) == members
+        for handle in owner.handles.values():
+            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        win32api.TerminateProcess(owner.handles[admission.worker_pid], 23)
+        # No command or frontend request follows the kill. The original host's
+        # independent poll must contain the scope while its native parent lives.
+        deadline = time.monotonic() + 15
+        descendant_handles = [handle for pid, handle in owner.handles.items() if pid != admission.runtime_pid]
+        while any(
+            win32event.WaitForSingleObject(handle, 0) != win32event.WAIT_OBJECT_0 for handle in descendant_handles
+        ):
+            assert time.monotonic() < deadline, "idle worker death did not retire its observed descendants"
+            assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
+            await asyncio.sleep(0.02)
+        retired = await _windows_fixture_record(tmp_path / "windows-host-retired.json", _WindowsHostRetirement, owner)
+        assert retired.runtime_pid == admission.runtime_pid and retired.worker_pid == admission.worker_pid
+        assert retired.owner_lost and retired.profile_removed and retired.server_running and not retired.stop_requested
+        assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
+        assert owner.process.returncode is None
+        assert all(
+            win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_OBJECT_0 for handle in descendant_handles
+        )
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        await close_async_resources(owner, task_name="windows-admitted-browser-fixture-close", primary_error=primary)
     assert owner.stderr == b""

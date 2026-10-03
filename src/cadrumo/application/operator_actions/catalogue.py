@@ -57,6 +57,23 @@ class ActionCatalogueEntry(BaseModel):
     action_id: NamespacedId
     target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
     argument_specifications: tuple[ActionArgumentBindingSpecification, ...] = ()
+    materialisable_without_arguments: bool = False
+    """Whether the live target executes with none of the declared arguments bound.
+
+    A declared argument specification states how a producer *may* materialise
+    one target argument; it does not state that the target requires it. For a
+    few actions every declared argument is optional on the live verb, so a
+    producer that holds none of them still names an executable command. Those
+    entries set this to ``True`` and :func:`next_action` materialises them with
+    no bindings.
+
+    The default is ``False``: an action whose declared arguments address a
+    specific subject (a transaction, a work unit, a calculation revision)
+    cannot be reduced to a bare verb without handing the operator a command
+    that does not reach their case. The claim is not self-certifying - a gate
+    on the live command surface checks that every entry carrying it declares no
+    required input.
+    """
 
     @field_validator("argument_specifications")
     @classmethod
@@ -90,6 +107,16 @@ class ActionCatalogueEntry(BaseModel):
                 ),
             ),
         )
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _argument_free_claim_has_arguments_to_waive(self) -> ActionCatalogueEntry:
+        """Refuse the waiver on an entry that declares no argument at all."""
+        if self.materialisable_without_arguments and not self.argument_specifications:
+            raise ValueError(
+                "materialisable_without_arguments declares nothing on an action without argument specifications",
+            )
+        return self
 
 
 class ActionCatalogue(BaseModel):
@@ -261,6 +288,9 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source_key="profile_name",
                 ),
             ),
+            # The verb edits the active profile when no name is given, so a
+            # producer that does not hold one still names a reachable command.
+            materialisable_without_arguments=True,
         ),
         ActionCatalogueEntry(
             action_id="operator.profile.list",
@@ -580,6 +610,12 @@ def next_action(action_id: str) -> ResolvedNoticeAction:
     application layer also emits such notices; a CLI-owned helper would force an
     application module to import ``entrypoints``, against the layer direction.
 
+    An entry that declares argument specifications is refused here, because a
+    bare verb would not reach the subject those arguments address. The
+    exception is an entry marked
+    :attr:`ActionCatalogueEntry.materialisable_without_arguments`, whose live
+    target declares every one of them optional.
+
     Args:
         action_id: A namespaced id declared in the operator action catalogue.
 
@@ -588,9 +624,10 @@ def next_action(action_id: str) -> ResolvedNoticeAction:
 
     Raises:
         KeyError: ``action_id`` is not declared in the catalogue.
+        ValueError: the entry needs argument bindings this call cannot supply.
     """
     entry = lookup_action(action_id)
-    if entry.argument_specifications:
+    if entry.argument_specifications and not entry.materialisable_without_arguments:
         raise ValueError(
             f"notice action requires materialised argument bindings: {entry.action_id}",
         )

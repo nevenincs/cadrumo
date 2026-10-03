@@ -77,6 +77,14 @@ _DECLARED_WRITERS: dict[str, str] = {
         "its CAS command. Every resulting fact comes from an explicit wizard answer or "
         "flag, never from an absent projected value, so a cleared path is not adopted."
     ),
+    "application/wizard/patch_edit.py": (
+        "Reads the projection only to merge it with the supplied patch for the filing-"
+        "baseline completeness check, which refuses rather than writes. Every constructed "
+        "fact's value comes from the supplied patch's own validated, non-blank answers, or "
+        "is an explicit clearing fact for a blank answer; neither path ever sources a "
+        "value from the current projection, so an absent (possibly cleared) path is never "
+        "adopted as a value."
+    ),
 }
 
 

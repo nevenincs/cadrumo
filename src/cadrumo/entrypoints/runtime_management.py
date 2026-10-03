@@ -81,10 +81,33 @@ async def inspect_runtime_management(
         return RuntimeManagementSnapshot(
             listener=RuntimeListenerState.UNKNOWN, manager_availability=manager_state, manager=facts
         )
-    listener = await await_cancellation_complete(
-        asyncio.to_thread(probe_runtime_listener, endpoint, expected=expected, timeout=remaining),
-        task_name="runtime-management-status-probe",
-    )
+    failures: list[BaseException] = []
+
+    async def observe() -> RuntimeListenerState | None:
+        try:
+            return await asyncio.to_thread(probe_runtime_listener, endpoint, expected=expected, timeout=remaining)
+        except BaseException as error:
+            # Transport a terminal callback cancellation as a value. Only a
+            # cancellation of this caller enters the shield's cancellation path.
+            failures.append(error)
+            return None
+
+    try:
+        listener = await await_cancellation_complete(observe(), task_name="runtime-management-status-probe")
+    except asyncio.CancelledError as cancellation:
+        if failures:
+
+            async def failed_probe() -> None:
+                raise failures[0]
+
+            await await_cancellation_complete(
+                failed_probe(), task_name="runtime-management-status-failure", cancellation=cancellation
+            )
+        raise
+    if failures:
+        raise failures[0]
+    if listener is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     return RuntimeManagementSnapshot(listener=listener, manager_availability=manager_state, manager=facts)
 
 
@@ -100,6 +123,7 @@ async def inspect_installed_runtime_management(*, timeout: float = 3) -> Runtime
             manager_availability=RuntimeManagerAvailability.UNKNOWN,
         )
     endpoint = _installed_management_endpoint(storage_root=root)
+    primary: BaseException | None = None
     try:
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
         manager_state = (
@@ -122,12 +146,26 @@ async def inspect_installed_runtime_management(*, timeout: float = 3) -> Runtime
             manager_if_absent=manager_state,
             timeout=timeout,
         )
+    except BaseException as error:
+        primary = error
+        raise
     finally:
-        endpoint.close()
+        if primary is not None:
+            retain_merged_cleanup(primary)
+        try:
+            await close_async_resources(
+                RuntimeTransportCleanup(endpoint), task_name="runtime-management-status-release", primary_error=primary
+            )
+        except BaseException as error:
+            retain_merged_cleanup(error, primary)
+            raise
+        finally:
+            if primary is not None:
+                retain_merged_cleanup(primary)
 
 
-async def start_installed_runtime_management(*, timeout: float = 10) -> RuntimeManagementSnapshot:
-    """Open the owner-verified launch door and report the resulting state."""
+async def start_installed_runtime_management(*, timeout: float = 75) -> RuntimeManagementSnapshot:
+    """Await bounded cold-start readiness through the owner-verified launch door."""
     require_finite_budget(timeout)
     try:
         root = effective_storage_root().resolve(strict=True)
@@ -135,19 +173,64 @@ async def start_installed_runtime_management(*, timeout: float = 10) -> RuntimeM
     except (OSError, PackageNotFoundError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
     endpoint = _installed_management_endpoint(storage_root=root)
+    connection: VerifiedRuntimeConnection | None = None
+    primary: BaseException | None = None
+    open_failures: list[BaseException] = []
     try:
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
         manager = installed_runtime_manager(root=root, endpoint=endpoint, product_version=product_version)
-        connection = await RuntimeLaunchDoor(endpoint, expected=expected, manager=manager).open(timeout=timeout)
-        connection.close()
+
+        async def open_connection() -> None:
+            nonlocal connection
+            try:
+                connection = await RuntimeLaunchDoor(endpoint, expected=expected, manager=manager).open(timeout=timeout)
+            except BaseException as error:
+                open_failures.append(error)
+
+        # Retain a returned connection before a deferred caller cancellation
+        # propagates. Manager start still has its existing non-rollback contract.
+        try:
+            await await_cancellation_complete(open_connection(), task_name="runtime-management-start-open")
+        except asyncio.CancelledError as cancellation:
+            if open_failures:
+
+                async def failed_open() -> None:
+                    raise open_failures[0]
+
+                await await_cancellation_complete(
+                    failed_open(), task_name="runtime-management-start-failure", cancellation=cancellation
+                )
+            raise
+        if open_failures:
+            raise open_failures[0]
+        if connection is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         return await inspect_runtime_management(
             endpoint=endpoint,
             expected=expected,
             manager=manager,
             manager_if_absent=RuntimeManagerAvailability.UNAVAILABLE,
         )
+    except BaseException as error:
+        primary = error
+        raise
     finally:
-        endpoint.close()
+        connection_owner = _retained_connection_owner(connection, primary)
+        if primary is not None:
+            retain_merged_cleanup(primary, *open_failures)
+        try:
+            await close_async_resources(
+                connection_owner,
+                RuntimeTransportCleanup(endpoint),
+                task_name="runtime-management-start-release",
+                primary_error=primary,
+            )
+        except BaseException as error:
+            retain_merged_cleanup(error, primary, *open_failures)
+            raise
+        finally:
+            if primary is not None:
+                retain_merged_cleanup(primary, *open_failures)
 
 
 async def configure_installed_runtime_management(*, login_autostart: bool) -> RuntimeManagerInspection:
@@ -327,7 +410,7 @@ async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopCo
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return RuntimeStopConsent(endpoint=endpoint, connection=connection, preview=reply)
     except BaseException as primary:
-        connection_owner = _runtime_stop_connection_owner(connection, primary)
+        connection_owner = _retained_connection_owner(connection, primary)
         retain_merged_cleanup(primary)
         try:
             await close_async_resources(
@@ -353,13 +436,13 @@ __all__ = [
 ]
 
 
-def _runtime_stop_connection_owner(
-    connection: VerifiedRuntimeConnection | None, primary: BaseException
+def _retained_connection_owner(
+    connection: VerifiedRuntimeConnection | None, primary: BaseException | None
 ) -> RuntimeTransportCleanup | None:
     """Reuse the retained native connection owner before composing release resources."""
     connection_owner: RuntimeTransportCleanup | None = None
     if connection is not None:
-        retained = primary.__dict__.get("_runtime_transport_cleanup")
+        retained = None if primary is None else primary.__dict__.get("_runtime_transport_cleanup")
         connection_owner = (
             retained
             if isinstance(retained, RuntimeTransportCleanup) and retained.resource is connection

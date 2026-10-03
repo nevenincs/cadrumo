@@ -360,6 +360,30 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
             ledger_payment=_capital_capture_request(),
         )
 
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        annual_detail = WithholdingObservation(
+            source_id="transaction-1",
+            perceptor_tax_id="11111111H",
+            transaction_date=date(2025, 1, 15),
+            clave=RetencionClave.from_registry("A"),
+            percibido_dinerario=Decimal("100.00"),
+            retencion_practicada=Decimal("15.00"),
+            incapacity_cash_perception=Decimal("0"),
+            incapacity_cash_withholding=Decimal("0"),
+            incapacity_kind_value=Decimal("0"),
+            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+            incapacity_kind_repercutido=Decimal("0"),
+            foral_retention_estatal=Decimal("0"),
+            foral_retention_navarra=Decimal("0"),
+            foral_retention_araba=Decimal("0"),
+            foral_retention_gipuzkoa=Decimal("0"),
+            foral_retention_bizkaia=Decimal("0"),
+            base_retenciones=Decimal("100.00"),
+        )
+        PerModeloAggregationCommand.model_validate(
+            {**_command().model_dump(mode="python"), "withholding_observations": (annual_detail,)}
+        )
+
 
 def test_public_command_round_trips_each_supported_observation_family() -> None:
     counterpart = CounterpartObservation(

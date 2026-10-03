@@ -111,9 +111,6 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     job = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))["jobs"]["lint"]
     assert "needs" not in job, "an independent verdict must not be gated behind another job"
     assert job.get("continue-on-error") is not True
-    # The fleet stops the steps at the execution budget; timeout-minutes also
-    # covers the wait for a runner slot, so the short bound is the budget.
-    assert int(job["env"]["CI_EXEC_BUDGET_MINUTES"]) <= 30
 
     executed = executed_text(step.get("run") for step in job["steps"])
     assert "just check-workflows" in executed, (

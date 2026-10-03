@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import errno
-import hashlib
 import os
 import platform
 import select
@@ -20,6 +19,7 @@ from threading import RLock
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.login import RuntimeLoginEvidence
+from ...core.hashing import sha256_hex
 
 
 def posix_owner_uid() -> int:
@@ -132,7 +132,7 @@ def posix_storage_identity(root: Path) -> str:
         metadata = root.resolve(strict=True).stat()
         if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
-        return hashlib.sha256(f"{posix_owner_uid()}:{metadata.st_dev}:{metadata.st_ino}".encode("ascii")).hexdigest()
+        return sha256_hex(f"{posix_owner_uid()}:{metadata.st_dev}:{metadata.st_ino}".encode("ascii"))
     except OSError:
         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
 

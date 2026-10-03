@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.confirmation_gate import FindingResolutionAction
+from ...core.country_code import CountryCodeAlpha2
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -89,7 +90,7 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     expected_source_sha256: Hex64Str
     expected_draft_review_sha256: Hex64Str
     kind: InvoiceKind
-    counterparty_country: Annotated[str, Field(min_length=2, max_length=2)] = "ES"
+    counterparty_country: CountryCodeAlpha2 = "ES"
     counterparty_tax_id: InvoiceEvidenceLabel | None = None
     counterparty_name: InvoiceEvidenceLabel | None = None
     invoice_number: InvoiceEvidenceLabel | None = None

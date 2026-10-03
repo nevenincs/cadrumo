@@ -42,8 +42,8 @@ from .runtime_modelo_invoice_withholding import aggregate_modelo_with_received_i
 # Modelo 123 is absent on purpose: its capital withholding is evidenced by the
 # paying ledger transaction, and invoice evidence for it is refused outright.
 _INVOICE_EVIDENCE_MODELOS = frozenset({Modelo("111").value, Modelo("115").value})
-_LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
 _PERIODIC_WINDOW_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
+_LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
 
 
 def _invoice_capture_period(year: int, token: str) -> Period:

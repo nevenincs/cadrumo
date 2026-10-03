@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from threading import Event, RLock
 from typing import override
 
 import pytest
@@ -77,6 +78,8 @@ def _worker(child: _Child) -> ProfileWorkerProcess:
     worker = ProfileWorkerProcess.__new__(ProfileWorkerProcess)
     worker._process = child
     worker._pending_channel_cleanup = []
+    worker._native_guard = RLock()
+    worker._stopping = Event()
     return worker
 
 

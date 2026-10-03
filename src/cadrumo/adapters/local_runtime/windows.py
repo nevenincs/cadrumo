@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import ctypes
-import hashlib
 import math
 import sys
 import time
@@ -16,6 +15,7 @@ from uuid import UUID
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import remaining_budget
+from ...core.hashing import sha256_hex
 from .framing import close_runtime_transport_after_failure
 
 if TYPE_CHECKING:
@@ -184,6 +184,54 @@ class WindowsRuntimeChannel:
         """Return native process-token identity, not a claimed protocol PID."""
         return self._peer
 
+    def verify_peer_process(self, process_handle: int) -> None:
+        """Bind a supplied native handle to this retained authenticated incarnation."""
+        if sys.platform != "win32":
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        from ctypes import wintypes
+
+        import win32event
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        identify = kernel.GetProcessId
+        identify.argtypes = (wintypes.HANDLE,)
+        identify.restype = wintypes.DWORD
+        times = kernel.GetProcessTimes
+        times.argtypes = (
+            wintypes.HANDLE,
+            ctypes.POINTER(wintypes.FILETIME),
+            ctypes.POINTER(wintypes.FILETIME),
+            ctypes.POINTER(wintypes.FILETIME),
+            ctypes.POINTER(wintypes.FILETIME),
+        )
+        times.restype = wintypes.BOOL
+        with self._capture_guard:
+            if self._handle is None or self._peer_process is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            retained = int(self._peer_process)
+            for handle in (retained, process_handle):
+                if win32event.WaitForSingleObject(handle, 0) != win32event.WAIT_TIMEOUT:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+                if identify(handle) != self._peer.process_id:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            births: list[tuple[int, int]] = []
+            for handle in (retained, process_handle):
+                created, exited, kernel_time, user_time = (wintypes.FILETIME() for _ in range(4))
+                if not times(
+                    handle,
+                    ctypes.byref(created),
+                    ctypes.byref(exited),
+                    ctypes.byref(kernel_time),
+                    ctypes.byref(user_time),
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+                births.append((created.dwHighDateTime, created.dwLowDateTime))
+            if births[0] != births[1]:
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            for handle in (retained, process_handle):
+                if win32event.WaitForSingleObject(handle, 0) != win32event.WAIT_TIMEOUT:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+
     def capture_login(self) -> WindowsLoginBinding:
         """Resolve login provenance from this connection's retained peer handle."""
         from .windows_login import capture_windows_login
@@ -305,9 +353,7 @@ class WindowsRuntimeEndpoint:
             metadata = root.stat()
         except (OSError, ValueError):
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
-        self.storage_identity = hashlib.sha256(
-            f"{self._owner}:{metadata.st_dev}:{metadata.st_ino}".encode()
-        ).hexdigest()
+        self.storage_identity = sha256_hex(f"{self._owner}:{metadata.st_dev}:{metadata.st_ino}".encode())
         self.pipe_name = "\\\\.\\pipe\\cadrumo-runtime-" + self.storage_identity
         if worker_namespace is not None:
             self.pipe_name += "-worker-" + worker_namespace.hex

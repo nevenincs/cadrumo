@@ -15,7 +15,7 @@ from pydantic import JsonValue
 
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.application.auth.operation_definitions import AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.mcp_query_operation import (
+from cadrumo.application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
 )
@@ -24,6 +24,7 @@ from cadrumo.application.modelo.query_read_operation import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveRequest,
+    ModeloReadinessOperationRequest,
     ModeloRequiresProjection,
 )
 from cadrumo.application.operations.frontend_requests import (
@@ -37,7 +38,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
-from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
+from cadrumo.application.runtime.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -273,7 +274,9 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                     assert released.definition_contract_digest == contract.definition_contract_digest
                     assert released.projection == case.expected_projection
                     assert released.projection.authority_generation == _structured(published)["logical_generation"]
-                    assert set(document["projection"]) == set(type(released.projection).model_fields)
+                    projection_document = document["projection"]
+                    assert isinstance(projection_document, dict)
+                    assert set(projection_document) == set(type(released.projection).model_fields)
                     public_output = canonical_json_bytes(
                         [
                             reply.model_dump(mode="json")
@@ -288,18 +291,16 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                         if tool_name == "result_page":
                             arguments["page"] = ProjectionPageRequest().model_dump(mode="json")
                         refused_result = await sdk.call_tool(tool_name, arguments)
-                        refusal_document = _structured(refused_result).get("document")
-                        if refusal_document is None:
-                            assert refused_result.is_error is True
-                            assert _structured(refused_result) == {
-                                "outcome": "refused",
-                                "code": "stale_operation_revision",
-                            }
+                        assert refused_result.is_error is True
+                        if tool_name == "result_page":
+                            page = ProjectionPage.model_validate(_structured(refused_result)["page"])
+                            assert page.offset == 0 and page.total_bytes == len(page.decode())
+                            refusal = OperationResultProjectionRefusalV1.model_validate_json(page.decode())
                         else:
                             refusal = OperationResultProjectionRefusalV1.model_validate_json(
-                                canonical_json_bytes(refusal_document)
+                                canonical_json_bytes(_structured(refused_result)["document"])
                             )
-                            assert refusal.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
+                        assert refusal.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
                     if isinstance(released.projection, ModeloReadinessSummaryProjection):
                         disclosed = released.projection.model_dump(mode="json")
                         assert "profile_refusal" not in disclosed
@@ -367,5 +368,51 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                 assert refused.projection.terminal_condition is OperationTerminalCondition.REFUSED
                 assert refused.projection.effect is OperationEffect.NONE
                 assert unsafe_value not in str(refused.model_dump(mode="json"))
+
+                readiness_case = enrolled.prepared[-1]
+                assert isinstance(readiness_case.request, ModeloReadinessOperationRequest)
+                assert isinstance(readiness_case.expected_projection, ModeloReadinessSummaryProjection)
+                stale_revision = next(
+                    revision.id
+                    for revision in authority_operation.modelo_directory("303").revisions
+                    if str(revision.id) != readiness_case.expected_projection.revision_id
+                    and revision.valid_from.year < readiness_case.request.filing_year
+                )
+                stale_input = readiness_case.request.model_copy(update={"revision_id": stale_revision})
+                submitted_stale = await sdk.call_tool(
+                    "execute",
+                    {
+                        "definition_id": "modelo.readiness.summary",
+                        "subject_ref": profile_operation_subject(str(enrolled.profile_id)),
+                        "payload": stale_input.model_dump(mode="json"),
+                    },
+                )
+                assert submitted_stale.is_error is False, _structured(submitted_stale)
+                stale_receipt = OperationSubmissionReceiptV1.model_validate_json(
+                    canonical_json_bytes(_structured(submitted_stale)["receipt"])
+                )
+                stale_terminal: OperationObservationSuccessV1 | None = None
+                for _ in range(80):
+                    observed_stale = await sdk.call_tool(
+                        "observe",
+                        {
+                            "observation": OperationObservationRequestV1(
+                                operation_id=stale_receipt.operation_id, after_cursor=0, page_limit=32
+                            ).model_dump(mode="json")
+                        },
+                    )
+                    assert observed_stale.is_error is False, _structured(observed_stale)
+                    stale_reply = _structured(observed_stale)["reply"]
+                    assert isinstance(stale_reply, dict)
+                    observation_stale = OperationObservationSuccessV1.model_validate_json(
+                        canonical_json_bytes(stale_reply["observation"])
+                    )
+                    if observation_stale.projection.lifecycle is OperationLifecycle.TERMINAL:
+                        stale_terminal = observation_stale
+                        break
+                    await asyncio.sleep(0.05)
+                assert stale_terminal is not None
+                assert stale_terminal.projection.terminal_condition is OperationTerminalCondition.REFUSED
+                assert stale_terminal.projection.effect is OperationEffect.NONE
         finally:
             await adapter.close()

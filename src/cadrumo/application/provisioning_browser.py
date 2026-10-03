@@ -62,7 +62,7 @@ BROWSER_PROVISION_ACTION_ID = "operator.provision.browser"
 PLAYWRIGHT_BROWSER_INSTALL_TIMEOUT_S = 1800.0
 
 #: The manifest entries ``playwright install chromium`` provisions: the full
-#: build for headed and ``channel="chromium"`` launches, and the headless shell
+#: build for headed launches, and the headless shell
 #: a default headless launch uses.
 _REQUIRED_MANIFEST_NAMES = ("chromium", "chromium-headless-shell")
 

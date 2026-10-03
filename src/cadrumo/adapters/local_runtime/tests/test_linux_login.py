@@ -23,7 +23,13 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
 
 from .. import linux_login
-from ..linux_gnome_lock import GnomeLockBinding, GnomeLockState
+from ..linux_gnome_lock import (
+    GnomeLockBinding,
+    GnomeLockState,
+    gnome_user_bus_path,
+    require_gnome_login_producer,
+    sample_gnome_lock,
+)
 from ..linux_login import LinuxLoginBinding, LinuxSessionObservation, capture_linux_login
 
 pytestmark = [pytest.mark.hex_outbound_adapter]
@@ -516,7 +522,10 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -
         pytest.skip("native libsystemd PIDFD symbols are unavailable")
     with _current_peer_pidfd() as pidfd:
         _require_native_desktop(native, pidfd)
-        _, uid = native.peer_session(pidfd)
+        session_id, uid = native.peer_session(pidfd)
+        prerequisite = _native_gnome_prerequisite(native, session_id=session_id, uid=uid)
+        if prerequisite is not None and prerequisite[1].eligibility is not LoginEligibility.ELIGIBLE:
+            pytest.skip("verified GNOME producer is currently in an incomplete lock transition")
         from ..login import capture_runtime_login
         from ..posix import PosixRuntimeChannel
 
@@ -528,12 +537,60 @@ def test_native_current_process_capture_requires_an_actual_supported_desktop() -
             channel.close()
             peer.close()
         result = binding.observe(credential_facilities=Availability.UNAVAILABLE)
-        assert result.active and result.locked and result.unattended is LoginEligibility.UNKNOWN
+        assert isinstance(binding, LinuxLoginBinding)
+        assert (binding.session_id, binding.os_owner_id) == (session_id, str(uid))
+        assert native.peer_session(pidfd) == (session_id, uid)
+        if prerequisite is None:
+            # No independently verified same-session producer: keep the strict refusal oracle.
+            assert _native_gnome_prerequisite(native, session_id=session_id, uid=uid) is None
+            assert binding.gnome_lock is None
+            assert result.active and result.locked and result.unattended is LoginEligibility.UNKNOWN
+        else:
+            expected_binding, expected_state = prerequisite
+            assert binding.gnome_lock == expected_binding
+            fresh = _native_gnome_prerequisite(native, session_id=session_id, uid=uid, expected=expected_binding)
+            assert fresh is not None
+            assert fresh == prerequisite
+            assert result.active and result.unattended is LoginEligibility.ELIGIBLE
+            assert result.locked == expected_state.safely_locked
         assert result.credential_facilities is Availability.UNAVAILABLE
         assert result.login_id == binding.login_id
         with pytest.raises(RuntimeRefusalError) as refused:
             capture_linux_login(pidfd, expected_owner=str(uid + 1))
         assert refused.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
+
+
+def _native_gnome_prerequisite(
+    native: linux_login._NativeLogin,
+    *,
+    session_id: str,
+    uid: int,
+    expected: GnomeLockBinding | None = None,
+) -> tuple[GnomeLockBinding, GnomeLockState] | None:
+    """Verify the actual producer independently of capture/observe's best-effort path.
+
+    An unavailable prerequisite selects only the fail-closed branch. A verified
+    producer must remain the same complete native snapshot across the test.
+    """
+    try:
+        require_gnome_login_producer(uid)
+        path = gnome_user_bus_path(uid)
+        socket_identity = path.lstat()
+        with linux_login._SessionBus(native.library, path=path, peer_uid=uid) as bus:
+            observed = sample_gnome_lock(
+                bus, uid=uid, session_id=session_id, peer_session=native.peer_session, expected=expected
+            )
+            require_gnome_login_producer(uid)
+            if gnome_user_bus_path(uid) != path or path.lstat() != socket_identity:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            bus.remaining_usec()
+            return observed
+    except RuntimeRefusalError as error:
+        if error.reason is not RuntimeRefusalCode.UNAVAILABLE:
+            raise
+    except (OSError, AttributeError):
+        pass
+    return None
 
 
 def _require_native_desktop(native: linux_login._NativeLogin, pidfd: int) -> None:

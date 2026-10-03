@@ -12,11 +12,13 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\tdocs-sequence-sandbox\n"
+      "text": "logged_out_profile\t<profile-id>\nThe CLI selection is cleared. Other sessions, bounded human resume and enrolled API keys retain their own authority. Use session or profile controls to revoke access.\nnotice\tconfig.logout.remaining_access\tThe CLI selection is cleared. Other sessions, bounded human resume and enrolled API keys retain their own authority. Use session or profile controls to revoke access.\n"
     },
     {
       "argv": [
         "aeat",
+        "--profile-auth-method",
+        "password",
         "--format",
         "json",
         "config",
@@ -44,7 +46,7 @@
                 "source_evidence_id": null,
                 "source_key": "name",
                 "status": "resolved",
-                "value": "docs-sequence-sandbox"
+                "value": "<profile-id>"
               }
             ],
             "conditionality": "immediate",
@@ -54,7 +56,7 @@
                 "evidence_id": "profile.session.resume",
                 "provenance": "persisted_state",
                 "values": {
-                  "profile_name": "docs-sequence-sandbox",
+                  "profile_name": "<profile-id>",
                   "session_refusal_reason": "absent",
                   "session_resumed": false
                 }

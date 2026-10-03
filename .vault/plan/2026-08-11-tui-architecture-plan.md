@@ -12,10 +12,10 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
-  - '[[2026-10-01-vault-health-reconciliation-preexisting-errors-audit]]'
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
-modified: '2026-10-01'
-body_hash: 'sha256:7dc00738446cf13b5397e34c9389781720e00f2acaded26862456a79c5f4333b'
+  - '[[2026-10-01-vault-health-reconciliation-preexisting-errors-audit]]'
+modified: '2026-10-02'
+body_hash: 'sha256:58445c6178aaf7e23752479153ff6e3fa2fafcddca5737b0bb305c068d685249'
 ---
 
 <!-- RETIRED: S370 -->

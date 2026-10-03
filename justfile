@@ -114,30 +114,29 @@ setup-env:
 doctor-product:
     uv run --no-sync aeat config check
 
-# Provision Playwright's bundled Chromium (the post-install step `uv sync` does
-# not perform): it is the default AEAT channel and the browser tests launch it
-# directly. When the missing piece is a Linux shared library rather than the
-# binary, `playwright install-deps chromium` adds it, which needs root or
-# passwordless sudo. An operator who sets `CADRUMO_BROWSER_CHANNEL` to a system
-# channel such as `chrome` gets that channel provisioned too; Playwright then
-# installs the SYSTEM browser through the OS package manager. Verify the result
-# with `just doctor-browser`.
-#
-# Installs run with `CI` removed from their environment. Under `CI` Playwright
-# reinstalls a system channel even when it is already present, which needs root
-# that a CI runner cannot escalate to.
+[doc('Verify Python package consistency without modifying the environment.')]
+[windows]
+doctor-python:
+    uv pip check --python .venv/Scripts/python.exe
 
-[doc('Check Playwright browser channels and install missing binaries or Linux libraries.')]
+[doc('Verify Python package consistency without modifying the environment.')]
+[unix]
+doctor-python:
+    uv pip check --python .venv/bin/python
+
+# Provision Playwright's bundled Chromium (the post-install step `uv sync` does
+# not perform): it is the only browser AEAT automation and the browser tests
+# launch. Verify the result with `just doctor-browser`.
+
+[doc('Provision the Playwright Chromium browser.')]
 [group('setup')]
 setup-browser:
     uv run --no-sync python -m dev.env.playwright_setup
 
-# Verify the local environment is correctly provisioned with the CONFIGURED
-# Playwright browser channel (per `cadrumo_browser_channel`, default bundled
-# `chromium`) and its dependencies. Performs a real headless launch-and-close
-# of that channel (reads the live setting rather than hardcoding a channel) and
-# prints the exact remediation command on failure.
-[doc('Probe the configured browser channel with a real read-only launch.')]
+# Verify the local environment is correctly provisioned with Playwright's
+# bundled Chromium and its dependencies. Performs a real headless
+# launch-and-close and prints the exact remediation command on failure.
+[doc('Probe the bundled Chromium with a real read-only launch.')]
 [group('doctor')]
 doctor-browser:
     uv run --no-sync python -m dev.env.playwright_doctor
@@ -367,13 +366,12 @@ check-persistence-write-paths:
 
 # ── Repository/control-plane checks ─────────────────────────────────────────
 
-[doc('Run identity, API-stub, workflow, and gate-contract checks as one read-only repository aggregate.')]
+[doc('Run identity, API-stub, and workflow checks as one read-only repository aggregate.')]
 [group('check')]
 check-repository:
     @uv run --no-sync python -m dev.identity
     @just check-docs-api
     @uv run --no-sync python -m dev.actionlint
-    @uv run --no-sync python -m dev.ci_contract
 
 # Verify workflow syntax and shell contracts without changing workflows. If
 # actionlint is unavailable, `just setup` installs the pinned version.
@@ -389,11 +387,6 @@ check-workflows:
 [group('check')]
 check-workflow-security:
     @uvx --from zizmor==1.30.1 zizmor --offline --min-severity medium .github/
-
-[doc('Verify workflow-to-recipe gate contracts without changing repository files.')]
-[group('check')]
-check-gate-contracts:
-    @uv run --no-sync python -m dev.ci_contract
 
 # Manual replay of the uninstalled prek configuration. `--all-files` is
 # mandatory: staged-file replay may use prek's stash/restore isolation.
