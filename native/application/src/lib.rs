@@ -8,6 +8,10 @@
 //! platform-projected environment and creates commands with ambient inheritance disabled.
 //! `component` verifies pinned ZIP bytes before extracting into a private staging tree,
 //! then activates an immutable version by replacing one pointer under an OS file lock.
+//! `binary` checks pinned executable bytes and target headers. `python` explicitly probes
+//! interpreter identity and existing Python browser policy with bounded time and output.
+//! The probe never launches a browser or downloads components. Its timeout covers child
+//! execution, not synchronous file verification; only the immediate child is contained.
 //!
 //! Component roots must be application-owned directories. Link checks refuse existing
 //! symlinks and Windows reparse points; they do not sandbox a hostile same-user writer.
@@ -18,11 +22,13 @@
 //! authenticate publishers. Browser revisions, storage defaults and supported target
 //! declarations remain with their existing owners and are inputs to this library.
 
+pub mod binary;
 pub mod capability;
 pub mod child;
 pub mod component;
 pub mod error;
 pub mod package;
+pub mod python;
 pub mod value;
 
 mod filesystem;

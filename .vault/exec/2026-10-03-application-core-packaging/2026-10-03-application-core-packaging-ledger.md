@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:99ad21b1143f5623ed545dc1a404a2db33b0d1973cad8773993b7b1bfdd53ed8'
+body_hash: 'sha256:d9d54497c740a982cdeae850e24944b5aedcf6c2e6460d9890297bee58fe5dba'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -39,6 +39,29 @@ related:
 - `S06` `M` `.vault/index/application-core-packaging.index.md`
 - `S06` `verify:` `vaultspec-core check --feature application-core-packaging` -> `pass`
 - `S06` `verify:` `git diff --check -- native/application .vault/plan/2026-10-03-application-core-packaging-plan.md` -> `pass`
+- `S09` `M` `native/application/Cargo.toml`
+- `S09` `M` `native/application/Cargo.lock`
+- `S09` `M` `native/application/src/component.rs`
+- `S09` `M` `native/application/src/error.rs`
+- `S09` `M` `native/application/src/lib.rs`
+- `S09` `A` `native/application/src/binary.rs`
+- `S09` `A` `native/application/src/python.rs`
+- `S09` `A` `native/application/src/python_probe.py`
+- `S09` `A` `native/application/tests/binary.rs`
+- `S09` `A` `native/application/tests/live_python.rs`
+- `S09` `A` `native/application/tests/live_package.rs`
+- `S09` `M` `.vault/plan/2026-10-03-application-core-packaging-plan.md`
+- `S09` `M` `.vault/audit/2026-10-03-application-core-packaging-audit.md`
+- `S09` `verify:` `Windows Rust 1.96 cargo test (29 library/integration tests)` -> `pass`
+- `S09` `verify:` `Linux x86_64 Rust 1.96 native-filesystem cargo test (31 tests)` -> `pass`
+- `S09` `verify:` `Windows/Linux cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S09` `verify:` `Windows cargo clippy --all-targets --all-features -- -D warnings` -> `pass`
+- `S09` `verify:` `cargo fmt --check` -> `pass`
+- `S09` `verify:` `Windows cargo build --locked --release --lib` -> `pass`
+- `S09` `verify:` `ruff check and format --check native/application/src/python_probe.py` -> `pass`
+- `S09` `verify:` `Windows cargo test --release --features live-python-tests --test live_python; CPython3.13.11 MissingBuilds and version/distribution refusals` -> `pass`
+- `S09` `verify:` `Initial relocated Windows Release package execution; CPython3.13.11 all80manifest distributions MissingDependency` -> `pass`
+- `S09` `verify:` `Final Windows cargo test --locked --release --features live-package-tests --test live_package; original manifest+inventory unchanged, CPython3.13.11 all80distributions matched` -> `pass`
 
 ## Notes
 
@@ -47,3 +70,8 @@ related:
 - `S06` User corrected ownership: standalone Rust work proceeds independently of Python packaging. S06 completed in its clarified scope; initial S07-S08 library implementation is included but shared integration and remaining acceptance stay open. No Python/platform/root CMake source changed.
 - `S06` Pinned Rust 1.96.0 used through explicit toolchain executables; ambient X:/ci-shared cargo shim is unusable. Windows final 20 tests, Linux native-filesystem final 22 tests passed. One prior WSL shared-drive test failed with PermissionDenied and passed alone; retained in audit, not suppressed. Explicit Linux B is /tmp/cadrumo-application.QsWHTMDZ/build/linux-x86-64; workspace build/linux-x86-64/application-core/native-filesystem-tests.log records final results.
 - `S06` Semantic discovery service was unavailable; used targeted supplied-owner reads and searches. Read-only independent review found and verified fixes for path aliases, mirror identity, damaged-version repair and directory-inclusive entry limits. Four-target package/Chromium/TLS success acceptance remains open.
+- `S09` Partial S09/library-owned S07 checkpoint only; no step closure. Canonical platform projection, trusted browser metadata/acquisition, ARM/macOS execution and write tracing remain open.
+- `S09` Initial live probe timed out due to missing stdin EOF; fixed with explicit drop and regression. Initial minimal test environment failed; disposable home/cache/temp projection fixed it.
+- `S09` Release archive SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b copied after matching source/copy/source hashes; isolated extraction locator build/windows-x86-64/application-core/live-package-dir.txt. Stronger original-manifest postcondition rerun is pending; final result will be appended to audit.
+- `S09` Corrective independent review resolved dynamic-library/fat-header acceptance, EOF handling and live-test original-inventory comparison. No new production defect remains; no descendant containment or hostile same-user filesystem guarantee.
+- `S09` Resolves the prior pending stronger package-immutability rerun. Archive identity and isolated extraction locator remain as recorded. S09 remains open for trusted acquisition metadata and complete Chromium provisioning.

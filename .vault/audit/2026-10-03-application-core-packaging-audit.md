@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3346fa6dfb49ec1c74bceac8663a0f9a5fa639fae21484c3d9502cb41a60be5'
+body_hash: 'sha256:08d1d4412edc645d9ede67c898c9ad0a29dff3d72cfc0b73a68043f7896b9e7f'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -44,6 +44,26 @@ The final 22-test Linux run on the Windows-mounted Y drive failed one initial co
 ### final-library-verification | low | Native-filesystem Linux suite and Windows checks pass
 
 Final unchanged-source verification passed: 20 Windows x64 integration tests, 22 Linux x64 integration tests on native Linux storage, Windows Clippy with warnings denied, formatting, and the optimized Windows Release library build. Both platforms executed the killed-writer recovery and real child-environment tests. Rust 1.96.0 was selected explicitly. The Linux output root is `/tmp/cadrumo-application.QsWHTMDZ/build/linux-x86-64/`; the retained log is `build/linux-x86-64/application-core/native-filesystem-tests.log`. The earlier shared-drive failure remains recorded above. S06's clarified standalone-library scope passes; S07-S11 integration/acceptance obligations remain open.
+
+### executable-admission | medium | Corrected library and fat-container acceptance
+
+Independent review of the S07/S09 library-owned continuation found shared libraries admitted as executables and Mach-O fat wrappers checked only through their selected slice. Corrected: dynamic objects are limited to ELF with nonzero entry points; fat containers require Mach-O expectations. Tests exercise native PE/ELF executables, wrong CPU/container/digest, malformed bytes, synthetic Mach-O executables/dylibs and fat slices. These are bounded header checks, not loader-dependency or deployment-floor proof. No new production defect remained in corrective review.
+
+### probe-lifecycle | medium | Live execution exposed and corrected missing stdin EOF
+
+The first live CPython probe timed out because async shutdown did not close the stdin handle. Explicit handle disposal fixes EOF delivery; the regression uses a real child that reads to EOF. Tests cover output bounds, unsuccessful exit, timeout and cancellation; a real OS-lock handshake verifies the cancelled immediate child releases its resources. The next live attempt failed with an incomplete test environment; projecting disposable home/cache/temp paths fixed it. Production callers still own the complete immutable environment. stderr is bounded and not exposed. Descendant containment, dropped-future reaping guarantees, preflight I/O deadlines and hostile same-user filesystem races are outside these claims.
+
+### python-browser-integration | low | Live development interpreter delegates browser policy to Python
+
+The Rust probe calls existing Python optional-extra and browser provisioning owners through fixed embedded source, using isolated interpreter flags and JSON over bounded pipes. CPython 3.13.11 in the Windows development environment passed live identity checks, wrong-version/missing-distribution refusals, and returned MissingBuilds with both canonical Chromium requirements. No browser/driver is started and no component is downloaded. Exact release interpreter/distribution expectations can be projected from the assembler manifest. Windows library tests (29), Linux x64 tests (31), Clippy on both hosts, Windows Release compilation and Ruff checks passed. Tests using synthetic Mach-O bytes do not establish macOS execution. S07 platform projection, S09 acquisition and four-target acceptance remain PENDING.
+
+### package-immutability-assertion | low | Retain original manifest for post-probe validation
+
+Corrective review found the initial live acceptance test reread the manifest after execution, which could permit a self-consistent manifest/payload rewrite. The test now compares the original manifest bytes and reuses its original inventory for post-probe checks. The isolated Release archive copy is pinned by SHA256 be4eaf81eb2b254d2d535db69609efbe684bca9c790d0994609268fb39923b0b; source/copy/source hashes matched before extraction. The copy is relocated under this session's build tree into a path containing spaces and Unicode. This is artifact-specific evidence and does not declare the concurrent packaging owner's handoff complete.
+
+### final-probe-acceptance | low | Relocated Release cohort and original inventory both pass
+
+Final optimized Windows acceptance passed against the pinned archive copy: CPython 3.13.11 matched all 80 manifest distribution versions, reported MissingDependency for Playwright, and left the original manifest bytes and original file inventory unchanged. The explicit browser cache remained absent. The final development-interpreter probe also passed with MissingBuilds and both canonical requirements. Commands: cargo test --locked --release --features live-package-tests --test live_package and cargo test --locked --release --features live-python-tests --test live_python, each with the owning fixture environment. Required fixture paths and expectations are documented by the tests; selected live features fail if prerequisites are absent. Windows Clippy with all targets/features, formatting, Ruff and optimized library build passed after the corrections. The stricter package run completed in 229.62 seconds; this is acceptance evidence, not a performance benchmark. Verdict: PASS for this bounded library/probe checkpoint; overall S07/S09/S11 remain PENDING for their outstanding integration requirements.
 
 ## Recommendations
 
