@@ -22,7 +22,7 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.invoices.bulk_import import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
-from ....application.invoices.catalogue_intake_operation import (
+from ....application.invoices.catalogue_intake_contracts import (
     InvoiceImportProjection,
     InvoiceImportRowFailure,
 )

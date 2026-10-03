@@ -9,7 +9,7 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from ...application.invoices.catalogue_add_operation import (
+from ...application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
     InvoiceAddRequest,

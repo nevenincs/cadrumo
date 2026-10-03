@@ -34,7 +34,9 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from ....application.invoices.catalogue_add_operation import INVOICE_ADD_OPERATION_DEFINITION_ID
+from ....application.invoices.catalogue_add_contracts import (
+    INVOICE_ADD_OPERATION_DEFINITION_ID,
+)
 from ....application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
 from ....application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from ....application.modelo.operation_definitions import (

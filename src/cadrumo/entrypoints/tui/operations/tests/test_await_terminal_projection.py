@@ -10,9 +10,11 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
-from cadrumo.application.invoices.catalogue_add_operation import (
+from cadrumo.application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     InvoiceAddRequest,
+)
+from cadrumo.application.invoices.catalogue_add_operation import (
     build_invoice_add_definition,
     build_invoice_add_registration,
 )

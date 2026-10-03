@@ -24,8 +24,14 @@ import typer
 from pydantic import ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
-from ...application.invoices.catalogue_add_operation import InvoiceAddLine, InvoiceAddRequest, InvoiceAddResult
-from ...application.invoices.catalogue_intake_operation import InvoiceImportProjection
+from ...application.invoices.catalogue_add_contracts import (
+    InvoiceAddLine,
+    InvoiceAddRequest,
+    InvoiceAddResult,
+)
+from ...application.invoices.catalogue_intake_contracts import (
+    InvoiceImportProjection,
+)
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...application.invoices.catalogue_update_operation import InvoiceUpdatePatch

@@ -24,7 +24,7 @@ from typing import cast
 import pytest
 from click.testing import Result
 
-from ....application.invoices.catalogue_add_operation import (
+from ....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
 )

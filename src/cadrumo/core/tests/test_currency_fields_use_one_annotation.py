@@ -109,7 +109,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
     # before/plain/wrap validators. A public operation field therefore cannot
     # normalise at all -- it declares shape and nothing else -- so the canonical
     # policy stays at the boundary each field feeds or is projected from.
-    "application/invoices/catalogue_add_operation.py::currency": (
+    "application/invoices/catalogue_add_contracts.py::currency": (
         "a registered operation's public request schema, which the operation "
         "model contract forbids from carrying a core-schema-customising "
         "annotation; build_catalogue_invoice constructs the domain Invoice, "
@@ -156,7 +156,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "canonical annotation on this mirror, and the mirror projects an "
         "already-validated row"
     ),
-    "application/invoices/catalogue_intake_operation.py::currency": (
+    "application/invoices/catalogue_intake_contracts.py::currency": (
         "a wizard request field held as raw transport text because "
         "create_invoice_via_wizard validates every field independently and "
         "ACCUMULATES the failures, so a malformed code is reported beside a "

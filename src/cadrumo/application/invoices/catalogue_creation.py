@@ -265,13 +265,7 @@ def _resolve_invoice_line_totals(
     of the one operator-supplied rate line.
     """
     if lines is not None:
-        if not lines:
-            raise InvoiceValidationError("lines must not be empty")
-        if not all(isinstance(item, InvoiceLine) for item in lines):
-            raise InvoiceValidationError("lines must be InvoiceLine records")
-        base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
-        iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
-        return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
+        return _totals_from_supplied_invoice_lines(lines)
 
     if taxable_base is None:
         raise InvoiceValidationError("taxable_base is required when lines are not supplied")
@@ -291,6 +285,18 @@ def _resolve_invoice_line_totals(
             },
         ],
     )
+
+
+def _totals_from_supplied_invoice_lines(
+    lines: Sequence[InvoiceLine],
+) -> tuple[Decimal, Decimal, list[dict[str, object]]]:
+    if not lines:
+        raise InvoiceValidationError("lines must not be empty")
+    if not all(isinstance(item, InvoiceLine) for item in lines):
+        raise InvoiceValidationError("lines must be InvoiceLine records")
+    base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
+    iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+    return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
 
 
 def _apply_operator_asserted_invoice_facts(

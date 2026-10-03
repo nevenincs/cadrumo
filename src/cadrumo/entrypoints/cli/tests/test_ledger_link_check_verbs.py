@@ -10,7 +10,9 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.invoices.catalogue_add_operation import INVOICE_ADD_OPERATION_DEFINITION_ID
+from ....application.invoices.catalogue_add_contracts import (
+    INVOICE_ADD_OPERATION_DEFINITION_ID,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ._isolated_profile_storage_fixtures import (

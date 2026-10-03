@@ -31,16 +31,18 @@ from ...operations.registry import OperationFrontendProjection, OperationRegistr
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_add_operation as add_operation
-from ..catalogue_add_operation import (
+from ..catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
     InvoiceAddExecutionResult,
-    InvoiceAddExecutor,
     InvoiceAddLine,
     InvoiceAddRequest,
+    project_invoice_add_result,
+)
+from ..catalogue_add_operation import (
+    InvoiceAddExecutor,
     build_invoice_add_definition,
     build_invoice_add_registration,
-    project_invoice_add_result,
 )
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from ..tests._catalogue_creation_fakes import in_memory_catalogue_creation_ports

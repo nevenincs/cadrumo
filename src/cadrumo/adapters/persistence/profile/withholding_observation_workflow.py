@@ -131,6 +131,17 @@ class WithholdingObservationWorkflowAdapter:
         head = _read_envelope(record.payload, _WindowHead)
         if head.scope != scope:
             raise WithholdingObservationMutationError("window_head_identity_mismatch")
+        self._require_projection_integrity(scope, head)
+        return WithholdingWindowState(
+            scope=scope,
+            baseline=WithholdingWindowBaseline(scope_token=scope.token, generation_id=head.generation_id),
+            entries=head.entries,
+            generation=head.generation,
+            persistence_revision_id=record.revision_id,
+        )
+
+    def _require_projection_integrity(self, scope: WithholdingWindowScope, head: _WindowHead) -> None:
+        """Validate all active projection rows against the committed window head."""
         expected = {entry.identity.token: entry for entry in head.entries}
         actual = tuple(self._projection_payloads(scope))
         if len(actual) != len(expected):
@@ -141,13 +152,6 @@ class WithholdingObservationWorkflowAdapter:
                 raise WithholdingObservationMutationError("projection_integrity_failure")
         if _entries_digest(head.entries) != head.projection_digest:
             raise WithholdingObservationMutationError("projection_integrity_failure")
-        return WithholdingWindowState(
-            scope=scope,
-            baseline=WithholdingWindowBaseline(scope_token=scope.token, generation_id=head.generation_id),
-            entries=head.entries,
-            generation=head.generation,
-            persistence_revision_id=record.revision_id,
-        )
 
     def idempotency_replay(self, scope: WithholdingWindowScope, key: str) -> WithholdingIdempotencyReplay | None:
         """Return the immutable committed result for a replay key, if present."""
@@ -252,53 +256,9 @@ class WithholdingObservationWorkflowAdapter:
             ),
             *guard_writes,
         ]
-        deletions: list[SecureObjectDeletion] = []
-        for entry in successor:
-            if entry.retencion is not None:
-                writes.append(
-                    self._retenciones.to_secure_object_write(
-                        self._retenciones.build_observation_payload(
-                            modelo=envelope.scope.modelo,
-                            filing_year=envelope.scope.period.filing_year,
-                            period=envelope.scope.period,
-                            observation=entry.retencion,
-                            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-                            projection_identity=entry.identity.token,
-                        ),
-                    ),
-                )
-            if entry.percepcion is not None:
-                writes.append(
-                    self._percepciones.to_secure_object_write(
-                        self._percepciones.build_observation_payload(
-                            modelo=envelope.scope.modelo,
-                            filing_year=envelope.scope.period.filing_year,
-                            period=envelope.scope.period,
-                            observation=entry.percepcion,
-                            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-                            projection_identity=entry.identity.token,
-                        ),
-                    ),
-                )
-        successor_ids = {entry.identity.token for entry in successor}
-        for entry in predecessor.entries:
-            if entry.identity.token in successor_ids:
-                continue
-            if entry.retencion is not None:
-                deletions.append(
-                    self._retenciones.to_secure_object_deletion(self._retencion_key(envelope.scope, entry))
-                )
-            if entry.percepcion is not None:
-                deletions.append(
-                    self._percepciones.to_secure_object_deletion(self._percepcion_key(envelope.scope, entry))
-                )
-        assertions: tuple[SecureObjectRevisionAssertion, ...] = ()
-        if envelope.source_catalogue_baseline is not None:
-            if self._source_catalogue_assertions is None:
-                raise WithholdingObservationMutationError("source_revision_unavailable")
-            assertions = self._source_catalogue_assertions(envelope.source_catalogue_baseline)
-            if not assertions:
-                raise WithholdingObservationMutationError("source_revision_unavailable")
+        projection_writes, deletions = self._projection_changes(envelope.scope, predecessor.entries, successor)
+        writes.extend(projection_writes)
+        assertions = self._source_revision_assertions(envelope)
         try:
             self._objects.apply_batch(tuple(writes), tuple(deletions), assertions=assertions)
         except SecureObjectRevisionConflictError as exc:
@@ -309,6 +269,65 @@ class WithholdingObservationWorkflowAdapter:
         except StorageError as exc:
             raise WithholdingObservationMutationError("persistence_failure") from exc
         return WithholdingWindowBaseline(scope_token=envelope.scope.token, generation_id=generation_id)
+
+    def _projection_changes(
+        self,
+        scope: WithholdingWindowScope,
+        predecessor: tuple[WithholdingProjectionEntry, ...],
+        successor: tuple[WithholdingProjectionEntry, ...],
+    ) -> tuple[tuple[SecureObjectWrite, ...], tuple[SecureObjectDeletion, ...]]:
+        """Prepare accepted projection rows and removals for the atomic batch."""
+        writes: list[SecureObjectWrite] = []
+        deletions: list[SecureObjectDeletion] = []
+        for entry in successor:
+            if entry.retencion is not None:
+                writes.append(
+                    self._retenciones.to_secure_object_write(
+                        self._retenciones.build_observation_payload(
+                            modelo=scope.modelo,
+                            filing_year=scope.period.filing_year,
+                            period=scope.period,
+                            observation=entry.retencion,
+                            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+                            projection_identity=entry.identity.token,
+                        ),
+                    ),
+                )
+            if entry.percepcion is not None:
+                writes.append(
+                    self._percepciones.to_secure_object_write(
+                        self._percepciones.build_observation_payload(
+                            modelo=scope.modelo,
+                            filing_year=scope.period.filing_year,
+                            period=scope.period,
+                            observation=entry.percepcion,
+                            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+                            projection_identity=entry.identity.token,
+                        ),
+                    ),
+                )
+        successor_ids = {entry.identity.token for entry in successor}
+        for entry in predecessor:
+            if entry.identity.token in successor_ids:
+                continue
+            if entry.retencion is not None:
+                deletions.append(self._retenciones.to_secure_object_deletion(self._retencion_key(scope, entry)))
+            if entry.percepcion is not None:
+                deletions.append(self._percepciones.to_secure_object_deletion(self._percepcion_key(scope, entry)))
+        return tuple(writes), tuple(deletions)
+
+    def _source_revision_assertions(
+        self, envelope: WithholdingMutationEnvelope
+    ) -> tuple[SecureObjectRevisionAssertion, ...]:
+        """Refuse a source baseline that cannot be guarded in the same batch."""
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = ()
+        if envelope.source_catalogue_baseline is not None:
+            if self._source_catalogue_assertions is None:
+                raise WithholdingObservationMutationError("source_revision_unavailable")
+            assertions = self._source_catalogue_assertions(envelope.source_catalogue_baseline)
+            if not assertions:
+                raise WithholdingObservationMutationError("source_revision_unavailable")
+        return assertions
 
     def _guard_writes(
         self,
@@ -326,62 +345,62 @@ class WithholdingObservationWorkflowAdapter:
         new_by_source = _allocations_by_source(successor)
         writes: list[SecureObjectWrite] = []
         for source_token in sorted(set(old_by_source) | set(new_by_source)):
-            record = self._objects.load(
-                WITHHOLDING_WORKFLOW_NAMESPACE.namespace,
-                _guard_key(source_token),
-                expected_class=WITHHOLDING_WORKFLOW_NAMESPACE.sensitivity,
-                max_supported_version=WITHHOLDING_WORKFLOW_NAMESPACE.schema_version,
-            )
             old = old_by_source.get(source_token, ())
             introduced = new_by_source.get(source_token, ())
-            if record is None:
-                if old:
-                    raise WithholdingObservationMutationError("liability_guard_integrity_failure")
-                prior_allocations: tuple[EconomicAllocation, ...] = ()
-                prior_liability = _single_liability(introduced)
-                expected_revision_id = ABSENT_SECURE_OBJECT_REVISION_ID
-            else:
-                guard = _read_envelope(record.payload, _SourceLiabilityGuard)
-                if guard.source_token != source_token:
-                    raise WithholdingObservationMutationError("liability_guard_integrity_failure")
-                _validate_guard_allocations(guard)
-                prior_allocations = guard.allocations
-                prior_liability = guard.liability
-                expected_revision_id = record.revision_id
-
-            old_by_identity = {item.guard_identity: item for item in old}
-            active_by_identity = {item.guard_identity: item for item in prior_allocations}
-            for identity, allocation in old_by_identity.items():
-                if active_by_identity.get(identity) != allocation:
-                    raise WithholdingObservationMutationError("liability_guard_integrity_failure")
-                del active_by_identity[identity]
-
-            next_liability = prior_liability
-            if introduced:
-                introduced_liability = _single_liability(introduced)
-                if active_by_identity and introduced_liability != prior_liability:
-                    raise WithholdingObservationMutationError("contradictory_liability_snapshot")
-                next_liability = introduced_liability
-                for allocation in introduced:
-                    existing = active_by_identity.get(allocation.guard_identity)
-                    if existing is not None and existing != allocation:
-                        raise WithholdingObservationMutationError("economic_allocation_conflict")
-                    active_by_identity[allocation.guard_identity] = allocation
-
-            active = tuple(sorted(active_by_identity.values(), key=lambda item: item.guard_identity))
-            _require_within_liability(next_liability, active)
-            writes.append(
-                _control_write(
-                    _guard_key(source_token),
-                    _SourceLiabilityGuard(
-                        source_token=source_token,
-                        liability=next_liability,
-                        allocations=active,
-                    ),
-                    expected_revision_id,
-                )
-            )
+            writes.append(self._source_guard_write(source_token, old, introduced))
         return tuple(writes)
+
+    def _source_guard_write(
+        self,
+        source_token: str,
+        old: tuple[EconomicAllocation, ...],
+        introduced: tuple[EconomicAllocation, ...],
+    ) -> SecureObjectWrite:
+        """Prepare one guarded source allocation replacement without committing."""
+        prior_allocations, prior_liability, expected_revision_id = self._load_source_guard(
+            source_token, old, introduced
+        )
+        next_liability, active = _replace_source_allocations(old, introduced, prior_allocations, prior_liability)
+
+        return _control_write(
+            _guard_key(source_token),
+            _SourceLiabilityGuard(
+                source_token=source_token,
+                liability=next_liability,
+                allocations=active,
+            ),
+            expected_revision_id,
+        )
+
+    def _load_source_guard(
+        self,
+        source_token: str,
+        old: tuple[EconomicAllocation, ...],
+        introduced: tuple[EconomicAllocation, ...],
+    ) -> tuple[tuple[EconomicAllocation, ...], SourceLiabilitySnapshot, str]:
+        """Validate the encrypted source index and capture its CAS revision."""
+        record = self._objects.load(
+            WITHHOLDING_WORKFLOW_NAMESPACE.namespace,
+            _guard_key(source_token),
+            expected_class=WITHHOLDING_WORKFLOW_NAMESPACE.sensitivity,
+            max_supported_version=WITHHOLDING_WORKFLOW_NAMESPACE.schema_version,
+        )
+        if record is None:
+            if old:
+                raise WithholdingObservationMutationError("liability_guard_integrity_failure")
+            prior_allocations: tuple[EconomicAllocation, ...] = ()
+            prior_liability = _single_liability(introduced)
+            expected_revision_id = ABSENT_SECURE_OBJECT_REVISION_ID
+        else:
+            guard = _read_envelope(record.payload, _SourceLiabilityGuard)
+            if guard.source_token != source_token:
+                raise WithholdingObservationMutationError("liability_guard_integrity_failure")
+            _validate_guard_allocations(guard)
+            prior_allocations = guard.allocations
+            prior_liability = guard.liability
+            expected_revision_id = record.revision_id
+
+        return prior_allocations, prior_liability, expected_revision_id
 
     def _projection_payloads(self, scope: WithholdingWindowScope) -> Iterable[tuple[str, object | None, object | None]]:
         for payload in self._retenciones.iter_modelo(scope.modelo):
@@ -546,3 +565,45 @@ def _read_envelope[EnvelopePayload: BaseModel](payload: bytes, model: type[Envel
 
 
 __all__ = ["WithholdingObservationWorkflowAdapter"]
+
+
+def _replace_source_allocations(
+    old: tuple[EconomicAllocation, ...],
+    introduced: tuple[EconomicAllocation, ...],
+    prior_allocations: tuple[EconomicAllocation, ...],
+    prior_liability: SourceLiabilitySnapshot,
+) -> tuple[SourceLiabilitySnapshot, tuple[EconomicAllocation, ...]]:
+    """Replace this window's allocations while retaining other windows' liability."""
+    old_by_identity = {item.guard_identity: item for item in old}
+    active_by_identity = {item.guard_identity: item for item in prior_allocations}
+    for identity, allocation in old_by_identity.items():
+        if active_by_identity.get(identity) != allocation:
+            raise WithholdingObservationMutationError("liability_guard_integrity_failure")
+        del active_by_identity[identity]
+
+    next_liability = _introduce_source_allocations(active_by_identity, introduced, prior_liability)
+
+    active = tuple(sorted(active_by_identity.values(), key=lambda item: item.guard_identity))
+    _require_within_liability(next_liability, active)
+    return next_liability, active
+
+
+def _introduce_source_allocations(
+    active_by_identity: dict[str, EconomicAllocation],
+    introduced: tuple[EconomicAllocation, ...],
+    prior_liability: SourceLiabilitySnapshot,
+) -> SourceLiabilitySnapshot:
+    """Add successor allocations only when the retained liability stays coherent."""
+    next_liability = prior_liability
+    if introduced:
+        introduced_liability = _single_liability(introduced)
+        if active_by_identity and introduced_liability != prior_liability:
+            raise WithholdingObservationMutationError("contradictory_liability_snapshot")
+        next_liability = introduced_liability
+        for allocation in introduced:
+            existing = active_by_identity.get(allocation.guard_identity)
+            if existing is not None and existing != allocation:
+                raise WithholdingObservationMutationError("economic_allocation_conflict")
+            active_by_identity[allocation.guard_identity] = allocation
+
+    return next_liability

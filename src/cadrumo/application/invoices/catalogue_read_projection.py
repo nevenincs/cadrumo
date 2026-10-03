@@ -119,31 +119,8 @@ class CatalogueInvoiceSnapshot(BaseModel):
 
     @model_validator(mode="after")
     def _bounds(self) -> Self:
-        if (
-            not self.lines
-            or not all(
-                _bounded_decimal(value)
-                for value in (
-                    self.base_total,
-                    self.iva_total,
-                    self.grand_total,
-                    self.retention_rate,
-                    self.retention_amount,
-                    self.recargo_amount,
-                    self.base_total_eur,
-                    self.iva_total_eur,
-                    self.grand_total_eur,
-                )
-            )
-            or not _bounded_decimal(self.fx_rate, positive=True)
-            or not self.invoice_class
-            or normalise_iso_4217_currency(self.currency) != self.currency
-            or (
-                self.source_filename is not None
-                and (not self.source_filename or "/" in self.source_filename or "\\" in self.source_filename)
-            )
-        ):
-            raise ValueError("invoice snapshot has invalid disclosed values")
+        _require_snapshot_amounts(self)
+        _require_snapshot_classification_and_source(self)
         return self
 
     @classmethod
@@ -187,6 +164,37 @@ class CatalogueInvoiceSnapshot(BaseModel):
             iva_total_eur=_optional_decimal(invoice.iva_total_eur),
             grand_total_eur=_optional_decimal(invoice.grand_total_eur),
         )
+
+
+def _require_snapshot_amounts(snapshot: CatalogueInvoiceSnapshot) -> None:
+    if not snapshot.lines or not all(
+        _bounded_decimal(value)
+        for value in (
+            snapshot.base_total,
+            snapshot.iva_total,
+            snapshot.grand_total,
+            snapshot.retention_rate,
+            snapshot.retention_amount,
+            snapshot.recargo_amount,
+            snapshot.base_total_eur,
+            snapshot.iva_total_eur,
+            snapshot.grand_total_eur,
+        )
+    ):
+        raise ValueError("invoice snapshot has invalid disclosed values")
+
+
+def _require_snapshot_classification_and_source(snapshot: CatalogueInvoiceSnapshot) -> None:
+    if (
+        not _bounded_decimal(snapshot.fx_rate, positive=True)
+        or not snapshot.invoice_class
+        or normalise_iso_4217_currency(snapshot.currency) != snapshot.currency
+        or (
+            snapshot.source_filename is not None
+            and (not snapshot.source_filename or "/" in snapshot.source_filename or "\\" in snapshot.source_filename)
+        )
+    ):
+        raise ValueError("invoice snapshot has invalid disclosed values")
 
 
 __all__ = ["CatalogueInvoiceSnapshot", "InvoiceLineSnapshot"]

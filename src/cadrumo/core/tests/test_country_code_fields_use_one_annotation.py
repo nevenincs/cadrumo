@@ -64,7 +64,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
     "domain/modelos/row_models.py::codigo_pais": (
         "the same _IsoCountryCode alias and the same manual-entry rows as its sibling pais field above"
     ),
-    "application/invoices/catalogue_intake_operation.py::country_code": (
+    "application/invoices/catalogue_intake_contracts.py::country_code": (
         "the sibling of the currency field exempted in the currency gate, for "
         "the same reason: create_invoice_via_wizard validates each field and "
         "ACCUMULATES the failures, so a bad country must reach the wizard to "

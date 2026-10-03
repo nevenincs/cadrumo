@@ -10,7 +10,7 @@ import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.invoices.catalogue_intake_operation import (
+from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     INVOICE_WIZARD_OPERATION_DEFINITION_ID,
     InvoiceImportProjection,

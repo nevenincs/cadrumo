@@ -7,7 +7,7 @@ from typing import NoReturn
 from uuid import UUID
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.invoices.catalogue_add_operation import (
+from ....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
     InvoiceAddLine,

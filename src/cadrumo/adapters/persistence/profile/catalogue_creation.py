@@ -218,26 +218,7 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
                     expected_revision_id=event_revision_id,
                 )
 
-                def save(
-                    prepared: InvoiceCatalogue = updated,
-                    prepared_revision_id: str = invoice_revision_id,
-                    prepared_event: SecureObjectWrite = event_write,
-                ) -> None:
-                    try:
-                        self._invoice_repository.save_with_secure_object_writes(
-                            prepared,
-                            expected_revision_id=prepared_revision_id,
-                            extra_writes=(prepared_event,),
-                        )
-                    except SecureObjectRevisionConflictError as exc:
-                        if self._commit is None:
-                            raise
-                        raise InvoiceIntakeCommitConflictError("prepared invoice batch lost its CAS revision") from exc
-
-                if self._commit is None:
-                    save()
-                else:
-                    self._commit(save)
+                self._commit_prepared_invoice_batch(updated, invoice_revision_id, event_write)
             except SecureObjectRevisionConflictError as exc:
                 last_conflict = exc
                 continue
@@ -254,6 +235,32 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
         if last_conflict is not None:
             raise CatalogueInvoicePersistenceError("invoice_catalogue_and_event_commit_conflict") from last_conflict
         raise AssertionError("invoice audit co-commit exhausted without a conflict")
+
+    def _commit_prepared_invoice_batch(
+        self, updated: InvoiceCatalogue, invoice_revision_id: str, event_write: SecureObjectWrite
+    ) -> None:
+        """Submit one prepared co-write through the optional intake commit fence."""
+
+        def save(
+            prepared: InvoiceCatalogue = updated,
+            prepared_revision_id: str = invoice_revision_id,
+            prepared_event: SecureObjectWrite = event_write,
+        ) -> None:
+            try:
+                self._invoice_repository.save_with_secure_object_writes(
+                    prepared,
+                    expected_revision_id=prepared_revision_id,
+                    extra_writes=(prepared_event,),
+                )
+            except SecureObjectRevisionConflictError as exc:
+                if self._commit is None:
+                    raise
+                raise InvoiceIntakeCommitConflictError("prepared invoice batch lost its CAS revision") from exc
+
+        if self._commit is None:
+            save()
+        else:
+            self._commit(save)
 
 
 class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):

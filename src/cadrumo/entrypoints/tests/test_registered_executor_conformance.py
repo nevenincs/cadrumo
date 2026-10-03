@@ -101,7 +101,9 @@ from ...application.inventory.registered_operation import (
 from ...application.inventory.tests.registered_operation_conformance_support import (
     prepare_inventory_operation_conformance_case,
 )
-from ...application.invoices.catalogue_add_operation import InvoiceAddResult
+from ...application.invoices.catalogue_add_contracts import (
+    InvoiceAddResult,
+)
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,

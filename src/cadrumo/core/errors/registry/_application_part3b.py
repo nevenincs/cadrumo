@@ -48,7 +48,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.invoices.catalogue_add_operation.InvoiceAddValidationRefusedError",
+        "cadrumo.application.invoices.catalogue_add_contracts.InvoiceAddValidationRefusedError",
         ErrorCode(
             code="REFUSED_INVOICE_ADD_VALIDATION",
             category=ErrorCategory.REFUSED,

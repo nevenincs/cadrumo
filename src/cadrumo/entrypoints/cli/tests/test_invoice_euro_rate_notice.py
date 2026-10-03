@@ -12,7 +12,7 @@ import typer
 
 from ....adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
-from ....application.invoices.catalogue_add_operation import (
+from ....application.invoices.catalogue_add_contracts import (
     InvoiceAddResult,
 )
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
