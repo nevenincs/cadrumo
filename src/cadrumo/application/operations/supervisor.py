@@ -204,10 +204,15 @@ class OperationSupervisor(
 
     @override
     @staticmethod
-    def _validate_request_payload[RequestPayloadT: BaseModel](
-        request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
-    ) -> None:
-        if not isinstance(request.payload, request_type):
+    def _validate_request_payload(payload: BaseModel, request_type: type[BaseModel]) -> None:
+        """Require exactly the registered request model at admission and at restore.
+
+        A subclass is refused: it may carry fields or validation the definition
+        was never registered for, and durable restore hydrates only the
+        registered type, so admitting it would change the operand's type
+        between submission and execution.
+        """
+        if type(payload) is not request_type:
             raise ValueError("request payload does not match definition")
 
     @override

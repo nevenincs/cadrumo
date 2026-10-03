@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:ab6202eccc6b4b1342e20752c343f0a472f09e82dba417924399f512820fcd6a'
+modified: '2026-10-03'
+body_hash: 'sha256:813bc8e6c522648f2afe1ac95f2190a3f902651a0b56f63947e9c5fd13e3d61b'
 related: []
 ---
 
@@ -25,8 +25,8 @@ application overview projection.
 
 ## S386-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_overview_rendering.py src/aeat/entrypoints/cli/tests/test_overview_rendering.py` passed.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_overview_rendering.py` passed with 10 tests.
+- the historical check passed.
+- the historical check passed with 10 tests.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S386 slice.

@@ -4,11 +4,10 @@ tags:
   - '#cross-period-prorrata'
 date: '2026-07-06'
 modified: '2026-10-03'
-body_hash: 'sha256:580aca0cefaa721c5fe3df0879a63b4756c02aeb2a7d7b7bba58d9b4e772bca1'
+body_hash: 'sha256:21f740583e2e70e9e78bbeadc3728b2ee9637054d3ab24c35ef0ca1ff6a2bd5a'
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
-  - '[[2026-06-19-silent-zero-base-aggregation-plan]]'
 ---
 
 # `cross-period-prorrata` reference: `cross-period-prorrata handover: W01 landed foundation, design decisions, plan roadmap, grounding surprises for the W02+ builder`
@@ -28,13 +27,12 @@ plan `2026-07-06-cross-period-prorrata-plan` at 9/40. What exists:
 - Core closed enums, re-exported from `aeat.core`: `ProrrataRegisterRegime`
   (general | especial | ninguna) and `ProrrataProvisionalProvenance`
   (carried_prior_definitiva | aeat_autorizada | inicio_actividad). In
-  `src/aeat/core/_prorrata_register.py`.
 - Domain register in `src/aeat/domain/prorrata_register/`: `ProrrataRegisterEntry`
   (one per (ejercicio, sector); regime, provisional %+provenance, and the
   settlement/definitive slots present from birth; coupled-field invariants),
   the `ProrrataRegister` aggregate (unique (ejercicio, sector) key), and the
   PURE art-105 precedence-ladder resolver `resolve_provisional_percentage`.
-- Encrypted persistence mirroring `src/aeat/adapters/persistence/profile/bienes_inversion.py`:
+- Encrypted persistence mirroring `src/cadrumo/adapters/persistence/profile/bienes_inversion.py`:
   `PROFILE_PRORRATA_REGISTER_NAMESPACE` (FINANCIAL, bucket-local, encrypted),
   `ProrrataRegisterRepository`, and a `ProrrataRegisterService` facade. Covered
   by a strict save/load/equality roundtrip plus an anti-tautology corrupt-payload
@@ -43,7 +41,6 @@ plan `2026-07-06-cross-period-prorrata-plan` at 9/40. What exists:
 ## Design decisions to honour (breaking these re-opens closed questions)
 
 - `ProrrataRegisterRegime` is DELIBERATELY DISTINCT from the substrate enum
-  `ProrrataRegime` in `src/aeat/domain/iva/_prorrata.py`. Do NOT reuse or extend
   the substrate enum: `validate_prorrata_reference` parses `ProrrataRegime(parts[3])`,
   so adding a `ninguna`/`none` member there would loosen a test-covered reference
   grammar the ADR forbids reopening ("substrate consumed, not re-opened"). The
@@ -90,22 +87,17 @@ plan `2026-07-06-cross-period-prorrata-plan` at 9/40. What exists:
 ## Grounding surprises (consume, do not rebuild; do not conflate)
 
 - The settlement advisory scaffold ALREADY EXISTS:
-  `src/aeat/application/calculations/_prorrata_regularizacion.py`
   (`build_prorrata_regularizacion_advisory`, a pure function over the two
   percentages and the deductible IVA) and
-  `src/aeat/application/modelo/_prorrata_regularizacion_advisory.py` (which
   already scans the prior-year-definitiva observation). W04 CONSUMES these — do
   not rebuild them.
-- The compute half is stable: `src/aeat/domain/iva/_prorrata.py`
   (`compute_prorrata_definitiva_anual`, `compute_regularizacion_prorrata_anual`,
   the art-106 especial classification). CONSUME it — do not re-open it.
 - DO NOT CONFLATE: the IVA ledger's `_resolve_iva_prorrata_attachment` /
   `ProrrataLedgerReference` (per-transaction SOPORTADO tagging in
-  `src/aeat/application/aggregation/_iva_ledger.py`) is a DIFFERENT concept —
   groundwork for the deferred especial per-input classification (W06). The
   register-% apportionment (W03) is a separate mechanism: a percentage applied to
   the deducible-cuota sum. Leave the per-tx tagging alone.
-- `src/aeat/application/aggregation/_prorrata.py` does NOT exist at HEAD — the
   aggregation orchestrator is genuinely net-new.
 
 ## Constraining rules (the ADR's binding disciplines)

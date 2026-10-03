@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:ba37e2de8f54bff1730256fef73269d3c0a69bd7623950042114ead8ef48a9e9'
+modified: '2026-10-03'
+body_hash: 'sha256:4c09486ac8b2acb8935bf2f82d75c0938c5dbd1f491f35b4c571395a36b8019b'
 related: []
 ---
 
@@ -26,8 +26,8 @@ The source-read assertion imports the centralized `UTF_8_ENCODING` constant inst
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_idle_timeout.py src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py src/aeat/adapters/persistence/storage/test_runtime.py` passed with 53 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_idle_timeout.py src/aeat/adapters/persistence/storage/master_key/test_idle_timeout.py src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py src/aeat/adapters/persistence/storage/test_runtime.py` passed.
+- the historical check passed with 53 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Touched-surface hygiene scan found no broad exception suppressions, direct settings construction, naked environment access, fake/stub/monkeypatch markers, skipped/xfail tests, or direct output.
 

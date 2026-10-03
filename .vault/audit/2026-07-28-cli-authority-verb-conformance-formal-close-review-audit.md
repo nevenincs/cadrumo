@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance'
 date: '2026-07-28'
-modified: '2026-07-28'
-body_hash: 'sha256:5939089b6769e5e78cee69fbf9ec9e79c5825d1f172ed333bc7d2af901550448'
+modified: '2026-10-03'
+body_hash: 'sha256:7c7c7b163d529eba096f952f8b726ecfd989a241ecdde29dc3f676acf8f6291b'
 related:
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
   - "[[2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit]]"
 ---
 
@@ -157,7 +156,7 @@ existence checks cannot silently empty, because a rename raises loudly. I
 verified one floor myself rather than accepting the report: the CLI-module
 corpus helper sees 456 modules and fails at 0 on a relocated root.
 
-The heuristic is now a shipped tool, `dev/audit/vacuity_screen.py`, tracked and
+The heuristic is now a shipped tool, the retired module, tracked and
 runnable, rather than the throwaway script this review used. Its current
 worklist is 108 candidates; the in-surface remainder is being worked and the
 owning Step stays open until it is done.

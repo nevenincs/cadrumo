@@ -5,11 +5,9 @@ tags:
 date: '2026-09-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b87af1e172ab7acc6f6902812516c3daabc1b97a6ac17e6b9ad4399f8476d68e'
+body_hash: 'sha256:3518a6d18aaa5f68e764d3baa71a9f66c13a88ce944b66553bd9d224f4d70160'
 related:
   - "[[2026-07-14-honest-all-green-adr]]"
-  - "[[2026-07-17-duplication-evidence-repair-plan]]"
-  - "[[2026-09-03-duplication-burndown-plan]]"
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
@@ -77,7 +75,7 @@ registry existed immediately before commit
 `23eadb38842c9b95a809b5df085cf47ef30fbc02`; that commit deleted it in a
 241,725-line, 1,285-file change, while its parent recorded four groups—three
 intentional PEP 562 module-local hooks and one inconsistent summary count
-(`git show 23eadb38842c9b95a809b5df085cf47ef30fbc02^:dev/audit/duplication_dispositions.toml`).
+(`git show 23eadb38842c9b95a809b5df085cf47ef30fbc02^:the former source file`).
 
 Disposition-only closure is useful as lossless triage and prevents forced
 abstractions where implementations are not substitutable. It is insufficient
@@ -130,6 +128,6 @@ ADR fixes the closure contract.
 - `dev/audit/duplication.py:135`
 - `dev/audit/report.py:190`
 - commit `23eadb38842c9b95a809b5df085cf47ef30fbc02`
-- `git show 23eadb38842c9b95a809b5df085cf47ef30fbc02^:dev/audit/duplication_dispositions.toml`
+- `git show 23eadb38842c9b95a809b5df085cf47ef30fbc02^:the former source file`
 - `just audit-duplication`, executed 2026-09-03 in
   `Y:/code/cadrumo-worktrees/main` against the live shared worktree

@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
-modified: '2026-10-02'
-body_hash: 'sha256:eeef02f23b4dfb122c52cf80640e1e0f58eba611474a4d91951a8572da213925'
+modified: '2026-10-03'
+body_hash: 'sha256:9d87c2a2a6e5fd206de560beea0773185ad618630bbce53ac0a5c0b6200cf8c2'
 related:
-  - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"
   - "[[2026-07-05-modelo-720-prior-year-baseline-adr]]"
   - "[[2026-06-02-modelo-720-prior-year-baseline-research]]"
   - '[[2026-09-11-binding-schema-adr]]'
@@ -146,7 +145,7 @@ This amendment refines the accepted ruling above. The accepted body stays as it 
 
 The six `foreign_asset` row bindings declare `record = "bien"`, and no export record claims that name. The type 2 record (`binding_record = "type_2"`) is claimed only by `manual_input` record-field bindings. The row bindings are therefore unconsumed (`UNCONSUMED_FILING_GRADE_BINDING`), and there are three reasons they cannot simply be renamed onto `type_2`.
 
-- **No join identity.** Source rows are numbered by position after a sort on `(country, class, identifier, acquisition date)` (`src/cadrumo/domain/calculations/registry/detail_record_bindings.py:217-234`), and the observation's `source_id` is dropped from the row. Operator row values are also numbered by position (`src/cadrumo/application/filing/draft_construction.py:738-761`). The two meet only at the row index. Adding an asset that sorts earlier shifts every later index, which attaches one asset's operator data to another. A `type_2` scalar `manual_input` value (row index `None`) never reaches an emitted row at all (`src/cadrumo/application/filing/_record_field_renderer.py:248-255`). The accepted `2026-08-22-source-casilla-integration-adr` already holds the M720 composite at `grounding_blocked` "until a typed persisted asset identity is established or a separately approved, uniqueness-enforced composite key is grounded".
+- **No join identity.** Source rows are numbered by position after a sort on `(country, class, identifier, acquisition date)` (`src/cadrumo/domain/calculations/registry/detail_record_bindings.py:217-234`), and the observation's `source_id` is dropped from the row. Operator row values are also numbered by position (`src/cadrumo/application/filing/draft_construction.py:738-761`). The two meet only at the row index. Adding an asset that sorts earlier shifts every later index, which attaches one asset's operator data to another. A `type_2` scalar `manual_input` value (row index `None`) never reaches an emitted row at all. The accepted `2026-08-22-source-casilla-integration-adr` already holds the M720 composite at `grounding_blocked` "until a typed persisted asset identity is established or a separately approved, uniqueness-enforced composite key is grounded".
 - **Class-conditional placement.** One source fact maps to different official slots depending on position 102: an account identifier goes to 144 and 156-189, a securities identifier to 131 and 132-143, and S and B carry no identifier slot (Orden HAP/72/2013 Anexo, type 2 pos. 131-189). The existing `row_field_casilla_ids` map is one row field to one casilla (`src/cadrumo/domain/calculations/registry/export.py:483-498`).
 - **Currency has no slot.** Every amount must be "en euros o su contravalor" (type 2 pos. 432-446 and 447-461). The source observation either arrives pre-converted with no rate provenance (`valuation_eur`, `src/cadrumo/application/aggregation/foreign_assets.py:130`) or carries a currency label that nothing converts (`src/cadrumo/application/calculations/row_set_assembly.py:772`).
 

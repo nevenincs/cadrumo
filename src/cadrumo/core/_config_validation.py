@@ -121,42 +121,30 @@ def resolve_database_url_for_active_profile(
 
 
 def resolve_output_dirs_under_storage_root(settings: Settings) -> Settings:
-    """Root every derived output directory under ``cadrumo_local_storage_root``.
+    """Derive storage defaults and relative overrides beneath the effective root.
 
-    Auth tokens, the diagnostic log, the encrypted-store substrate (secret,
-    blob, audit), the append-only telemetry logs, the regenerable caches,
-    and the durable generated-output directories all default to a subpath
-    under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
-    the core storage taxonomy. That root is the platform
-    user-data location in every run mode, never inside a virtualenv or uv
-    cache — the hazard a checkout-relative ``var/...`` default carries on
-    an installed distribution. A developer who wants the tree inside their
-    checkout sets ``CADRUMO_LOCAL_STORAGE_ROOT``.
-
-    An explicit per-field env override (``CADRUMO_TOKEN_DIR``,
-    ``CADRUMO_RUNS_DIR``, …) or a value supplied via an ``override_settings``
-    block registers the field in ``model_fields_set`` and wins: the
-    validator only computes the derived path when the field was left at its
-    placeholder default. The validator only computes paths; provider
-    factories and custody loaders decide how those directories are opened.
-
-    Which fields those are, and what subpath each takes, is not decided
-    here: the typed declaration is iterated directly so this validator
-    cannot drift from it by carrying a table of its own. Members whose
-    field is a deliberate opt-in override are excluded by the declaration
-    rather than by a special case here -- deriving a default into one would
-    silently retire the branch that selects on the field being unset.
-
-    ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
-    populated when this runs.
+    Absolute per-category overrides remain independently configurable.
+    The taxonomy declares the default members and their settings fields.
     """
-    from .storage_taxonomy_locations import ROOT_DERIVED_STORAGE_LOCATIONS
+    from .storage_taxonomy_locations import ROOT_DERIVED_STORAGE_LOCATIONS, STORAGE_TAXONOMY
 
     for location in ROOT_DERIVED_STORAGE_LOCATIONS:
         field_name = location.settings_field
-        if field_name is None or field_name in settings.model_fields_set:
+        if field_name is None:
             continue
-        object.__setattr__(settings, field_name, settings.cadrumo_local_storage_root / location.relative_path())
+        if field_name in settings.model_fields_set:
+            value = getattr(settings, field_name)
+            if isinstance(value, Path) and not value.is_absolute():
+                object.__setattr__(settings, field_name, (settings.cadrumo_local_storage_root / value).resolve())
+        else:
+            object.__setattr__(settings, field_name, settings.cadrumo_local_storage_root / location.relative_path())
+    for location in STORAGE_TAXONOMY.values():
+        if location.settings_field is None:
+            continue
+        value = getattr(settings, location.settings_field)
+        if isinstance(value, Path) and not value.is_absolute():
+            resolved = (settings.cadrumo_local_storage_root / value).resolve()
+            object.__setattr__(settings, location.settings_field, resolved)
     return settings
 
 

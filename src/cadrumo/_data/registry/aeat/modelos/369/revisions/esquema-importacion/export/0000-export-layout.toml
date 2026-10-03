@@ -1,0 +1,57 @@
+[[revisions.esquema-importacion.export_layouts]]
+id = 'modelo-369-importacion-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-369-2021']
+legal_refs = ['orden-hac-610-2021:art-1']
+dictionary_path_overrides = []
+
+[revisions.esquema-importacion.export_layouts.filing_envelope]
+schema_version = 1
+source_ref = 'aeat-dr-369-2021'
+source_sha256 = 'b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3'
+record_identity = 'T3690 Estruc. gral'
+prefix_extent = 328
+closer_derivation = 'relative-closer-v1'
+total_derivation = 'emitted-byte-total-v1'
+body_record_ids = [
+    'modelo-369-importacion-info-adicional',
+    'modelo-369-importacion-t36910',
+    'modelo-369-importacion-t36911',
+    'modelo-369-importacion-t36912',
+]
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'opening_tag'
+length = 2
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'modelo'
+length = 3
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'discriminant'
+length = 1
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'filing_year'
+length = 4
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'period'
+length = 2
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'record_type'
+length = 5
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'pre_declarant_filler'
+length = 92
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'declarant_tax_id'
+length = 9
+
+[[revisions.esquema-importacion.export_layouts.filing_envelope.prefix_fields]]
+role = 'post_declarant_filler'
+length = 210

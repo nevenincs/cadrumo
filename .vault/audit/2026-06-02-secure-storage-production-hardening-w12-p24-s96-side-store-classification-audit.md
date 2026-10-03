@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:6192713d8fa2d8f257b0b71d8ec0054676f549a6c7735abd2b5b3401f4f7af47'
+modified: '2026-10-03'
+body_hash: 'sha256:94680b09e6e40ec16fb17d0d2dca1df1bd24f035fa87597cd29e19e18f82002d'
 related: []
 ---
 
@@ -20,15 +20,15 @@ The classification is grounded in the active-profile runtime discovery audit, th
 
 | Surface | Current implementation | Classification | Owner and required disposition |
 | --- | --- | --- | --- |
-| Evidence bundle manifests | `src/aeat/application/evidence/_service.py` persists `EvidenceBundle` through `EvidenceBundleRepository`, `SecureBoundRepository`, `APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`, and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S37. Keep as runtime-created secure-object storage; no bucket-local JSONL exception remains. |
+| Evidence bundle manifests | the retired module persists `EvidenceBundle` through `EvidenceBundleRepository`, `SecureBoundRepository`, `APPLICATION_EVIDENCE_BUNDLE_NAMESPACE`, and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S37. Keep as runtime-created secure-object storage; no bucket-local JSONL exception remains. |
 | Evidence bundle ZIP export | `EvidenceBundleService.export()` writes only to an operator-supplied `output_path`, verifies first, refuses failed verification, requires `force_incomplete` for incomplete bundles, and writes `manifest.json` last. | export-only | Covered by W05.P09.S40 ADR. This is not a default bucket-local persistence backend. |
-| Inventory ledgers | `src/aeat/application/inventory/_service.py` resolves `InventoryLedgerRepository` through `secure_object_repository_for_bucket` and the registered inventory namespace. | secure-object migration completed | Covered by W05.P09.S38. Keep runtime bucket mismatch refusal and namespace-registry sensitivity authority. |
-| Purchase invoice evidence ledger records | `src/aeat/application/ledger/_evidence.py` still reads and writes `settings.aeat_purchase_invoice_evidence_dir / {bucket_id}.jsonl` through centralized `Settings` and `storage_path`. The payload includes source path, source digest, supplier, invoice number/date, taxable base, IVA rate, IVA amount, notes, and timestamps. | secure-object migration pending | Owned by `W17.P37.S424`. This is not an accepted plaintext exception and must migrate behind a runtime-created secure-object repository unless later implementation research produces explicit ADR-backed rejection. |
-| Payable and collectible business-operation invoice records | `src/aeat/application/ledger/_business_operation_invoice.py` still reads and writes `settings.aeat_invoices_dir / {payable_invoice|collectible_invoice} / {bucket_id}.jsonl` through centralized `Settings` and `storage_path`. The payload includes counterparty identifiers, invoice numbers, dates, amounts, intracom fields, notes, and timestamps. | secure-object migration pending | Owned by `W17.P37.S425`. This is not an accepted plaintext exception and must migrate behind runtime-created secure-object repositories unless later implementation research produces explicit ADR-backed rejection. |
-| Live verification observations | `src/aeat/application/live/_verify.py` persists `VerifyObservation` through `LIVE_VERIFY_OBSERVATION_NAMESPACE` and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S39. Retain as encrypted bucket-scoped audit state. |
-| Live expedientes snapshots | `src/aeat/application/live/_expedientes.py` uses `SecureSnapshotRepository`, `LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE`, and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S39. No legacy JSONL snapshot store remains in the scoped implementation. |
-| Live notifications snapshots | `src/aeat/application/live/_notifications.py` uses `SecureSnapshotRepository`, `LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE`, and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S39. No legacy JSONL snapshot store remains in the scoped implementation. |
-| Shared live snapshot base | `src/aeat/application/live/_snapshot_base.py` implements `SecureSnapshotRepository` over registered namespace definitions and runtime-created secure-object repositories. | secure-object migration completed | Covered by W05.P09.S39. Remaining review caveats are list-time mismatch handling and stale comments, not plaintext side-store acceptance. |
+| Inventory ledgers | the retired module resolves `InventoryLedgerRepository` through `secure_object_repository_for_bucket` and the registered inventory namespace. | secure-object migration completed | Covered by W05.P09.S38. Keep runtime bucket mismatch refusal and namespace-registry sensitivity authority. |
+| Purchase invoice evidence ledger records | the retired module still reads and writes `settings.aeat_purchase_invoice_evidence_dir / {bucket_id}.jsonl` through centralized `Settings` and `storage_path`. The payload includes source path, source digest, supplier, invoice number/date, taxable base, IVA rate, IVA amount, notes, and timestamps. | secure-object migration pending | Owned by `W17.P37.S424`. This is not an accepted plaintext exception and must migrate behind a runtime-created secure-object repository unless later implementation research produces explicit ADR-backed rejection. |
+| Payable and collectible business-operation invoice records | the retired module still reads and writes `settings.aeat_invoices_dir / {payable_invoice|collectible_invoice} / {bucket_id}.jsonl` through centralized `Settings` and `storage_path`. The payload includes counterparty identifiers, invoice numbers, dates, amounts, intracom fields, notes, and timestamps. | secure-object migration pending | Owned by `W17.P37.S425`. This is not an accepted plaintext exception and must migrate behind runtime-created secure-object repositories unless later implementation research produces explicit ADR-backed rejection. |
+| Live verification observations | the retired module persists `VerifyObservation` through `LIVE_VERIFY_OBSERVATION_NAMESPACE` and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S39. Retain as encrypted bucket-scoped audit state. |
+| Live expedientes snapshots | the retired module uses `SecureSnapshotRepository`, `LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE`, and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S39. No legacy JSONL snapshot store remains in the scoped implementation. |
+| Live notifications snapshots | the retired module uses `SecureSnapshotRepository`, `LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE`, and `secure_object_repository_for_bucket`. | secure-object migration completed | Covered by W05.P09.S39. No legacy JSONL snapshot store remains in the scoped implementation. |
+| Shared live snapshot base | the retired module implements `SecureSnapshotRepository` over registered namespace definitions and runtime-created secure-object repositories. | secure-object migration completed | Covered by W05.P09.S39. Remaining review caveats are list-time mismatch handling and stale comments, not plaintext side-store acceptance. |
 | Borrador 100 and Censo live snapshots | W05.P09.S36 classified these as already secure-object backed registered live snapshot namespaces. | secure-object migration completed | Not a W12.P24 blocker; retain as registered secure-object snapshot families. |
 
 ## Disposition Rules
@@ -48,6 +48,6 @@ The classification is grounded in the active-profile runtime discovery audit, th
 
 ## Verification
 
-- Reviewed `src/aeat/application/evidence/_service.py`, `src/aeat/application/inventory/_service.py`, `src/aeat/application/ledger/_evidence.py`, `src/aeat/application/ledger/_business_operation_invoice.py`, `src/aeat/application/live/_verify.py`, `src/aeat/application/live/_expedientes.py`, `src/aeat/application/live/_notifications.py`, and `src/aeat/application/live/_snapshot_base.py`.
+- Reviewed the retired module, the retired module, the retired module, the retired module, the retired module, the retired module, the retired module, and the retired module.
 - Reviewed W05.P09.S36 inventory and S37-S40 review/ADR evidence.
 - Confirmed `W17.P37.S424` and `W17.P37.S425` remain the explicit migration owners for the two ledger JSONL stores.

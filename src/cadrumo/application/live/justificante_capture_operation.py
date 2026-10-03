@@ -14,7 +14,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import FilingRecordId, SnapshotId
 from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.observations_repository import ObservationSourceKind
@@ -24,8 +24,7 @@ from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
 )
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
@@ -113,15 +112,13 @@ _RECEIPT_CONTRADICTION = "justificante capture result contradicts its terminal r
 def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = JustificanteCaptureOperationReport.model_validate(result, strict=True)
     projection = report.projection
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(projection.bucket_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )
-    require_succeeded_receipt_references(receipt, message=_RECEIPT_CONTRADICTION)
     return projection
 
 

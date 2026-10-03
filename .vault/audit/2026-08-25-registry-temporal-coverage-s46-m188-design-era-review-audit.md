@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:ccadefa100404ea3d59a6a28556a30e08ac7b7615dfe2aeab55efe521c42ba99'
-related:
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `S46 Modelo 188 design-era review`

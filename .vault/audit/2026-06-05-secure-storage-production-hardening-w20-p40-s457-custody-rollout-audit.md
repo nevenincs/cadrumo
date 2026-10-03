@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:7d04a2048a4ca173d0277ebf7f7f7de5cfedd441586495dd20acb1c52a6529a6'
+modified: '2026-10-03'
+body_hash: 'sha256:4c99e276ed7894e6c6b6f4f3e9f20fc478db8436793e9484d4d06995c1b962d0'
 related: []
 ---
 
@@ -57,7 +57,7 @@ reopens the encrypted profile after each passphrase change.
 ## S457-006 | PASS | Blocking backend regression repaired
 
 The S457 CLI gate exposed a backend `NameError` in
-`src/aeat/adapters/persistence/storage/sql/secure_objects.py`: revision metadata
+The retired module: revision metadata
 used `json.dumps` without importing `json`. Restoring the import was necessary
 to keep profile creation and secure-object writes functional under the verified
 backend path.

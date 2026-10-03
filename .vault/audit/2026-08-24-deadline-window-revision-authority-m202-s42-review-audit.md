@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:440ad7e7445fed4ca5c38ac5d69151062cce1492243c8e22b2c49b4cd7da1437'
 related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
   - "[[2026-08-24-deadline-window-revision-authority-adr]]"
 ---
 

@@ -4,18 +4,16 @@ tags:
   - '#index'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:23b63ffa70646d575ac3e2e5a9311ff678331c295a4b58ff825493ca8039cabe'
+body_hash: 'sha256:9ed4514b4a3bffd794210efa8faf8f35ca8c27432987da4663e89f9106ba98fc'
 related:
   - '[[2026-09-02-python-runtime-compatibility-adr]]'
   - '[[2026-09-02-python-runtime-compatibility-canary-selector-identity-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-final-review-audit]]'
-  - '[[2026-09-02-python-runtime-compatibility-ledger]]'
   - '[[2026-09-02-python-runtime-compatibility-p01-code-review-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-p02-code-review-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-p03-code-review-audit]]'
-  - '[[2026-09-02-python-runtime-compatibility-plan]]'
   - '[[2026-09-02-python-runtime-compatibility-research]]'
   - '[[2026-09-02-python-runtime-compatibility-sealed-wheelhouse-audit]]'
 ---
@@ -38,14 +36,6 @@ Auto-generated index of all documents tagged with `#python-runtime-compatibility
 - `2026-09-02-python-runtime-compatibility-p02-code-review-audit` - `python-runtime-compatibility` audit: `P02 code review`
 - `2026-09-02-python-runtime-compatibility-p03-code-review-audit` - `python-runtime-compatibility` audit: `P03 code review`
 - `2026-09-02-python-runtime-compatibility-sealed-wheelhouse-audit` - `python-runtime-compatibility` audit: `Sealed runtime wheelhouse review`
-
-### exec
-
-- `2026-09-02-python-runtime-compatibility-ledger` - `python-runtime-compatibility` ledger
-
-### plan
-
-- `2026-09-02-python-runtime-compatibility-plan` - `python-runtime-compatibility` plan
 
 ### research
 

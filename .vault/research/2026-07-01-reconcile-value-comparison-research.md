@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#reconcile-value-comparison'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:5e77039ffaab9e06756d46e09b95fd39dcdc2f596f26e4905d5124cb0ab2bb69'
+modified: '2026-10-03'
+body_hash: 'sha256:abf9fe117196fa1a247456b4d8dd6929f3c8a45d5f114dd7834d263da1fe4ec6'
 related: []
 ---
 
@@ -26,19 +26,19 @@ frame the decisions the ADR must resolve. Nothing is implemented in this pass.
 
 ### F1 — The compare is header-identity-only; totals are parsed then dropped
 
-`_reconcile_parsed_justificante` (`src/aeat/application/modelo/_reconcile.py:270-398`)
+`_reconcile_parsed_justificante`
 diffs exactly four header-identity fields against the parsed receipt: `modelo`
 (`:309`), `ejercicio` (`:318`), `period` (`:327`), `tax_id` (`:336`). Verdict is
 binary `MATCHES` / `MISMATCHES` (`:347`). It never loads the local
 `CalculationRevision` and compares **no** casillas nor totals (service docstring
-`:216-219`; payload docstring `src/aeat/entrypoints/cli/_payloads_modelo_reconcile.py:28-32`).
+`:216-219`; payload docstring the former source file).
 The `--revision` CLI arg is consumed only for work-unit resolution
 (`_modelo_reconcile_cli.py:176,228`), never for value comparison.
 
 The parser **does** extract the receipt totals: `Justificante.total_a_ingresar` /
-`total_a_devolver` (`Decimal | None`, `src/aeat/domain/justificante/_schema.py:73-74`),
+`total_a_devolver` (`Decimal | None`, the former source file),
 matched by `_TOTAL_INGRESAR_RE` / `_TOTAL_DEVOLVER_RE` / `_NRC_IMPORTE_RE`
-(`src/aeat/adapters/inbound/justificante/_extract.py:184-198`, resolved by
+(the former source file, resolved by
 `_extract_totals` `:457-463`). These live on every parsed `Justificante` and are
 carried through both reconcile entry points (`modelo_reconcile`,
 `modelo_reconcile_bytes`) — but `_reconcile_parsed_justificante` never reads them.
@@ -48,7 +48,7 @@ A filed-amount divergence is therefore structurally invisible today.
 
 `VerificationExpectationDefinition.reconciliation_total_casilla_ids` is a
 registry-declared, strict `Mapping[Literal["ingresar", "devolver"], CasillaId]`
-(`src/aeat/domain/calculations/registry/_schema.py:574`). It maps the two receipt
+. It maps the two receipt
 total kinds to the canonical **result** casilla of a revision, and it is
 registry-build validated against real casilla ids on three surfaces
 (`_validate_references.py:250`, `_validate_surfaces.py:283`,
@@ -56,7 +56,7 @@ registry-build validated against real casilla ids on three surfaces
 (`_record_design_coverage.py:136`).
 
 Crucially, `calculation_result_summary`
-(`src/aeat/application/modelo/_result_summary.py:94-167`) **already consumes** this
+ **already consumes** this
 map to project `result_ingresar` / `result_devolver` rows out of
 `revision.casilla_values`. So the canonical computed total — the value the receipt
 total must equal — is exactly `revision.casilla_values[reconciliation_total_casilla_ids["ingresar"|"devolver"]]`.
@@ -115,7 +115,7 @@ Both `reconcile pull` and `reconcile file` call
 `modelo.reconcile.pull` / `modelo.reconcile.file`
 (`_payloads_modelo_reconcile.py:40-41`). `emit_json_success` stamps the `command`
 string verbatim without validating it against the registered leaf
-(`src/aeat/core/json_contract.py`), so the emitted envelope carries neither
+, so the emitted envelope carries neither
 registered id. An agent cannot discriminate pull vs file from the envelope.
 (`history` is correct: it emits `modelo.reconcile.history`, `:340`.) This is a
 concrete instance of a *behavioural*-conformance gap: the leaf-schema gate is
@@ -144,7 +144,7 @@ it must instead catch the refusal error. The member is currently a shell.
 
 `pull` is gated by the same live-auth boundary as `app live`
 (`capture_justificante_snapshot` → `require_live_read`) and needs the raw PDF bytes
-from the encrypted snapshot (`src/aeat/application/live/_justificante.py`). The
+from the encrypted snapshot . The
 durable `Justificante` **metadata** record holds the totals but not the PDF bytes,
 so reconcile cannot fall back to metadata-only — it needs either a persisted capture
 (bytes) or a local `--file`. A restored bundle that dropped attachment bytes cannot
@@ -170,7 +170,7 @@ The value reconciliation the ADR mandates consumes existing, proven surfaces:
   resolution the CLI already performs.
 - Load the persisted `CalculationRevision` for that work unit (the surface
   `calculation_result_summary` and `_load_revision_for_export`
-  (`src/aeat/application/modelo/_export.py:398`) already read;
+   already read;
   `revision.casilla_values` is the canonical `{CasillaId: Decimal}` map).
 - Read `snapshot.revision.verification_expectations[*].reconciliation_total_casilla_ids`
   → `{ingresar|devolver → CasillaId}`; look those casillas up in

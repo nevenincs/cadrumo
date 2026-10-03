@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -27,7 +27,7 @@ msgstr "A Cadrumo beszerzése"
 
 #: ../../index.md:109
 msgid "Install Cadrumo"
-msgstr "A Cadrumo telepítése"
+msgstr "Cadrumo telepítése"
 
 #: ../../index.md:109
 msgid "Quickstart"
@@ -107,7 +107,7 @@ msgstr "Számlák és bizonylatok csatolása a tranzakciókhoz"
 
 #: ../../index.md:142
 msgid "Manage business invoices"
-msgstr "Üzleti számlák kezelése"
+msgstr "Vállalkozási számlák kezelése"
 
 #: ../../index.md:142
 msgid "Correct mistakes in your records"
@@ -163,7 +163,7 @@ msgstr "Felülvizsgálat Google Sheetsben"
 
 #: ../../index.md:155
 msgid "Check a draft declaration and act on the issues"
-msgstr "Bevallástervezet ellenőrzése és a problémák kezelése"
+msgstr "Bevallás-piszkozat ellenőrzése és teendők a problémák alapján"
 
 #: ../../index.md:155
 msgid "Share and check a calculation summary"
@@ -228,6 +228,14 @@ msgstr "Szerzői útmutató"
 #: ../../index.md:202
 msgid "Project"
 msgstr "Projekt"
+
+#: ../../index.md:212
+msgid "Architecture and internals"
+msgstr "Architektúra és belső működés"
+
+#: ../../index.md:212
+msgid "Technical documentation"
+msgstr "Műszaki dokumentáció"
 
 #: ../../index.md:1
 msgid "Cadrumo documentation"
@@ -332,7 +340,7 @@ msgstr ""
 
 #: ../../index.md:60
 msgid "Set up your taxpayer profile"
-msgstr "Állítsd be az adózói profilodat"
+msgstr "Állítsd be az adózói profilod"
 
 #: ../../index.md:65
 msgid ""
@@ -364,7 +372,7 @@ msgstr ""
 
 #: ../../index.md:86
 msgid "Plan your filing calendar"
-msgstr "Tervezd meg a benyújtási naptáradat"
+msgstr "Tervezd meg a bevallási naptáradat"
 
 #: ../../index.md:91
 msgid "See which modelos are due and which period to prepare next."

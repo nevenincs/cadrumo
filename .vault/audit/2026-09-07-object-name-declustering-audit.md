@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:886c448c17c7a619471c2aa53712284888ebe3632b71ea931ba2bc24c99a1a9b'
+body_hash: 'sha256:7d0fe9ac8e5be97227bc3f642c677e82fa1b84daaa75e87e33bbcf1659b66ab4'
 related: []
 ---
 
@@ -13,15 +13,7 @@ related: []
 
 ## Scope
 
-Reviewed the current uncommitted S32 changes in `dev/quality/object_name_replay.py`,
-`dev/quality/object_name_declustering.py`, `dev/quality/tests/test_object_name_replay.py`,
-and `dev/quality/tests/test_object_name_declustering.py` against the accepted
-`object-name-declustering` ADR, the W04.P11 plan, the receipt-scope and teardown-authority
-audit, and the S31 review. The review covered receipt-integrity validation, exact
-receipt-derived root identity, recursive member-tree containment, the canonical empty
-`.absent-paths` marker, byte equality of every retained backup with both the receipt
-baseline and live tree, the mandatory second verification immediately before strict
-removal, structured result reporting, and the `dispose` CLI boundary.
+The review covered receipt-integrity validation, exact receipt-derived root identity, recursive member-tree containment, the canonical empty `.absent-paths` marker, byte equality of every retained backup with both the receipt baseline and live tree, the mandatory second verification immediately before strict removal, structured result reporting, and the `dispose` CLI boundary.
 
 The focused detector run passed all 20 replay-disposition cases and all 4 disposal CLI
 cases after the latest changes. The implementation is deliberately manifest-independent

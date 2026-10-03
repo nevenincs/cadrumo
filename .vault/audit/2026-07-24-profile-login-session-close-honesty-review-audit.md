@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#profile-login-session'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:5cb08bed957e7771a9adb77e5aa7100c61e499fa91ee9986967f3cca63a52c95'
+modified: '2026-10-03'
+body_hash: 'sha256:dc85e20017d49028c627e4f66c4c9adee961f44e99aed07e25144b1ab02090da'
 related: []
 ---
 
@@ -93,7 +93,7 @@ failures are unexplained.
 
 They are explained, and they remain environmental, but by a different path. The
 keychain failure is caught in production rather than raised:
-`src/cadrumo/application/user_profile/_login_session.py:618` logs that the profile
+The retired module logs that the profile
 session was not persisted because no usable OS keychain is available, and returns
 a flag saying the login is process-scoped. The five tests then fail because they
 assert against a persisted session that was deliberately never written. The
@@ -137,11 +137,10 @@ The verb-removal step names a curated operator help module beneath
 `src/cadrumo/entrypoints/cli/operator_surface/` among its scoped files. That path
 does not exist, and no `operator_surface` package exists anywhere under
 `src/cadrumo/entrypoints/`. The real surface is
-`src/cadrumo/application/operator_surface/_help.py`.
 
 This is a scope-accuracy defect in the step row, not a coverage gap. The real file
 was swept: it contains no occurrence of either retired verb and carries the
-replacements at `src/cadrumo/application/operator_surface/_help.py:286` and `:290`.
+replacements at the retired module and `:290`.
 The work was done on the right file; only the row points at the wrong one.
 
 It is recorded because a reader auditing that step against its stated scope would
@@ -169,7 +168,7 @@ retargeting the assertion at login would have been fitting the test to whichever
 verb happened to pass.
 
 The failure mode retains an owner with real coverage. Two tests in
-`src/cadrumo/entrypoints/cli/_config/tests/test_config.py`, at `:151` and `:171`,
+The retired test, at `:151` and `:171`,
 corrupt the per-bucket SQLite database on disk for real and drive the profile-show
 readiness pre-read through it. The first asserts exit 2 and the unreadable-record
 payload; the second asserts the boundary error appears in the exception cause
@@ -225,7 +224,7 @@ rule's same-commit requirement.
 
 The no-keychain degradation is surfaced to the operator, not silent. The
 application returns a persistence flag, the CLI branches on it at
-`src/cadrumo/entrypoints/cli/_config/_custody.py:105` and emits a typed Notice, the
+The retired module and emits a typed Notice, the
 envelope carries the flag as a field, and the locale catalogues carry the message.
 This was checked specifically because a login reporting success while persisting
 nothing would be a silent capability loss.

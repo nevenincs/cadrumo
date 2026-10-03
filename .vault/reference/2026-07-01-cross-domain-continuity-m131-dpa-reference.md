@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#cross-domain-continuity-m131-dpa'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:1f04494523009e33c86e48596138b0c7afc56647c20afde7b020af8104794dff'
+modified: '2026-10-03'
+body_hash: 'sha256:865300a92665f1dba20ee30b11cf17b5ad964e514787da881a3ac14edc66df51'
 related: []
 ---
 
@@ -19,13 +19,7 @@ runtime.
 
 ## Summary
 
-M131 currently models page activity fields and DPA module fields as structured
-fixed-record `manual_input` bindings. The 2026 binding file defines page activity
-fields under the `page_1` record and DPA module units/rendimiento fields under
-the `DPA` record; the 2024 and 2025 revisions carry year-prefixed equivalents.
-These bindings support draft/export surfaces, as shown by
-`src/aeat/application/filing/tests/_export_support.py`, but they are not
-calculation casillas.
+M131 currently models page activity fields and DPA module fields as structured fixed-record `manual_input` bindings. The 2026 binding file defines page activity fields under the `page_1` record and DPA module units/rendimiento fields under the `DPA` record; the 2024 and 2025 revisions carry year-prefixed equivalents.
 
 Liquidation formulas remain separate. For the active M131 revisions, casilla
 `04` is the official no-datos-base branch, calculated from casilla `03` using

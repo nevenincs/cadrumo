@@ -27,7 +27,7 @@ from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
@@ -485,16 +485,14 @@ def _require_successful_mutation_receipt(
     expected_effect: OperationEffect,
 ) -> None:
     """Require the complete success-only terminal shape for one evidence mutation."""
+    message = "ledger evidence mutation has an incompatible terminal receipt"
     if (
         receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
         or receipt.effect is not expected_effect
     ):
-        raise ValueError("ledger evidence mutation has an incompatible terminal receipt")
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _project_terminal_result(

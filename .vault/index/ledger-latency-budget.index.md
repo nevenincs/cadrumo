@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#ledger-latency-budget'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7fc3fd47673c41f8a4a8ce05857da8959afde38ff0cf87e812d7976b8040b97'
+body_hash: 'sha256:41192f8da68d675cf9745f932f604943484a1802b802778f051a4087f90edc2f'
 related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-07-06-ledger-latency-budget-adr]]'
   - '[[2026-07-06-ledger-latency-budget-audit]]'
-  - '[[2026-07-06-ledger-latency-budget-ledger]]'
-  - '[[2026-07-06-ledger-perf-optimization-plan]]'
   - '[[2026-07-06-ledger-perf-optimization-reference]]'
   - '[[2026-07-06-ledger-perf-optimization-research]]'
 ---
@@ -31,14 +29,6 @@ Auto-generated index of all documents tagged with `#ledger-latency-budget`.
 ### audit
 
 - `2026-07-06-ledger-latency-budget-audit` - `ledger-latency-budget` audit: `S03 benchmark refresh review`
-
-### exec
-
-- `2026-07-06-ledger-latency-budget-ledger` - `ledger-latency-budget` ledger
-
-### plan
-
-- `2026-07-06-ledger-perf-optimization-plan` - `ledger-latency-budget` plan
 
 ### reference
 

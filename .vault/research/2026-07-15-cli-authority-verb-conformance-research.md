@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-08-15'
-body_hash: 'sha256:953e306a53e4c9754b2d2fb17422d69a7a0f52ae6fe9a9080010aa2ede6160b6'
+modified: '2026-10-03'
+body_hash: 'sha256:f8974a7126863a6570c2b2ce6e281aa5e43f4a3ec6bad6e71ac1752d644ddaf9'
 related:
   - "[[2026-06-10-cli-operator-surface-adr]]"
 ---
@@ -80,7 +80,7 @@ registered.  It does not add a production pin or wildcard and does not weaken
 `core -> outer` enforcement.
 
 The accompanying ratchet is independently false-green.
-`src/cadrumo/tests/test_importlinter_ledger.py:31` still parses only `aeat.*`,
+the former source file still parses only `aeat.*`,
 so it currently finds zero of the Cadrumo ignore entries while comparing that
 empty inventory with obsolete ceilings of 840 application edges, 78
 application source wildcards, and 70 domain edges.  Parsing the live

@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:5bedbaef14978d2f1b9e423577acff937c0236155476fb3d1e0ce877335ae244'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-25-registry-completeness-closure-s33-filing-grade-export-verification-audit]]"
 ---
 

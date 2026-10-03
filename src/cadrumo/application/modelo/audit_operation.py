@@ -57,7 +57,11 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import (
+    require_access_request_payload,
+    require_access_request_profile_payload,
+    require_operation_profile,
+)
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -344,9 +348,7 @@ class ModeloAuditReadExecutor:
         expected = (
             MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID if self._query else MODELO_AUDIT_READ_OPERATION_DEFINITION_ID
         )
-        if request.definition_id != expected or type(request.payload) is not ModeloAuditReadRequest:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        payload = request.payload
+        payload = require_access_request_payload(request, definition_id=expected, payload_type=ModeloAuditReadRequest)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(expected)
 
@@ -395,12 +397,11 @@ class ModeloAuditExportExecutor:
         self, request: OperationRequest[ModeloAuditExportRequest], context: OperationExecutorContext
     ) -> str:
         """Preserve incomplete/failed refusal and settle actual ZIP write uncertainty."""
-        if (
-            request.definition_id != MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID
-            or type(request.payload) is not ModeloAuditExportRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        payload = request.payload
+        payload = require_access_request_payload(
+            request,
+            definition_id=MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,
+            payload_type=ModeloAuditExportRequest,
+        )
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID)
 
@@ -462,7 +463,6 @@ def resolve_modelo_audit_operation_access(
         definition_id=expected,
         payload_type=ModeloAuditExportRequest if recording else ModeloAuditReadRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     frontends, access_profile = _audit_access_policy(recording=recording, query=query)
     require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3a25686a1e458c98dc3f3f0a26b8460b55fa85ba0c39bb86aa30fab7548291c8'
+body_hash: 'sha256:fdd683a316648fc0ec0186f000388d2f0527e39971e03e3b62d7f2f9f70b8fcc'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
   - "[[2026-08-03-canonical-storage-management-research]]"
@@ -24,7 +24,7 @@ The artifact gate confirms that the built wheel and sdist exclude `.vault/`, `.v
 
 ### storage-area-placement | medium | The new closed operator axis is outside core
 
-`StorageArea` is declared in `src/cadrumo/application/storage_management/_models.py`. The always-on typed-boundary rule requires every constant-like closed axis to be a `StrEnum` in `core/`; R25 introduces exactly such an axis and does not authorize an application-layer exception. Keeping the public enum in the application package makes the CLI vocabulary depend on a placement that contradicts the repository's canonical ownership rule.
+`StorageArea` is declared in the retired module. The always-on typed-boundary rule requires every constant-like closed axis to be a `StrEnum` in `core/`; R25 introduces exactly such an axis and does not authorize an application-layer exception. Keeping the public enum in the application package makes the CLI vocabulary depend on a placement that contradicts the repository's canonical ownership rule.
 
 ### internal-taxonomy-operator-contract | medium | The operator contract still names storage categories
 
@@ -40,7 +40,7 @@ The table alignment and notice wrapping are visually readable, but `_storage_cli
 
 ### dev-parity-residue | high | A dev-only parity helper remains in the shipped package
 
-`src/cadrumo/domain/calculations/registry/_scenario_filing_period.py` is now consumed only by `dev/registry/_parity_tapes.py` and wheel-excluded tests. Its own documentation identifies it as a shared validator for a parity scenario model that has moved to `dev/registry`. This is executable maintainer-only parity machinery left under `src/cadrumo`, directly violating R24's categorical product boundary and R27's capability-based relocation. The dev tape module additionally reaches both this helper and `selector_period_matches_request` through private product-module imports instead of the owning registry facade, contrary to the canonical import boundary.
+The retired module was now consumed only by the retired module and wheel-excluded tests. Its own documentation identifies it as a shared validator for a parity scenario model that has moved to `dev/registry`. This is executable maintainer-only parity machinery left under `src/cadrumo`, directly violating R24's categorical product boundary and R27's capability-based relocation. The dev tape module additionally reaches both this helper and `selector_period_matches_request` through private product-module imports instead of the owning registry facade, contrary to the canonical import boundary.
 
 ## Recommendations
 
@@ -56,7 +56,7 @@ The implementation should not be marked complete until the high finding and all 
 
 ### storage-area-placement | resolved | Core now owns the operator axis
 
-`StorageArea` now originates in `src/cadrumo/core/_storage_taxonomy.py`, is exported by the canonical `cadrumo.core` facade, and is imported from that facade by the application service/models/errors, CLI payload and handler modules, and focused tests. No application-layer duplicate or re-export remains.
+`StorageArea` now originates in the retired module, is exported by the canonical `cadrumo.core` facade, and is imported from that facade by the application service/models/errors, CLI payload and handler modules, and focused tests. No application-layer duplicate or re-export remains.
 
 ### internal-taxonomy-operator-contract | resolved | The shipped operator noun is storage area
 

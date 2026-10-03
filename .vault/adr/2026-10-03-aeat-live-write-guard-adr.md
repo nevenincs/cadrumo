@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:be31504403c70ea6264aebb98fba790c9e819258ca3d9490bfe19d15590eb001'
+body_hash: 'sha256:38922e51d7351b3788e0ce4e66283644520e1c1309f4c1a026561ea11888edf1'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr]]"
   - "[[2026-07-10-clave-permanente-idp-guard-host-adr]]"
@@ -81,7 +81,7 @@ Grounding (ruling 5):
 - `static_official_only` and `forbidden_stateful_surface` still refuse every live operation (`remote_state_guard.py:424-436`).
 - No bypass flag, environment variable, observe mode or per-call override in product code.
 - Refusal logs carry only policy ids, method, host and path. They never include the query string, body, headers, cookies or identifiers.
-- Implementation hypotheses that may change within these constraints: the field name (for example `declared_read_requests`), the module name (for example `src/cadrumo/adapters/outbound/aeat/browser/request_guard.py`), and whether `allowed_read_post_paths` is folded into the new field. Under `no-legacy-compatibility` it must be folded in, not kept beside it, if the meanings coincide.
+- Implementation hypotheses that may change within these constraints: the field name (for example `declared_read_requests`), the module location, and whether `allowed_read_post_paths` is folded into the new field. Under `no-legacy-compatibility` it must be folded in, not kept beside it, if the meanings coincide.
 
 Accepted 2026-10-03 by the operator, including ruling 3 as amended before acceptance. Reconciliation of accepted wording, applied on acceptance:
 

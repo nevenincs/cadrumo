@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:145580d5987ebb52cb9d9558889bdf957043f5d0cc1ea8e23aa394ed0a46f724'
+body_hash: 'sha256:0831ab271a92a2e4e7a3a1dfef9a31f4db87722b238ebd4678948a9168407a7b'
 related: []
 ---
 
@@ -144,5 +144,5 @@ hide what it saw.
 - `dev/audit/semantic_duplication.py` — the deterministic semantic duplication detector.
 - `src/cadrumo/entrypoints/cli/_ledger_payloads.py` — the CLI payload examples from the measured field-set overlap.
 - `src/cadrumo/application/ledger/models.py` — the paired canonical ledger models.
-- `src/cadrumo/domain/auth/apoderamientos/_catalogue.py:40` — one implementation of the repeated uppercase alphanumeric validator.
-- `src/cadrumo/entrypoints/cli/_config_payloads.py:1160` — the second implementation of that validator.
+- the former source file — one implementation of the repeated uppercase alphanumeric validator.
+- the former source file — the second implementation of that validator.

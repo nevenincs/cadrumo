@@ -8,12 +8,11 @@ from uuid import UUID
 from pydantic import Field
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operations.models import (
     OperationTerminalReceipt,
-    require_succeeded_receipt_references,
-    require_terminal_receipt_match,
+    require_succeeded_terminal_receipt,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -68,15 +67,13 @@ def require_iva_wallet_write_receipt(
     The write must have succeeded with an updating effect, name its result and
     carry no refusal or failure facts.
     """
-    require_terminal_receipt_match(
+    require_succeeded_terminal_receipt(
         receipt,
         definition_id=definition_id,
         subject_ref=profile_operation_subject(str(profile_id)),
-        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
         message=message,
     )
-    require_succeeded_receipt_references(receipt, message=message)
 
 
 __all__ = [

@@ -161,7 +161,7 @@ from cadrumo.domain.calculations.registry.keyed_families import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev._paths import REPO_ROOT
-from dev.test_runs.paths import allocate_run_directory
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from . import edition_delta_assessment as _edition_delta_assessment
 from . import edition_delta_drop as _edition_delta_drop
@@ -874,7 +874,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write(f"refused: {exc}\n")
         return 1
     command = tuple(sys.argv) if argv is None else (sys.argv[0], *argv)
-    report_path = persist_migration_report(REPO_ROOT, outcome, command)
+    report_path = persist_migration_report(test_log_root(), outcome, command)
     sys.stdout.write(_render(outcome))
     sys.stdout.write(f"report persisted to {report_path}\n")
     return _cli_exit_code(outcome)

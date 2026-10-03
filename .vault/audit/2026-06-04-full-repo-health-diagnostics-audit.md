@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#repo-health-diagnostics'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:c1df92dacc5eb676beafb23b875e774b6e8106caca7c1c4b821885c20663c328'
+modified: '2026-10-03'
+body_hash: 'sha256:4ec9d982adcfa7979f7c75ce553a8f4e8dda60b4896e56cb98f3ad3e2c1af4a0'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-research]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'
@@ -35,17 +35,10 @@ Dominant themes:
 - Pydantic/config constructor calls passing raw `str` or `str | None` into typed
   `Path`, `SecretStr`, enum, `bool`, `int`, `Decimal`, and literal fields.
 - Private API usage warnings across tests that reach into module internals.
-- Strict generic annotation gaps in `src/aeat/domain/usage_ratios/_service.py`.
+- Strict generic annotation gaps in the retired module.
 
 Representative high-signal files include
-`src/aeat/application/aggregation/_counterpart.py`,
-`src/aeat/application/aggregation/_models.py`,
-`src/aeat/application/aggregation/_source_mesh.py`,
-`src/aeat/application/auth/_apoderado.py`,
-`src/aeat/domain/justificante/_repository.py`,
-`src/aeat/domain/submission/_repository.py`,
-`src/aeat/domain/renta/_ledger_expenses.py`, and
-`src/aeat/adapters/inbound/sanitizer/_pipeline.py`.
+The retired module, and
 
 ### 2026-06-04 refresh after no-sync just typecheck repair
 
@@ -117,7 +110,7 @@ Port-bound RAG corroborated that the aggregation and secure-repository residuals
 are follow-on work from W02 rather than new architecture: the top vault results
 were W02 aggregation source-kind and secure repository payload execution records,
 and code search returned the canonical `CounterpartSourceKind` and
-`counterpart_source_kind` surfaces in `src/aeat/core/aggregation.py`.
+`counterpart_source_kind` surfaces in the retired module.
 
 ## HEALTH-002 | HIGH | Structural boundaries are now diagnosable and show real layer violations
 
@@ -125,7 +118,7 @@ The initial structural run failed because `aeat` was not importable from the sha
 `.venv`, which was a `uv` virtual-environment concurrency issue. A no-deps editable
 reinstall repaired the local project install. Verification after repair:
 
-- `uv run --no-sync python -c "import aeat"` resolves to `src/aeat/__init__.py`.
+- `uv run --no-sync python -c "import aeat"` resolves to the retired module.
 - `uv run --no-sync aeat --help` exits successfully.
 - `uv run --no-sync lint-imports` now analyzes 1925 files and 7863 dependencies.
 
@@ -136,41 +129,30 @@ surfaces directly or indirectly through `aeat.tests.secure_sql`.
 
 The relative-import checker reports 14 absolute `aeat.*` imports inside `src/aeat`.
 Representative production violations include
-`src/aeat/adapters/outbound/fx/_ecb_provider.py` and
-`src/aeat/adapters/outbound/fx/_ecb_refresh.py`; representative test violations
-include `src/aeat/application/user_profile/test_bundle_reexports.py` and
-`src/aeat/application/workflow/test_declaration_key.py`.
+The retired module and
+The retired module; representative test violations
+include the retired test and
 
 ## HEALTH-003 | HIGH | Complexity hotspots identify several monolithic refactor candidates
 
 Radon found 284 C-or-worse cyclomatic-complexity blocks. The top cyclomatic
 hotspots include:
 
-- `src/aeat/entrypoints/cli/_modelo.py` `work_calculate`.
-- `src/aeat/domain/calculations/registry/_formula_runtime.py` `_initial_values`.
-- `src/aeat/entrypoints/cli/_modelo.py` `modelo_project`.
-- `src/aeat/diagnostics/_identity_placement.py`
+- the retired module `work_calculate`.
+- the retired module `_initial_values`.
+- the retired module `modelo_project`.
+- the retired module
   `find_same_name_constant_multi_declarations`.
-- `src/aeat/entrypoints/cli/_modelo.py` `modelo_compare`.
-- `src/aeat/entrypoints/cli/_config/_google.py` `google_sync_calc_pull`.
-- `src/aeat/domain/calculations/registry/_remote_state_guard.py`
+- the retired module `modelo_compare`.
+- the retired module `google_sync_calc_pull`.
+- the retired module
   `_validate_policy`.
-- `src/aeat/entrypoints/cli/_ledger.py` `ledger_list`.
-- `src/aeat/application/ledger/_actions.py` `_filter_ledger_review_rows`.
-- `src/aeat/application/modelo/_actions.py` `_resolve_m210_rate`.
+- the retired module `ledger_list`.
+- the retired module `_filter_ledger_review_rows`.
+- the retired module `_resolve_m210_rate`.
 
 Radon maintainability index placed several files at or near zero maintainability:
-`src/aeat/application/live/__init__.py`,
-`src/aeat/domain/calculations/registry/_bindings.py`,
-`src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
-`src/aeat/entrypoints/cli/_ledger.py`,
-`src/aeat/entrypoints/cli/_config/__init__.py`,
-`src/aeat/application/ledger/_actions.py`,
-`src/aeat/diagnostics/_identity_placement.py`,
-`src/aeat/entrypoints/cli/_modelo.py`,
-`src/aeat/domain/calculations/registry/_schema.py`,
-`src/aeat/domain/calculations/registry/_record_design.py`, and
-`src/aeat/application/modelo/_actions.py`.
+The retired module, and
 
 Complexipy analyzed 1926 files and reported total cognitive complexity of 21856.
 Top cognitive hotspots include `find_same_name_constant_multi_declarations`,
@@ -189,33 +171,33 @@ exits non-zero when functions exceed `--max-complexity-allowed 20`.
 The removed diagnostics package no longer appears in the current complexity
 output. Current production hotspots are now concentrated in these families:
 
-- Modelo CLI orchestration: `src/aeat/entrypoints/cli/_modelo.py`
+- Modelo CLI orchestration: the retired module
   `work_calculate` is still the largest cyclomatic hotspot at F (45);
   `modelo_project` is D (30), `modelo_compare` is D (29), and `work_create` is
   D (24). Complexipy also reports `modelo_compare` at cognitive complexity 37
   and `work_calculate` at 32.
-- Registry formula and binding runtime: `src/aeat/domain/calculations/registry/_formula_runtime.py`
+- Registry formula and binding runtime: the retired module
   `_initial_values` is E (35) cyclomatic and 33 cognitive; `_evaluate_m210_resolve_rate`
-  is D/C-high and 30 cognitive. `src/aeat/domain/calculations/registry/_bindings.py`
+  is D/C-high and 30 cognitive. The retired module
   remains a high-load cluster with `_validate_invoice_fact_and_aggregation` D
   (23) and 30 cognitive, plus `resolve_previous_filing_binding_values` at 44
   cognitive.
-- Registry record and validation graph: `src/aeat/domain/calculations/registry/_record_design.py`
+- Registry record and validation graph: the retired module
   has `calculation_closure_identities` and `calculation_closure_numbers` as
   repeated high-complexity closure builders; Complexipy reports one closure path
   at 37 cognitive and another at 29. `_cross_revision_divergence.py`
   `_iter_cross_revision_casilla_divergences` reports 34 cognitive.
-- Ledger review/list and action services: `src/aeat/entrypoints/cli/_ledger.py`
-  `ledger_list` is D (27), and `src/aeat/application/ledger/_actions.py`
+- Ledger review/list and action services: the retired module
+  `ledger_list` is D (27), and the retired module
   `_filter_ledger_review_rows` is D (27), `summarize_manual_transactions` is D
   (22), and `_command_matches_current` is C (20).
-- Modelo application actions and profile binding: `src/aeat/application/modelo/_actions.py`
+- Modelo application actions and profile binding: the retired module
   `_resolve_m210_rate` is D (26), `calculate_modelo_revision` is D (25), and
-  `_apply_iva_compensation_decision_binding` is D (22). `src/aeat/application/modelo/_profile_binding.py`
+  `_apply_iva_compensation_decision_binding` is D (22). The retired module
   `resolve_profile_sourced_bindings` reports 25 cognitive.
-- Wizard/config/live-auth surfaces: `src/aeat/application/wizard/_commands.py`
-  `build_wizard_commands` reports 44 cognitive; `src/aeat/entrypoints/cli/_config/_google.py`
-  `_push_secure_object_inventory` reports 37 cognitive; `src/aeat/application/live/_errors.py`
+- Wizard/config/live-auth surfaces: the retired module
+  `build_wizard_commands` reports 44 cognitive; the retired module
+  `_push_secure_object_inventory` reports 37 cognitive; the retired module
   `classify_live_iva_acquisition_failure` reports 32 cognitive.
 
 The current execution supports the existing W03 decomposition order: continue
@@ -249,10 +231,10 @@ a separate test-ratchet complexity lane for test-maintenance debt.
 - `formulas`, `rich`, and `torch` are declared but not detected as used in scanned
   production source.
 - `playwright_stealth` is imported from
-  `src/aeat/adapters/outbound/aeat/browser/evasion.py` but is declared as a dev
+  The retired module but is declared as a dev
   dependency.
 - `prompt_toolkit` is imported from
-  `src/aeat/application/wizard/_prompter.py` but is currently only transitive.
+  The retired module but is currently only transitive.
 
 This is a focused, tractable dependency-health workstream.
 
@@ -264,12 +246,9 @@ test-path exclusions were corrected.
 Representative candidates:
 
 - Unused `http` and `num_retries` variables in
-  `src/aeat/adapters/outbound/google/_api.py`.
 - Unused `CursorResult` import in
-  `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- Unused `draft_path` variable in `src/aeat/domain/submission/_protocols.py`.
+- Unused `draft_path` variable in the retired module.
 - Multiple unused CLI documentation payload imports in
-  `src/aeat/entrypoints/cli/_doc_reference.py`.
 
 The candidate set is small enough for manual triage.
 
@@ -318,11 +297,10 @@ reported separately.
 additional hidden unsafe fixes. A meaningful portion of the noise comes from
 root-level scratch/probe files and ad hoc scripts such as `scratch_probe*.py`,
 `run_p04_s11_test.py`, `test_m714.py`, `test_attachment_fix.py`, and
-`scripts/classify_m200.py`.
 
 Production-code Ruff signals still matter: import sorting in large CLI modules,
 line-length violations in CLI commands, `__all__` ordering, and an undefined
-`_emit_envelope` reference in `src/aeat/entrypoints/cli/_modelo.py`.
+`_emit_envelope` reference in the retired module.
 
 ## HEALTH-009 | INFO | Diagnostic surface itself is now viable after the venv repair
 
@@ -358,7 +336,7 @@ Verification:
 - `uv run --no-sync pyright src/aeat/application/aggregation --level warning --warnings`
   reported 0 errors and 17 pre-existing warnings for private/protected test
   reach-ins.
-- `uv run --no-sync pytest src/aeat/application/aggregation/test_counterpart.py src/aeat/application/aggregation/test_per_modelo_registry_provider.py src/aeat/application/aggregation/test_per_modelo_service.py src/aeat/application/aggregation/test_service.py src/aeat/application/aggregation/test_ledger_filing_evidence.py src/aeat/application/aggregation/test_source_mesh.py src/aeat/application/aggregation/test_renta_ledger_helpers.py src/aeat/application/aggregation/test_renta_ledger_aggregation.py -q`
+- the historical check
   passed with 89 tests.
 - `uv run --no-sync ruff check` over the touched aggregation files passed.
 
@@ -378,9 +356,9 @@ Verification:
 - `uv run --no-sync pyright src/aeat/domain/filing --level warning --warnings`
   reported 0 errors and 7 pre-existing warnings for private/protected test
   reach-ins.
-- `uv run --no-sync pytest src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py src/aeat/domain/filing/test_amendment_roundtrip.py -q`
+- the historical check
   passed with 11 tests.
-- `uv run --no-sync ruff check src/aeat/domain/filing/_repository.py` passed.
+- the historical check passed.
 
 ## HEALTH-012 | CLOSED | Renta and transaction Decimal residuals reduced to zero warnings
 
@@ -400,13 +378,13 @@ Changes:
 
 Verification:
 
-- `uv run --no-sync ty check src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py --output-format concise`
+- the historical check
   passed.
-- `uv run --no-sync pyright src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py --level warning --warnings`
+- the historical check
   reported 0 errors and 0 warnings.
-- `uv run --no-sync pytest src/aeat/domain/transactions/test_gross_invariant.py src/aeat/domain/renta/test_first_slice_routing.py -q`
+- the historical check
   passed with 13 tests.
-- `uv run --no-sync ruff check src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py`
+- the historical check
   passed.
 
 ## HEALTH-013 | OPEN | W06 type ratchet is Ty-green with explicit Pyright residuals
@@ -415,19 +393,19 @@ Verification:
 
 Closed baseline:
 
-- `uv run --no-sync ty check src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/adapters/inbound/declaracion/test_exception_hygiene.py src/aeat/adapters/outbound/aeat/auth src/aeat/application/aggregation src/aeat/domain/filing src/aeat/domain/renta/_ledger_expenses.py src/aeat/domain/transactions/test_gross_invariant.py --output-format concise`
+- the historical check
   passed.
 
 Explicit Pyright residual ratchets:
 
 - Auth production profile-service drift:
-  `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` reports constructor and
+  The retired module reported constructor and
   method-call drift around profile service/repository access.
 - Auth provider description return path:
-  `src/aeat/adapters/outbound/aeat/auth/_authenticator.py` reports a missing
+  The retired module reported a missing
   return path for `AuthProviderDescription`.
 - Auth test config narrowing:
-  `src/aeat/adapters/outbound/aeat/auth/test_authenticator.py` reports
+  The retired test reported
   non-required `ConfigDict["frozen"]` access.
 - Aggregation and filing packages report no Pyright errors but still carry
   pre-existing private/protected test reach-in warnings.
@@ -499,17 +477,17 @@ foral CCAA refusal, persistence-path dispatch, and success emission.
 Verification:
 
 - Focused Complexipy check on
-  `src/aeat/application/wizard/_commands.py` now reports
+  The retired module now reports
   `build_wizard_command` at cognitive complexity 1. No function in the module is
   above 15.
 - `just audit-complexity-production` no longer lists
-  `src/aeat/application/wizard/_commands.py::build_wizard_command`; the
+  The retired module; the
   production lane still fails on remaining non-wizard hotspots.
-- `uv run --no-sync ruff check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py`
+- the historical check
   passed.
-- `uv run --no-sync ty check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py --output-format concise`
+- the historical check
   passed.
-- `uv run --no-sync pytest src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py src/aeat/application/wizard/test_wizard_translations_resolve.py -q`
+- the historical check
   passed with 29 tests.
 
 Residual:
@@ -593,11 +571,11 @@ Current focused complexity result:
 
 Verification:
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_modelo.py` passed.
+- the historical check passed.
 - Focused real CLI tests passed for bindings-list missing/year behavior,
   work-calculate borrador/help/default behavior, saved-result confirmation, and
   result-summary rendering.
-- `uv run --no-sync python -m compileall -q src/aeat/entrypoints/cli/_modelo.py`
+- the historical check
   passed.
 - `just audit-complexity-production` still exits 1 on other production
   hotspots, but the filtered output no longer lists `_modelo.py` functions
@@ -605,7 +583,7 @@ Verification:
 
 Residual:
 
-- `uv run --no-sync ty check src/aeat/entrypoints/cli/_modelo.py --output-format concise`
+- the historical check
   still reports 26 diagnostics in pre-existing row-splat and revision-object
   typing areas. The S74 refactor removed the local calculate-revision variable
   shadowing diagnostic introduced during extraction, but this step is not a
@@ -659,39 +637,39 @@ Current lane status:
 
 Top production cognitive-complexity hotspots:
 
-- 44: `src/aeat/domain/calculations/registry/_bindings_previous_filing.py::resolve_previous_filing_binding_values`.
-- 37: `src/aeat/entrypoints/cli/_config_google.py::_push_secure_object_mirror_rows`.
-- 37: `src/aeat/domain/calculations/registry/_record_design.py::calculation_closure_identities`.
-- 34: `src/aeat/domain/calculations/registry/_cross_revision_divergence.py::_iter_cross_revision_casilla_divergences`.
-- 33: `src/aeat/domain/calculations/registry/_formula_initial_values.py::initial_values`.
-- 32: `src/aeat/application/live/_errors.py::classify_live_iva_acquisition_failure`.
-- 30: `src/aeat/domain/calculations/registry/_formula_runtime.py::_evaluate_m210_resolve_rate`.
-- 30: `src/aeat/domain/calculations/registry/_bindings.py::_validate_invoice_fact_and_aggregation`.
-- 29: `src/aeat/domain/calculations/registry/_record_design.py::calculation_closure_numbers`.
-- 27: `src/aeat/domain/calculations/registry/_validate_semantic_role_typos.py::_semantic_role_looks_like_typo`.
+- 44: the retired module.
+- 37: the retired module.
+- 37: the retired module.
+- 34: the retired module.
+- 33: the retired module.
+- 32: the retired module.
+- 30: the retired module.
+- 30: the retired module.
+- 29: the retired module.
+- 27: the retired module.
 
 Top monolithic module pressure:
 
-- `src/aeat/entrypoints/cli/_ledger.py`: 3808 non-comment LOC, 95 functions,
+- the retired module: 3808 non-comment LOC, 95 functions,
   max function length 194 lines at `ledger_classify`; also contains
   `rule_apply` above the cognitive threshold.
-- `src/aeat/application/ledger/_actions.py`: 3432 non-comment LOC, 102
+- the retired module: 3432 non-comment LOC, 102
   functions, max function length 221 lines at `merge_transactions`.
-- `src/aeat/application/modelo/_actions.py`: 3256 non-comment LOC, 74
+- the retired module: 3256 non-comment LOC, 74
   functions, 21 classes, max function length 273 lines at
   `amend_modelo_revision`.
-- `src/aeat/entrypoints/cli/_modelo.py`: 2790 non-comment LOC, 53 functions,
+- the retired module: 2790 non-comment LOC, 53 functions,
   max function length 330 lines at `work_calculate`. S74 reduced the command
   callback cognitive findings, but module-size pressure remains.
-- `src/aeat/entrypoints/cli/_config/__init__.py`: 2554 non-comment LOC, 58
+- the retired module: 2554 non-comment LOC, 58
   functions, max function length 151 lines at `config_status`.
-- `src/aeat/domain/calculations/registry/_schema.py`: 2153 non-comment LOC, 78
+- the retired module: 2153 non-comment LOC, 78
   functions, 50 classes. This is a schema-density hotspot more than a single
   long-function hotspot.
-- `src/aeat/domain/calculations/registry/_bindings.py`: 2152 non-comment LOC,
+- the retired module: 2152 non-comment LOC,
   90 functions, 31 classes, with `_validate_invoice_fact_and_aggregation` still
   above the cognitive threshold.
-- `src/aeat/application/live/__init__.py`: 2151 non-comment LOC, 73 functions,
+- the retired module: 2151 non-comment LOC, 73 functions,
   23 classes, max function length 117 lines.
 
 Mitigation queue implied by this pass:
@@ -742,28 +720,28 @@ adjacent M210 rate resolver hotspot without changing registry schema semantics.
 
 Complexity deltas:
 
-- `src/aeat/domain/calculations/registry/_formula_initial_values.py::initial_values`
+- the retired module
   moved from Radon E (35) and Complexipy 33 to Radon A (4) and Complexipy 0.
-- `src/aeat/domain/calculations/registry/_formula_runtime.py::_evaluate_m210_resolve_rate`
+- the retired module
   moved from Radon D (27) and Complexipy 30 to Radon B (6) and Complexipy 6.
-- `src/aeat/domain/calculations/registry/_formula_initial_values.py` now has no
+- the retired module now has no
   function above Radon B or Complexipy 8.
-- `src/aeat/domain/calculations/registry/_formula_runtime.py` still has
+- the retired module still has
   `calculate_registry_snapshot` at Radon D (22) and Complexipy 17. That is a
   remaining runtime orchestration hotspot, not part of the S75 initial-value/M210
   resolver scope.
 
 Focused verification:
 
-- `uv run --no-sync ruff check src/aeat/domain/calculations/registry/_formula_runtime.py src/aeat/domain/calculations/registry/_formula_initial_values.py`
+- the historical check
   passed.
-- `uv run --no-sync ty check src/aeat/domain/calculations/registry/_formula_runtime.py src/aeat/domain/calculations/registry/_formula_initial_values.py --output-format concise`
+- the historical check
   passed.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_formula_runtime.py src/aeat/domain/calculations/registry/test_modelo_130_registry.py src/aeat/domain/calculations/registry/test_modelo_210_registry.py src/aeat/application/modelo/test_modelo_210_phase1.py -q`
+- the historical check
   passed with 53 tests.
-- `uv run --no-sync radon cc src/aeat/domain/calculations/registry/_formula_initial_values.py src/aeat/domain/calculations/registry/_formula_runtime.py -s`
+- the historical check
   captured the reduced Radon grades.
-- `uv run --no-sync complexipy src/aeat/domain/calculations/registry/_formula_initial_values.py src/aeat/domain/calculations/registry/_formula_runtime.py --max-complexity-allowed 20`
+- the historical check
   passed for the touched files.
 
 Residual carried forward:
@@ -777,7 +755,7 @@ Residual carried forward:
 ## HEALTH-019-S76 | CLOSED | 2026-06-05 ledger projection complexity reduction
 
 W06.P19.S76 reduced the active ledger CLI projection hotspots in
-`src/aeat/entrypoints/cli/_ledger.py`. The plan row named list/review
+The retired module. The plan row named list/review
 projection complexity; current discovery showed `ledger list` was already low,
 `ledger review` was moderate by Radon but below the Complexipy threshold, and
 `rule_apply` was the remaining ledger function above the Complexipy threshold.
@@ -795,16 +773,16 @@ Complexity deltas:
 
 Focused verification:
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_ledger.py` passed.
-- `uv run --no-sync ty check src/aeat/entrypoints/cli/_ledger.py --output-format concise`
+- the historical check passed.
+- the historical check
   passed after local typed-boundary cleanup.
-- `uv run --no-sync radon cc src/aeat/entrypoints/cli/_ledger.py -s`
+- the historical check
   captured the reduced Radon grades.
-- `uv run --no-sync complexipy src/aeat/entrypoints/cli/_ledger.py --max-complexity-allowed 20`
+- the historical check
   passed.
-- `uv run --no-sync pytest src/aeat/entrypoints/cli/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/test_ledger_list_filter.py -q`
+- the historical check
   passed with 23 tests.
-- `uv run --no-sync pytest src/aeat/entrypoints/cli/test_cli_surface.py::test_app_ledger_import_reimport_review_round_trips_state src/aeat/entrypoints/cli/test_backend_boundary.py::test_manual_ledger_import_and_review_boundaries_stay_backend_owned -q`
+- the historical check
   passed when run as part of the three-test backend probe.
 
 Residuals carried forward:
@@ -881,7 +859,6 @@ W06.P20.S78 verified the Ruff scope for root scratch and probe artifacts in the
 current shifted worktree. The configuration change itself was already present in
 `HEAD`: `tool.ruff.extend-exclude` excludes `run_p04_s11_test.py`,
 `scratch_probe*.py`, `test_attachment_fix.py`, `test_m714.py`, and
-`scripts/classify_m200.py`.
 
 Verification:
 

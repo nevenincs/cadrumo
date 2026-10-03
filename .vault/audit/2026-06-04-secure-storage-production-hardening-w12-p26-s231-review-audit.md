@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:5b3f1951b53b95724f3d03577d48873511a75269eb4c4238496cb91a51978ec3'
+modified: '2026-10-03'
+body_hash: 'sha256:4354bc9255d507fc366f80b48fd8815561d5220af1742bf892ba5639e47ddda7'
 related: []
 ---
 
@@ -35,9 +35,9 @@ encountered.
 
 ## S231-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/live/_verify.py src/aeat/application/live/test_verify.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_verify.py` passed with 18 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "verify or s85_runtime"` passed with 1 selected runtime-migration test.
+- the historical check passed.
+- the historical check passed with 18 tests.
+- the historical check passed with 1 selected runtime-migration test.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing `PLAN022` warning.
 

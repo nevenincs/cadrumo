@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#agent-harness'
 date: '2026-06-30'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:33c55e1ddf259ac22a2bca3bd33527cf913ca6b1cdf1b9a0fd6dc8fad77d5a58'
-related:
-  - "[[2026-06-30-agent-harness-plan]]"
+related: []
 ---
 
 # `agent-harness` audit: `campaign close honesty review`

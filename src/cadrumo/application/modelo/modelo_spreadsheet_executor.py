@@ -22,7 +22,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..storage.calc_sheets.workbook_export import ModeloWorkbookExport, export_modelo_workbook
@@ -77,10 +77,10 @@ class _SpreadsheetExecution:
 def _admit_spreadsheet_request(
     request: OperationRequest[BaseModel], context: OperationExecutorContext
 ) -> ModeloSpreadsheetRequest:
-    payload = request.payload
     pair = MODELO_SPREADSHEET_OPERATION_CONTRACTS.get(request.definition_id)
-    if pair is None or type(payload) is not pair[0] or not isinstance(payload, ModeloSpreadsheetRequest):
+    if pair is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    payload = require_access_request_payload(request, definition_id=request.definition_id, payload_type=pair[0])
     require_operation_profile(request, context, payload.profile_id)
     return payload
 

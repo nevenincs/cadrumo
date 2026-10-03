@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76a8840c8c3ae2e8c0bb04a7ba9df77910b54ec9f643f84a706ccaa782154f59'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:68449276df7fc9207dc96d603678f599cbede88e8698561768b8818b94921f6e'
+related: []
 ---
 
 # `tui-architecture` reference: `modelo 347 contraparte binding inventory`
@@ -140,11 +139,6 @@ unverified against RD 1065/2007's consolidated text).
 
 ## Open finding: the row model cannot represent per-quarter transmisiones amounts
 
-Confirmed against the tree while scoping this inventory:
-`Modelo347ContraparteRow` (`src/cadrumo/domain/modelos/_row_models.py:620-623`)
-declares only `importe_Q1..Q4`, so the diseño's paired "PERCIBIDO POR
-TRANSMISIONES" sub-fields have no representation in the row shape at all.
-
 The full finding, its consequence and the open legitimacy question live in
 `2026-08-26-tui-architecture-modelo-347-contraparte-quarterly-transmisiones-representation-gap-audit`.
 It is recorded there rather than here because it is a different class of problem
@@ -162,15 +156,7 @@ answers both the binding-family classification question and the ledger
 fail-closed guard's open trigger-population question from the same
 evidence, as instructed.
 
-**H and I do not exist in any M347 diseño de registro checked.** The
-CLAVE OPERACIÓN table in the current (`orden-hac-1431-2025`, 2025-y-
-siguientes) diseño runs A through G only (position 82, single alphabetic
-character); the 2011 diseño (`orden-eha-3378-2011`) and the 2010 diseño show
-the same A-G set. `Modelo347ContraparteRow`'s `_M347_CLAVE_OPERACION =
-Literal["A", "B", "C", "D", "E", "F", "G", "H", "I"]`
-(`src/cadrumo/domain/modelos/_row_models.py:595`) claims two members, H and
-I, that no checked diseño declares. This is now a confirmed finding, not an
-unconfirmed gap: the type over-declares its own domain by two members.
+This is now a confirmed finding, not an unconfirmed gap: the type over-declares its own domain by two members.
 
 | Clave | Diseño description (2025-y-siguientes) | Observable fact / grounding |
 | --- | --- | --- |

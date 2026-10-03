@@ -3,27 +3,29 @@ tags:
   - '#plan'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:b4647d98a74b1ef74b8538903aeea01dd5b80252c8a2afc5bf179ef4c9e13da0'
 tier: L2
 related:
   - '[[2026-06-10-ledger-input-localization-adr]]'
   - '[[2026-06-10-ledger-input-localization-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:4497faab759c06ef896b4b697978b4744de9013d606589002b968e107f4be08a'
 ---
 
 # `ledger-input-localization` `Ledger CLI canonical input parsing and localised rejection` plan
+
+## Steps
 
 ### Phase `P01` - Shared amount/date validator consolidation
 
 Consolidate all six duplicated _parse_decimal/_parse_required_decimal copies and the unguarded invoice_date pass-throughs into single canonical helpers in _common.py, enforcing the decimal regex plus is_finite() guard and routing every date-typed CLI input through _parse_iso_date.
 
-- [x] `P01.S01` - Author canonical parse_decimal_amount (signed and non-negative variants) and verify _parse_iso_date is already present in _common.py; `add _DECIMAL_RE constant and is_finite() guard; export both helpers via __all__; `src/aeat/entrypoints/cli/_common.py`.
-- [x] `P01.S02` - Replace the local _parse_decimal/_parse_required_decimal with imports of parse_decimal_amount from _common.py; `use the signed variant for --amount until C1 (ledger-amount-direction) lands; `src/aeat/entrypoints/cli/_ledger.py`.
-- [x] `P01.S03` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `gate all four invoice_date parameters (lines 180, 281, 398, 503) through _parse_iso_date; `src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [x] `P01.S04` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `gate both invoice_date parameters (lines 98, 197) through _parse_iso_date; `src/aeat/entrypoints/cli/_ledger_evidence_cli.py`.
-- [x] `P01.S05` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `src/aeat/entrypoints/cli/_ledger_inventory_cli.py`.
-- [x] `P01.S06` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [x] `P01.S07` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `src/aeat/entrypoints/cli/_ledger_ratios_cli.py`.
+- [x] `P01.S01` - Author canonical parse_decimal_amount (signed and non-negative variants) and verify _parse_iso_date is already present in _common.py; `add _DECIMAL_RE constant and is_finite() guard; export both helpers via __all__; `src/cadrumo/entrypoints/cli/_decimal_parsing.py, src/cadrumo/entrypoints/cli/_date_parsing.py`.
+- [x] `P01.S02` - Replace the local _parse_decimal/_parse_required_decimal with imports of parse_decimal_amount from _common.py; `use the signed variant for --amount until C1 (ledger-amount-direction) lands; `src/cadrumo/entrypoints/cli/_ledger.py`.
+- [x] `P01.S03` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `gate all four invoice_date parameters (lines 180, 281, 398, 503) through _parse_iso_date; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [x] `P01.S04` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `gate both invoice_date parameters (lines 98, 197) through _parse_iso_date; `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`.
+- [x] `P01.S05` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`.
+- [x] `P01.S06` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`.
+- [x] `P01.S07` - Replace the local _parse_decimal/_parse_required_decimal with parse_decimal_amount from _common.py; `src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`.
 - [x] `P01.S08` - Run pytest --collect-only -q to verify zero collection errors across all six migrated modules; `confirm no surviving local _parse_decimal/_parse_required_decimal definition remains in any of the six migrated files; `src/aeat/entrypoints/cli/`.
 
 ### Phase `P02` - Locale catalogue updates
@@ -39,9 +41,9 @@ Add the missing interpolation tokens to invalid_iso_date in EN/CA/HU, append the
 
 Write real-behavior tests covering decimal accept/reject cases and ISO date accept/reject cases, plus a localised error-payload test asserting all four locales carry label, raw value, and expected-format hint — no mocks, no skips, no tautology.
 
-- [x] `P03.S13` - Write real-behavior unit tests for parse_decimal_amount: assert refusal of 1.000, 1.234,56, NaN, Infinity, -Infinity, 1e3 (InvalidOperation or ValueError); `assert acceptance of 1000, 1234.56, 0; assert signed variant accepts -50.00 and non-negative variant rejects -50.00; `src/aeat/entrypoints/cli/tests/test_common_decimal_parser.py`.
-- [x] `P03.S14` - Write real-behavior unit tests for _parse_iso_date applied to invoice_date inputs: assert refusal of 15/01/2026, 01-15-2026, 2026/01/15 with ValueError; `assert acceptance of 2026-01-15; `src/aeat/entrypoints/cli/tests/test_common_date_parser.py`.
-- [x] `P03.S15` - Write real-behavior localised error-payload tests: invoke parse_decimal_amount with a bad input in each of en/es/ca/hu locale contexts and assert each error payload carries label, raw value, and expected-format hint; `invoke _parse_iso_date with a bad date and assert all four locales carry %{label} and %{raw} in the rendered message; `src/aeat/entrypoints/cli/tests/test_localised_parser_errors.py`.
+- [x] `P03.S13` - Write real-behavior unit tests for parse_decimal_amount: assert refusal of 1.000, 1.234,56, NaN, Infinity, -Infinity, 1e3 (InvalidOperation or ValueError); `assert acceptance of 1000, 1234.56, 0; assert signed variant accepts -50.00 and non-negative variant rejects -50.00; `src/cadrumo/entrypoints/cli/tests/test_common_decimal_parser.py`.
+- [x] `P03.S14` - Write real-behavior unit tests for _parse_iso_date applied to invoice_date inputs: assert refusal of 15/01/2026, 01-15-2026, 2026/01/15 with ValueError; `assert acceptance of 2026-01-15; `src/cadrumo/entrypoints/cli/tests/test_common_date_parser.py`.
+- [x] `P03.S15` - Write real-behavior localised error-payload tests: invoke parse_decimal_amount with a bad input in each of en/es/ca/hu locale contexts and assert each error payload carries label, raw value, and expected-format hint; `invoke _parse_iso_date with a bad date and assert all four locales carry %{label} and %{raw} in the rendered message; `src/cadrumo/entrypoints/cli/tests/test_localised_parser_errors.py`.
 - [x] `P03.S16` - Run the full test suite for the entrypoints/cli surface (uv run --no-sync pytest src/aeat/entrypoints/cli/ -x -q) and confirm all new tests pass with no skips or xfail; `verify no pre-existing test regression; `src/aeat/entrypoints/cli/`.
 
 ## Description

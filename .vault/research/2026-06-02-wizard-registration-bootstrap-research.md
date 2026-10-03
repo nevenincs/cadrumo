@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#wizard-registration-bootstrap'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:c7cd751610389d35b1e2e70c779408677a0d1c32b6b2ae3b84c410e394c6505a'
+modified: '2026-10-03'
+body_hash: 'sha256:cd11c1e7527d8acb7612cd0d7f436c4c0f75c33068efbcc97a5ac178a4d016d4'
 related:
   - "[[2026-06-01-domain-boundary-audit-audit]]"
 ---
@@ -13,7 +13,7 @@ related:
 
 Empirical investigation of how the domain profile-key registry and the core wizard
 catalogue are populated, undertaken to determine whether the DB-17 lazy
-domain-to-application pull in `src/aeat/domain/profile/_keys.py` could be removed
+domain-to-application pull  could be removed
 (audit step `W06.P18.S64`). The work was an attempt-and-revert on the
 `chore/eliminate-shims` branch; the detailed reproduction log lives in the related
 domain-boundary audit document. These findings ground the sibling decision record.

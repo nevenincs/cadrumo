@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:69e7d4865f50b623c9233d1f414f005b4ce13c9a2bdbbf6ee480c291a9017d22'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - '[[2026-08-24-registry-completeness-closure-s11-independent-post-review-audit]]'
 ---
 # `registry-completeness-closure` audit: `s11 source connectivity ratchet`

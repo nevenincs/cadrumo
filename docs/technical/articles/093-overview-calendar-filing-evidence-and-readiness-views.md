@@ -1,0 +1,58 @@
+# Overview calendar, filing evidence, and readiness views
+
+[Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-093` · **Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
+
+<!-- preserved:article -->
+**Scope:** 12 files under `src/cadrumo/application/overview`, totaling 5,087 lines, 213,244 bytes, and 45,765 measured `o200k_base` proxy tokens. All nine bounded-reader pages and assigned line ranges were read. Static inspection only; no application execution or tests were run. These builders use deadlines, profile facts, and persisted observations already supplied by callers; this report does not validate current legal rules.
+
+## Capabilities and mechanisms
+
+The central calendar composes registry deadline schedules with an inclusive date range, profile-derived applicability, adjusted filing dates, local Modelo work units, loaded filing evidence, and additive observed events. It surfaces an obligation row only when applicability is positively established; it can optionally retain suppressed rows with their reason. A missing taxpayer model returns an explicit incomplete result and still reports whole-registry obligation coverage instead of falling back to a guessed persona. A year with no registered deadline windows is skipped narrowly, while other schedule integrity failures propagate. Rows include original and adjusted deadlines, holiday coverage, user state, overdue age, recovery estimate/action where available, and censo-enrolment provenance. Calendar assembly and incomplete-profile behavior (`src/cadrumo/application/overview/calendar.py`), schedule gaps and integrity failures (`src/cadrumo/application/overview/calendar.py`), typed row invariants (`src/cadrumo/application/overview/calendar_models.py`)
+
+Obligation coverage closes a significant visibility gap: it partitions the full recognized obligation universe into surfaced, confidently excluded, advised, or explicitly out of scope. Applicable obligations without a deadline window and obligations whose applicability is undetermined become advice; the report refuses duplicate placement. The API composes this coverage into calendar, agenda, and backlog results so a date-filtered view can still distinguish “not in this date window” from “not covered by the product.” Coverage partition model (`src/cadrumo/application/overview/coverage.py`), full-universe reconciliation (`src/cadrumo/application/overview/coverage.py`)
+
+Agenda ranks the next obligation, due-today, due-soon, and overdue cohorts around an explicit `as_of` date, with a default 14-day horizon and 90-day overdue lookback. Backlog lists every late row in the selected range; its default lookback is 365 days, extended to include the earliest non-discarded local work unit when the caller has loaded those units. Both inherit completeness, warning, and coverage data from the calendar. Agenda window and cohort logic (`src/cadrumo/application/overview/agenda.py`), backlog range and oldest-first projection (`src/cadrumo/application/overview/backlog.py`)
+
+The evidence facade accepts already-loaded local filing records, AEAT register events, filed-declaration observations, calculation observations, live justificante captures, encrypted artefact verification references, and loaded justificante metadata. It keeps local readiness/filing state separate from AEAT submission state. The latter advances only from observed sources, with justificante verification requiring a matching CSV/model/year/period/taxpayer target or a storage-verified artefact reference and CSV supplied by the storage boundary. Evidence merge precedence is deterministic and independent for the local and AEAT axes; distinct receipt references are retained as conflicts instead of silently erased. Evidence source reconciliation (`src/cadrumo/application/overview/calendar_evidence.py`), axis-aware evidence merge (`src/cadrumo/application/overview/calendar_evidence.py`), filed-record and live-evidence checks (`src/cadrumo/application/overview/_calendar_evidence_sources.py`), verified filed-declaration evidence (`src/cadrumo/application/overview/_calendar_evidence_sources.py`), calculation observations (`src/cadrumo/application/overview/_calendar_evidence_sources.py`), live justificante captures (`src/cadrumo/application/overview/_calendar_evidence_sources.py`)
+
+Calendar events are built from persisted expedientes and notification snapshots and verified live justificante captures. They remain observations alongside deadlines; a notification does not imply a filing. The service-state projection receives `as_of` explicitly and obtains its tacit-rejection period from a pinned authority operation. Actionability is also orthogonal: defined post-filing procedures or a notification classified as tacitly served can demand attention. Inactive register rows remain historical or concern records rather than upgrading an obligation to filed. Persisted event fan-out (`src/cadrumo/application/overview/calendar.py`), actionable post-filing events (`src/cadrumo/application/overview/calendar.py`), independent AEAT/local DTO axes (`src/cadrumo/application/overview/calendar_models.py`)
+
+Warnings make uncertainty actionable without embedding CLI commands in the read model. They can identify unset profile facts affecting obligation rows, unverified censo enrolment, observed filings lacking receipt verification, conflicting AEAT references, or a simplified-IVA model lacking calculation support. Remedies use declared catalogue actions, scoped only when the source row supplies enough coordinates; divergent scopes collapse to a broader pull instead of silently choosing one. Completeness distinguishes values explicitly supplied from defaults. A separate data-preparation walkthrough inspects transactions, evidence pointers, invoices, preflight readiness, and Modelo work-unit state for one filing scope, presenting six ordered steps and only handing off a fully determined next action. It is read-only. Evidence warnings and scoped remedies (`src/cadrumo/application/overview/calendar_warnings.py`), profile completeness and default warnings (`src/cadrumo/application/overview/calendar_warnings.py`), data-prep walkthrough (`src/cadrumo/application/overview/data_prep.py`)
+
+## Knowledge, security, and implementation assessment
+
+The authoritative inputs are a generation-pinned deadline/applicability registry, holiday and recovery data exposed through that authority, the taxpayer profile and optional raw profile values, local work-unit records, and snapshots already captured by other services. This chunk does not fetch AEAT data, read repositories for calendar/evidence assembly, or write state. Help/status contracts and projection metadata are in-memory read models; storage ownership remains in callers. Local-only calendar boundary (`src/cadrumo/application/overview/calendar.py`), already-loaded evidence projection boundary (`src/cadrumo/application/overview/evidence.py`)
+
+Concrete safeguards include strict frozen DTOs, date-range and cross-field invariants, a receipt-verification invariant requiring a verified CSV when the state is `JUSTIFICANTE_VERIFIED`, exact period/model/year joins, normalized AEAT CSV identity, and taxpayer identity comparisons when an expected ID is known. Serialized calendar events exclude their authenticated identity field. Evidence availability is explicit: available/stale reads carry values, while unavailable or never-captured reads cannot carry source bundles. Projection masks an unobservable axis before merging, preventing one unavailable source from fabricating a negative result or erasing the other axis. Receipt-state consistency (`src/cadrumo/application/overview/calendar_models.py`), identity matching and canonical CSV key (`src/cadrumo/application/overview/_calendar_evidence_sources.py`), evidence availability contract (`src/cadrumo/application/overview/evidence.py`), masking unavailable axes (`src/cadrumo/application/overview/evidence.py`)
+
+Identity isolation remains caller-dependent when `expected_tax_id` is omitted: the source projectors generally accept observations without comparing them to a known profile identity. The composition root must supply the active taxpayer identifier when sources can span identities. The same boundary applies to verified-artefact references: this chunk trusts the storage layer’s supplied verified reference set and does not hash or decrypt artefact bodies itself.
+
+One conditional checklist concern is visible in `data_prep`: the evidence step counts a business/mixed expense as covered whenever its transaction has a non-null evidence ID, while the loaded evidence records affect only the summary count. If the repository can return dangling evidence IDs, the walkthrough could report the step complete without proving that the referenced record exists. Repository referential-integrity guarantees or a targeted test would resolve the uncertainty. Evidence-step predicate (`src/cadrumo/application/overview/data_prep.py`)
+
+The strongest implementation choice is that local filing state, observed submission, receipt verification, and event attention remain separate, typed facts with explicit provenance. Coverage partitions the obligation set rather than relying on row absence, while warning actions preserve scope. The remaining verification needs are cross-layer: ensure every source read carries the correct active taxpayer identity, confirm storage’s verified-artefact contract, and validate the data-prep evidence pointer assumption. The code’s legal-calendar sources and service-window rules were not independently checked against current law, and no tests assigned to this chunk were executed.
+
+## Dependencies and follow-up
+
+Synthesis should trace `DeadlineEngine` and pinned registry authority to the underlying legal schedule, applicability, holiday, and recovery datasets; inspect the CLI/composition roots that load local work units, profile values, and live snapshots; and follow storage verification of filed-declaration artefacts. Confirm whether expected taxpayer identity is always attached before evidence fan-in, and whether transaction repositories enforce purchase-evidence referential integrity. Connect the declared actions to the command surface and test coverage for conflict merging, inactive register rows, no-window years, and incomplete-profile coverage.
+
+## Complete assigned-file coverage
+
+All 12 assigned files were read fully across pages 1–9; no portions remain unread.
+
+- overview/__init__.py (`src/cadrumo/application/overview/__init__.py`)
+- overview/_calendar_evidence_sources.py (`src/cadrumo/application/overview/_calendar_evidence_sources.py`)
+- overview/agenda.py (`src/cadrumo/application/overview/agenda.py`)
+- overview/backlog.py (`src/cadrumo/application/overview/backlog.py`)
+- overview/calendar.py (`src/cadrumo/application/overview/calendar.py`)
+- overview/calendar_evidence.py (`src/cadrumo/application/overview/calendar_evidence.py`)
+- overview/calendar_models.py (`src/cadrumo/application/overview/calendar_models.py`)
+- overview/calendar_warnings.py (`src/cadrumo/application/overview/calendar_warnings.py`)
+- overview/coverage.py (`src/cadrumo/application/overview/coverage.py`)
+- overview/data_prep.py (`src/cadrumo/application/overview/data_prep.py`)
+- overview/errors.py (`src/cadrumo/application/overview/errors.py`)
+- overview/evidence.py (`src/cadrumo/application/overview/evidence.py`)
+<!-- /preserved:article -->

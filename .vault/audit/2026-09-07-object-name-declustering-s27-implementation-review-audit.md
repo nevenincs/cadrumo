@@ -5,17 +5,14 @@ tags:
 date: '2026-09-07'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:917b2bbdbb4a8c579804684be9286ef09e6e8d5c1879df1d1044a1571ae37899'
+body_hash: 'sha256:067538a11119b61cb01aa224989719e06a5d66a855fd4c024d8e669ccdfcf059'
 related: []
 ---
 # `object-name-declustering` audit: `S27 implementation review`
 
 ## Scope
 
-Reviewed only the live `W04.P10.S27` changes in `dev/quality/object_name_rehearsal.py`
-and the two inventory-focused additions in
-`dev/quality/tests/test_object_name_rehearsal.py`. The unrelated AST declaration and
-eviction-root test hunk in the same dirty test file was excluded from S27 findings.
+The unrelated AST declaration and eviction-root test hunk in the same dirty test file was excluded from S27 findings.
 
 The review checked that rehearsal requires the verified copy's canonical inventory
 digest to equal the supplied current inventory digest, records the verified copy's

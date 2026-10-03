@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:4daf0b4baa4983120fe06a734cf613d739be3f2bdc9c55d115672a32926c174a'
 related:
   - '[[2026-09-12-registry-authority-artifact-boundary-tax-id-bootstrap-boundary-reference]]'
-  - '[[2026-09-10-registry-authority-artifact-boundary-plan]]'
 ---
 # `registry-authority-artifact-boundary` audit: `Software identity bootstrap split`
 

@@ -4,19 +4,15 @@ tags:
   - '#index'
   - '#modelo-addressing-ux'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f6b70ff6e606efca4d6a6f4b4cf18e3eb0db0eb11f88cce13d8f516941a3e694'
+body_hash: 'sha256:87e9665cf49fa23aed8baf55c7bd11a6ef0a02d3e7b2256dc2b5e34d98532696'
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-code-review-audit]]'
-  - '[[2026-06-04-modelo-addressing-ux-ledger]]'
-  - '[[2026-06-04-modelo-addressing-ux-plan]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'
   - '[[2026-06-05-modelo-addressing-ux-code-review-audit]]'
   - '[[2026-06-05-modelo-addressing-ux-follow-up-queue-adr]]'
-  - '[[2026-06-05-modelo-addressing-ux-ledger]]'
-  - '[[2026-06-05-modelo-addressing-ux-plan]]'
   - '[[2026-06-05-modelo-addressing-ux-vault-curation-audit]]'
 ---
 
@@ -36,16 +32,6 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 - `2026-06-04-modelo-addressing-ux-code-review-audit` - `modelo-addressing-ux` Code Review
 - `2026-06-05-modelo-addressing-ux-code-review-audit` - `modelo-addressing-ux` Code Review
 - `2026-06-05-modelo-addressing-ux-vault-curation-audit` - `modelo-addressing-ux` Vault Curation Audit
-
-### exec
-
-- `2026-06-04-modelo-addressing-ux-ledger` - `modelo-addressing-ux` ledger
-- `2026-06-05-modelo-addressing-ux-ledger` - `modelo-addressing-ux` ledger
-
-### plan
-
-- `2026-06-04-modelo-addressing-ux-plan` - `modelo-addressing-ux` implementation plan
-- `2026-06-05-modelo-addressing-ux-plan` - `modelo-addressing-ux` `modelo CLI decomposition continuous plan` plan
 
 ### research
 

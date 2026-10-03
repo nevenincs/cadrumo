@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#tui-registry-api-gate'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb75e9e288af04bf47c37ab4327789d7101899c7766f6060785e43dfa8684a5a'
+body_hash: 'sha256:7948b8e60c481a9628ea3eb776aa50225fde467947059f3b3794ef9f41f92052'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -23,13 +23,7 @@ Read at the tree before the removal (`a23276d2d0~1`) and at `ab9ae2d093` on
 
 ### Why it was removed
 
-The graded path never had a production caller. At `a23276d2d0~1` the only
-non-test mention of `resolve_graded_snapshot_result` is a docstring in
-`src/cadrumo/entrypoints/tui/modelo/view/results.py:23`. The symbol-usage gate
-(`dev/quality/unused_symbol_coverage.py`, `just check-symbol-usage`, test
-references do not count, `dev/audit/unreachable_code.py:1`) therefore flagged
-it, and `a23276d2d0` removed it. Restoring the code without a production call
-site in the TUI launcher would repeat that.
+The graded path never had a production caller. The symbol-usage gate (`dev/quality/unused_symbol_coverage.py`, `just check-symbol-usage`, test references do not count, `dev/audit/unreachable_code.py:1`) therefore flagged it, and `a23276d2d0` removed it. Restoring the code without a production call site in the TUI launcher would repeat that.
 
 ### What the removal deleted
 

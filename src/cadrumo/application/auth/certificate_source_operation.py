@@ -25,7 +25,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
     OperationFrontendProjection,
@@ -288,16 +288,14 @@ def _certificate_source_disclosures(
 
 
 def _profile_from_receipt(receipt: OperationTerminalReceipt, *, definition_id: str) -> UUID:
+    message = "certificate source result contradicts its terminal receipt"
     if (
         receipt.identity.definition_id != definition_id
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
     ):
-        raise ValueError("certificate source result contradicts its terminal receipt")
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
     subject = receipt.identity.subject_ref
     try:
         profile_id = UUID(subject.removeprefix("profile:"))

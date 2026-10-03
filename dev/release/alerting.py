@@ -45,7 +45,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev._paths import UTF_8, prepare_temporary_directory
 
 _UTF_8: Final[str] = UTF_8
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0
@@ -263,7 +263,7 @@ def emit_alert(
 
     gh = _resolve_gh(gh_executable)
     if (existing := find_open_alert(alert, repository=repository, gh_executable=gh)) is not None:
-        with tempfile.TemporaryDirectory() as scratch:
+        with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as scratch:
             body_path = Path(scratch) / "alert-body.md"
             body_path.write_text(alert_payload(alert), encoding=_UTF_8, newline="\n")
             _run_gh(gh, ["issue", "comment", existing, "--repo", repository, "--body-file", str(body_path)])
@@ -275,7 +275,7 @@ def emit_alert(
     # unbounded, and a command line is neither: Windows caps one at ~8k
     # characters, and embedded newlines are quoted differently by every shell
     # in the chain. `--body-file` sidesteps both.
-    with tempfile.TemporaryDirectory() as scratch:
+    with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as scratch:
         body_path = Path(scratch) / "alert-body.md"
         body_path.write_text(alert_payload(alert), encoding=_UTF_8, newline="\n")
         base = ["issue", "create", "--repo", repository, "--title", alert.title, "--body-file", str(body_path)]

@@ -3,25 +3,18 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9baf4833595caa62bd601eeaa155b0e806d6efc672b223db0b3ece4b66d90623'
+body_hash: 'sha256:46cf850e26e46a8e4e4336b855cf318c2472a4278338e1719b66fa82ed20af7c'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
-  - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
 # `source-casilla-integration` audit: `W01.P01.S03 core contract review`
 
 ## Scope
 
-Commit `6a787a4bf5` was audited against the accepted source-casilla integration
-ADR, `W01.P01.S03` of the implementation plan, the canonical source-kind and
-secure-storage rules, and the requirement that a `connected` census disposition
-be supported by resolver ownership, encrypted `CalculationRevision`
-anti-tautology, and operator reachability. The review is limited to commit-owned
-changes in `src/cadrumo/core/source_connectivity.py` and its Vaultspec execution
-closure. It does not review or modify concurrent worktree changes.
+Commit `6a787a4bf5` was audited against the accepted source-casilla integration ADR, `W01.P01.S03` of the implementation plan, the canonical source-kind and secure-storage rules, and the requirement that a `connected` census disposition be supported by resolver ownership, encrypted `CalculationRevision` anti-tautology, and operator reachability. It does not review or modify concurrent worktree changes.
 
 ## Findings
 
@@ -96,20 +89,7 @@ identity portion of `disconnected-attestations`.
 
 ### enrollment-evidence-remains-asserted | high | Deferred sources and nonexistent executable evidence can still claim a production connection
 
-The correction does not establish that the shared source kind is actually
-enrolled or that its executable evidence exists. A focused probe built a
-`connected` row for candidate `inventory-stock` using the currently deferred
-`BindingSourceKind.RELATED_PARTY_OPERATION`, resolver `resolver-a`, command id
-`anything`, and locator
-`src/cadrumo/fake/tests/test_does_not_exist.py:999`. The complete row validated.
-`SourceConnectivityExecutableEvidence` checks only the locator string shape; it
-does not establish repository existence, a test identity, or a test-to-command
-and test-to-resolver relationship. Likewise, `command_id` is merely a stable
-token, not an identity drawn from or checked against the supported CLI command
-surface. Consequently one internally consistent but invented identity bundle
-still upgrades a deferred source to `connected` without live resolver enrollment
-or executable operator and persistence proof. The original
-`disconnected-attestations` HIGH finding is narrowed but remains open.
+The correction does not establish that the shared source kind is actually enrolled or that its executable evidence exists. The complete row validated. `SourceConnectivityExecutableEvidence` checks only the locator string shape; it does not establish repository existence, a test identity, or a test-to-command and test-to-resolver relationship. Likewise, `command_id` is merely a stable token, not an identity drawn from or checked against the supported CLI command surface. Consequently one internally consistent but invented identity bundle still upgrades a deferred source to `connected` without live resolver enrollment or executable operator and persistence proof. The original `disconnected-attestations` HIGH finding is narrowed but remains open.
 
 ### strict-true-correction | low | Corrective strict booleans reject integer and textual substitutes
 

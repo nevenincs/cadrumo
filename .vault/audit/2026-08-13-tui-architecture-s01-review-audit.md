@@ -3,36 +3,35 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1c70072389c1947ac7858b5a585c6c8aefe182495af2298b673b18462822e5de'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:33a795699d5acf883f86bf21ff2f8a48532435ae016868de36fca736d18ced63'
+related: []
 ---
 
 # `tui-architecture` audit: `W01.P01.S01 legacy TUI migration manifest review`
 
 ## Scope
 
-Independent review of `W01.P01.S01` against the accepted TUI architecture decision, its research census, the live legacy TUI tree, the current `dev/quality/import_hygiene_scan.py` and `dev/tests/test_import_hygiene_scan.py` diffs, the empty S01 execution record, and current-tree validation evidence.
+Independent review of `W01.P01.S01` against the accepted TUI architecture decision, its research census, the live legacy TUI tree, the current the retired module and the retired test diffs, the empty S01 execution record, and current-tree validation evidence.
 
 ## Findings
 
 ### aggregate-count-proof | medium | The tests do not prove an exact identity census
 
-`dev/tests/test_import_hygiene_scan.py:43` hard-codes the current module count while lines 44-46 accept only aggregate lower bounds, contrary to the quality rule that gates properties rather than exact counts. Those assertions can stay green when one required consumer disappears and an unrelated row replaces it; the two spot identities at lines 49-63 do not prove the full facade export set, every production and test consumer, every development surface, or each row's exact owner and replacement.
+The retired test hard-codes the current module count while lines 44-46 accept only aggregate lower bounds, contrary to the quality rule that gates properties rather than exact counts. Those assertions can stay green when one required consumer disappears and an unrelated row replaces it; the two spot identities at lines 49-63 do not prove the full facade export set, every production and test consumer, every development surface, or each row's exact owner and replacement.
 
 ### unverified-gates | medium | Focused validation produced no passing evidence and the execution record is empty
 
-The focused `dev/tests/test_import_hygiene_scan.py` plus Ruff command exceeded 124 seconds without a result, so neither gate is evidenced green. The scaffolded `W01.P01.S01` execution record contains no Description, Outcome, Notes, command output, or commit reference. Current `git diff --check` is clean for the reviewed files, but that is not substitute evidence for AST behavior or the exact CLI JSON route.
+The focused the retired test plus Ruff command exceeded 124 seconds without a result, so neither gate is evidenced green. The scaffolded `W01.P01.S01` execution record contains no Description, Outcome, Notes, command output, or commit reference. Current `git diff --check` is clean for the reviewed files, but that is not substitute evidence for AST behavior or the exact CLI JSON route.
 
 ### silent-consumer-parse-loss | high | Consumer parse failures silently remove rows from the supposedly exact manifest
 
-`dev/quality/import_hygiene_scan.py:343-354` converts a missing, malformed, or undecodable consumer into an empty import list, and lines 1519-1522 independently suppress the same parse failures for qualified references. A consumer file that cannot be parsed therefore contributes no import or reference rows and does not fail the manifest, whereas legacy-module parse failures correctly raise at lines 1335-1338. This violates exactness and fail-closed census semantics.
+The retired module converts a missing, malformed, or undecodable consumer into an empty import list, and lines 1519-1522 independently suppress the same parse failures for qualified references. A consumer file that cannot be parsed therefore contributes no import or reference rows and does not fail the manifest, whereas legacy-module parse failures correctly raise at lines 1335-1338. This violates exactness and fail-closed census semantics.
 
 ### identity-policy-fallback | high | New symbols and consumers enter the manifest without an accepted identity disposition
 
-`dev/quality/import_hygiene_scan.py:1372-1374` falls back from an unlisted symbol to its source module's broad disposition, and lines 1485-1542 automatically enroll every newly discovered consumer. Consequently a new export or import from any already-known legacy module, or a new consumer of an existing identity, joins the manifest without a reviewed exact `(module, symbol, consumer class)` policy row. The only refusal test at `dev/tests/test_import_hygiene_scan.py:76-90` plants a new module, so it cannot catch either fail-open path. This contradicts the accepted decision that the generated migration manifest is keyed by exact module, imported symbol, and consumer class and admits no new identity.
+The retired module falls back from an unlisted symbol to its source module's broad disposition, and lines 1485-1542 automatically enroll every newly discovered consumer. Consequently a new export or import from any already-known legacy module, or a new consumer of an existing identity, joins the manifest without a reviewed exact `(module, symbol, consumer class)` policy row. The only refusal test at the retired test plants a new module, so it cannot catch either fail-open path. This contradicts the accepted decision that the generated migration manifest is keyed by exact module, imported symbol, and consumer class and admits no new identity.
 
 ## Recommendations
 
@@ -67,6 +66,6 @@ The S01 execution record now contains implementation detail and reports focused 
 
 ### unverified-gates | closed | Exact bounded commands and completed results are recorded
 
-The S01 execution record now preserves the exact focused commands and outcomes: Ruff formatting completed, Ruff checks passed, Ruff format checking passed, and `uv run --no-sync pytest -q dev/tests/test_import_hygiene_scan.py -k "tui_migration_manifest"` completed with eight passing tests in 281.40 seconds. The previously empty and non-specific evidence gap is closed.
+The S01 execution record now preserves the exact focused commands and outcomes: Ruff formatting completed, Ruff checks passed, Ruff format checking passed, and the historical check completed with eight passing tests in 281.40 seconds. The previously empty and non-specific evidence gap is closed.
 
 No critical, high, or medium findings remain from this review.

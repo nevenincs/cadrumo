@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:553f30d08fa87d066c7523874c3bfd70538c99ea67cf7131049b5b7ed17a3f49'
+body_hash: 'sha256:542cdde3840c64b179792734048764f3708c716ff195460a5da4e3488ea05a6a'
 related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
   - "[[2026-08-18-profile-password-custody-campaign-close-audit]]"
   - "[[2026-08-24-profile-password-custody-fresh-context-campaign-close-audit]]"
@@ -17,6 +16,7 @@ related:
   - "[[2026-08-24-profile-password-custody-s219-docs-audit]]"
   - "[[2026-08-24-profile-password-custody-s222-platform-gate-audit]]"
 ---
+
 # `profile-password-custody` audit: `S223 campaign-close remediation and honesty review`
 
 ## Scope
@@ -81,7 +81,6 @@ owners and keeps the broader campaign-close decision open.
 
 ## Evidence
 
-- `pytest -q -n 0 dev/tests/test_no_skip_xfail.py`: **25 passed**.
 - `pytest -q -n 0 -m integration ...test_documented_command_conformance.py`:
   **349 passed**.
 - `pytest -q -n 0 dev/docs/tests/test_docs_localization.py`: **10 passed**.

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#profile-login-session'
 date: '2026-07-24'
-modified: '2026-08-15'
-body_hash: 'sha256:3b8e5a1f3d30b4018560b4b17c05c26caa6759ceb8aad3d9ee1946b5d9619ef0'
+modified: '2026-10-03'
+body_hash: 'sha256:b0936608516023e49dc25f4d8bfeca2e881ac189f8993a5e33d22939e3ae65e9'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
@@ -18,7 +18,7 @@ Operator directive: users must log in to a profile once with a password, stay lo
 
 ### The profile-unlock session is purely in-process and evaporates between commands
 
-`BucketSession` (`src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py:51`) holds the unlocked KEK and DEK in `bytearray` buffers, zeroised at `close()` (`_bucket_session.py:259`). It is bound per-thread via a `ContextVar` (`_active_session.py:48`) and activated by the CLI root callback `_activate_active_bucket_session` (`src/cadrumo/entrypoints/cli/__init__.py:396`) on every non-bootstrap-exempt invocation via `get_master_key_provider()` as a context manager. Each `aeat` invocation is a fresh process, so the session never survives a command. An `atexit` hook zeroises on interpreter exit (`_active_session.py:178`).
+`BucketSession`  holds the unlocked KEK and DEK in `bytearray` buffers, zeroised at `close()` (`_bucket_session.py:259`). It is bound per-thread via a `ContextVar` (`_active_session.py:48`) and activated by the CLI root callback `_activate_active_bucket_session` (`src/cadrumo/entrypoints/cli/__init__.py:396`) on every non-bootstrap-exempt invocation via `get_master_key_provider()` as a context manager. Each `aeat` invocation is a fresh process, so the session never survives a command. An `atexit` hook zeroises on interpreter exit (`_active_session.py:178`).
 
 Idle timeout exists but only in-process: `BucketSession` carries `_idle_window`/`_idle_deadline`, sliding `touch(now)` (`_bucket_session.py:191`) and `is_expired(now)` (`_bucket_session.py:197`); `evaluate_idle` (`_idle_timeout.py:43`, `DEFAULT_IDLE_LOCK_MINUTES = 15`) is enforced by `SecureObjectRepository._check_session_freshness` (`src/cadrumo/adapters/persistence/storage/sql/secure_objects.py:217`), the sole production `touch()` caller, raising `SessionExpiredError` on expiry. Config: `Settings.cadrumo_bucket_default_idle_lock_minutes` (default 15) with per-bucket manifest override `idle_lock_minutes` (`_master_key_bucket_dek.py:49`, `idle_minutes_for_bucket`).
 
@@ -36,7 +36,7 @@ Consequence for design: a persisted session must let a fresh process reach the b
 
 ### Active-profile pointer and the env override
 
-Precedence chain (`src/cadrumo/core/_bucket_pointer_io.py:145`, `resolve_active_bucket_id`): `Settings.cadrumo_active_profile` (populated from the `CADRUMO_ACTIVE_PROFILE` env var or `override_settings`, also the `--profile` flag's internal channel via `entrypoints/cli/__init__.py:294`) wins over the plaintext pointer file `<root>/active-profile`. The override is additionally read by the database-route validator (`core/config.py:985`), `core/_config_storage_route.py:102`, and workflow profile-health (`application/workflow/_profile_health.py:178`). `logout_active_profile` (`application/user_profile/_orchestration.py:477`) refuses while the override is set (`ProfileLogoutOverrideError`) because a process-scoped env override cannot be unset by the application boundary. Pointer mutation is serialised by the reentrant fail-closed pointer transaction (`application/user_profile/_profile_pointer_transaction.py:115`).
+Precedence chain (the former source file, `resolve_active_bucket_id`): `Settings.cadrumo_active_profile` (populated from the `CADRUMO_ACTIVE_PROFILE` env var or `override_settings`, also the `--profile` flag's internal channel via `entrypoints/cli/__init__.py:294`) wins over the plaintext pointer file `<root>/active-profile`. The override is additionally read by the database-route validator (`core/config.py:985`), `core/_config_storage_route.py:102`, and workflow profile-health (`application/workflow/_profile_health.py:178`). `logout_active_profile` (`application/user_profile/_orchestration.py:477`) refuses while the override is set (`ProfileLogoutOverrideError`) because a process-scoped env override cannot be unset by the application boundary. Pointer mutation is serialised by the reentrant fail-closed pointer transaction (`application/user_profile/_profile_pointer_transaction.py:115`).
 
 Retirement surface: the env var is one pydantic-settings field; the internal `override_settings` channel must survive (it is how `--profile` and tests scope a selection in-process), so retirement means removing the environment *source* for the field, not the field.
 
@@ -88,24 +88,12 @@ Threat model axes: (T1) attacker with disk read only (stolen backup, other OS us
 
 ## Sources
 
-- `src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py:51,191,197,259`
-- `src/cadrumo/adapters/persistence/storage/master_key/_active_session.py:48,97,146,178`
-- `src/cadrumo/adapters/persistence/storage/master_key/_idle_timeout.py:31,43`
-- `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py:110,116,214,244,427,586,794`
-- `src/cadrumo/adapters/persistence/storage/master_key/_master_key_derivation.py:12`
-- `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py:27,49,64`
 - `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py:217`
-- `src/cadrumo/core/_bucket_pointer_io.py:145`
+
 - `src/cadrumo/core/config.py:574,985`
-- `src/cadrumo/core/_config_storage_route.py:102`
-- `src/cadrumo/application/user_profile/_orchestration.py:302,477`
-- `src/cadrumo/application/user_profile/_profile_pointer_transaction.py:115`
-- `src/cadrumo/application/auth/_sessions.py:171`
-- `src/cadrumo/application/auth/_operator.py:756`
-- `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py:295`
+
 - `src/cadrumo/entrypoints/cli/__init__.py:294,396`
-- `src/cadrumo/entrypoints/cli/_config/_custody.py:109`
-- `src/cadrumo/entrypoints/cli/_config/_auth.py:255,302`
+
 - https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
 - https://pages.nist.gov/800-63-3-Implementation-Resources/63B/Session/
 - https://pages.nist.gov/800-63-4/sp800-63b.html

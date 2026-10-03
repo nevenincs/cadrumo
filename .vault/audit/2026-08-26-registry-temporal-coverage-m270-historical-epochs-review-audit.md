@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7e7ab3531da530cd6b7242e8f8334611828dc5e45e1b4e0a53f9dc1424bf606f'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `Modelo 270 historical epochs independent review`

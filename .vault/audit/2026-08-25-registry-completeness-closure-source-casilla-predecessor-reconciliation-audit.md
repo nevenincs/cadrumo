@@ -3,32 +3,25 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:56c0bdc0e81bd782974a3f56266831534a526b8f1896fce0911b28d7ddaa2f98'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:a8377c986087d7cc0cfefe3e1ff19ab2b24de82b843dc7f11727e63f68d8eeb1'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `S35 source-casilla predecessor reconciliation`
 
 ## Scope
 
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md`
-- `src/cadrumo/_data/source_connectivity/census.toml`
-- `src/cadrumo/application/registry/source_connectivity.py`
-- `src/cadrumo/application/registry/_source_connectivity_coverage.py`
-- `src/cadrumo/application/registry/_source_connectivity_authority.py`
 - `dev/source_connectivity/{discovery,live_proof,check,cli}.py`
-- `src/cadrumo/application/calculations/_row_set_assembly.py`
-- `src/cadrumo/application/aggregation/_source_mesh.py`
 - `src/cadrumo/application/modelo/{_calculation_actions,_revision_persistence}.py`
 
 ## Method and no-redeclaration result
 
 Vaultspec-RAG searched the vault for the source-casilla decision, plan, execution, census, and closure evidence, then searched production code for the live census proof, encrypted-revision match, and row-observation ingress. Whole-file reads covered the source plan, census, discovery, live-proof, coverage, authority, and current research records. Targeted `rg` then confirmed the exact symbols and all named plan rows.
 
-There is no second source-connectivity authority to merge or delete. The sole census is `src/cadrumo/_data/source_connectivity/census.toml`; its loader is `application.registry.source_connectivity.load_source_connectivity_census`; its revision projection is `compose_source_connectivity_coverage`; and `LiveSourceConnectivityProofAuthority`, composed by `dev.source_connectivity.live_proof`, remains the only connected-claim proof authority. `assemble_observations_for_grouping` is the existing typed assembler, not a rival source resolver or persistence model. The exact file/symbol sweep found no duplicate census TOML, closure composer, live-proof authority, row identity model, or source-provenance carrier.
+There is no second source-connectivity authority to merge or delete. `assemble_observations_for_grouping` is the existing typed assembler, not a rival source resolver or persistence model. The exact file/symbol sweep found no duplicate census TOML, closure composer, live-proof authority, row identity model, or source-provenance carrier.
 
 Scoped Ruff over the census, coverage, authority, discovery, check, and live-proof surfaces passed. `vaultspec-core vault plan check` passed with the existing PLAN022 ordering warning. A broad comparison/test run did not yield a completed result while concurrent worktree work was active, so this audit makes no broad-pass claim.
 
@@ -49,10 +42,8 @@ The source coverage composer deliberately turns every current `ingress_blocked` 
 
 `S87` is the shared first implementation dependency, but it is not authorization to invent a generic source, resolver, persistence store, provenance shape, or filing writer. It must define one application command that consumes the existing `assemble_observations_for_grouping(grouping, cells, revision, filing_year)` output under a validated snapshot and hands the typed observations to the existing calculation architecture. Its acceptance contract is:
 
-1. Reuse the closed grouping dispatch and typed observation unions in `src/cadrumo/application/calculations/_row_set_assembly.py`; reject an unknown grouping or invalid row through the existing localized `RegistryValidationError` boundary. The current Google pull report is observational only and must not be represented as calculation ingress.
 2. Reuse, rather than redeclare, the secure calculation-revision carriers already accepted by `calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`, `persist_calculation_revision`, and `CalculationRevision`: `row_binding_values`, `RowSourceIdentity`, `row_casilla_values`, `DirectRowMaterializationProvenance`, and `CalculationSourceRef`.
 3. Preserve the selected registry revision, grouping, row index, binding identity, source identity, and content fingerprint to the source-specific resolver/handoff. `S87` cannot itself decide the legal fact, source ownership, collision policy, or a row-to-casilla mapping; those remain the separately grounded `S92`-`S107` slices.
-4. Keep the stage boundaries intact: `S87` owns the application command and its tests in `src/cadrumo/application/calculations/_row_set_assembly.py` (plus its public application export if required); `S88` owns the Google pull route in `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`; `S89` owns preservation at `src/cadrumo/domain/modelos/_calculation_revision.py` and the actual calculation handoff; `S90` owns hostile-row refusal; and `S91` owns the real encrypted round trip. No generic row repository is authorized by this audit because the existing module explicitly keeps persistence source-specific.
 
 The independent semantic work that can proceed in parallel with `S87` is `S92`: official M232 row semantics and source ownership. It cannot make M232 connected until the shared ingress and the M232-specific resolver/proof/review rows also land.
 

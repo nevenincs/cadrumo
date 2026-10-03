@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#arch-remediation-program'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:d48e027d2f037142a9c52ba38b0bc8c9972f9370c09de489bad726bd06583c54'
+modified: '2026-10-03'
+body_hash: 'sha256:b39b4725f52de948a647bedb3527ba204e63d4745dd9796928cbf602e1f3e2dd'
 related:
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-07-05-arch-remediation-program-audit]]"
-  - "[[2026-07-02-arch-remediation-gates-ratchet-plan]]"
 ---
 
 # `arch-remediation-program` audit: `ratchet refresh after import-tail reconciliation`
@@ -34,13 +33,8 @@ The 2026-07-05 audit's `ratchet-gates-red` and
 describe the current tree. After the size and import-tail reconciliation
 commits, the Wave 4 ratchet bundle now passes:
 
-`uv run --no-sync pytest -q src/aeat/tests/test_import_hygiene_gate.py
-src/aeat/tests/test_importlinter_ledger.py
-src/aeat/tests/test_lazy_import_policy.py
-src/aeat/tests/test_data_size_budget.py
-src/aeat/tests/test_codebase_size_budgets.py
-src/aeat/tests/test_wheel_content_boundary.py
-src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`
+Historical command omitted; its target was retired.
+The retired test`
 
 Result: 38 passed in 52.72s. The current log is
 `var/log/arch-remediation-ratchets-current.log`.
@@ -50,7 +44,7 @@ rewrote private production imports onto the existing public
 `application.user_profile` facade, renamed private-looking test support modules
 to public test-support names, and updated the corresponding `.importlinter`
 pinned edges. Focused evidence also passed before the bundle rerun:
-`src/aeat/tests/test_import_hygiene_gate.py` reported 11 passed, and scoped
+The retired test reported 11 passed, and scoped
 `ruff check` on the touched import-boundary paths reported clean.
 
 Disposition: the code-gate blocker recorded in the prior audit is cleared for

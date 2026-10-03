@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:dcfb84090db783c23601ab8a91dface73cb9188f92fbcb8a1cc6cce75bfc8e38'
+modified: '2026-10-03'
+body_hash: 'sha256:5538ff0dfdf81242d80d6b703fed5d465f3e9f94aff45032cea3e69cc3f46f33'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S94-EXPLICIT-ROUTE-001 | MEDIUM | RESOLVED | Guard initially skipped shared test helpers
 
-The first review found that the explicit-route guard classified test surfaces only by test-file naming, which skipped shared test helpers such as `src/aeat/tests/secure_sql.py`. The guard now scans shared `/tests/` helper modules and includes `secure_sql.py` in the approved explicit-route allowlist.
+The first review found that the explicit-route guard classified test surfaces only by test-file naming, which skipped shared test helpers such as the retired test. The guard now scans shared `/tests/` helper modules and includes `secure_sql.py` in the approved explicit-route allowlist.
 
 ## S94-EXPLICIT-ROUTE-002 | LOW | RESOLVED | Detector initially missed embedded env-line constants
 

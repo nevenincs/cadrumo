@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#recipient-encryption'
 date: '2026-07-04'
-modified: '2026-07-04'
-body_hash: 'sha256:cc9c397e0a099f85d66f7a9d9a5fdaab7615298c143d11b8cd693f4b57ee9b95'
+modified: '2026-10-03'
+body_hash: 'sha256:c8d93c51508beac682bd83c99cdfda748089f4cb6328ca12c9bf193b128cb412'
 related: []
 ---
 
@@ -45,7 +45,7 @@ fingerprint registry and the encrypt-for-recipient primitive.
   encryption; X25519 ECDH + HKDF + the project's existing AES-256-GCM AEAD
   primitive composes to a standard ECIES-style construction.
 
-- `src/aeat/adapters/persistence/storage/crypto/_crypto.py` (re-exported via
+- the former source file (re-exported via
   `crypto/__init__.py`) is the at-rest AEAD substrate: `encrypt_record` /
   `decrypt_record` (AES-256-GCM, 12-byte random nonce, `EncryptedBlob` wire
   shape `nonce || ciphertext_with_tag`) and `derive_key` (HKDF-SHA256, takes
@@ -54,7 +54,7 @@ fingerprint registry and the encrypt-for-recipient primitive.
   shared secret and to perform the actual AEAD encryption — no new AEAD
   logic should be written.
 
-- `src/aeat/application/modelo/_review_package_signing.py` is the closest
+- the former source file is the closest
   structural analogue for a per-profile keypair: `ReviewPackageSigningKeypair`
   (private+public hex, `bucket_id`, `created_at`), minted once per bucket via
   `ensure_review_package_signing_keypair` (idempotent: loads existing via
@@ -64,12 +64,10 @@ fingerprint registry and the encrypt-for-recipient primitive.
   The recipient-encryption keypair (for accepting encrypted bundles) should
   follow the identical shape but with `X25519PrivateKey`/`X25519PublicKey` in
   place of Ed25519, and a distinct `SecureObjectNamespaceDefinition` (own
-  `namespace=` string, own `key=`) registered in
-  `src/aeat/adapters/persistence/storage/_namespace_registry.py` next to
+  `namespace=` string, own `key=`) registered  next to
   `MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE` (same `sensitivity=SECRET`
   pattern).
 
-- `src/aeat/adapters/persistence/profile/bienes_inversion.py`
   (`BienesInversionIvaRegisterRepository`) is the closest structural analogue
   for a small typed catalogue/registry with `.add()` duplicate-id refusal:
   loads a `FINANCIAL`-sensitivity singleton secure object (empty register when

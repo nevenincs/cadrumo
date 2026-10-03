@@ -35,7 +35,9 @@ def active_profile_pointer_observation(
     "which pointer would the next construction see" BEFORE any settings exist
     to ask.
     """
-    configured_root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+    configured_root = (
+        os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT", "").strip() or os.environ.get("CADRUMO_STORAGE_ROOT", "").strip()
+    )
     root = normalizer(Path(configured_root)) if configured_root else storage_root()
     if root is None:
         raise ValueError(

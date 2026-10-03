@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:4ecb02e035e0d073a7a95f4bbc5b58ff08cffdffd7637c538149b19991e470c2'
+modified: '2026-10-03'
+body_hash: 'sha256:c0603c42be5f17dd9989a114b2383b4e43bf1b90c420a47f9cc7182e391d07eb'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-04-registry-m200-completeness-audit]]'
   - '[[2026-06-04-registry-m303-completeness-audit]]'
 ---
@@ -49,11 +48,11 @@ the W05/W06 rows.
 
 No issue. Local and reviewer verification passed:
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_record_design.py -q`
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_committed_registry.py -q`
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py -q`
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_registry_reviewability.py -q`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-06-02-registry-hardening-next-work-plan.md`
 
 The plan check exits 0 with only the already-known PLAN022 warning.

@@ -24,7 +24,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Final, Literal, override
 
-from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
+from pydantic import BeforeValidator, Field, SecretStr, ValidationInfo, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
     EnvSettingsSource,
@@ -105,6 +105,16 @@ class _CadrumoEnvSettingsSource(EnvSettingsSource):
     def __call__(self) -> dict[str, Any]:
         original_env_vars = self.env_vars
         self.env_vars = _without_severed_names(original_env_vars)
+        controls = Settings.storage_env_var_names()
+        for key, value in tuple(self.env_vars.items()):
+            if key.upper() in controls and isinstance(value, str):
+                if cleaned := value.strip():
+                    self.env_vars[key] = cleaned
+                else:
+                    self.env_vars.pop(key)
+        root = self.env_vars.get("cadrumo_storage_root")
+        if root and not self.env_vars.get("cadrumo_local_storage_root"):
+            self.env_vars["cadrumo_local_storage_root"] = root
         try:
             return super().__call__()
         finally:
@@ -151,7 +161,8 @@ class AuthorityRootSettings(BaseSettings):
 
     @field_validator("cadrumo_authority_root", mode="after")
     @classmethod
-    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+    def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
+        del info
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
@@ -334,13 +345,30 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar. The default is the platform user-data "
-            "directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` "
-            "or `~/Library/Application Support/cadrumo/storage`) in every run mode, so the "
-            "encrypted store never lands inside a virtualenv or uv cache. A source checkout "
-            "does not redirect it: a developer who wants the tree inside their checkout "
-            "sets this variable, and that explicit override wins over the derived default."
+            "paired with a `.meta.json` sidecar. Defaults to CADRUMO_STORAGE_ROOT, "
+            "or var/storage beneath the repository. This backend refinement wins "
+            "over the shared root. Relative roots anchor to the repository."
         ),
+    )
+    cadrumo_temp_dir: Path = Field(
+        default=Path("tmp"), description="Application temporary files beneath the storage root."
+    )
+    cadrumo_runtime_socket_dir: Path = Field(
+        default=Path("runtime"), description="Owner-only POSIX runtime sockets and locks beneath the storage root."
+    )
+    cadrumo_playwright_browsers_dir: Path = Field(
+        default=Path("components/playwright"),
+        description="Managed Playwright browser binaries beneath the storage root.",
+    )
+    cadrumo_ollama_home_dir: Path = Field(
+        default=Path("components/ollama/home"),
+        description="Private home for Cadrumo-owned Ollama processes, including their runtime identity.",
+    )
+    cadrumo_ollama_models_dir: Path = Field(
+        default=Path("models/ollama"), description="Model weights for Cadrumo-owned Ollama processes."
+    )
+    cadrumo_gnome_extensions_dir: Path = Field(
+        default=Path("integrations/gnome/extensions"), description="Explicit GNOME extension publication directory."
     )
     cadrumo_google_drive_root_folder_id: str | None = Field(
         default=None,
@@ -991,7 +1019,23 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         been cut is still a field, but no environment variable reaches it,
         so listing it here would document a control that does nothing.
         """
-        return {name.upper() for name in cls.model_fields} - _NON_ENVIRONMENT_SELECTION_NAMES
+        names: set[str] = {name.upper() for name in cls.model_fields} | {"CADRUMO_STORAGE_ROOT"}
+        return names - _NON_ENVIRONMENT_SELECTION_NAMES
+
+    @classmethod
+    def storage_env_var_names(cls) -> frozenset[str]:
+        """Return path controls safe to carry across isolated process launch boundaries."""
+        from .storage_environment import TOOL_STORAGE_LOCATIONS
+        from .storage_taxonomy_locations import STORAGE_TAXONOMY
+
+        names = {"CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT"}
+        names.update(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values())
+        names.update(
+            location.settings_field.upper()
+            for location in STORAGE_TAXONOMY.values()
+            if location.settings_field is not None and location.settings_field in cls.model_fields
+        )
+        return frozenset(names)
 
     @staticmethod
     def external_constants() -> ExternalConstants:
@@ -1010,6 +1054,12 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
 
     @field_validator(
         "cadrumo_token_dir",
+        "cadrumo_temp_dir",
+        "cadrumo_runtime_socket_dir",
+        "cadrumo_playwright_browsers_dir",
+        "cadrumo_ollama_models_dir",
+        "cadrumo_ollama_home_dir",
+        "cadrumo_gnome_extensions_dir",
         "cadrumo_chromium_data_root",
         "cadrumo_usage_ratios_path",
         "cadrumo_financial_txs_dir",
@@ -1042,7 +1092,14 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     )
     @classmethod
     @override
-    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+    def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
+        from .storage_taxonomy_locations import STORAGE_TAXONOMY
+
+        if info.field_name in {location.settings_field for location in STORAGE_TAXONOMY.values()}:
+            if value is None:
+                return None
+            candidate = value.expanduser()
+            return candidate.resolve() if candidate.is_absolute() else candidate
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 

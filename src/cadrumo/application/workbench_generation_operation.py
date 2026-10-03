@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from functools import cache
 from uuid import UUID
@@ -23,7 +24,7 @@ from .operations.access_resolution import (
 )
 from .operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from .operations.frontend_requests import OperationResultProjectionSuccessV1
-from .operations.models import CredentialFreeOperationRequest, OperationRequest
+from .operations.models import CredentialFreeOperationRequest, OperationIdentity, OperationRequest
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
 from .operations.registry import (
@@ -49,8 +50,10 @@ class WorkbenchGenerationOperationRequest(CredentialFreeOperationRequest):
     output_language: OutputLanguage
 
 
+#: The outer reader receives only the invocation identity, never the executor's
+#: supervisor-owned capabilities.
 type WorkbenchGenerationReader = Callable[
-    [OperationExecutorContext, WorkbenchGenerationOperationRequest], Awaitable[WorkbenchGenerationV1]
+    [OperationIdentity, WorkbenchGenerationOperationRequest], Awaitable[WorkbenchGenerationV1]
 ]
 
 
@@ -79,11 +82,19 @@ class WorkbenchGenerationExecutor:
         await context.events.phase(_PHASE)
 
         async def capture() -> str:
-            generation = await reader(context, request.payload)
+            generation = await reader(context.identity, request.payload)
             if type(generation) is not WorkbenchGenerationV1:
                 raise TypeError("workbench reader returned an invalid generation")
-            projection = project_workbench_generation(request.payload.profile_id, generation)
-            _require_pageable_result(projection)
+
+            def project() -> WorkbenchGenerationOperationProjection:
+                projection = project_workbench_generation(request.payload.profile_id, generation)
+                _require_pageable_result(projection)
+                return projection
+
+            # Mirroring and validating the full workspace can be CPU-heavy.
+            # Keep the worker loop available to observations and lease renewal
+            # while the cancellation-owned capture retains this thread's work.
+            projection = await asyncio.to_thread(project)
             result_ref = await context.operands.put(projection, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return result_ref

@@ -275,7 +275,6 @@ def _request(request: OperationRequest[BaseModel], *, profile_id: UUID) -> Works
         definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
         payload_type=WorkstationCheckRequest,
         access_profile_id=profile_id,
-        exact_type=True,
     )
 
 

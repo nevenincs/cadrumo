@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ccf2aa35836ae05281600702d7d0b46e5390e6571c2b4316ff1637d4d2506d2b'
+body_hash: 'sha256:02b574a084868587da6e3b4c301c676830f615a0d7e5ee1286e4c861a03c11ab'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference]]'
 ---
 
@@ -95,10 +94,7 @@ model-scoped normative alternative for an ADR to settle.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_763/files/01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx.extracted.md:18`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_763/files/01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx.extracted.md:129`
 - `src/cadrumo/_data/registry/aeat/legal/modelo-763.toml:1`
-- `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2012-2t-3t/casillas/cdecl.ejercicio__cdecl.periodo.toml:1`
+
 - `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2015-2017/revision.toml:1`
 - `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-4t/revision.toml:1`
 - `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2019-y-siguientes/revision.toml:1`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_490_604_763_registry.py:111`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:158`
-- `src/cadrumo/_data/source_connectivity/census.toml:1`

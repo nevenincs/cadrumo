@@ -128,7 +128,11 @@ class OperationSecureOperandLookup(Protocol):
         reference: ContentDigest,
         operand_type: type[OperandT],
     ) -> OperandT:
-        """Return the validated operand of the requested application model type."""
+        """Return the operand at ``reference`` as an instance of exactly ``operand_type``.
+
+        Stored content that does not validate as ``operand_type`` is refused;
+        content written from a subclass is never returned as that subclass.
+        """
         del operand_type
         raise NotImplementedError
 

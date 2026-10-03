@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#ledger-amount-direction'
 date: '2026-06-13'
-modified: '2026-07-17'
-body_hash: 'sha256:a872ccf2c60f9d473d1bcfadddf49b70bd8109b7ebcf094b718e796091ea5c96'
-related:
-  - "[[2026-06-10-ledger-amount-direction-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:7aef61730c72d0bd4f0fdea214c6afb3dbafd76c3fdddad1ba590c8e7eef86eb'
+related: []
 ---
 
 # `ledger-amount-direction` audit: `C1 suite green-pass triage: S15 owner-vs-peer`
@@ -26,11 +25,11 @@ Steps (`P01`–`P04`, `P05.S16`) were already checked; the rule
 
 Verified every C1 obligation is live in source, not just checked on paper:
 `RawTransaction.amount` carries a non-negative gate
-(`src/aeat/domain/transactions/_raw_transaction.py`); `_direction_from_amount`
+; `_direction_from_amount`
 is deleted with no call site remaining in `src/aeat/application/ledger/`;
 `LedgerEvidenceRow.amount` / `value_in_eur` carry a non-negative
-`field_validator` (`src/aeat/domain/modelos/_ledger_filing_snapshot.py`); the
-CLI `--amount` guard is present (`src/aeat/entrypoints/cli/_ledger.py`). The
+`field_validator` ; the
+CLI `--amount` guard is present . The
 owner-scoped test surface — transactions domain tests, ledger application tests,
 the CLI ledger tests, and the evidence-row roundtrip + anti-tautology proof —
 runs **427 passed, 0 failed**. S15's actual intent (confirm C1 introduced no
@@ -67,7 +66,7 @@ to the governance ratchets above.
 ### F3 — The lone C1-named signature is a pre-existing, shrinking overage (not a C1 regression)
 
 Only one failure line names a C1-touched file: the codebase-size budget reports
-`src/aeat/entrypoints/cli/_ledger.py` at 1281 lines over a 1250 budget (31
+The retired module at 1281 lines over a 1250 budget (31
 over). This is **not** introduced by C1: at the C1 landing commit `3695a1b93`
 the file was already **1338 lines** — over budget before C1 — and six-plus
 subsequent peer ledger campaigns (IVA derivation, `_resolve_id` collapse,

@@ -11,7 +11,6 @@ history.
 from __future__ import annotations
 
 from collections.abc import Callable
-from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -22,7 +21,6 @@ from ...core.operations import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    profile_operation_subject,
 )
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
@@ -43,14 +41,14 @@ from ..operations.capabilities import (
 )
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
-from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
@@ -64,6 +62,7 @@ from .m145_communication_contracts import (
     M145CommunicationExecutionResult,
     M145CommunicationOperationId,
     M145CommunicationOperationResult,
+    M145CommunicationRequest,
 )
 from .m145_communication_execution import (
     M145CommunicationExecutor,
@@ -79,16 +78,12 @@ def _resolve_access(
     context: OperationAccessContext,
     *,
     operation_id: M145CommunicationOperationId,
-    request_type: type[BaseModel],
+    request_type: type[M145CommunicationRequest],
     permission: AccessAction,
 ) -> ResolvedOperationAccess:
-    payload = request.payload
-    if request.definition_id != operation_id or not isinstance(payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = getattr(payload, "profile_id", None)
-    subject = profile_operation_subject(str(profile_id)) if isinstance(profile_id, UUID) else None
-    if profile_id != context.profile_id or request.subject_ref != subject:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    require_access_request_profile_payload(
+        request, definition_id=operation_id, payload_type=request_type, access_profile_id=context.profile_id
+    )
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
         require_period_independent_admission(admitted, profile_id=context.profile_id, definition_id=operation_id)
@@ -126,7 +121,7 @@ def _resolve_access(
 def _build_definition(
     *,
     operation_id: M145CommunicationOperationId,
-    request_type: type[BaseModel],
+    request_type: type[M145CommunicationRequest],
     records_ports_factory: M145CommunicationRecordsPortsFactory,
     renderer_factory: Callable[[], FicheroBoeRecordRenderer],
 ) -> OperationDefinition:
@@ -193,7 +188,7 @@ def build_m145_communication_operation_definitions(
 def _registration(
     definition: OperationDefinition,
     *,
-    request_type: type[BaseModel],
+    request_type: type[M145CommunicationRequest],
     permission: AccessAction,
 ) -> OperationPublicDefinitionRegistrationV1:
     operation_id = definition.definition_id

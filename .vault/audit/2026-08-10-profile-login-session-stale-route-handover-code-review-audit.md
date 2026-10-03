@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-login-session'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:116fe422853cafbdf3b0e39f518676940b4be19a103d0bcc93c7fa535f1fa014'
+body_hash: 'sha256:7b9417ae7c0393ea5ada5fd31634c2bb6c0d596b9c105dcef732e08fb51cdf97'
 related:
   - "[[2026-07-24-profile-login-session-adr]]"
 ---
@@ -15,10 +15,10 @@ related:
 ## Scope
 
 Reviewed the uncommitted stale-route handover change in
-`src/cadrumo/application/user_profile/_login_session.py` and
+The retired module and
 `src/cadrumo/entrypoints/cli/__init__.py`, together with the added cases in
-`src/cadrumo/application/user_profile/tests/test_login_session.py` and
-`src/cadrumo/entrypoints/cli/_config/tests/test_login_frontend.py`. The review
+The retired test and
+The retired test. The review
 was grounded in the accepted profile-login/session decision, the accepted CLI
 action-envelope decision and its active plan, and checked the nested
 `ContextVar` lifetime, the authenticated profile/pointer/session/database-route

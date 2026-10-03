@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e889f902176704f375025592d581e2a9faeb0eb05e8da766dc928e67556665bf'
+body_hash: 'sha256:560f32b12382b8ab94d965344835df4a41187b638f2ef00c72c11321ff0a0487'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-10-canonical-identifiers-expediente-provenance-adr]]"
@@ -20,23 +20,9 @@ keyword arguments and are invisible to any `field = "literal"` pattern.
 
 ## Summary
 
-`IvaCompensationPeriodState.expediente_id` is declared in
-`src/cadrumo/domain/iva_compensation/_carry_forward.py` as
-`str = Field(min_length=1, max_length=32)`, with no `description`. Its two
-neighbouring fields in the same model, `taxpayer_nif` and
-`source_artefact_sha256`, each carry a multi-sentence description declaring
-exactly which absent case their `None` represents and why a malformed value is
-refused there. The one field that is genuinely polymorphic documents nothing.
+Its two neighbouring fields in the same model, `taxpayer_nif` and `source_artefact_sha256`, each carry a multi-sentence description declaring exactly which absent case their `None` represents and why a malformed value is refused there. The one field that is genuinely polymorphic documents nothing.
 
-Five production paths supply that field. Only three are direct construction
-sites. The remaining two reach the model through a shared conduit pair -
-`persist_observation_envelope_and_iva_history` calling
-`iva_compensation_state_from_observation_envelope`, both in
-`src/cadrumo/application/calculations/_iva_compensation_history.py` - which
-takes `expediente_id: str` as an untyped parameter and passes it straight
-through. **By the time the value reaches the model those two provenances are
-indistinguishable**, which is why a marker placed on the model alone cannot
-recover them.
+Five production paths supply that field. Only three are direct construction sites.
 
 ## The five supplying paths
 
@@ -102,33 +88,13 @@ no recoverable fact.
 The objection that sank the earlier retype attempt was orphaning persisted
 records. It does not apply here, and the reason is checkable in one line.
 
-`IvaCompensationHistoryRepository.extract_identifier` returns
-`iva_compensation_period_key(payload.period)`, and the namespace definition
-`IVA_COMPENSATION_HISTORY_NAMESPACE` in
-`src/cadrumo/adapters/persistence/storage/_namespace_registry.py` declares
-`object_key_grammar="303:{filing_year}:{period}"`. The record is addressed by
-period. **Changing this field's representation orphans nothing.**
+The record is addressed by period. **Changing this field's representation orphans nothing.**
 
-The namespace that DOES fold an expediente into its key is a different one:
-`AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`, grammar
-`"{sha256(modelo,ejercicio,period,expediente_id)}"`, owned by the sede adapter
-and holding `FiledDeclaracionObservation` records whose expediente is genuinely
-AEAT-issued. A second key-composition path folding an expediente in Python
-lives in `src/cadrumo/adapters/outbound/aeat/sede/_observation_store.py`. Both
-sit on the AEAT-issued side of the seam and neither is reached by a change to
-`IvaCompensationPeriodState`.
+The namespace that DOES fold an expediente into its key is a different one: `AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`, grammar `"{sha256(modelo,ejercicio,period,expediente_id)}"`, owned by the sede adapter and holding `FiledDeclaracionObservation` records whose expediente is genuinely AEAT-issued. Both sit on the AEAT-issued side of the seam and neither is reached by a change to `IvaCompensationPeriodState`.
 
 ## What the tighter alias would refuse today
 
-`AeatExpedienteId` in `src/cadrumo/core/identity/_namespace.py` is
-`^[0-9]{4,}[A-Z0-9]+$` at length 12-32, described in its own module as an
-OBSERVED range rather than a published AEAT specification. Eight non-conforming
-`expediente_id` literals survive tree-wide and all eight construct
-`IvaCompensationPeriodState` - the reason that model was deliberately left
-un-retyped when its siblings were converted. Those eight are fixtures and
-synthetic corpora, not AEAT-issued values; that count is a floor rather than a
-census, because a static literal sweep cannot see the two module-level
-constants above, which one run surfaced as a ninth.
+Eight non-conforming `expediente_id` literals survive tree-wide and all eight construct `IvaCompensationPeriodState` - the reason that model was deliberately left un-retyped when its siblings were converted. Those eight are fixtures and synthetic corpora, not AEAT-issued values; that count is a floor rather than a census, because a static literal sweep cannot see the two module-level constants above, which one run surfaced as a ninth.
 
 ## Known gaps in this grounding
 

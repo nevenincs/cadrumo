@@ -21,9 +21,10 @@ from ..operations.access_resolution import (
     bind_operation_access,
     operation_disclosures,
     require_declared_frontend_and_action,
+    require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import (
@@ -37,7 +38,6 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .diagnostics import (
@@ -138,13 +138,10 @@ def project_auth_diagnostic_report_result(result: BaseModel, receipt: OperationT
 
 
 def _require_diagnostic_success_receipt(receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("diagnostic success has incompatible terminal evidence")
+    message = "diagnostic success has incompatible terminal evidence"
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_diagnostic_absence_receipt(receipt: OperationTerminalReceipt) -> None:
@@ -229,7 +226,9 @@ def resolve_auth_diagnostic_report_access(
     """Require exact human profile/all periods at mutation and result release."""
     payload = _require_auth_diagnostic_report_request(request, context)
     require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=_ACTIONS)
-    _require_diagnostic_admission_or_authority(request, context)
+    require_period_independent_replay_or_authority(
+        context, profile_id=payload.profile_id, definition_id=request.definition_id
+    )
     disclosures = operation_disclosures(
         context,
         observed_by=frozenset({AccessAction.OBSERVE}),
@@ -258,31 +257,6 @@ def _require_auth_diagnostic_report_request(
         definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
         payload_type=AuthDiagnosticReportRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
-    )
-
-
-def _require_diagnostic_admission_or_authority(
-    request: OperationRequest[BaseModel], context: OperationAccessContext
-) -> None:
-    admitted = context.admitted_request
-    if admitted is not None and context.action in {AccessAction.OBSERVE, AccessAction.RESULT}:
-        if not _matches_diagnostic_admission(admitted, request, context):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    elif context.authority_operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-
-def _matches_diagnostic_admission(
-    admitted: OperationAccessRequest, request: OperationRequest[BaseModel], context: OperationAccessContext
-) -> bool:
-    return (
-        admitted.profile_id == context.profile_id
-        and admitted.definition_id == request.definition_id
-        and admitted.destination_id == context.destination_id
-        and admitted.action is AccessAction.SUBMIT
-        and not admitted.periods
-        and admitted.period_independent
     )
 
 

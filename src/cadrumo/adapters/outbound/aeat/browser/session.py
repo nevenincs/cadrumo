@@ -19,6 +19,7 @@ AEAT maintenance, WAF, rate-limit, and transport failures into typed
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Mapping
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -220,7 +221,7 @@ class BrowserSession:
         """
         from .....application.provisioning_browser import probe_playwright_browser
 
-        status = probe_playwright_browser()
+        status = probe_playwright_browser(settings=self.settings)
         if status.available:
             return
         logger.error(
@@ -247,9 +248,29 @@ class BrowserSession:
             root = self.settings.cadrumo_chromium_data_root
             root.mkdir(parents=True, exist_ok=True, mode=0o700)
             self._working_directory = TemporaryDirectory(prefix="session-", dir=root)
-            working_path = Path(self._working_directory.name)
+            working_path = Path(self._working_directory.name).resolve()
             restrict_directory_permissions(working_path)
             (working_path / "artifacts").mkdir(mode=0o700)
+            child_directories = {
+                "HOME": working_path / "home",
+                "USERPROFILE": working_path / "home",
+                "XDG_CACHE_HOME": working_path / "xdg-cache",
+                "XDG_CONFIG_HOME": working_path / "xdg-config",
+                "XDG_DATA_HOME": working_path / "xdg-data",
+                "XDG_STATE_HOME": working_path / "xdg-state",
+                "APPDATA": working_path / "appdata-roaming",
+                "LOCALAPPDATA": working_path / "appdata-local",
+            }
+            for directory in set(child_directories.values()):
+                directory.mkdir(mode=0o700)
+            from .....core.storage_taxonomy import StorageCategory
+            from .....core.storage_taxonomy_locations import storage_path
+
+            temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=self.settings)
+            temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            child_environment = os.environ.copy()
+            child_environment.update({name: str(path) for name, path in child_directories.items()})
+            child_environment.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
             # Keep the default persistent context empty. Authenticated contexts
             # are still isolated new_context calls with encrypted state inputs.
             context = await self.playwright.chromium.launch_persistent_context(
@@ -259,6 +280,7 @@ class BrowserSession:
                 accept_downloads=False,
                 headless=self.settings.cadrumo_browser_headless,
                 proxy=proxy,
+                env=child_environment,
             )
             browser = context.browser
             if browser is None:

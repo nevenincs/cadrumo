@@ -411,7 +411,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                 "unsupported_provenance",
             ),
         ),
-        *_diagnostics_range_registrations(),
+        *_diagnostics_command_spec_registrations(),
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
         *_modelo_workbench_registrations(),
@@ -506,21 +506,19 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
 
 
-def _diagnostics_range_registrations() -> tuple[FStringKeyRegistration, ...]:
-    """Register the shared since/until/provider options every range command declares.
+def _diagnostics_command_spec_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register diagnostic keys declared by the live command-spec registry."""
+    from ._command_spec_scanner import scan_command_spec_keys
 
-    ``_range(prefix)`` in ``entrypoints/cli/_app_diagnostics_command_specs.py``
-    builds the same three options for each diagnostics range command, so the
-    value space is the set of commands that call it.
-    """
-    commands = ("run_health", "runs", "latency", "errors", "llm_usage")
-    return tuple(
+    keys = tuple(sorted(key for key in scan_command_spec_keys() if key.startswith("cli.diagnostics.")))
+    if not keys:
+        raise RuntimeError("The command-spec registry declared no CLI diagnostics translation keys")
+    return (
         FStringKeyRegistration(
-            description=f"cli.diagnostics.*.{option}_help",
-            key_factory=lambda command, option=option: f"cli.diagnostics.{command}.{option}_help",
-            values=commands,
-        )
-        for option in ("since", "until", "provider")
+            description="cli.diagnostics.* (live command-spec TranslationKey fields)",
+            key_factory=lambda key: key,
+            values=keys,
+        ),
     )
 
 

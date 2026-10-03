@@ -1,0 +1,379 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:1
+msgid "inventory valuation and taxpayer-profile mechanics"
+msgstr "Készletértékelés és adózóiprofil-mechanizmusok"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:7
+msgid ""
+"**Report:** `STAGE-2-140` · **Topic:** [Business and taxpayer "
+"domain](../topics/business-and-taxpayer-domain.md)"
+msgstr ""
+"**Jelentés:** `STAGE-2-140` · **Téma:** [Üzleti és adózói "
+"szakterület](../topics/business-and-taxpayer-domain.md)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:10
+msgid "Scope"
+msgstr "Hatókör"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:12
+msgid ""
+"This chunk covers 10 files totaling 2,888 manifest-counted lines, 122,630"
+" bytes, and 25,700 measured `o200k_base` tokens. It includes inventory "
+"acquisition, closing-authority and Anexo D records, FIFO and weighted-"
+"average valuation, marriage predicates, work-month parsing, profile-key "
+"normalization, Modelo 100 code projections, insured-person counts, and "
+"tax-residence profiles. All assigned files were read in bounded portions "
+"through their ends. This is static inspection of the repository snapshot;"
+" no modules were imported or executed, no tests were run, and no source "
+"files were changed."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:14
+msgid "Product capabilities"
+msgstr "Termékképességek"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:16
+msgid ""
+"The largest capability is an evidence-backed business-inventory ledger "
+"for one activity and year. It supports FIFO, PMP, and coste medio; LIFO "
+"input is explicitly refused. Purchase acquisition cost includes "
+"consideration, directly attributable cost components, and nonrecoverable "
+"IVA, with recoverable IVA excluded. Each acquisition carries evidence "
+"references and content digests, unique review evidence for attributable "
+"costs and IVA recoverability, and a checked monetary decomposition. "
+"Purchase movements must retain that complete decomposition acquisition-"
+"cost records and checks "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`) decomposition "
+"validator (`src/cadrumo/domain/contribuyente/inventory/records.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:18
+msgid ""
+"At year end, an operator decision selects movement-derived or physical "
+"closing authority. A physical observation must be tied to a year-end "
+"date, a valuation basis matching the ledger’s method, and both a count "
+"and acquisition-price evidence role. The decision records an actor, "
+"reason, timestamp, source command, and unique evidence. A prior-"
+"authoritative-closing link requires the immediately preceding year, "
+"equality with current opening stock, and a fingerprint binding the prior "
+"source and evidence. When observed and movement values differ, the "
+"conflict is retained in the resolution rather than discarded; the "
+"selected authoritative amount must agree with the recorded decision "
+"physical observation "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`), decision and "
+"continuity records "
+"(`src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`),"
+" resolution invariants "
+"(`src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`),"
+" conflict-preserving resolver "
+"(`src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:20
+msgid ""
+"The valuation engine sorts movements by date and identifier, maintains "
+"stock layers per SKU for FIFO or per-SKU quantity/value pools for "
+"weighted average, computes purchases and COGS, and refuses consumption "
+"beyond available quantity. Count movements model a reduction to an "
+"observed count and cannot add stock without a purchase. Anexo D "
+"projection requires the registry to declare the filing year applicable, "
+"checks every movement falls in that year, requires a complete closing-"
+"authority record and acquisition cost for each purchase, then derives "
+"opening, authoritative closing, acquisition fingerprints, and the "
+"mutually exclusive increase/decrease split. The resulting immutable "
+"projection is checked against its retained source ledger and a versioned "
+"content fingerprint valuation and projection derivation "
+"(`src/cadrumo/domain/contribuyente/inventory/valuation.py`) FIFO and "
+"weighted average "
+"(`src/cadrumo/domain/contribuyente/inventory/valuation.py`) count "
+"reduction (`src/cadrumo/domain/contribuyente/inventory/valuation.py`) "
+"projection record "
+"(`src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:22
+msgid ""
+"Smaller domain helpers support profile export and deductions. Marriage "
+"predicates determine whether a marriage predates the filing year and "
+"which first month applies. The work-month parser accepts month numbers "
+"and ascending inclusive ranges, expands and sorts them, refuses "
+"duplicates, and serializes a stable canonical set marriage facts "
+"(`src/cadrumo/domain/contribuyente/marriage_facts.py`) work-month grammar"
+" (`src/cadrumo/domain/contribuyente/meses_trabajo.py`). `normalise_key` "
+"strips whitespace, lowercases and maps hyphens to dots while preserving "
+"underscores. Renta code helpers validate Modelo 100 civil-status exports "
+"and project common-regime CCAA tokens to a read-only code table; fiscal-"
+"residency and family-situation types remain registry-projected tokens "
+"code projections (`src/cadrumo/domain/contribuyente/renta_codes.py`) CCAA"
+" export mapping (`src/cadrumo/domain/contribuyente/renta_codes.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:24
+msgid ""
+"The insurance reducer counts the taxpayer, a spouse when marital status "
+"is `casado`, and eligible descendants, separating general and disability "
+"limits. It resolves dated thresholds and an applicability mapping, then "
+"reads descendants through the shared descendant-fact hydrator. The tax-"
+"residence profile stores a current CCAA, effective date and typed "
+"residence-change history, parsing CCAA values through the dated catalogue"
+" and rejecting recognized foral aliases as outside this profile’s scope "
+"insurance count "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`) fact-"
+"index adapter "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`) tax-"
+"region parsing (`src/cadrumo/domain/contribuyente/tax_residence.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:26
+msgid "How it works"
+msgstr "Hogyan működik"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:28
+msgid ""
+"Pydantic records are strict and frozen. Inventory money fields are "
+"checked to cents, monetary values are nonnegative where appropriate, "
+"schema versions are fixed at version 3, document-level `(actividad_id, "
+"year)` keys must be unique, and movement IDs must be unique inside a "
+"ledger. The ledger checks opening stock against provided layers and "
+"resolves any embedded authority record at construction. The Anexo D "
+"projection path validates the source again, canonicalizes movement order,"
+" requires a generation-pinned registry operation for the selected Modelo "
+"100 revision and applicability, and derives all public outputs from the "
+"retained ledger. This keeps form-facing values tied to the underlying "
+"record and permits downstream projection validation ledger invariants "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`) document "
+"uniqueness (`src/cadrumo/domain/contribuyente/inventory/records.py`) "
+"Anexo D source validation "
+"(`src/cadrumo/domain/contribuyente/inventory/valuation.py`) projection "
+"derivation (`src/cadrumo/domain/contribuyente/inventory/valuation.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:30
+msgid ""
+"If a purchase movement omits its IVA rate, the before-validator obtains "
+"the movement date, requires a pinned authority operation in scope, "
+"resolves the dated IVA category/rate kind and looks up the rate. Other "
+"token projections resolve lazily or through the dated CCAA catalogue. "
+"Inventory evidence documents themselves are not ingested here; the "
+"records carry opaque references and supplied digests dated IVA default "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`) acquisition "
+"fingerprint (`src/cadrumo/domain/contribuyente/inventory/valuation.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:32
+msgid "Knowledge and data"
+msgstr "Tudás és adatok"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:34
+msgid ""
+"The inventory ledger’s operator-entered facts include business activity "
+"ID, SKU, quantities, costs, movement dates, IVA ratios, valuation method,"
+" physical counts and evidence references. It stores no evidence document "
+"contents in these records. Calculation and export behavior relies on "
+"registry declarations for IVA, Anexo D applicability and selected form "
+"revision. The insurance reducer reads disability minimum, child age "
+"maximum and an applicability map at 31 December of the filing year. Its "
+"inputs include taxpayer/spouse disability grades and descendant facts. "
+"Renta code mappings are form projections maintained in source; comments "
+"assert grounding in bundled AEAT XSD examples, but this chunk does not "
+"contain those XSDs, so their currentness is not independently verified "
+"here."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:36
+msgid ""
+"Content fingerprints provide stable identities for acquisitions, physical"
+" observations, decisions, continuity links and complete projections. They"
+" bind canonical values and evidence digests, but are unkeyed hashes: by "
+"themselves they identify content and detect a mismatch against a trusted "
+"expected digest; they do not prove that an evidence document is authentic"
+" or that its reference is authorized."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:38
+msgid "Security and safety"
+msgstr "Biztonság és biztonságos működés"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:40
+msgid ""
+"Concrete controls include a closed valuation-method enum, explicit LIFO "
+"refusal, strict record shapes, bounded strings, nonnegative quantities "
+"and amounts, required evidence roles, unique evidence references, amount "
+"decomposition checks, year and activity coordinate checks, immediate "
+"prior-year continuity, and conflict retention. Inventory resolution also "
+"fails when the required pinned registry authority is unavailable. These "
+"records support auditability, but actor and source-command fields are "
+"supplied strings; this code does not authenticate the actor or authorize "
+"the decision. No filesystem or network boundary is implemented here, and "
+"the evidence reference/digest fields do not establish access control. No "
+"credentials or direct PII appear in the inventory subsystem; business IDs"
+" and evidence references are persisted inputs."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:42
+msgid ""
+"One potential configuration gap exists in insurance counting: the "
+"resolved applicability map is checked for required keys, but the values "
+"are not interpreted by the reducer. The actual child gates remain hard-"
+"coded as cohabitation, a strict age comparison and a death-year rule; the"
+" disability split uses a separately resolved threshold. If those mapping "
+"values are expected to govern changing behavior, their resolution "
+"currently functions as a completeness check only map resolution and "
+"required keys "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`) hard-"
+"coded child gates "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`). Also, "
+"malformed stored disability-grade values are converted to `None`, which "
+"assigns the general limb rather than refusing; depending on the person’s "
+"actual status this can withhold a higher disability ceiling, and the "
+"upstream fact validation should be traced grade coercion "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`)."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:44
+msgid "Implementation assessment"
+msgstr "A megvalósítás értékelése"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:46
+msgid ""
+"The inventory path has strong internal consistency checks: monetary "
+"decomposition and evidence links are validated at the purchase boundary, "
+"closing disagreements are preserved, continuity is explicit, calculations"
+" are deterministic over canonical sort order, and projection values are "
+"recomputed from the retained ledger before acceptance. The clear "
+"separation between source records, resolution, valuation and form "
+"projection supports audit review. Anexo D projection is unavailable when "
+"applicability, prior continuity, closing authority, or purchase evidence "
+"is missing, so incomplete source data produces an explicit refusal."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:48
+msgid ""
+"The principal unresolved risks are cross-layer. The registry "
+"applicability strings for insurance are not used as predicates, stored "
+"disability parsing is tolerant, tax-residence history has no local "
+"chronology/current-region consistency validator, and the embedded "
+"registry/XSD provenance claims cannot be checked from these files alone. "
+"Whether these are defects depends on upstream schema guarantees and "
+"application validation. No tests are in this chunk, so static review "
+"cannot certify valuation arithmetic, legal interpretation, or whether "
+"callers always provide trusted fingerprints and pinned authority. No "
+"runtime or external legal validation was performed."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:50
+msgid "Dependencies and follow-up"
+msgstr "Függőségek és további vizsgálatok"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:52
+msgid ""
+"Synthesis should trace the inventory repository and application service "
+"to see how records, evidence references, actor identity and digests are "
+"created, persisted, and later trusted. It should trace the registry "
+"declarations and form bindings that consume the Anexo D projection, plus "
+"the IVA facade used by default rates. For insurance, inspect the "
+"applicability fact schema and fact-index validation to decide whether "
+"unused values and `None` fallback are safe. For residence and export "
+"codes, connect the CCAA catalogue, profile read/write flows and bundled "
+"XSD reference data."
+msgstr ""
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:54
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:56
+msgid ""
+"inventory/_anexo_d_records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`)"
+msgstr ""
+"inventory/_anexo_d_records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/_anexo_d_records.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:57
+msgid ""
+"inventory/closing_authority_records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`)"
+msgstr ""
+"inventory/closing_authority_records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/closing_authority_records.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:58
+msgid ""
+"inventory/records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`)"
+msgstr ""
+"inventory/records.py "
+"(`src/cadrumo/domain/contribuyente/inventory/records.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:59
+msgid ""
+"inventory/valuation.py "
+"(`src/cadrumo/domain/contribuyente/inventory/valuation.py`)"
+msgstr ""
+"inventory/valuation.py "
+"(`src/cadrumo/domain/contribuyente/inventory/valuation.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:60
+msgid "marriage_facts.py (`src/cadrumo/domain/contribuyente/marriage_facts.py`)"
+msgstr "marriage_facts.py (`src/cadrumo/domain/contribuyente/marriage_facts.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:61
+msgid "meses_trabajo.py (`src/cadrumo/domain/contribuyente/meses_trabajo.py`)"
+msgstr "meses_trabajo.py (`src/cadrumo/domain/contribuyente/meses_trabajo.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:62
+msgid "normalise.py (`src/cadrumo/domain/contribuyente/normalise.py`)"
+msgstr "normalise.py (`src/cadrumo/domain/contribuyente/normalise.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:63
+msgid "renta_codes.py (`src/cadrumo/domain/contribuyente/renta_codes.py`)"
+msgstr "renta_codes.py (`src/cadrumo/domain/contribuyente/renta_codes.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:64
+msgid ""
+"seguro_enfermedad_insured.py "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`)"
+msgstr ""
+"seguro_enfermedad_insured.py "
+"(`src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`)"
+
+#: ../../technical/articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md:65
+msgid "tax_residence.py (`src/cadrumo/domain/contribuyente/tax_residence.py`)"
+msgstr "tax_residence.py (`src/cadrumo/domain/contribuyente/tax_residence.py`)"

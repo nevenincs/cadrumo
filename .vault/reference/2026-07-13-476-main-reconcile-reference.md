@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#476-main-reconcile'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:1673173ad97085565205ed789ce2a142e323dcb1dc2f4f6c0037a9c2fe5a92be'
+modified: '2026-10-03'
+body_hash: 'sha256:f374b0d95cfb35d8090b478597770de91787726ee442d77548dd966e357f5642'
 related: []
 ---
 
@@ -77,12 +77,8 @@ Raw inventory (recompute before the real merge):
 - `CONFLICT (content): Merge conflict in dev/packaging/tests/test_cadrumo_data_distribution.py`
 - `CONFLICT (content): Merge conflict in dev/release/__init__.py`
 - `CONFLICT (content): Merge conflict in dev/release/tests/test_readiness.py`
-- `CONFLICT (modify/delete): docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md deleted in main and modified in chore/eliminate-shims.  Version chore/eliminate-shims of docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md left in tree.`
-- `CONFLICT (modify/delete): docs/USERDOCS-KICKOFF-BRIEF.md deleted in main and modified in chore/eliminate-shims.  Version chore/eliminate-shims of docs/USERDOCS-KICKOFF-BRIEF.md left in tree.`
 - `CONFLICT (content): Merge conflict in docs/_release_checklist.yaml`
 - `CONFLICT (content): Merge conflict in docs/_release_notes_template.md`
-- `CONFLICT (modify/delete): docs/_static/aeat-mark-dark.svg deleted in chore/eliminate-shims and modified in main.  Version main of docs/_static/aeat-mark-dark.svg left in tree.`
-- `CONFLICT (modify/delete): docs/_static/aeat-mark-light.svg deleted in chore/eliminate-shims and modified in main.  Version main of docs/_static/aeat-mark-light.svg left in tree.`
 - `CONFLICT (content): Merge conflict in docs/architecture/index.md`
 - `CONFLICT (content): Merge conflict in docs/conf.py`
 - `CONFLICT (content): Merge conflict in docs/disclaimer.md`
@@ -92,22 +88,14 @@ Raw inventory (recompute before the real merge):
 - `CONFLICT (content): Merge conflict in docs/explanation/index.md`
 - `CONFLICT (content): Merge conflict in docs/explanation/recording-a-filing-and-the-boundary.md`
 - `CONFLICT (content): Merge conflict in docs/explanation/reviewing-and-exporting.md`
-- `CONFLICT (modify/delete): docs/how-to/classify-with-llm-evidence.md deleted in main and modified in chore/eliminate-shims.  Version chore/eliminate-shims of docs/how-to/classify-with-llm-evidence.md left in tree.`
 - `CONFLICT (content): Merge conflict in docs/how-to/classify-with-llm.md`
 - `CONFLICT (content): Merge conflict in docs/how-to/file-at-aeat.md`
 - `CONFLICT (content): Merge conflict in docs/how-to/import-bank-statements.md`
 - `CONFLICT (content): Merge conflict in docs/how-to/index.md`
-- `CONFLICT (modify/delete): docs/how-to/justificante-receipts.md deleted in main and modified in chore/eliminate-shims.  Version chore/eliminate-shims of docs/how-to/justificante-receipts.md left in tree.`
 - `CONFLICT (content): Merge conflict in docs/how-to/quickstart.md`
-- `CONFLICT (modify/delete): docs/how-to/read-live-aeat-data.md deleted in main and modified in chore/eliminate-shims.  Version chore/eliminate-shims of docs/how-to/read-live-aeat-data.md left in tree.`
-- `CONFLICT (modify/delete): docs/how-to/setup-llm-classification.md deleted in main and modified in chore/eliminate-shims.  Version chore/eliminate-shims of docs/how-to/setup-llm-classification.md left in tree.`
 - `CONFLICT (content): Merge conflict in docs/how-to/troubleshooting.md`
 - `CONFLICT (content): Merge conflict in docs/index.md`
-- `CONFLICT (content): Merge conflict in docs/tutorials/index.md`
 - `CONFLICT (content): Merge conflict in docs/updates.md`
-- `CONFLICT (content): Merge conflict in docs/verification/cowork-install-proof.md`
-- `CONFLICT (content): Merge conflict in docs/verification/neve-marketplace-install-proof.md`
-- `CONFLICT (content): Merge conflict in docs/verification/support-matrix.md`
 - `CONFLICT (content): Merge conflict in docs/workstation-setup.md`
 - `CONFLICT (content): Merge conflict in justfile`
 - `CONFLICT (modify/delete): packaging/aeat_data_manuals/README.md deleted in chore/eliminate-shims and modified in main.  Version main of packaging/aeat_data_manuals/README.md left in tree.`
@@ -123,14 +111,7 @@ Raw inventory (recompute before the real merge):
 - `CONFLICT (content): Merge conflict in packaging/mcpb/manifest.json`
 - `CONFLICT (content): Merge conflict in packaging/mcpb/tests/test_build.py`
 - `CONFLICT (content): Merge conflict in pyproject.toml`
-- `CONFLICT (content): Merge conflict in src/cadrumo/agent/_workspace.py`
-- `CONFLICT (content): Merge conflict in src/cadrumo/agent/tests/test_plugin_workspace.py`
-- `CONFLICT (content): Merge conflict in src/cadrumo/core/compatibility_lifecycle.py`
 - `CONFLICT (content): Merge conflict in src/cadrumo/core/resources/tests/test_corpus_companion_seam.py`
-- `CONFLICT (content): Merge conflict in src/cadrumo/domain/calculations/registry/_corpus_catalogue.py`
-- `CONFLICT (content): Merge conflict in src/cadrumo/entrypoints/mcp/_server.py`
-- `CONFLICT (content): Merge conflict in src/cadrumo/entrypoints/mcp/tests/test_server_refusal.py`
-- `CONFLICT (content): Merge conflict in src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py`
 - `CONFLICT (content): Merge conflict in uv.lock`
 
 ## Post-merge follow-ups (the deferred PyPI-surface miss hunt)

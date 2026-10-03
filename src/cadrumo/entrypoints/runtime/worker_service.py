@@ -78,8 +78,8 @@ async def _expire_custody(
     while not stop.is_set():
         await asyncio.sleep(0.1)
         try:
-            await asyncio.to_thread(custody.expire)
-            uploads.expire(live_sessions=custody.live_sessions())
+            live_sessions = await asyncio.to_thread(custody.live_sessions)
+            uploads.expire(live_sessions=live_sessions)
             await asyncio.to_thread(human.expire)
         except Exception:
             failed.set()

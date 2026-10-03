@@ -108,6 +108,11 @@ def render_environment_reference() -> str:
         rows.append(
             f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field, language)} | {_escape(description)} |",
         )
+    rows.append(
+        "| `CADRUMO_STORAGE_ROOT` | Path | (derived) | Shared storage root; defaults to the repository's "
+        "var/storage. CADRUMO_LOCAL_STORAGE_ROOT overrides it for the local backend. |"
+    )
+    rows.sort()
     footer = "\n" + docs_chrome("docs.cli.env.secrets_note", language) + "\n"
     return _HEADER + "\n".join(rows) + "\n" + footer
 

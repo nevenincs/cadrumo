@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:f88224e7d397ae44f4433becd1d70c3ea41f2ee8c961d2f7bd4618a910e42351'
+modified: '2026-10-03'
+body_hash: 'sha256:b4c32b3ece19cf44616c0e2260c4fa953f058af6eb8b22ccebe3cd28f3f20b44'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The new bucket-DEK tamper test provisions a real file-backed master key, activat
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_master_key.py src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py src/aeat/adapters/persistence/storage/test_runtime.py` passed with 101 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_master_key.py src/aeat/adapters/persistence/storage/master_key/test_master_key.py src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py src/aeat/adapters/persistence/storage/test_runtime.py` passed.
+- the historical check passed with 101 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Touched-surface hygiene scan found no pragma/noqa/type-ignore suppressions, direct output, naked encoding literals, monkeypatch/fake/stub markers, skipped/xfail tests, or direct test-shortcut markers in `_master_key.py` and `test_master_key.py`.
 

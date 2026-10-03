@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#docs-terminology-search'
 date: '2026-07-15'
-modified: '2026-07-15'
-body_hash: 'sha256:1ac24eecb17fe96e9044109b8e02bdd372b063e02cec68383142e3dc6c15705e'
+modified: '2026-10-03'
+body_hash: 'sha256:856d8c2de2dc78da489dbc03042d8123a1aecbfc791addf6621ce579ba610193'
 related:
   - "[[2026-07-15-docs-terminology-search-adr]]"
 ---
@@ -35,7 +35,7 @@ The casilla destination has a grounding-coverage parity gate (a record carrying 
 
 ### stale-docstring | low | `_unified_record.py` module docstring names retired per-kind weighting
 
-The `dev/docs/terminology/_unified_record.py` module docstring (lines 14-17) still describes the retired per-kind base-weight framing rather than the per-display-class table. Cosmetic; being corrected in-campaign by a separate code agent — actioned, not deferred.
+The the retired module module docstring (lines 14-17) still describes the retired per-kind base-weight framing rather than the per-display-class table. Cosmetic; being corrected in-campaign by a separate code agent — actioned, not deferred.
 
 ### stale-cli-regex | low | `test_relevance_data.py` carries the retired query-string casilla-target pattern
 

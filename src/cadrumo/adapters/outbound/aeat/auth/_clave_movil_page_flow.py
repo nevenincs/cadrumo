@@ -660,7 +660,17 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             await self._dismiss_pre303_alert_modal_if_present(page)
             if not await self._own_name_representation_is_already_selected(page):
                 await click(selected_own_name)
-            await click(pre303.representation_submit_selector, strict=True, timeout=self._navigation_timeout_ms)
+            try:
+                await click(pre303.representation_submit_selector, strict=True, timeout=self._navigation_timeout_ms)
+            except PlaywrightTimeoutError:
+                # AEAT can show its alert after the initial DOM inspection,
+                # covering the confirmation while Playwright waits to click.
+                # Retry once only after actually dismissing that known overlay.
+                if not await self._dismiss_pre303_alert_modal_if_present(page):
+                    raise
+                if not await self._own_name_representation_is_already_selected(page):
+                    await click(selected_own_name)
+                await click(pre303.representation_submit_selector, strict=True, timeout=self._navigation_timeout_ms)
         except PlaywrightError as exc:
             raise AeatLoginAssertionError(
                 "AEAT representation gate did not expose the own-name continuation expected for the "
@@ -708,7 +718,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             )
         return own_name is not None and _html_input_checked(own_name)
 
-    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPagePort) -> None:
+    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPagePort) -> bool:
         """Dismiss the visible Pre303 alert modal before submitting own-name access.
 
         Delegates to the canonical, collapsed implementation in
@@ -720,7 +730,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         behaviour unchanged.
         """
         pre303 = self._settings.external_constants().aeat.pre303
-        await dismiss_pre303_alert_modal_if_present(
+        return await dismiss_pre303_alert_modal_if_present(
             page,
             alert_modal_selector=pre303.alert_modal_selector,
             alert_continue_button_text=pre303.alert_continue_button_text,

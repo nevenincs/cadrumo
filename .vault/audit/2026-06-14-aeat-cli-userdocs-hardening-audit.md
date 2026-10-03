@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:b3a47ea7419de0c870b9c7bd525a29fc924ca29b1458c43d8857cbe97fd42778'
+modified: '2026-10-03'
+body_hash: 'sha256:ffce3a974a4c39cb5205742b24d9216be35866b4e4bc135da60da3107a127d5b'
 related:
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
 ---
@@ -28,7 +27,7 @@ backlog/decision candidates depending on the CLI surface.
 
 ### S11 | DECISION (acted) | Curated help omitted journey-critical surfaces
 
-The backend-authored curated help in `src/aeat/application/operator_surface/_help.py`
+The backend-authored curated help in the retired module
 advertised `import` through `export` for the ledger and `list`/`describe`/`bindings`/`work`
 for modelo, but omitted six real surfaces from `aeat app --help`: `ledger add`,
 `ledger evidence`, `ledger doclink`, `ledger providers`, `modelo
@@ -93,7 +92,7 @@ observed.
   is 204 and the generated `docs/cli/index.rst` reads "all 204 leaf commands"; the
   historical 193-vs-188 discrepancy is resolved. `docs/cli/` is gitignored build
   output regenerated at build time, and the drift plus conformance gates
-  (`dev/docs/tests/test_cli_reference_drift.py`,
+  (the retired test,
   `test_cli_reference_conformance.py`) are green (6 passed). The leaf collector now
   lives at `dev.docs.cli_reference`, not the retired production `_doc_reference.py`.
 - **S46 (Sphinx nitpicky build):** RUN; one campaign regression fixed, residual
@@ -109,7 +108,7 @@ observed.
   deprecation warnings; a confirmation re-run then failed at pytest collection on a
   peer circular import (`cannot import name CoreValidationError from partially
   initialized module aeat.core.errors`), triggered by an uncommitted peer edit to
-  `src/aeat/core/hashing.py`. Both blockers are peer-owned `core` churn, not the
+  The retired module. Both blockers are peer-owned `core` churn, not the
   userdocs surface. The campaign regression (the six broken anchor xrefs) is fixed
   and verified; the residual is recorded honestly per the step's allowance and the
   full-tree-gate-must-distinguish-owner rule.

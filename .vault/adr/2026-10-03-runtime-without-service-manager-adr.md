@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f47f4cfe6c43b4d3a4918cb8eca27e2664fb0b84ce90535b730e41787070c5e'
+body_hash: 'sha256:3196439e558265e395dbb45ca922db09d61431aa3dc3aff33969f6bccd4aad88'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -13,6 +13,7 @@ related:
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
   - '[[2026-10-03-runtime-manager-architecture-research]]'
 ---
+
 # `runtime-without-service-manager` adr: runtime management is deferred to application provisioning | (**status:** `accepted`)
 
 ## Problem Statement
@@ -25,7 +26,7 @@ On 2026-10-03 the operator explicitly authorized amending the runtime and relate
 
 The existing runtime already has a standalone entrypoint and verified endpoint. Its sealed interpreter, single-owner exclusion, profile admission, custody and worker containment do not require runtime administration controls. Evidence is in 2026-09-26-mcp-purpose-authentication-reference and 2026-10-03-runtime-manager-architecture-research. Those records retain historical observations; they do not authorize management implementation.
 
-The code inspection identified management in `src/cadrumo/adapters/local_runtime/startup.py`, `runtime_manager_composition.py`, the platform manager adapters, `src/cadrumo/entrypoints/runtime_management.py`, CLI runtime commands, TUI management screens, and owner-control/status transport requests. Removing only registration would leave health management in place and would not implement the operator's instruction.
+The code inspection identified management in `src/cadrumo/adapters/local_runtime/startup.py`, `runtime_manager_composition.py`, the platform manager adapters, CLI runtime commands, TUI management screens, and owner-control/status transport requests. Removing only registration would leave health management in place and would not implement the operator's instruction.
 
 ## Considered options
 

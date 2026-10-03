@@ -34,12 +34,15 @@ import logging
 import os
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
 from pydantic import BaseModel
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from dev.cache_root import dev_cache_dir
 
 from .compiled_cache import loader_code_fingerprint
@@ -153,8 +156,8 @@ def default_verdict_cache_dir() -> Path:
         The directory holding writable verdict files.
     """
     override = os.environ.get(_CACHE_DIR_ENV)
-    if override:
-        return Path(override)
+    if override and override.strip():
+        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("registry-verdict")
 
 

@@ -6,6 +6,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Protocol, runtime_checkable
 
+from dev._paths import prepare_temporary_directory
+
 from pydantic import BaseModel
 
 from cadrumo.application.filing.export_verification import (
@@ -94,7 +96,7 @@ def prove_export_conformance(
         or render_inputs.period != evidence.period
     ):
         raise ValueError("conformance vector builder returned inputs for another coordinate")
-    with TemporaryDirectory(prefix="cadrumo-export-conformance-") as temporary:
+    with TemporaryDirectory(prefix="cadrumo-export-conformance-", dir=prepare_temporary_directory()) as temporary:
         output_path = Path(temporary) / "proof-output"
         result = _export(render_inputs, output_path=output_path, schema_provider=schema_provider)
         payload = output_path.read_bytes()

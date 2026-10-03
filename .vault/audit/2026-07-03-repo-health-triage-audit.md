@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#repo-health-triage'
 date: '2026-07-03'
-modified: '2026-07-17'
-body_hash: 'sha256:c7c8d6b953b4d6653db7ce61b7d9d9a6f7a76fbd0d52119d89dd4538ac7ce6f8'
+modified: '2026-10-03'
+body_hash: 'sha256:65fcd2f5823424ba92331dbc14ffb0b867162950bbd93b24904bea65103e70ca'
 related:
-  - "[[2026-06-04-repo-health-triage-plan]]"
   - "[[2026-06-08-repo-health-diagnostics-audit]]"
 ---
 
@@ -33,8 +32,8 @@ The repo-health-triage owner surface is the set of files this campaign authored 
 
 Full hard-gate matrix (full-tree verdict versus owner-scoped verdict):
 
-- `ruff check .` (check-style): full-tree RED, 14 errors across 8 files. Owner-scoped GREEN. Failing files are `dev/import_centralization_codemod.py`, `adapters/persistence/profile/filing_amendments.py`, `adapters/persistence/profile/filing_drafts.py`, `agent/eval/_live_harness.py`, `application/filing/tests/test_complementaria_repository.py`, `application/modelo/tests/test_bienes_inversion_advisory.py`, `application/state_projection.py`, `tests/test_importlinter_ledger.py`. None is an owner file.
-- `ruff format --check .` (check-format): full-tree RED, 5 files would reformat (`packaging/mcpb/tests/test_build.py`, `agent/eval/_live_harness.py`, `application/corpus_search/tests/test_hybrid_real_model_recall.py`, `application/storage/calc_sheets/tests/test_modelo_export_parity.py`, `tests/test_wheel_content_boundary.py`). None is an owner file.
+- `ruff check .` (check-style): full-tree RED, 14 errors across 8 files. Owner-scoped GREEN. Failing files are the retired module, `adapters/persistence/profile/filing_amendments.py`, `adapters/persistence/profile/filing_drafts.py`, `agent/eval/_live_harness.py`, `application/filing/tests/test_complementaria_repository.py`, `application/modelo/tests/test_bienes_inversion_advisory.py`, `application/state_projection.py`, the retired test. None is an owner file.
+- `ruff format --check .` (check-format): full-tree RED, 5 files would reformat (`packaging/mcpb/tests/test_build.py`, `agent/eval/_live_harness.py`, `application/corpus_search/tests/test_hybrid_real_model_recall.py`, `application/storage/calc_sheets/tests/test_modelo_export_parity.py`, the retired test). None is an owner file.
 - `lint-imports` (check-imports): full-tree RED, the AEAT layered architecture contract is BROKEN (the other 4 contracts kept). 19 violating edges, primarily tests reaching adapters plus one production module `application/modelo/_review_package_signing`. No owner file appears.
 - `dev.quality.relative_imports` (check-relative-imports): full-tree RED, 8 violations across 4 test files (`adapters/inbound/tests/test_extraction_parser_paths_resolve.py`, `application/corpus_search/tests/test_hybrid_real_model_recall.py`, `entrypoints/cli/tests/test_overview_backlog_verb.py`, `entrypoints/cli/tests/test_overview_calendar_degradation.py`). No owner file appears.
 - `deptry` (check-dependencies): GREEN. No dependency issues across 1214 scanned files.

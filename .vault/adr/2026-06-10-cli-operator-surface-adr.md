@@ -4,7 +4,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-06-10'
 modified: '2026-10-03'
-body_hash: 'sha256:934efda0265d08c0eea29bc7870b2bd0238925508a6a8c81211d0f04fa38f3f4'
+body_hash: 'sha256:127896783537b040d4430aa47bfae9288d96ee30b7aa749c1b86fd9d86917d73'
 related:
   - '[[2026-06-10-cli-operator-surface-research]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
@@ -140,8 +140,7 @@ active `2026-08-13-profile-session-lifecycle-successor-adr` decision.
   no AEAT counterpart and fall under that rule's explicit English-stays-English
   exception; they are not AEAT surfaces.
 - The ledger lifecycle already carries a generic state-transition primitive
-  (`_transition_manual_transaction_lifecycle` in
-  `src/cadrumo/application/ledger/_actions_lifecycle.py`) that can target any state.
+  (`_transition_manual_transaction_lifecycle` ) that can target any state.
   No `ACTIVE`-targeting public action or CLI verb calls it; the inverse the prior
   ADR promised is one caller away, not a new subsystem.
 - The modelo-addressing-ux ADR already solved the content-addressed-id-churn shape
@@ -186,8 +185,7 @@ alternatives.
 verb. `aeat config profile switch` and `aeat config profile use` are retired
 (`_RETIRED_VERBS` at
 `src/cadrumo/entrypoints/cli/tests/test_config_profile_surface_inventory.py`); the
-surviving door is `aeat config unlock NAME`, registered in
-`src/cadrumo/entrypoints/cli/_config/_custody.py`, which names the storage-layer act
+surviving door is `aeat config unlock NAME`, registered , which names the storage-layer act
 of unsealing an encrypted bucket session, not the operator's intent. The userdocs
 campaign was forced to write "switch by unlocking" -- a gloss that exists only
 because the verb and the intent diverged.
@@ -298,7 +296,7 @@ behind a sealed calculation).
 ### D3 -- Stable operator lineage handle for ledger rows across edits (F3)
 
 **Context.** Correcting a field on a transaction changes its id: the
-transaction-id derivation in `src/cadrumo/domain/transactions/_models.py` keys on the
+transaction-id derivation keys on the
 provider identifier and verbatim narrative and "therefore changes when a
 transaction is edited". An operator who recorded `history <old-id>`, then fixed a
 typo, finds the old handle dead -- the correction the CLI invited destroyed the
@@ -375,7 +373,7 @@ reconciled.
 
 **Context (original, superseded above).** The same operator learns two period vocabularies. Modelo surfaces
 accept `0A / 1T-4T / 01-12`; ledger surfaces accept `2026Q1 / 2026-03 / 2026` via
-`_PERIOD_RE` / `_canonical_period` in `src/cadrumo/entrypoints/cli/_common.py`. A
+`_PERIOD_RE` / `_canonical_period`. A
 quarter is `1T` in one place and `2026Q1` in another, with no conversion and no
 cross-acceptance. The ledger grammar predates and has no governing ADR.
 
@@ -593,8 +591,7 @@ lifecycle-semantics decision near the safety boundary, not a read-back surface).
 ### D8 -- `preflight` defaults `--revision-id` to the active revision (F8)
 
 **Context.** "Am I ready to file this?" demands a registry-internal handle. `aeat
-config profile preflight` declares `revision_id: str = typer.Option(...)` in
-`src/cadrumo/entrypoints/cli/_config/__init__.py` with no default, so `--revision-id`
+config profile preflight` declares `revision_id: str = typer.Option(...)`  with no default, so `--revision-id`
 is mandatory; answering a readiness question forces the operator to first run
 `modelo describe`, read out an internal revision id, and paste it back.
 

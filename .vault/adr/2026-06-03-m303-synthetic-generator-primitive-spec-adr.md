@@ -4,7 +4,7 @@ tags:
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-03'
 modified: '2026-10-03'
-body_hash: 'sha256:999e6bb58f47025eb0415cb7fbdce37d5fec3f507c91ee2ec0669af043992703'
+body_hash: 'sha256:da6060f1fe58b763b6294138f08646039cb4dfaf680848e3ec05dc9d85dffab4'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
@@ -293,12 +293,12 @@ verification-chain reds were not the real green.
 
 Single atomic commit per the engine-and-fixture co-landing rule:
 
-- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` (profile patterns: remove 27/45, add primitive ids).
-- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` (legacy profile patterns: same shape).
+- the former source file (profile patterns: remove 27/45, add primitive ids).
+- the former source file (legacy profile patterns: same shape).
 - `src/cadrumo/tests/fixtures/justificantes/_generate.py` (dataclass + helper + per-fixture instantiation + drawing).
 - Regenerate the 15 M303 corpus PDFs by running `uv run python src/cadrumo/tests/fixtures/justificantes/_generate.py`.
 - Update each fixture's sidecar JSON if the sidecar declares per-casilla expected values (verify whether the sidecars carry expected casilla values; if so, they need the new primitive entries).
-- Add the anti-tautology test as `src/cadrumo/adapters/inbound/declaracion/test_m303_primitive_anti_tautology.py`.
+- Add the anti-tautology test as the former source file.
 
 Estimated change footprint: ~80-100 LOC across the generator + ~20 LOC
 profile changes + ~50 LOC anti-tautology test + binary fixture
@@ -339,7 +339,7 @@ split into base/cuota pairs:
 `soportado_interiores_base + soportado_interiores_cuota`.
 
 The actual M303 registry casillas (verified in
-`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
+
 and the parallel 2009-y-siguientes file) are single-leaf cuota IDs:
 
 - `iva.repercutido.general` — one Decimal, `input_kind = "bound"`

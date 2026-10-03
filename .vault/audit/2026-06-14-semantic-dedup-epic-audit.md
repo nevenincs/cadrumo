@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#semantic-dedup-epic'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:6a98de4494e584abc0f34cc0990300e83077b76a62509f58684d07ee92205f3a'
+modified: '2026-10-03'
+body_hash: 'sha256:bae4318d2e9a2c0ba2a0415e8ee62d3cc6c8594f3f2f7c629576aa4de7a65514'
 related:
   - "[[2026-06-13-semantic-dedup-epic-adr]]"
-  - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
 
 # `semantic-dedup-epic` audit: `Semantic Deduplication Discovery Pass 2 (RAG cluster sweep)`
@@ -50,40 +49,33 @@ quality cleanup, none is a live calculation bug.
 ### Actionable duplication clusters
 
 - **C1-1 — `sha256_hex(bytes) -> str` (HIGH for named helpers, MED for tail).**
-  Canonical: `src/aeat/core/hashing.py:17` (its docstring already instructs
+  Canonical: the retired module (its docstring already instructs
   callers not to inline `hashlib.sha256(x).hexdigest()`). Byte-identical
-  redeclarations: `src/aeat/adapters/persistence/storage/sql/_secure_object_crypto.py:11`
-  (same name + signature), `src/aeat/application/storage/calc_sheets/_workbook_export.py:406`
+  redeclarations: the retired module
+  (same name + signature), the retired module
   (`_sha256`). Plus a long inline tail of ~50 full-digest sites across
   `domain/`, `application/`, `adapters/` that are mechanical 1:1 swaps.
   Excluded: every truncated-digest `…hexdigest()[:16]`/`[:12]` site (different
   output shape).
 
 - **C1-2 — chunked-read file SHA-256 (MED-HIGH).** Canonical:
-  `src/aeat/core/hashing.py:26` (`hash_file`) / `:42` (`sha256_file`).
-  Re-implemented 64 KiB-chunk loops: `src/aeat/adapters/inbound/pdf/_utils.py:22`
-  (substitutable with error-wrap), `src/aeat/domain/calculations/registry/_sources.py:71`,
-  `src/aeat/domain/manuals/_fetch.py:231`,
-  `src/aeat/adapters/persistence/storage/attachment.py:222`,
-  `src/aeat/adapters/inbound/sanitizer/_pipeline.py:225`.
+  The retired module (`hash_file`) / `:42` (`sha256_file`).
+  Re-implemented 64 KiB-chunk loops: the retired module
+  (substitutable with error-wrap), the retired module,
 
 - **C1-3 — inline euro-cent quantize (HIGH).** Canonical:
-  `src/aeat/core/money/__init__.py:24` (`round_to_cents`). Lone outlier:
-  `src/aeat/application/filing/_export.py:332` (`_MONEY_QUANT`) + `:563`
+  The retired module (`round_to_cents`). Lone outlier:
+  The retired module (`_MONEY_QUANT`) + `:563`
   re-derive `round_to_cents(abs(amount))` inline. The sibling fichero encoder
-  `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py:315`
   already imports the canonical — proving the swap is behaviour-identical.
 
 - **C2-1 — `selector_as_dict` binding-selector normalizer (HIGH).** Canonical:
-  `src/aeat/domain/calculations/registry/_binding_selector_utils.py:12`
   (already `__all__`-exported and consumed by three modules). Byte-identical
-  private clones: `src/aeat/domain/calculations/registry/_withholding_bindings.py:115`,
-  `src/aeat/domain/calculations/registry/_bindings_previous_filing.py:224`,
-  `src/aeat/domain/calculations/registry/_formula_initial_values.py:276`.
+  private clones: the retired module,
 
 - **C2-2 — uppercase-alpha code validator + `_values_unique` (MED).** No shared
   home today; nominate a parameterized validator factory in
-  `src/aeat/domain/calculations/registry/_binding_selector_utils.py`. The
+  The retired module. The
   uppercase-alpha check is copied across ~7 observation models in the binding
   modules (`_invoice_bindings.py:81`, `_counterpart_bindings.py:66`,
   `_withholding_bindings.py:63`, `_detail_record_bindings.py:62/197/331/450`);
@@ -93,36 +85,35 @@ quality cleanup, none is a live calculation bug.
   error-message string varies — absorbable by a factory parameter.
 
 - **C3-1 — `IvaRate -> IvaRateKind` mapping defined twice (HIGH).** Canonical:
-  `src/aeat/domain/invoices/_enums.py:76` (`_IVA_RATE_TO_IVA_KIND`, exposed via
+  The retired module (`_IVA_RATE_TO_IVA_KIND`, exposed via
   `iva_rate_kind()` and already consumed cross-domain by
   `application/aggregation/_oss_ioss.py:250`). Duplicate dict rebuilt with
-  lazy-import gymnastics: `src/aeat/domain/iva/_invoice_classification.py:85`
+  lazy-import gymnastics: the retired module
   (`_iva_rate_to_iva_kind`). Import direction invoices→iva already exists, so
   consuming the canonical adds no new dependency edge.
 
 - **C4-1 — review payload duplicates base payload (HIGH; JSON-shape sensitive).**
-  `src/aeat/application/ledger/_models.py:339` (`LedgerTransactionReviewPayload`)
+  The retired module (`LedgerTransactionReviewPayload`)
   is a field-for-field copy of `:294` (`LedgerTransactionPayload`) plus one
   `review_status` field (incl. a copy-pasted `_validate_source_jurisdiction`);
-  the builder `src/aeat/application/ledger/_actions_manual.py:301` likewise
+  the builder the retired module likewise
   copies `:266`. Refactor: extract the common base, have the review shape
   extend it. Caveat: both are registered CLI `OutputSchema` payloads — the
   serialized JSON must stay byte-identical (`test_json_schema_conformance.py`
   guards drift).
 
 - **C4-2 — `_display_decimal` triplication (HIGH).** Canonical:
-  `src/aeat/application/ledger/_actions_common.py:557` (already reused by
+  The retired module (already reused by
   `_actions_manual.py:62`). Identical body re-declared at
-  `src/aeat/application/ledger/_review_projection.py:198`.
 
 - **C5-1 — content-hash integrity verification (MED).** No canonical home;
   the `sha256-`-prefix-strip + digest + compare + raise kernel is open-coded in
-  `src/aeat/adapters/outbound/storage/_local.py:304` and
-  `src/aeat/adapters/outbound/storage/_google_drive.py:609`. Extract only the
+  The retired module and
+  The retired module. Extract only the
   shared compare-and-raise kernel; each backend keeps its own error message/context.
 
 - **C6-1 — active-profile bucket-id guard (HIGH).** Canonical:
-  `src/aeat/entrypoints/cli/_common.py:388` (`_active_bucket_id_or_bad`,
+  The retired module (`_active_bucket_id_or_bad`,
   delegating to the shared `_no_active_profile_refusal()` at `:132`).
   Per-file copies with identical bodies: `_ledger_inventory_cli.py:36`,
   `_ledger_ratios_cli.py:32` (+ `_ratios_bucket_and_profile` at `:43`),

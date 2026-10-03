@@ -6,10 +6,8 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e8baf06dadbca63426cd23eb18b4668519911c11841bb310c7645170a5d2cfc'
+body_hash: 'sha256:ad9779a224ac01a885294ea85d416c21820641b6cb194d95f7cc9be1539ac8c3'
 related:
-  - '[[2026-07-17-cli-authority-quality-backlog-ledger]]'
-  - '[[2026-07-17-cli-authority-quality-backlog-plan]]'
   - '[[2026-07-18-cli-authority-quality-backlog-adr]]'
   - '[[2026-07-18-cli-authority-quality-backlog-research]]'
   - '[[2026-07-22-cli-authority-quality-backlog-close-honesty-review-audit]]'
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 ### audit
 
 - `2026-07-22-cli-authority-quality-backlog-close-honesty-review-audit` - `cli-authority-quality-backlog` audit: `Close honesty review`
-
-### exec
-
-- `2026-07-17-cli-authority-quality-backlog-ledger` - `cli-authority-quality-backlog` ledger
-
-### plan
-
-- `2026-07-17-cli-authority-quality-backlog-plan` - `cli-authority-quality-backlog` plan
 
 ### research
 

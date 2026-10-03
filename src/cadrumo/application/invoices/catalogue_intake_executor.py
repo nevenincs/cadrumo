@@ -20,7 +20,7 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import IvaCategory
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
@@ -54,11 +54,10 @@ from .source_resolver import iva_category_for_operation_type
 def _require_profile(
     request: OperationRequest[BaseModel], context: OperationExecutorContext
 ) -> InvoiceImportRequest | InvoiceWizardRequest:
-    payload = request.payload
-    if type(payload) is not INVOICE_INTAKE_REQUEST_TYPES.get(request.definition_id) or not isinstance(
-        payload, (InvoiceImportRequest, InvoiceWizardRequest)
-    ):
+    request_type = INVOICE_INTAKE_REQUEST_TYPES.get(request.definition_id)
+    if request_type is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    payload = require_access_request_payload(request, definition_id=request.definition_id, payload_type=request_type)
     require_operation_profile(request, context, payload.profile_id)
     return payload
 

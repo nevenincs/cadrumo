@@ -6,8 +6,7 @@ date: '2026-08-06'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e4f48230b0ecac0e019e31b0aecf9587ad9dccb986f1f31ea9002abd405d07d0'
-related:
-  - "[[2026-06-13-semantic-dedup-epic-plan]]"
+related: []
 ---
 # `semantic-dedup-epic` audit: `204 of 239 execution records carry no authored content at all`
 

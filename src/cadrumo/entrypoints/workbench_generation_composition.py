@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
@@ -46,6 +48,7 @@ def compose_secure_workbench_generation_provider(
     from ..core.time.clock import now
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
     from .calendar_evidence_composition import compose_calendar_aeat_reader
+    from .censal_readback_composition import read_stored_censal_observation
     from .ledger_action_composition import compose_ledger_action_ports
 
     account_session_reader()
@@ -77,6 +80,7 @@ def compose_secure_workbench_generation_provider(
             ledger_action_ports=ledger_action_ports,
             verification_repository=calculation_binding.verification_repository(),
             notification_custody_reader=_notification_custody_reader(profile_id),
+            census_observation_reader=lambda: asyncio.run(read_stored_censal_observation(UUID(profile_id))),
             result_casilla_reader=_declaration_result_casilla_reader(operation),
             operation_contracts=operation_contracts,
             modelo_projection_reader=modelo_workspace_projection_reader(operation),

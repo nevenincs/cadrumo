@@ -27,7 +27,12 @@ from ..operations.access_resolution import (
     operation_disclosures,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationIdentity,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
@@ -96,8 +101,10 @@ class AutomationOperationRequest(CredentialFreeOperationRequest):
     review_digest: ContentDigest | None = None
 
 
-type AutomationAdministrationFactory = Callable[[OperationExecutorContext, UUID], AutomationAdministrationExecution]
-type AutomationInventoryReader = Callable[[OperationExecutorContext, UUID], Awaitable[AutomationInventory]]
+#: Outer capabilities receive only the invocation identity, never the executor's
+#: supervisor-owned capabilities.
+type AutomationAdministrationFactory = Callable[[OperationIdentity, UUID], AutomationAdministrationExecution]
+type AutomationInventoryReader = Callable[[OperationIdentity, UUID], Awaitable[AutomationInventory]]
 
 
 def project_automation_inventory_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -271,14 +278,14 @@ class AutomationAdministrationExecutor:
     ) -> AutomationAdministrationExecution:
         if self.factory is None:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        service = self.factory(context, profile_id)
+        service = self.factory(context.identity, profile_id)
         await await_cancellation_complete(service.require_profile(profile_id), task_name="automation-profile-binding")
         return service
 
     async def _execute_inventory(self, profile_id: UUID, context: OperationExecutorContext) -> str:
         if self.inventory_reader is not None:
             inventory = await await_cancellation_complete(
-                self.inventory_reader(context, profile_id), task_name="automation-inventory-reader"
+                self.inventory_reader(context.identity, profile_id), task_name="automation-inventory-reader"
             )
         else:
             service = await self._service_for_profile(profile_id, context)

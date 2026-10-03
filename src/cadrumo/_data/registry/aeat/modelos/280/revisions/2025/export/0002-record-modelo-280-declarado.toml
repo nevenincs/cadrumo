@@ -1,0 +1,568 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-280-fichero-2022'
+
+[[revisions.2025.export_layouts.records]]
+id = 'modelo-280-declarado'
+record_type = 'declarado'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '280'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-ejercicio'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-nif-declarante'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-nif-declarado'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'declarado-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-representante-legal-nif'
+offset = 27
+length = 9
+kind = 'casilla'
+casilla_id = 'representante-legal-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-nombre-declarado'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'declarado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-tipo-plan'
+offset = 76
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo-plan-ahorro'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+]
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-tipo-identificador'
+offset = 77
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo-identificador'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-identificador-producto'
+offset = 78
+length = 24
+kind = 'casilla'
+casilla_id = 'identificador-producto'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-fecha-apertura-component-102'
+offset = 102
+length = 4
+kind = 'casilla'
+casilla_id = 'fecha-apertura'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-year'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-fecha-apertura-component-106'
+offset = 106
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-apertura'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-month'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-fecha-apertura-component-108'
+offset = 108
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-apertura'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-day'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-clave-alta'
+offset = 110
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-alta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-aportaciones-ejercicio-component-111'
+offset = 111
+length = 4
+kind = 'casilla'
+casilla_id = 'aportaciones-ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-aportaciones-ejercicio-component-115'
+offset = 115
+length = 2
+kind = 'casilla'
+casilla_id = 'aportaciones-ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-positivos-ejercicio-component-117'
+offset = 117
+length = 8
+kind = 'casilla'
+casilla_id = 'rendimientos-positivos-ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-positivos-ejercicio-component-125'
+offset = 125
+length = 2
+kind = 'casilla'
+casilla_id = 'rendimientos-positivos-ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-ejercicio-component-127'
+offset = 127
+length = 8
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-ejercicio-component-135'
+offset = 135
+length = 2
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-ejercicio'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-extincion-plan'
+offset = 137
+length = 1
+kind = 'casilla'
+casilla_id = 'extincion-plan'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+]
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1192-2022:art-cuarto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-fecha-extincion-component-138'
+offset = 138
+length = 4
+kind = 'casilla'
+casilla_id = 'fecha-extincion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-year'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-fecha-extincion-component-142'
+offset = 142
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-extincion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-month'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-fecha-extincion-component-144'
+offset = 144
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-extincion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-day'
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-positivos-acumulados-component-146'
+offset = 146
+length = 8
+kind = 'casilla'
+casilla_id = 'rendimientos-positivos-acumulados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-positivos-acumulados-component-154'
+offset = 154
+length = 2
+kind = 'casilla'
+casilla_id = 'rendimientos-positivos-acumulados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-acumulados-component-156'
+offset = 156
+length = 8
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-acumulados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-acumulados-component-164'
+offset = 164
+length = 2
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-acumulados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-base-retencion-practicada-component-166'
+offset = 166
+length = 8
+kind = 'casilla'
+casilla_id = 'base-retencion-practicada'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-base-retencion-practicada-component-174'
+offset = 174
+length = 2
+kind = 'casilla'
+casilla_id = 'base-retencion-practicada'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-imputables-sign'
+offset = 176
+length = 1
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-imputables'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-zero-sign'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-imputables-component-177'
+offset = 177
+length = 8
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-imputables'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-integer-part'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-rendimientos-negativos-imputables-component-185'
+offset = 185
+length = 2
+kind = 'casilla'
+casilla_id = 'rendimientos-negativos-imputables'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-fractional-digits'
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1822-2016:art-sexto',
+]
+source_refs = ['aeat-dr-280-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-280-t2-blancos'
+offset = 187
+length = 314
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hap-2118-2015:art-1']
+source_refs = ['aeat-dr-280-2022']
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#codebase-monolith-decomposition'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:d9e531e307b396efb692de648fe8eb3a1bd547ecadc16d1b8d380a30aa156033'
-related:
-  - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:8bc5c5f6fd1af167a9ecebd471f02fe80050c4ded1070cc91f6697b26addd1f7'
+related: []
 ---
 
 # `codebase-monolith-decomposition` Code Review
@@ -39,7 +38,7 @@ Reviewed the completed continuation covering `S53`, `S55`, `S56`, `S57`, `S112`,
 
 Verification recorded in the step logs covers focused Ruff and compile checks, modelo action behavior, natural-key modelo CLI UX, ledger application and CLI integration behavior, live IVA remote-state behavior, live filed-data behavior, registry CLI filed-data helper behavior, and live-read CLI subgroup behavior.
 
-Residual risks remain intentionally open: `src/aeat/application/live/__init__.py` is still above the final 1250-line target, and `S115` tracks the remaining filed-data capture orchestration extraction. Broader application, registry, adapter, persistence, and core decomposition rows also remain open.
+Residual risks remain intentionally open: the retired module was still above the final 1250-line target, and `S115` tracks the remaining filed-data capture orchestration extraction. Broader application, registry, adapter, persistence, and core decomposition rows also remain open.
 
 ## REVIEW-005 | LOW | No blocking findings in W02 residual config, ledger, and modelo-test tranche
 
@@ -101,7 +100,7 @@ Verification covers ruff, compileall, direct facade smoke imports, 46 focused ap
 
 ## REVIEW-013 | LOW | No blocking findings in modelo residual action closure
 
-Reviewed the W03.P11 `S135` through `S140` residual modelo action closure. Verification, filing, amendment, and external import workflows now live in focused private modules while `src/aeat/application/modelo/_actions.py` remains a compatibility facade and `aeat.application.modelo` remains the public boundary. The extraction keeps clean-state, IVA wallet, amendment evidence, import custody, supersession, and bucket-event policy in the application layer; no policy moved to CLI.
+Reviewed the W03.P11 `S135` through `S140` residual modelo action closure. Verification, filing, amendment, and external import workflows now live in focused private modules while the retired module remains a compatibility facade and `aeat.application.modelo` remains the public boundary. The extraction keeps clean-state, IVA wallet, amendment evidence, import custody, supersession, and bucket-event policy in the application layer; no policy moved to CLI.
 
 Verification covers Ruff, compileall, 92 focused application modelo tests, 66 focused import/file/export tests, 36 focused modelo CLI work/export/history tests, 8 architecture-boundary tests, public and legacy facade smoke imports, a private-submodule consumer scan across entrypoints/adapters/domain, and direct line-budget confirmation that `_actions.py` is 258 lines. The modelo production callables in this slice are below the 180-line hard limit. The repository-wide size-budget gate still reports unrelated stale git inventory plus overview/config callable offenders, so that residual risk remains tracked outside the modelo closure.
 
@@ -115,7 +114,7 @@ Verification covers Ruff, compileall, 39 focused application live tests, 36 focu
 
 Reviewed the W03.P11 `S123` and `S124` overview root decomposition. Calendar DTOs, event synthesis, filing-evidence merge, applicability filtering, profile completeness warnings, and `build_overview_calendar` now live in `_calendar.py`; `aeat.application.overview` remains the public facade and retains the existing `derive_modelo_applicability` re-export. Status-report advisory helpers remain in the root because they are separate from calendar aggregation.
 
-Verification covers Ruff, compileall, 147 focused overview application tests, 49 focused overview CLI tests, and 26 focused core logging tests. The verification surfaced and repaired a logging-redaction regression where placeholder-bearing sensitive assignments removed the placeholder but left `LogRecord.args` populated. Residual risk remains outside this slice: `src/aeat/application/overview/tests/test_calendar.py` is still oversized and should be handled in a test-surface decomposition row.
+Verification covers Ruff, compileall, 147 focused overview application tests, 49 focused overview CLI tests, and 26 focused core logging tests. The verification surfaced and repaired a logging-redaction regression where placeholder-bearing sensitive assignments removed the placeholder but left `LogRecord.args` populated. Residual risk remains outside this slice: the retired test was still oversized and should be handled in a test-surface decomposition row.
 
 ## REVIEW-016 | LOW | No blocking findings in modelo internal import cleanup
 
@@ -157,7 +156,7 @@ Verification covers Ruff, compileall, direct registry equality comparison, publi
 
 ## REVIEW-022 | LOW | No blocking findings in justificante generator split
 
-Reviewed W05.P12 `S125`. The committed synthetic justificante regeneration command remains `src/aeat/tests/fixtures/justificantes/_generate.py`, while shared receipt rendering and sidecar writing live in `_generate_base.py`, IVA/pagos-fraccionados corpus fixtures live in `_generate_iva_corpus.py`, and the remaining modelo families live in `_generate_misc_a.py` and `_generate_misc_b.py`.
+Reviewed W05.P12 `S125`. The committed synthetic justificante regeneration command remains the retired test, while shared receipt rendering and sidecar writing live in `_generate_base.py`, IVA/pagos-fraccionados corpus fixtures live in `_generate_iva_corpus.py`, and the remaining modelo families live in `_generate_misc_a.py` and `_generate_misc_b.py`.
 
 Verification covers Ruff, compileall, compatibility export smoke, 23 focused fixture/provenance tests, the 2-test hard size-budget guard, and vault frontmatter/link checks. No fixture PDFs were regenerated or changed in this slice.
 
@@ -231,4 +230,4 @@ Verification covers full Ruff over `src/aeat`, compileall over `src/aeat`, the 4
 
 Reviewed the final hard-budget closure after staged and unstaged worktree changes shifted during execution. The only blocking issue found in the reviewed slice was a transient `split_transaction` persistence call that passed the optional input repository parameter instead of the resolved repository. That was repaired before handoff.
 
-Post-fix verification covers Ruff for `src/aeat/application/ledger/_actions_split_merge.py`, 18 focused ledger split/merge tests, and the 4-test hard module/callable budget lane. A later attempted dynamic scoped test command accidentally ran broad collection because the changed Python list was empty after concurrent index changes; those collection errors are unrelated full-tree fixture/conftest issues and are not used as closure evidence.
+Post-fix verification covers Ruff for the retired module, 18 focused ledger split/merge tests, and the 4-test hard module/callable budget lane. A later attempted dynamic scoped test command accidentally ran broad collection because the changed Python list was empty after concurrent index changes; those collection errors are unrelated full-tree fixture/conftest issues and are not used as closure evidence.

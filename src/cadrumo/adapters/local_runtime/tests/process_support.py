@@ -8,6 +8,17 @@ import sys
 import sysconfig
 from pathlib import Path
 
+from cadrumo.core.storage_environment import storage_directory
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
+
+
+def runtime_namespace_base() -> Path:
+    """Create the configured socket base for temporary integration namespaces."""
+    root = storage_directory("CADRUMO_RUNTIME_SOCKET_DIR", storage_location(StorageCategory.RUNTIME_SOCKETS).subpath)
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    return root
+
 
 def native_python() -> Path:
     """Select the interpreter process itself, bypassing Windows venv redirectors."""

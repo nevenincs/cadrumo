@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:de0e2ee00a100acb11bdc60c1874ad36634cb046d59de1102ce9990c629bee84'
+body_hash: 'sha256:2f0f7261ea4e983fde129361fc33002a88833b2e413b6175b02e9784bc4fbd6a'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -43,7 +43,7 @@ decided here is the boundary's shape, not whether inference is worth having.
   back in-process, and the product currently ships none (`pyproject.toml:181-187`, the
   retired `search` extra).
 - Every AST gate enforcing secure-storage-only persistence derives its corpus from
-  `SRC_CADRUMO`, hard-coded as `src/cadrumo` in `src/cadrumo/tests/_inventory.py:11`. Code
+  `SRC_CADRUMO`, hard-coded as `src/cadrumo`. Code
   in a sibling top-level package is invisible to all five. **But the five do not share one
   mechanism, and the difference is load-bearing** — see the fail-open finding below.
 - `.importlinter:2` sets `root_package = cadrumo`, so a sibling package is outside the
@@ -63,7 +63,7 @@ decided here is the boundary's shape, not whether inference is worth having.
   failure.** `_SENSITIVE_SURFACES`
   (`adapters/persistence/storage/tests/test_sensitive_persistence_policy.py:24-42`) is an
   enumerated tuple, not a walk. The iteration at `:353-354` feeds each entry to
-  `non_test_python_files_under` (`src/cadrumo/tests/_inventory.py:142-150`), which filters
+  `non_test_python_files_under`, which filters
   an rglob — so **a surface path that does not exist, or that has been emptied, yields the
   empty tuple with no error, no warning and no failure.** There is no existence check, no
   `is_dir()`, no non-vacuity assertion anywhere in either file. A named entry pointing at an
@@ -958,7 +958,7 @@ cloud-derived artefacts BY the transport segment, so an apparatus built on the c
 axis would survey for a value that can no longer be assumed.
 
 **This note is not self-executing, and the code it rules on has landed with it.** The
-minting-side gate in `src/cadrumo/tests/test_cloud_transport_fully_deleted.py` no longer
+minting-side gate no longer
 asserts that every reader stamps on-host. It partitions the readers instead: those whose
 constructor declares no provider parameter -- reachable with no consent token -- must stamp
 on-host, and those that accept one must stamp the transport the read actually used, never

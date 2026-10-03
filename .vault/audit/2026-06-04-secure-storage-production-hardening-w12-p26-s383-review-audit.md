@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:53284dbb460d7398b625a7eb32f100ed0e368bdde0b51bfb19351358c9d8601c'
+modified: '2026-10-03'
+body_hash: 'sha256:8a01781d7ce8cf533804d01c11e7c346a7325045c48b5a1c829b6c2dd83a50d0'
 related: []
 ---
 
@@ -25,6 +25,6 @@ The natural-key tests create a real isolated profile, create Modelo 130 work, ca
 ## S383-004 | PASS | Validation
 
 - `uv run --no-sync ruff check ...`
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_selectors.py src/aeat/entrypoints/cli/test_modelo_projection.py src/aeat/entrypoints/cli/test_modelo_work_natural_key.py src/aeat/entrypoints/cli/test_modelo_work_ux.py`
+- the historical check
 
 Disposition: close `AFR-281`.

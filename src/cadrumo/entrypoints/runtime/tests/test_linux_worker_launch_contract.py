@@ -13,6 +13,7 @@ import pytest
 from cadrumo.adapters.local_runtime import linux_worker_process
 from cadrumo.adapters.local_runtime.manager_commands import NativeManagerCommand
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.config import Settings
 from cadrumo.entrypoints.runtime import linux_worker_guardian
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -150,6 +151,8 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     opened: list[int] = []
     closed: list[int] = []
     launched: list[tuple[str, ...]] = []
+    forwarded_names = Settings.storage_env_var_names() | {"TEMP", "TMP", "TMPDIR"}
+    expected_environment = _ENVIRONMENT | {name: value for name, value in os.environ.items() if name in forwarded_names}
     native_stat = Path.stat
 
     def stat(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
@@ -189,7 +192,7 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     ) -> Child:
         assert starts == [41, 41] and opened == [41]
         assert stdin == stdout == stderr == -3
-        assert env == _ENVIRONMENT and close_fds and start_new_session
+        assert env == expected_environment and close_fds and start_new_session
         launched.append(arguments)
         return Child()
 
@@ -199,7 +202,11 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
         "sys",
         SimpleNamespace(platform="linux", flags=SimpleNamespace(isolated=True), executable=sys.executable),
     )
-    monkeypatch.setattr(linux_worker_guardian, "os", SimpleNamespace(getuid=lambda: 1001, close=closed.append))
+    monkeypatch.setattr(
+        linux_worker_guardian,
+        "os",
+        SimpleNamespace(getuid=lambda: 1001, close=closed.append, environ=os.environ),
+    )
     monkeypatch.setattr(linux_worker_guardian, "select", SimpleNamespace(poll=Poller, POLLIN=1, POLLERR=2, POLLHUP=4))
     monkeypatch.setattr(linux_worker_guardian, "subprocess", SimpleNamespace(Popen=launch, DEVNULL=-3))
     monkeypatch.setattr(linux_worker_guardian, "linux_process_start_identity", start)
@@ -210,3 +217,34 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     )
     assert launched == [(sys.executable, *command)]
     assert closed == [51]
+
+
+def test_guardian_forwards_only_storage_controls_to_the_contained_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+    inherited = {
+        "CADRUMO_STORAGE_ROOT": "/managed/storage",
+        "CADRUMO_TEMP_DIR": "tmp",
+        "CADRUMO_RUNTIME_SOCKET_DIR": "runtime",
+        "CADRUMO_LLM_OPENAI_API_KEY": "must-not-cross-worker-boundary",
+        "TEMP": "/managed/storage/tmp",
+        "TMP": "/managed/storage/tmp",
+        "TMPDIR": "/managed/storage/tmp",
+    }
+    captured: dict[str, object] = {}
+    sentinel = object()
+
+    def launch(_arguments: tuple[str, ...], **kwargs: object) -> object:
+        captured.update(kwargs)
+        return sentinel
+
+    monkeypatch.setattr(linux_worker_guardian, "os", SimpleNamespace(environ=inherited))
+    monkeypatch.setattr(linux_worker_guardian, "sys", SimpleNamespace(executable="/python"))
+    monkeypatch.setattr(linux_worker_guardian, "subprocess", SimpleNamespace(Popen=launch, DEVNULL=-3))
+
+    assert linux_worker_guardian._launch_worker(_DEFAULT) is sentinel
+    expected = _ENVIRONMENT | {
+        name: value
+        for name, value in inherited.items()
+        if name in Settings.storage_env_var_names() | {"TEMP", "TMP", "TMPDIR"}
+    }
+    assert captured["env"] == expected
+    assert "CADRUMO_LLM_OPENAI_API_KEY" not in expected

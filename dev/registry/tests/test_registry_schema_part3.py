@@ -111,6 +111,146 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
         committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
+@pytest.mark.parametrize(
+    "expression",
+    (
+        'positive_application_le_present_stock(["01"])',
+        'positive_application_le_present_stock(["01", "02", "03"])',
+    ),
+    ids=("one-operand", "three-operands"),
+)
+def test_validator_rejects_positive_application_stock_predicate_wrong_arity(expression: str) -> None:
+    """The canonical registry gate rejects malformed exact-pair declarations."""
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        id="positive-application-le-present-stock:wrong-arity",
+        predicate_id="modelo-130-positive-application-stock-wrong-arity",
+        legal_refs=("rd-439-2007:art-110",),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must name exactly 2 casilla ids"):
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_positive_application_stock_predicate_unknown_casilla() -> None:
+    """The generic CASILLA_LIST authoring route checks both pair references."""
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        id="positive-application-le-present-stock:unknown-casilla",
+        predicate_id="modelo-130-positive-application-stock-unknown-casilla",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='positive_application_le_present_stock(["15", "missing-casilla"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="positive_application_le_present_stock references unknown casilla 'missing-casilla'",
+    ):
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+
+
+@pytest.mark.parametrize(
+    ("expression", "role"),
+    (
+        (
+            'positive_application_le_present_stock(["tipo_renta", "base_imponible"])',
+            "application",
+        ),
+        (
+            'positive_application_le_present_stock(["base_imponible", "tipo_renta"])',
+            "stock",
+        ),
+    ),
+    ids=("text-application", "text-stock"),
+)
+def test_validator_rejects_text_operands_for_positive_application_stock_predicate(
+    expression: str,
+    role: str,
+) -> None:
+    """Both pair members must be Decimal casillas, not absent text projections."""
+    modelo, catalogues = _committed_modelo("210")
+    revision = modelo.revisions["2025"]
+    predicate = VerificationPredicateDefinition(
+        id=f"positive-application-le-present-stock:text-{role}",
+        predicate_id=f"modelo-210-positive-application-stock-text-{role}",
+        legal_refs=("trlirnr-rdleg-5-2004:art-24",),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=rf"{role} casilla 'tipo_renta' must be a Decimal numeric casilla",
+    ):
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_accepts_decimal_operands_for_positive_application_stock_predicate() -> None:
+    """The proposed ordinary M200 amount pair passes the same authoring gate."""
+    modelo, catalogues = _committed_modelo("200")
+    revision = modelo.revisions["2024"]
+    expression = 'positive_application_le_present_stock(["DP200014:00547", "00670"])'
+    existing_index = next(
+        index
+        for index, item in enumerate(revision.verification_predicates)
+        if item.predicate_id == "modelo-200-compensacion-bin-no-excede-stock-disponible"
+    )
+    existing = revision.verification_predicates[existing_index]
+    predicate = existing.model_copy(
+        update={
+            "id": "positive-application-le-present-stock:compensacion-bin-no-excede-stock-disponible",
+            "expression": expression,
+        },
+    )
+    predicates = list(revision.verification_predicates)
+    predicates[existing_index] = predicate
+    mutated = revision.model_copy(update={"verification_predicates": tuple(predicates)})
+
+    committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+
+
+@pytest.mark.parametrize("revision_id", ("2024", "2025-y-siguientes"))
+def test_committed_m200_materializes_stock_guard_and_preserves_statutory_cap(revision_id: str) -> None:
+    """Both source revisions retain the stock guard and the statutory cap."""
+    modelo, _catalogues = _committed_modelo("200")
+    revision = modelo.revisions[revision_id]
+
+    stock_guard = next(
+        predicate
+        for predicate in revision.verification_predicates
+        if predicate.predicate_id == "modelo-200-compensacion-bin-no-excede-stock-disponible"
+    )
+    assert (stock_guard.id, stock_guard.expression, stock_guard.finding_kind) == (
+        "positive-application-le-present-stock:compensacion-bin-no-excede-stock-disponible",
+        'positive_application_le_present_stock(["DP200014:00547", "00670"])',
+        "BLOCKING_RULE",
+    )
+
+    statutory_cap = next(
+        predicate
+        for predicate in revision.verification_predicates
+        if predicate.predicate_id == "modelo-200-compensacion-bin-no-excede-limite-art-26"
+    )
+    assert (statutory_cap.expression, statutory_cap.finding_kind) == (
+        'cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])',
+        "BLOCKING_RULE",
+    )
+
+
 def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
     """A roll_forward_balances predicate must name exactly four casilla ids.
 

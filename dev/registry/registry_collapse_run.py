@@ -25,8 +25,8 @@ from .registry_collapse_fingerprints import (
     fingerprint_tree,
     published_authority_root,
 )
-from .registry_collapse_inputs import _copy_source_dependencies, _source_dependency_paths
-from .registry_collapse_models import _MODELOS, _TOOL_INPUTS, CheckStatus, FingerprintEntry, ModeloOutcome
+from .registry_collapse_inputs import _copy_source_dependencies, _source_dependency_paths, _tool_input_paths
+from .registry_collapse_models import _MODELOS, CheckStatus, FingerprintEntry, ModeloOutcome
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,7 +40,6 @@ class _RunContext:
     sources: tuple[ModeloSource, ...]
     discovered: int
     requested_modelos: tuple[str, ...]
-    tool_paths: tuple[Path, ...]
     live_registry_before: tuple[FingerprintEntry, ...]
     tools_before: tuple[FingerprintEntry, ...]
     source_dependencies: tuple[Path, ...]
@@ -140,16 +139,22 @@ def _prepare_run_context(
 ) -> _RunContext:
     registry_root, source_root, work_dir = _validated_run_paths(registry_root, source_root, work_dir)
     snapshot_registry, snapshot_source_root, registry_candidate = _snapshot_paths(work_dir)
-    _copy_registry_snapshots(registry_root, snapshot_registry, registry_candidate)
-    sources, discovered = _selected_sources(snapshot_registry, modelos)
-    tool_paths = tuple(REPO_ROOT / relative for relative in _TOOL_INPUTS)
     live_registry_before = fingerprint_tree(registry_root)
-    tools_before = fingerprint_paths(tool_paths, relative_to=REPO_ROOT)
+    tools_before = _tool_fingerprints(REPO_ROOT)
     source_dependencies = _source_dependency_paths(source_root)
     source_dependencies_before = fingerprint_paths(source_dependencies, relative_to=source_root)
-    _copy_source_dependencies(source_dependencies, source_root=source_root, destination=snapshot_source_root)
     published_root = published_authority_root(authority_root)
     published_before = fingerprint_optional_tree(published_root)
+    _copy_registry_snapshots(registry_root, snapshot_registry, registry_candidate)
+    _copy_source_dependencies(source_dependencies, source_root=source_root, destination=snapshot_source_root)
+    _require_snapshots_match_inputs(
+        snapshot_registry,
+        registry_candidate,
+        snapshot_source_root,
+        live_registry_before,
+        source_dependencies_before,
+    )
+    sources, discovered = _selected_sources(snapshot_registry, modelos)
     support, ceiling = _run_support(snapshot_registry)
     details_dir = work_dir / "modelos"
     details_dir.mkdir()
@@ -163,7 +168,6 @@ def _prepare_run_context(
         sources=sources,
         discovered=discovered,
         requested_modelos=tuple(modelos),
-        tool_paths=tool_paths,
         live_registry_before=live_registry_before,
         tools_before=tools_before,
         source_dependencies=source_dependencies,
@@ -174,6 +178,22 @@ def _prepare_run_context(
         ceiling=ceiling,
         details_dir=details_dir,
     )
+
+
+def _require_snapshots_match_inputs(
+    snapshot_registry: Path,
+    registry_candidate: Path,
+    snapshot_source_root: Path,
+    registry_before: tuple[FingerprintEntry, ...],
+    dependencies_before: tuple[FingerprintEntry, ...],
+) -> None:
+    """Refuse a frozen input that differs from the pre-copy live image."""
+    if fingerprint_tree(snapshot_registry) != registry_before:
+        raise RuntimeError("registry source snapshot differs from the captured live input")
+    if fingerprint_tree(registry_candidate) != registry_before:
+        raise RuntimeError("registry candidate snapshot differs from the captured live input")
+    if fingerprint_optional_tree(snapshot_source_root) != dependencies_before:
+        raise RuntimeError("source dependency snapshot differs from the captured live input")
 
 
 def _run_support(snapshot_registry: Path) -> tuple[SupportedFilingYearsCatalogue, int]:
@@ -284,10 +304,15 @@ def _fingerprint_run_inputs(
 ]:
     return (
         fingerprint_tree(context.registry_root),
-        fingerprint_paths(context.tool_paths, relative_to=REPO_ROOT),
-        fingerprint_paths(context.source_dependencies, relative_to=context.source_root),
+        _tool_fingerprints(REPO_ROOT),
+        fingerprint_paths(_source_dependency_paths(context.source_root), relative_to=context.source_root),
         fingerprint_optional_tree(context.published_root),
     )
+
+
+def _tool_fingerprints(repo_root: Path) -> tuple[FingerprintEntry, ...]:
+    """Re-discover tool paths for each boundary before hashing their bytes."""
+    return fingerprint_paths(_tool_input_paths(repo_root), relative_to=repo_root)
 
 
 def _inputs_stable(
@@ -336,7 +361,7 @@ def _run_summary(
     no_live_mutation: bool,
 ) -> dict[str, object]:
     outcome_counts = {status.value: sum(item["outcome"] == status for item in results) for status in ModeloOutcome}
-    complete = _run_is_complete(context.sources, results, authority, inputs_stable)
+    complete = _run_is_complete(context.sources, results, authority, inputs_stable, no_live_mutation)
     return {
         "schema": "cadrumo-registry-collapse-readiness/v1",
         "complete": complete,
@@ -380,9 +405,11 @@ def _run_is_complete(
     results: Sequence[Mapping[str, object]],
     authority: Mapping[str, object],
     inputs_stable: bool,
+    no_live_mutation: bool,
 ) -> bool:
     return (
         inputs_stable
+        and no_live_mutation
         and len(results) == len(sources)
         and all(item.get("source_apply_readiness") == CheckStatus.PASSED for item in results)
         and authority["publication_readiness"] == CheckStatus.PASSED

@@ -63,9 +63,6 @@ _HOME_ATTRIBUTE: Final[str] = "home"
 #: state owned by something OUTSIDE this project, which is the only reason the
 #: home directory is the right place to look.
 _HOME_IS_CORRECT: Final[dict[str, str]] = {
-    "src/cadrumo/application/provisioning_browser.py": (
-        "Playwright's own browser cache, whose location Playwright defines and this project only reads"
-    ),
     "src/cadrumo/application/provisioning_host.py": (
         "where each platform's official Ollama installer places the runtime binary, which that "
         "installer chooses and this project only looks for"

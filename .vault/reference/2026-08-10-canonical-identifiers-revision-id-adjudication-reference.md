@@ -6,8 +6,7 @@ date: '2026-08-10'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:96d8e5fe9ae8e4835bb364793fa6419440189773a32537b03dc65381239dfff4'
-related:
-  - "[[2026-08-07-canonical-identifiers-plan]]"
+related: []
 ---
 
 # `canonical-identifiers` reference: revision_id adjudication

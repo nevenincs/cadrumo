@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0333c1fa0598e84019f147c516c30a7bdb3ec76989a70b751c4440208febdac1'
+body_hash: 'sha256:9755345828592ae592fa8431887c539b5283fb03348f39eca3a19a44fa4d74f2'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `s43 variable envelope recognition`
@@ -19,7 +18,7 @@ Verdict: **PASS.** The independent final re-review found no open critical, high,
 
 Independent review of `W04.P07.S43` against the accepted generator-authority decision, its active plan row, the parser/schema authority, parser-to-IR boundary, and fixed-width generation refusal.
 
-The review used bounded semantic discovery and exact-symbol confirmation. `src/cadrumo/domain/calculations/registry/_record_design.py` is the sole production envelope recognizer. Development modules consume its typed output; no alternate selector, duplicate parser, legacy export-layout input, or record-name classifier was found.
+The review used bounded semantic discovery and exact-symbol confirmation. the retired module was the sole production envelope recognizer. Development modules consume its typed output; no alternate selector, duplicate parser, legacy export-layout input, or record-name classifier was found.
 
 ## Findings
 

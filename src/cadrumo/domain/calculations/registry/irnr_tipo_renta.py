@@ -10,7 +10,12 @@ from typing import Final
 
 from ....core.irnr import TipoRentaIrnr
 from .errors import RegistryValidationError
-from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import (
+    UNIQUE_REFERENCES_REQUIREMENT,
+    optional_unique_mapping_tokens,
+    required_mapping_entry,
+    unique_mapping_tokens,
+)
 from .facts.string_mapping import (
     MappingValueWhitespace,
     StringMappingFact,
@@ -109,16 +114,6 @@ class TipoRentaIrnrCatalogue:
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _csv_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        return ()
-    refs = tuple(token.strip() for token in value.split(",") if token.strip())
-    if len(refs) != len(set(refs)):
-        raise RegistryValidationError(f"M349/M210 catalogue {key!r} must contain unique references")
-    return refs
-
-
 _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
@@ -167,7 +162,12 @@ def _tipo_renta_definitions(entries: Mapping[str, str]) -> tuple[TipoRentaIrnrDe
             TipoRentaIrnrDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
-                legal_refs=_csv_refs(entries, f"{prefix}.legal_refs"),
+                legal_refs=optional_unique_mapping_tokens(
+                    entries,
+                    f"{prefix}.legal_refs",
+                    subject=_ENTRY_SUBJECT,
+                    requirement=UNIQUE_REFERENCES_REQUIREMENT,
+                ),
             ),
         )
     return tuple(definitions)

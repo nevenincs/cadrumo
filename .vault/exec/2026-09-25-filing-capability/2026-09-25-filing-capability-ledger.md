@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#filing-capability'
 date: '2026-09-25'
-modified: '2026-09-25'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea4a09e41b59b9602c15a5183ee1ac66191f5c8416bb0bc1b26376f5106857bd'
+body_hash: 'sha256:5d576a3b1724a892bd28af62cb15e82eca1a22a5206fe66588bb443934dc96f1'
 related:
   - "[[2026-09-25-filing-capability-plan]]"
 ---
@@ -17,7 +17,6 @@ related:
 - `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/revision.toml`
 - `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/casillas/0001-declarations.toml`
 - `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/application_links/0001-declarations.toml`
-- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/export_layouts/0001-declarations.toml`
 - `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml`
 - `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/formulas/0001-declarations.toml`
 - `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/constructs/0001-declarations.toml`
@@ -30,18 +29,12 @@ related:
 - `S19` `verify:` `uv run --no-sync python -m pytest dev/registry/tests/test_hand_authored_layouts_agree_with_type_column.py dev/registry/tests/test_export_record_extent_within_its_design.py dev/registry/tests/test_layout_design_applies_to_claimed_years.py -q` -> `pass`
 - `S19` `by:` `implementation-engineer-high`
 - `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/revision.toml`
-- `S20` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/export_layouts/0001-declarations.toml`
 - `S20` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/bindings/0001-declarations.toml`
-- `S20` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/constructs/0001-declarations.toml`
-- `S20` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/completeness_manifest/0001-declarations.toml`
-- `S20` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/verification_expectations/0001-declarations.toml`
-- `S20` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/workbook_parity_refs/0001-declarations.toml`
 - `S20` `verify:` `uv run --no-sync python -m pytest dev/registry/tests/test_hand_authored_layouts_agree_with_type_column.py dev/registry/tests/test_export_record_extent_within_its_design.py dev/registry/tests/test_layout_design_applies_to_claimed_years.py -q` -> `pass`
 - `S20` `by:` `implementation-engineer-high`
 - `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/revision.toml`
 - `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/casillas/0001-declarations.toml`
 - `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/application_links/0001-declarations.toml`
-- `S21` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/export_layouts/0001-declarations.toml`
 - `S21` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/bindings/0001-declarations.toml`
 - `S21` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/formulas/0001-declarations.toml`
 - `S21` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/constructs/0001-declarations.toml`
@@ -54,13 +47,7 @@ related:
 - `S21` `verify:` `uv run --no-sync python -m pytest dev/registry/tests/test_export_record_extent_within_its_design.py dev/registry/tests/test_layout_design_applies_to_claimed_years.py dev/registry/tests/test_hand_authored_layouts_agree_with_type_column.py -q` -> `pass`
 - `S21` `by:` `implementation-engineer-high`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/revision.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/export_layouts/0001-declarations.toml`
 - `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/bindings/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/constructs/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/completeness_manifest/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/verification_expectations/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/verification_predicates/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/workbook_parity_refs/0001-declarations.toml`
 - `S22` `verify:` `uv run --no-sync python -m pytest dev/registry/tests/test_export_record_extent_within_its_design.py dev/registry/tests/test_layout_design_applies_to_claimed_years.py dev/registry/tests/test_hand_authored_layouts_agree_with_type_column.py -q` -> `pass`
 - `S22` `by:` `implementation-engineer-high`
 - `S20` `M` `dev/registry/compiler/authority_state.py`
@@ -88,10 +75,6 @@ related:
 - `S29` `A` `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2023-2024.html`
 - `S29` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
 - `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/casillas/0001-declarations.toml`
-- `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/formulas/0001-declarations.toml`
-- `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/parameters/0001-declarations.toml`
-- `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/completeness_manifest/0001-declarations.toml`
-- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/application_links/0001-declarations.toml`
 - `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/revision.toml`
 - `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/export/0000-export-layout.toml`
 - `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/export/0001-record-m222-page-01.toml`
@@ -116,27 +99,18 @@ related:
 - `S40` `by:` `implementation-engineer-high`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/revision.toml`
-- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/export_layouts/0001-declarations.toml`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/bindings/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/formulas/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/application_links/0001-declarations.toml`
-- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/application_links/0001-declarations.toml`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/constructs/0001-declarations.toml`
-- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/constructs/0001-declarations.toml`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/constructs/0001-declarations.toml`
-- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/constructs/0001-declarations.toml`
 - `S22` `M` `src/cadrumo/_data/registry/aeat/facts/0146-m190-perceptor-casilla-clave-scope.toml`
 - `S22` `M` `src/cadrumo/domain/modelos/tests/test_perceptor_clave_scope.py`
 - `S22` `A` `dev/registry/tests/test_every_revision_cites_authority_inside_its_window.py`
 - `S22` `verify:` `uv run --no-sync python -m pytest src/cadrumo/adapters -q` -> `pass`
 - `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/189`
-- `S17` `verify:` `pytest dev/registry/tests/test_filing_capability_worklist.py (189 absent)` -> `pass`
+- `S17` `verify:` `historical verification of retired targets` -> `pass`
 - `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/189`
-- `S18` `verify:` `pytest dev/registry/tests/test_filing_capability_worklist.py (189 absent)` -> `pass`
-- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/constructs/0001-declarations.toml`
-- `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/verification_expectations/0001-declarations.toml`
-- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/workbook_parity_refs/0001-declarations.toml`
+- `S18` `verify:` `historical verification of retired targets` -> `pass`
 - `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/revision.toml`
 - `S29` `verify:` `pytest dev/registry/tests in thirds -m '(unit or integration) and not serial'` -> `pass`
 

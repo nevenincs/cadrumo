@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:deda431f69a66172d800444ff84e9185f807c2782427d48801d5d45a047e1276'
+modified: '2026-10-03'
+body_hash: 'sha256:6993524580765615873710f21e1a2f84b12684c9234230a455a670d7868acba7'
 related: []
 ---
 
@@ -36,13 +36,13 @@ Counting that command as evidence would have been misleading.
 Action: the gate was split by test file and rerun. The split validation passed:
 `test_config_custody_profile_lifecycle.py` passed 3 tests,
 `test_profile_lifecycle_verbs.py` passed 42 tests,
-`test_workflow_surface.py` passed 24 tests, and
+`test_workflow_surface.py` passed 24 tests,
 `test_cold_start_no_profile.py` passed 7 tests.
 
 ## S101-003 | MEDIUM | RESOLVED | Stale domain test path invalidated the first domain batch
 
 The first domain repository command referenced the removed path
-`src/aeat/domain/filing/test_repository.py`, so pytest collected zero tests and failed
+the retired test, so pytest collected zero tests and failed
 before exercising the repository surface. Accepting that command would have left a
 hole in the S101 evidence.
 

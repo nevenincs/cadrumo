@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#retenciones-perceptor-count'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:1369f6e0a6b8601521c87be6794e33f1f69543a289b30c1872ead6ebf5d3f83d'
+modified: '2026-10-03'
+body_hash: 'sha256:677294e1ce6e4e0557ad19d1cd29b347a88549135df0d13d4875fa0723979693'
 related:
   - "[[2026-06-24-retenciones-perceptor-count-adr]]"
 ---
@@ -17,7 +17,7 @@ Current-state research for the RET-1 P03 closure. The work used code RAG and dir
 
 ### M180 and M193 are RET-1 distinct-NIF count consumers
 
-`uvx vaultspec-rag search "M190 M111 reconciliation missing binding fact modelo-111-trabajo-dinerario-perceptores test helper" --type code` and direct registry inspection show M180 and M193 bind their annual perceptor totals to `source = "retenciones_aggregation"` with `fact = "perceptor_count_distinct"`. The resolver implementation in `src/aeat/application/aggregation/_modelo_bindings.py` maps M180 and M193 to the validated retenciones aggregation primitives.
+`uvx vaultspec-rag search "M190 M111 reconciliation missing binding fact modelo-111-trabajo-dinerario-perceptores test helper" --type code` and direct registry inspection show M180 and M193 bind their annual perceptor totals to `source = "retenciones_aggregation"` with `fact = "perceptor_count_distinct"`. The resolver implementation  maps M180 and M193 to the validated retenciones aggregation primitives.
 
 ### M190 is intentionally not a retenciones_aggregation consumer
 
@@ -29,6 +29,6 @@ The failing verification exposed test drift rather than a production source erro
 
 ### Verification evidence
 
-- M190 focused set: `uv run --no-sync pytest -q --tb=short src/aeat/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py src/aeat/application/aggregation/tests/test_withholding_source_resolver.py src/aeat/application/calculations/tests/test_modelo_190_percepciones_e2e.py src/aeat/domain/calculations/registry/tests/test_withholding_percepcion_count.py` passed with 12 tests.
-- M180/M193 retenciones set: `uv run --no-sync pytest -q --tb=short src/aeat/application/calculations/tests/test_modelo_180_115_reconciliation_continuity.py src/aeat/application/calculations/tests/test_modelo_193_123_reconciliation_continuity.py src/aeat/application/aggregation/tests/test_retenciones_aggregation_resolver.py` passed with 14 tests.
-- Store/enrollment set: `uv run --no-sync pytest -q --tb=short src/aeat/application/aggregation/tests/test_retencion_observations_repository_roundtrip.py src/aeat/application/aggregation/tests/test_retenciones.py src/aeat/application/aggregation/tests/test_source_resolver_enrollment.py` passed with 33 tests.
+- M190 focused set: `uv run --no-sync pytest -q --tb=short the former source file the former source file the former source file the former source file` passed with 12 tests.
+- M180/M193 retenciones set: `uv run --no-sync pytest -q --tb=short the former source file the former source file the former source file` passed with 14 tests.
+- Store/enrollment set: `uv run --no-sync pytest -q --tb=short the former source file the former source file the former source file` passed with 33 tests.

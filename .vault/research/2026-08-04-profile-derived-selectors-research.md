@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#profile-derived-selectors'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e66e5de794ffec26abf5a240637b03680603424c5d2044427c8ad5acd83cf22f'
+body_hash: 'sha256:47c82d2f1e6d5754494347351344e889ac89a14797e83b577bb2e022759c7fd7'
 related:
   - "[[2026-07-25-censal-profile-autofill-adr]]"
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
@@ -37,7 +37,7 @@ catalogues at 22 keys each.
 
 Twenty of the 22 are derived. They are injected at calculate time from real
 `renta_family.descendiente.{n}.*` facts plus registry Art. 58/61/64 parameters
-(`src/cadrumo/application/modelo/_profile_binding.py:806,809`), and
+, and
 `2026-07-01-modelo-100-minimo-descendientes-engine-adr` records the selector as "a
 dangling selector scaffolded ahead of the engine". Only `cotizaciones_ss_madre_2024`
 (external payroll data) and `rental_reduccion_art_23_2_tier_2024` (contract
@@ -45,7 +45,7 @@ circumstances) are genuine operator input.
 
 ### A derived value rendered as an editable row silently overrides the law
 
-`build_profile_overview` (`src/cadrumo/application/user_profile/_overview.py:531`) walks
+`build_profile_overview`  walks
 the SCHEMA, so every declared non-namespace field becomes an editable row. The injectors
 deliberately do not overwrite a present key (`_profile_binding.py:206,388,405,413,464`),
 and `_profile_fact_index` (`:114-142`) indexes every stored fact unconditionally,
@@ -66,7 +66,7 @@ It would also leave the value stored and writable, so the override channel survi
 
 Independently, the mechanism is not wired on the consuming path. Four fact-index builders
 disagree: `_profile_fact_index` (`_profile_binding.py:114`) and `facts_to_values`
-(`src/cadrumo/application/user_profile/_projections.py:73`) take raw declaration order,
+ take raw declaration order,
 last wins; only `record_to_path_values` (`:174`) and `record_to_effective_facts` (`:217`)
 honour `_in_window_order`. A live probe with two facts at one path returned the older
 window from the binding resolver and the later one from the projection. The binding
@@ -78,17 +78,17 @@ cheap: the filing year is already in scope at every hop above the lookup, all fo
 production callers of `resolve_profile_sourced_bindings` hold it, and the instant has an
 in-tree precedent (`_profile_binding.py:317`). The projection path is not: 50 direct call
 sites across 36 files, exactly one already holding an instant
-(`src/cadrumo/application/user_profile/_preflight.py:76`), around 35 with no meaningful
+, around 35 with no meaningful
 filing instant, and at least three ill-defined — the CLI calendar carries a range not an
 instant, portable-bundle import has no filing context, and
-`src/cadrumo/application/filing/_review.py:718` fingerprints the projection into a
+the former source file fingerprints the projection into a
 staleness digest documented as reproducible from `bucket_id` alone. Auth and
 output-language would be actively wrong to effective-date.
 
 Two standing rulings govern. `2026-07-25-censal-profile-autofill-plan` step `P03.S31`
 ruled that projections do not honour `valid_to`, shipping the
 `effective_window_end_not_enforced` warning
-(`src/cadrumo/application/user_profile/_validation.py:230-266`) and a test that blesses
+ and a test that blesses
 it. `2026-05-07-user-profile-backend-schema-adr` ruled that filing reads come from an
 immutable snapshot; that pipeline is entirely dormant (`UserProfileSnapshot.from_profile`
 and `ProfileSnapshotRequest` have zero production callers) and freezes raw facts rather
@@ -104,7 +104,7 @@ announce itself, and is a further argument against reaching for them here.
 
 ### The refusal boundary already exists, and it is not where a symbol search would look
 
-`profile_value_refusal` (`src/cadrumo/domain/user_profile/_schema.py:474-510`) is the
+`profile_value_refusal`  is the
 declared authority on whether a value may be stored at a field, and its docstring names
 two-surface divergence as the failure it exists to prevent. It is nonetheless
 VALUE-scoped against a `ProfileFieldDefinition`, and expressly declines to judge absence.
@@ -113,16 +113,16 @@ declarations are deleted — has no `ProfileFieldDefinition` to be asked with.
 
 The codebase already splits that axis: `unknown_field`, the other path-legitimacy
 judgment, lives in `ProfileValidationService._validate_one_fact`
-(`src/cadrumo/application/user_profile/_validation.py:158-165`) via a `_field_index`
+ via a `_field_index`
 lookup, not in `profile_value_refusal`. Two consumers of `ProfileValueRefusalKind` branch
 exhaustively with deliberate no-fallback arms (`_validation.py:78-87`, pinned by test;
-`src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:160-169`), so extending that
+the former source file), so extending that
 enum carries reconciliation cost a sibling placement avoids.
 
 ### A dormant second as-of channel is already declared
 
 `_ProfileSelector.valid_at`
-(`src/cadrumo/domain/calculations/registry/_bindings.py:762`) is declared, populated in
+ is declared, populated in
 two shipped binding TOMLs, read by zero production code, and asserted by one test
 (`src/cadrumo/application/modelo/tests/test_profile_binding_real_path.py:290-294`). Any
 design introducing a temporal mechanism on this surface must adopt or retire it rather
@@ -153,12 +153,12 @@ is expected; noted, not pursued.
 ## Sources
 
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` — the 22 year-suffixed declarations
-- `src/cadrumo/application/modelo/_profile_binding.py:114-142,206,317,388,405,413,464,804-809` — fact index and injectors
-- `src/cadrumo/application/user_profile/_projections.py:30-36,73,168,174,217` — the four fact-index builders
-- `src/cadrumo/application/user_profile/_overview.py:531` — schema-driven row walk
-- `src/cadrumo/application/user_profile/_validation.py:78-87,158-165,230-266` — issue-code map, `unknown_field`, expiry warning
-- `src/cadrumo/application/user_profile/_preflight.py:76` — the one caller already holding an instant
-- `src/cadrumo/application/filing/_review.py:718` — projection staleness fingerprint
-- `src/cadrumo/domain/user_profile/_schema.py:474-510` — `profile_value_refusal`
-- `src/cadrumo/domain/calculations/registry/_bindings.py:762` — dormant `valid_at`
-- `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:160-169` — exhaustive refusal-kind match
+- the former source file — fact index and injectors
+- the former source file — the four fact-index builders
+- the former source file — schema-driven row walk
+- the former source file — issue-code map, `unknown_field`, expiry warning
+- the former source file — the one caller already holding an instant
+- the former source file — projection staleness fingerprint
+- the former source file — `profile_value_refusal`
+- the former source file — dormant `valid_at`
+- the former source file — exhaustive refusal-kind match

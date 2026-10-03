@@ -26,6 +26,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import build_search_index
 
 if TYPE_CHECKING:
@@ -38,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 # dev/deploy/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
+_BUILT_HTML = docs_html_root(_REPO_ROOT)
 _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 _PAGES = 2
 

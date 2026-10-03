@@ -62,7 +62,7 @@ class SupervisorSubmissionMixin(SupervisorHost):
     ) -> tuple[OperationDefinition, OperationPublicDefinitionContractV1, OperationIdentity, datetime]:
         definition = self.registry.lookup(request.definition_id)
         definition_contract = self.registry.lookup_public_contract(request.definition_id)
-        self._validate_request_payload(request, definition.request_type)
+        self._validate_request_payload(request.payload, definition.request_type)
         now = self._clock()
         identity = OperationIdentity(
             operation_id=operation_id or new_operation_id(),

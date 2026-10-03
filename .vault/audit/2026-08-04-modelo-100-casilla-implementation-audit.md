@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-100-casilla'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:21d3a86337d6fef0070c51a4678579b5891e826dafda86005947886260aa00df'
+body_hash: 'sha256:e7d698f7c016eaa4d92d39bf8f200ca22a06f1c968931e656047fe6f81acecf9'
 related: []
 ---
 
@@ -89,7 +89,7 @@ Every repaired target now has "input_kind = computed" and a matching
 "formula = <formula-id>" declaration.
 
 The validator in
-"src/cadrumo/domain/calculations/registry/_validate_formulas.py" now rejects
+"the retired module" now rejects
 both directions of the contract:
 
 1. A formula target that does not exist, is not "computed", or is declared with a
@@ -98,7 +98,7 @@ both directions of the contract:
    target.
 
 The revision validator passes the casilla index into this check through
-"src/cadrumo/domain/calculations/registry/_validate_revision_sections.py". The
+"the retired module". The
 negative contract tests prove that validation fails when a real loaded target is
 mutated to "manual" and when its back-reference is removed. These are real
 Pydantic registry objects; the tests do not use mocks, fakes, stubs, patches,
@@ -199,7 +199,7 @@ and
 No equivalent 2025 relation is present.
 
 The 2024 "0613" formula is grounded in the real profile oracle
-"src/cadrumo/domain/contribuyente/family.py", whose supported fields and method
+"the retired module", whose supported fields and method
 are explicitly 2024-only. Rebinding 2025 without adding and grounding the
 corresponding profile inputs would create a false computed declaration.
 

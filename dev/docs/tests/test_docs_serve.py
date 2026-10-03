@@ -29,6 +29,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from ..build_paths import docs_build_root, docs_html_root
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from ..serve import (
     _DEFAULT_HOST,
@@ -66,7 +67,7 @@ def test_serve_command_scopes_the_autodoc_source_watch() -> None:
     user = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False)
     assert user[1:3] == ["-m", "sphinx_autobuild"]
     assert str(_REPO_ROOT / "docs") in user
-    assert str(_REPO_ROOT / "docs" / "_build" / "html") in user
+    assert str(docs_html_root(_REPO_ROOT)) in user
     assert "--watch" not in user  # user scope does not watch the (unrendered) app source
 
     full = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False, scope="full")
@@ -93,6 +94,7 @@ def test_the_live_preview_renders_goldens_without_executing_them(scope: str) -> 
     try:
         assert env[SEQUENCE_CHECK_SKIP_ENV] == "1"
         assert env["CADRUMO_DOCS_SCOPE"] == scope
+        assert env["CADRUMO_DOCS_BUILD_ROOT"] == str(docs_build_root(_REPO_ROOT))
     finally:
         shutil.rmtree(env["CADRUMO_LOCAL_STORAGE_ROOT"], ignore_errors=True)
 

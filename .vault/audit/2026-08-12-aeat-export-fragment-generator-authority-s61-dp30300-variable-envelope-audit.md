@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e1dc197cb44d9ff0c56b4d7eb258e73e5911482ebcee7d939ddfee3929b2d0b5'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S61 DP30300 Variable Envelope Audit`

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1ef21769969ddb528323818e3ef9115e089cf2fd3348df714d98a5aa30a7ce0d'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-research]]"
   - "[[2026-08-13-tui-architecture-s17-lease-contract-review-audit]]"

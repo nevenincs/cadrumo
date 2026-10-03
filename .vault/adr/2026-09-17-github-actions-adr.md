@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#github-actions'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1b078f2238856d0fe8c7cfb1b4e86f36702ebf72109862e075f2667a7f784b38'
+body_hash: 'sha256:000563d0dd3a25c33781d5eda74987614b1471afc27a4d41c88f2a6bb72c1905'
 related:
   - "[[2026-09-17-github-actions-research]]"
 ---
@@ -81,7 +81,7 @@ CI has grown to 19 workflows. Nothing gates a merge. Pull-request checks are mix
 ## Constraints
 
 - Owner-only direct pushes stay on the existing ruleset, whose admin bypass is intentional.
-- Every job runs on self-hosted runners (`dev/ci/tests/test_self_hosted_fleet.py:216`). A required check may target only the Linux X64 runner.
+- Every job runs on self-hosted runners. A required check may target only the Linux X64 runner.
 - Reusable workflows must sit directly in `.github/workflows/`. Environment secrets cannot cross `workflow_call`, so PyPI publication stays in `release.yml` itself.
 - Every action stays pinned to a commit SHA (`dev/ci/tests/test_action_pinning.py`).
 - Required checks are enabled only after the current findings reach zero:
@@ -153,7 +153,7 @@ CI has grown to 19 workflows. Nothing gates a merge. Pull-request checks are mix
 - the stale allow-list entries and the `ci_contract` parity citation
 - the dead Node setup
 
-**Contract tests.** Tests pinned to the old layout are rewritten or deleted in the same change, including the workflow-count floors (`dev/ci/tests/test_self_hosted_fleet.py:76-77` and its two sibling modules). `.github/ci-contract-allow.txt`, `.github/ci-control-plane.md` and `docs/_release_checklist.yaml` are updated to match.
+**Contract tests.** Tests pinned to the old layout are rewritten or deleted in the same change, including the workflow-count floors (the former source file and its two sibling modules). `.github/ci-contract-allow.txt`, `.github/ci-control-plane.md` and `docs/_release_checklist.yaml` are updated to match.
 
 **Prerequisites before the rule is enabled.**
 - Remove the per-worker registry compile from the test fixtures.

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:66c047cc0ab76b87ea0781d05d19f491124ccc8a2164815b04e6b4149af391c6'
+body_hash: 'sha256:5f4ee95d37a04d93701e78d67c1b93db8075984be41c000f3ba46cee8cd4cfe8'
 related:
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
   - '[[2026-06-09-quality-hardening-campaign-research]]'
@@ -53,7 +53,7 @@ reported, not whether its truth condition should be weakened.
 
 The current type run has concentrated clusters: ty is led by
 `call-non-callable` and `unresolved-attribute`; pyrefly is led by
-`bad-argument-type`, with `src/cadrumo/application/calculations/_row_set_assembly.py`
+`bad-argument-type`, with the former source file
 carrying the largest file cluster; BasedPyright is led by unknown-member and
 unknown-argument families, with the auth operators and registry connectivity
 surfaces among the largest files. The wrapper's normalised checker/rule/file
@@ -81,7 +81,7 @@ to the active feature owners, and what clean-snapshot evidence closes a cluster.
 
 The current Ruff run reports 86 findings, dominated by import ordering and line
 length. The largest cluster is the export producer
-(`src/cadrumo/application/filing/_export_producer.py:589-832`); the same
+; the same
 snapshot includes four syntax diagnostics in
 `src/cadrumo/entrypoints/cli/tests/test_action_reconciliation_invocation_scope.py:52-75`
 and smaller `__all__`, unused-import, and test-file import clusters. The
@@ -126,12 +126,11 @@ passed. The highest-signal failures include stale post-relocation assertions in
 still treat their own old source-tree path as a package test even though
 `dev/tests/_project_inventory.py:18-53` declares project tests under `dev` and
 `docs`. Other reds are marker policy
-(`dev/tests/test_marker_integrity.py:1043-1174`), 26 absolute intra-package
-imports (`src/cadrumo/tests/test_relative_imports_only.py:82-91`), forbidden
-shortcuts (`dev/tests/test_no_skip_xfail.py:553,872`), broad raises
+, 26 absolute intra-package
+imports , forbidden
+shortcuts , broad raises
 (`dev/tests/test_no_broad_exception_raises.py:331-345`), mock/double inventory
-(`dev/tests/test_mock_inventory.py:574-592`), and monkeypatch inventory
-(`dev/tests/test_monkeypatch_inventory.py:313-318`).
+, and monkeypatch inventory
 
 The active test-harness plan explicitly owns marker/live-import enforcement,
 monkeypatch removal, central-harness ownership, and the reopened W09 census
@@ -221,5 +220,5 @@ revalidated before an ADR claims exhaustive architecture discovery.
 - `uv run --no-sync ruff check . --output-format concise` (2026-08-24 dirty-tree snapshot)
 - `uv run --no-sync ruff format --check .` (2026-08-24 dirty-tree snapshot)
 - `uv run --no-sync deptry src/cadrumo dev/registry --known-first-party cadrumo --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"` (2026-08-24 dirty-tree snapshot)
-- `uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py dev/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_no_tautology.py --tb=short` (2026-08-24 dirty-tree snapshot)
+- `uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py the former source file the former source file the former source file the former source file the former source file dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py the former source file --tb=short` (2026-08-24 dirty-tree snapshot)
 - `uv run --no-sync vaultspec-core vault check all --json` (2026-08-24 dirty-tree snapshot)

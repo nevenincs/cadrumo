@@ -21,6 +21,7 @@ from ...user_profile.access_contracts import (
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..access_resolution import (
     ADMISSION_ENTRY_ACTIONS,
+    ADMISSION_REPLAY_ACTIONS,
     COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
     OPERATION_LIFECYCLE_ACTIONS,
@@ -31,7 +32,6 @@ from ..access_resolution import (
     require_declared_frontend_and_action,
     require_period_independent_admission,
     require_period_independent_replay_or_authority,
-    require_same_origin_admission,
     require_single_period_admission,
     with_commit_action,
 )
@@ -277,19 +277,6 @@ def test_period_independent_admission_accepts_only_independent_submissions() -> 
         assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
-def test_same_origin_admission_binds_destination_and_frontend() -> None:
-    context = _context(AccessAction.OBSERVE)
-    require_same_origin_admission(_admitted(destination_id=context.destination_id), context)
-
-    for admitted in (
-        _admitted(),
-        _admitted(destination_id=context.destination_id, frontend=OperationFrontendProjection.TUI),
-    ):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            require_same_origin_admission(admitted, context)
-        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
-
-
 def test_admitted_submission_accepts_either_period_scope_of_this_profiles_submission() -> None:
     require_admitted_submission(_admitted(), profile_id=_PROFILE, definition_id="test.access")
     require_admitted_submission(
@@ -313,15 +300,19 @@ def _replay_or_authority(context: OperationAccessContext) -> None:
     require_period_independent_replay_or_authority(context, profile_id=_PROFILE, definition_id="test.access")
 
 
-@pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.COMMIT])
-def test_later_actions_replay_the_same_origin_period_independent_admission(action: AccessAction) -> None:
-    context = _context(action)
-    _replay_or_authority(replace(context, admitted_request=_admitted(destination_id=context.destination_id)))
+@pytest.mark.parametrize("action", sorted(ADMISSION_REPLAY_ACTIONS | {AccessAction.COMMIT}))
+def test_later_actions_replay_the_period_independent_admission_from_a_fresh_session(action: AccessAction) -> None:
+    """A later session has a new destination and may use another frontend; the admission still binds."""
+    context = replace(_context(action), frontend=OperationFrontendProjection.MCP)
+    submitted = _admitted(frontend=OperationFrontendProjection.TUI)
+    assert submitted.destination_id != context.destination_id
+    _replay_or_authority(replace(context, admitted_request=submitted))
 
     for admitted in (
-        _admitted(),
-        _admitted(destination_id=context.destination_id, periods=frozenset({_PERIOD})),
-        _admitted(destination_id=context.destination_id, definition_id="test.other"),
+        _admitted(profile_id=uuid4()),
+        _admitted(definition_id="test.other"),
+        _admitted(action=AccessAction.RESUME),
+        _admitted(periods=frozenset({_PERIOD})),
     ):
         with pytest.raises(ProfileAccessRefusedError) as refused:
             _replay_or_authority(replace(context, admitted_request=admitted, authority_operation=_HELD_AUTHORITY))
@@ -329,8 +320,11 @@ def test_later_actions_replay_the_same_origin_period_independent_admission(actio
 
 
 @pytest.mark.parametrize("action", sorted(ADMISSION_ENTRY_ACTIONS))
-def test_entry_actions_resolve_against_held_authority_instead_of_an_admission(action: AccessAction) -> None:
-    context = replace(_context(action), admitted_request=_admitted(periods=frozenset({_PERIOD})))
+@pytest.mark.parametrize("periods", [frozenset(), frozenset({_PERIOD})], ids=["matching", "foreign-scope"])
+def test_entry_actions_resolve_against_held_authority_instead_of_an_admission(
+    action: AccessAction, periods: frozenset[Period]
+) -> None:
+    context = replace(_context(action), admitted_request=_admitted(periods=periods))
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
         _replay_or_authority(context)

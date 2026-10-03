@@ -219,6 +219,10 @@ modelo:
             label: Resultado a ingresar de autoliquidaciones anteriores
           retenciones-ingresos-a-cuenta:
             label: Retenciones e ingresos a cuenta
+      construct:
+        modelo-131-objective-estimation-instalment:
+          field:
+            title: 'Modelo 131: pago fraccionado en estimación objetiva'
       field:
         official_name: Modelo 131. IRPF. Empresarios y profesionales en Estimación
           Objetiva. Pago fraccionado.

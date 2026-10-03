@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1fdacccab6f2e43ac267f2e50d30d886c9937aaa1b531046d6984218ff7f9c48'
+body_hash: 'sha256:6607d739ca6d8099d866cf0655f096e3626a54ca5ed44166b85440b436b12364'
 related: []
 ---
 
@@ -34,11 +34,6 @@ Modelos 210, 353 and 322 each had a revision carrying byte-identical copies of a
 sibling revision's windows. Modelo 210's two revisions (`2025` and
 `2026-y-siguientes`) were complete duplicates of one another: all eight window
 ids present in both, every body identical.
-
-- `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/0001-deadline-windows.toml` -- carried four `filing_year = 2026` windows
-- `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/deadline_windows/0001-deadline-windows.toml` -- carried four `filing_year = 2025` windows
-- `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-y-siguientes/deadline_windows/0001-deadline-windows.toml` -- carried three `filing_year = 2025` windows
-- `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/deadline_windows/0001-deadline-windows.toml` -- carried two `filing_year = 2023` windows
 
 Each out-of-span block was removed, along with its id in the revision's
 construct completeness manifest. Registry validation errors fell from 3183 to
@@ -755,11 +750,6 @@ deciding which years a revision owns.
 
 ### prior-domiciliation rectificativa construction (M303 evidence chain, owned elsewhere)
 
-`src/cadrumo/application/modelo/tests/test_prior_domiciliation_election.py:120` — 12
-failures, one cause: `CalculationRevision` now refuses a RECTIFICATIVA revision built
-without a `CalculationRevisionAggregateContext`
-(`src/cadrumo/domain/modelos/_calculation_revision.py:1208`).
-
 The subject of these tests is the prior direct-debit election, not amendment evidence;
 the rectificativa revision is only a fixture input. But the parametrisation builds
 modelo **303** revisions with `filing_instance_evidence=None`, so satisfying the
@@ -890,10 +880,6 @@ Left red deliberately. The fix is to validate and attest modelo 200's
 is wrong. Contrast with the 57 domain failures closed earlier, where the callers
 asked calculation and structure questions and merely inherited a FILING default:
 here the caller genuinely needs the rung the registry does not declare.
-
-Note also `CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES` in
-`dev/registry/filing_export_proof.py` is currently an empty tuple, so the live
-proof authority enrols no coordinates; these eight tests construct their own.
 
 ### five recurring causes behind the application-layer failures
 

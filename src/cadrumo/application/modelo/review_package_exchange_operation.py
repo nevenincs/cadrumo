@@ -34,7 +34,11 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_U
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import (
+    require_access_request_payload,
+    require_access_request_profile_payload,
+    require_operation_profile,
+)
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -443,9 +447,9 @@ class ReviewPackageExchangeExecutor:
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> str:
         """Execute the request-bound canonical human exchange and honest write effects."""
         models = _MODELS.get(request.definition_id)
-        payload = request.payload
-        if models is None or type(payload) is not models[0] or not isinstance(payload, _Request):
+        if models is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        payload = require_access_request_payload(request, definition_id=request.definition_id, payload_type=models[0])
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
 
@@ -495,7 +499,6 @@ def resolve_review_package_exchange_operation_access(
         definition_id=request.definition_id,
         payload_type=models[0],
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     access_profile = HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)

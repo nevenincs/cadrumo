@@ -34,11 +34,13 @@ exists to catch.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Final, NamedTuple
 
 import pytest
 
+from ...tests.env_scope import derived_storage_settings
 from ..config import override_settings
 from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 from ..storage_taxonomy import (
@@ -51,6 +53,13 @@ from ..storage_taxonomy_locations import FINGERPRINT_EXCLUDED_STORAGE_FIELDS, ST
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.fixture(autouse=True)
+def derived_storage_baseline(tmp_path: Path) -> Iterator[None]:
+    """Derive every category from the root under test, not from the runner's explicit paths."""
+    with derived_storage_settings(tmp_path / "ambient-storage"):
+        yield
+
+
 class ExclusionExpectation(NamedTuple):
     """One field the digest must skip, and why it must."""
 
@@ -59,6 +68,34 @@ class ExclusionExpectation(NamedTuple):
 
 
 EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
+    ExclusionExpectation(
+        "cadrumo_ollama_home_dir",
+        "Model-server runtime identity belongs to the provisioned server, independently of taxpayer facts.",
+    ),
+    ExclusionExpectation(
+        "cadrumo_ollama_models_dir",
+        "Provisioned public model weights are executable resources, independent of profile facts.",
+    ),
+    ExclusionExpectation(
+        "cadrumo_gnome_extensions_dir",
+        "Published integration code is an executable resource, independent of profile facts.",
+    ),
+    ExclusionExpectation(
+        "cadrumo_runtime_socket_dir",
+        "Runtime endpoints and locks represent process ownership rather than taxpayer facts.",
+    ),
+    ExclusionExpectation(
+        "cadrumo_temp_dir",
+        "Invocation scratch changes during work and is removed by its owning context.",
+    ),
+    ExclusionExpectation(
+        "cadrumo_playwright_browsers_dir",
+        "Provisioned browser binaries are executable resources, independent of profile facts.",
+    ),
+    ExclusionExpectation(
+        "cadrumo_chromium_data_root",
+        "Browser working profiles change during capture and are cleaned by their session owner.",
+    ),
     ExclusionExpectation(
         "cadrumo_runs_dir",
         "Self-reference. This is observability's own output, so hashing it makes every run's "

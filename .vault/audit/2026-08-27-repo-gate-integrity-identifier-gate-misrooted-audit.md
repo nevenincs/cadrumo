@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2db106ea10187fafe40da7af1050c250f849b45b2241c65fab0f508fa1f91f73'
+body_hash: 'sha256:a9652105e47de707f1dae02a846360e1546947930fb031de787402e4f2b2f5ee'
 related: []
 ---
 # `repo-gate-integrity` audit: `the identifier ratchet scanned the tooling tree, hiding eighteen bare fields`
@@ -40,24 +40,24 @@ same model, field and reason in each case.
 Eighteen identifier-named model fields are declared bare `str` and are not
 adjudicated. They are not new; they were unreachable while the root was wrong.
 
-    src/cadrumo/application/filing/_producer_snapshot.py:540 Modelo210ContribuyenteFacts.foreign_tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:543 Modelo210ContribuyenteFacts.tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:567 Modelo210DeclaranteFacts.tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:593 Modelo210DevolucionFacts.cuenta_titular_tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:603 Modelo210GananciaInmobiliariaFacts.conyuge_tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:626 Modelo210IngresoFacts.cuenta_titular_tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:660 Modelo210PagadorFacts.tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/filing/_producer_snapshot.py:697 Modelo210RepresentanteFacts.tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/application/registry/_diff.py:78 RenumberedCasilla.continuidad_id: str [BARE] token=continuidad_id
+    The retired module Modelo210ContribuyenteFacts.foreign_tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210ContribuyenteFacts.tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210DeclaranteFacts.tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210DevolucionFacts.cuenta_titular_tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210GananciaInmobiliariaFacts.conyuge_tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210IngresoFacts.cuenta_titular_tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210PagadorFacts.tax_id: str | None [BARE] token=tax_id
+    The retired module Modelo210RepresentanteFacts.tax_id: str | None [BARE] token=tax_id
+    The retired module RenumberedCasilla.continuidad_id: str [BARE] token=continuidad_id
     src/cadrumo/domain/calculations/registry/gasto193_bindings.py:56 Gasto193Observation.representative_tax_id: str | None [BARE] token=tax_id
     src/cadrumo/domain/calculations/registry/support_matrix.py:149 ModeloRenameRecord.continuidad_id: str [BARE] token=continuidad_id
     src/cadrumo/domain/calculations/registry/withholding296_bindings.py:86 Withholding296Observation.representative_tax_id: str | None [BARE] token=tax_id
     src/cadrumo/domain/calculations/registry/withholding_bindings.py:219 WithholdingObservation.representative_tax_id: str | None [BARE] token=tax_id
     src/cadrumo/domain/calculations/registry/withholding_bindings.py:222 WithholdingObservation.spouse_or_unit_titular_tax_id: str | None [BARE] token=tax_id
-    src/cadrumo/entrypoints/cli/_config_payloads.py:436 ConfigProfileAddRowResult.content_digest: str [BARE] token=content_digest
+    The retired module ConfigProfileAddRowResult.content_digest: str [BARE] token=content_digest
     src/cadrumo/entrypoints/cli/_modelo_payloads.py:489 WorkSelectResult.selected_work_unit_id: str | None [BARE] token=work_unit_id
     src/cadrumo/entrypoints/cli/_modelo_support_matrix_payloads.py:26 ModeloRenamePayload.continuidad_id: str [BARE] token=continuidad_id
-    src/cadrumo/entrypoints/cli/_registry_diff_payloads.py:51 RenumberedCasillaPayload.continuidad_id: str [BARE] token=continuidad_id
+    The retired module RenumberedCasillaPayload.continuidad_id: str [BARE] token=continuidad_id
 
 Twelve are tax identifiers on Modelo 210 producer facts and on withholding /
 gasto observation models. Two more are `continuidad_id` on registry rename

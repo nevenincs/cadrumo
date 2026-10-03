@@ -1,6 +1,6 @@
 """Post-build Pagefind index pass over the built documentation HTML.
 
-Runs AFTER Sphinx has emitted ``docs/_build/html``: it indexes the built
+Runs AFTER Sphinx has emitted the configured docs HTML root: it indexes the built
 pages with Pagefind's bundled (vendored, offline) binary, producing the
 chunked, per-language search index into the build output. The index is an
 uncommitted build artifact - it is regenerated on every docs build, exactly
@@ -401,7 +401,7 @@ def build_search_index(
     """Run the post-build Pagefind index pass over the built HTML.
 
     Args:
-        html_root: The Sphinx HTML output directory (``docs/_build/html``).
+        html_root: The Sphinx HTML output directory.
             Pagefind reads ``pagefind.yml`` from this root for the
             root/exclude selectors and writes the chunked index into
             ``<html_root>/pagefind/``.

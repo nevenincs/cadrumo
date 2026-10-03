@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3d2056f538a62ca5121c0b653990c9252425fe68483adf262285147a7430def6'
+body_hash: 'sha256:f81824ead3ce224891b5b6202c04c5e95980ccd4b7caddba0e17dc87494aafe8'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
 
@@ -50,10 +49,7 @@ and A-to-B-to-A observations invalidate the prior authority.
 
 ### authority-census | low | generated v1 evidence covers every promised category
 
-`dev/quality/registry_authority_consumer_census.py` derives definition locators
-and production, test, fixture, documentation, tooling, annotation, registration,
-dynamic-target, package-attribute, and reverse-import transitive consumers. Its
-checked JSON and tests refuse derived-field drift without fixed counts.
+Its checked JSON and tests refuse derived-field drift without fixed counts.
 
 ### modelo-200-fixture | low | EXTERNAL bundled-registry validation blocks setup
 

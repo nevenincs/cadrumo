@@ -170,6 +170,7 @@ class LiteralSite(NamedTuple):
     """One production module naming an operator-data location by a bare literal."""
 
     module: str
+    function: str
     lineno: int
     literal: str
 
@@ -182,14 +183,34 @@ def embedded_slash_literal_sites(module: str, source: str) -> tuple[LiteralSite,
     fires or does not, without touching the filesystem.
     """
     vocabulary = _taxonomy_vocabulary()
+    spans = _function_spans(ast.parse(source))
     sites: list[LiteralSite] = []
     for match in _EMBEDDED_SLASH_LITERAL.finditer(source):
         literal = match.group(1)
         segments = {segment for segment in literal.split("/") if segment}
         if segments & vocabulary:
             lineno = source.count("\n", 0, match.start()) + 1
-            sites.append(LiteralSite(module=module, lineno=lineno, literal=literal))
+            sites.append(
+                LiteralSite(
+                    module=module,
+                    function=_enclosing_scope(lineno, spans),
+                    lineno=lineno,
+                    literal=literal,
+                )
+            )
     return tuple(sites)
+
+
+#: Narrow site pins for deliberate non-storage literals in production.
+#: The storage environment function owns the canonical repository-local root
+#: default itself; the runtime installer probe only reads standard executable
+#: locations and never writes operator data to those directories.
+PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
+    {
+        ("core/storage_environment.py", "configured_storage_root"),
+        ("application/provisioning_host.py", "_standard_executable_paths"),
+    },
+)
 
 
 @cache
@@ -350,6 +371,20 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
             "core/tests/test_config.py",
             "TestRepoRelativePathNormalisationCoverage.test_relative_audit_flagged_paths_resolve_under_project_root",
         ),
+        # Independent resolver oracles for the managed Playwright cache,
+        # spawned Ollama home and repository-local storage-root default.
+        (
+            "application/tests/test_provisioning_browser.py",
+            "test_browsers_root_defaults_under_the_configured_storage_root",
+        ),
+        (
+            "application/tests/test_provisioning_host.py",
+            "test_start_spawns_the_located_runtime_with_controlled_model_storage_and_waits_for_it",
+        ),
+        (
+            "core/tests/test_storage_environment.py",
+            "test_shared_root_relocates_settings_and_relative_refinements",
+        ),
     },
 )
 
@@ -387,11 +422,24 @@ def test_the_scanned_corpus_and_the_taxonomy_vocabulary_are_both_non_degenerate(
 
 def test_no_production_module_names_an_operator_data_location_by_a_bare_literal() -> None:
     """Shape 1: a single literal already spelling the whole relative path."""
-    offenders = sorted(f"{site.module}:{site.lineno}: Path({site.literal!r})" for site in _production_literal_sites())
+    offenders = sorted(
+        f"{site.module}:{site.lineno}: Path({site.literal!r})"
+        for site in _production_literal_sites()
+        if (site.module, site.function) not in PERMITTED_LITERAL_PIN_SITES
+    )
     assert not offenders, (
         f"shipped module(s) naming an operator-data location by a bare literal instead of "
         f"resolving it through the storage taxonomy: {offenders}. Declare the member's "
         "StorageCategory and resolve it with storage_path/bucket_scoped_storage_path"
+    )
+
+
+def test_every_permitted_literal_pin_site_still_carries_a_qualifying_literal() -> None:
+    carrying = {(site.module, site.function) for site in _production_literal_sites()}
+    stale = sorted(PERMITTED_LITERAL_PIN_SITES - carrying)
+    assert not stale, (
+        f"PERMITTED_LITERAL_PIN_SITES names {stale}, which no longer contains a qualifying path literal; "
+        "strike the entry in the same change that removed the literal"
     )
 
 

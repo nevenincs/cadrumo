@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#m210-export-authority'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:09f384d4692b53ef3adcd86fe4b28afe1d7bdf5c735850eb696a8259c51f1097'
+body_hash: 'sha256:0e86a59d19343ca15e5e89040c2726418480d14154083dad9fe5ce9a40061172'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-07-10-m210-irnr-phase-2-engine-adr]]"
@@ -74,7 +74,7 @@ typed owner.
 
 ### The closed producer-key enum has no IRNR party vocabulary
 
-`src/cadrumo/core/_filing_producer_key.py` declares the closed set of non-derived values
+the former source file declares the closed set of non-derived values
 the export boundary may supply. It is organised as generic cross-modelo identities
 (`taxpayer.*`, `presenter.*`, `contact_person.*`, `selected_account.*`,
 `amendment_evidence.*`) plus per-modelo fact families (`m303.*`, `m111.*`). Every member
@@ -122,7 +122,7 @@ checkable.
 
 ### An identical Spanish-coded component vocabulary already exists, but in an adapter
 
-`CensalDomicilio` at `src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:240`
+`CensalDomicilio`
 models an AEAT address group with `tipo_via`, `nombre_via`, `tipo_numero`,
 `numero_casa`, `calificacion_numero`, `bloque`, `portal`, `escalera`, `planta`,
 `puerta`, `complemento`, `localidad`, `referencia_catastral`, `codigo_postal`,
@@ -139,8 +139,7 @@ does not settle.
 
 ### Generation is blocked behind two further authored artefacts, not just the enum
 
-The export tree is generated, never hand-authored: `render_complete_export_tree` in
-`dev/registry/_export_tree.py` consumes a hash-verified design intermediate joined to a
+The export tree is generated, never hand-authored: `render_complete_export_tree`  consumes a hash-verified design intermediate joined to a
 persisted semantic map and a source-bound render profile, and writes a
 `_generation.provenance.json` beside the fragments. Modelo 303 is the only modelo with a
 committed `export/` tree today.
@@ -173,13 +172,6 @@ justificante number) was not explored.
 
 ## Sources
 
-- `src/cadrumo/core/_filing_producer_key.py`
-- `src/cadrumo/core/_record_design_epoch.py`
-- `src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:240`
-- `dev/registry/_export_tree.py`
-- `dev/registry/_record_design_ir.py`
-- `dev/registry/_semantic_map.py`
-- `src/cadrumo/domain/calculations/registry/_corpus_catalogue.py`
 - `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/casillas/`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_210/files/02-210-devengos-entre-01-06-2022-y-01-01-2026.xls`

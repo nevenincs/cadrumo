@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b45156eaf28e7128809aa624ba67e19a8bb545ab92cb483e4ad96468fb081492'
+body_hash: 'sha256:302554cc5859320d4db04598f5ad31f1c1e0639a291f271308d6c929e551b5c7'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
 ---
+
 # `casilla-schema` audit: `S30 application verification deletion review`
 
 ## Scope
@@ -26,7 +26,7 @@ The core deletion is semantically correct. All seven tracked package and package
 
 ### [ ] complexity-baseline-residual | medium | The active complexity ratchet still names the deleted verifier twice
 
-`dev/audit/complexity_baseline.json` retains `src/cadrumo/application/verification/_verify.py::verify_declaracion` in both its cyclomatic and cognitive sections. The real current-owner baseline test fails because those keys no longer resolve to files, and strict complexity reports the cognitive entry as resolved debt that must be removed. This is an active baseline, unlike the intentionally immutable error-code preimage ledger and historical changelog entry, which correctly retain historical references.
+The retired data file retains the retired module in both its cyclomatic and cognitive sections. The real current-owner baseline test fails because those keys no longer resolve to files, and strict complexity reports the cognitive entry as resolved debt that must be removed. This is an active baseline, unlike the intentionally immutable error-code preimage ledger and historical changelog entry, which correctly retain historical references.
 
 ### [ ] verification-claims | medium | The execution record overstates closure and misstates the follow-up history
 

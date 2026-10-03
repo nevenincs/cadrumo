@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s90-overlap-authority'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:2e3e9861f177bfacc311b01bf30ea509a7b6fd328e3541de3eaaa3d091c4f027'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s90-overlap-authority` audit: `S90 overlap authority code review`

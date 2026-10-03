@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:ac25f00528bd1e443d0f5b5a4c1fcadd9fb3a57ee78be4040aaf4646a111e21a'
+modified: '2026-10-03'
+body_hash: 'sha256:699ed4d4c8f5be2a066ce12b3e8b05286a2f100dd3ad799bb7aa580e37322921'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-m303-fragment-pressure-audit]]'
 ---
 
@@ -26,7 +25,7 @@ above 1200 lines. The follow-up split is tracked as `P05.S29`.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 10.28s.
 - Direct M303 load:
   - Result: `303 ['2009-y-siguientes', '2023-y-siguientes']` and `[('2009-y-siguientes', 113, 1), ('2023-y-siguientes', 115, 1)]`.

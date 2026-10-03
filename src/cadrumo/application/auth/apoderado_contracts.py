@@ -14,7 +14,7 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from .apoderado_service import (
     ApoderadoConfiguration,
     ApoderadoStatus,
@@ -236,13 +236,10 @@ def project_apoderado_operation_result(result: BaseModel, receipt: OperationTerm
 
 
 def _require_apoderado_success_receipt(receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("apoderado success has incompatible terminal evidence")
+    message = "apoderado success has incompatible terminal evidence"
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_apoderado_refusal_receipt(

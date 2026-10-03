@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:082896066eaed312d38933c771ff01d81471d6d07c1c5015fa921c9792e8e79e'
+modified: '2026-10-03'
+body_hash: 'sha256:6603c3eafaf2e64a88a203df99779d960047fd0f76e92fcef5fa2daee7ea925b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S268-001 | PASS | Orchestration delegates profile persistence to runtime-owned repositories
 
-`src/aeat/application/user_profile/_orchestration.py` coordinates profile lifecycle
+The retired module coordinates profile lifecycle
 operations around runtime storage sessions. Secure-object writes remain delegated to
 `ProfileRepository`, `ProfileLifecycleService`, `UserProfileLifecycleRepository`, and
 bucket-event repositories; the orchestration layer does not introduce an independent
@@ -43,10 +43,10 @@ or business-logic mirrors.
 
 ## S268-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_orchestration.py src/aeat/application/user_profile/test_orchestration.py src/aeat/locales`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_orchestration.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_orchestration_pointer.py`
-- `uv run --no-sync ruff check src/aeat/application/user_profile/test_orchestration_pointer.py`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync python -m aeat.locales audit`
 
 Disposition: close `AFR-166`.

@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e916b523bb2feeb5eb1d93cf962393ebcd0aeb559113b92f8d3f100e0720ea9e'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:25c767959edc7c74950b7c71107a1c532ffe2db686440b326dcc7e98820052bb'
+related: []
 ---
 # `source-casilla-integration` research: `s113 helper candidate classification`
 
@@ -81,15 +80,9 @@ source fact to map to either surface.
 
 - `2026-08-22-source-casilla-integration-adr.md`
 - `2026-08-22-source-casilla-integration-W06-P20-S112.md`
-- `src/cadrumo/domain/calculations/registry/_temporal.py:32`
-- `src/cadrumo/domain/calculations/registry/_coverage.py:379`
-- `src/cadrumo/application/registry/_temporal_coverage.py:207`
-- `src/cadrumo/application/registry/_filing_export_coverage.py:107`
-- `src/cadrumo/domain/portals/_errors.py:148`
-- `src/cadrumo/domain/portals/_registry.py:134`
+
 - `src/cadrumo/domain/portals/__init__.py:51`
 - `src/cadrumo/domain/portals/tests/test_terminal_preconditions.py:42`
-- `src/cadrumo/application/registry/source_connectivity.py:68`
-- `dev/source_connectivity/discovery.py:548`
+
 - commit `915a66a5bc`
 - commit `395b83a8a9`

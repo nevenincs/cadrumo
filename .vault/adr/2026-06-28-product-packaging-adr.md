@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#product-packaging'
 date: '2026-06-28'
-modified: '2026-07-17'
-body_hash: 'sha256:9c9312832455914e7171ce43f66026e267286e1c0e55a4dab1ab0e5734155d5a'
+modified: '2026-10-03'
+body_hash: 'sha256:4ffeeb580bde36e7346e32ecfa61869d2fb9da5167f9eed6ed32c98708839bf4'
 related:
   - '[[2026-06-28-product-packaging-research]]'
   - '[[2026-06-28-product-packaging-reference]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
+  - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
 ---
 
 # `product-packaging` adr: `Exact-version Cadrumo wheel cohort and clean-install proof` | (**status:** `accepted`)
@@ -61,8 +62,11 @@ operator-provisioned capabilities rather than package data.
   `cadrumo.entrypoints.cli:main`; the MCP command is `cadrumo-mcp`.
 - Optional integrations remain capability extras. Their absence produces the
   declared install guidance rather than `ModuleNotFoundError`.
-- Clean-install proof uses no taxpayer data, live AEAT mutation, cloud writes,
-  secrets, checkout imports, or ambient product executables.
+- Clean-install proof uses no taxpayer data, live AEAT mutation, cloud writes or
+  secrets. Installed-product commands and probes use no checkout product imports
+  or ambient product executables. A separately identified controller may use
+  explicitly selected, pinned checkout support under the process-role clarification
+  below; that support may never enter the installed target's product import path.
 - Publication and channel promotion follow the immutable-cohort evidence
   authority in the distribution-installation-readiness ADR.
 
@@ -96,3 +100,30 @@ the bytes that would be promoted.
 - Packaging gates cost more than source-tree tests, but they detect missing
   runtime dependencies, omitted data, broken entry points, and split drift that
   a source checkout conceals.
+
+## Proof process-role clarification (2026-10-03)
+
+Authorized by the user's delegated architect instruction, "make the decisision", and
+recorded in `2026-10-03-duplication-remediation-hashing-proof-boundaries-adr`. The
+controller/verifier host may use explicitly selected, pinned checkout support and
+canonical inward core contracts for orchestration and bookkeeping. Record its actual
+interpreter and imported first-party origins; it must not silently obtain support from
+the installed artifact under verification or an unrelated checkout. Installed-product
+commands and probes remain separate clean, cohort-bound processes with checkout product
+imports and ambient executables excluded.
+
+Expected installed-byte integrity calculations remain private and stdlib-based, never
+product hashing or target-installed implementations. Expected tax outcomes remain
+externally grounded. Existing isolated stdlib payload verification is retained; an
+installed entrypoint may be imported by the separate origin-identification probe without
+becoming the source of expected integrity calculations. The host is not claimed to be
+stdlib-only. One existing core hashing owner serves ordinary tooling, with caller byte
+representations unchanged.
+
+The original constraint read: "Clean-install proof uses no taxpayer data, live AEAT
+mutation, cloud writes, secrets, checkout imports, or ambient product executables."
+The dated clarification identifies the clean installed product/probe and separate pinned
+controller to which those import requirements apply. It permits no checkout dependency
+in the installed target and no self-supplied expected hashing implementation. Cohort,
+companion, resource, public command and publication commitments are unchanged. This
+ruling records authority, not completed rollout or a foreign source-write release.

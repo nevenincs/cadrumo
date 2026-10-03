@@ -27,6 +27,11 @@ _PYTHON_PERCENT: Final[re.Pattern[str]] = re.compile(
 )
 
 
+_PROSE_PERCENTAGE: Final[re.Pattern[str]] = re.compile(r"(?<=\d)%(?:-[^\W\d_]+| [^\W\d_]{2,}| [^\W\d_](?=\s+\S))")
+
+_PROSE_PERCENT_FORMAT: Final[re.Pattern[str]] = re.compile(r"%-format(?:ting|ted)?\b")
+
+
 def _validate_format_contract(
     msgid: str,
     current: str,
@@ -64,8 +69,21 @@ def _validate_format_contract(
 
 
 def _percent_placeholders(value: str) -> frozenset[str]:
-    """Return Python percent-format tokens, excluding the literal ``%%``."""
-    return frozenset(match.group(0) for match in _PYTHON_PERCENT.finditer(value) if match.group(0) != "%%")
+    """Return format tokens without mistaking percentage/formatting prose for flags.
+
+    A number followed by ``% standard`` or a Hungarian suffix such as ``%-os``
+    contains prose, not a space- or minus-flagged Python conversion. Keep bare
+    conversions such as ``100%s`` protected; inline literals are independently
+    required to remain exact by ``_inline_tokens``. The prose term ``%-format``
+    describes the formatting mechanism rather than a minus-flagged conversion.
+    """
+    percentages = {match.start() for match in _PROSE_PERCENTAGE.finditer(value)}
+    percentages.update(match.start() for match in _PROSE_PERCENT_FORMAT.finditer(value))
+    return frozenset(
+        match.group(0)
+        for match in _PYTHON_PERCENT.finditer(value)
+        if match.group(0) != "%%" and match.start() not in percentages
+    )
 
 
 def _inline_tokens(

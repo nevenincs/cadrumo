@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6d23744e2dc4566cb8b96030f9362a1c7962026cb24e90943965116efab877e2'
 related:
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
-  - "[[2026-08-10-casilla-schema-plan]]"
 ---
 
 # `casilla-schema` audit: `S25 progress counts final review`

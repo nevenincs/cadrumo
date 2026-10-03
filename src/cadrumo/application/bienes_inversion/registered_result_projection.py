@@ -8,7 +8,11 @@ from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import (
+    OperationTerminalReceipt,
+    refused_receipt_references_hold,
+    require_succeeded_terminal_receipt,
+)
 from .registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_LIST_OPERATION_DEFINITION_ID,
@@ -70,30 +74,10 @@ def _refusal_receipt_matches(
         and receipt.effect is OperationEffect.NONE
         and receipt.refusal_ref == refusal.code
         and receipt.refusal_detail_ref is not None
-        and receipt.result_ref is None
-        and receipt.failure_error_code is None
+        and refused_receipt_references_hold(receipt)
         and receipt.diagnostic_ref is None
         and receipt.identity.definition_id == BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID
         and refusal.code == BIENES_INVERSION_VALIDATION_REFUSAL_CODE
-    )
-
-
-def _success_receipt_matches_effect(receipt: OperationTerminalReceipt, effect: OperationEffect) -> bool:
-    return (
-        receipt.condition is OperationTerminalCondition.SUCCEEDED
-        and receipt.effect is effect
-        and receipt.result_ref is not None
-        and receipt.refusal_ref is None
-        and receipt.refusal_detail_ref is None
-        and receipt.failure_error_code is None
-        and receipt.diagnostic_ref is None
-    )
-
-
-def _declaration_receipt_matches(receipt: OperationTerminalReceipt) -> bool:
-    return (
-        _success_receipt_matches_effect(receipt, OperationEffect.UPDATED)
-        and receipt.identity.definition_id == BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID
     )
 
 
@@ -102,6 +86,7 @@ def _require_list_result(
     receipt: OperationTerminalReceipt,
     profile_id: UUID,
 ) -> BienesInversionIvaRegister:
+    message = "capital-goods list result contradicts its terminal receipt"
     register = result.register_snapshot
     if (
         result.operation_id != "list"
@@ -110,10 +95,15 @@ def _require_list_result(
         or register is None
         or result.record is not None
         or result.refusal is not None
-        or not _success_receipt_matches_effect(receipt, OperationEffect.NONE)
-        or receipt.identity.definition_id != BIENES_INVERSION_LIST_OPERATION_DEFINITION_ID
     ):
-        raise ValueError("capital-goods list result contradicts its terminal receipt")
+        raise ValueError(message)
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=BIENES_INVERSION_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        effect=OperationEffect.NONE,
+        message=message,
+    )
     return register
 
 
@@ -129,6 +119,7 @@ def _require_declaration_result(
     receipt: OperationTerminalReceipt,
     profile_id: UUID,
 ) -> tuple[BienInversionIvaRecord, BienesInversionIvaRegister]:
+    message = "capital-goods declaration result contradicts its terminal receipt"
     record = result.record
     register = result.register_snapshot
     if (
@@ -139,11 +130,17 @@ def _require_declaration_result(
         or register is None
         or result.count != len(register.records)
         or result.refusal is not None
-        or not _declaration_receipt_matches(receipt)
     ):
-        raise ValueError("capital-goods declaration result contradicts its terminal receipt")
+        raise ValueError(message)
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        effect=OperationEffect.UPDATED,
+        message=message,
+    )
     if not _record_is_present(record, register):
-        raise ValueError("capital-goods declaration result contradicts its terminal receipt")
+        raise ValueError(message)
     return record, register
 
 

@@ -48,6 +48,7 @@ from ..censal_datos import (
 from ..censal_datos import _navigate_and_parse as read_censal
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..iva_compensation_wallet import fetch_iva_compensation_wallet
+from .censal_consultation_fixtures import consultation_documents
 from .declarations_register_test_support import offline_aeat_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -424,15 +425,44 @@ class TestDirectAuthenticatedEntry:
 
     @pytest.mark.asyncio
     async def test_direct_entry_reads_the_consulta_without_the_selector(self) -> None:
-        boundary = _SedeDocuments(lambda url: _Reply(html=_fixture_html()))
+        documents = consultation_documents(_fixture_html())
+
+        def respond(url: str) -> _Reply:
+            path = urlsplit(url).path
+            if path == _AEAT.sede_paths.censal_actividades_entry:
+                return _Reply(redirect_to=f"{_AEAT.domains.www6}{_AEAT.sede_paths.censal_actividades}")
+            return _Reply(html=documents.get(path, _OTHER_HTML))
+
+        boundary = _SedeDocuments(respond)
         try:
             observation = await _read(boundary, "censal-direct-entry")
         finally:
             boundary.close()
 
         assert observation.identity.nif is not None
-        assert [urlsplit(url).path for url in boundary.documents] == [_AEAT.sede_paths.censal_datos]
+        assert {item.kind for item in observation.consultations} == {
+            "actividades",
+            "situacion_tributaria",
+            "obligaciones",
+        }
+        assert urlsplit(boundary.documents[0]).path == _AEAT.sede_paths.censal_datos
+        assert all(urlsplit(url).path != urlsplit(_SELECTOR_URL).path for url in boundary.documents)
         assert urlsplit(boundary.documents[0]).netloc == urlsplit(_AEAT.domains.www6).netloc
+
+    @pytest.mark.asyncio
+    async def test_consultation_control_cannot_dispatch_to_a_write_route(self) -> None:
+        documents = consultation_documents(_fixture_html())
+        write_url = _REAL_WRITE_LANDINGS[0]
+        documents[_AEAT.sede_paths.censal_datos] = documents[_AEAT.sede_paths.censal_datos].replace(
+            _AEAT.sede_paths.censal_actividades_entry, urlsplit(write_url).path
+        )
+        boundary = _SedeDocuments(lambda url: _Reply(html=documents.get(urlsplit(url).path, _OTHER_HTML)))
+        try:
+            with pytest.raises(SedeNavigationError):
+                await _read(boundary, "censal-planted-write")
+        finally:
+            boundary.close()
+        assert not any(urlsplit(url).path == urlsplit(write_url).path for url in boundary.documents)
 
     @pytest.mark.asyncio
     async def test_bounce_to_the_access_selector_is_a_prompt_session_refusal(self) -> None:

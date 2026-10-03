@@ -87,7 +87,7 @@ wizard:
             description: Recognised disability of 65% or more - higher increase to
               the personal minimum.
             label: Disability grade 65% or higher
-          assistance-or-mobility:
+          assistance-or-reduced-mobility:
             description: Certified need of third-party assistance or reduced mobility
               - adds the assistance increase.
             label: Third-party assistance or reduced mobility
@@ -578,8 +578,11 @@ wizard:
       irpf-special-regime:
         choices:
           general:
+            description: You are taxed under the general IRPF regime (Modelo 100).
             label: General regime
           impatriado:
+            description: You have opted for the Article 93 LIRPF special regime (Modelo
+              151).
             label: Inbound expatriate - Beckham Law (Art. 93 LIRPF)
         help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
           after relocation. Most taxpayers are on the general regime.

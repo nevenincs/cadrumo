@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:769fba49ddb208afda27529e6854892ecc299bd7976ec5c6922deaedb8233afc'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:292c1e9437d9fc017f6554da78ed4952b07a5397b2f6fa9adc7d90e1adb74524'
+related: []
 ---
+
 # `tui-architecture` audit: `s172 workspace producers review`
 
 ## Scope
@@ -25,7 +25,7 @@ RAG discovery followed by whole-file and exact-symbol confirmation found one pub
 
 ### s172-workspace-producers-review | low | EXTERNAL: persisted-format gate has an unrelated unbound secure replay proof constant
 
-The full persisted-format control reports `SECURE_REPLAY_PROOF_SCHEMA_VERSION (cadrumo.application.filing._export_proof)` as unbound in `test_every_version_constant_is_bound_or_deliberately_excluded`. The constant is declared in `src/cadrumo/application/filing/_export_proof.py` and is outside the S172 producer-contract move and epoch-v2 classification. This review neither fixes nor assigns a persisted-format classification to that external filing concern.
+The full persisted-format control reports `SECURE_REPLAY_PROOF_SCHEMA_VERSION (cadrumo.application.filing._export_proof)` as unbound in `test_every_version_constant_is_bound_or_deliberately_excluded`. This review neither fixes nor assigns a persisted-format classification to that external filing concern.
 
 ## Recommendations
 

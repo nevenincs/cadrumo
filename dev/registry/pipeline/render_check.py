@@ -54,11 +54,12 @@ import rtoml
 
 from cadrumo.core.period import Period, PeriodError, is_administrative_period_token
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
@@ -66,6 +67,7 @@ from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENA
 from ._export_tree import render_complete_export_tree
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
+from .generated_export_inheritance import select_generated_export_inheritance
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from .record_design_intermediate import load_record_design_intermediate
 from .render_profile_evidence import RenderProfileSourceEvidence
@@ -536,7 +538,7 @@ def revision_render_inputs(
     filing_year: int | None = None,
     period: str | None = None,
 ) -> RevisionRenderInputs:
-    """Derive one revision's render inputs from the validated authority.
+    """Derive one revision's render inputs from validated authority.
 
     Raises:
         ValueError: If the source selector is undeclared, a layout is absent
@@ -544,11 +546,34 @@ def revision_render_inputs(
             absent. Each is reported by name rather than substituted, because a
             silent fallback would derive the wrong thing and look like success.
     """
-    definition = authority.modelo(modelo)
+    return _revision_render_inputs(
+        authority.modelo(modelo),
+        authority.catalogues,
+        modelo=modelo,
+        revision=revision,
+        source_ref=source_ref,
+        bootstrap_transport=bootstrap_transport,
+        filing_year=filing_year,
+        period=period,
+    )
+
+
+def _revision_render_inputs(
+    definition: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None,
+    bootstrap_transport: GeneratedExportBootstrapTransport | None,
+    filing_year: int | None,
+    period: str | None,
+) -> RevisionRenderInputs:
+    """Assemble canonical source facts; the caller owns authority admission."""
     if revision not in definition.revisions:
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
     selected = definition.revisions[revision]
-    sources = authority.catalogues.sources
+    sources = catalogues.sources
     effective_year = selected.valid_from.year if filing_year is None else filing_year
     selected_source_ref, epoch = _select_record_design_source(
         selected,
@@ -594,7 +619,7 @@ def revision_render_inputs(
         revision=selected,
         source_root=bundled_path(),
         sources=sources,
-        legal_ref_ids=frozenset(authority.catalogues.legal),
+        legal_ref_ids=frozenset(catalogues.legal),
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     evidence = load_render_profile_source_evidence(
@@ -636,9 +661,15 @@ def compare_revision_against_committed(
             would compare the wrong thing and report a match.
     """
     inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
+    inheritance = select_generated_export_inheritance(
+        authority,
+        bundled_path("registry", "aeat"),
+        modelo=modelo,
+        revision=revision,
+    )
 
     committed_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
-    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-") as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temporary_directory()) as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
             target,
@@ -649,6 +680,7 @@ def compare_revision_against_committed(
             render_profile=inputs.render_profile,
             render_profile_source_evidence=inputs.render_profile_source_evidence,
             source_defects=source_defects_for(str(inputs.transport_profile.source_ref)),
+            inheritance=inheritance,
         )
         return compare_export_tree_roots(
             modelo=modelo,

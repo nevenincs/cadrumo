@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6821b47c17f15da6c890b7c1ee62b314a70de0541f82b926ee0d6eadaa4df71'
+body_hash: 'sha256:3819993c886f13627017cbafc23b024c73f5b183cd10cf71e52e5d9b8570c8ed'
 related: []
 ---
 # `registry-legal-grounding-windows` audit: Modelo 100 2024 savings scale citation window
@@ -56,7 +56,6 @@ only the second is made here.
 Repointing 2024 at the `art-66-2023` / `art-76-2023` redaction was attempted
 across all 41 files of the revision's savings-scale chain, and is refused by
 `_check_revision_scoped_legal_windows` in
-`src/cadrumo/domain/calculations/registry/_snapshot_internals.py:540`:
 
     legal reference 'ley-35-2006:art-66-2023' (effective_from 2023-01-01,
     effective_to 2024-12-21) does not cover revision '2024''s devengo date

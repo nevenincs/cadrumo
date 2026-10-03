@@ -29,7 +29,12 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    require_admitted_submission,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -560,18 +565,8 @@ def _authorized_query_scope(
 ) -> tuple[frozenset[Period], bool, bool]:
     periods, period_independent, requires_all_periods = _requested_scope(payload)
     admitted = context.admitted_request
-    if admitted is not None and context.action in {
-        AccessAction.OBSERVE,
-        AccessAction.RESULT,
-        AccessAction.CANCEL,
-        AccessAction.DETACH,
-    }:
-        if (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != definition_id
-            or admitted.action is not AccessAction.SUBMIT
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=definition_id)
         periods = admitted.periods
         period_independent = admitted.period_independent
     elif context.authority_operation is None:

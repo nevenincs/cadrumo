@@ -26,11 +26,12 @@ from typing import Final, NamedTuple
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
 from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
-from ..iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+from ..iva.schema import EUMemberState, IvaCategory
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -131,7 +132,6 @@ _STRING_FIELD_RULES: Final[tuple[_StringFieldRule, ...]] = (
     _StringFieldRule("recipient_address", absent_when_blank=True),
     _StringFieldRule("exemption_reference", absent_when_blank=True),
     _StringFieldRule("rectifies_invoice_number", uppercase=True, absent_when_blank=True),
-    _StringFieldRule("referencia_catastral", uppercase=True, absent_when_blank=True),
 )
 
 

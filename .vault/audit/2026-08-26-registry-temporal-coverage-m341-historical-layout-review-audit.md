@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b51136b09abc7d29ef912498919a648160e073413c247c8c2e347d65d06ed62'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+body_hash: 'sha256:f340d3de05a834665c0bcded3e7e946deeafe83a418a7c7c16eeae2f581db32d'
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `Modelo 341 historical layout implementation review`
@@ -51,19 +50,7 @@ presented to an operator.
 
 ### m341-selector-validity-axis | medium | The 2005 selector and validity date are contradictory without an adjudicated axis
 
-`src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/revision.toml:6`
-sets `valid_from = 2005-02-01`, while line 8 selects the whole 2005 filing
-year. Because `src/cadrumo/domain/calculations/registry/temporal.py:176`
-intersects an explicit `on` date with that validity window, the live resolver
-selects this revision for `(2005, 1T)` when `on` is omitted but refuses the
-same coordinate at `on=2005-01-01`. The new test only samples
-`on=2005-04-01` at
-`src/cadrumo/domain/calculations/registry/tests/test_modelo_341_historical_design.py:69`,
-so it does not prove or explain the disagreement. The governing plan requires
-a selector start that disagrees with the declared validity start to surface a
-finding, and the research requires an explicit date-axis relationship or
-exception reason. The asserted 2005--2015 revision identity therefore has an
-unresolved date-window meaning.
+`src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/revision.toml:6` sets `valid_from = 2005-02-01`, while line 8 selects the whole 2005 filing year. Because `src/cadrumo/domain/calculations/registry/temporal.py:176` intersects an explicit `on` date with that validity window, the live resolver selects this revision for `(2005, 1T)` when `on` is omitted but refuses the same coordinate at `on=2005-01-01`. The governing plan requires a selector start that disagrees with the declared validity start to surface a finding, and the research requires an explicit date-axis relationship or exception reason. The asserted 2005--2015 revision identity therefore has an unresolved date-window meaning.
 
 ## Recommendations
 
@@ -117,29 +104,9 @@ partition; its first failure is `modelo 200 / 2025-y-siguientes`, not Modelo
 
 ## Remediation verification (2026-08-26, current HEAD)
 
-`m341-revision-localization` is closed. The generated locale migration carries
-only `2005-2015` and `2016-y-siguientes` beneath Modelo 341 in each of
-`src/cadrumo/locales/{ca,en,es,hu}/modelo/schema/341.yml`; an exact search
-finds no `2000-y-siguientes` residue. The focused test at
-`src/cadrumo/domain/calculations/registry/tests/test_modelo_341_historical_design.py:96`
-is non-tautological: it verifies the exact live casilla sets, invokes the
-production resolver for every shipped locale, and pins the three
-historical-only Spanish wire labels. An independent direct load resolved all
-108 `(revision, casilla, locale)` combinations. The seven-test focused module
-passes with the registry confcut and Ruff reports no finding.
+`m341-revision-localization` is closed. The generated locale migration carries only `2005-2015` and `2016-y-siguientes` beneath Modelo 341 in each of `src/cadrumo/locales/{ca,en,es,hu}/modelo/schema/341.yml`; an exact search finds no `2000-y-siguientes` residue. An independent direct load resolved all 108 `(revision, casilla, locale)` combinations. The seven-test focused module passes with the registry confcut and Ruff reports no finding.
 
-`m341-selector-validity-axis` remains a medium finding. The new comment and
-boundary test describe `2005-02-01` as the date at which Modelo 341 becomes
-selectable, but the cited BOE final provision says presentation may occur from
-the first presentation period that begins after that date. Its Modelo 341
-deadline provision places the first-quarter presentation in the first twenty
-days of April. Consequently,
-`src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/revision.toml:7`
-does not ground selection at `2005-02-01`, and the new positive assertion at
-`src/cadrumo/domain/calculations/registry/tests/test_modelo_341_historical_design.py:92`
-only proves the registry's own declaration. Establish the actual `on` axis
-from the authoritative date, revise the boundary or source declaration to
-match it, and make the mutation test prove that source-derived boundary.
+`m341-selector-validity-axis` remains a medium finding. The new comment and boundary test describe `2005-02-01` as the date at which Modelo 341 becomes selectable, but the cited BOE final provision says presentation may occur from the first presentation period that begins after that date. Its Modelo 341 deadline provision places the first-quarter presentation in the first twenty days of April. Establish the actual `on` axis from the authoritative date, revise the boundary or source declaration to match it, and make the mutation test prove that source-derived boundary.
 
 Verdict: PASS with one residual MEDIUM; no critical or high finding remains.
 

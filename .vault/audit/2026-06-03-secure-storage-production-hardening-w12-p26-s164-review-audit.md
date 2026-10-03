@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:51d60a36649ec5bd926be55c7a225da15e282bbcc3c98f557b9aa378facb54aa'
+modified: '2026-10-03'
+body_hash: 'sha256:24834673e700b993718e84bec8b771276c9f83f0be59d8ba162140a3cab14985'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S164-001 | PASS | AEAD/HKDF wrapper failures are no longer broad catches
 
-`src/aeat/adapters/persistence/storage/crypto/_crypto.py` no longer uses `except Exception` or `pragma: no cover` around AESGCM encrypt/decrypt or HKDF derivation. The wrapper now catches the observable cryptography 47.0.0 Rust-binding boundary failures, `TypeError` and `ValueError`, while preserving the explicit `InvalidTag` arm for authentication failure.
+The retired module no longer uses `except Exception` or `pragma: no cover` around AESGCM encrypt/decrypt or HKDF derivation. The wrapper now catches the observable cryptography 47.0.0 Rust-binding boundary failures, `TypeError` and `ValueError`, while preserving the explicit `InvalidTag` arm for authentication failure.
 
 The replacement keeps all public failures inside the AEAT storage hierarchy: `EncryptionError`, `DecryptionError`, and `KeyDerivationError`.
 
@@ -22,12 +22,12 @@ The narrowed wrappers include only cryptography exception text such as invalid a
 
 ## S164-003 | PASS | Tests exercise real boundary failures
 
-`src/aeat/adapters/persistence/storage/crypto/test_crypto.py` now includes real invalid-runtime-input tests for AESGCM encryption, AESGCM decryption, and HKDF derivation. The tests call the production wrapper functions directly and assert the AEAT error classes, without mocks, monkeypatching, fakes, stubs, skip, or xfail.
+The retired test now includes real invalid-runtime-input tests for AESGCM encryption, AESGCM decryption, and HKDF derivation. The tests call the production wrapper functions directly and assert the AEAT error classes, without mocks, monkeypatching, fakes, stubs, skip, or xfail.
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/crypto/test_crypto.py src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py` passed with 73 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/crypto/_crypto.py src/aeat/adapters/persistence/storage/crypto/test_crypto.py src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py` passed.
+- The historical check passed with 73 tests.
+- The historical check passed.
 - Touched-surface hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
 
 Review-agent note: spawning `vaultspec-code-reviewer` for this row failed with the current agent thread limit, so the formal review was completed locally using the same checklist.

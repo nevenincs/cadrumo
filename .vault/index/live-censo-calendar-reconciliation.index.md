@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#live-censo-calendar-reconciliation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb0103a448ddf5459339b3917368adb11e44de19d51057c95c259c6db0430180'
+body_hash: 'sha256:a38042ab9c40ac1001929e58506b29eea5e3b2f43afd5aa36c14c195840112f2'
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-adr]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-code-review-audit]]'
-  - '[[2026-06-05-live-censo-calendar-reconciliation-ledger]]'
-  - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-reference]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-research]]'
   - '[[2026-07-10-live-censo-calendar-reconciliation-audit]]'
@@ -32,14 +30,6 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 
 - `2026-06-05-live-censo-calendar-reconciliation-code-review-audit` - `live-censo-calendar-reconciliation` Code Review
 - `2026-07-10-live-censo-calendar-reconciliation-audit` - `live-censo-calendar-reconciliation` audit: `live sweep closeout honesty review`
-
-### exec
-
-- `2026-06-05-live-censo-calendar-reconciliation-ledger` - `live-censo-calendar-reconciliation` ledger
-
-### plan
-
-- `2026-06-05-live-censo-calendar-reconciliation-plan` - `live-censo-calendar-reconciliation` `implementation` plan
 
 ### reference
 

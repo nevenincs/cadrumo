@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a4ed5ff8dfa755ebd6086e04a968640c4d057a2d1c2ff93354de5401874c460e'
 related:
-  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]"
 ---
 

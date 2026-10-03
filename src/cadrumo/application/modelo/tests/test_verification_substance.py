@@ -176,6 +176,93 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     )
 
 
+_M200_POSITIVE_APPLICATION_STOCK = 'positive_application_le_present_stock(["DP200014:00547", "00670"])'
+
+
+@pytest.mark.parametrize(
+    ("casilla_values", "expected"),
+    (
+        pytest.param({}, True, id="omitted-application-and-stock"),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("0")},
+            True,
+            id="zero-application-with-missing-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("1")},
+            False,
+            id="positive-application-with-missing-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("1"), _M200_BIN_OPEN_CASILLA: Decimal("0")},
+            False,
+            id="positive-application-with-explicit-zero-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("1"), _M200_BIN_OPEN_CASILLA: Decimal("-1")},
+            False,
+            id="positive-application-with-negative-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("50"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            True,
+            id="partial-application",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("100"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            True,
+            id="exact-stock-boundary",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("101"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            False,
+            id="application-exceeds-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("-1")},
+            True,
+            id="negative-application-is-not-sign-validated-here",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("0"), _M200_BIN_OPEN_CASILLA: Decimal("-1")},
+            True,
+            id="zero-application-does-not-validate-stock-sign",
+        ),
+    ),
+)
+def test_positive_application_le_present_stock_contract(
+    casilla_values: dict[CasillaId, Decimal],
+    expected: bool,
+) -> None:
+    """Only a positive application requires a present stock no smaller than itself."""
+    assert (
+        evaluate_predicate_expression(_M200_POSITIVE_APPLICATION_STOCK, casilla_values, workflow_profile()) is expected
+    )
+
+
+def test_positive_application_le_present_stock_emits_block_when_stock_is_absent() -> None:
+    """The blocking rule refuses a positive application without a stock operand."""
+    predicate = VerificationPredicateDefinition(
+        id="positive-application-le-present-stock:compensacion-bin-no-excede-stock-disponible",
+        predicate_id="modelo-200-compensacion-bin-no-excede-stock-disponible",
+        legal_refs=("ley-27-2014:art-26",),
+        expression=_M200_POSITIVE_APPLICATION_STOCK,
+        finding_kind="BLOCKING_RULE",
+    )
+    findings = evaluate_verification_predicates(
+        (predicate,),
+        {_M200_BIN_APPLIED_CASILLA: Decimal("1")},
+        workflow_profile(),
+    )
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert findings[0].message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert dict(findings[0].message_facts) == {
+        "predicate_id": "modelo-200-compensacion-bin-no-excede-stock-disponible",
+    }
+
+
 def test_at_most_one_positive_blocks_only_multiple_positive_casillas() -> None:
     """at_most_one_positive treats absent, zero, and negative values as non-positive."""
 

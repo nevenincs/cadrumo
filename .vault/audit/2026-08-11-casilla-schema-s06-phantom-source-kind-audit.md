@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:df6ee1bc4890c25c281a198010b3c5061e8ec109036f1648c38c923ee1633849'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-research]]"
 ---
 # `casilla-schema` audit: `S06 phantom source-kind removal`

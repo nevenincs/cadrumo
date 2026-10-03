@@ -6,8 +6,7 @@ date: '2026-08-07'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7e28c950603cea119a94e37228078cc240a7f000b03f395d51d111bf24d3c407'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 # `ci-lane-deconflation` audit: the docs lane is red on stale goldens, not on nondeterminism
 

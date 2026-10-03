@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-distribution-consolidation'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5c048d214927bfe43fd6b497a1c4b46ba6cac8f42a66edf20029b5cd471d703b'
-related:
-  - "[[2026-09-02-cli-distribution-consolidation-plan]]"
+related: []
 ---
 
 # `cli-distribution-consolidation` audit: `import time collectability`

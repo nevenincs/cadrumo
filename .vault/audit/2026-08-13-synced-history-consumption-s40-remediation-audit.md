@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#synced-history-consumption'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e9dfd2419cb70f7a71f03421477a5681160c94bef37e04238d23b0c1532d8058'
-related:
-  - "[[2026-08-08-synced-history-consumption-plan]]"
+body_hash: 'sha256:e1a70766051cc0c9350000de5521f621a30f99eebf952893790961e0b09a2d95'
+related: []
 ---
 
 # `synced-history-consumption` audit: `S40 progress diagnostics remediation`
 
 ## Scope
 
-Reviewed the uncommitted `P03.S40` remediation in `dev/docs/sequences/__main__.py`, `dev/docs/sequences/_runner.py`, `dev/docs/sequences/tests/test_cli.py`, the removal of `dev/docs/sequences/tests/test_progress_diagnostics.py`, and `dev/docs/tests/test_sequence_goldens.py`. The audit checks the plan's bounded, real-runner diagnostic requirement; CLI input validation; strict receipt validation; real-child page coherence; public/private test topology; duplicate test sites; and the no-test-double rule.
+Reviewed the uncommitted `P03.S40` remediation in `dev/docs/sequences/__main__.py`, the retired module, `dev/docs/sequences/tests/test_cli.py`, the removal of the retired test, and `dev/docs/tests/test_sequence_goldens.py`. The audit checks the plan's bounded, real-runner diagnostic requirement; CLI input validation; strict receipt validation; real-child page coherence; public/private test topology; duplicate test sites; and the no-test-double rule.
 
 ## Findings
 

@@ -18,7 +18,7 @@ from cadrumo.tests.module_target_inventory import (
     compile_inventory,
     load_all_target_sets,
 )
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
 from dev.first_party_source import is_test_source
 from dev.packaging.command_execution import run_command
 
@@ -125,7 +125,9 @@ def _load_in_authority_interpreter(
     environment = os.environ.copy()
     environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(str(root.source_root) for root in authority.roots))
     environment["PYTHONIOENCODING"] = UTF_8
-    with tempfile.TemporaryDirectory(prefix="cadrumo-import-load-worker-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="cadrumo-import-load-worker-", dir=prepare_temporary_directory()
+    ) as temporary:
         report_path = Path(temporary) / "report.json"
         completed = run_command(
             (

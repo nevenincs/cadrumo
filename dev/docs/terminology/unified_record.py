@@ -254,7 +254,7 @@ def _display_class_for(
     modelo-domain card is a ``MODELO`` document, every other domain (a
     general-fact concept: régimen, período, legal, concepto, ...) is a ``DOC``;
     a full-text PAGE hit splits by path -- under ``cli/`` it is ``CLI``, under
-    ``api/`` (or any dev-machinery surface) it is ``TECHNICAL``, everything else
+    ``api/`` or ``technical/`` it is ``TECHNICAL``, everything else
     user-facing is ``DOC``.
     """
     if kind is SearchRecordKind.CASILLA:
@@ -270,7 +270,7 @@ def _display_class_for(
     path = target.split("#", 1)[0].lstrip("/")
     if path.startswith("cli/"):
         return ResultDisplayClass.CLI
-    if path.startswith("api/"):
+    if path.startswith(("api/", "technical/")):
         return ResultDisplayClass.TECHNICAL
     return ResultDisplayClass.DOC
 

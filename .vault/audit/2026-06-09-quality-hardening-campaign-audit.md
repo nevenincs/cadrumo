@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#quality-hardening-campaign'
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:b9588f5ebb45fa162923d5fcd5c3860144709df451900c3d66720a2f5c6360bc'
+modified: '2026-10-03'
+body_hash: 'sha256:8c31128c48006578b1b94abd1434e693085d1521ed49c723dc4330e75df00ddc'
 related:
   - "[[2026-06-08-repo-health-diagnostics-audit]]"
 ---
@@ -38,7 +38,7 @@ regression guard during the campaign.
 ### QHC-001 | CLOSED | check-style: one E501 over-long docstring line
 
 `just check-style` reported a single E501 (155 > 120) at
-`src/aeat/application/calculations/_cross_period_clean_state.py:5` — a docstring
+The retired module — a docstring
 line cross-linking `RegistrySnapshot` and `ValidatedRegistryAuthority`.
 Resolution: wrapped the sentence across lines, preserving both core-struct
 cross-references. `just check-style` now exits 0. Landed on the campaign branch.
@@ -47,7 +47,7 @@ cross-references. `just check-style` now exits 0. Landed on the campaign branch.
 
 `just check-security` reported 2 blocking semgrep findings
 (`python.lang.security.deserialization.pickle.avoid-pickle`) at
-`src/aeat/domain/calculations/registry/_loader.py:1064` (load) and `:1074`
+The retired module (load) and `:1074`
 (dump), in the `_load_registry_tree_cached` performance cache introduced by the
 recent registry-perf commit. The cache deserialises only first-party data the
 same process wrote, keyed by a sha256 of the registry-tree fingerprints; no
@@ -63,15 +63,15 @@ now exits 0.
 maintainability grade A, and 28 production functions above the cognitive
 threshold of 20. The dominant hotspots, in descending cognitive cost:
 
-- 108: `src/aeat/domain/calculations/registry/_loader.py::_apply_locales` — by
+- 108: the retired module — by
   far the worst; a locale-merge routine.
-- 48: `src/aeat/application/calculations/_cross_period_clean_state.py::_evaluate_requirement`.
-- 44: `src/aeat/domain/calculations/registry/_bindings_previous_filing.py::resolve_previous_filing_binding_values`.
-- 37: `src/aeat/domain/calculations/registry/_record_design_coverage.py::calculation_closure_identities`.
-- 37: `src/aeat/entrypoints/cli/_config/_google.py::_push_secure_object_mirror_rows`.
-- 34: `src/aeat/domain/calculations/registry/_cross_revision_divergence.py::_iter_cross_revision_casilla_divergences`.
-- 32: `src/aeat/application/live/_errors.py::classify_live_iva_acquisition_failure`.
-- 30: `src/aeat/domain/calculations/registry/_invoice_bindings.py::_validate_invoice_fact_and_aggregation`.
+- 48: the retired module.
+- 44: the retired module.
+- 37: the retired module.
+- 37: the retired module.
+- 34: the retired module.
+- 32: the retired module.
+- 30: the retired module.
 - 29: `_record_design_coverage.py::calculation_closure_numbers`, `_config/_repair_profile.py::register_repair_profile_command`.
 - 27: `calc_sheets/_workbook_export.py::_apply_styling`, `_remote_state_guard.py::_validate_policy`, `_validate_semantic_role_typos.py::_semantic_role_looks_like_typo`.
 - 25–26: a cluster across sede `_declarations`, secure-object migration, declaracion `_parser`, auth `_authenticator`, modelo `_m210_rate`/`_profile_binding`, cross-period `_evaluate_filing_history`.
@@ -156,7 +156,7 @@ collection and clean skips, not real AEAT access.
 
 ### QHC-006 | CLOSED | Keystone type fix: register_schema was not type-preserving
 
-`register_schema` (in `src/aeat/core/json_contract.py`) returned
+`register_schema` (in the retired module) returned
 `Callable[[RegisteredSchema], RegisteredSchema]` where
 `RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]`. ty
 therefore typed every `@register_schema`-decorated CLI payload as that union and
@@ -549,7 +549,7 @@ The remainder is genuine boundary drift, by class: ty `invalid-argument-type`
 `reportMissingTypeArgument` 24. Worst non-peer files:
 `domain/modelos/tests/test_row_models.py` (26 ty),
 `entrypoints/cli/_config/_google.py` (24 ty),
-`tests/test_storage_decimal_redaction_error_typing.py` (19),
+The retired test (19),
 `application/auth/_diagnostics.py` (17 pyright),
 export fichero-BOE roundtrip tests (16). `_cross_period_clean_state.py`
 (15 ty + 14 pyright) is peer-WIP-locked.

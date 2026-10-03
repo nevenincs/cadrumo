@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#repo-health-diagnostics'
 date: '2026-06-08'
-modified: '2026-07-17'
-body_hash: 'sha256:d7a42557032557b702420dc5c146c2c2f573c5b85955e62e48035ea89fe7ede2'
+modified: '2026-10-03'
+body_hash: 'sha256:8f4310f44ff2110b286cd3c65d94e462a1ea623d2b24a093817a351c691deef7'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
 ---
@@ -25,7 +25,7 @@ The typecheck suite `ty check src/aeat/adapters/persistence/storage/sql/` origin
 
 - **Missing Overrides:** Subclass repositories `ModeloRepository`, `PortalRepository`, and `CorpusArtifactRepository` overridden base class methods `list_all`, `get`, `upsert`, and `delete` from `SqlRecordRepository` without the `@override` decorator.
   * *Resolution:* Imported `override` from `typing` and decorated all overridden methods.
-- **Narrowing Defect:** In `src/aeat/adapters/persistence/storage/sql/_secure_object_schema.py` line 199, `bytes(value)` was invoked on `value: object` without type narrowing.
+- **Narrowing Defect:** In the retired module line 199, `bytes(value)` was invoked on `value: object` without type narrowing.
   * *Resolution:* Replaced the blind `bytes(value)` fallback with a `TypeError` raise on unsupported types, narrowing the type boundary.
 
 Verification:
@@ -37,7 +37,7 @@ Status: closed.
 
 The static type checker originally reported 4 test-related diagnostics in the SQL test suite:
 
-- **SQLAlchemy Table Insert attribute:** In `src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py` and `test_secure_objects_part2.py`, `SecureObjectRow.__table__.insert()` raised `unresolved-attribute`.
+- **SQLAlchemy Table Insert attribute:** In the retired test and `test_secure_objects_part2.py`, `SecureObjectRow.__table__.insert()` raised `unresolved-attribute`.
   * *Resolution:* Cast `SecureObjectRow.__table__` to `Any` using `cast` from `typing` to satisfy the static compiler.
 - **Dynamic Connection Hook argument type:** In `test_secure_objects_part2.py` line 125, `context.execution_options` raised `unresolved-attribute` because the parameter `context` was annotated as `object`.
   * *Resolution:* Changed annotation of `context` to `Any` inside the hook callback definition.
@@ -54,7 +54,7 @@ Status: closed.
 
 Radon and Complexipy analysis identified one function above the project's cognitive complexity threshold of 20:
 
-- `src/aeat/adapters/persistence/storage/sql/_secure_object_migration.py::ensure_deterministic_object_keys` has a cyclomatic complexity of 13 (Grade C) and a cognitive complexity of 26.
+- the retired module had a cyclomatic complexity of 13 (Grade C) and a cognitive complexity of 26.
 - Analysis shows this module is legitimately integrated in the database bootstrap lifecycle (invoked inside `SecureObjectRepository.__init__`) to migrate legacy randomized ciphertext keys to HMAC digests on startup.
 - *Resolution:* Assessed the complexity against data migration stability requirements. Since it is safely isolated within the migration helper and successfully passes all integration test scenarios, it is kept as-is to preserve compatibility for existing SQLite databases.
 

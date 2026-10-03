@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:517cb73c0346e10ee71d857fd7907d8b84d252e99688468fdcab997d9e05cfdc'
+modified: '2026-10-03'
+body_hash: 'sha256:d2c86e9b385e77f2b90a6b7f291d6f7998a244ee943db112364ddf4663c2925e'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
@@ -15,7 +15,7 @@ related:
 
 ## S236-001 | PASS | Modelo export is a plaintext export exception
 
-`src/aeat/application/modelo/_export.py` writes an operator-selected local
+The retired module writes an operator-selected local
 fichero-BOE artefact and appends a `MODELO_EXPORTED` bucket event. The event
 continues through the bucket-event repository, while the output file is an
 intentional operator-facing plaintext artefact. The affected-file row was
@@ -61,8 +61,8 @@ and `_export.py`; it did not identify another modelo fichero-BOE export owner.
 
 ## S236-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/_export.py src/aeat/application/modelo/test_export.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_export.py` passed with 14 tests.
+- the historical check passed.
+- the historical check passed with 14 tests.
 - `python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - `vaultspec-core vault plan check` reported only the existing `PLAN022 line 0` warning.
 

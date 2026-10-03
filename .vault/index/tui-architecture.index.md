@@ -6,11 +6,9 @@ tags:
 date: '2026-08-25'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0b63358b01c4eef67891ca617849fd1bad188e47bb866863b426ef3fd747ff46'
+body_hash: 'sha256:8ff0c4b583ef28155e675aea18b7887bf64f6591388dd78d4e3d37c427538fa6'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
-  - '[[2026-08-11-tui-architecture-ledger]]'
-  - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-13-tui-architecture-s01-review-audit]]'
   - '[[2026-08-13-tui-architecture-s02-review-audit]]'
@@ -281,14 +279,6 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-09-03-tui-architecture-w08-p28-s402-review-audit` - `tui-architecture` audit: `w08 p28 s402 review`
 - `2026-09-03-tui-architecture-w08-p28-s403-review-audit` - `tui-architecture` audit: `w08 p28 s403 review`
 - `2026-09-08-tui-architecture-s340-audit` - `tui-architecture` audit: `S340 supervised Google Sheets export`
-
-### exec
-
-- `2026-08-11-tui-architecture-ledger` - `tui-architecture` ledger
-
-### plan
-
-- `2026-08-11-tui-architecture-plan` - `tui-architecture` plan
 
 ### reference
 

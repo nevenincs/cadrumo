@@ -6,8 +6,7 @@ date: '2026-08-07'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:781edea1d80b2452ce2d082929a0664a4f8e0e105a78482547e67dda1311db75'
-related:
-  - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
+related: []
 ---
 # `ledger-invoice-decomposition` audit: P06.S55 targets a surface another campaign is retiring
 

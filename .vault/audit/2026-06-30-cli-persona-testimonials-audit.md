@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-persona-testimonials'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:4988df4f90f853b7b8439047e7e33c29dd142823f2364c622180014aa642f83f'
-related:
-  - "[[2026-06-30-cli-persona-testimonials-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:41be391c24013ee801204b31ba08c8a0df250ea35e63ac58facc6e163bcaa47b'
+related: []
 ---
 
 # `cli-persona-testimonials` audit: `W02 worker code review`
@@ -23,21 +22,21 @@ blockers found by reviewer agents and drives follow-up worker dispatches.
 ### m303-seed-help | medium | seed help conflates zero amount with proven first period
 
 Commit `c35feaba5` improves Catalan and Hungarian help text but overclaims the
-seed command's proof value in `src/aeat/locales/ca.yml` and
-`src/aeat/locales/hu.yml`. The text says `--amount 0` is the true first-period
+seed command's proof value in the retired data file and
+The retired data file. The text says `--amount 0` is the true first-period
 case and that reconciliation treats it as `first_period_zero`. The seed command
 only persists a declared carry-forward balance; the automatic first-period path
 is proved by activity-start and registry conditions in
-`src/aeat/application/modelo/_iva_wallet_gate.py` and reconciliation logic in
-`src/aeat/application/calculations/_iva_wallet_reconciliation.py`. A prior filer
+The retired module and reconciliation logic in
+The retired module. A prior filer
 can also seed `--amount 0` when the last filed M303 left no pending
 compensation.
 
 ### ledger-export-import | high | canonical ledger CSV enters through raw bank import
 
 Commit `402f8a5d` registers an `AEAT_LEDGER_EXPORT_LAYOUT` in
-`src/aeat/adapters/inbound/financial/providers/_csv.py` and changes
-`src/aeat/entrypoints/cli/tests/test_ledger_corpus_import_export.py` to require
+The retired module and changes
+The retired test to require
 canonical ledger CSV export re-import through the bank CSV provider. That weakens
 the ledger ADR's raw-bank plus separate-oracle boundary: a rich local ledger
 export can enter through the raw financial import surface rather than a distinct
@@ -46,9 +45,9 @@ restore or backup path.
 ### ledger-dedup-fingerprint | high | import duplicate detection still ignores direction and currency
 
 The W02.P04 commit did not harden a known data-loss edge: import duplicate
-fingerprints in `src/aeat/domain/transactions/_models.py` still key on effective
+fingerprints in the retired module still key on effective
 date, amount magnitude, and normalized narrative while omitting direction and
-currency. `_evaluate_import_rows` in `src/aeat/application/ledger/_actions_import.py`
+currency. `_evaluate_import_rows` in the retired module
 then skips matching rows as duplicates. Same-date opposite-direction movements or
 same numeric amount in different currencies can collapse.
 
@@ -63,7 +62,7 @@ fully satisfied.
 ### profile-active-uuid-tombstone | high | tombstoned UUIDs still bypass active-profile routing
 
 Commit `e6c0295` filters tombstoned UUIDs in `resolve_profile_bucket`, but the
-CLI root active-profile path in `src/aeat/entrypoints/cli/__init__.py` still
+CLI root active-profile path in the retired module still
 uses `read_profile_bucket_by_id` directly and returns for any manifest, including
 tombstoned buckets. `AEAT_ACTIVE_PROFILE=<uuid>` or an active-profile pointer can
 therefore bypass the live-surface lifecycle filter that explicit `--profile`
@@ -72,7 +71,7 @@ coverage now exercises.
 ### profile-show-by-uuid | medium | tombstoned profile inspect parity is still label-only
 
 `config profile show` still resolves inspect targets through the label scanner in
-`src/aeat/entrypoints/cli/_config/__init__.py`. The new tests prove tombstoned
+The retired module. The new tests prove tombstoned
 profiles can be shown by label, but not by UUID. That leaves S14 open for the
 by-id command-family sweep and conflicts with the resolver contract that
 inspection callers may include tombstoned profiles by UUID.
@@ -92,11 +91,11 @@ YAML, or formatting issue.
 Corrective commit `34873aa5a` resolves the original high data-loss and
 raw-provider-boundary blockers, but it regresses verified re-import diagnostics.
 The persisted import path stamps direction-qualified fingerprints, while
-`import_ledger_with_diagnostics` in `src/aeat/application/transactions/_import.py`
+`import_ledger_with_diagnostics` in the retired module
 still receives only raw rows and recomputes fingerprints without parsed
-direction. The ledger import path in `src/aeat/application/ledger/_actions_import.py`
+direction. The ledger import path in the retired module
 passes `tuple(parsed.raw for parsed in parsed_rows)`, so existing duplicate
-diagnostics coverage in `src/aeat/application/ledger/tests/test_actions_review_query_imports.py`
+diagnostics coverage in the retired test
 now reports only `gap`, not `duplicate`.
 
 ### profile-inspect-stale-active | medium | stale tombstoned active profile blocks inspect commands

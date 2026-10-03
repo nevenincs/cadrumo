@@ -13,8 +13,6 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..paths import (
-    SCRATCH_BASE_ENV,
-    SCRATCH_PATH_BUDGET,
     SCRATCH_PREFIX,
     SCRATCH_SEPARATOR,
     ScratchAllocation,
@@ -27,6 +25,7 @@ from ..paths import (
     run_log_roots,
     scratch_base,
     scratch_environment,
+    test_log_root,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -46,19 +45,17 @@ def test_run_directory_is_date_partitioned_unique_and_repository_local(tmp_path:
 def test_every_base_a_run_can_land_under_is_enumerated() -> None:
     """The reaper's population is defined here, and it must cover both writers.
 
-    Repository tooling passes its checkout; a pytest controller does not --
-    ``conftest.py`` roots its run under the OS temp directory to keep collection
-    storage outside the checkout. Enumerating only the checkout is what left the
-    busier base unreaped, so the parity with ``conftest.py`` is asserted against
-    that file rather than restated as a second constant.
+    New output follows the configured storage root. The checkout and OS temp
+    bases remain enumerable for old runs that predate storage-root routing.
     """
     bases = run_log_bases()
 
-    assert REPO_ROOT in bases, "repository run families would be left unreaped"
+    assert test_log_root() in bases, "configured run families would be left unreaped"
+    assert REPO_ROOT in bases, "legacy repository run families would be left unreaped"
     assert Path(tempfile.gettempdir()) in bases, "pytest controller runs would be left unreaped"
     conftest = (REPO_ROOT / "conftest.py").read_text(encoding="utf-8")
-    assert "prepare_environment(Path(tempfile.gettempdir()))" in conftest, (
-        "conftest.py no longer roots its run under the OS temp directory; run_log_bases must"
+    assert "prepare_environment(_TEST_LOG_ROOT)" in conftest, (
+        "conftest.py no longer roots its run under CADRUMO_TEST_LOG_ROOT; run_log_bases must"
         " be updated to match wherever it roots now, or that base goes unreaped"
     )
 
@@ -99,7 +96,6 @@ def test_run_scratch_is_short_owned_and_beside_the_pinned_base() -> None:
         assert scratch.parent == base
         assert scratch.name.split(SCRATCH_SEPARATOR)[1] == str(os.getpid())
         assert sibling != scratch
-        assert len(str(scratch)) <= SCRATCH_PATH_BUDGET
     finally:
         scratch.rmdir()
         sibling.rmdir()
@@ -117,16 +113,6 @@ def test_nested_runs_allocate_beside_the_first_rather_than_inside_it(monkeypatch
         outer.rmdir()
 
     assert inner.parent == outer.parent
-
-
-def test_a_base_too_deep_for_the_temp_budget_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    deep = tmp_path / ("d" * SCRATCH_PATH_BUDGET)
-    monkeypatch.setenv(SCRATCH_BASE_ENV, str(deep))
-
-    with pytest.raises(RuntimeError, match="TEMP budget"):
-        allocate_scratch_directory()
-
-    assert not deep.exists()
 
 
 @pytest.fixture

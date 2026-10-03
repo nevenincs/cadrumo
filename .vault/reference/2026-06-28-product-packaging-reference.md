@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#product-packaging'
 date: '2026-06-28'
-modified: '2026-06-29'
-body_hash: 'sha256:44a9c18c17e6c8ce8fe4f3b87c2ce385a0bf07d37a5f837b9e017b0ee847920b'
+modified: '2026-10-03'
+body_hash: 'sha256:1a6e293a1e91dec0c32d35904703982773b307b6f5f1523970bb041e988a21b2'
 related:
   - "[[2026-06-28-product-packaging-research]]"
 ---
@@ -19,12 +19,6 @@ research pass.
 ## Summary
 
 ### Packaging metadata and build backend
-
-`pyproject.toml:2` declares distribution name `aeat`, `pyproject.toml:3`
-declares version `0.1.0`, and `pyproject.toml:6` requires Python `>=3.13`.
-`pyproject.toml:70` declares `PyYAML` as a core runtime dependency because
-`src/aeat/core/i18n/_render.py:18` imports `yaml` during CLI startup.
-`pyproject.toml:85` declares the `aeat` console script.
 
 `pyproject.toml:93` starts optional dependencies. `pyproject.toml:109` declares
 the `google` extra, `pyproject.toml:115` declares the `browser` extra with
@@ -45,66 +39,24 @@ External docs consulted: `https://packaging.python.org/en/latest/specifications/
 
 ### Bundled data resource boundary
 
-`src/aeat/core/resources/_boundary.py:27` sets `_PACKAGE_DATA` through
-`importlib.resources.files("aeat").joinpath("_data")`. `packaged_data` begins at
-`src/aeat/core/resources/_boundary.py:32`, `bundled_path` begins at
-`src/aeat/core/resources/_boundary.py:51`, and `as_path` begins at
-`src/aeat/core/resources/_boundary.py:72`.
+The accepted ADR and current wheel guard say the actual mechanism is physical relocation under `src/aeat/_data` plus `packages = ["src/aeat"]`.
 
-The top docstring in `src/aeat/core/resources/_boundary.py:3` is stale: it still
-mentions hatchling `force-include` and top-level source trees. The accepted ADR
-and current wheel guard say the actual mechanism is physical relocation under
-`src/aeat/_data` plus `packages = ["src/aeat"]`.
-
-`src/aeat/core/tests/test_resources.py:15` verifies the resource root,
-`src/aeat/core/tests/test_resources.py:51` verifies representative leaves, and
-`src/aeat/core/tests/test_resources.py:84` verifies `as_path`.
-
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:1` describes the wheel
-archive contract. `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:39`
-enumerates tracked `_data` files with `git ls-files`. `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:77`
-builds the wheel with `uv build --wheel`. `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:113`
-asserts archive completeness.
+`src/cadrumo/core/tests/test_resources.py` verifies the resource root,
+`src/cadrumo/core/tests/test_resources.py` verifies representative leaves, and
+`src/cadrumo/core/tests/test_resources.py` verifies `as_path`.
 
 ### Optional extras and missing-dependency contract
 
-`src/aeat/core/_optional_extras.py:1` defines the optional-extra registry and
-guard. `OptionalExtra` begins at `src/aeat/core/_optional_extras.py:37`;
-`install_hint` returns `pip install aeat[<extra>]` at
-`src/aeat/core/_optional_extras.py:47`; the declared extras are at
-`src/aeat/core/_optional_extras.py:55`; `MissingOptionalExtraError` starts at
-`src/aeat/core/_optional_extras.py:62`; `optional_extra_available` starts at
-`src/aeat/core/_optional_extras.py:79`; and `require_optional_extra` starts at
-`src/aeat/core/_optional_extras.py:92`.
-
-`src/aeat/tests/test_optional_extra_degradation.py:67` verifies the core CLI can
-build with optional packages blocked. `src/aeat/tests/test_optional_extra_degradation.py:77`
-verifies the Anthropic boundary emits the install hint. `src/aeat/tests/test_optional_extra_degradation.py:91`
-verifies the browser boundary emits the install hint. `src/aeat/tests/test_optional_extra_degradation.py:103`
-verifies the google extra probe observes absence.
-
 ### Product doctor and provisioning probes
 
-`src/aeat/application/provisioning.py:40` defines `DependencyStatus`.
-`probe_ollama_vision` begins at `src/aeat/application/provisioning.py:57` and
+`src/cadrumo/application/provisioning.py` defines `DependencyStatus`.
+`probe_ollama_vision` begins at `src/cadrumo/application/provisioning.py` and
 returns `ollama serve` / `ollama pull <model>` remediation. `probe_subprocess_providers`
-begins at `src/aeat/application/provisioning.py:98`. `probe_playwright_browser`
-begins at `src/aeat/application/provisioning.py:140` and returns
+begins at `src/cadrumo/application/provisioning.py`. `probe_playwright_browser`
+begins at `src/cadrumo/application/provisioning.py` and returns
 `playwright install chromium` when no Chromium build is present.
-`probe_optional_extra` begins at `src/aeat/application/provisioning.py:168`, and
-`probe_optional_extras` begins at `src/aeat/application/provisioning.py:191`.
-
-`src/aeat/entrypoints/cli/_config/_check_cli.py:26` registers `aeat config check`.
-`src/aeat/entrypoints/cli/_config/_check_cli.py:47` runs the probes, and
-`src/aeat/entrypoints/cli/_config/_check_cli.py:55` collects opted-in capability
-issues. `src/aeat/entrypoints/cli/_config/_check_cli.py:87` emits the envelope,
-and `src/aeat/entrypoints/cli/_config/_check_cli.py:89` exits with code 2 when
-the workstation is not ready for an opted-in capability.
-
-`src/aeat/entrypoints/cli/_config/_check_payloads.py:1` documents the JSON
-payload shape. `src/aeat/entrypoints/cli/tests/test_config_capabilities.py:67`
-checks that `config check` reports capabilities and dependencies, including
-`ollama-vision`, `playwright-chromium`, and `extra:*` rows.
+`probe_optional_extra` begins at `src/cadrumo/application/provisioning.py`, and
+`probe_optional_extras` begins at `src/cadrumo/application/provisioning.py`.
 
 ### Justfile and CI surfaces
 
@@ -126,35 +78,15 @@ then `uv sync --locked --no-editable` after copying. They also show
 
 ### Playwright and browser health
 
-`src/aeat/adapters/outbound/aeat/browser/_factory.py:284` is the Playwright
-runtime chokepoint. It calls `require_optional_extra(BROWSER_EXTRA)` before
-importing Playwright, so a missing Python package is reported as a typed
-`BrowserError`.
+It calls `require_optional_extra(BROWSER_EXTRA)` before importing Playwright, so a missing Python package is reported as a typed `BrowserError`.
 
-`src/aeat/adapters/outbound/aeat/browser/health.py:1` defines a Playwright setup
-smoke check that starts the production browser session factory, creates a
-context, navigates to `https://example.com`, and closes the session. This is the
-best existing no-secret browser smoke candidate for a fresh install gate, as long
-as the gate owns the browser provisioning step first. The local packaging smoke
-uses the same installed production browser factory and `BrowserSession.navigate`
-path, but serves a local HTTP page to avoid public-network flakiness in release
-artifact validation.
+This is the best existing no-secret browser smoke candidate for a fresh install gate, as long as the gate owns the browser provisioning step first. The local packaging smoke uses the same installed production browser factory and `BrowserSession.navigate` path, but serves a local HTTP page to avoid public-network flakiness in release artifact validation.
 
 External docs consulted: `https://playwright.dev/python/docs/browsers`.
 
 ### LLM and evidence data boundaries
 
-`src/aeat/application/ledger/_llm_classification.py:322` documents the preflight
-around Ollama vision classification. `docs/how-to/classify-with-llm-evidence.md:13`
-documents the safety conditions around cloud evidence classification.
-`2026-06-13-llm-evidence-classification-adr` is the governing decision for LLM
-evidence use.
-
-`src/aeat/domain/attachments/_models.py:87` defines the attachment manifest
-model. `src/aeat/domain/attachments/_service.py:59` stores attachment bytes from
-disk and persists a manifest. `src/aeat/adapters/persistence/storage/attachment.py:1`
-owns the attachment storage implementation. These surfaces are runtime state,
-not distribution package data.
+These surfaces are runtime state, not distribution package data.
 
 ### Local installed-wheel smoke evidence
 
@@ -176,26 +108,7 @@ sdist, extras, browser, Docker, and fresh dev-environment packaging smoke lane
 depends on this preflight so a deleted tracked data file fails before wheel,
 virtualenv, or container work starts.
 
-`dev/packaging/smoke_core.py:1` owns the repeatable core packaging smoke
-runner, and `justfile:192` exposes it as `just packaging-smoke-core`. The runner
-validates `uv lock --check`, frozen core export, frozen all-extras export, and
-frozen all-groups export before building the wheel. Those export checks now
-derive the expected production, optional, and dev package names from
-`pyproject.toml`; current-platform markers are respected for export presence
-checks, while wheel metadata still proves the declared marker rows exist. It
-preflights every git-tracked shipped-data file under `src/aeat/_data/corpus`,
-`src/aeat/_data/registry`, and `src/aeat/_data/terminology`, verifies those
-files appear in the wheel archive, checks wheel metadata against
-`pyproject.toml`, installs the wheel into a fresh virtualenv, runs
-`uv pip check`, runs the installed CLI, verifies representative `_data` leaves
-through `importlib.resources`, runs an installed encrypted `AttachmentStore`
-round trip for evidence bytes/manifests, verifies the Anthropic LLM adapter
-refuses from a bare core install with `pip install aeat[anthropic]`, and creates
-an isolated profile with `--no-llm-vision --no-google-export` so installed
-`config check` has an exit-0 core proof. It also parses
-`src/aeat/core/_optional_extras.py` with `ast` and verifies the capability-gated
-optional-extra registry names existing `pyproject.toml` extras and that the
-`all` aggregate includes each registry extra.
+`dev/packaging/smoke_core.py:1` owns the repeatable core packaging smoke runner, and `justfile:192` exposes it as `just packaging-smoke-core`. The runner validates `uv lock --check`, frozen core export, frozen all-extras export, and frozen all-groups export before building the wheel. Those export checks now derive the expected production, optional, and dev package names from `pyproject.toml`; current-platform markers are respected for export presence checks, while wheel metadata still proves the declared marker rows exist. It preflights every git-tracked shipped-data file under `src/aeat/_data/corpus`, `src/aeat/_data/registry`, and `src/aeat/_data/terminology`, verifies those files appear in the wheel archive, checks wheel metadata against `pyproject.toml`, installs the wheel into a fresh virtualenv, runs `uv pip check`, runs the installed CLI, verifies representative `_data` leaves through `importlib.resources`, runs an installed encrypted `AttachmentStore` round trip for evidence bytes/manifests, verifies the Anthropic LLM adapter refuses from a bare core install with `pip install aeat[anthropic]`, and creates an isolated profile with `--no-llm-vision --no-google-export` so installed `config check` has an exit-0 core proof.
 
 `dev/packaging/smoke_pip_core.py:1` owns the plain-pip core packaging smoke
 runner, and `justfile:197` exposes it as `just packaging-smoke-pip-core`. It
@@ -214,13 +127,7 @@ installs the sdist with plain `python -m pip install`, runs `python -m
 pip check`, and then reuses the installed `_data`, attachment, LLM
 optional-boundary, and CLI probes.
 
-`dev/packaging/smoke_extras.py:1` owns the aggregate optional-extra smoke
-runner, and `justfile:207` exposes it as `just packaging-smoke-extras`. It
-builds the wheel, creates a stdlib virtualenv, installs the wheel as
-`aeat[all]` with plain `python -m pip install`, runs `python -m pip check`, and
-verifies the Google, browser, and Anthropic Python packages import through the
-installed optional-extra registry. This proves the convenience `all` extra
-resolves as a real product install without relying on the dev dependency group.
+It builds the wheel, creates a stdlib virtualenv, installs the wheel as `aeat[all]` with plain `python -m pip install`, runs `python -m pip check`, and verifies the Google, browser, and Anthropic Python packages import through the installed optional-extra registry. This proves the convenience `all` extra resolves as a real product install without relying on the dev dependency group.
 
 `dev/packaging/smoke_dev.py:1` owns the fresh development-environment smoke
 runner, and `justfile:212` exposes it as `just packaging-smoke-dev`. It sets
@@ -245,17 +152,7 @@ which passes Playwright's `--with-deps` flag for Linux/container lanes.
 aggregate of uv core, pip core, sdist core, all extras, and
 browser-with-system-deps.
 
-`dev/packaging/smoke_docker.py:1` owns the fresh Linux image harness. It
-preflights Docker daemon responsiveness, prefers the native WSL `Ubuntu` Docker
-daemon on Windows when it answers, translates Windows bind mounts through
-`wslpath`, builds the wheel on the host, writes a small probe script into the
-smoke work directory, mounts only the wheel directory and probe directory into
-`python:3.13-slim`, installs the wheel with pip inside the container, and runs
-the same installed CLI/resource, attachment, and LLM optional-boundary checks
-without checkout imports.
-`justfile:229` exposes `just packaging-smoke-docker-core`, `justfile:234`
-exposes `just packaging-smoke-docker-browser`, and `justfile:238` exposes the
-aggregate `just packaging-smoke-docker`.
+It preflights Docker daemon responsiveness, prefers the native WSL `Ubuntu` Docker daemon on Windows when it answers, translates Windows bind mounts through `wslpath`, builds the wheel on the host, writes a small probe script into the smoke work directory, mounts only the wheel directory and probe directory into `python:3.13-slim`, installs the wheel with pip inside the container, and runs the same installed CLI/resource, attachment, and LLM optional-boundary checks without checkout imports. `justfile:229` exposes `just packaging-smoke-docker-core`, `justfile:234` exposes `just packaging-smoke-docker-browser`, and `justfile:238` exposes the aggregate `just packaging-smoke-docker`.
 
 `.github/workflows/packaging-smoke.yml:1` owns the CI release-artifact smoke
 surface. It runs on Ubuntu with Python 3.13, runs the dependency-surface

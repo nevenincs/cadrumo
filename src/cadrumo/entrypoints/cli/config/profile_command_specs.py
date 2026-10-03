@@ -752,6 +752,18 @@ PROFILE_COMMAND_SPECS = (
         ),
     ),
     _leaf(
+        "config_profile_censo_show",
+        "config_profile_censo",
+        "show",
+        "cli.config.profile.censo.show_help",
+        "_censo_transport",
+        "censo_show",
+        f"{_CONFIG}._censo_payloads",
+        "CensoStoredResult",
+        ENCRYPTED_READ,
+        (),
+    ),
+    _leaf(
         "config_profile_complete_setup",
         "config_profile",
         "complete-setup",

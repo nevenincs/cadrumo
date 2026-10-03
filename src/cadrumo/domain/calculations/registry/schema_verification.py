@@ -738,6 +738,8 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "at_most_one_positive",
         "any_nonzero",
         "cap_le_when_positive",
+        # A positive elective application requires an actually present stock value.
+        "positive_application_le_present_stock",
         # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
         # "consequent_casilla_id"]) — categorical-conditional material
         # implication: when the operator-entered raw text value of the named
@@ -872,6 +874,7 @@ class VerificationPredicateOperator(StrEnum):
     AT_MOST_ONE_POSITIVE = "at_most_one_positive"
     ANY_NONZERO = "any_nonzero"
     CAP_LE_WHEN_POSITIVE = "cap_le_when_positive"
+    POSITIVE_APPLICATION_LE_PRESENT_STOCK = "positive_application_le_present_stock"
     CASILLA_EQUALS_IMPLIES_DIVERGES = "casilla_equals_implies_diverges"
     CASILLA_EQUALS_IMPLIES_NONZERO = "casilla_equals_implies_nonzero"
     CASILLA_EQUALS_IMPLIES_PROFILE_FLAG = "casilla_equals_implies_profile_flag"
@@ -976,6 +979,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
         ),
         VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _predicate_specification(
             VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: _predicate_specification(
+            VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK,
             VerificationPredicateSyntax.CASILLA_LIST,
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
@@ -1273,6 +1282,12 @@ class VerificationPredicateDefinition(RegistryModel):
       figurar... un importe superior a la cantidad positiva consignada").
       Predicate holds when ceiling ≤ 0; the cap applies only when the
       operator's gross liability is positive.
+    - positive_application_le_present_stock(["application_id", "stock_id"]) —
+      an omitted or non-positive elective application holds without
+      requiring a stock value. A positive application requires the stock
+      casilla to be present and must not exceed its actual value. Missing
+      stock is not interpreted as zero; this predicate does not validate
+      either operand's sign outside that comparison.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with a strictly-positive antecedent test: predicate
       holds iff ``casilla_values[antecedent] <= 0`` OR

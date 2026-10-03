@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:69dd7823bc61918754af2931233b8becf1ff1c1684a9379596c082828725908b'
+modified: '2026-10-03'
+body_hash: 'sha256:ad68f1a83e69d90b5d26ec96a0d09bb2f23deee658b7921f0e370ff55c1bec22'
 related: []
 ---
 
@@ -33,8 +33,8 @@ model's interaction with the censo-derived usage-ratio contract.
 
 ## S370-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/usage_ratios/_model.py src/aeat/domain/usage_ratios/test_model.py src/aeat/domain/usage_ratios/test_censo_derivation.py src/aeat/domain/usage_ratios/test_censo_refuse_load.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/usage_ratios/test_model.py src/aeat/domain/usage_ratios/test_censo_derivation.py src/aeat/domain/usage_ratios/test_censo_refuse_load.py` passed with 34 tests.
+- the historical check passed.
+- the historical check passed with 34 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "UsageRatioProfile validate_usage_ratio_reference plaintext exception model only no storage service secure object" --type code --port 8766 --max-results 8` returned the model and separate service storage boundary.
 - `uv run --no-sync vaultspec-rag search "usage ratios model tests eligible categories MappingProxyType UsageRatioValidationError ratio validation" --type code --port 8766 --max-results 8` returned the model validation and test evidence.

@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:a5eff79fd10b6e293391c09dfde525838c5471f070f84727621715b0589954f1'
 related:
-  - "[[2026-08-11-tui-interface-plan]]"
   - "[[2026-08-31-tui-interface-command-path-population-measurements-reference]]"
 ---
 

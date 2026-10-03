@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#phase-two-plan-state-review'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:947103f35c9489f59517d288ddc03c26001a27a27e6cfb677c3f680d26ee1ac6'
+modified: '2026-10-03'
+body_hash: 'sha256:753ba2a31a25567da2b1bc18a9815f5365068b636e1588ed5d2c3ce87688f042'
 related:
   - "[[2026-06-04-repo-health-triage-audit]]"
-  - "[[2026-06-04-repo-health-triage-plan]]"
 ---
 
 # `phase-two-plan-state-review` audit: `Phase Two plan state review`
@@ -115,7 +114,6 @@ removed by the triage work rather than as an approved module.
 | `2026-06-03-m200-internal-casilla-discipline-plan.md` | complete | 9 | 0 | 9 | 100.0% | 0.0% | 0 | L2 |
 | `2026-06-03-m303-cross-period-carry-continuity-plan.md` | active | 4 | 3 | 7 | 57.1% | 42.9% | 4 | L2 |
 | `2026-06-03-modelo-export-evidence-parity-plan.md` | complete | 24 | 0 | 24 | 100.0% | 0.0% | 0 | L3 |
-| `2026-06-03-registry-construct-pressure-plan.md` | complete | 3 | 0 | 3 | 100.0% | 0.0% | 0 | L2 |
 | `2026-06-03-user-profile-lazy-import-plan.md` | active | 6 | 1 | 7 | 85.7% | 14.3% | 0 | L2 |
 | `2026-06-04-aeat-cli-userdocs-hardening-plan.md` | active | 11 | 38 | 49 | 22.4% | 77.6% | 0 | L3 |
 | `2026-06-04-docs-sphinx-ux-plan.md` | active | 7 | 19 | 26 | 26.9% | 73.1% | 0 | L3 |

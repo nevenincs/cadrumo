@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#profile-derived-selectors'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5eec3db412b4b83d88fa73103aafa241d0e90177c94407beca7570e177631f57'
+body_hash: 'sha256:6541e4b19cf3ca8dda40cbc8538569fb42063ba66ccf1cc426931f9e94a0583a'
 related:
   - '[[2026-08-04-profile-derived-selectors-adr]]'
   - '[[2026-08-04-profile-derived-selectors-audit]]'
-  - '[[2026-08-04-profile-derived-selectors-ledger]]'
-  - '[[2026-08-04-profile-derived-selectors-plan]]'
   - '[[2026-08-04-profile-derived-selectors-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#profile-derived-selectors`.
 ### audit
 
 - `2026-08-04-profile-derived-selectors-audit` - `profile-derived-selectors` audit: `Closing audit: what the derived-selector campaign knowingly accepts and what it hands on`
-
-### exec
-
-- `2026-08-04-profile-derived-selectors-ledger` - `profile-derived-selectors` ledger
-
-### plan
-
-- `2026-08-04-profile-derived-selectors-plan` - `profile-derived-selectors` plan
 
 ### research
 

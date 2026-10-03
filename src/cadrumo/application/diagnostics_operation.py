@@ -280,7 +280,6 @@ def _resolve_access(
         definition_id=expected,
         payload_type=DiagnosticsTelemetryFlushRequest if flush else DiagnosticsReadRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     frontends = _FLUSH_FRONTENDS if flush else ALL_OPERATION_FRONTENDS
     actions = _diagnostics_access_actions(payload)

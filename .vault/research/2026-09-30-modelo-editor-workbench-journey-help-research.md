@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c52108a63f554f3491f81b6fb77f20b15b2e3a899a8a1e3d906f8c7537841329'
+body_hash: 'sha256:e74116ac161afb2b0d505fdc3bffe01e5762e79bb6928f031245104c752c27d5'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -56,7 +56,7 @@ Evidence roots used below:
 | 8 | "Procedencia" | "Sujeto: sin atribuir" / "transaction:71a5db2bb891df29...", "100:2025:0A:irpf.previous_year_economic_activity_net_income". | `SHOTS\svg\130-full-provenance__160x80__es.svg` |
 | 9 | "Presentación" | Two sentences that say what the page does not do, then a one-row "Capacidad / Disposición: Borrador de presentación ? Sin medir" table. The export controls are not here; they are on the Resumen. | `SHOTS\svg\130-full-filing__120x80__es.svg` |
 | 10 | Calcular (303) | Modal "Datos de la autoliquidación del modelo 303" asks "¿Autoliquidación conjunta?" with an untranslated "Select" placeholder, every time Calculate is pressed. | `SHOTS\svg\303-act-overview-calculate__120x36__es.svg` |
-| 11 | Calcular / Verificar success | The operation modal opens, and on success the workspace dismisses itself (`src/cadrumo/entrypoints/tui/modelo/view/overview.py:621-628`). The user lands back on the Declarations list, which still says "Borrador" / "No disponible"; the success notice was written to the dismissed screen. | `SHOTS\text\130-act-overview-calculate__120x36__es.txt`, `...-verify__...` |
+| 11 | Calcular / Verificar success | The operation modal opens, and on success the workspace dismisses itself . The user lands back on the Declarations list, which still says "Borrador" / "No disponible"; the success notice was written to the dismissed screen. | `SHOTS\text\130-act-overview-calculate__120x36__es.txt`, `...-verify__...` |
 | 12 | Registrar presentación local | Confirmation dialog (good copy, safe default focus on Cancelar). Enabled before verification; refusal comes after the press. | `SHOTS\svg\130-act-overview-file__120x36__es.svg` |
 | 13 | Exportar | Type a filesystem path into a box, choose "Artefacto a exportar", press Exportar; a result screen lists SHA-256, byte size, software identity grade. | `overview.py:201-222`; `src/cadrumo/entrypoints/tui/modelo/export_result.py` |
 
@@ -524,9 +524,9 @@ modal-heavy navigation, help that only exists as a separate PDF.
 
 | ID | Bug | Evidence |
 |---|---|---|
-| B1 | Inputs page never shows labels and puts every row under "Sin sección": the lookup keys are `str(record.reference)`, which renders as `"kind='casilla' casilla_id='01'"`, while rows are keyed by the bare casilla id. | `src/cadrumo/entrypoints/tui/modelo/view/inputs.py:191`, `:211`, `:235`, `:245`; verified with `str(ModeloWorkspaceCasillaReferenceV1(casilla_id='01'))` |
+| B1 | Inputs page never shows labels and puts every row under "Sin sección": the lookup keys are `str(record.reference)`, which renders as `"kind='casilla' casilla_id='01'"`, while rows are keyed by the bare casilla id. | the former source file, `:211`, `:235`, `:245`; verified with `str(ModeloWorkspaceCasillaReferenceV1(casilla_id='01'))` |
 | B2 | Casillas ordered as strings ("107" before "11") on the overview edit list and the results/inputs tables. Which layer sorts was not isolated. | `SHOTS\text\303-a-overview__80x24__es.txt`, `303-a-results__120x36__es.txt` |
-| B3 | Successful Calculate/Verify dismisses the workspace (`self.dismiss(None)`) and the success notice is written to the dismissed screen. | `src/cadrumo/entrypoints/tui/modelo/view/overview.py:621-628`; `SHOTS\text\130-act-overview-calculate__120x36__es.txt` |
+| B3 | Successful Calculate/Verify dismisses the workspace (`self.dismiss(None)`) and the success notice is written to the dismissed screen. | the former source file; `SHOTS\text\130-act-overview-calculate__120x36__es.txt` |
 | B4 | Declarations list shows "Borrador" and "Resultado: No disponible" for calculated, verified and filed declarations. | `src/cadrumo/entrypoints/tui/declarations/overview.py:84-97`; `REVIEW\seq-modelo-303-first-quarter--declarations__large__dark.txt` |
 | B5 | Verification page states "Verificación: ? Sin medir" and "Preparado (veredicto del productor): No" for a 303 the sequence verified and filed, while listing its findings. | `SHOTS\text\303-full-verification__120x120__es.txt` |
 | B6 | Finding messages interpolate raw origin codes, transaction digests and period tokens; the Casilla column is empty for them. | `src/cadrumo/locales/en/application.yml:1159-1161` (`cross_period_operator_declared_suppression`), `:1233`; `SHOTS\text\130-full-verification__120x120__es.txt` |
@@ -598,7 +598,6 @@ modal-heavy navigation, help that only exists as a separate PDF.
 - `src/cadrumo/entrypoints/tui/declarations/overview.py:84-97`
 - `src/cadrumo/entrypoints/tui/launcher.py:416`
 - `src/cadrumo/entrypoints/tui/modelo/export_result.py`
-- `src/cadrumo/entrypoints/tui/modelo/view/inputs.py:191`
-- `src/cadrumo/entrypoints/tui/modelo/view/overview.py:621-628`
+
 - `src/cadrumo/entrypoints/tui/operations/modal.py:119`
 - `src/cadrumo/locales/en/application.yml:1159-1161`

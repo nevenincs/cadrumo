@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:9fbd0f397ca14018e9a51d64cf09fec212c6b072c7c936aacefdfa21983399f8'
+modified: '2026-10-03'
+body_hash: 'sha256:56a4acd1d0b7bb57751ff9455e359dc1b61cbde03c219e661299a511d08e3e04'
 related: []
 ---
 
@@ -27,8 +27,8 @@ each mutating operation creates event history through
 
 ## S220-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/ledger/_business_operation_invoice.py src/aeat/application/ledger/test_business_operation_invoice.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/ledger/test_business_operation_invoice.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for S220.

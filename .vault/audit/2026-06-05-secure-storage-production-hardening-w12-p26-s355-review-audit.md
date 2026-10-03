@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:928292ba409fba32e046d46a2544cd23774b3e6aa136e410866e3b76566047c4'
+modified: '2026-10-03'
+body_hash: 'sha256:c569c70a78ce051789c78dd9cedacbe31ac03c60278f401266888f080e366254'
 related: []
 ---
 
@@ -55,9 +55,9 @@ were removed via `python -m aeat.locales remove`, and the follow-up audit passed
 
 ## S355-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_filing_repository.py src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py src/aeat/domain/modelos/_runtime_repository.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py src/aeat/domain/modelos/test_repository_sensitivity_class.py` passed with 10 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
+- the historical check passed.
+- the historical check passed with 10 tests.
+- the historical check passed with 10 selected tests.
 - `uv run --no-sync -q python -m aeat.locales audit` passed after scaffold repair.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the known `PLAN022` warning.
 

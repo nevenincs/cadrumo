@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#test-harness-honesty'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-10-03'
 body_hash: 'sha256:6f1902c1d34da518de137d7f129d9bcd58d642264f40a4990a884128fc9f8c08'
 related:
   - "[[2026-07-25-test-harness-honesty-false-green-gates-audit]]"
-  - "[[2026-07-25-test-harness-honesty-plan]]"
 ---
 
 # `test-harness-honesty` adr: `A gate must prove it discriminates: positive controls on every scanning gate` | (**status:** `accepted`)

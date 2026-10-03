@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import multiprocessing
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from threading import Event
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -720,7 +722,7 @@ async def test_unpageable_success_refuses_before_any_result_storage(monkeypatch:
     )
 
     async def reader(
-        _context: OperationExecutorContext, _payload: WorkbenchGenerationOperationRequest
+        _identity: OperationIdentity, _payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
         return _generation()
 
@@ -734,16 +736,28 @@ async def test_unpageable_success_refuses_before_any_result_storage(monkeypatch:
 
 
 @pytest.mark.asyncio
-async def test_executor_stores_actual_generation_and_none_effect_only_after_reader() -> None:
+async def test_executor_stores_actual_generation_and_none_effect_only_after_reader(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     profile_id = uuid4()
     request = _request(profile_id, language=OutputLanguage.CA)
     generated = _generation()
     calls: list[object] = []
+    loop = asyncio.get_running_loop()
+    validate = generation_operation_module._require_pageable_result
+
+    def responsive_validation(projection: WorkbenchGenerationOperationProjection) -> None:
+        heartbeat = Event()
+        loop.call_soon_threadsafe(heartbeat.set)
+        assert heartbeat.wait(2), "projection validation blocked runtime observations and lease renewal"
+        validate(projection)
+
+    monkeypatch.setattr(generation_operation_module, "_require_pageable_result", responsive_validation)
 
     async def reader(
-        context: OperationExecutorContext, payload: WorkbenchGenerationOperationRequest
+        identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
-        assert context.identity.subject_ref == request.subject_ref
+        assert identity.subject_ref == request.subject_ref
         assert payload == request.payload
         calls.append("read")
         return generated

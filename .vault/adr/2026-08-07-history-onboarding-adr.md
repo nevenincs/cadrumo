@@ -10,7 +10,6 @@ related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
   - "[[2026-07-12-justificante-reframing-audit]]"
-  - '[[2026-08-07-history-onboarding-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
 ---
 # `history-onboarding` adr: `New-profile AEAT history discovery and onboarding` | (**status:** `accepted`)

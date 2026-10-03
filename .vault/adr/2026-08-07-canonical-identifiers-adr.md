@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:519ba44ecc0ea607c0e7c7ea2d72c05d5412f397833cb7528ba0e561d0a4817c'
+body_hash: 'sha256:3c7cb0dcf33af9c5700437ca077a2391b45d4fc81351a1952f3f05192625777e'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -894,7 +894,7 @@ Two loci of the `W05` amendment (2026-08-07) rule on truncated display ids:
   `Hex16Str`, never a full-length alias."
 
 **Both are withdrawn as factually wrong.** `core.Hex16Str`
-(`src/cadrumo/core/_hex.py:57-60`) is
+ is
 `StringConstraints(strip_whitespace=True, min_length=16, max_length=16, pattern=HEX_PATTERN_16)`
 — exactly sixteen lowercase hex characters. Every value in this population
 is **twelve**. The instruction as written does not narrow the population;
@@ -946,7 +946,7 @@ used as a short address. It is truncated to a different width.
 
 ### Twelve is a product decision, not a truncation artefact
 
-`src/cadrumo/application/modelo/_selectors.py:57-66` declares the operator
+the former source file declares the operator
 lookup type:
 
 ```

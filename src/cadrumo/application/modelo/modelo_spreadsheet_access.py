@@ -36,7 +36,6 @@ def _admitted_access_payload(
         definition_id=request.definition_id,
         payload_type=pair[0],
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
 
 

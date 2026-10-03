@@ -9,7 +9,7 @@ from typing import Final
 
 from ...deadlines.models import IrpfIncomeCategory
 from .errors import RegistryValidationError
-from .facts.resolution import required_mapping_entry
+from .facts.resolution import optional_unique_mapping_tokens, required_mapping_entry, unique_mapping_tokens
 from .facts.string_mapping import (
     MappingValueWhitespace,
     StringMappingFact,
@@ -81,20 +81,8 @@ class IrpfIncomeCategoryCatalogue:
         return next(item for item in self.definitions if item.token == token)
 
 
-def _csv(entries: Mapping[str, str], key: str, *, required: bool = True) -> tuple[str, ...]:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        if required:
-            raise RegistryValidationError(f"IRPF income-category vocabulary is missing {key!r}")
-        return ()
-    values = tuple(token.strip() for token in value.split(",") if token.strip())
-    if len(values) != len(set(values)):
-        raise RegistryValidationError(f"IRPF income-category vocabulary {key!r} must contain unique tokens")
-    return values
-
-
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = _csv(entries, key)
+    values = unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT, refuse_empty=False)
     if not values:
         raise RegistryValidationError(f"IRPF income-category vocabulary {key!r} must contain legal references")
     return values
@@ -114,7 +102,7 @@ def resolve_irpf_income_category_catalogue(
     """Resolve all six income categories from fact 0128."""
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     definitions: list[IrpfIncomeCategoryDefinition] = []
-    for raw_token in _csv(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IrpfIncomeCategory(raw_token, _registry_validated=True)
         prefix = f"{_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -124,8 +112,12 @@ def resolve_irpf_income_category_catalogue(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
-                activity_gate_modelos=_csv(entries, f"{prefix}activity_gate_modelos", required=False),
-                payment_modelos=_csv(entries, f"{prefix}payment_modelos", required=False),
+                activity_gate_modelos=optional_unique_mapping_tokens(
+                    entries, f"{prefix}activity_gate_modelos", subject=_ENTRY_SUBJECT
+                ),
+                payment_modelos=optional_unique_mapping_tokens(
+                    entries, f"{prefix}payment_modelos", subject=_ENTRY_SUBJECT
+                ),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )

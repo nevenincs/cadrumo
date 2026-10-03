@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6282e76f2adbe212621daa14c66304c5b47a281b46644c516365aabf61b77112'
+body_hash: 'sha256:bdcdae9d33d2e0b7cdee1dbd9835f84d187d216856405fdd011d72ba64676112'
 related:
   - "[[2026-08-10-current-schema-only-purge-adr]]"
 ---
@@ -29,7 +29,7 @@ The focused S42 lane passed four tests in 20.24 seconds. Path-scoped Ruff and Ba
 
 ### wallet-consumer-proof | medium | The live no-laundering acceptance path is not green
 
-The new S42 real-behavior test proves the public operator writer persists an envelope with no disposition or compensation basis, proves canonical carry validation rejects its `OPERATOR_MANUAL` provenance, and proves the same rows still resolve an unrelated M390 relation. It does not traverse the wallet consumer where unreadable evidence was historically converted into first-period zero. The existing end-to-end consumer test, `test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero`, currently fails earlier in aggregation at `src/cadrumo/application/aggregation/_iva_ledger.py` with an explicit bienes-inversion-authority precondition. Source inspection shows `_prior_period_carry_evidence` preserves `prior_period_observation_found=True` on validation refusal and forwards `local_evidence_found_but_unusable=True`, but current-tree runtime proof of that full path remains blocked.
+The new S42 real-behavior test proves the public operator writer persists an envelope with no disposition or compensation basis, proves canonical carry validation rejects its `OPERATOR_MANUAL` provenance, and proves the same rows still resolve an unrelated M390 relation. It does not traverse the wallet consumer where unreadable evidence was historically converted into first-period zero. The existing end-to-end consumer test, `test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero`, currently fails earlier in aggregation at the retired module with an explicit bienes-inversion-authority precondition. Source inspection shows `_prior_period_carry_evidence` preserves `prior_period_observation_found=True` on validation refusal and forwards `local_evidence_found_but_unusable=True`, but current-tree runtime proof of that full path remains blocked.
 
 ## Recommendations
 

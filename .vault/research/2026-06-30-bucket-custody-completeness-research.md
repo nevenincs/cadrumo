@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#bucket-custody-completeness'
 date: '2026-06-30'
-modified: '2026-08-15'
-body_hash: 'sha256:ccdb8f05a7c34c7489e0dc785b871775abeb64a6556ab357728f580e41441135'
+modified: '2026-10-03'
+body_hash: 'sha256:293dbd348b6f89c2b862a0d98aebf7f0f9cb0f3869d54ff33fe3233f3b5178e5'
 related:
   - '[[2026-06-30-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
@@ -36,19 +36,19 @@ implementation is proposed here.
 ## The shared partial-payload builder
 
 Both custody transports funnel through one payload builder,
-`serialize_profile_bundle` (`src/aeat/application/user_profile/_bundle.py:47-88`),
+`serialize_profile_bundle` ,
 which walks exactly five categories — profile, `work_units`,
 `ledger_transactions`, `calculation_revisions`, `filing_records` — and
 `deserialize_profile_bundle` (`_bundle.py:96-187`) re-saves only those five.
 The payload model `UserProfilePortableExport`
-(`src/aeat/domain/user_profile/_portable_export.py:28-66`) has **no field** for
+ has **no field** for
 any other durable store. Both transports inherit the builder's blind spots:
 
 - **Cleartext CLI path** — `aeat config profile export` / `import`
-  (`src/aeat/entrypoints/cli/_config/_profile_bundle.py`) writes the bundle as
+   writes the bundle as
   plaintext JSON on operator disk.
 - **Sealed recovery-archive path** — `BucketMaintenanceService.export` /
-  `import_` (`src/aeat/application/bucket_maintenance/_service.py:285-487`)
+  `import_`
   wraps the **same** bundle in AEAD under a recovery passphrase (built at
   `_service.py:325`, serialised at `:353`). The archive header carries a
   `manifest_digest` that asserts integrity over a bucket manifest whose secure
@@ -59,7 +59,7 @@ any other durable store. Both transports inherit the builder's blind spots:
 
 There is a single typed registry of every secure-object namespace:
 `STORAGE_NAMESPACE_REGISTRY`
-(`src/aeat/adapters/persistence/storage/_namespace_registry.py:865`), a tuple
+, a tuple
 of `SecureObjectNamespaceDefinition` records (`_namespace_registry.py:62-77`).
 Each definition carries a `scope: StorageNamespaceScope` field
 (`_namespace_registry.py:37-42`) with three members: `PROFILE_LOCAL`,
@@ -68,8 +68,7 @@ the object key; `PROFILE_LOCAL` keys do not.
 
 This `scope` field authoritatively partitions the dropped stores into the two
 import strategies a design needs, and the live-DB enumeration the `browse` verb
-already performs (`SecureObjectRepository.list_namespaces()` at
-`src/aeat/adapters/persistence/storage/sql/secure_objects.py:358`, consumed at
+already performs (`SecureObjectRepository.list_namespaces()` , consumed at
 `_service.py:273-281` into `BucketNamespaceInventoryRow` rows with per-namespace
 row counts) is the natural basis for a completeness/coverage gate. The transport
 sees none of this today; `browse` sees every stored namespace at runtime while
@@ -87,13 +86,11 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
   `aeat.domain.attachments.blobs` (`_namespace_registry.py:536-544`, scope
   `PROFILE_LOCAL`, grammar `{sha256_hex}`, FINANCIAL) and
   `aeat.domain.attachments.manifests` (`:545-553`). `AttachmentStore`
-  (`src/aeat/adapters/persistence/storage/attachment.py:175`) writes bytes via
+   writes bytes via
   `put_bytes` (`:202`) / `put_file` (`:221`), reads via `read_bytes` (`:251`),
   writes manifests via `write_manifest` (`:276`), iterates via `iter_manifests`
   (`:325`). Transactions and revisions reference evidence by id **only**
-  (`Transaction.attachment_ids` / `purchase_invoice_evidence_id` at
-  `src/aeat/domain/transactions/_models.py:819-820`; `LedgerEvidenceRow` at
-  `src/aeat/domain/modelos/_ledger_filing_snapshot.py:171-173`). On restore
+  (`Transaction.attachment_ids` / `purchase_invoice_evidence_id` ; `LedgerEvidenceRow` ). On restore
   those ids resolve to nothing → `AttachmentNotFoundError`. This breaks the
   `ledger-evidence-bytes-not-links` and `ledger-derived-revisions-bundle-evidence`
   rules. **Key leverage:** an attachment id *is* the SHA-256 of its bytes
@@ -104,10 +101,10 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
   `aeat.calculations.observations` (`_namespace_registry.py:310-318`, scope
   `PROFILE_LOCAL`, grammar `{modelo}:{filing_year}:{period}`, AUDIT).
   `CalculationObservationRepository`
-  (`src/aeat/application/calculations/_observations_repository.py:271`) with
+   with
   `save_observation` (`:314`) / `load_observation` (`:305`); written by
   `persist_filed_calculation_observation`
-  (`src/aeat/application/live/_filed_observation_persistence.py:111-136`).
+
   Payload `_ObservationEnvelopePayload` wrapping `RegistryModeloObservation`
   with `stamped_revision_id`. These are the cross-period 303 carry-forward
   inputs; orphaning them silently corrupts future-period calculations.
@@ -115,7 +112,7 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
 - **IVA compensation history.** Namespace
   `aeat.calculations.iva_compensation.history` (`_namespace_registry.py:369-377`,
   scope `PROFILE_LOCAL`, AUDIT). `IvaCompensationHistoryRepository`
-  (`src/aeat/application/calculations/_iva_compensation_history.py:151`) with
+   with
   `save_period` (`:179`) / `load_period` (`:169`). Payload
   `IvaCompensationPeriodState`. Cross-period 303 carry input.
 
@@ -124,7 +121,7 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
   (`_namespace_registry.py:351-359`, `PROFILE_LOCAL`, AUDIT) and its immutable
   event store `...reconciliation_decision_events` (`:360-368`).
   `IvaWalletDecisionRepository`
-  (`src/aeat/application/calculations/_observations_repository.py:370`) with
+   with
   `save_decision` (`:392`) / `load_decision` (`:411`) /
   `load_decision_history` (`:438`). Payload wrapping
   `IvaCompensationReconciliationDecision`. Cross-period reconciliation input.
@@ -134,7 +131,7 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
 - **Censo snapshots.** Namespace `aeat.application.live.censo_snapshot`
   (`_namespace_registry.py:434-442`, scope **`BUCKET_LOCAL`**, grammar
   `censo-snapshot:{bucket_id}:{snapshot_id}`, IDENTITY).
-  `CensoSnapshotRepository` (`src/aeat/application/live/_censo.py:167`), object
+  `CensoSnapshotRepository` , object
   key `censo_snapshot_object_key` (`_censo.py:133`, embeds `bucket_id` at
   `:141`). Payload `CensoSnapshot`. Bucket-local: the key embeds `{bucket_id}`.
 
@@ -142,7 +139,7 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
   `aeat.application.live.justificante_capture_snapshot`
   (`_namespace_registry.py:518-526`, scope **`BUCKET_LOCAL`**, FINANCIAL).
   `JustificanteCaptureSnapshotRepository`
-  (`src/aeat/application/live/_justificante.py:256`), `save` (`:308`) enforces a
+  , `save` (`:308`) enforces a
   bucket-match guard (`:309-313`). Payload `JustificanteCaptureSnapshot`. The
   AEAT-signed receipts are held only here.
 
@@ -150,7 +147,7 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
   `aeat.domain.buckets.event_history` (`_namespace_registry.py:654-663`, scope
   `PROFILE_LOCAL`, single fixed key `catalogue`, FINANCIAL).
   `BucketEventHistoryRepository`
-  (`src/aeat/domain/buckets/_event_repository.py:33`) stores the whole history
+   stores the whole history
   as one `BucketEventHistoryCatalogue` blob; `append_bucket_event` (`:138`) is
   idempotent (`mapping[event.event_id] = event`). The entire operator audit
   trail is dropped on export.
@@ -163,7 +160,7 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
   (`_namespace_registry.py:500-508`, `BUCKET_LOCAL`, FINANCIAL).
 - **Justificante metadata** `aeat.domain.justificante.metadata`
   (`_namespace_registry.py:673-681`, `PROFILE_LOCAL`, AUDIT;
-  `JustificanteRepository` at `src/aeat/domain/justificante/_repository.py:31`).
+  `JustificanteRepository` ).
 - Related dropped AEAT-outbound stores:
   `AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE` (`:626-634`, justificante PDF
   bytes), `AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE` (`:635-643`),
@@ -174,11 +171,11 @@ referenced by **none** of `_bundle.py`. Scope and sensitivity are quoted from
 
 - **Transaction↔revision participation index.** Namespace
   `aeat.domain.modelos.participation_index`
-  (`src/aeat/domain/modelos/_participation_index.py:52`). It is a derived,
+  . It is a derived,
   self-describing read-side cache; authoritative source is the
   `CalculationRevisionCatalogue` (governed by the
   `ledger-participation-index-is-derived-rebuildable` rule). Rebuild entrypoint
-  `rebuild_participation_index` (`src/aeat/application/modelo/_participation_index_rebuild.py:92`).
+  `rebuild_participation_index` .
   The design rebuilds this after import rather than transporting it.
 
 ## Bucket-local re-keying is a non-issue for the recovery workflow
@@ -248,14 +245,14 @@ value, so a schema bump breaks no existing assertion.
 
 2. **Audit-trail provenance on import.** Bucket event ids are content-addressed
    (SHA-256 over seven fields via `derive_bucket_event_id` /
-   `src/aeat/domain/buckets/_event.py:213-233`, enforced by `_enforce_derived_id`
+   the former source file, enforced by `_enforce_derived_id`
    at `:269-282`), nothing references them as foreign keys, and the catalogue
    merge is idempotent by id. Preserving original ids/timestamps verbatim vs.
    re-stamping is a real choice with a content-addressing constraint.
 
 3. **Manifest-digest honesty.** `manifest_digest` is a SHA-256 over the
-   plaintext `BucketManifest` (`src/aeat/application/bucket_maintenance/_manifest_digest.py:30`;
-   `BucketManifest` at `src/aeat/adapters/persistence/storage/bucket/_manifest.py:91-119`
+   plaintext `BucketManifest` (the former source file;
+   `BucketManifest`
    carries bucket-identity + KDF metadata only — no namespace or row-count
    enumeration). It is bound into AEAD associated data as a header tamper-anchor
    but has **zero** relationship to what the payload actually contains. Whether

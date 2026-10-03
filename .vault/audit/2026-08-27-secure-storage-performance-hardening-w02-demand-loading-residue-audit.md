@@ -5,9 +5,8 @@ tags:
 date: '2026-08-27'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fec32c1b9279882ef0fb9c79af9d9013f6b4784d83b1ddefa65a7e07d03d9e7e'
+body_hash: 'sha256:d02def784019726a7e2e75a05c71661fa846cb19f5b50d4615e39fe1266cbdbc'
 related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
 ---
 # `secure-storage-performance-hardening` audit: W02 demand-loading residue
@@ -33,7 +32,7 @@ tests the calibration arithmetic, not any live node.
 
 ### F1 - the registry loaded at bootstrap for every command
 
-`src/cadrumo/entrypoints/cli/_common.py` imported
+The retired module imported
 `domain.calculations.registry.authority` at module scope for ONE call site on a
 filing-precondition refusal path. `_common` is loaded by the CLI bootstrap, so
 every command -- including all 68 state-free nodes -- paid for the whole
@@ -217,7 +216,7 @@ capability residue stays open.
   as a leak -- but it is the reason the predicate exempts `*.lock` at all.
 
 - `W04.P09.S36` asks for static AND executed import-graph checks. The EXECUTED
-  half exists and is maintained (`src/cadrumo/tests/test_deferred_cross_layer_imports.py`);
+  half exists and is maintained ;
   this campaign declared its one new deferral there and deleted the row its
   sandbox-notice change retired. The STATIC half -- eager cross-layer edges and
   cycles -- is `.importlinter`, and it is DEAD: `uv run --no-sync lint-imports`

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:8b126f80cf3687dbbb41d766eb59fde0032aef84928eae3a1cf70202d26f7414'
+modified: '2026-10-03'
+body_hash: 'sha256:78d09efedf4d61979ea093615118812fad0fb8acfba39643eb1739c705ec4d30'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S165-001 | PASS | Column validation failures carry a locale key
 
-`src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py` now centralizes column-boundary `StorageValidationError` construction through a helper carrying `translated_message="errors.integrity.integrity_storage_validation"`.
+The retired module now centralizes column-boundary `StorageValidationError` construction through a helper carrying `translated_message="errors.integrity.integrity_storage_validation"`.
 
 The helper is used for invalid encrypted string values, invalid encrypted bytes values, non-JSON-serializable encrypted JSON values, invalid hashed-lookup plaintext values, invalid pre-computed digest lengths, invalid bind value types, and invalid stored digest lengths. `uv run --no-sync -q python -m aeat.locales audit` passed for all locale files.
 
@@ -32,8 +32,8 @@ The tests use real `EphemeralMasterKeyProvider` sessions, AESGCM encryption, SQL
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py src/aeat/adapters/persistence/storage/crypto/test_crypto.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py` passed with 118 tests and 3 known SQLAlchemy sqlite datetime adapter deprecation warnings.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py src/aeat/adapters/persistence/storage/crypto/test_crypto.py` passed.
+- The historical check passed with 118 tests and 3 known SQLAlchemy sqlite datetime adapter deprecation warnings.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Touched-surface hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
 

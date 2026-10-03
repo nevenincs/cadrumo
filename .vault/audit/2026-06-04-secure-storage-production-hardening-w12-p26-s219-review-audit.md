@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e48cf3bec99ff03c1715ddd698092f03638390fca52e804125a0ff24541949f9'
+modified: '2026-10-03'
+body_hash: 'sha256:badf98015e9b96b4cf225e3350105f36cb1a74f145f0159483a7cc0bbef4b81b'
 related: []
 ---
 
@@ -29,7 +29,7 @@ profile.
 
 ## S219-003 | LOW | Existing raw ledger validation messages remain outside this storage slice
 
-`src/aeat/application/ledger/_actions.py` still has pre-existing
+The retired module still has pre-existing
 `TransactionValidationError` construction sites that pass raw strings in
 provider/source validation and some ledger workflow guards. These were not
 introduced by S219 and do not change the runtime-default storage disposition,
@@ -38,8 +38,8 @@ using the canonical `python -m aeat.locales` CLI.
 
 ## S219-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/ledger/_actions.py src/aeat/application/ledger/test_actions.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/ledger/test_actions.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-117` as `runtime-default`; no critical, high, or medium

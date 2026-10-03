@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import Field, TypeAdapter, model_validator
 
@@ -47,6 +47,7 @@ from .schema import (
 from .variants import FactOwnership, FactOwnershipField, FactSelector, GovernedFactVariant
 
 __all__ = [
+    "UNIQUE_REFERENCES_REQUIREMENT",
     "BracketFactQuery",
     "EntitySetFactQuery",
     "EventFactQuery",
@@ -63,6 +64,7 @@ __all__ = [
     "ResolvedOverrideFact",
     "ResolvedScalarFact",
     "ScalarFactQuery",
+    "optional_unique_mapping_tokens",
     "required_mapping_entry",
     "resolve_governed_fact",
     "resolve_validated_governed_fact",
@@ -303,28 +305,72 @@ def required_mapping_entry(entries: Mapping[str, str], key: str, *, subject: str
     return value.strip()
 
 
+UNIQUE_REFERENCES_REQUIREMENT: Final = "must contain unique references"
+
+
+def _unique_tokens(
+    value: str,
+    key: str,
+    *,
+    subject: str,
+    requirement: str,
+    separator: str,
+    refuse_empty: bool,
+) -> tuple[str, ...]:
+    tokens = tuple(token.strip() for token in value.split(separator) if token.strip())
+    if (refuse_empty and not tokens) or len(tokens) != len(set(tokens)):
+        raise RegistryValidationError(f"{subject} {key!r} {requirement}")
+    return tokens
+
+
 def unique_mapping_tokens(
     entries: Mapping[str, str],
     key: str,
     *,
     subject: str,
     requirement: str = "must contain unique tokens",
+    separator: str = ",",
+    refuse_empty: bool = True,
 ) -> tuple[str, ...]:
-    """Return the stripped, non-empty comma-separated tokens of one required entry.
+    """Return the stripped, non-empty separated tokens of one required entry, in order.
 
     ``subject`` and ``requirement`` word the refusal, so each consumer keeps its
-    own diagnostic.
+    own diagnostic. ``refuse_empty=False`` admits a present entry made only of
+    separators, such as ``",,"``, as an empty tuple.
 
     Raises:
-        RegistryValidationError: When the entry is absent or blank, yields no
-            token, or repeats a token.
+        RegistryValidationError: When the entry is absent or blank, repeats a
+            token, or (unless ``refuse_empty`` is false) yields no token.
     """
-    tokens = tuple(
-        token.strip() for token in required_mapping_entry(entries, key, subject=subject).split(",") if token.strip()
+    return _unique_tokens(
+        required_mapping_entry(entries, key, subject=subject),
+        key,
+        subject=subject,
+        requirement=requirement,
+        separator=separator,
+        refuse_empty=refuse_empty,
     )
-    if not tokens or len(tokens) != len(set(tokens)):
-        raise RegistryValidationError(f"{subject} {key!r} {requirement}")
-    return tokens
+
+
+def optional_unique_mapping_tokens(
+    entries: Mapping[str, str],
+    key: str,
+    *,
+    subject: str,
+    requirement: str = "must contain unique tokens",
+) -> tuple[str, ...]:
+    """Return the stripped, non-empty comma-separated tokens of one optional entry, in order.
+
+    An absent or blank entry, or one made only of separators, declares no token
+    and yields an empty tuple. ``subject`` and ``requirement`` word the refusal.
+
+    Raises:
+        RegistryValidationError: When the entry repeats a token.
+    """
+    value = entries.get(key)
+    if value is None or not value.strip():
+        return ()
+    return _unique_tokens(value, key, subject=subject, requirement=requirement, separator=",", refuse_empty=False)
 
 
 def resolve_governed_fact(

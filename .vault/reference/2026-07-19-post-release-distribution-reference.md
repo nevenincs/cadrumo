@@ -3,10 +3,9 @@ tags:
   - '#reference'
   - '#post-release-distribution'
 date: '2026-07-19'
-modified: '2026-08-23'
-body_hash: 'sha256:75d5b7bce6e8f4a619aa3f4278e5705aab1740b7d90dda00f8c17e92ec6c5348'
-related:
-  - "[[2026-07-17-post-release-distribution-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:c19ed92e948e8cb8d4b2dcb7b37db67d113d15c1d9468a706a957ef1ff27f52c'
+related: []
 ---
 
 > Persisted from the 2026-07-19 Fable holistic pipeline review. Gaps G2 (marketplace publication), G1(a) (readiness --cohort-dir/--evidence-dir wiring), and G7 (mcpb version surface) were actioned in commit `17abf9c021`. Gaps G3 (RELEASING.md rewrite), G4/G6 (homebrew/scoop row emission), G5 (claude-row aggregation + `just release-collect-evidence`), and G8 (housekeeping) remain open and are tracked below.
@@ -49,33 +48,7 @@ avenue" clause.
 
 However, the pipeline **cannot currently complete a publication end-to-end**:
 
-1. **CRITICAL â€” the publish workflow's own evidence gate is structurally unsatisfiable.**
-   `publish-release.yml:154-156` runs `dev.release.readiness` whose blocking
-   `distribution-evidence-complete` check reads hard-coded default paths
-   `var/release-cohort` and `var/distribution-install-readiness`
-   (`dev/release/readiness.py:385-386`), while the workflow downloads the cohort and
-   evidence into `var/promotion/*` (`publish-release.yml:91-93,120-128`). Additionally the
-   check requires `manifest.source.tag == v{version}` (`readiness.py:402-408`), but the
-   CI-built cohort is produced from a plain push-to-main checkout that fetches no tags
-   (`packaging-smoke.yml:272-273`; `actions/checkout@v4` default `fetch-tags: false`), so
-   `source.tag` is `None`. And of the 12 required rows, the packaging-smoke run holds only
-   the 3 `python-*` rows â€” the other 9 live on other workflows' artifacts or on the
-   operator's workstation and are never downloaded. Gate 2 refuses forever.
-2. **Mandate gap â€” the Claude marketplace avenue is never populated.** The publish
-   workflow pushes Scoop and Homebrew but has **no marketplace publication step**; the
-   marketplace zip is only attached to the GitHub release. The post-publication verifier
-   (`dev/packaging/acquire_claude_plugin.py:53`) expects a public marketplace source
-   (`nevenincs/cadrumo`), which is a private repo today.
-3. **Docs gap â€” an operator cannot run a release from the docs.** `RELEASING.md` still
-   states "No publication authority currently exists" (`RELEASING.md:151-155`) and
-   "Publication is blocked" (`RELEASING.md:376-386`), directly contradicting
-   `publish-release.yml`, which its own tests call "the sole upload authority"
-   (`dev/release/tests/test_publish_release_workflow.py:1-8`). There is no runbook for the
-   dispatch, evidence aggregation, or the vars/secrets it needs.
-4. **8 of 12 required evidence rows have no CI emission path.** Homebrew's 4 rows are
-   emitted by no workflow (only post-publication `acquire_homebrew.py`); the 4 `claude-*`
-   rows require an operator-run real-client capture (`emit_real_client_evidence.py`); the
-   Scoop row is emitted inside the Scoop workflow's own artifact but never aggregated.
+1. **CRITICAL â€” the publish workflow's own evidence gate is structurally unsatisfiable.**    `publish-release.yml:154-156` runs `dev.release.readiness` whose blocking    `distribution-evidence-complete` check reads hard-coded default paths    `var/release-cohort` and `var/distribution-install-readiness`    (`dev/release/readiness.py:385-386`), while the workflow downloads the cohort and    evidence into `var/promotion/*` (`publish-release.yml:91-93,120-128`). Additionally the    check requires `manifest.source.tag == v{version}` (`readiness.py:402-408`), but the    CI-built cohort is produced from a plain push-to-main checkout that fetches no tags    (`packaging-smoke.yml:272-273`; `actions/checkout@v4` default `fetch-tags: false`), so    `source.tag` is `None`. And of the 12 required rows, the packaging-smoke run holds only    the 3 `python-*` rows â€” the other 9 live on other workflows' artifacts or on the    operator's workstation and are never downloaded. Gate 2 refuses forever. 2. **Mandate gap â€” the Claude marketplace avenue is never populated.** The publish    workflow pushes Scoop and Homebrew but has **no marketplace publication step**; the    marketplace zip is only attached to the GitHub release. There is no runbook for the    dispatch, evidence aggregation, or the vars/secrets it needs. 4. **8 of 12 required evidence rows have no CI emission path.** Homebrew's 4 rows are    emitted by no workflow (only post-publication `acquire_homebrew.py`); the 4 `claude-*`    rows require an operator-run real-client capture (`emit_real_client_evidence.py`); the    Scoop row is emitted inside the Scoop workflow's own artifact but never aggregated.
 
 The GitHub-release half of the mandate is **satisfied by construction** (all cohort files
 attached, `publish-release.yml:208-223`); the "all avenues populated" half is satisfied
@@ -137,7 +110,6 @@ gate (run is packaging-smoke, success, `push` to `main`, same repo, head_sha mat
   (`packaging-claude.yml:161-178`), plus the MCPB runtime oracle â€” but its outputs
   (`plugin-evidence.json`, `mcpb-assembly-runtime-evidence.json`) are lane evidence,
   **not** `DistributionEvidence` rows. The four `claude-*` rows are real-client claims
-  mintable only via the operator hook `dev/packaging/emit_real_client_evidence.py`
   (SDK-driven runs are refused by the honesty guard,
   `dev/packaging/distribution_evidence_emit.py:61-75,270-280`).
 
@@ -457,7 +429,6 @@ governance classes:
 - **5 client-display surfaces** (Claude plugin, marketplace, marketplace-served
   plugin, MCPB `description`, MCPB `long_description`) already carry
   **operator-approved bilingual EN/ES copy**, pinned byte-exact in
-  `dev/packaging/verify_distribution_identity.py` `_APPROVED_PRODUCT_DESCRIPTION_PAIRS`
   (ADR `2026-07-16-distribution-harness-identity-adr`, exec record "S06 Revision 2").
   These five all restate the same six required claims (capability, safety, privacy,
   on-host storage, human confirmation, never-files-live) and are **internally
@@ -503,12 +474,10 @@ say "Cadrumo is in beta" three separate times. One of the two is stale.
 | 11 | Homebrew formula `desc` | `packaging/homebrew/generate.py:381` | "Deterministic Spanish tax calculation CLI and MCP server" | EN only | none | Metadata (Homebrew style guide caps `desc` at ~80 chars, no trailing period, no "A"/"An" prefix â€” this one already conforms in style) |
 | 12 | GitHub repository description | live, via `gh repo view` | **`"Tax burden"`** | EN, informal | none | Metadata â€” **the worst conflict** |
 | 13 | GitHub repository `homepageUrl` | live, via `gh repo view` | *(empty)* | n/a | none | Metadata â€” README references `https://cadrumo.neve.md` as "product page" (`docs/index.md:13`) but the repo homepage field is unset |
-| 14 | Claude plugin `plugin.json` `description` | `src/cadrumo/agent/_workspace.py:70-89`, enrolled `verify_distribution_identity.py:181-186` | EN: "Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided workflows, and human-confirmed execution of every state-changing step. Cadrumo is read-only toward AEAT and never files..." / ES: "Opera Cadrumo, la CLI determinista de impuestos espaÃ±oles, desde Claude: ..." | **EN/ES, operator-approved** | `verify_distribution_identity.py` `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("claude_plugin_client_display","description")]` | Client-display â€” **PINNED, requires re-approval to touch** |
 | 15 | Claude marketplace-served plugin `description` (same value re-emitted inside the marketplace `plugins/cadrumo` subtree) | `_workspace.py:70-89` (same constant reused) | identical to #14 | EN/ES, approved | same pinned set, key `("claude_marketplace_plugin_client_display","description")` | Client-display â€” PINNED |
 | 16 | `marketplace.json` `description` | `_workspace.py:142-154` | EN: "Neve plugin marketplace - Claude plugins including the Cadrumo Spanish-tax assistant: read-only toward AEAT, it never files..." / ES: "Marketplace de plugins de Neve - plugins de Claude, incluido el asistente de impuestos espaÃ±oles Cadrumo: ..." | EN/ES, approved | `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("claude_marketplace_client_display","description")]` | Client-display â€” PINNED |
 | 17 | `packaging/mcpb/manifest.json` `description` | `packaging/mcpb/manifest.json:6` | "English: Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool surface: grounded search over the bundled BOE/AEAT legal corpus... \nEspaÃ±ol: Opera Cadrumo, una CLI determinista de impuestos espaÃ±oles, como superficie de herramientas MCP: ..." | EN/ES labelled, approved | `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("mcpb_client_display","description")]` | Client-display â€” PINNED. **Note: wording differs slightly from #14/#15/#16** ("as an MCP tool surface" vs "from Claude") â€” this is an intentional, already-approved per-surface variant, not drift. |
 | 18 | `packaging/mcpb/manifest.json` `long_description` | `manifest.json:7` | "English: The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client... \nEspaÃ±ol: La consola de Cadrumo expone una CLI determinista de impuestos espaÃ±oles a cualquier cliente MCP..." | EN/ES labelled, approved | `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("mcpb_client_display","long_description")]` | Client-display â€” PINNED |
-| 19 | MCP tool/prompt/resource/argument descriptions (`cadrumo_harness_load`, `cadrumo_corpus_search`, `search`, `execute`, etc.) | `src/cadrumo/entrypoints/mcp/_server.py` (multiple), `packaging/mcpb/manifest.json:37-44` | Short per-verb operational strings, e.g. "Load the operator rules and active persona...", "Search the bundled BOE/AEAT legal corpus for grounding." | **EN only, deliberately** | `ModelFacingDescriptionCheck` â€” frozen `sha256` `_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256 = "4b53a667c7e0..."` over the four `_MODEL_FACING_DESCRIPTION_SURFACES` (MCP tool/prompt/resource/argument descriptions) | Model-facing (not client-display) â€” **PINNED, English-only by design; out of scope for bilingual reconciliation** |
 | 20 | CHANGELOG.md header | `CHANGELOG.md:1-9` | "All notable changes to this project are documented here..." (Keep a Changelog boilerplate, no product summary sentence) | EN | none | Not a product description â€” no conflict, nothing to reconcile |
 | 21 | release-please-config.json / manifest | root | no `description` field present | n/a | n/a | Not applicable |
 
@@ -633,45 +602,7 @@ pinned copy alone; this reconciliation only touches the ungoverned metadata tier
 
 ## 6. Risks / gates / landing order
 
-1. **`verify_distribution_identity.py` / `_APPROVED_PRODUCT_DESCRIPTION_PAIRS`** â€”
-   any edit to surfaces #14-#18 (plugin/marketplace/MCPB bilingual copy) trips this
-   gate immediately; it fails closed on any byte-level mismatch against the pinned
-   frozensets, and per-claim keyword coverage is also checked. **Do not touch these
-   surfaces in this reconciliation** â€” confirmed out of scope per Â§3(b).
-2. **`ModelFacingDescriptionCheck` sha256 pin** â€” any edit to MCP tool/prompt/
-   resource/argument description strings (#19) breaks the frozen digest
-   `4b53a667c7e0...`. Not touched by this reconciliation.
-3. **No gate protects** the metadata tier this reconciliation *does* propose
-   touching (pyproject descriptions, Scoop, Homebrew, GitHub repo description) â€”
-   confirmed by `rg` across `dev/`, `.github/workflows/`, and
-   `dev/packaging/verify_distribution_identity.py`; none of these strings appear
-   in any test assertion. This makes them **safe mechanical edits** with no gate
-   dependency, but also means nothing will catch future drift here â€” worth a
-   follow-up: consider adding a lightweight "one canonical short description,
-   asserted identical across pyproject.toml/Scoop/Homebrew" gate in a later step,
-   mirroring the discipline `verify_distribution_identity.py` already applies to
-   the client-display tier. (Proposal only â€” not requested by this task.)
-4. **Locale parity gate** (`test_parity.py`, `test_locale_translation_honesty.py`)
-   â€” irrelevant here; no locale catalogue keys are touched by any recommendation
-   in this document.
-5. **Docs-claims / Sphinx `-n -W` build gate** â€” the beta-vs-alpha status
-   discrepancy (Â§4, README badge row) does not trip any existing gate (badges and
-   prose maturity claims aren't cross-checked), but is a factual-honesty risk
-   independent of any CI mechanism; flagged for operator decision, not a gate
-   dependency.
-6. **Recommended landing order** (once approved):
-   1. Operator resolves the alpha/beta status question and the README-vs-approved-
-      copy framing-divergence question (Â§3b) â€” these are judgment calls, land
-      first so downstream copy is written against a settled maturity claim.
-   2. Land the canonical EN short description into `pyproject.toml` (root) â€”
-      lowest-risk, most-visible metadata surface.
-   3. Land the same/derived string into Scoop and Homebrew generators (cosmetic
-      parity only; neither currently conflicts materially).
-   4. `gh repo edit` for the GitHub description + homepage â€” no code change,
-      no PR, do this once the canonical sentence is settled so the repo
-      description doesn't need a second edit.
-   5. Optional cosmetic casing fix on the two companion-package descriptions.
-   6. Do **not** touch #14-#19 in this pass.
+1. **`verify_distribution_identity.py` / `_APPROVED_PRODUCT_DESCRIPTION_PAIRS`** â€”    any edit to surfaces #14-#18 (plugin/marketplace/MCPB bilingual copy) trips this    gate immediately; it fails closed on any byte-level mismatch against the pinned    frozensets, and per-claim keyword coverage is also checked. **Do not touch these    surfaces in this reconciliation** â€” confirmed out of scope per Â§3(b). 2. **`ModelFacingDescriptionCheck` sha256 pin** â€” any edit to MCP tool/prompt/    resource/argument description strings (#19) breaks the frozen digest    `4b53a667c7e0...`. This makes them **safe mechanical edits** with no gate    dependency, but also means nothing will catch future drift here â€” worth a    follow-up: consider adding a lightweight "one canonical short description,    asserted identical across pyproject.toml/Scoop/Homebrew" gate in a later step,    mirroring the discipline `verify_distribution_identity.py` already applies to    the client-display tier. (Proposal only â€” not requested by this task.) 4. **Locale parity gate** (`test_parity.py`, `test_locale_translation_honesty.py`)    â€” irrelevant here; no locale catalogue keys are touched by any recommendation    in this document. 5. **Docs-claims / Sphinx `-n -W` build gate** â€” the beta-vs-alpha status    discrepancy (Â§4, README badge row) does not trip any existing gate (badges and    prose maturity claims aren't cross-checked), but is a factual-honesty risk    independent of any CI mechanism; flagged for operator decision, not a gate    dependency. 6. **Recommended landing order** (once approved):    1. Operator resolves the alpha/beta status question and the README-vs-approved-       copy framing-divergence question (Â§3b) â€” these are judgment calls, land       first so downstream copy is written against a settled maturity claim.    2. Land the canonical EN short description into `pyproject.toml` (root) â€”       lowest-risk, most-visible metadata surface.    3. Land the same/derived string into Scoop and Homebrew generators (cosmetic       parity only; neither currently conflicts materially).    4. `gh repo edit` for the GitHub description + homepage â€” no code change,       no PR, do this once the canonical sentence is settled so the repo       description doesn't need a second edit.    5. Optional cosmetic casing fix on the two companion-package descriptions.    6. Do **not** touch #14-#19 in this pass.
 
 ## Summary for the coordinator
 

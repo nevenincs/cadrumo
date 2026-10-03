@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-m100-2025-row-width'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:9c52440107a7d45171f6ccd39fb3852de621c223eb134a1aa0b5fe2891542e6d'
-related:
-  - '[[2026-06-04-registry-m100-2025-row-width-plan]]'
+related: []
 ---
 
 # `registry-m100-2025-row-width` audit: `target inventory`

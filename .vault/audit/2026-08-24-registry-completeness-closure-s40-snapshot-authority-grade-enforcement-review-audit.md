@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee519eb5473716f4621462d2eba5ff239beb908ed2eacd977816fd1a7ef1cd98'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:d69c4bacd9d8cd94e88c4aaa508f0a4e6e546e8717f2c7e6377856571b8f58bc'
+related: []
 ---
 
 # `registry-completeness-closure` audit: `S40 snapshot authority-grade enforcement review`
 
 ## Scope
 
-Independent review of W01.P01.S40's selected-revision authority-grade refusal in `src/cadrumo/domain/calculations/registry/_snapshot.py` and its focused adversarial tests. Checked conformance with the accepted registry-completeness and temporal authority-grade decisions, the S04 escalation finding, enum-ladder semantics, exception and facade-cache contracts, and whether the real-authority mutation reaches the public snapshot boundary.
+Checked conformance with the accepted registry-completeness and temporal authority-grade decisions, the S04 escalation finding, enum-ladder semantics, exception and facade-cache contracts, and whether the real-authority mutation reaches the public snapshot boundary.
 
 ## Findings
 

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#declaracion-real-render-verification'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff87c2cbe9aef212c7df52a305ec46a4fb9143a2bccd3c84eaa504dca82a15ef'
+body_hash: 'sha256:fae74d86324f1d314db836079672cd442e3973b5792491a13bb65c6d5c700638'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
 ---
@@ -49,7 +49,7 @@ spanning those same four modelos. That is no longer true of the tree: the nine
 artefacts at those coordinates declare `synthetic_generated` and carry
 `role = parser_anchor`. The ADR itself records that specimens carrying unredacted
 taxpayer identity were withdrawn and replaced with synthetic ones, and
-`src/cadrumo/adapters/inbound/sanitizer/tests/test_residual_identity_absence.py:137`
+
 states the justificante directory "held no real specimen at all" after that
 replacement. The count of nine and the modelo set survive in both documents while the
 provenance they attach to does not. Which of the two axes each document meant is not
@@ -65,7 +65,6 @@ with source URLs) belonging to the ledger evidence corpus, not to `declaracion_p
 verification. The existing `src/cadrumo/**/tests/**` wheel exclusion already covers
 them.
 
-`src/cadrumo/adapters/inbound/sanitizer/tests/test_residual_identity_absence.py:131`
 discovers real-provenance artefacts by walking the whole package and reading each
 sidecar, so that scope is data-driven rather than directory-scoped: a future
 `real_corpus` artefact enrols in the identity scan wherever it lands.
@@ -116,7 +115,7 @@ names the derivation function as the binding site rather than the gate.
 
 ### One shipped module already consumes a precompiled projection of the corpus
 
-`src/cadrumo/adapters/inbound/sanitizer/fixtures.py` is NOT under a `tests/` directory,
+the former source file is NOT under a `tests/` directory,
 so it matches none of the four wheel exclusion patterns and ships to installed users. It
 carries `SANITIZED_SHAS` at `:32`, a frozen set of the SHA-256 digest of every committed
 specimen including the three top-level PDFs, and it is load-bearing for a production
@@ -129,7 +128,6 @@ it serves is a light precompiled projection, not the bytes. The module docstring
 matched no committed fixture and 53 of 62 fixtures were absent, so the guard covered
 nine fixtures while reading as though it covered all of them), and it is now regenerated
 and pinned against drift by
-`src/cadrumo/adapters/inbound/sanitizer/tests/test_sanitized_sha_catalogue.py`.
 
 The corpus therefore already conforms to the project's precompile boundary: the heavy
 artefact stays out of the wheel and a light reviewable derivative ships under a
@@ -138,7 +136,7 @@ drift gate.
 ### Only one of the two corpus-dependent checks is live, and its verdict is frozen at build time
 
 `validate_declaracion_pdf_round_trip_gate`
-(`src/cadrumo/domain/calculations/registry/_validate_extraction_profiles.py:46`) returns
+ returns
 before reaching `corpus_root` whenever `corpus_round_trip_verified` is set. Parsing the
 registry with `tomllib`, all 29 `declaracion_pdf` profiles set it `true` and all 29
 carry a `verification_source` (uniformly `synthetic_from_aeat_published_text`), so this
@@ -188,7 +186,7 @@ constraint that motivated that split. Size is not a live objection in either dir
 
 ### The companion locator resolves files, not directories
 
-`resolve_companion_binary` (`src/cadrumo/core/resources/_boundary.py:131`) and
+`resolve_companion_binary`  and
 `resolve_corpus_binary` (`:155`) both gate on `_traversable_is_file` (`:109`) and return
 a single file `Path` or `None`. Neither resolves a directory, which is the shape the
 specimen gate needs, since it joins `corpus_root / <modelo_id>` and then globs. Shipping
@@ -212,7 +210,6 @@ The stamping side is `src/cadrumo/tests/fixtures/justificantes/_generate_base.py
 which writes `"provenance": FIXTURE_PROVENANCE_SYNTHETIC` into every generated sidecar,
 with `:172` recording that `role` and `provenance` are orthogonal axes per the
 verification-fixture-roles decision. The enforcing gate is
-`src/cadrumo/domain/calculations/registry/tests/test_verification_source_fixture_metadata.py:126`.
 
 Every one of those sites lives under a `tests/` directory and is wheel-excluded. A guard
 preventing a future `real_corpus` anchor from shipping therefore cannot be an assertion
@@ -242,7 +239,7 @@ rule states the committed-versus-generated half of that boundary.
 ### The uncommitted campaign work already implements the refusal resolution
 
 `derive_justificante_corpus_candidate`
-(`src/cadrumo/domain/calculations/registry/_source_evidence_fingerprint.py:85`,
+
 uncommitted at time of writing) gates derivation on `RunMode.CHECKOUT` at `:116` and
 returns a typed `JustificanteCorpusUnavailableAdvisory` (`:32`) carrying `run_mode`,
 `probed_path` and an operator-safe `reason` whenever the corpus cannot be derived.
@@ -290,16 +287,8 @@ question needs.
 - `src/cadrumo/tests/fixtures/manual_annexes/` (7 facsimile artefacts)
 - `src/cadrumo/tests/fixtures/__init__.py:38`, `:41`, `:44`, `:58`, `:71`
 - `src/cadrumo/tests/fixtures/justificantes/_generate_base.py:172`, `:190`
-- `src/cadrumo/domain/calculations/registry/_source_evidence_fingerprint.py:3`, `:32`, `:85`, `:116`, `:155`
-- `src/cadrumo/domain/calculations/registry/_validate.py:104`, `:108`, `:136`, `:157`, `:281`
-- `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py:80`, `:198`, `:249`, `:288`
-- `src/cadrumo/domain/calculations/registry/_validate_record_sections.py:272`, `:303`
-- `src/cadrumo/domain/calculations/registry/_validate_extraction_profiles.py:10`, `:35`, `:46`, `:82`
-- `src/cadrumo/domain/calculations/registry/tests/test_verification_source_fixture_metadata.py:126`
-- `src/cadrumo/adapters/inbound/sanitizer/fixtures.py:26`, `:32`
-- `src/cadrumo/adapters/inbound/sanitizer/tests/test_sanitized_sha_catalogue.py`
-- `src/cadrumo/adapters/inbound/sanitizer/tests/test_residual_identity_absence.py:131`, `:137`
+
 - `src/cadrumo/application/ledger/tests/_evidence_corpus/`
-- `src/cadrumo/core/resources/_boundary.py:65`, `:109`, `:131`, `:155`
+
 - `pyproject.toml:232`
 - `packaging/cadrumo_data_manuals/pyproject.toml:13`

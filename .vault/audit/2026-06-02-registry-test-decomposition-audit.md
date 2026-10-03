@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-test-decomposition'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:08adbf4348ae9948f7ef51a338def3b94bf1c8ac81dc24a9a73e76ab151d812e'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+related: []
 ---
 
 # `registry-test-decomposition` audit: `oversized registry test module decomposition audit`

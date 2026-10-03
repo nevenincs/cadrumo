@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e842bcaab8939820435e5c1b8c793c87cec228bf9ea131e076709a3b717d9bd3'
+body_hash: 'sha256:c24f3c59cc624f7b5401cd898bf33633999e2b57d7638725911164fc4f7f3056'
 related:
   - "[[2026-08-13-secure-storage-hardening-successor-adr]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
@@ -33,14 +33,13 @@ Five isolated samples took 5,224--7,754 ms; an independent run reached 8,541 ms
 under heavier host contention. An already-imported repository empty scan took
 0.16--0.58 ms. Inventory checks retired paths before returning when the capsule
 root is absent; this intentional fail-closed path contains no envelope unwrap,
-KDF, decrypt, or keyring call. `src/cadrumo/adapters/persistence/storage/custody/_capsule.py:721`
+KDF, decrypt, or keyring call. the former source file
 
 One `cProfile` run attributed 8.69 of 8.98 seconds to imports, including 1,237
 Pydantic model constructions. The `application.workflow` facade loads broad
 adapter and engine graphs before its lightweight profile scan; independent
 timing placed that facade at 2.64--3.13 seconds. The config payload module also
 imports unrelated surfaces. `src/cadrumo/application/workflow/__init__.py:94`
-`src/cadrumo/entrypoints/cli/_config_payloads.py:22`
 
 Keeping eager facades makes small commands pay for unrelated AEAT, certificate,
 filing, registry, Google, and schema surfaces. A PEP 562 lazy facade matches the
@@ -53,14 +52,10 @@ The payload needs UUID, authenticated label, and active selection, but listing
 builds a full view per capsule. It re-recognizes commits, takes a transaction
 lock, reads commit, password envelope, sentinel, label, creation journal, and
 label head, and verifies label provenance. No Argon2 or decrypt runs, but roughly
-four commit validations occur per profile. `src/cadrumo/application/user_profile/_profile_repository.py:88`
-`src/cadrumo/application/user_profile/_profile_repository.py:144`
-`src/cadrumo/application/user_profile/_profile_repository.py:176`
+four commit validations occur per profile. the former source file
 
 The label-head verifier can publish or recover state, so listing can mutate.
 Output rendering can resolve the active profile again, duplicating work.
-`src/cadrumo/adapters/persistence/storage/custody/_label_head_repository.py:54`
-`src/cadrumo/entrypoints/cli/_common.py:703`
 
 A pure `ProfileSummary` inventory can preserve UUID/commit/label provenance
 while excluding envelope, sentinel, KDF, session, and repair work. The ADR must
@@ -78,7 +73,6 @@ startup. `src/cadrumo/core/config.py:1427`
 Binding gates include retired-layout refusal even without `buckets/`; canonical
 UUID and no-follow bounded commit discovery; fail-closed malformed markers;
 UUID-bound labels; and full custody checks on explicit inspection/repair.
-`src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py:191`
 
 Absolute thresholds remain unselected because the shared Windows host was
 contended. Quiet-CI medians and structural gates need calibration. Populated
@@ -87,15 +81,8 @@ secure-object namespaces remain uninvestigated and belong in the campaign plan.
 
 ## Sources
 
-- `src/cadrumo/adapters/persistence/storage/custody/_capsule.py:721`
-- `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py:191`
-- `src/cadrumo/adapters/persistence/storage/custody/_label_head_repository.py:54`
-- `src/cadrumo/application/user_profile/_profile_repository.py:88`
-- `src/cadrumo/application/user_profile/_profile_repository.py:144`
-- `src/cadrumo/application/user_profile/_profile_repository.py:176`
 - `src/cadrumo/application/workflow/__init__.py:94`
-- `src/cadrumo/entrypoints/cli/_config_payloads.py:22`
-- `src/cadrumo/entrypoints/cli/_common.py:703`
+
 - `src/cadrumo/core/config.py:1427`
 - `.vault/adr/2026-08-13-secure-storage-hardening-successor-adr.md:23`
 - `.vault/adr/2026-08-13-profile-password-custody-rollup-adr.md:34`

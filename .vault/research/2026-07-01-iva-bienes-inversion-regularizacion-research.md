@@ -3,8 +3,8 @@ tags:
   - "#research"
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
-modified: '2026-08-15'
-body_hash: 'sha256:4a4f74e99553d0049b52dad3744acecfa774b467b807efd1a104ee7ef58f3550'
+modified: '2026-10-03'
+body_hash: 'sha256:b144b0a7cfba91932bd7ac952c505a302795a0a23d588d3c3a5e2a202e548cc7'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
   - "[[2026-06-21-m390-iva-carry-boxes-adr]]"
@@ -16,7 +16,7 @@ related:
 Scope: issue #349 (P2). The multi-year capital-goods deduction-regularization mechanism
 (LIVA arts. 107-110) is not modelled. Present at HEAD (`debf1b2c1`): the four legal entries
 `ley-37-1992:art-107/108/109/110` grounded to bundled consolidated LIVA text
-(`src/aeat/_data/registry/aeat/legal/iva.toml:1006-1082`, all reviewed, reviewed_by operator);
+(the former source file, all reviewed, reviewed_by operator);
 a dedicated manual casilla `iva.regularizacion-inversiones`
 (`303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml:265`) and the official
 form casilla 43 (`...part-002.toml:280`), both `input_kind = manual`, grounded to arts. 107-110.
@@ -28,12 +28,11 @@ case, and the feed into casilla 43 / M390.
 ### F1 - Register data largely exists as `AssetRecord` (income-tax purpose), on the wrong axis for LIVA
 
 `aeat.domain.contribuyente.assets.AssetRecord`
-(`src/aeat/domain/contribuyente/assets/__init__.py:95`) already carries `acquisition_date`,
+ already carries `acquisition_date`,
 `taxable_base`, `iva_rate`, `iva_amount`, and `deductible_iva_ratio` (`:117`, the fraction of
 input IVA the contribuyente may deduct, 0-1) - the initial-year prorrata proxy. It persists
 encrypted, bucket-local, `FINANCIAL` sensitivity through `PROFILE_ASSETS_LEDGER_NAMESPACE`
-(`src/aeat/adapters/persistence/storage/_namespace_registry.py:306`) via
-`src/aeat/adapters/persistence/profile/assets.py`.
+ via
 
 Not directly reusable as the LIVA register authority: (a) its `AssetClass` StrEnum
 (`__init__.py:39-74`) is the LIS art. 12.1.a amortization-coefficient taxonomy (obra civil,
@@ -49,9 +48,9 @@ cross-reference target (avoid double data-entry), not the right authority.
 Two templates. (a) `AssetRecord` above - durable, authoritative, cross-year primary input. (b)
 The IVA-compensation history
 `aeat.domain.iva_compensation._carry_forward.IvaCompensationPeriodState`
-(`src/aeat/domain/iva_compensation/_carry_forward.py:46`) is one record per filed period,
+ is one record per filed period,
 persisted at `IVA_COMPENSATION_HISTORY_NAMESPACE` (`AUDIT` sensitivity) through
-`SecureBoundRepository` (`src/aeat/application/calculations/_iva_compensation_history.py:1`),
+`SecureBoundRepository` ,
 with a pure FIFO projection `build_iva_compensation_carry_forward_report`. The register follows
 that shape (one record per bien de inversion, plus a per-year prorrata snapshot). Unlike the
 participation index (`ledger-participation-index-is-derived-rebuildable`), it is authoritative
@@ -71,16 +70,16 @@ in a profile-scoped encrypted register.
 ### F4 - The feed mechanism has an exact precedent: `IVA_COMPENSATION_ANNUAL_PARTITION`
 
 M390 boxes 97/662 are fed by a registry-declared source kind `iva_compensation_annual_partition`
-(`src/aeat/core/aggregation.py:268-272`) that reads a profile-scoped cross-year store and
+ that reads a profile-scoped cross-year store and
 materialises the box via an application projection
-(`src/aeat/application/calculations/_iva_compensation_annual_partition.py`), not a per-casilla
+, not a per-casilla
 relation copy/sum. The regularizacion feed is the same shape: a registry-declared
 `bienes_inversion_regularizacion` source reading the register plus the definitiva prorrata for
 the year, materialising casilla 43 (M303, annual/4T) and the M390 regularizacion field
 (`390/revisions/2010-y-siguientes/casillas/0001-casillas.toml:159`, box 662-adjacent).
 Enrollment is governed by `no-dormant-source-resolvers`: a new source kind is enrolled in the
 live mesh OR placed in `DEFERRED_SOURCE_KINDS`
-(`src/aeat/application/aggregation/_source_mesh.py:128`) with a live advisory - never left to
+ with a live advisory - never left to
 resolve silently to zero.
 
 ### F5 - The automatic feed is BLOCKED on the deferred prorrata-definitiva source; the annual compute is not

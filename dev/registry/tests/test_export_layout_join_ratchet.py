@@ -38,12 +38,20 @@ See Also:
 
 from __future__ import annotations
 
+from functools import cache
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    declared_revision_selection_date,
+    revision_selection_coordinates,
+)
 
 from ..compiler import export_layout_record_join as coverage_records
 
@@ -60,49 +68,65 @@ _UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset[tuple[str, 
 _MINIMUM_REVISIONS_SCANNED = 40
 
 
-def _resolve(
-    authority: ValidatedRegistryAuthority, modelo_id: str, filing_year: int, period: str
-) -> RegistrySnapshot | None:
-    """Return the snapshot for this coordinate, or ``None`` when law defines none.
-
-    A ``(modelo, year, period)`` triple that no published revision covers is not
-    an error here -- it is simply a coordinate outside the scan. Narrowed to
-    :exc:`RegistryError` rather than a blanket catch so a genuine loader or
-    schema fault still propagates and reds the gate instead of silently
-    shrinking the scanned population.
-    """
+def _resolve_declared(
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    revision: ModeloRevision,
+    filing_year: int,
+    period: str,
+) -> RegistrySnapshot:
+    """Select the declared coordinate at its honest grade, or fail the scan."""
     try:
-        return authority.snapshot(modelo_id, filing_year=filing_year, period=period)
-    except RegistryError:
-        return None
+        snapshot = authority.snapshot(
+            modelo_id, filing_year=filing_year, period=period, grade=revision.effective_authority_grade
+        )
+    except AmbiguousRevisionSelectionError:
+        on = declared_revision_selection_date(revision, filing_year)
+        if on is None:
+            raise
+        snapshot = authority.snapshot(
+            modelo_id, filing_year=filing_year, period=period, on=on, grade=revision.effective_authority_grade
+        )
+    assert snapshot.revision.id == revision.id, (
+        f"declared coordinate {modelo_id}/{revision.id} {filing_year}/{period} selected {snapshot.revision.id}"
+    )
+    return snapshot
 
 
-def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, str], int]]:
-    """Return the unjoined sheets, revisions scanned, and each entry's record count."""
+@cache
+def _scan() -> tuple[
+    frozenset[tuple[str, str, str]],
+    int,
+    dict[tuple[str, str, str], int],
+    frozenset[tuple[str, str, int, str]],
+    tuple[str, ...],
+]:
+    """Return unjoined sheets, exact selected frames, and auxiliary misfilings."""
     authority = compiled_bundled_authority()
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    floor = coverage_assessment_floor(authority.catalogues)
     source_refs = authority.catalogues.sources
     source_refs = getattr(source_refs, "entries", None) or source_refs
     if not hasattr(source_refs, "get"):
         source_refs = {entry.id: entry for entry in source_refs}
 
     seen: set[tuple[str, str]] = set()
+    frames: set[tuple[str, str, int, str]] = set()
     unjoined: set[tuple[str, str, str]] = set()
     record_counts: dict[tuple[str, str, str], int] = {}
-    # Every filing year is walked, not just the first that resolves: a modelo's
-    # revisions are keyed by year span, so stopping at the first hit would scan
-    # one revision per modelo and silently shrink the population this gate pins.
+    misfiled: list[str] = []
     for definition in authority.modelos:
         modelo_id = definition.id
-        for filing_year in range(2008, 2028):
-            for period in ("0A", "1T", "01"):
-                resolution = _resolve(authority, modelo_id, filing_year, period)
-                if resolution is None:
-                    continue
-                snapshot = resolution
+        for declared in definition.revisions.values():
+            for filing_year, period in revision_selection_coordinates(
+                declared, assessment_horizon=horizon, assessment_floor=floor
+            ):
+                snapshot = _resolve_declared(authority, modelo_id, declared, filing_year, str(period))
                 revision = snapshot.revision
                 revision_id = revision.id
+                frames.add((str(modelo_id), str(revision_id), filing_year, str(period)))
                 if (modelo_id, revision_id) in seen:
-                    break
+                    continue
                 seen.add((modelo_id, revision_id))
                 # Read the SAME constant channels the coverage checker reads. A
                 # ratchet seeing fewer would pin sheets the checker joins fine
@@ -112,10 +136,16 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                     for source in coverage_records._design_sources(layout, source_refs):
                         sheets = coverage_records._read_design_sheets(source)
                         if isinstance(sheets, str):
-                            continue
+                            raise AssertionError(
+                                f"cannot assess official design sheets for modelo {modelo_id} revision {revision_id} "
+                                f"layout {layout.id} source {source.id}: {sheets}"
+                            )
                         for sheet in sheets:
                             if not coverage_records._belongs_to_layout(sheet, layout.records, constants, source=source):
                                 continue
+                            key = (modelo_id, str(revision_id), sheet.name)
+                            if key in _UNJOINED_DESIGN_SHEETS and sheet.auxiliary_envelope_header is not None:
+                                misfiled.append(f"{key[0]} {key[1]} {key[2]!r}")
                             if (
                                 coverage_records._join_record(sheet, layout.records, constants, source=source)
                                 is not None
@@ -156,25 +186,29 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                                 # prefix, including roles and source pin, by
                                 # the coverage validator before fallback.
                                 continue
-                            key = (modelo_id, str(revision_id), sheet.name)
                             unjoined.add(key)
                             record_counts[key] = len(layout.records)
-                break
-    return frozenset(unjoined), len(seen), record_counts
+    return frozenset(unjoined), len(seen), record_counts, frozenset(frames), tuple(sorted(misfiled))
 
 
 def test_the_scan_reaches_the_real_registry() -> None:
     """Anti-vacuity: a scan resolving nothing satisfies the equality assertion."""
-    _, scanned, _ = _scan()
+    _, scanned, _, frames, _ = _scan()
 
     assert scanned >= _MINIMUM_REVISIONS_SCANNED, (
         f"only {scanned} revisions scanned; the snapshot walk collapsed and every assertion in this module is vacuous"
     )
+    assert {
+        ("131", "2026", 2026, "1T"),
+        ("131", "2026", 2026, "2T"),
+        ("131", "2026-late", 2026, "3T"),
+        ("131", "2026-late", 2026, "4T"),
+    } <= frames
 
 
 def test_the_unjoined_design_sheet_inventory_is_exact() -> None:
     """The fallback population must equal the declared inventory, in both directions."""
-    measured, _, _ = _scan()
+    measured, _, _, _, _ = _scan()
 
     grown = sorted(measured - _UNJOINED_DESIGN_SHEETS)
     fixed = sorted(_UNJOINED_DESIGN_SHEETS - measured)
@@ -199,7 +233,7 @@ def test_every_inventory_entry_sits_on_a_multi_record_layout() -> None:
     Without this, the inventory would accept a benign single-record entry and
     quietly overstate how much coverage the project has actually given up.
     """
-    measured, _, record_counts = _scan()
+    measured, _, record_counts, _, _ = _scan()
 
     benign = sorted(key for key in measured if record_counts.get(key, 0) < 2)
 
@@ -227,36 +261,7 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
     gave up no rigor whatsoever. The sibling multi-record assertion catches one
     flavour of overstatement; this catches the other.
     """
-    authority = compiled_bundled_authority()
-    source_refs = authority.catalogues.sources
-    source_refs = getattr(source_refs, "entries", None) or source_refs
-    if not hasattr(source_refs, "get"):
-        source_refs = {entry.id: entry for entry in source_refs}
-
-    misfiled: list[str] = []
-    seen: set[tuple[str, str]] = set()
-    for definition in authority.modelos:
-        modelo_id = definition.id
-        for filing_year in range(2008, 2028):
-            for period in ("0A", "1T", "01"):
-                snapshot = _resolve(authority, modelo_id, filing_year, period)
-                if snapshot is None:
-                    continue
-                revision = snapshot.revision
-                revision_id = str(revision.id)
-                if (modelo_id, revision_id) in seen:
-                    break
-                seen.add((modelo_id, revision_id))
-                for layout in getattr(revision, "export_layouts", ()) or ():
-                    for source in coverage_records._design_sources(layout, source_refs):
-                        sheets = coverage_records._read_design_sheets(source)
-                        if isinstance(sheets, str):
-                            continue
-                        for sheet in sheets:
-                            key = (modelo_id, revision_id, sheet.name)
-                            if key in _UNJOINED_DESIGN_SHEETS and sheet.auxiliary_envelope_header is not None:
-                                misfiled.append(f"{key[0]} {key[1]} {key[2]!r}")
-                break
+    _, _, _, _, misfiled = _scan()
 
     assert not misfiled, (
         "inventory entr(ies) are auxiliary envelope headers, which the coverage check handles on "

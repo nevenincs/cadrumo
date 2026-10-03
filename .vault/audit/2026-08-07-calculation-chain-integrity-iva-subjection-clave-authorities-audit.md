@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:65b23c07e337abdb4f1eec407a59685b1151978d3459ec00113ec116e27bbb3b'
-related:
-  - "[[2026-08-07-calculation-chain-integrity-plan]]"
+body_hash: 'sha256:b0e9f55c36d362e548b1aa4d9000454ed198195d8c4d1d8555bc042337fa1b85'
+related: []
 ---
 # `calculation-chain-integrity` audit: `IVA subjection and M349 clave: two fragmented authorities`
 
@@ -25,7 +24,7 @@ Discovery was by meaning rather than by identifier: decide whether an operation 
 
 `IvaCategory` carries two members expressing non-subjection, `DOMESTIC_NOT_SUBJECT` and `OPERACION_NO_SUJETA`. Neither carries a docstring distinguishing it, while their neighbour `INTRA_COMMUNITY_SERVICE_SUPPLY` carries an explicit note stating why it is kept distinct from a sibling. That asymmetry prompted measurement rather than inspection.
 
-Loading 1478 modules and comparing the two members at every `IvaCategory`-keyed mapping and set found them identical at nine surfaces: the cuota-less and evidence-exempt frozensets under each of their aliases, the non-derivable saturation reasons, and the component rows, which give both the same legal reference on both invoice sides. The cuota-zero-by-law predicate agrees for both invoice kinds. One mapping diverges, `_IVA_CATEGORY_HINTS` in `src/cadrumo/domain/transactions/_llm.py`, which carries prompt prose rather than treatment. Exactly one surface in the tree contains one member and not the other: `_CASH_ACCOUNTING_EXCLUDED_CATEGORIES` in `src/cadrumo/application/aggregation/_iva_ledger.py`, consumed by the cash-accounting gate in the same module, contains `OPERACION_NO_SUJETA` and omits `DOMESTIC_NOT_SUBJECT`.
+Loading 1478 modules and comparing the two members at every `IvaCategory`-keyed mapping and set found them identical at nine surfaces: the cuota-less and evidence-exempt frozensets under each of their aliases, the non-derivable saturation reasons, and the component rows, which give both the same legal reference on both invoice sides. The cuota-zero-by-law predicate agrees for both invoice kinds. One mapping diverges, `_IVA_CATEGORY_HINTS` in the retired module, which carries prompt prose rather than treatment. Exactly one surface in the tree contains one member and not the other: `_CASH_ACCOUNTING_EXCLUDED_CATEGORIES` in the retired module, consumed by the cash-accounting gate in the same module, contains `OPERACION_NO_SUJETA` and omits `DOMESTIC_NOT_SUBJECT`.
 
 Which member a row receives is decided by the classification rule that fires. Six rules emit `DOMESTIC_NOT_SUBJECT`, covering outbound EU B2B services, B2C distance sales, the three OSS-Union rules, and issuers outside the TAI. Three emit `OPERACION_NO_SUJETA`, covering external-scheme services, outbound third-country services, and IOSS low-value distance sales. No principle separating the two groups is discoverable: OSS-Union services take one member while third-country services take the other, and OSS goods and IOSS goods split the same way.
 
@@ -35,7 +34,7 @@ The set therefore holds six apartado Dos carve-outs alongside one apartado Uno s
 
 ### m349-clave-second-authority | medium | The clave is derived twice, once from the enum whose value is the clave and once from a partial table of string literals
 
-The function `_intracommunity_clave` in `src/cadrumo/application/invoices/_source_resolver.py` has two paths. When an invoice carries an operation type it delegates to `_m349_clave_for_operation_type`, which validates the type against the collectible or payable set and then returns the member's value directly. `IntracomOperationType` is therefore the clave authority: its value is the clave letter. When the operation type is absent it falls back to a chain of `IvaCategory` comparisons emitting clave letters as string literals. The field is optional and defaults to none, so the fallback path is live rather than vestigial.
+The function `_intracommunity_clave` in the retired module had two paths. When an invoice carries an operation type it delegates to `_m349_clave_for_operation_type`, which validates the type against the collectible or payable set and then returns the member's value directly. `IntracomOperationType` is therefore the clave authority: its value is the clave letter. When the operation type is absent it falls back to a chain of `IvaCategory` comparisons emitting clave letters as string literals. The field is optional and defaults to none, so the fallback path is live rather than vestigial.
 
 Measured against the enum, the fallback emits the letters A, E, I, S and T. The canonical set is A, C, D, E, H, I, M, R, S and T. The fallback is an exact subset of the canonical set, missing exactly C, D, H, M and R.
 

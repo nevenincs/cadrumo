@@ -244,6 +244,19 @@ def envelope_closer_bytes(*, modelo: Modelo, period: Period, envelope: FilingEnv
     return closer
 
 
+def assemble_filing_envelope_payload(
+    envelope: FilingEnvelopeDefinition,
+    *,
+    prefix: bytes,
+    occurrences: Sequence[FilingEnvelopeOccurrence],
+    closer: bytes,
+) -> tuple[bytes, bytes]:
+    """Compose the source-declared byte tail after rendered record occurrences."""
+    terminator = b"\r\n" if envelope.record_terminator == "crlf" else b""
+    payload = prefix + b"".join(item.payload for item in occurrences) + closer + terminator
+    return terminator, payload
+
+
 class FilingEnvelopeRenderResult(BaseModel):
     """Measured bytes and ordered occurrence evidence for one filing envelope."""
 
@@ -258,6 +271,7 @@ class FilingEnvelopeRenderResult(BaseModel):
     occurrences: tuple[FilingEnvelopeOccurrence, ...]
     prefix: bytes = Field(min_length=1)
     closer: bytes = Field(min_length=1)
+    terminator: bytes = b""
     payload: bytes = Field(min_length=1)
     payload_sha256: ContentDigest
     total_length: int = Field(gt=0)
@@ -272,9 +286,14 @@ class FilingEnvelopeRenderResult(BaseModel):
             )
         if self.closer != envelope_closer_bytes(modelo=self.modelo, period=self.period, envelope=self.envelope):
             raise ValueError("filing-envelope closer must be derived from the selected modelo and filing period")
+        expected_terminator = b"\r\n" if self.envelope.record_terminator == "crlf" else b""
+        if self.terminator != expected_terminator:
+            raise ValueError("filing-envelope terminator must match the source-declared record marker")
         body = b"".join(item.payload for item in self.occurrences)
-        if self.payload != self.prefix + body + self.closer:
-            raise ValueError("filing-envelope payload must be the exact prefix, occurrences, and closer bytes")
+        if self.payload != self.prefix + body + self.closer + self.terminator:
+            raise ValueError(
+                "filing-envelope payload must be the exact prefix, occurrences, closer, and terminator bytes"
+            )
         if self.payload_sha256 != sha256_hex(self.payload):
             raise ValueError("filing-envelope payload digest must be derived from emitted bytes")
         if self.total_length != len(self.payload):

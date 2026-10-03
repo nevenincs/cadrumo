@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:583e9add11454ed302f82bac669b52dadf3ba42a7190d7bdcb78e7d132f5cc51'
+modified: '2026-10-03'
+body_hash: 'sha256:af5a375e4c4fac34e23a01f22d7b90d3816c9130b3d6ca22b067a5d05097577d'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S160-001 | PASS | Lockfile plaintext is non-sensitive coordination state
 
-`src/aeat/adapters/persistence/storage/bucket/_lockfile.py` writes only the current process PID to `<bucket-dir>/.lock`. It does not persist taxpayer identifiers, ledger rows, secret bytes, wrapped DEKs, recovery material, secure-object payloads, or modelo export content.
+The retired module writes only the current process PID to `<bucket-dir>/.lock`. It does not persist taxpayer identifiers, ledger rows, secret bytes, wrapped DEKs, recovery material, secure-object payloads, or modelo export content.
 
 The `plain-file` signal is therefore accepted as coordination metadata. The file is created with mode `0o600` and `O_CREAT | O_EXCL | O_WRONLY`, so acquisition remains atomic and the plaintext surface is bounded to the PID holder marker.
 
@@ -36,8 +36,8 @@ The tests exercise real filesystem and subprocess behavior. They do not use fake
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_lockfile.py src/aeat/adapters/persistence/storage/bucket/test_layout.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed with 48 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_lockfile.py src/aeat/adapters/persistence/storage/bucket/test_lockfile.py src/aeat/adapters/persistence/storage/bucket/test_layout.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed.
+- The historical check passed with 48 tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
 

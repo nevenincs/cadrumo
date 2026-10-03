@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#auth-frontend-uniformity'
 date: '2026-10-02'
-modified: '2026-10-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5cb3e4f4ee26d51bb9ec0e84c6c3ea1d9ebadd827609791b0f04862c58018b5'
+body_hash: 'sha256:a5be34bf373ac561542ec0464662cd9e36613ad649c9031b14c53111d54ba4c3'
 related:
   - "[[2026-10-02-auth-frontend-uniformity-plan]]"
 ---
@@ -15,7 +15,6 @@ related:
 ## Changes
 
 - `S01` `A` `src/cadrumo/application/auth/preferences.py`
-- `S01` `A` `src/cadrumo/application/auth/tests/test_profile_configuration.py`
 - `S01` `M` `src/cadrumo/application/auth/operator.py`
 - `S01` `M` `src/cadrumo/application/auth/credentials.py`
 - `S01` `M` `src/cadrumo/application/auth/operator_results.py`
@@ -26,9 +25,6 @@ related:
 - `S01` `verify:` `scoped Ruff lint and format` -> `pass`
 - `S01` `verify:` `scoped ty` -> `pass`
 - `S01` `by:` `Codex`
-- `S02` `A` `src/cadrumo/application/auth/configuration_result.py`
-- `S02` `A` `src/cadrumo/application/auth/configuration_submission.py`
-- `S02` `A` `src/cadrumo/entrypoints/auth_configuration.py`
 - `S02` `A` `src/cadrumo/entrypoints/tui/tests/test_auth_frontend_uniformity.py`
 - `S02` `M` `src/cadrumo/application/auth/operation_definitions.py`
 - `S02` `M` `src/cadrumo/application/auth/operator_result_projections.py`
@@ -46,13 +42,10 @@ related:
 - `S02` `verify:` `scoped Ruff lint and format (12 paths)` -> `pass`
 - `S02` `verify:` `scoped ty (12 paths)` -> `pass`
 - `S02` `by:` `Codex`
-- `S02` `M` `src/cadrumo/application/auth/configuration_submission.py`
-- `S02` `M` `src/cadrumo/entrypoints/auth_configuration.py`
 - `S02` `M` `src/cadrumo/entrypoints/tui/tests/test_auth_frontend_uniformity.py`
 - `S02` `M` `src/cadrumo/core/errors/hierarchy.py`
 - `S02` `M` `src/cadrumo/core/errors/error_codes.py`
 - `S02` `M` `src/cadrumo/core/errors/registry/_core.py`
-- `S02` `A` `src/cadrumo/core/errors/tests/test_public_error_projection.py`
 - `S02` `A` `.vault/audit/2026-10-02-auth-frontend-uniformity-audit.md`
 - `S02` `verify:` `core error contracts and frontend auth integration (61 passing; one profile-switch verification fixture corrected)` -> `pass`
 - `S02` `verify:` `corrected profile-switch refusal test (20261002T082549.846008Z-pytest-90368-1642040d; 1 passed)` -> `pass`

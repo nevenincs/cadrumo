@@ -4,14 +4,11 @@ tags:
   - '#index'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4c7b3c41ae0795d4815f21d9b46767c61cc68de7c066b8584d23b9078abda58f'
+body_hash: 'sha256:0cec01642fd185a637e86c26c33c9d6e29d898adcd477c86f5243185e72ba0d7'
 related:
-  - '[[2026-09-11-binding-schema-P04-summary]]'
   - '[[2026-09-11-binding-schema-adr]]'
-  - '[[2026-09-11-binding-schema-ledger]]'
-  - '[[2026-09-11-binding-schema-plan]]'
   - '[[2026-09-11-binding-schema-provider-enrollment-design-research]]'
   - '[[2026-09-11-binding-schema-research]]'
   - '[[2026-09-12-binding-schema-tooling-review-audit]]'
@@ -32,15 +29,6 @@ Auto-generated index of all documents tagged with `#binding-schema`.
 
 - `2026-09-12-binding-schema-tooling-review-audit` - `binding-schema` audit: `binding order gate, family identities, lift, 714 rename, predecessor cause, period overrides`
 - `2026-09-13-binding-schema-overnight-repair-audit` - `binding-schema` audit: `Binding-schema overnight repair and hardening`
-
-### exec
-
-- `2026-09-11-binding-schema-ledger` - `binding-schema` ledger
-- `2026-09-11-binding-schema-P04-summary` - `binding-schema` `P04` summary
-
-### plan
-
-- `2026-09-11-binding-schema-plan` - `binding-schema` plan
 
 ### research
 

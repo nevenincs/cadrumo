@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:60c84485a41021b90f515072198dddb75298c352d48f03a062c1a5744c382c9a'
+body_hash: 'sha256:548eede71509d8355b2a39adfbc23c5d017f0711f97c9ff32a48672a92c9f982'
 related:
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
   - "[[2026-08-04-modelo-localization-cascade-research]]"
@@ -95,14 +95,14 @@ entries are for occurrences without grounded continuity
 
 The live loader instead attaches an exact occurrence key to every casilla and
 appends a continuity key when `continuidad_id` exists
-(`src/cadrumo/domain/calculations/registry/_loader.py:250-308`). The live
+. The live
 resolver then searches that tuple in order, exact first, and has no
 applicability, variant, or tombstone record
-(`src/cadrumo/domain/calculations/registry/_modelo_localization.py:95-118`).
+.
 The schema retains `continuidad_id` and `casilla_continuidad_evolutions`, but
 has no Modelo localization enrollment surface
-(`src/cadrumo/domain/calculations/registry/_schema.py:1083-1114`;
-`src/cadrumo/domain/calculations/registry/_schema_surfaces.py:237-318`).
+(the retired module;
+The retired module).
 
 `W02-P03-S07` also records that no post-cutover staging catalogue or temporary
 variant/tombstone emitter was retained
@@ -130,7 +130,7 @@ The migration plan and its W01-W04 execution records contain only
 `dev/registry/migration`/Modelo work and no inventory or explicit decision for
 those surfaces. The live user-profile schema still carries literal
 presentation prose, for example `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:4,26,66,75`,
-and `src/cadrumo/domain/user_profile/_labels.py:12-24` deliberately states
+and the retired module deliberately states
 that schema prose remains the copy authority and fallback. No corresponding
 feature evidence records the required D5 classification or a formally
 authorizing decision to leave these fields schema-resident. Under the
@@ -151,7 +151,7 @@ retained W04 record confirms that the temporary-output tests were deleted.
 
 The resolver's static order does enforce requested-locale-then-Spanish and
 does not fall from one non-Spanish locale into another
-(`src/cadrumo/domain/calculations/registry/_modelo_localization.py:102-117`).
+.
 A real read-only probe also showed a missing Catalan, English, or Hungarian
 value for Modelo 036 `decl.causa-110` resolving to the same Spanish source.
 That is useful bounded evidence, not exhaustive proof of strict Spanish

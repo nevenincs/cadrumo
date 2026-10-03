@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:176e66ce58693b8e63f166d93792085a09c9a8a512142508499fb7d6dbb0694c'
+modified: '2026-10-03'
+body_hash: 'sha256:39625a88c8dd650c65c4edb45e0e12d1d8a3c2e1072bc13a4258dd3f66380a8a'
 related: []
 ---
 
@@ -34,9 +34,9 @@ The new Google Drive provider tests instantiate the real provider and exercise c
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_google_drive.py src/aeat/adapters/outbound/storage/test_factory.py src/aeat/core/test_external_constants.py -k "google_drive or binary_mime"` passed with 14 selected tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_google_drive.py` passed with 8 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_google_drive.py src/aeat/adapters/outbound/storage/test_google_drive.py src/aeat/adapters/outbound/storage/_factory.py src/aeat/adapters/outbound/storage/test_factory.py` passed.
+- the historical check passed with 14 selected tests.
+- the historical check passed with 8 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Source scan found no direct `Settings()`, `_Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, suppression pragmas, monkeypatching, fakes/stubs, skips, xfails, or `json` suppression pattern in the S143 slice.
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:407e70803ad02f79c0f402bd563275c09fc7cbbb6d6c71a5ad5b2a74d009811e'
+modified: '2026-10-03'
+body_hash: 'sha256:a1039d2953ab0097188761fc47d776b82468e8e32ca872e0e77196633455e0e5'
 related: []
 ---
 
@@ -17,7 +17,7 @@ related: []
 The S44 test uses an ad hoc namespace value and constructs `SecureObjectRepository` without `STORAGE_NAMESPACE_REGISTRY`. That still exercises the encryption and provider boundaries, and it avoids fakes, mocks, stubs, monkeypatches, skips, and xfails. However, `W05.P10` follows the namespace-registry remote mirror policy work, where production namespaces default to ciphertext-with-metadata and require revision plus integrity metadata. Because the test bypasses that registry binding, it does not prove the opaque mirror behavior under a registered production namespace contract. Prefer binding the production registry and using an existing ciphertext-mirror namespace, or adding an explicit test-only registry entry if this fixture namespace must remain synthetic.
 
 ## S44-003 | INFO | No HIGH or CRITICAL findings
-The reviewed S44 addition is a focused real-behavior test and the focused suite passed with `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py`. No HIGH or CRITICAL findings were identified.
+The reviewed S44 addition is a focused real-behavior test and the focused suite passed with the historical check. No HIGH or CRITICAL findings were identified.
 
 ## S44-004 | INFO | S44-001 resolved by full mirror artifact scan
 The remediated S44 test now scans every artifact under the mirror provider root and asserts both relative artifact paths and raw file bytes do not contain the plaintext sentinel. This covers payload objects, manifest objects, sidecar JSON files, and generated filenames rather than only values returned through `LocalFileSystemProvider.get`. The previous S44-001 plaintext-leak proof gap is resolved.

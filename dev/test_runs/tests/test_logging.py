@@ -17,7 +17,6 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.test_runs.logging import RunLog, _redirect_collection_output
 from dev.test_runs.paths import (
-    SCRATCH_PATH_BUDGET,
     SCRATCH_PREFIX,
     SCRATCH_SEPARATOR,
     ScratchAllocation,
@@ -67,7 +66,16 @@ class _FinishedRunLog(RunLog):
 def _top_level_environment() -> dict[str, str]:
     """Return an environment in which a child pytest mints its own run rather than joining this one."""
     environment = os.environ.copy()
-    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    run_root = environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment.pop("CADRUMO_TEST_RUN_SCRATCH", None)
+    configured_logs = environment.get("CADRUMO_LOG_DIR", "").strip()
+    if run_root and configured_logs:
+        # The parent logger exports its generated per-process product-log path.
+        # Drop that derived value with the run-root binding so an independent
+        # child can mint a fresh run; explicit overrides remain untouched.
+        generated_logs = Path(run_root) / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
+        if Path(configured_logs).resolve() == generated_logs.resolve():
+            environment.pop("CADRUMO_LOG_DIR", None)
     return environment
 
 
@@ -156,7 +164,7 @@ def test_a_failing_run_removes_its_scratch() -> None:
 
 
 def _registry_reading_environment(*, leak_lease: bool = False) -> dict[str, str]:
-    """Return an environment in which a child run freezes its own authority snapshot into its scratch."""
+    """Return an environment in which a child run freezes its own authority snapshot."""
     environment = _top_level_environment()
     environment["CADRUMO_AUTHORITY_ROOT"] = str(REPO_ROOT / ".authority")
     if leak_lease:
@@ -277,8 +285,7 @@ def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Pat
 
 
 def test_real_child_pytest_persists_internal_error_traceback() -> None:
-    environment = os.environ.copy()
-    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment = _top_level_environment()
     environment["CADRUMO_INTERNAL_ERROR_PROBE"] = "1"
     result = subprocess.run(
         [
@@ -310,8 +317,7 @@ def test_real_child_pytest_persists_internal_error_traceback() -> None:
 
 def test_real_child_pytest_records_a_setup_skip_as_the_tests_verdict() -> None:
     """A test skipped before its body still ends its ``RUN`` line with a verdict."""
-    environment = os.environ.copy()
-    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment = _top_level_environment()
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
         cwd=REPO_ROOT,
@@ -337,10 +343,13 @@ def test_real_child_pytest_records_a_setup_skip_as_the_tests_verdict() -> None:
 def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path) -> None:
     report = tmp_path / "pytest-paths.json"
     ambient_cache = tmp_path / "ambient-cache"
-    environment = os.environ.copy()
-    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment = _top_level_environment()
     environment["CADRUMO_PYTEST_PATH_PROBE"] = str(report)
     environment["XDG_CACHE_HOME"] = str(ambient_cache)
+    configured_storage = tmp_path / "configured-storage"
+    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = ""
+    environment["CADRUMO_STORAGE_ROOT"] = str(configured_storage)
+    environment["CADRUMO_LOG_DIR"] = "diagnostic-logs"
     result = subprocess.run(
         [
             sys.executable,
@@ -364,14 +373,14 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     run_root = Path(paths["run_root"]).resolve()
     scratch = Path(paths["scratch"]).resolve()
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
-    # Tool caches such as uv's keep their own home; moved into the run, each run
-    # that builds a distribution rebuilds one cold and leaves it behind.
-    assert paths["tool_cache_home"] == str(ambient_cache)
+    # Third-party tool caches are shared below configured Cadrumo storage.
+    assert paths["tool_cache_home"] == os.environ["XDG_CACHE_HOME"]
+    assert paths["tool_cache_home"] != str(ambient_cache)
+    assert paths["log_dir"] == str(configured_storage / "diagnostic-logs")
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch
-    assert Path(paths["storage_root"]).resolve().parent == scratch
-    # TEMP must stay short enough for tools that bind Unix-domain sockets under it.
-    assert len(paths["stdlib_temp"]) <= SCRATCH_PATH_BUDGET, paths["stdlib_temp"]
+    storage_root = Path(paths["storage_root"]).resolve()
+    assert storage_root.parent == Path(paths["storage_temp_root"]).resolve()
     assert Path(json.loads((run_root / "run.json").read_text(encoding="utf-8"))["scratch"]).resolve() == scratch
 
 
@@ -386,8 +395,7 @@ def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: P
     """
     records = tmp_path / "records"
     records.mkdir()
-    environment = os.environ.copy()
-    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment = _top_level_environment()
     environment["CADRUMO_WORKER_BASETEMP_PROBE"] = str(records)
     result = subprocess.run(
         [

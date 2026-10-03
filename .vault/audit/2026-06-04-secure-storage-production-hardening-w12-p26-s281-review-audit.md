@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:b52237883da92079222747a43618ae73b1d7b98aab4780125ba150387dd86984'
+modified: '2026-10-03'
+body_hash: 'sha256:bd554517d1c0eb24aedb9533a5c46cacbea4d3c5e74ddffe7535e13077e6167e'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S281-001 | PASS | Centralized encrypted event persistence
 
-`src/aeat/application/workflow/_events.py` delegates persistence to
+The retired module delegates persistence to
 `BucketEventHistoryRepository`, whose default route resolves the active-bucket
 `SecureObjectRepository` and stores the event catalogue as a `FINANCIAL`
 secure object. This slice does not implement a parallel file store or remote
@@ -40,6 +40,6 @@ reset-state messages remain in the CLI layer and use `tr()` locale keys.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/workflow/_events.py src/aeat/application/workflow/_persistence.py src/aeat/application/workflow/test_persistence.py src/aeat/entrypoints/cli/_config/test_repair_reset_state.py src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py src/aeat/domain/buckets/_event_repository.py src/aeat/domain/buckets/test_event_history_roundtrip.py`
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_persistence.py src/aeat/entrypoints/cli/_config/test_repair_reset_state.py src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py src/aeat/domain/buckets/test_event_history_roundtrip.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`

@@ -31,6 +31,19 @@ _COLUMN_LABELS = frozenset(
     }
 )
 _CASILLA = re.compile(r"\d{3}")
+_REQUIRED_TAX_SECTIONS = frozenset(
+    census_key(title)
+    for title in (
+        "Impuesto sobre el Valor Añadido",
+        "Impuesto sobre la Renta de las Personas Físicas",
+        "Impuesto sobre Sociedades",
+        "Impuesto sobre la Renta de No Residentes",
+        "Régimen fiscal especial del Título II de la ley 49/2002",
+        "Retenciones e ingresos a cuenta",
+        "Otros Impuestos",
+        "Regímenes Especiales Comercio Intracomunitario (Ventas a Distancia y No Sujeción art. 14 Ley I.V.A.)",
+    )
+)
 
 
 def _label(cell: Tag) -> str | None:
@@ -60,9 +73,9 @@ def _row_cells(row: Tag) -> tuple[CensalCell, ...]:
                 value = census_text(remainder)
                 if value:
                     cells.append(CensalCell(role="value", text=value))
-        elif text and _CASILLA.fullmatch(text) and "fondo_medio" not in element.get("class", []):
+        elif text and _CASILLA.fullmatch(text) and "fondo_medio" not in element.get_attribute_list("class"):
             cells.append(CensalCell(role="casilla", text=text))
-        elif text or "fondo_medio" in element.get("class", []) or element.has_attr("data-censal-value"):
+        elif text or "fondo_medio" in element.get_attribute_list("class") or element.has_attr("data-censal-value"):
             cells.append(CensalCell(role="value", text=text))
     return tuple(cells)
 
@@ -102,10 +115,20 @@ def _sections(fieldset: Tag) -> tuple[CensalSection, ...]:
                 cell.model_copy(update={"column": next(names)}) if cell.role == "value" else cell for cell in cells
             )
         records.append(CensalRow(label=" / ".join(labels) or None, columns=columns, cells=cells))
-    if records:
+    if records or current_title != title:
         sections.append(CensalSection(title=current_title, rows=tuple(records)))
     if not sections:
         raise census_shape_error("tax-status fieldset contains no recognizable rows")
+    retained = " ".join(
+        text
+        for section in sections
+        for text in (
+            section.title,
+            *(text for row in section.rows for text in (*row.columns, *(cell.text or "" for cell in row.cells))),
+        )
+    )
+    if any(" ".join(text.split()) not in retained for text in fieldset.stripped_strings):
+        raise census_shape_error("tax-status section contains unparsed text")
     return tuple(sections)
 
 
@@ -121,5 +144,12 @@ def parse_censal_tax_status(html: str, *, source_url: str) -> CensalConsultation
     fieldsets = soup.select("fieldset")
     if not fieldsets:
         raise census_shape_error("tax-status sections missing")
+    titles = {
+        census_key(census_text(legend) or "")
+        for fieldset in fieldsets
+        if isinstance(legend := fieldset.find("legend", recursive=False), Tag)
+    }
+    if not _REQUIRED_TAX_SECTIONS.issubset(titles):
+        raise census_shape_error("required tax-status section is missing or renamed")
     sections = tuple(section for fieldset in fieldsets for section in _sections(fieldset))
     return CensalConsultation(kind="situacion_tributaria", source_url=census_source_url(source_url), sections=sections)

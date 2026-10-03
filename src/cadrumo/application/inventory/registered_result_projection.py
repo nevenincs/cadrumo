@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.public_scalar import PublicDecimal
 from .service import (
     InventoryLedgerResult,
@@ -103,16 +103,14 @@ def _require_inventory_list_execution(
 
 
 def _require_inventory_list_receipt(receipt: OperationTerminalReceipt) -> None:
+    message = "inventory list result contradicts its terminal receipt"
     if (
         receipt.condition is not OperationTerminalCondition.SUCCEEDED
         or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
     ):
-        raise ValueError("inventory list result contradicts its terminal receipt")
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _validate_refusal_receipt(
@@ -247,17 +245,15 @@ def _require_inventory_ledger_receipt(
     expected_effect: OperationEffect,
     definition_id: str,
 ) -> None:
+    message = "inventory ledger result contradicts its terminal receipt"
     if (
         receipt.condition is not OperationTerminalCondition.SUCCEEDED
         or receipt.effect is not expected_effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
         or receipt.identity.definition_id != definition_id
     ):
-        raise ValueError("inventory ledger result contradicts its terminal receipt")
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_inventory_ledger_event_scope(
@@ -414,14 +410,10 @@ def _require_inventory_valuation_receipt(
 
 
 def _require_inventory_valuation_receipt_references(receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("inventory valuation result contradicts its terminal receipt")
+    message = "inventory valuation result contradicts its terminal receipt"
+    if receipt.diagnostic_ref is not None:
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def project_inventory_closing_authority_result(

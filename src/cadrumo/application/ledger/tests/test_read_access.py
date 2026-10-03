@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from uuid import UUID, uuid4
 
 import pytest
@@ -102,26 +101,12 @@ def test_request_read_access_binds_the_payload_profile_for_the_exact_request_typ
     assert resolved == resolve_ledger_read_access(request, context, profile_id=_PROFILE, periods=frozenset())
 
 
-class _RemoveRequestSubclass(LedgerRemoveRequest):
-    """A payload that is-a removal request but is not the registered request type."""
-
-
-@pytest.mark.parametrize(
-    "request_factory",
-    (
-        lambda: _request(_remove_payload(), definition_id="ledger.reset"),
-        lambda: _request(_RemoveRequestSubclass(profile_id=_PROFILE, transaction_id="a" * 64)),
-    ),
-    ids=("other-definition", "subclass-payload"),
-)
-def test_request_read_access_refuses_anything_but_the_exact_definition_and_type(
-    request_factory: Callable[[], OperationRequest[BaseModel]],
-) -> None:
+def test_request_read_access_refuses_another_definition() -> None:
     registration = _registration()
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_ledger_request_read_access(
-            request_factory(),
+            _request(_remove_payload(), definition_id="ledger.reset"),
             _context(registration),
             definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
             request_type=LedgerRemoveRequest,

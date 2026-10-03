@@ -47,6 +47,8 @@ class CensalConsultation(BaseModel):
     kind: Literal["actividades", "locales", "situacion_tributaria", "obligaciones"]
     source_url: AnyHttpUrl
     sections: tuple[CensalSection, ...] = Field(min_length=1)
+    activity_row_index: int | None = Field(default=None, ge=0)
+    """For premises, the parent row in the flattened activities observation."""
 
 
 class CensalObservationIdentity(BaseModel):

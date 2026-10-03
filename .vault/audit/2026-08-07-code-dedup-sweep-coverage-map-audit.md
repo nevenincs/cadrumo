@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#code-dedup-sweep'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a70892afdae07321da76a99bde21a1e9c1fc77078c64d915a90643098672f0a3'
+body_hash: 'sha256:c995c4dcedfb992e59f5c2d025d7c99c1fa73246093c100bb43e73dc8f66b589'
 related: []
 ---
 
@@ -47,7 +47,7 @@ entire test tree.
 ### renta-measures-cannot-collapse | low | Three measures of income are distinct typed facts, and the model prevents the collapse a future sweep will be tempted to make
 
 `RentaIncomeObservation` in
-`src/cadrumo/application/aggregation/_renta_income_ledger.py` carries
+The retired module carried
 `gross_amount`, `taxable_base_amount` and `withheld_amount` as three separate
 facts. `gross_amount` is the cash magnitude times the business proportion;
 `taxable_base_amount` is `None` when the operator declared no base, rather than

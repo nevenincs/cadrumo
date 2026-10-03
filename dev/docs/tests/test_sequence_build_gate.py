@@ -16,6 +16,8 @@ seams (``CADRUMO_DOCS_FORCE_CLI_TREE`` / ``CADRUMO_DOCS_SKIP_CLI_TREE``).
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -127,6 +129,27 @@ def test_sequence_check_skip_env_suppresses_the_check(tmp_path: Path) -> None:
         assert should_check_sequences() is False
         app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path / "never-read"), config=SimpleNamespace()))
         check_sequence_goldens(app, pages=None)
+
+
+def test_skipped_sequence_check_needs_no_engine_import() -> None:
+    """A rendering-only pass must not load the engine it explicitly skips."""
+    script = (
+        "import sys\n"
+        "from types import SimpleNamespace\n"
+        "sys.modules['dev.docs.sequences.checks'] = None\n"
+        "from dev.docs.sequence_build_gate import check_sequence_goldens\n"
+        "check_sequence_goldens(SimpleNamespace(), pages=None)\n"
+    )
+    with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
+        result = subprocess.run(  # noqa: S603 - trusted interpreter and literal regression fixture.
+            [sys.executable, "-c", script],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    assert result.returncode == 0, result.stderr
 
 
 def test_an_unpublished_authority_fails_the_build_before_any_verdict_is_reused(tmp_path: Path) -> None:

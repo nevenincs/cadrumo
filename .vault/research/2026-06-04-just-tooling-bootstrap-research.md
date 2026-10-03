@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:cb6b891b108bb6a9e8b6e3155e2832e67e2ee7bf2b8f230c05e41d6e7fd1dd41'
+modified: '2026-10-03'
+body_hash: 'sha256:2dfd103fea405be3e1527bdc0507d25a925db8799e4d44f9908fd2db9d758cb9'
 related: []
 ---
 
@@ -53,29 +53,21 @@ surface-scoped checks.
 
 Complexity tooling is present but not surfaced. A read-only `radon cc` run with
 C-or-worse threshold produced 284 C-or-worse blocks. The hottest surfaces included
-`src/aeat/entrypoints/cli/_modelo.py`, `src/aeat/application/ledger/_actions.py`,
-`src/aeat/domain/calculations/registry/_formula_runtime.py`,
-`src/aeat/domain/calculations/registry/_bindings.py`, and
-`src/aeat/diagnostics/_identity_placement.py`. A `complexipy` cognitive-complexity
+
+the former source file, and
+the former source file. A `complexipy` cognitive-complexity
 sample with threshold 20 found high cognitive load in similar areas plus wizard
 command assembly and Google sync helpers.
 
-The `src/aeat/diagnostics/_identity_placement.py` references above are historical
+The the former source file references above are historical
 diagnostic-output evidence from the bootstrap run, not approval for a production
 `aeat.diagnostics` package. The later repo-health review rejected and removed
 that source package because diagnostics is not an approved hexagonal module.
 
 `radon mi` identifies several file-level maintainability hotspots with near-zero
-or low scores, including `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`,
-`src/aeat/adapters/outbound/aeat/sede/_declarations.py`,
-`src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`,
-`src/aeat/diagnostics/_identity_placement.py`,
-`src/aeat/domain/calculations/registry/_bindings.py`,
-`src/aeat/domain/calculations/registry/_record_design.py`,
-`src/aeat/domain/calculations/registry/_schema.py`,
-`src/aeat/domain/calculations/registry/_workbook_parity.py`,
-`src/aeat/entrypoints/cli/_ledger.py`, `src/aeat/entrypoints/cli/_modelo.py`,
-and `src/aeat/entrypoints/cli/_config/__init__.py`.
+or low scores, including the former source file,
+
+and the former source file.
 
 The duplication/tooling gap should be filled separately from Ruff. Ruff already
 has branch/statement/McCabe-style rules available, but copy-paste clone detection

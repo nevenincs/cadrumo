@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cae78b106a86b04922beeb472e320e4cda57876ef54046ecddfe345906ef3b6'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+body_hash: 'sha256:7948398ea8b27ee06aa5096de657d282c0fcbbe4d125554f5e3fbf0b1a7659f9'
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `Load census classification backlog`
@@ -18,7 +17,7 @@ The registry load census at HEAD 2026-08-30, after `facade_symbol_owners()` was 
 
 ## Findings
 
-### 108 modules in the census universe carry no classification | `dev/registry/analysis/load_census_classification.py`
+### 108 modules in the census universe carry no classification |
 
 Universe 384, classified 276, leaving **108 unclassified**; 103 of them are `cadrumo.domain.calculations.registry` submodules. These were invisible until now: `test_every_reachable_module_carries_exactly_one_classification` died inside `build_reference_map` on the retired facade, so it never reached its own assertion. The backlog is not new, it was preempted.
 

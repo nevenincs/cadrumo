@@ -14,6 +14,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
+from dev._paths import prepare_temporary_directory
+
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -172,17 +174,12 @@ def run_workbook_with_libreoffice(
 def _libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
     """Yield a private scratch tree holding the input copy, profile and output of one call.
 
-    Declared exception to the "every tempfile call passes dir=" storage
-    provenance discipline: nothing here is renamed into place -- the converted
-    workbook is read back into memory, or yielded for the caller to read within
-    the ``with`` block -- so the same-filesystem adjacency that ``dir=`` pins
-    does not bind. The tree stays on the process temp root with one-letter
-    member names because LibreOffice's user installation beneath it is
-    path-length sensitive (see ``_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS``);
-    anchoring it on a deeper directory such as a pytest ``tmp_path`` is what
-    pushed the profile past that limit.
+    The tree uses the controlled temporary root with one-letter member names
+    because LibreOffice's user installation beneath it is path-length sensitive
+    (see ``_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS``). Operators with a long checkout
+    path can point ``CADRUMO_TEMP_DIR`` at a shorter controlled location.
     """
-    with TemporaryDirectory(prefix="lo-") as tmp:
+    with TemporaryDirectory(prefix="lo-", dir=prepare_temporary_directory()) as tmp:
         root = Path(tmp).resolve()
         output = root / "o"
         output.mkdir()
@@ -208,7 +205,7 @@ def _convert_with_libreoffice(
             LibreOfficeFailureCause.PROFILE_PATH_TOO_LONG,
             f"LibreOffice {operation} refused: its user profile root would be {profile_chars} characters "
             f"long, above the {_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS} LibreOffice can initialise on this "
-            "platform without silently producing no output; point TMP/TEMP at a shorter directory",
+            "platform without silently producing no output; set CADRUMO_TEMP_DIR to a shorter directory",
         )
     try:
         completed = _run_libreoffice(

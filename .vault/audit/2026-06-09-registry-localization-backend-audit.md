@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-localization-backend'
 date: '2026-06-09'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:f1c71e323a4df8828d178a9abc86874fff870cd09aebc0d2e0666b075843dfb6'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-08-registry-localization-backend-research]]'
-  - '[[2026-06-08-registry-localization-backend-plan]]'
 ---
 
 # `registry-localization-backend` audit: `registry-localization-backend honesty review`

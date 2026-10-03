@@ -27,24 +27,13 @@ shell or CI environment left unset, and the bridge is a clean no-op when
 ``env/.env`` is absent. The single ``cadrumo.tests.live_gate`` gate
 remains the only live-opt-in reader.
 
-The storage-root ``setdefault`` below is deliberately spelled out with
-pure-stdlib calls (``tempfile.gettempdir()`` / ``os.getpid()``) rather than
-imported from :func:`cadrumo.tests.collection_storage_root`, even though
-the two compute the identical path. Importing ANY name from
-``cadrumo.tests`` -- even a genuinely pure-stdlib submodule such as
-``_collection_storage_root`` -- unconditionally executes
-``cadrumo/tests/__init__.py``'s own module body first (Python always
-initialises a parent package before a submodule access can complete), and
-that package's import surface has, in practice, drifted to reach
-production modules carrying module-level ``get_logger(__name__)`` calls.
-Any such call fires ``configure_logging()``, which binds its
-``RotatingFileHandler`` exactly once per process; if that firing happens
-before this line runs, it binds to the operator's real log rather than
-this process's isolated root, and nothing later in the process can
-re-bind it. Spelling the derivation out here removes the dependency on
-``cadrumo/tests/__init__.py`` staying import-light for THIS one
-safety-critical line -- the guarantee this docstring's next paragraph
-already claimed, now enforced structurally instead of by convention.
+The import-light :mod:`cadrumo.core.storage_environment` module is the
+canonical storage-path authority for this bootstrap. The checkout's source
+path is seeded before importing it; its pure-stdlib implementation can then
+load the development-only env bridge and resolve storage controls before
+any runtime, logging, or settings import. This ordering lets ``env/.env``
+storage refinements take effect while ensuring temporary directories,
+shared caches, and the isolated test root are pinned before runtime imports.
 Verified by instrumenting ``configure_logging`` to dump its first real
 call stack: importing ``cadrumo.tests`` alone no longer triggers it, and
 the residual triggers found only fire from session-scoped fixtures that
@@ -67,28 +56,103 @@ from typing import TYPE_CHECKING
 
 import pytest
 from _pytest.unraisableexception import gc_collect_iterations_key
-from dev.test_runs import logging as _run_logging
 
-# Keep pytest scratch and collection-time storage outside the checkout. The
-# run logger retains its relative ``.logs`` layout under this external base.
-_run_logging.prepare_environment(Path(tempfile.gettempdir()))
-# The runner's product-log artifact is not a Cadrumo Settings override: the
-# default must be derived from the isolated storage root used by this run.
-os.environ.pop("CADRUMO_LOG_DIR", None)
+# The path authority is intentionally pure stdlib and import-light. Seed the
+# checkout source path before importing it so standalone pytest uses the same
+# canonical root as application and dev commands.
+_REPOSITORY_ROOT = Path(__file__).resolve().parent
+_SOURCE_ROOT = _REPOSITORY_ROOT / "src"
+if str(_SOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SOURCE_ROOT))
 
-# Pure stdlib, deliberately not `from cadrumo.tests import collection_storage_root`
-# -- see the docstring above. Mirrors `_collection_storage_root.collection_storage_root`'s
-# own derivation (`<gettempdir()>/cadrumo-pytest-<pid>`) exactly; the two module docstrings
-# cross-reference each other so a future edit to one is not made deaf to the other.
+from cadrumo.core.storage_environment import (  # noqa: E402
+    TOOL_STORAGE_LOCATIONS,
+    configured_storage_root,
+    resolve_storage_path,
+    storage_directory,
+    tool_storage_environment,
+)
+
+# The tests package initializer is intentionally inert and env_loader is pure
+# stdlib. Bridge storage controls before deriving or pinning any category path.
+bridge_env_file_into_environ = import_module("cadrumo.tests.env_loader").bridge_env_file_into_environ
+bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
+
+_BASE_STORAGE_ROOT = configured_storage_root()
+
+
+def _pin_storage_override(name: str, default: str) -> Path:
+    """Resolve and freeze a relative refinement before test isolation changes the local root."""
+    resolved = storage_directory(name, default, root=_BASE_STORAGE_ROOT)
+    os.environ[name] = str(resolved)
+    return resolved
+
+
+_pin_storage_override("CADRUMO_DEV_CACHE_ROOT", "development/cache")
+_TEST_LOG_ROOT = _pin_storage_override("CADRUMO_TEST_LOG_ROOT", "development")
+_pin_storage_override("CADRUMO_DOCS_BUILD_ROOT", "development/build/docs")
+_TEMP_BASE = _pin_storage_override("CADRUMO_TEMP_DIR", "tmp")
+_SCRATCH_BASE = os.environ.get("CADRUMO_SCRATCH_BASE", "").strip()
+if _SCRATCH_BASE:
+    os.environ["CADRUMO_SCRATCH_BASE"] = str(storage_directory("CADRUMO_SCRATCH_BASE", "tmp", root=_BASE_STORAGE_ROOT))
+
+# Relative cache/artifact refinements must remain anchored to the operator's
+# root after Cadrumo tests install a process-private local state root.
+for _storage_variable, _storage_default in (
+    ("CADRUMO_ACTIONLINT_DIR", "development/tools/actionlint"),
+    ("CADRUMO_DEV_ARTIFACTS_DIR", "development/artifacts"),
+):
+    os.environ[_storage_variable] = str(storage_directory(_storage_variable, _storage_default, root=_BASE_STORAGE_ROOT))
+for _storage_variable in (
+    "CADRUMO_REGISTRY_DISK_CACHE_DIR",
+    "CADRUMO_RECORD_DESIGN_CACHE_DIR",
+    "CADRUMO_CORPUS_TEXT_CACHE_DIR",
+    "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
+    "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
+):
+    if os.environ.get(_storage_variable, "").strip():
+        os.environ[_storage_variable] = str(
+            storage_directory(_storage_variable, "development", root=_BASE_STORAGE_ROOT)
+        )
+for _report_variable in ("CADRUMO_CI_REPORTS_DIR", "VAULTSPEC_CI_REPORTS"):
+    _report_destination = os.environ.get(_report_variable, "").strip()
+    if _report_destination:
+        os.environ[_report_variable] = str(resolve_storage_path(_report_destination, root=_BASE_STORAGE_ROOT))
+
+# Resolve external tool caches while the operator's configured root is still
+# active, then preserve them when product tests install their private local
+# storage root below. Cadrumo's refined environment variables are authoritative
+# for the corresponding native-tool locations.
+_TOOL_STORAGE_ENVIRONMENT = tool_storage_environment()
+for _native_variable, (_refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
+    os.environ[_refinement_variable] = _TOOL_STORAGE_ENVIRONMENT[_native_variable]
+os.environ.update(_TOOL_STORAGE_ENVIRONMENT)
+sys.pycache_prefix = _TOOL_STORAGE_ENVIRONMENT["PYTHONPYCACHEPREFIX"]
+
+# Python and stdlib temp files start under Cadrumo's configured temporary root.
+# The run logger narrows TEMP/TMP/TMPDIR to its own scratch immediately below.
+_TEMP_BASE.mkdir(parents=True, exist_ok=True)
+os.environ.update({"TEMP": str(_TEMP_BASE), "TMP": str(_TEMP_BASE), "TMPDIR": str(_TEMP_BASE)})
+tempfile.tempdir = str(_TEMP_BASE)
+
+# Importing the dev logger is safe before Cadrumo runtime imports. Its run and
+# scratch outputs now resolve under the configured storage root.
+from dev.test_runs import logging as _run_logging  # noqa: E402
+
+_run_logging.prepare_environment(_TEST_LOG_ROOT)
+# A configured product log path stays authoritative. Relative values were
+# resolved against the original root before test isolation; only a blank value
+# falls through to the per-run product-log default.
+if os.environ.get("CADRUMO_LOG_DIR", "").strip():
+    os.environ["CADRUMO_LOG_DIR"] = str(
+        storage_directory("CADRUMO_LOG_DIR", "development/logs", root=_BASE_STORAGE_ROOT)
+    )
+else:
+    os.environ.pop("CADRUMO_LOG_DIR", None)
+
+# Keep collection-time product data process-private under this run's scratch.
+# This value is set before importing any module that may resolve Settings.
 _PURE_STDLIB_COLLECTION_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
-"""This conftest's own candidate root, computed before any Cadrumo import.
-
-Only ever materialises on disk (and only ever needs cleanup) when a test run
-never reaches ``src/cadrumo/conftest.py`` -- e.g. a ``dev/**``-only
-collection -- since that conftest unconditionally overwrites the same
-environment variable for every run that does reach it, and this value is
-never referenced again once overwritten.
-"""
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
 
 _PURE_STDLIB_AUTHORITY_ROOT = Path(__file__).resolve().parent / ".authority"
@@ -116,17 +180,6 @@ if not os.environ.get("CADRUMO_AUTHORITY_ROOT", "").strip():
 _collection_storage_root = import_module("cadrumo.tests.collection_storage_root")
 collection_storage_root = _collection_storage_root.collection_storage_root
 register_collection_storage_root_cleanup = _collection_storage_root.register_collection_storage_root_cleanup
-bridge_env_file_into_environ = import_module("cadrumo.tests.env_loader").bridge_env_file_into_environ
-
-# Bridge the operator's development-only env/.env dotfile into os.environ
-# BEFORE any Cadrumo import resolves Settings (production Settings carries
-# no dotenv source of its own — see core.config.Settings). setdefault
-# semantics inside the bridge keep a real ambient environment variable
-# authoritative; the dotfile only fills gaps. Safe to import cadrumo.tests
-# here (unlike the storage-root line above): the storage-root env var this
-# module's own import surface might trigger a premature configure_logging()
-# against is already set by the pure-stdlib line above.
-bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 
 # The collection-policy, reporting, timeout and worker-count hooks load by their
 # public package path, after the storage-root and env bridging above; a

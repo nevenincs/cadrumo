@@ -1,0 +1,68 @@
+# Supervised key derivation and automation custody
+
+[Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-021` · **Topic:** [Persistence and secure storage](../topics/persistence-and-secure-storage.md)
+
+<!-- preserved:article -->
+## Scope
+
+This chunk contains 24 custody modules for supervised password/recovery KDF work, resumable profile sessions, and unattended automation credentials. I read all assigned source across nine bounded pages: 5,065 lines and 45,085 measured `o200k_base` proxy tokens. Static review only; I did not launch workers, call native credential APIs, or run the application.
+
+## Supervised password and recovery KDF
+
+Each wrap or unwrap starts a fresh child process with a small framed-JSON protocol, strict operation-specific fields, bounded 8 KiB frames, canonical base64, and a fixed Argon2id parameter grid. Password input is re-assessed against the profile-password policy; recovery secrets are transported exactly without password rewriting. AEAD binds the wrapped DEK to caller-provided associated data, and only a correctly sized 32-byte DEK is accepted. Unsupported parameter combinations and malformed inputs fail through a typed refusal path. KDF wire validation (`src/cadrumo/adapters/persistence/storage/custody/_kdf_records.py`) Worker operation dispatch and wrap/unwrap (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`) Exact password codec (`src/cadrumo/adapters/persistence/storage/custody/_profile_password_codec.py`)
+
+Before sending any secret, the supervisor requires a child readiness frame and validates platform, neutral working directory, environment-key allowlist, and inherited descriptors. POSIX uses a new process group, a sanitized environment, explicit descriptor passing, and CPU, address-space, file-size, core, and open-file limits. Windows uses a Job Object with CPU, memory, active-process, and kill-on-close limits and checks that the worker is inside the job. A timeout or malformed exchange terminates the worker tree; there is no in-process fallback. Process launch and environment (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`) POSIX resource setup (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`) Readiness identity verification (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py`) Windows Job Object limits (`src/cadrumo/adapters/persistence/storage/custody/_kdf_windows_job.py`)
+
+One attestation detail merits a narrow check: POSIX readiness reports `max_processes` from a constant, but `apply_posix_worker_limits` does not set a process-count limit. The current worker source does not spawn subprocesses, so this observation alone does not show an exploitable process escape; confirm the invariant is intentional or make the reported limit reflect an enforced boundary. Attested limits (`src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py`) Actual POSIX rlimits (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`)
+
+## Human profile acceleration receipt
+
+The persisted login accelerator splits one session across a random key in the OS keychain and an encrypted receipt in the separated profile keystore. AES-GCM associated data binds schema, profile/session IDs, custody generation, DEK epoch, issue time, and idle/absolute deadlines. Resume requires current authenticated custody coordinates, current time within both deadlines, the exact keychain item, and a valid tag. The receipt is a cache: missing, expired, mismatched, or tampered material refuses and is normally retired; no DEK is returned as part of a serializable outcome. Mutable key buffers are wiped on exit, though the source notes transient immutable byte views remain runtime-managed. Receipt metadata AAD and wrapping (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`) Resume admission and cleanup (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`) Mutable-buffer return contract (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`)
+
+Mint and retirement use an exact-byte journal that records predecessor and successor receipts before swapping. Recovery decides only between those exact byte strings, then deletes the corresponding random keychain account; it refuses a third value rather than guessing. Root and per-receipt locks serialize lifecycle work, and the idle-renewal API requires the previously resumed record still match before publishing a replacement. Separate trusted-client APIs can borrow the receipt key without returning the DEK or can prove a supplied key without renewing deadlines. Journaled receipt swap (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`) Exact predecessor/successor recovery (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`) Borrow and supplied-key doors (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`)
+
+## Automation credential custody
+
+Automation API keys and per-grant DEK wrapping keys are stored only through an explicitly selected native secret backend. The Windows implementation accesses exact Credential Manager targets without enumeration or UI, bounds blobs, wipes mutable copies, and verifies replacement/deletion by read-back. Client records bind profile access, client, destination, credential reference, grant, key ID, and reviewed-content digest; reads verify all expected coordinates and the key verifier. A handle pins the exact original byte fingerprint so later replacement is refused. Native client record checks (`src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`) Pinned-reference verification (`src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`) Windows native-secret boundary (`src/cadrumo/adapters/persistence/storage/custody/automation_secret_store.py`)
+
+The encrypted control file and native control anchor use a publication witness and recoverable intent across their separate durability boundaries. The anchor pins the current record ID, revision, digest, and control key; associated data binds the record to profile, installation, custody generation, DEK epoch, and purpose. New per-grant keys wrap grant DEKs, and the profile sentinel is checked again before a decrypted DEK is returned. Recovery recognizes only an exact predecessor/successor publication and reconciles created/retired wrap keys. Anchor and publication recovery (`src/cadrumo/adapters/persistence/storage/custody/automation_store.py`) Revision-guarded control publication (`src/cadrumo/adapters/persistence/storage/custody/automation_store.py`) Grant/key admission and sentinel validation (`src/cadrumo/adapters/persistence/storage/custody/automation_store.py`)
+
+Denial is durable before optional native cleanup: the local denial intent blocks ordinary custody doors while state changes and wrap-key retirement are retried. Global profile locks are kept as a credential-free local fence. Retirement writes a marker for every discovered installation before cleanup, allowing a password/recovery/delete transition to proceed with old automation denied if the optional secret store is unavailable. This is custody, not complete authorization: the code explicitly leaves current policy admission and authenticated remote-recipient proof to application and transport owners. Denial and cleanup state machine (`src/cadrumo/adapters/persistence/storage/custody/automation_store.py`) Profile retirement across installations (`src/cadrumo/adapters/persistence/storage/custody/automation_store.py`) Transport-owned recipient proof (`src/cadrumo/adapters/persistence/storage/custody/automation_delivery.py`) Profile binding and DEK sentinel (`src/cadrumo/adapters/persistence/storage/custody/automation_profile.py`)
+
+## Assessment and limits
+
+The strongest properties are split-knowledge session storage, metadata-authenticated expiry, exact-byte recovery journals, a pre-secret worker attestation, bounded framed KDF input, explicit native-only credential stores, and witness-driven recovery across file/keychain publication. Follow up on the POSIX process-count attestation and confirm caller-side authorization/transport checks for automation. I did not validate native backend behavior, worker limits on either OS, keychain error recovery, or full app-level grant admission. The child’s fresh-process cost and 15-second KDF deadline may also affect slow machines; actual compatibility was not measured.
+
+## Complete source coverage
+
+All 24 assigned files were read in full across pages 1–9.
+
+- _kdf_attestation.py (109 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py`)
+- _kdf_codec.py (172 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py`)
+- _kdf_operations.py (58 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_operations.py`)
+- _kdf_process.py (175 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`)
+- _kdf_records.py (166 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_records.py`)
+- _kdf_refusals.py (22 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_refusals.py`)
+- _kdf_windows_job.py (207 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_windows_job.py`)
+- _kdf_worker.py (224 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`)
+- _kdf_worker_identity.py (82 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py`)
+- _kdf_worker_limits.py (19 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_limits.py`)
+- _kdf_worker_supervision.py (296 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`)
+- _profile_password_codec.py (39 lines) (`src/cadrumo/adapters/persistence/storage/custody/_profile_password_codec.py`)
+- _recovery_secret_codec.py (34 lines) (`src/cadrumo/adapters/persistence/storage/custody/_recovery_secret_codec.py`)
+- acceleration_receipt.py (1,331 lines) (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`)
+- acceleration_receipt_crypto.py (224 lines) (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`)
+- automation_client_credentials.py (355 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`)
+- automation_crypto.py (114 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_crypto.py`)
+- automation_delivery.py (87 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_delivery.py`)
+- automation_profile.py (46 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_profile.py`)
+- automation_records.py (146 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_records.py`)
+- automation_secret_store.py (274 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_secret_store.py`)
+- automation_secret_target.py (41 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_secret_target.py`)
+- automation_store.py (819 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_store.py`)
+- automation_store_composition.py (25 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_store_composition.py`)
+<!-- /preserved:article -->

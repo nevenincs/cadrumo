@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-11'
-modified: '2026-08-15'
-body_hash: 'sha256:b1a9bde01b91095d4c45a6a8cd70e4ee1d3759909dd8a2f86e8f6ac1de230d2c'
+modified: '2026-10-03'
+body_hash: 'sha256:e8bf31b998d365f3717b4902ac43cb01d32babf36c97df08ab4e15b17c468e20'
 related: []
 ---
 
@@ -54,15 +54,15 @@ Passed:
 
 - `uv run --no-sync python -m aeat.locales audit`
 - `uv run --no-sync python -m aeat.locales scaffold --check`
-- `uv run --no-sync pytest src/aeat/tests/test_parity.py src/aeat/tests/test_locale_translation_honesty.py src/aeat/tests/test_locale_coverage_hardened_errors.py src/aeat/tests/test_locale_coverage_inventory.py src/aeat/tests/test_locale_tr_positional_inventory.py -q`
-- `uv run --no-sync pytest src/aeat/application/modelo/tests/test_calculate_input_error_localization.py -q`
-- `uv run --no-sync pytest src/aeat/application/tests/test_error_class_registration.py src/aeat/application/tests/test_error_envelope_enrollment.py src/aeat/tests/test_calc_sheets_error_hierarchy.py -q`
-- `uv run --no-sync pytest src/aeat/tests/test_no_bare_except.py src/aeat/tests/test_except_clause_narrowing.py -q`
-- `uv run --no-sync pytest src/aeat/application/modelo/tests/test_work_addressing.py src/aeat/application/modelo/tests/test_actions.py -q`
-- `uv run --no-sync ruff check src/aeat/application/modelo/_calculate_input.py src/aeat/application/modelo/_work_addressing.py src/aeat/application/modelo/tests/test_calculate_input_error_localization.py src/aeat/core/errors/registry/_application_part2.py`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 
 Failed, external to the S454 patch:
 
-- `uv run --no-sync pytest -m "integration or hex_entrypoint" src/aeat/entrypoints/cli/tests/test_modelo_casilla_normalisation.py -q`
+- the historical check
 
 The failure is the current-tree wizard catalogue startup registration error described in S454-005.

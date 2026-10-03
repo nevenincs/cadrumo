@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:426e91791fabd038dddac617aaa24594ed89bb5691d35085549ed63c41413615'
+modified: '2026-10-03'
+body_hash: 'sha256:5005edcac0d59a76dbadfafe38a5b2a8971acdbe73f9a3694c24e00f369a6cb2'
 related: []
 ---
 
@@ -30,7 +30,7 @@ production registry invariant.
 
 - `uv run --no-sync ruff check ...`
 - `uv run --no-sync pytest -q src/aeat/core/errors/tests`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_root_help_shape.py`
+- the historical check
 - `uv run --no-sync python -m aeat.locales audit`
 
 ## Review

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd61888467f430a6993c824add2edcd329530ca255c8a7411a22dc6db026663d'
+body_hash: 'sha256:f88f7b4503cd2308cb9a2f8bfc9e48f007b3eaba4c2daefe7c4bf16c94f323ba'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -999,8 +999,8 @@ joins every exported schema, projector, adapter, and custody declaration to
 production composition.
 
 Initial operation executors remain with their application owners:
-`src/cadrumo/application/user_profile/_censal_operation.py` and
-`src/cadrumo/application/live/_filed_history_operation.py`. Their definitions
+the former source file and
+the former source file. Their definitions
 are exported only through the owning package facades.
 
 The operation platform reuses `JournalRepositoryBase` as the hardened,
@@ -1209,7 +1209,7 @@ the exact C0 artifact
 `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
 It validates as `TuiOperationObservationDependencyReceiptV1` under the sole
 live-tree validator
-`src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
+
 No alternate path, schema alias, prose attestation, fixture-only validator, or
 receipt artifact not committed at the validator's clean current HEAD opens C0.
 

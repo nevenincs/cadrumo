@@ -58,7 +58,6 @@ import argparse
 import datetime as _dt
 import http.client
 import json
-import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -66,6 +65,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from dev.report_storage import report_directory
 
 #: See the module docstring: these mirror ``dev/exit_codes.py`` (lane L9).
 EXIT_OK = 0
@@ -559,11 +559,9 @@ def write_artifact(report: Report, destination: str | None = None) -> Path | Non
         ``VAULTSPEC_CI_REPORTS`` unset nothing is written anywhere: cadrumo
         adopts the whole standard and simply never sets it.
     """
-    if destination is None:
-        destination = os.environ.get("VAULTSPEC_CI_REPORTS", "")
-    if not destination:
+    directory = report_directory(destination)
+    if directory is None:
         return None
-    directory = Path(destination)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "dependency-audit.json"
     path.write_text(json.dumps(report.as_dict(), indent=2) + "\n", encoding="utf-8")

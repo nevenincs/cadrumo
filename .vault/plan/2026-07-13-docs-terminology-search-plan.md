@@ -3,16 +3,20 @@ tags:
   - '#plan'
   - '#docs-terminology-search'
 date: '2026-07-13'
-modified: '2026-07-15'
-body_hash: 'sha256:128e7ac24d38b8bc579a58e666347faef50dc431c5e8f966f1ac217e04b2d8df'
 tier: L3
 related:
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-15-docs-terminology-search-adr]]'
   - '[[2026-06-10-docs-terminology-search-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:c880fe1f3799909704e921c8486ec863b0e6a4f061640ac796b570c658faa9b2'
 ---
 
 # `docs-terminology-search` plan
+
+## Description
+
+## Steps
 
 ## Wave `W01` - Measure
 
@@ -37,7 +41,7 @@ Build the upstream-schema adapter and rule file, gate config validity, prove par
 - [x] `W02.P02.S04` - Implement the upstream-schema adapter: serialize the repo PreprocessOutput to the upstream PreprocOutput JSON contract behind a python -m entry point, with unit tests against the pinned schema major; `dev/docs/preprocess/`.
 - [x] `W02.P02.S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test; `.vaultragpreprocess.toml, dev/docs/preprocess/tests/`.
 - [x] `W02.P02.S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test; `dev/docs/preprocess/tests/`.
-- [x] `W02.P02.S07` - Re-scoped cutover (ADR Update 1): exclude the extracted sidecars from the dev index via .vaultragignore, retarget the terminology resolver path rules to source-file paths, correct the stale preprocess docstring to describe the sidecars' product-payload role, keep the hook-vs-sidecar parity gate as a permanent lock, and prove an equal-or-superset sweep target set - one explicit-path commit; `the sidecar tree stays (it is the wheel's corpus payload and the shipped search's index source); `.vaultragignore, dev/docs/terminology/_resolution.py, dev/docs/preprocess/__init__.py, dev/docs/preprocess/tests/test_hook.py`.
+- [x] `W02.P02.S07` - Re-scoped cutover (ADR Update 1): exclude the extracted sidecars from the dev index via .vaultragignore, retarget the terminology resolver path rules to source-file paths, correct the stale preprocess docstring to describe the sidecars' product-payload role, keep the hook-vs-sidecar parity gate as a permanent lock, and prove an equal-or-superset sweep target set - one explicit-path commit; `the sidecar tree stays (it is the wheel's corpus payload and the shipped search's index source); `.vaultragignore, dev/docs/terminology/resolution.py, dev/docs/preprocess/__init__.py, dev/docs/preprocess/tests/test_hook.py`.
 
 ## Wave `W03` - Widen
 
@@ -48,7 +52,7 @@ Extend the sweep query vocabulary from the coverage report over the bundled lega
 Author the widened query vocabulary from the coverage report, reindex, sweep, wrangle, and land the reviewed mapping diff.
 
 - [x] `W03.P03.S08` - Author the widened query vocabulary from the coverage report through the Handbook enrolment surfaces, keeping the synonym ratification ratchet; `src/cadrumo/_data/terminology/`.
-- [x] `W03.P03.S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff; `src/cadrumo/_data/terminology/relevance/relevance.json`.
+- [x] `W03.P03.S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff; `dev/docs/terminology/relevance/relevance.json`.
 
 ## Wave `W04` - Rung-2 gate
 
@@ -68,8 +72,8 @@ Implement ADR 2026-07-15 D7/D8: a closed display-class taxonomy (casilla box, mo
 
 Derive the closed display class per unified record at the injection seam, ship it in the Pagefind meta, and move the base-weight authority to one per-class table; unit gates prove total coverage and the declared ordering.
 
-- [x] `W05.P05.S11` - Declare the closed ResultDisplayClass StrEnum and the single derivation function (record kind + concept domain + page path prefix to class) beside the unified record, with a unit gate proving every projected record maps to exactly one class; `dev/docs/terminology/_unified_record.py, dev/docs/terminology/tests/test_unified_record.py`.
-- [x] `W05.P05.S12` - Ship display_class in the injected Pagefind meta and replace the per-kind base-weight table with the one declared per-class user-first table (facts, modelo, casilla, cli, user docs, technical last), updating kind_base_weight consumers and tests; `dev/docs/pagefind_inject.py, dev/docs/terminology/_unified_record.py`.
+- [x] `W05.P05.S11` - Declare the closed ResultDisplayClass StrEnum and the single derivation function (record kind + concept domain + page path prefix to class) beside the unified record, with a unit gate proving every projected record maps to exactly one class; `dev/docs/terminology/search_record.py, dev/docs/terminology/unified_record.py, dev/docs/terminology/tests/test_unified_record.py`.
+- [x] `W05.P05.S12` - Ship display_class in the injected Pagefind meta and replace the per-kind base-weight table with the one declared per-class user-first table (facts, modelo, casilla, cli, user docs, technical last), updating kind_base_weight consumers and tests; `dev/docs/pagefind_inject.py, dev/docs/terminology/search_record.py, dev/docs/terminology/unified_record.py`.
 - [x] `W05.P05.S13` - Gate the weight table: its ordering matches the ADR D8 ladder verbatim and every display class carries exactly one weight, failing on any unmapped class; `dev/docs/terminology/tests/test_unified_record.py`.
 
 ### Phase `W05.P06` - Controller iconography and re-ranking (JS + gates)
@@ -80,10 +84,6 @@ Render the per-class inline-SVG icons and class-scoped styling in the shared sea
 - [x] `W05.P06.S15` - Consume the shipped per-class weights in the compose ladder unchanged and extend the Playwright palette-ranking gate with the D8 ordering assertions. Casilla-above-cli on a mixed query delivered and gated (test_palette_ranking casilla-above-cli). The how-to-page-above-api-stub full-text ordering was deferred to W05.P06.S17 and has now landed and gated there, so both D8 orderings are delivered; `docs/_static/cadrumo-docs.js, dev/docs/tests/test_palette_ranking.py`.
 - [x] `W05.P06.S16` - Coordinate the controller edits with the in-flight palette-host extraction owner: diff cadrumo-docs.js before editing, land via explicit-pathspec commits, and verify icons render on both hosts (Ctrl-K dialog and search page) once the extraction lands; `docs/_static/cadrumo-docs.js, docs/_templates/search.html`.
 - [x] `W05.P06.S17` - Emit display_class as data-pagefind-meta on the generated and built pages so directory-indexed full-text page hits carry a ranking weight, completing the D8 user-documentation-above-technical ordering for full-text results, gated by a browser assertion that a how-to page outranks an api stub on a mixed query; `docs/conf.py, dev/docs/pagefind_index.py, dev/docs/tests/test_palette_ranking.py`.
-
-## Description
-
-## Steps
 
 ## Parallelization
 

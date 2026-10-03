@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:378ea10af2fb2bb8dca11457dddeb1f47b1ff2a91b070830986529719f89a07b'
+body_hash: 'sha256:b13bff6e6bc0c8e4a9e3880fd806bbf10c151d5a314b63cd3b7998a234b4e0c9'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
 ---
@@ -35,7 +35,7 @@ kept safe given its direct adjacency to AEAT's payment flow.
   demora never reaches a modelo casilla — this is purely read-and-display").
 - The registry already carries a casilla-level "Intereses de demora" concept
   that must never be confused with this gap. M100 casilla `0576`
-  (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/c0576.toml`,
+
   `legal_refs` citing `ley-58-2003:art-26`) is the taxpayer
   **self-computing** an interés de demora while voluntarily regularising a
   previously-claimed tax benefit within the SAME declaration under LGT art.
@@ -72,11 +72,11 @@ kept safe given its direct adjacency to AEAT's payment flow.
   resolving to real, live-cross-checked BOE text, and forbids an agent
   stamping a legal entry as reviewed.
 - The sibling to mirror structurally is `ExpedientesService` /
-  `PersistedExpedientesSnapshot` (`src/cadrumo/application/live/_expedientes.py`):
+  `PersistedExpedientesSnapshot`:
   a `mode: Literal["read"]` structural marker, a `StatelessSnapshotService`
   over `SecureSnapshotRepository`, a bucket-scoped namespace constant, and an
   `assert_read_landing` guard pinned to an allowed path-prefix tuple
-  (`src/cadrumo/adapters/outbound/aeat/sede/_walker.py:109-134`). The censal
+. The censal
   reader's `_assert_read_landing` (`src/cadrumo/adapters/outbound/aeat/sede/
   _censal_datos.py:791`) is the sharper worked example: it refuses at runtime
   the moment AEAT lands the session on *Cambio de Domicilio Fiscal*, an M036
@@ -110,14 +110,14 @@ kept safe given its direct adjacency to AEAT's payment flow.
   provisional gap. `aeat-architecture-boundaries`'s closed-value-set mandate
   binds axes this application defines and fully enumerates (period codes,
   auth providers, its own submission lifecycle — see `SubmissionStatus`,
-  `src/cadrumo/domain/submission/_models.py:72`, and `ModeloDraftStatus`,
-  `src/cadrumo/domain/submission/_protocols.py:83`, both closed StrEnums built
+  the former source file, and `ModeloDraftStatus`,
+  the former source file, both closed StrEnums built
   from AEAT's documented submission protocol). `situacion` is not that: it is
   a free-text label AEAT prints on a read-only listing row, whose full
   vocabulary this application does not control and cannot enumerate without
   ongoing observation. The exact sibling for that shape already exists and
   ships as `str`: `Declaracion.estado`
-  (`src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py:25`,
+
   `estado: str = Field(min_length=1, max_length=16)`), a status label scraped
   from the same declarations-register listing table and compared by exact
   string match elsewhere in that module rather than enum membership. `Deuda`
@@ -203,7 +203,7 @@ as license to name a new family in English.
 
 **Domain type (unblocked today).** A `Deuda` pydantic model in a new adapter
 schema module, mirroring `Expediente`'s placement
-(`src/cadrumo/adapters/outbound/aeat/sede/_schema.py`), carries:
+, carries:
 `clave_liquidacion` (validated identifier), a closed `ObjetoTributario`
 StrEnum declared in `core/` (interés de demora / recargo de apremio / sanción /
 liquidación / other, per `aeat-architecture-boundaries`'s closed-value-set
@@ -219,7 +219,7 @@ as reported.
 
 **Snapshot service (unblocked today).** `DeudasService` /
 `PersistedDeudasSnapshot` / `DeudasCapture`, structured identically to
-`ExpedientesService` (`src/cadrumo/application/live/_expedientes.py`): a
+`ExpedientesService`: a
 `StatelessSnapshotService` over `SecureSnapshotRepository`, a new
 `LIVE_DEUDAS_SNAPSHOT_NAMESPACE` bucket-scoped namespace constant, and
 content-addressed snapshot ids via the same `_derive_snapshot_id` pattern.
@@ -253,7 +253,7 @@ with a comment stating it persists a captured snapshot to bucket storage
 (mirroring the existing `"app live expedientes pull"` entry's rationale). The
 same commit adds `deudas pull` to the operator-orientation agent-harness
 document alongside `expedientes pull` and `notifications pull`
-(`src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md:59-64`),
+
 per `aeat-cli-contract`'s mandate that the harness cites only the live verb
 surface.
 

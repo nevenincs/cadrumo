@@ -9,12 +9,11 @@ from decimal import Decimal, InvalidOperation
 from ...deadlines.models import M303RegimeComposition, M303TaxTerritory
 from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from .errors import RegistryValidationError
-from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import UNIQUE_REFERENCES_REQUIREMENT, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource
 from .iva_schema_vocabulary_source import (
     SCHEMA_VOCABULARY_SUBJECT,
     UNIQUE_TOKENS_REQUIREMENT,
-    csv_legal_references,
     resolve_scoped_schema_entries,
 )
 
@@ -206,10 +205,11 @@ def resolve_m303_tax_territory_catalogue(
             M303TaxTerritoryDefinition(
                 token=token,
                 description=description,
-                legal_refs=csv_legal_references(
+                legal_refs=unique_mapping_tokens(
                     entries,
                     f"{_TERRITORY_PREFIX}{raw_token}.legal_refs",
-                    required=True,
+                    subject=SCHEMA_VOCABULARY_SUBJECT,
+                    requirement=UNIQUE_REFERENCES_REQUIREMENT,
                 ),
                 is_foral=raw_is_foral == "true",
                 state_attribution_ratio=ratio,
@@ -266,10 +266,11 @@ def resolve_m303_regime_composition_catalogue(
                 description=description,
                 export_code=export_code,
                 simplified_scope=simplified_scope,
-                legal_refs=csv_legal_references(
+                legal_refs=unique_mapping_tokens(
                     entries,
                     f"{_COMPOSITION_PREFIX}{raw_token}.legal_refs",
-                    required=True,
+                    subject=SCHEMA_VOCABULARY_SUBJECT,
+                    requirement=UNIQUE_REFERENCES_REQUIREMENT,
                 ),
             ),
         )

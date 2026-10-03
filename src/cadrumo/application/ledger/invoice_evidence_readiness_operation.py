@@ -232,7 +232,6 @@ def _resolve_metadata_access(
         definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
         payload_type=LedgerEvidenceReaderReadinessRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
     return bind_operation_access_profile(
         context,

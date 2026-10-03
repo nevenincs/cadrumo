@@ -1,12 +1,13 @@
 ---
 related: []
 date: '2026-08-24'
-modified: '2026-08-25'
-body_hash: 'sha256:c4b0b8c2693f20cd2264d098e1a266d78509152f61611aea3016e194b96232f9'
+modified: '2026-10-03'
+body_hash: 'sha256:8f255fbffe055295c0247e8b9919abc6baf80fabb5242c8585e66523853b8e85'
 tags:
   - '#reference'
   - '#registry-completeness-closure'
 ---
+
 # REGISTRY LOOP v4 — make the registry GREEN and WHOLE
 
 GOAL, set by the operator: **the registry is green (every gate passes) and whole (every
@@ -23,10 +24,7 @@ starts by looking for unresolved producer keys in a SHIPPED layout will find non
 
 ## WHAT IS ACTUALLY LEFT — from the gate, not from memory
 
-The live worklist is
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
-Run it first; it prints one line per revision that cannot file, each naming its own
-blocker. As of 2026-08-24 it names **14 revisions across 13 modelos**, in five classes:
+Run it first; it prints one line per revision that cannot file, each naming its own blocker. As of 2026-08-24 it names **14 revisions across 13 modelos**, in five classes:
 
 | blocker | revisions | actionable? |
 |---|---|---|

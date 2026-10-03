@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:ebb62e23d193a68f81076aaf5272ca9251ed8e0e40b3efcfb44b1b38b558e68e'
-related:
-  - "[[2026-07-02-arch-remediation-gates-ratchet-plan]]"
+related: []
 ---
 
 # `arch-remediation-gates-ratchet` audit: `implementation review`

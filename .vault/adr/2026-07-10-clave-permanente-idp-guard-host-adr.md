@@ -4,7 +4,7 @@ tags:
   - '#clave-permanente-idp-guard-host'
 date: '2026-07-10'
 modified: '2026-10-03'
-body_hash: 'sha256:fb41c91a6e04a50f339ba5dfc42791918c5d445653632a003c09d68766ea6c9e'
+body_hash: 'sha256:48ffef846db148613e0aaebfe9d86e09a4040e136e586bcf1294c28db76c310c'
 related:
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'
 ---
@@ -13,13 +13,12 @@ related:
 
 ## Problem Statement
 
-`clave_permanente_auth_browser_action_policy` in
-`src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente_support.py` builds a
+`clave_permanente_auth_browser_action_policy`  builds a
 `RemoteStateGuardPolicy` whose `allowed_hosts` include
 `urlsplit(external.aeat.domains.clave).netloc` — the host `clave.gob.es`. The guard
 model's `_validate_hosts` field validator
-(`src/cadrumo/domain/calculations/registry/_remote_state_guard.py`, ~line 204) refuses any
-host that fails `is_aeat_host` (`src/cadrumo/domain/calculations/registry/_aeat_hosts.py`),
+(the former source file, ~line 204) refuses any
+host that fails `is_aeat_host`,
 which accepts only the configured AEAT apex `agenciatributaria.gob.es` plus the legacy
 `aeat.es` suffix. `clave.gob.es` is under neither apex, so the builder raises
 `RegistryValidationError` ("allowed host is not an AEAT host") on every invocation.
@@ -142,18 +141,18 @@ policies that have no business naming an identity provider.
 Code-surface footprint of the chosen fix (implementation follows as a separate grounded
 commit; nothing here is implemented by this ADR):
 
-- `src/cadrumo/domain/calculations/registry/_aeat_hosts.py`: add
+- the former source file: add
   `sanctioned_gov_idp_host_suffixes()` returning the netloc of
   `Settings.external_constants().aeat.domains.clave` (single-member tuple) and an
   `is_sanctioned_gov_idp_host(host)` suffix predicate mirroring `is_aeat_host`.
-- `src/cadrumo/domain/calculations/registry/_remote_state_guard.py`: new
+- the former source file: new
   `RemoteStateGuardPolicy` field `allows_gov_idp_hosts: bool` defaulting to false;
   `_validate_hosts` and `_validate_host_suffixes` defer non-AEAT entries that are
   sanctioned-IdP hosts to the model phase; `_validate_policy` gains a phase refusing
   (a) any IdP host on a policy that has not opted in, (b) opt-in on any classification
   other than `authenticated_read_surface` or with `requires_authentication` false, and
   (c) any non-AEAT, non-sanctioned host unconditionally (unchanged behaviour).
-- `src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente_support.py`:
+
   `clave_permanente_auth_browser_action_policy` sets `allows_gov_idp_hosts=True` and
   carries the Cl@ve apex as an `allowed_host_suffixes` entry (so IdP subdomains match
   if an `http`-kind consumer ever appears), keeping the two AEAT hosts; add the missing
@@ -161,7 +160,7 @@ commit; nothing here is implemented by this ADR):
 - Tests: `src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_permanente.py` gains
   policy-build coverage mirroring `test_clave_movil.py` (policy builds; the three
   `clave-permanente-*` patterns allowed; unlisted actions refused).
-  `src/cadrumo/domain/calculations/registry/tests/test_remote_state_guard.py` gains: IdP
+  the former source file gains: IdP
   host refused without opt-in; opt-in refused on `open_simulator` and
   `public_read_surface`; an arbitrary `gob.es` host refused even with opt-in; Móvil
   policy behaviour unchanged.
@@ -216,7 +215,7 @@ addendum rules the second latent defect surfaced by the build coverage above and
 documented in `test_policy_submit_action_is_write_token_blocked`: the third allowed action
 pattern, `clave-permanente-submit`, contains the universal write-forbidden token `submit`
 (`AEAT_WRITE_FORBIDDEN_VERB_TOKENS`,
-`src/cadrumo/domain/calculations/registry/_remote_state_guard.py:76`), and
+the former source file), and
 `_evaluate_browser_action` checks forbidden tokens BEFORE the allow-list
 (`_remote_state_guard.py:423-433`), so the guard refuses the login-form submit at runtime
 and Cl@ve Permanente authentication can never complete.
@@ -236,8 +235,7 @@ therefore to rename OUR label, never to carve an exception into the guard.
 substring scan (`_first_forbidden_token` matches `token in value`) against the full
 `_FORBIDDEN_TOKENS` union — every member of `AEAT_WRITE_FORBIDDEN_VERB_TOKENS` and
 `_URL_AND_METHOD_FORBIDDEN_TOKENS` — and, for cross-surface hygiene, against the
-click-time extension set `_CLICK_ONLY_FORBIDDEN_TOKENS` in
-`src/cadrumo/adapters/outbound/aeat/sede/_renta_web_open_safety.py`. Rejected alternatives:
+click-time extension set `_CLICK_ONLY_FORBIDDEN_TOKENS` . Rejected alternatives:
 any `enviar`/`send`-derived label (both are tokens); a `validate-credentials` label
 (passes the guard today, but the `validar`/`validacion` family is a click-time forbidden
 extension because AEAT's Validar surface is pre-presentation write-adjacent — reusing that
@@ -271,7 +269,7 @@ three references in the tree; the policy is currently unconsumed and
 `ClavePermanenteAuthProvider` (`_clave_permanente.py`) emits no browser-action labels at
 all, so nothing else moves:
 
-- `src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente_support.py:84` — the
+- the former source file — the
   `allowed_browser_action_patterns` tuple entry (rename to
   `clave-permanente-authenticate`); also update the builder docstring's "(username fill,
   password fill, submit)" wording at ~line 57.

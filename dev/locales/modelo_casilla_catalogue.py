@@ -85,11 +85,13 @@ class ModeloCasillaCatalogue:
         values: Values,
         *,
         label_evolutions: Mapping[str, tuple[CasillaContinuidadEvolutionDefinition, ...]] | None = None,
+        binding_presentation_keys: frozenset[str] = frozenset(),
     ) -> None:
         """Index occurrence chains and optional typed evidence for label changes."""
         self.occurrences = occurrences
         self.values = values
         self.label_evolutions = {} if label_evolutions is None else label_evolutions
+        self.binding_presentation_keys = binding_presentation_keys
         self.locales = tuple(sorted(values))
         self.dependents: dict[str, list[tuple[int, str]]] = defaultdict(list)
         self.declared_revisions = frozenset(
@@ -104,8 +106,13 @@ class ModeloCasillaCatalogue:
     @classmethod
     def published(cls, locales_dir: Path = LOCALES_DIR) -> ModeloCasillaCatalogue:
         """Build the view from the published generation and the on-disk catalogue."""
-        occurrences, evolutions = _published_surface()
-        return cls(occurrences, load_casilla_values(locales_dir), label_evolutions=evolutions)
+        occurrences, evolutions, binding_keys = _published_surface()
+        return cls(
+            occurrences,
+            load_casilla_values(locales_dir),
+            label_evolutions=evolutions,
+            binding_presentation_keys=binding_keys,
+        )
 
     # -- resolution -------------------------------------------------------
 
@@ -384,7 +391,7 @@ class ModeloCasillaCatalogue:
             changed = False
             for locale in (SOURCE_LOCALE, *[loc for loc in self.locales if loc != SOURCE_LOCALE]):
                 for key in sorted(working[locale], key=_specificity):
-                    if self._undeclared_revision(key):
+                    if self._undeclared_revision(key) or key in self.binding_presentation_keys:
                         continue
                     value = working[locale].pop(key)
                     if self._unchanged(key, locale, working, baseline):
@@ -457,7 +464,11 @@ class ModeloCasillaCatalogue:
         shutil.copytree(locales_dir, staged)
         try:
             written = self._write_plan(result.plan, staged)
-            proof = ModeloCasillaCatalogue(self.occurrences, load_casilla_values(staged))
+            proof = ModeloCasillaCatalogue(
+                self.occurrences,
+                load_casilla_values(staged),
+                binding_presentation_keys=self.binding_presentation_keys,
+            )
             changed = sum(1 for coordinate, text in proof.resolution().items() if result.baseline[coordinate] != text)
         except BaseException:
             _discard(pending_dir)
@@ -500,7 +511,11 @@ class ModeloCasillaCatalogue:
             manager = LocaleManager(src_dir=staged, locales_dir=staged)
             for locale, values in sorted(manifest.items()):
                 _apply_authored_casilla_locale(manager, locale, values)
-            proof = ModeloCasillaCatalogue(self.occurrences, load_casilla_values(staged))
+            proof = ModeloCasillaCatalogue(
+                self.occurrences,
+                load_casilla_values(staged),
+                binding_presentation_keys=self.binding_presentation_keys,
+            )
             after = proof.resolution()
             changed: dict[str, int] = defaultdict(int)
             unattributed: list[Coordinate] = []

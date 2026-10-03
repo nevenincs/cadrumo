@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 from dev._paths import REPO_ROOT
 
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
@@ -26,6 +27,7 @@ from .paths import (
     remove_scratch_directory,
     scratch_base,
     scratch_environment,
+    test_log_root,
 )
 from .pytest_summary_signal import _PYTEST_SUMMARY_SIGNAL, _PytestSummaryProcessor
 from .reaper import sweep_scratch_directories
@@ -162,6 +164,7 @@ def run(
     command: tuple[str, ...],
     *,
     repository: Path,
+    run_log_root: Path | None = None,
     family: str,
     label: str,
     signal: str | None = None,
@@ -183,6 +186,7 @@ def run(
         return _run_in_scratch(
             command,
             repository=repository,
+            run_log_root=run_log_root,
             family=family,
             label=label,
             signal=signal,
@@ -200,6 +204,7 @@ def _run_in_scratch(
     command: tuple[str, ...],
     *,
     repository: Path,
+    run_log_root: Path | None,
     family: str,
     label: str,
     signal: str | None,
@@ -208,7 +213,7 @@ def _run_in_scratch(
 ) -> int:
     """Run ``command`` with ``scratch`` as its temporary directory; the caller owns the scratch."""
     started = datetime.now(tz=UTC)
-    run_dir = allocate_run_directory(repository, family=family, label=label, now=started)
+    run_dir = allocate_run_directory(run_log_root or repository, family=family, label=label, now=started)
     artifacts = run_dir / "artifacts"
     cache = run_dir / "cache"
     artifacts.mkdir(parents=True)
@@ -256,7 +261,12 @@ def _run_in_scratch(
     environment["CADRUMO_DEV_ARTIFACTS_DIR"] = str(artifacts)
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
-    # Tool caches such as uv's keep their own homes; only temporary files move.
+    # Reassert the Cadrumo-controlled shared caches for children, even if a
+    # caller changed a native tool variable such as XDG_CACHE_HOME in-process.
+    tool_environment = tool_storage_environment()
+    for native_variable, (refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
+        environment[refinement_variable] = tool_environment[native_variable]
+    environment.update(tool_environment)
     environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=_UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")
@@ -348,6 +358,7 @@ def main() -> int:
     return run(
         command,
         repository=REPO_ROOT,
+        run_log_root=test_log_root(),
         family=args.family,
         label=args.label,
         signal=args.signal,

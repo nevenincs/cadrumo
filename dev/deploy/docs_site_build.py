@@ -11,7 +11,9 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import prepare_temporary_directory
 from dev.docs import i18n as _docs_i18n
+from dev.docs.build_paths import docs_html_root
 from dev.packaging.command_execution import CommandResult, run_command
 
 from .docs_delivery_contracts import _UTF_8
@@ -28,7 +30,7 @@ from .docs_site_languages import (
 
 def _site_root(repo_root: Path) -> Path:
     """Return the directory the published tree is composed in."""
-    return repo_root / "docs" / "_build" / "html"
+    return docs_html_root(repo_root)
 
 
 def _clear_apex(html_root: Path) -> None:
@@ -108,7 +110,10 @@ def _build_language_roots(
             a test passes a small real command to prove the concurrency and
             isolation without paying for four Sphinx builds.
     """
-    environments = _language_build_environments()
+    environments = [
+        (language, {**environment, "CADRUMO_DOCS_BUILD_ROOT": str(html_root.parent)})
+        for language, environment in _language_build_environments()
+    ]
     cpus = os.cpu_count() or 1
     jobs = root_build_jobs([language for language, _ in environments], cpus)
     print(
@@ -116,7 +121,7 @@ def _build_language_roots(
         f"{', '.join(f'{language} with {jobs[language]} workers' for language, _ in environments)}.",
         flush=True,
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-") as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temporary_directory()) as scratch:
 
         def build(language: str, environment: dict[str, str]) -> CommandResult:
             storage_root = Path(scratch) / language

@@ -3,13 +3,12 @@ tags:
   - '#research'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c1dc9b172e91774b894da1429aa26775201b0f2e17b2c64d727573b94134355'
+body_hash: 'sha256:4b271f5e48d604a886543587e3f3ccdfb66836c282032e783b27fbd7e8aa83e6'
 related:
   - "[[2026-08-11-profile-setup-flow-critical-baseline-research]]"
   - "[[2026-08-11-tui-architecture-research]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-censal-sync-control-architecture-research]]"
   - "[[2026-07-23-tui-wizard-substrate-adr]]"
   - "[[2026-07-23-profile-setup-flow-adr]]"
@@ -17,7 +16,6 @@ related:
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-08-10-casilla-schema-research]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
-  - '[[2026-08-10-casilla-schema-plan]]'
 ---
 
 # `tui-interface` research: `Canonical modular Textual package and flat-module migration`
@@ -48,19 +46,11 @@ The modules already separate into flow rendering, profile management,
 secret/session interaction, and reusable presentation. Login and registration
 subclass the credential base, while manager, credentials, forms, status, and
 flows consume the same theme and status primitives.
-`src/cadrumo/adapters/inbound/tui/_app.py:53`,
-`src/cadrumo/adapters/inbound/tui/_login_screen.py:43`,
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:49`,
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:47`.
 
 The facade exports more than fifty names across those clusters, and production
 CLI modules import them to build manager actions, login choices, status
 projections, forms, and wizard frontends.
-`src/cadrumo/adapters/inbound/tui/__init__.py:14`,
-`src/cadrumo/adapters/inbound/tui/__init__.py:84`,
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:49`,
-`src/cadrumo/entrypoints/cli/_config/_login_frontend.py:51`,
-`src/cadrumo/entrypoints/cli/_config/_status_frontend.py:32`.
+
 Grouping only by Textual kind (`apps`, `screens`, `widgets`) would leave
 capability ownership implicit. Ownership-oriented areas make the existing
 clusters and their dependency directions mechanically visible.
@@ -90,20 +80,13 @@ publish that identical join tree before overlapping code is scaffolded.
 `_theme.py` supplies domain-neutral themes, constrained scrolling,
 content-sized tables, notices, and appearance control; `_status_bar.py` is a
 reusable pinned channel that redacts before updating widget state.
-`src/cadrumo/adapters/inbound/tui/_theme.py:225`,
-`src/cadrumo/adapters/inbound/tui/_theme.py:288`,
-`src/cadrumo/adapters/inbound/tui/_status_bar.py:88`,
-`src/cadrumo/adapters/inbound/tui/_status_bar.py:175`.
+
 `ConfirmScreen` is generic, while `confirm_restart_dialog` carries flow policy.
-`src/cadrumo/adapters/inbound/tui/_confirm_screen.py:43`,
-`src/cadrumo/adapters/inbound/tui/_confirm_screen.py:86`.
 
 Forms expose the hard split. Immutable field/page models and edit widgets are
 domain-neutral, but the `ContextVar` presenter lets CLI-owned orchestration
 open Textual screens from manager workers.
-`src/cadrumo/adapters/inbound/tui/_form_screen.py:55`,
-`src/cadrumo/adapters/inbound/tui/_form_screen.py:111`,
-`src/cadrumo/adapters/inbound/tui/_form_screen.py:564`.
+
 Putting the whole module in components canonizes orchestration; duplicating
 forms per feature canonizes drift. The evidence favors component-owned visual form contracts,
 operation-owned interaction transport, and feature-owned validation and
@@ -116,10 +99,7 @@ The manager renders `ProfileOverview` but also owns workers, callback execution,
 progress settlement, fallback errors, embedded-form presentation, and session
 close behavior. `ManagerAction` is an arbitrary callable and
 `ManagerActionOutcome` is a TUI-owned execution result.
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:72`,
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:81`,
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:729`,
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:878`.
+
 The accepted operation lane replaces that authority with application
 operations and immutable projections; `profile/` can own navigation, overview,
 field editing, status, readiness, and profile-specific review without owning
@@ -138,25 +118,18 @@ or another long wizard.
 
 The schema declares only a static `required` boolean, defaulting to false. It
 also carries selectors and schedule predicates, but no advisory or importance
-tier. `src/cadrumo/domain/user_profile/_schema.py:113`.
+tier. the former source file.
 
 Application completeness adds cross-field conditional requirements for Clave,
 IRNR residence and representation, and repeatable attribution rows. A separate
 `iva_regime_required` rule supplies IVA conditionality to profile validation.
 Those rules evaluate known profile facts; they do not expose a generic
 `unassessed applicability` state.
-`src/cadrumo/application/user_profile/_completeness.py:36`,
-`src/cadrumo/application/user_profile/_completeness.py:63`,
-`src/cadrumo/application/user_profile/_completeness.py:107`,
-`src/cadrumo/application/user_profile/_completeness.py:122`,
-`src/cadrumo/application/user_profile/_validation.py:368`.
 
 Modelo preflight adds a third context: it selects schema-required fields whose
 selectors match one filing and appends conditional requirements. Its own
 `per_operation_requirements_assessed` flag distinguishes an empty assessment
-from a clean result. `src/cadrumo/application/user_profile/_preflight.py:197`,
-`src/cadrumo/application/user_profile/_preflight.py:220`,
-`src/cadrumo/application/user_profile/_preflight.py:270`.
+from a clean result. the former source file,
 
 The interface therefore cannot infer applicability from the schema or locale.
 Any future unassessed state needs an application projection that distinguishes
@@ -170,8 +143,6 @@ explicitly told to apply. Application reconciliation already distinguishes
 adoption, divergence, and clearing and delegates the write through its authority.
 `.vault/research/2026-08-11-censal-sync-control-architecture-research.md:25`,
 `.vault/research/2026-08-11-censal-sync-control-architecture-research.md:40`,
-`src/cadrumo/application/user_profile/_censo_sync.py:275`,
-`src/cadrumo/application/user_profile/_censo_sync.py:380`.
 
 A dedicated sync application would duplicate navigation and lifecycle; a
 generic modal alone may not express side-by-side field adjudication. The
@@ -187,17 +158,11 @@ host without stdin, environment, or JSON secret channels. The page chooses a
 profile and collects a value in a masked field. Its injected CLI authentication
 seam supplies that plaintext value to the public `login_profile` application
 door. Non-screen routes retain their existing custody channels.
-`src/cadrumo/entrypoints/cli/_config/_login_frontend.py:55`,
-`src/cadrumo/entrypoints/cli/_config/_login_frontend.py:155`,
-`src/cadrumo/entrypoints/cli/_config/_login_frontend.py:168`,
-`src/cadrumo/adapters/inbound/tui/_login_screen.py:206`.
 
 Registration also uses masked inputs. It copies the submitted password into a
 bounded byte buffer and overwrites that buffer in `finally` after the
 application callback returns. This limits one controlled copy without claiming
-runtime-wide erasure. `src/cadrumo/adapters/inbound/tui/_registration_screen.py:201`,
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:380`,
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:412`.
+runtime-wide erasure. the former source file,
 
 The accepted profile-bundle decision separately forbids passphrases in generic
 flow answers and retains a hidden secret-input channel.
@@ -221,9 +186,7 @@ semantics in one renderer-neutral application engine.
 `.vault/adr/2026-07-23-tui-wizard-substrate-adr.md:266`.
 The current app, question, and review modules already consume its projections,
 so relocation to `flows/` can preserve that direction.
-`src/cadrumo/adapters/inbound/tui/_app.py:28`,
-`src/cadrumo/adapters/inbound/tui/_question_screen.py:38`,
-`src/cadrumo/adapters/inbound/tui/_review_screen.py:30`.
+
 Frontend selection remains unresolved because the new boundary forbids CLI
 imports of the TUI; moving `select_flow_frontend` unchanged would retain the
 reverse edge.
@@ -234,12 +197,9 @@ The status widget defensively redacts before holding a message, while the
 canonical error builder scrubs context and produces a frozen `ErrorEnvelope`
 with code, category, localized message, typed action, retryability, runbook,
 safe context, and trace ID.
-`src/cadrumo/adapters/inbound/tui/_status_bar.py:175`,
-`src/cadrumo/core/errors/_registry.py:98`,
-`src/cadrumo/core/errors/_registry.py:304`,
-`src/cadrumo/core/errors/_registry.py:325`.
+
 The current manager reduces unexpected failures to a sentence and loses that
-structure. `src/cadrumo/adapters/inbound/tui/_manager_screen.py:817`.
+structure. the former source file.
 
 A reusable live-log view can own bounded rendering, severity styling,
 follow/pause, and accessible empty state, but must accept only typed,
@@ -248,7 +208,6 @@ identity remain in `operations/`. An error view can render the canonical safe
 fields and typed action, but must not accept raw exceptions or reclassify them.
 Notices remain distinct from blocking errors.
 `src/cadrumo/core/json_contract.py:237`,
-`src/cadrumo/adapters/inbound/tui/_theme.py:288`.
 
 ### Modelo presentation depends on the in-flight canonical casilla schema
 
@@ -395,55 +354,11 @@ census implementation can rely on it.
 - `.vault/plan/2026-08-10-casilla-schema-plan.md:94`
 - `.vault/plan/2026-08-10-casilla-schema-plan.md:115`
 - `.vault/plan/2026-08-10-casilla-schema-plan.md:129`
-- `src/cadrumo/adapters/inbound/tui/__init__.py:14`
-- `src/cadrumo/adapters/inbound/tui/__init__.py:84`
-- `src/cadrumo/adapters/inbound/tui/_app.py:28`
-- `src/cadrumo/adapters/inbound/tui/_app.py:53`
-- `src/cadrumo/adapters/inbound/tui/_question_screen.py:38`
-- `src/cadrumo/adapters/inbound/tui/_review_screen.py:30`
-- `src/cadrumo/adapters/inbound/tui/_confirm_screen.py:43`
-- `src/cadrumo/adapters/inbound/tui/_confirm_screen.py:86`
-- `src/cadrumo/adapters/inbound/tui/_theme.py:225`
-- `src/cadrumo/adapters/inbound/tui/_theme.py:288`
-- `src/cadrumo/adapters/inbound/tui/_status_bar.py:88`
-- `src/cadrumo/adapters/inbound/tui/_status_bar.py:175`
-- `src/cadrumo/adapters/inbound/tui/_form_screen.py:55`
-- `src/cadrumo/adapters/inbound/tui/_form_screen.py:111`
-- `src/cadrumo/adapters/inbound/tui/_form_screen.py:564`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:72`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:81`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:729`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:817`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:878`
-- `src/cadrumo/adapters/inbound/tui/_credential_screen.py:50`
-- `src/cadrumo/adapters/inbound/tui/_login_screen.py:73`
-- `src/cadrumo/adapters/inbound/tui/_login_screen.py:206`
-- `src/cadrumo/adapters/inbound/tui/_registration_screen.py:89`
-- `src/cadrumo/adapters/inbound/tui/_registration_screen.py:201`
-- `src/cadrumo/adapters/inbound/tui/_registration_screen.py:380`
-- `src/cadrumo/adapters/inbound/tui/_registration_screen.py:412`
+
 - `src/cadrumo/application/user_profile/__init__.py:41`
-- `src/cadrumo/application/user_profile/_completeness.py:36`
-- `src/cadrumo/application/user_profile/_completeness.py:63`
-- `src/cadrumo/application/user_profile/_completeness.py:107`
-- `src/cadrumo/application/user_profile/_completeness.py:122`
-- `src/cadrumo/application/user_profile/_validation.py:368`
-- `src/cadrumo/application/user_profile/_preflight.py:197`
-- `src/cadrumo/application/user_profile/_preflight.py:220`
-- `src/cadrumo/application/user_profile/_preflight.py:270`
-- `src/cadrumo/application/user_profile/_censo_sync.py:275`
-- `src/cadrumo/application/user_profile/_censo_sync.py:380`
-- `src/cadrumo/domain/user_profile/_schema.py:113`
-- `src/cadrumo/core/errors/_registry.py:98`
-- `src/cadrumo/core/errors/_registry.py:304`
-- `src/cadrumo/core/errors/_registry.py:325`
+
 - `src/cadrumo/core/json_contract.py:237`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:49`
-- `src/cadrumo/entrypoints/cli/_config/_login_frontend.py:51`
-- `src/cadrumo/entrypoints/cli/_config/_login_frontend.py:55`
-- `src/cadrumo/entrypoints/cli/_config/_login_frontend.py:155`
-- `src/cadrumo/entrypoints/cli/_config/_login_frontend.py:168`
-- `src/cadrumo/entrypoints/cli/_config/_status_frontend.py:32`
+
 - `src/cadrumo/entrypoints/__init__.py:1`
 - `src/cadrumo/adapters/inbound/__init__.py:1`
 - `.vault/adr/2026-06-01-domain-boundary-audit-adr.md:73`

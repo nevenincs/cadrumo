@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#ledger-latency-budget'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:1f53c405de06ababcb266dbf788915cbdcff83493a35c49f81e27e75d735a91c'
+modified: '2026-10-03'
+body_hash: 'sha256:439b0131a552417618c02d6bbb2eb28d13642428b2e6b2d49bab9e650af39bbc'
 related:
-  - "[[2026-07-06-ledger-perf-optimization-plan]]"
   - "[[2026-07-05-ledger-latency-budget-adr]]"
   - "[[2026-07-06-ledger-perf-optimization-research]]"
 ---
@@ -15,81 +14,79 @@ related:
 
 ## Scope
 
-Reviewed the S03 benchmark refresh in `src/aeat/application/aggregation/tests/test_ledger_scale_benchmark.py`.
+Reviewed the S03 benchmark refresh in the retired test.
 The audit checked whether the new partition-read reporting used real repository behavior,
 preserved the existing scale budget assertion, avoided fakes and monkeypatches, and produced
 actionable output for the later batch-read and diagnostic-summary waves.
 
 Reviewed the S04 repository-level guard in
-`src/aeat/adapters/persistence/profile/tests/test_transactions_repository.py`. The audit
+The retired test. The audit
 checked whether the new test uses the real SQL-backed runtime profile, mutates only the
 derived date-index table to simulate staleness, and proves fallback parity against the
 complete-index partition rather than mirroring repository logic.
 
 Reviewed the S05 roundtrip guard in
-`src/aeat/adapters/persistence/profile/tests/test_transactions_repository_roundtrip.py`.
 The audit checked whether the test proves storage-level unchanged-row stability through
 real secure-object revision metadata while changing one transaction row with the same
 derived id.
 
 Reviewed the S06 timestamp witness guard in
-`src/aeat/adapters/persistence/profile/tests/test_transactions_repository_roundtrip.py`.
 The audit checked whether the test exercises the real decoded-row witness helper and the
 repository load boundary without monkeypatching JSON parsing or mutating production code.
 
 Reviewed the S07 secure-object batch result contract in
-`src/aeat/adapters/persistence/storage/sql/_secure_object_records.py`. The audit checked
+The retired module. The audit checked
 whether the contract reuses the existing readable/unreadable failure model instead of
 introducing a parallel diagnostics surface.
 
 Reviewed the S08 secure-object batch implementation in
-`src/aeat/adapters/persistence/storage/sql/secure_objects.py`. The audit checked whether
+The retired module. The audit checked whether
 the implementation uses one targeted SQL `IN` query, preserves the fail-closed
 `list_records` behavior, and shares the same row validation logic with namespace scans.
 
 Reviewed the S09 secure-object batch tests in
-`src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py`. The audit
+The retired test. The audit
 checked whether the tests compare batch results to repeated real single loads, prove the
 targeted SQL query shape, and cover mixed readable/schema-drift behavior without mocks.
 
 Reviewed the S10 transaction date-range adoption in
-`src/aeat/adapters/persistence/profile/transactions.py`. The audit checked whether the
+The retired module. The audit checked whether the
 indexed `load_for_date_range` path now uses the targeted secure-object batch primitive
 without changing the stale-index full-scan fallback, missing-row omission, or domain
 schema-drift wrapping.
 
 Reviewed the S11 transaction partition adoption in
-`src/aeat/adapters/persistence/profile/transactions.py`. The audit checked whether
+The retired module. The audit checked whether
 `partition_by_date_range` now uses the targeted secure-object batch primitive only after
 the existing completeness gate succeeds, while preserving the stale-index full-scan
 fallback and plaintext out-of-window stub construction.
 
 Reviewed the S12 repository-level batch-read proof in
-`src/aeat/adapters/persistence/profile/tests/test_transaction_date_index.py`. The audit
+The retired test. The audit
 checked whether the test observes real SQL emitted by the SQL-backed repository, proves a
 single targeted secure-object batch read for the in-window rows, and still asserts the
 expected in-window and out-of-window partition sets.
 
-Reviewed the S17 domain summary model in `src/aeat/domain/transactions/_models.py` and
-`src/aeat/domain/transactions/__init__.py`. The audit checked whether the new summary
+Reviewed the S17 domain summary model in the retired module and
+The retired module. The audit checked whether the new summary
 payload is additive, carries only the ADR-authorized count and filing-date span, avoids
 decrypted financial fields, and is exported through the public transaction facade.
 
 Reviewed the S18 repository protocol documentation in
-`src/aeat/domain/transactions/_protocols.py`. The audit checked whether the
+The retired module. The audit checked whether the
 `partition_by_date_range` contract now permits the compact summary representation while
 retaining the same in-window parity, no-silent-drop, and plaintext-only constraints.
 
 Reviewed the S19 repository summary emission in
-`src/aeat/adapters/persistence/profile/transactions.py` and
-`src/aeat/adapters/persistence/profile/tests/test_transaction_date_index.py`. The audit
+The retired module and
+The retired test. The audit
 checked whether both indexed and stale-index fallback partitions populate the compact
 summary, whether the summary carries only count and filing-date span, and whether
 existing row-level behavior remains compatible during the consumer migration.
 
 Reviewed the S20 source-diagnostic summary surface in
-`src/aeat/application/aggregation/_source_mesh.py` and
-`src/aeat/application/aggregation/tests/test_source_mesh.py`. The audit checked whether
+The retired module and
+The retired test. The audit checked whether
 the new diagnostic fields remain optional, require a complete count/date-span tuple when
 used, reject reversed spans, and expose a reusable helper for resolver conversion.
 

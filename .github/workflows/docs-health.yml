@@ -26,6 +26,14 @@ jobs:
         uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
         with:
           tool: just@1.38.0
+      - name: Bind monitoring tool storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in UV_CACHE_DIR UV_PYTHON_INSTALL_DIR UV_TOOL_DIR UV_TOOL_BIN_DIR PYTHONPYCACHEPREFIX XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME; do
+            value="$(just --evaluate "$name")"
+            printf '%s=%s\n' "$name" "$value" >> "$GITHUB_ENV"
+          done
       - name: Provision the monitoring runtime
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
@@ -44,9 +52,10 @@ jobs:
           set -euo pipefail
           title='Documentation availability check failed'
           existing=$(gh issue list --state open --search "$title in:title" --json number,title --jq '.[] | select(.title == "Documentation availability check failed") | .number' | head -n 1)
-          printf 'Public documentation verification failed. Inspect the HTTP checks and release identities.\n\nRun: %s\n' "$RUN_URL" > "$RUNNER_TEMP/docs-alert.md"
+          alert="$(uv run --no-sync python -c 'from dev._paths import prepare_temporary_directory; print(prepare_temporary_directory() / "docs-alert.md")')"
+          printf 'Public documentation verification failed. Inspect the HTTP checks and release identities.\n\nRun: %s\n' "$RUN_URL" > "$alert"
           if [ -n "$existing" ]; then
-            gh issue edit "$existing" --body-file "$RUNNER_TEMP/docs-alert.md"
+            gh issue edit "$existing" --body-file "$alert"
           else
-            gh issue create --title "$title" --body-file "$RUNNER_TEMP/docs-alert.md"
+            gh issue create --title "$title" --body-file "$alert"
           fi

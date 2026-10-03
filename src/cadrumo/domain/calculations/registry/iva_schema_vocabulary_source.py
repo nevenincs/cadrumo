@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Final
 from weakref import ReferenceType, ref
 
 from ....core.time.clock import today_madrid
-from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .facts.string_mapping import (
     MappingValueWhitespace,
@@ -33,19 +32,6 @@ _FACT_ID = "iva-statutory-schema-vocabulary"
 _ENTRIES_POLICY = StringMappingPolicy(
     subject=SCHEMA_VOCABULARY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE
 )
-
-
-def csv_legal_references(entries: Mapping[str, str], key: str, *, required: bool) -> tuple[str, ...]:
-    """Return the unique comma-separated references declared under ``key``."""
-    value = entries.get(key)
-    if value is None or not value.strip():
-        if required:
-            raise RegistryValidationError(f"IVA schema vocabulary is missing {key!r}")
-        return ()
-    refs = tuple(token.strip() for token in value.split(",") if token.strip())
-    if len(set(refs)) != len(refs):
-        raise RegistryValidationError(f"IVA schema vocabulary {key!r} must contain unique references")
-    return refs
 
 
 @dataclass(frozen=True, slots=True)

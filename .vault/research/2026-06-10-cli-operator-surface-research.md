@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:ef7dbef59165b471f0bd0f6fa38c69c86f0b4d2738bc6e0a2181c0b87cb03743'
+modified: '2026-10-03'
+body_hash: 'sha256:947123c3ac4c45a4c08aab4fb7db1934eed990c07d10739d1c60ca83f5779cc5'
 related:
   - '[[2026-06-10-cli-operator-surface-audit]]'
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
@@ -30,8 +30,7 @@ claim below was re-verified against `HEAD` during this pass.
 
 ### F1 -- profile switch verb leaks the storage layer (HIGH)
 
-`aeat config profile switch` and `use` are retired (`_RETIRED_VERBS` in
-`src/aeat/entrypoints/cli/tests/test_config_profile_surface_inventory.py`); the
+`aeat config profile switch` and `use` are retired (`_RETIRED_VERBS` ); the
 surviving switch door is `aeat config unlock NAME` (`config/_custody.py`), which
 names session unsealing, not the operator's intent. Prior decision:
 `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` reasoned

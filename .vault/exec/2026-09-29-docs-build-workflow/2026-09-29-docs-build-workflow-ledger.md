@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#docs-build-workflow'
 date: '2026-09-29'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f1707c742336746f044633e0a6bb47555084c3e30f7eb9d8b98b230b1ce75af'
+body_hash: 'sha256:2724150d46bbe712d3ee78f423a4ccdd59c564686b2dadd2d94a954a10081179'
 related:
   - "[[2026-09-29-docs-build-workflow-plan]]"
 ---
@@ -29,9 +29,6 @@ related:
 - `S04` `M` `README.md`
 - `S04` `M` `dev/docs/apidocs/manager.py`
 - `S04` `M` `dev/docs/apidocs/__init__.py`
-- `S04` `D` `dev/docs/apidocs/__main__.py`
-- `S04` `D` `dev/docs/apidocs/cli.py`
-- `S04` `D` `dev/docs/apidocs/tests/test_cli.py`
 - `S04` `M` `dev/docs/apidocs/tests/test_manager.py`
 - `S04` `M` `dev/docs/tests/test_api_stubs.py`
 - `S04` `M` `dev/docs/tests/test_pruning_remedies_are_bounded.py`

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-persona-testimonials'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:384774fa2573dd2cf8aec756c2f5715872f02fa4879c527572ded1c8b37aefd7'
-related:
-  - '[[2026-06-30-cli-persona-testimonials-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:b7fd7414066b73f3d639a2c8b5f6c767a98ff98080b1db49a551e3a2df4e0861'
+related: []
 ---
 
 # `cli-persona-testimonials` audit: W05 checkpoint closure
@@ -30,7 +29,7 @@ The campaign closed the highest-risk Modelo 303 carry paths: first-period zero
 compensation, missing prior filing evidence, refund-request periods that must not
 double-claim compensación carry, and REDEME/product-policy wording. The latest W05
 review found no behavioral blocker in this area and the remaining low wording issue
-was fixed in `src/aeat/application/modelo/_filed_revision_observation.py`.
+was fixed in the retired module.
 
 ### ledger-and-currency | high | ledger import and non-EUR IVA diagnostics fail closed
 
@@ -62,8 +61,8 @@ short-circuiting.
 ## W05 Gates
 
 The touched-surface gate passed after one campaign-owned test-harness fix in
-`src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py` and
-`src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py`: service seed data
+The retired test and
+The retired test: service seed data
 now uses the same active UUID bucket as the secure-storage fixture. The post-fix
 gates included IVA/ledger/preflight saturation, legal verifier and legal grounding,
 live CLI schema/guard tests, live capture tests, Modelo/refund/calendar tests,

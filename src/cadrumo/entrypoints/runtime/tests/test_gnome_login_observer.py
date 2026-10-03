@@ -17,9 +17,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
     ("action", "existing", "expected"),
     [
         ("inspect", False, "absent"),
-        ("inspect", True, "installed"),
-        ("install", False, "already_installed"),
-        ("install", True, "created"),
+        ("inspect", True, "published"),
+        ("install", False, "already_published"),
+        ("install", True, "published"),
     ],
 )
 def test_native_setup_reports_only_the_exact_installation_outcome(

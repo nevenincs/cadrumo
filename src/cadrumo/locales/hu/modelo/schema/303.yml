@@ -84,13 +84,13 @@ modelo:
           dr303-155:
             label: Keletkezett ÁFA, általános rendszer új kulcs, 2. sáv - adóösszeg
           dr303-156:
-            label: 1,75%-os egyenértékűségi felár - Adóalap
+            label: 1,75%-os egyenértékűségi felár - adóalap
           dr303-157:
             label: 1,75%-os egyenértékűségi felár - Kulcs (%)
           dr303-158:
-            label: 1,75%-os egyenértékűségi felár - Adóösszeg
+            label: 1,75%-os egyenértékűségi felár - adóösszeg
           dr303-16:
-            label: Egyenértékűségi felár - Adóalap
+            label: Egyenértékűségi felár - adóalap
           dr303-165:
             label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
           dr303-166:
@@ -107,7 +107,7 @@ modelo:
           dr303-170:
             label: Új egyenértékűségi felárkulcs 2024-től - adóösszeg
           dr303-18:
-            label: Egyenértékűségi felár - Adóösszeg
+            label: Egyenértékűségi felár - adóösszeg
           dr303-19:
             label: Egyenértékűségi felár 1,4% - adóalap
           dr303-20:

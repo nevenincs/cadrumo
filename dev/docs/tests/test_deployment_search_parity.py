@@ -62,6 +62,7 @@ from dev.deploy.docs_site_languages import (
     localized_languages,
     site_build_environment,
 )
+from dev.docs.build_paths import docs_html_root
 
 from ..build import docs_build_language, resolve_record_injector
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, build_search_index
@@ -72,7 +73,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 # dev/docs/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
+_BUILT_HTML = docs_html_root(_REPO_ROOT)
 _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
 #: Record kinds the shipped index is required to carry. A kind absent from the
@@ -336,7 +337,7 @@ def _root_build_environment(language: str) -> Mapping[str, str]:
 def _root_page_corpus(root: Path, language: str) -> Path:
     """Write one root's page corpus, indexed under that root's own language.
 
-    Prefers the real localized root at ``docs/_build/html/<language>`` when the
+    Prefers the real localized root at ``CADRUMO_DOCS_BUILD_ROOT/html/<language>`` when the
     machine has built one. Otherwise it takes the real English pages and
     retargets the single signal Pagefind reads to decide a page's language --
     the ``<html lang>`` attribute, which Sphinx writes from the same

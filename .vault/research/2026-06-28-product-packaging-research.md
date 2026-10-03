@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#product-packaging'
 date: '2026-06-28'
-modified: '2026-06-29'
-body_hash: 'sha256:8bcdfafe44254e6df692e1a053222f8720d1107f17b259af2191a4954e8668e9'
+modified: '2026-10-03'
+body_hash: 'sha256:e95306edad9474177ffaa7c07e578f8fb6c36ae1c94b6c18de44ecdf4b827270'
 related:
   - "[[2026-06-28-product-packaging-reference]]"
 ---
@@ -64,7 +64,7 @@ project installs for container validation.
 Source locators: `pyproject.toml:20`, `pyproject.toml:70`,
 `pyproject.toml:85`, `pyproject.toml:93`, `pyproject.toml:132`,
 `pyproject.toml:136`, `pyproject.toml:168`,
-`src/aeat/core/i18n/_render.py:18`,
+
 `https://packaging.python.org/en/latest/specifications/declaring-project-metadata/#dependencies-optional-dependencies`,
 `https://hatch.pypa.io/latest/config/build/`,
 `https://docs.astral.sh/uv/guides/integration/docker/`.
@@ -72,7 +72,7 @@ Source locators: `pyproject.toml:20`, `pyproject.toml:70`,
 ### F3 - Bundled data has a real wheel guard, but installed-wheel execution is not yet proven
 
 The current resource boundary reads from `importlib.resources.files("aeat")`
-under `_data`, and `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`
+under `_data`, and the former source file
 builds the wheel with `uv build --wheel`, opens the zip, and asserts every
 tracked file under `src/aeat/_data/corpus`, `src/aeat/_data/registry`, and
 `src/aeat/_data/terminology` appears in the archive.
@@ -146,20 +146,18 @@ packaging implementation and the Linux import fix. In that clean checkout,
 `python -m dev.packaging.smoke_docker --browser --timeout 1800` passed at
 `var/packaging-smoke/docker-browser-20260629T074305Z`.
 
-There is also local documentation drift: `src/aeat/core/resources/_boundary.py`
+There is also local documentation drift: the former source file
 still describes hatchling `force-include`, while the accepted correction and the
 current wheel guard use physical relocation under `src/aeat/_data` with
 `packages = ["src/aeat"]`.
 
-Source locators: `src/aeat/core/resources/_boundary.py:27`,
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:1`,
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:76`,
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py:113`,
-`src/aeat/core/i18n/_render.py:18`, `pyproject.toml:70`,
+Source locators: the former source file,
+
+the former source file, `pyproject.toml:70`,
 `dev/packaging/smoke_core.py:237`, `dev/packaging/smoke_core.py:263`,
 `dev/packaging/source_preflight.py:1`, `dev/packaging/smoke_core.py:378`,
 `dev/packaging/smoke_pip_core.py:1`, `dev/packaging/smoke_sdist_core.py:40`,
-`dev/packaging/smoke_extras.py:1`, `dev/packaging/smoke_dev.py:1`,
+the former source file, `dev/packaging/smoke_dev.py:1`,
 `justfile:178`, `justfile:183`,
 `justfile:188`, `justfile:193`, `justfile:198`.
 
@@ -179,9 +177,7 @@ dependency. This is the correct operator-facing self-management surface to run
 inside a fresh-install smoke gate.
 
 Source locators: `justfile:10`, `justfile:13`, `justfile:24`,
-`justfile:30`, `justfile:37`, `src/aeat/entrypoints/cli/_config/_check_cli.py:47`,
-`src/aeat/entrypoints/cli/_config/_check_cli.py:55`,
-`src/aeat/entrypoints/cli/_config/_check_payloads.py:1`.
+`justfile:30`, `justfile:37`, the former source file,
 
 ### F5 - Playwright browser binaries should be provisioned, not bundled
 
@@ -197,7 +193,7 @@ dependencies as well as the Chromium browser. The product wheel should not bundl
 Chromium; browser binaries are platform-specific external runtime assets.
 
 Source locators: `pyproject.toml:114`, `justfile:137`,
-`src/aeat/application/provisioning.py:140`,
+
 `.github/workflows/aeat-drift-detector.yml:60`,
 `https://playwright.dev/python/docs/browsers`.
 
@@ -215,10 +211,8 @@ The clean install proof should verify the no-secret behavior: the core CLI start
 raw provider import or network traceback escapes. Live LLM calls belong to
 separate opt-in tests with credentials and usage controls.
 
-Source locators: `src/aeat/application/provisioning.py:57`,
-`src/aeat/application/provisioning.py:98`,
-`src/aeat/application/ledger/_llm_classification.py:322`,
-`docs/how-to/classify-with-llm-evidence.md:13`,
+Source locators: the former source file,
+
 `2026-06-13-llm-evidence-classification-adr`.
 
 ### F7 - Evidence attachments are runtime state and need install-safe storage checks
@@ -234,9 +228,7 @@ include a no-secret smoke that creates a temporary storage root and exercises th
 attachment storage boundary with synthetic bytes, proving the installed wheel can
 write/read runtime evidence state without relying on checkout paths.
 
-Source locators: `src/aeat/domain/attachments/_models.py:87`,
-`src/aeat/domain/attachments/_service.py:59`,
-`src/aeat/adapters/persistence/storage/attachment.py:1`.
+Source locators: the former source file,
 
 ### F8 - The missing proof is release-gate execution, not a new install philosophy
 
@@ -299,12 +291,12 @@ Source locators: `Docker version 29.6.1` from local tool output,
 `uv 0.11.10` from local tool output, local clean-venv proof under
 `var/packaging-smoke`, `dev/packaging/dependency_surface.py:1`,
 `dev/packaging/smoke_core.py:1`,
-`dev/packaging/smoke_extras.py:1`, `dev/packaging/smoke_browser.py:1`,
+the former source file, `dev/packaging/smoke_browser.py:1`,
 `dev/packaging/source_preflight.py:1`, `dev/packaging/tests/test_dependency_surface.py:1`,
-`dev/packaging/smoke_docker.py:1`, `justfile:178`, `justfile:182`,
+the former source file, `justfile:178`, `justfile:182`,
 `justfile:187`, `justfile:207`, `justfile:217`, `justfile:229`,
 `.github/workflows/packaging-smoke.yml:1`,
-`src/aeat/adapters/outbound/aeat/browser/health.py:1`,
+
 `https://docs.astral.sh/uv/guides/integration/docker/`.
 
 ## Recommendation

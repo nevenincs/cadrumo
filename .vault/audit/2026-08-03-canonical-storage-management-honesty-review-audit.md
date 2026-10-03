@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2ea4a614e042856e1f1c1d8f653086d16edf073a6901535d5ec96aa908017878'
+body_hash: 'sha256:2b765f620a02b73df4ec3322b8a8e62bae5c570bb7a440bac2da35c9f0f760de'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
-  - '[[2026-08-03-canonical-storage-management-plan]]'
   - '[[2026-08-03-canonical-storage-management-closure-criterion-reference]]'
 ---
 
@@ -281,7 +280,6 @@ would pass.
 ### plan-cites-wrong-path-for-a-gate | low | `S69` names a file that does not exist; the gate itself does
 
 **Claimed:** `S69` lands the materialisation-parity gate at
-`src/cadrumo/tests/test_storage_materialisation_parity.py`.
 
 **Verified:** no such file at HEAD. The gate exists and passes, at
 `src/cadrumo/core/tests/test_storage_materialisation_parity.py`. A path typo in the Step
@@ -343,7 +341,7 @@ The baseline records a **derived band**, not a measured size.
 
 The anti-laundering guard is mechanical, not merely prose. `build_limits` resolves
 `ceiling if actual > ceiling else limit`, so a subject over its prior ceiling keeps that
-ceiling and stays red; `dev/audit/size_budget.py` passes `previous=existing.modules` on
+ceiling and stays red; the retired module passes `previous=existing.modules` on
 the real `--write-baseline` path, so the guard is not inert. Proven by construction with
 a positive control: a subject at 1500 against a prior pin of 1385 regenerates to **1385**
 (kept, stays red) with a plain regeneration, and to 1575 only with an explicit
@@ -768,7 +766,7 @@ as "reproduced on demand" and that claim was wrong. Corrected here.
 What I measured: baseline the real log, run one test file, measure again.
 
 ```
-pytest src/cadrumo/core/tests/test_storage_taxonomy.py             delta     0 bytes
+Historical command omitted; its target was retired.
 pytest src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py   delta   258 bytes
 ```
 
@@ -1155,7 +1153,7 @@ and every gate run from an archive of that object.
 parametrised cases feed synthetic `floors` mappings and assert
 `unfloored_durable_formats(floors, PERSISTED_FORMATS) == expected` against **literal
 hand-written tuples**
-(`tests/test_compatibility_lifecycle_gate.py:177-210`). The expectation is independent
+. The expectation is independent
 data, not predicate output, so a wrong classification in `PERSISTED_FORMATS` still reds
 it. A companion, `test_the_enrollment_predicate_accepts_a_complete_freeze`, supplies the
 other half of non-vacuity by proving the predicate is not simply always-failing. **17
@@ -1354,7 +1352,7 @@ identity — so absence of evidence is the most I can offer there.
 
 ### bucket-database-file-hardcoded-its-shared-prefix | none | A file member re-typed the directory prefix it nests under, and a rename would have silently orphaned it
 
-`BUCKET_DATABASE_FILE` at `src/cadrumo/core/_storage_taxonomy_locations.py:562-563`
+`BUCKET_DATABASE_FILE` at the retired module
 declared its subpath as `f"db/{_PRODUCT_DATABASE_FILENAME}"` — a hand-typed `"db"`
 prefix duplicating `BUCKET_DATABASE`'s own subpath four lines above it, rather than
 reading it off that member. Both are `FIXED`, so nothing blocked a reference-based
@@ -1373,7 +1371,7 @@ the exact silent-orphaning shape, since nothing provisions a directory the file
 member still points inside — and both members moved to `database/cadrumo.db`
 together after hoisting the shared segment into a `_BUCKET_DATABASE_DIRNAME`
 constant, mirroring the module's own existing `_PRODUCT_DATABASE_FILENAME` pattern.
-Fixed at `src/cadrumo/core/_storage_taxonomy_locations.py`, full core/adapters
+Fixed at the retired module, full core/adapters
 storage suite green (1860 passed). Discovered in flight while closing the
 `BUCKET_DATABASE_FILENAME` literal-corpus batch; not a plan Step, since the plan's
 denominator should record intended work rather than defects found while executing

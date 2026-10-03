@@ -146,10 +146,6 @@ selector = { revision = "2022", id = "09" }
 fields = { formula = "modelo-303-dr303-09-projection", input_kind = "computed" }
 removed_fields = []
 
-[[revisions.2023.casilla_overrides]]
-selector = { revision = "2022", id = "18" }
-fields = { binding = "modelo-303-recargo-equivalencia-super-reducido-cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
-removed_fields = []
 
 [[revisions.2023.casilla_positions]]
 id = "109"
@@ -1414,6 +1410,13 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions.2023.family_overrides]]
 family = "bindings"
 selector = {revision = "2022", id = "modelo-303-recargo-equivalencia-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-recargo-equivalencia-super-reducido-cuota"}
 sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}

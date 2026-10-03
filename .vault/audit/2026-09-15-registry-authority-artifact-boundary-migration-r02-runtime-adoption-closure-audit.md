@@ -8,7 +8,6 @@ body_schema: 'body-v2'
 body_hash: 'sha256:f53c56b0ba4eb9db1dd0651ca3f53f56eab5d608ba5d8bd9af24dc33b6dbb538'
 related:
   - "[[2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit]]"
-  - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
 
 # `registry-authority-artifact-boundary` audit: `migration r02 runtime adoption closure`

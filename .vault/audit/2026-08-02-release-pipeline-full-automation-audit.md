@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
-modified: '2026-08-04'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:da54d7f31d3a013e0b4a0e891aa597328865cbb76582844394801a0f2535353a'
+body_hash: 'sha256:acb9a183fe6bfe70623ba537a5d2441f640a52a337a87e09cf43912303d04b69'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-adr]]"
-  - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
 
 # `release-pipeline-full-automation` audit: `fresh-context honesty review of the full-automation campaign`
@@ -62,7 +61,7 @@ and each was reasoned in its record.
 ### dry-run-candidate-starves-the-promoter | critical | A rehearsal dispatch permanently deadlocks the soak promoter, and no release ever publishes again.
 
 The rehearsal input defaults to true, the seal stage carries no rehearsal guard,
-and `dev/release/seal_candidate.py` calls its publish routine unconditionally, so
+and the retired module called its publish routine unconditionally, so
 a rehearsal mints a real sealed candidate draft on the forge. That draft lives in
 the deliberately garbage-collector-exempt namespace, which is correct for a real
 candidate and permanent for a rehearsal one. `select_promotable` then returns the
@@ -118,7 +117,7 @@ soaked candidate is not.
 
 ### acquisition-run-ids-are-dropped | high | The acquisition run ids never reach the sealed candidate, so the publication would be dispatched without its acquisition proofs.
 
-`dev/release/seal_candidate.py` reads the scoop run id, the homebrew run id, and
+The retired module read the scoop run id, the homebrew run id, and
 the claude evidence release from three environment variables. The orchestrator
 seal step sets none of them: its environment carries only the token, the
 packaging run id, and the rehearsal flag. The acquisition stage that produced
@@ -162,7 +161,7 @@ The emitter is correct; the wiring never uses the field.
 
 ### rehearsal-skips-the-stage-it-claims-to-prove | medium | The rehearsal bump stops after computing a version, so it exercises neither the seven surfaces nor the identity guard.
 
-`dev/release/version_bump.py` returns immediately after parsing the computed
+The retired module returns immediately after parsing the computed
 version when the rehearsal flag is set, writing no surface and creating no ref.
 The orchestrator comment claims the rehearsal proves this stage rather than
 skipping it, and the decision record claims the rehearsal covers the whole chain
@@ -194,7 +193,7 @@ reading the runbook is not told to check it.
 
 The plan Verification section states that a tree-wide search for the retired
 apply target matches only vault records and history. It does not:
-`dev/release/version_bump.py` carries roughly a dozen references to it across its
+The retired module carried roughly a dozen references to it across its
 module and function docstrings, mapping each new function onto the numbered step
 of the retiring checklist it replaces. The references are descriptive rather than
 instructional and the mapping has genuine explanatory value, so the substance is

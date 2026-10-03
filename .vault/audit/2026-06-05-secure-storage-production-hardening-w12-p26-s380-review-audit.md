@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:bdf8f0309a1c7d4f52ca5d21b9d6be1da3d34176511dcb914f0c2e391912d322'
+modified: '2026-10-03'
+body_hash: 'sha256:ac50c5d41d49d7072434c470bed544f4158cfb9ba3e986507d370bfafacdd49d'
 related: []
 ---
 
@@ -40,8 +40,8 @@ foundation decisions.
 
 ## S380-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py` passed.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py` passed with 11 tests.
+- the historical check passed.
+- the historical check passed with 11 tests.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S380 slice.

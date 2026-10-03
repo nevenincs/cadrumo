@@ -262,6 +262,71 @@ def test_a_linked_custody_target_refuses_with_its_exact_safety_verdict(tmp_path:
             redirected.rename(paths.bucket_dir)
 
 
+def test_a_linked_bucket_container_refuses_before_creating_external_lock(tmp_path: Path) -> None:
+    """A linked container must be refused before the service creates its lock."""
+    from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
+    from cadrumo.adapters.persistence.storage.storage_path_definitions import BUCKET_LOCK_FILENAME
+
+    with _published_profile(tmp_path) as root:
+        paths = bucket_paths(root, _PROFILE_ID)
+        bucket_container = paths.bucket_dir.parent
+        external_container = tmp_path / "external-buckets"
+        cleanup_root = tmp_path.resolve()
+        cleanup_paths = tuple(Path(os.path.abspath(path)) for path in (root, bucket_container, external_container))
+        assert all(path.is_relative_to(cleanup_root) for path in cleanup_paths)
+        assert not external_container.exists()
+
+        try:
+            bucket_container.rename(external_container)
+            if os.name == "nt":
+                import _winapi
+
+                create_junction = getattr(_winapi, "CreateJunction", None)
+                if create_junction is None:  # pragma: no cover - absent only on non-CPython builds
+                    raise RuntimeError("this Windows runtime cannot create a junction")
+                create_junction(str(external_container), str(bucket_container))
+                assert bucket_container.is_junction()
+                assert not bucket_container.is_symlink()
+            else:
+                bucket_container.symlink_to(external_container, target_is_directory=True)
+                assert bucket_container.is_symlink()
+
+            external_lock = external_container / _PROFILE_ID / BUCKET_LOCK_FILENAME
+            assert not external_lock.exists()
+            service = BucketMaintenanceService(bucket_storage=profile_custody_port().bucket_storage())
+            with (
+                pytest.raises(BucketDeleteRefusedError) as refused,
+                service.deletion_target_locks(
+                    root=root,
+                    bucket_ids=(_PROFILE_ID,),
+                    wait_seconds=0.0,
+                ),
+            ):
+                assert not external_lock.exists(), "the linked bucket received a lock before refusal"
+
+            verdict = _refusal_verdict(refused.value)
+            assert verdict.failed_condition_id == "bucket_maintenance.custody.target_unlinked"
+            assert verdict.evidence[0].values == {
+                "bucket_id": _PROFILE_ID,
+                "custody_target_unlinked": False,
+            }
+            assert not external_lock.exists()
+        finally:
+            junction_entry = Path(os.path.abspath(bucket_container))
+            external_entry = Path(os.path.abspath(external_container))
+            assert junction_entry.is_relative_to(cleanup_root)
+            assert external_entry.is_relative_to(cleanup_root)
+            if external_container.exists():
+                if os.path.lexists(bucket_container):
+                    if os.name == "nt":
+                        assert bucket_container.is_junction()
+                        os.rmdir(bucket_container)
+                    else:
+                        assert bucket_container.is_symlink()
+                        bucket_container.unlink()
+                external_container.rename(bucket_container)
+
+
 def test_a_missing_label_projection_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
     """A present capsule without a committed projection is not a deletable target."""
     from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path

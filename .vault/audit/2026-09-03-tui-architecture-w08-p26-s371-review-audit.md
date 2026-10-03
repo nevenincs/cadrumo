@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:697fcf4e268140ce340fb8f1c83725275daf28ea7fc356b43f1a5cec804edb3a'
+body_hash: 'sha256:81d586cf38c937fd2653b6c81e43eec73a01f8428e2496e47056962ebd5598a3'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]"
 ---
 
@@ -15,7 +14,7 @@ related:
 
 ## Scope
 
-Independent review of `W08.P26.S371` in `src/cadrumo/entrypoints/tui/devtools/home_fixtures.py` and its focused tests against the exact plan row, approved Home product research, live `HomeProjectionV1` invariants, and architecture, naming, quality-gate and sensitive-data rules. The review covered all seven required scenarios, typed immutability, synthetic-data safety, deterministic fresh construction, availability truth, candidate-sizing utility, locale neutrality, I/O, and operator vocabulary.
+The review covered all seven required scenarios, typed immutability, synthetic-data safety, deterministic fresh construction, availability truth, candidate-sizing utility, locale neutrality, I/O, and operator vocabulary.
 
 The scenario enum and immutable builder mapping cover ready, locked, stale, never-captured, unavailable, empty and blocked exactly. Every builder returns a fresh, equal `HomeProjectionV1`; nested values use the real frozen Home, action, period and calendar models. Fixed time/date values and generic fixture labels are deterministic and synthetic. Non-available scenarios carry explicit reason codes and no false rows or counts, while available-empty carries proven zero Ledger and Messages values. Inspection found no repository, filesystem, network, secret, locale-catalogue or frontend execution dependency. The required internal `work_unit_id` field is used only to construct `HomeDeclarationResume`; the fixture authors no visible WorkUnit wording, and candidate product code must treat it solely as declaration identity.
 

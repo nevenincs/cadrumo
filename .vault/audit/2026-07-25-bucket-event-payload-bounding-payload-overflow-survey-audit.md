@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#bucket-event-payload-bounding'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:907b31567d5928a1f6df9bf53df9e8be384a16d3117fed9df9265ec8cb67d337'
+modified: '2026-10-03'
+body_hash: 'sha256:2974c4b1cf612c1ca6f28f9352ca1934dd18bebf839e1334425a63389f9d9825'
 related:
   - '[[2026-07-25-reconcile-evidence-relocation-adr]]'
 ---
@@ -33,7 +33,7 @@ on `rg`, and on execution against the real model — never on a search miss.
 ### payload-overflow-tally | high | the shape has six occurrences, not four
 
 Two live occurrences were found that no prior pass had recorded, both in
-`src/cadrumo/application/ledger/_actions_split_merge.py`: the split event bound
+The retired module: the split event bound
 `child_transaction_ids` to a comma join of the child ids, and the merge event
 bound `source_child_ids` to a join of the same. Both are live in shipped verbs.
 

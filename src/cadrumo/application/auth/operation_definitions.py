@@ -40,6 +40,7 @@ from ..operations.capabilities import (
 )
 from ..operations.models import (
     CredentialFreeOperationRequest,
+    OperationIdentity,
     OperationRequest,
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
@@ -73,7 +74,9 @@ AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
 PROFILE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
 _PROFILE_LOGIN_KIND = "profile.login.passphrase"
 _PROFILE_ROTATION_KIND = "profile.passphrase.rotation"
-type ProfileRotationFinalizer = Callable[[OperationExecutorContext, ProfilePassphraseRotationOutcome], Awaitable[None]]
+#: Outer finalizers receive only the invocation identity, never the executor's
+#: supervisor-owned capabilities.
+type ProfileRotationFinalizer = Callable[[OperationIdentity, ProfilePassphraseRotationOutcome], Awaitable[None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -272,7 +275,7 @@ class ProfilePassphraseRotationOperationExecutor:
                         await context.events.effect(OperationEffect.UPDATED)
                         result_ref = await context.operands.put(result, written_at=now())
                         if self._finalize_rotation is not None:
-                            await self._finalize_rotation(context, result)
+                            await self._finalize_rotation(context.identity, result)
                         await context.events.phase("auth.passphrase.settlement")
                         return result_ref
 

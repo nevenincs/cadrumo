@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76dc8296a26338b541fc7b6b16547414a5dbbba5e307762cd072a3fd38c77a11'
+body_hash: 'sha256:3f919577c43755942cd1c55791ca64b4038e64d41e4cc204955ed3759823db3f'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -88,6 +88,10 @@ After explicit CC/AR/INCLUDE projection, both Rust crates build in Release; the 
 ### cargo-reuse | low | Identical CMake builds reuse artifacts but CTest transitions can rebuild native dependencies
 
 The first CMake build immediately after standalone CTest rebuilt ring and downstream crates, so its attempted unchanged-artifact assertion failed. Both invocations project the pinned tools and SDK paths, but Cargo also observes ambient MSBuild/CTest build-script environment differences. No fingerprint was bypassed. A subsequent identical CMake invocation completed Cargo in 0.11 seconds and preserved both the application rlib timestamp and SHA256. Reuse is demonstrated for repeated identical build invocations; optimal reuse across CTest/MSBuild environments is not claimed. Further normalization of non-toolchain build-script environment remains an improvement, not a passing performance claim.
+
+### zip-probe-gate | low | Rust compatibility now participates in actual ZIP acceptance
+
+Reviewed the CMake-generated argv projection, existing artifact verifier and new real-subprocess regressions. CMake remains the compiler/target/configuration owner; generated JSON preserves argument boundaries including Windows LIB lists. The artifact verifier supplies the extracted root rather than the staged-root cache setting, runs the fixed Rust test command after Python acceptance and refuses a passing result on failure. Reports distinguish passed application verification from standalone Python-only verification where it was not requested. The original archive and manifest hashes are rechecked before acceptance. Four artifact-identity tests pass, including probe rejection and manifest mutation; adjacent storage-contract checks remain passing. Ruff and CMake generation pass. Independent review found no concrete defect. Live combined verification is pending in build/windows-x64/application-cmake/archive-fixture, using the prior pinned ZIP rather than a freshly built package. The new fresh build attempt again failed the existing Modelo 232 registry bindings; no validation was bypassed.
 
 ## Recommendations
 

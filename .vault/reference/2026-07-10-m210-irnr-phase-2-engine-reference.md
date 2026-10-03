@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#m210-irnr-phase-2-engine'
 date: '2026-07-10'
-modified: '2026-07-17'
-body_hash: 'sha256:3b1f92723d48a575dda1a0f21eba39d5934375eb4e62bc366f0d1297724ba04e'
+modified: '2026-10-03'
+body_hash: 'sha256:d238303d5fc5737fea6c01aa9dacd16974653ab13a18f52732ed4c2df5b1322d'
 related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-research]]"
 ---
@@ -24,40 +24,27 @@ provenance-bearing observations before it can derive or filter a base.
 
 - M151 supplies the source-scope pattern. Its classifier emits a typed issue
   before any foreign or undeclared-source row can become an observation
-  (`src/aeat/application/aggregation/_impatriado_income_ledger.py:294`),
   retains the rejected jurisdiction on the issue
-  (`src/aeat/application/aggregation/_impatriado_income_ledger.py:105`), and
   constructs the casilla total and transaction provenance only from admitted
-  observations (`src/aeat/application/aggregation/_impatriado_income_ledger.py:433`).
   Its source resolver converts issues into calculate-time diagnostics and
   admitted rows into source provenance
-  (`src/aeat/application/aggregation/_modelo_bindings.py:461`). M210 should
   copy that topology, not its annual-only period rule or its single M151 base
   casilla.
 - M353's `per_grupo_member` is a different kind of grouping. It enumerates
   several already-persisted Modelo 322 observations for a cross-filer
   `previous_filing` fan-in
-  (`src/aeat/application/calculations/_binding_prefill.py:265`,
-  `src/aeat/application/calculations/_binding_prefill.py:400`). It has no
   operator-declared row set, no same-payer/rate/right validation, and no
   applicability to M210 rentas. Do not generalise it as the S06 solution.
 - The generic row persistence seam is deliberately a tagged union
-  (`src/aeat/domain/modelos/_row_models.py:627`) that
   `CalculationRevision` canonicalises before persistence
-  (`src/aeat/domain/modelos/_calculation_revision.py:138`) and stores as
-  `detail_rows` (`src/aeat/domain/modelos/_calculation_revision.py:477`). It
   can carry a new strict M210 row type, but its current input validator only
   knows M184 and M347 rules
-  (`src/aeat/application/modelo/_calculate_input.py:427`); it supplies no
   M210 grouping semantics by itself.
 - The current M210 engine is manual-input based. Its calculation bundle keeps
   decimal casillas, text casillas, bindings, relations, and detail rows
-  separate (`src/aeat/application/modelo/_calculate_input.py:126`), while
   `tipo_renta` specifically remains a text casilla
-  (`src/aeat/application/modelo/_calculate_input.py:307`). The verification
   expression runtime evaluates values, text values, profile state, and
   unresolved outcomes, not detail-row collections
-  (`src/aeat/application/modelo/_verification_predicates.py:337`). Thus a
   row-set operator needs an explicit typed input into verification; adding a
   regex over existing scalar casillas would be ungrounded.
 

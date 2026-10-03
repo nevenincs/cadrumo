@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1191f51b18f93bdee35866c04fa2a791ca86ababcb9d8c1520c593b6009b7456'
+body_hash: 'sha256:23e8464be263fe025dd65b1125c06270396506058253eb0da965599e9cc14f93'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -679,7 +679,7 @@ sites at a layer that has no application imports by design and cannot accept
 them.
 
 *Tier one — collection-time bootstrapping. Exempt, untouched, not a target.*
-`src/cadrumo/tests/_collection_storage_root.py` and its two conftest callers
+the former source file and its two conftest callers
 point the root environment variable at a process-private temporary directory
 **before any import can resolve settings**, so collection never resolves against
 a real platform root on a machine still carrying retired-product state. Verified:

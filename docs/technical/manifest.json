@@ -1,0 +1,1736 @@
+{
+  "snapshot_head": "3df7c143cc67663fadeacedb38a113df5aaac07e",
+  "scope": "Presentation of existing static analysis; source code and runtime not reverified.",
+  "body_hash_format": "UTF-8; LF; no surrounding blank lines; rendered citation transformations and architecture heading nesting included",
+  "documents": [
+    {
+      "source": "map/stage-2/STAGE-2-001.md",
+      "source_sha256": "6ab45cbed4117f50cdf09e48eb078086a808c45f6557ecbc892fdf3271877d77",
+      "page": "articles/001-package-namespaces.md",
+      "section": "article",
+      "body_sha256": "39bd33108bea9b72b2b473ef345fc91fa141b5cc7cd3839899432a474be059df"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-002.md",
+      "source_sha256": "410b5618f6b19e3f96994299ebab50dbe3907d23cd19aecfbb4c8b10086ef2a8",
+      "page": "articles/002-inbound-document-and-financial-adapters.md",
+      "section": "article",
+      "body_sha256": "e196c23fada8a2afc9a7b258dee1800670d4ce691260bd79d4f96b6eff137643"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-003.md",
+      "source_sha256": "559d8dd1b86509fcaec0cdd46f4d288607ad2506d8788fb2a98d5c6d2f621ead",
+      "page": "articles/003-financial-providers-receipts-and-notification-pdfs.md",
+      "section": "article",
+      "body_sha256": "9015eb61a6c93dee6b0e58734125e70465792149d9cc546b2e64e363e1000919"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-004.md",
+      "source_sha256": "41b309b3edf41915cd5de3d3a6fa3bbfbd4fb7a5ae20660ec8e18070df802565",
+      "page": "articles/004-shared-pdf-text-and-provenance-boundary.md",
+      "section": "article",
+      "body_sha256": "43456e2d89646f3825c81c7075e5f645bda67420c01b10bc7d20dd9fb4fbd5f9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-005.md",
+      "source_sha256": "00c19c5a1a6b7a33b7283279c3f755de61cb966e63fd391ce2052cd58ade2977",
+      "page": "articles/005-local-runtime-clients-and-native-os-bindings.md",
+      "section": "article",
+      "body_sha256": "b924231b921f55c80859d88c5254498354dd0f6df29e250ad9fc397873d140c0"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-006.md",
+      "source_sha256": "f8d2b1d61f81da5f7e89ff865a4d358847534767eeb41bae6906b6485fa1b524",
+      "page": "articles/006-local-runtime-transport-worker-custody-and-lifecycle.md",
+      "section": "article",
+      "body_sha256": "58c3745acbe183b86434ca10cb6473898164dfd8dc35d7567363247c430187bb"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-007.md",
+      "source_sha256": "1dee3501a22cf65c7f7f9782ecffa2cea2806f99e1f2e9c83126193c09ecf8e7",
+      "page": "articles/007-windows-login-task-control-and-worker-authority.md",
+      "section": "article",
+      "body_sha256": "9f161705479d72177149fe7ca9f9d9abf4aa1d523636b432ebe8fc0f21557470"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-008.md",
+      "source_sha256": "1fb11b841057c923ac44882ad5156291911a22198751375688f7f2d8c4bf1253",
+      "page": "articles/008-aeat-certificate-and-cl-ve-browser-authentication.md",
+      "section": "article",
+      "body_sha256": "2d01115e44b90a38c6388daa81e31602434fcf6a79d532ef76eb5fa9b248411e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-009.md",
+      "source_sha256": "e1712f4268b907dace67d24e802fdf1a1185a2d02717c25e430b370ac3be789a",
+      "page": "articles/009-cl-ve-permanente-browser-support-and-sede-read-primitives.md",
+      "section": "article",
+      "body_sha256": "b9f3bf1eb6174466cf326f326f6e773c41cb46359f276b7bfe13fad360827181"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-010.md",
+      "source_sha256": "5c5ba27ea754cd17dd93ce99559de47838285b27854ad4ee307d6a823b7437cf",
+      "page": "articles/010-censal-reads-filed-declaration-capture-and-groi-checks.md",
+      "section": "article",
+      "body_sha256": "fcf9fbd7d017e4ad0f25e81e5ddc08215dea8380a4e10cc5b7e721992f460d39"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-011.md",
+      "source_sha256": "2459ca58b45ca12e519cc4faec18604cb24b72144cc2313cadfd7f09db5cce67",
+      "page": "articles/011-iva-wallet-notifications-vies-checks-and-expediente-reads.md",
+      "section": "article",
+      "body_sha256": "808b250e0f99b83ec04cac9b8fddd78bafce951e91f4331e0c7fd84f22ff7e4e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-012.md",
+      "source_sha256": "c1d578e74ba51ab394cdf4fd1d018af98e504f49d19cdd8193c419156da0b72a",
+      "page": "articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md",
+      "section": "article",
+      "body_sha256": "d3f9327d9d2fe088478d78061035c0be68ba5103896d81318e13f0fc8774ef83"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-013.md",
+      "source_sha256": "7fe82b50d45c0c3f84ce1a16b7171b307ad749a4a1cffbaa6c0d03df647a2d00",
+      "page": "articles/013-google-sheets-readback-drive-evidence-and-google-credentials.md",
+      "section": "article",
+      "body_sha256": "59c0262dd366f472657afcc4ceb3d3c324ef783c62eff9bed9c1dcdf125a8a62"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-014.md",
+      "source_sha256": "b72a5fbf27ae35f1374827b3520b83b4ba23e164d67d7485b4159200d44a7587",
+      "page": "articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md",
+      "section": "article",
+      "body_sha256": "4f65941687a93ef406976991c5fbb2fd51081da9a495f622c6cbd3dbbb7339c8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-015.md",
+      "source_sha256": "79281d364dcaa6358144653f2363adc0afd9d6e3a377325e899d688398bec925",
+      "page": "articles/015-llm-provider-adapters-and-google-drive-storage.md",
+      "section": "article",
+      "body_sha256": "1dc2028a446a3b7954d880a4973ea4aa5444324c7d9452682cc14171468d70a5"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-016.md",
+      "source_sha256": "00980687cfbec32e65763b9b594afabb92c72833913b04f2e27529deef541672",
+      "page": "articles/016-local-storage-remote-ciphertext-mirroring-and-offline-workbooks.md",
+      "section": "article",
+      "body_sha256": "2425b8783cd1b7737f3461c1ebdc8c38ade4e2bdaa9a48b495f7e2ef3eb8dae0"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-017.md",
+      "source_sha256": "f12f7e73406647d9a35dba6abfb3e3661160cec9b7a96e9ab031bb69e1ba4114",
+      "page": "articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md",
+      "section": "article",
+      "body_sha256": "6f421ec6cca93a451d1e8e610cd62b9c797f712dde5449d64a2d0b33def35cce"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-018.md",
+      "source_sha256": "e5e009db551004b66c96f52abc1e259c09c690f2e72fa4ba589bd17a83de7857",
+      "page": "articles/018-profile-persistence-for-invoices-filings-and-calculation-evidence.md",
+      "section": "article",
+      "body_sha256": "b6ed5a1aeffac8bcb6de65f6ce86c37ff7f7cb494213d3e61ef9f75ec0b4ff06"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-019.md",
+      "source_sha256": "d49b0944b66c8d342633dd57ee0ffc65ffee4ad5369bbb10cdadbffa21106b98",
+      "page": "articles/019-profile-persistence-for-transactions-review-exchange-and-workflows.md",
+      "section": "article",
+      "body_sha256": "8f3f4e0eee1dc3c09b9928a9d87bbe7c3955b7535b6ab7b06f08a12c61470a57"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-020.md",
+      "source_sha256": "b71ac38c67166547b059730e55b50d9e5deb45ff09d837231f789487eb0cc65c",
+      "page": "articles/020-encrypted-blobs-bucket-archives-and-custody-filesystem.md",
+      "section": "article",
+      "body_sha256": "df090ef1ef0b68b5d75b733c5c16c4c0f4e411e63e0538f1ccc89dbfe0ec6adc"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-021.md",
+      "source_sha256": "a6677df892e3c01ed279804ed42db4e5cd1d99142ee7aab31689355bf105a5fa",
+      "page": "articles/021-supervised-key-derivation-and-automation-custody.md",
+      "section": "article",
+      "body_sha256": "1bef5d9a2fb188c3ece64b92b47d8dad85017f6edebe991b194bc9c095a8d75e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-022.md",
+      "source_sha256": "acb46c6802cc8baef69026d6a700a5449faf85b036f17747f2afd52e66138cc3",
+      "page": "articles/022-profile-capsule-lifecycle-and-custody-proof.md",
+      "section": "article",
+      "body_sha256": "71b929c603742f79cda2e24acdf8eb49f262bb20889cecb5ffb67371beef2ac1"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-023.md",
+      "source_sha256": "54fce7a94c7fe8b61b0f728bab233cb36767235d342d54660c31a3f8bbb74de0",
+      "page": "articles/023-profile-custody-primitives-session-state-and-secure-envelopes.md",
+      "section": "article",
+      "body_sha256": "a3a097503d968a219a0abdad1a305c23f315626b5eff0c528ee15a02376abeb1"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-024.md",
+      "source_sha256": "a6bcc07a553732dcd92672e9d27c7c8f50021b5bcbc5629c70a7535a92c7bfa0",
+      "page": "articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.md",
+      "section": "article",
+      "body_sha256": "210397e4142eb3b6eb01c76a6340adb180d99dd1ee1b2471f4ad18675d0585d9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-025.md",
+      "source_sha256": "bf5ecf40dc6827aca9aba86b7fd838f4cab4355e530dd3227a3443118c3ae934",
+      "page": "articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.md",
+      "section": "article",
+      "body_sha256": "c9ce944c679ce7c2ee0d2c1969b4b2d70c1568df1ae91325502f561ff7e60e5b"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-026.md",
+      "source_sha256": "96ecf630b29777384688e27e2eb66cbc8dbf062fc34568a6c50b7fa1973c3942",
+      "page": "articles/026-configuration-reset-diagnostics-and-consent-gated-telemetry.md",
+      "section": "article",
+      "body_sha256": "91c70d93aef23a72c0f12955ee42b383eb58724d03163149cde8b4b462dc58c1"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-027.md",
+      "source_sha256": "196992aad8124ad07b4e5cefa231b2b4d38bddae9f288b7a66bc895a61eed47b",
+      "page": "articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md",
+      "section": "article",
+      "body_sha256": "7e389068d5f17ee2688b5478017e8665994851012adba5dee23e07d801739ade"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-028.md",
+      "source_sha256": "9a2b0e0291c7c6ca518917ed8c180e91cb9ba5e705257115b76ecb4069fdf5b2",
+      "page": "articles/028-runtime-admission-canonical-state-and-storage-route-policy.md",
+      "section": "article",
+      "body_sha256": "eabb8a360231a72b428224a5226b67286b2a52a0b3ae6023cc413680288177f4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-029.md",
+      "source_sha256": "d8484ff64a83faaaf657fd0d6c2fd7ce99c4c4f9b9ae05cfca86add6134a2276",
+      "page": "articles/029-installed-workbench-generations-and-workstation-checks.md",
+      "section": "article",
+      "body_sha256": "d7872cac7aebf4df3a5f82ce90686a11e336051a2e3dd108ad8539718b7977e4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-030.md",
+      "source_sha256": "69498f7b4574476d1e8ccfc7a7a82d029238433e135db78a2055da6cc09c222d",
+      "page": "articles/030-activity-asset-claims-and-aeat-sync-workspace-projection.md",
+      "section": "article",
+      "body_sha256": "7b8fd9113bbe0bb59cb519bfcc3eb28916bdecfa94456f256b9c90dc7ff4e7e9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-031.md",
+      "source_sha256": "5cd3b529e0b3f604b8466efe143ee6ff8eaf5ce17d47261dac001b6d5bcacb6e",
+      "page": "articles/031-aggregation-iva-screening-and-fiscal-evidence.md",
+      "section": "article",
+      "body_sha256": "20706faf2c1c172c40e02dc73a2c9d987eb3285dc725e54f4160dd4154bc1e80"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-032.md",
+      "source_sha256": "baf334939ba89e211e5fb4b4c9f88e1394f8337bdacdf9ab5191e2423ba99112",
+      "page": "articles/032-aggregation-sources-evidence-and-withholding-projections.md",
+      "section": "article",
+      "body_sha256": "d6303ea7e51c94c56b8c10a862b538f2225ea9509e285ee8c5dda6a7c044ce2d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-033.md",
+      "source_sha256": "a31251b7d30ec40fdd3ea737acd4ee1c025789a542121ff69b4ed24422def838",
+      "page": "articles/033-iva-ledger-filing-drift-and-withholding-arrivals.md",
+      "section": "article",
+      "body_sha256": "eb904e712a5f9d71c04bd6de56c6ac90c871f4186322f48a9a2afbf24fdc58e5"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-034.md",
+      "source_sha256": "1e1e1e5c787b0ae9a1b7fd9f45afb923004c03230dea6f89754931433f7e0e29",
+      "page": "articles/034-model-bindings-oss-ioss-and-renta-expenses.md",
+      "section": "article",
+      "body_sha256": "e4a706266457c96dcc9a3840e3e8def7729a2237f04d59ba71aaf7abce86167d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-035.md",
+      "source_sha256": "c211b1047d46dc6e423549eaf379299a4f32b86006e30bcbc9e7ce1c99c7f4a1",
+      "page": "articles/035-renta-ledgers-withholding-rollups-and-aggregation-service.md",
+      "section": "article",
+      "body_sha256": "0dd09aeaaf8b959e74c9d51bdf740aa9e848831327bc30d8d65c7e4ee22faade"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-036.md",
+      "source_sha256": "590a55535c142b04c4d8e8f145472e98c5ca1b8d0086d5117a0eb2e4fffd3c9b",
+      "page": "articles/036-source-resolution-contracts-and-withholding-capture.md",
+      "section": "article",
+      "body_sha256": "26a3e8900dc5f71f7b8aeb057652795c3d29fe40887b4d3725eac7b1ab2f38cb"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-037.md",
+      "source_sha256": "6223777f33befcec6ba6700f9b33a25e7c4375dcb177b3efccf7ccf4e8c97270",
+      "page": "articles/037-authentication-certificate-sources-and-diagnostic-privacy.md",
+      "section": "article",
+      "body_sha256": "8f971ac6b56427dd82605a8e1a7fac921bb40113e25fabc559917270c9b2d2e8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-038.md",
+      "source_sha256": "a95717402e2b08665ce130a85b8e807bf00215feb73b40fc65f4193c1dc18481",
+      "page": "articles/038-operator-authentication-session-custody-and-access-contracts.md",
+      "section": "article",
+      "body_sha256": "6881c4df811583e9a60099a40908cb6c1169aec1fa6ac7c66c9292eb2587a8cd"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-039.md",
+      "source_sha256": "703bc2fa7fb9fcedbcfe1b2a10370e760fdc456351dc0a84c889329c420d3c42",
+      "page": "articles/039-authenticated-session-lifecycle-and-identity-binding.md",
+      "section": "article",
+      "body_sha256": "c9fa62285d3e0c60d94e0cb5fb3c4455f69d113443dab1ded649283386354557"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-040.md",
+      "source_sha256": "0eb7487c9b8d2aa539f66b309b5c0e8e4f0a3fd23a306a0872fff7f6a8fb884a",
+      "page": "articles/040-capital-goods-register-and-bucket-deletion-assessment.md",
+      "section": "article",
+      "body_sha256": "bdbe5d4b4b0a73db3a7360d741b9cd3a97417ea1ae26596dfabc34ce251f53a4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-041.md",
+      "source_sha256": "ac46c01fe13f4c9e6f6b4180f1cdbdce2332507ed36b0de2a63f427712ff76c4",
+      "page": "articles/041-filing-carries-cross-period-clean-state-and-calculation-advisories.md",
+      "section": "article",
+      "body_sha256": "58c580c23c9b616d3be890a3227e22edb66a893ec3bc96fd8f51be04665414ed"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-042.md",
+      "source_sha256": "9352f005444d6a1b7680fca18e7a723561ae215d1914a4a787f15c26d6420aa5",
+      "page": "articles/042-iva-compensation-m303-evidence-and-annual-handoffs.md",
+      "section": "article",
+      "body_sha256": "5639b86868a3f8eaa14b3415ac4b63fd28f74d2fb7039cb99c6be1796b62909e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-043.md",
+      "source_sha256": "67682f33f229e343c2213c77f3811e5f27816ef3732d8e620ae5c8c3aad9f85d",
+      "page": "articles/043-prorrata-settlement-relation-prefill-and-row-set-reconstruction.md",
+      "section": "article",
+      "body_sha256": "90836a1c83e2151608c7d0a639bf82bbc133959c9bcb33204e92c43a64be38ed"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-044.md",
+      "source_sha256": "77f6e2de867efe5a1f262093070626a2f654ff078433cbc5d7989a451bc230c1",
+      "page": "articles/044-offline-search-evidence-bundles-and-export-boundaries.md",
+      "section": "article",
+      "body_sha256": "875d115f884a278d60564d3b921b2d309d07fcd22a0e4dac8e11f46591081488"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-045.md",
+      "source_sha256": "e5e57d846bd87c73420381fc83530acf668fbe6619888868157435e7bc0d1b7a",
+      "page": "articles/045-filing-draft-approval-and-local-export-pipeline.md",
+      "section": "article",
+      "body_sha256": "b0d67ced87c248b85d657f6cc82ef20f5dbdf2f5e94d164869dbef588d9fb46d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-046.md",
+      "source_sha256": "9e40998583bb2a32d1cf41dd84b9f4193089931297e06c1420ec11762de33d01",
+      "page": "articles/046-filing-envelope-integrity-export-parity-and-producer-values.md",
+      "section": "article",
+      "body_sha256": "0bdd70f84b821b68396927cbdf295a657d483e29c79edd4a6db7913f6b28a1fb"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-047.md",
+      "source_sha256": "cf6b12972cf5e67ea1144dc868d504ba0d1b4af8666323b8bd36bac964a7ed87",
+      "page": "articles/047-filing-producer-facts-repeated-record-projection-and-runtime-schema.md",
+      "section": "article",
+      "body_sha256": "8d9a3754d6a2b38c5cf07447a2ebf22ea7a135b7ad47d06f7a7657bc33694ae3"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-048.md",
+      "source_sha256": "f66c31ab1adb96d28a28aa2f912478fe91d5246d5c41c90367534f2a80047625",
+      "page": "articles/048-interactive-flows-and-profile-bound-inventory-operations.md",
+      "section": "article",
+      "body_sha256": "b116cd50f8b7c08a987ae22973f1839ebcd6b6a6aeed6d4f6bdbcec9e12d40b3"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-049.md",
+      "source_sha256": "c0441ee59f50aa6b883068050ab424f056b1ef93429007126fd19e8ce2f658d4",
+      "page": "articles/049-invoice-intake-catalogue-lifecycle-and-operation-boundaries.md",
+      "section": "article",
+      "body_sha256": "cf0cce6bfa7f18331970b3f69a0297796edf9b28737867ae8a5e70bc423291cb"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-050.md",
+      "source_sha256": "51cb248c50deeeb83e02026958d37835ae27a2920eab7491f0e831f0a1def311",
+      "page": "articles/050-invoice-profile-advisories-source-mesh-resolution-and-linking.md",
+      "section": "article",
+      "body_sha256": "5a2a141eeb711da8dacebcb896df1393c523a69c7287eb1708c65b3f13647aeb"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-051.md",
+      "source_sha256": "3f2afefc82d4040d4a62dfbbbbcca127dfc250b65bcd81c3bad53a2bfd6bd1b5",
+      "page": "articles/051-ledger-classification-import-export-and-lifecycle-services.md",
+      "section": "article",
+      "body_sha256": "77181214a6c6e21fcd9efdaa859ee62af083de81148cace24495b78d8c366918"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-052.md",
+      "source_sha256": "2e4a02fbf599493b4adf5b360dd5c724309f8d24d5d8fea9a50ca756ef3b79dc",
+      "page": "articles/052-manual-ledger-services-evidence-operations-and-batch-ingestion.md",
+      "section": "article",
+      "body_sha256": "a964232e151000f446316f5f246dbe5e2aff7ad006b6504677ccbee9f11f5cb5"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-053.md",
+      "source_sha256": "4e46a1689cf063afe8690ea4b8540ae4d4a62f21f439a46ec261f331c591c69e",
+      "page": "articles/053-iva-classification-assembly-confirmation-checks-and-readiness.md",
+      "section": "article",
+      "body_sha256": "e8dadb7a06f72b9860c52945c74984255f813d12d710ba378109cbcea272998a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-054.md",
+      "source_sha256": "c3f11f3c8e3bb0a372db171345c72422461c257785b0e9429597bda9b01166a3",
+      "page": "articles/054-confirmation-gate-counterparty-establishment-and-evidence-provenance.md",
+      "section": "article",
+      "body_sha256": "0d89c5ccc686d04d82a3cd306166657e3fbfd4a6207553b41647e2057f3865f2"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-055.md",
+      "source_sha256": "f1d6b6f3d55d97dd7698644608b5c75450e43d61384b3e0a2bd7646ef5e1cdce",
+      "page": "articles/055-evidence-custody-review-and-ingestion-operations.md",
+      "section": "article",
+      "body_sha256": "7d3064fd45603816d470d5674492a66c6f0072599f85147ff4ac83d60a3ae190"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-056.md",
+      "source_sha256": "5a1cbc42a467f80ae836c3fb4dae2ea4a169f1fa2978657362e3d0407abfa8ce",
+      "page": "articles/056-document-grounding-evidence-routing-history-and-import-export.md",
+      "section": "article",
+      "body_sha256": "abd4f3709ff80fa16958e26ea8f03113272bf31e9529bb4b4dac994c20df9f8a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-057.md",
+      "source_sha256": "c63a804152fe46c3c227845553fb3987ab59bfe5700462948852d981073d2aa0",
+      "page": "articles/057-invoice-evidence-extraction-and-reviewed-confirmation.md",
+      "section": "article",
+      "body_sha256": "d7a9aa50b246f480c1da6da678d2e0bb17fc8781073a3daaf2176d37b0b34e8b"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-058.md",
+      "source_sha256": "4f51cefe8cf6c347807d5222962a34ae20d6c4586de48b42faefd213e3773040",
+      "page": "articles/058-deterministic-invoice-labels-and-core-ledger-surfaces.md",
+      "section": "article",
+      "body_sha256": "b22a065f696dd5955642376df666fce6505972b85ea123c00abc2fba7d48ba8e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-059.md",
+      "source_sha256": "7323e6a7350e4e6d5a130d8ef3ce23608c2e4a71f563847cf215fdc4a9387839",
+      "page": "articles/059-llm-ledger-review-diagnostics-and-merge.md",
+      "section": "article",
+      "body_sha256": "c95926f62f1c41677927fd84d1d307548e10af97bdca2711d3a8bb1605d2cc62"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-060.md",
+      "source_sha256": "a044fb567a55d5e27e3ecb8ed0d8d23773d5f90a8169ff706e98239846d07d08",
+      "page": "articles/060-ledger-contracts-attribution-readiness-and-ratios.md",
+      "section": "article",
+      "body_sha256": "b7db08fb8566c5ca14869d7bc87da3cdaeaf2c59bc3fd3a4e427e38cef555466"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-061.md",
+      "source_sha256": "03118b3ee87229cc290f7445c4813e8101ac0683d6193b99d106b4883ffd3005",
+      "page": "articles/061-ledger-operations-rule-application-and-filing-readiness.md",
+      "section": "article",
+      "body_sha256": "3bbaeb785deb6bede28c5e3f292f0bbfaffd99c9139455493b87af0c14f5db0b"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-062.md",
+      "source_sha256": "bd5c0cb8f9080cc7abc4226aae273fb84ea5aa7eb431884f554ed8b0051ca89f",
+      "page": "articles/062-ledger-workspace-projection-and-read-boundaries.md",
+      "section": "article",
+      "body_sha256": "5968cea2fde7301a4cd55d568cc7261c2aa544fff5f2d4a5dc57084edbd48f68"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-063.md",
+      "source_sha256": "87cdeecb523d88b74e309a0bdbf9df0b1cceb2bbed06f149c00a3d8d5b305e2d",
+      "page": "articles/063-live-snapshots-and-filed-data-capture-operations.md",
+      "section": "article",
+      "body_sha256": "7358c1544e55b41cd48a177c594310456b89bb6aa3a9279ae3655a166c61d442"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-064.md",
+      "source_sha256": "4c1cb676a9cfde7883aca013871a8795c6297af83fa17aa7861cb391a0c7b8b5",
+      "page": "articles/064-filed-declaration-capture-evidence-enrollment-and-history-sweep.md",
+      "section": "article",
+      "body_sha256": "b654da5eb06b745e8c95aac22d4582d3f077b91beec0b69b15dc7302076b0239"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-065.md",
+      "source_sha256": "24de7a90250104e5b12492f53ff32c8ba71de9f535c77d5b5c44cec3dbe3eee9",
+      "page": "articles/065-iva-receipt-and-notification-evidence-surfaces.md",
+      "section": "article",
+      "body_sha256": "d115ec9d086dee167c02438f8088682acb2b0399f65b6d23ca3bb7caa9142c9a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-066.md",
+      "source_sha256": "03686952adf704d13a06faca9fae6febc55b37462441e7a775fd2e23ae6b529a",
+      "page": "articles/066-notifications-verification-and-shared-live-state-contracts.md",
+      "section": "article",
+      "body_sha256": "def8dc3e0a76f8d3b34daf9cf84981d6f8c595f5746e585b15038b62b67bb53a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-067.md",
+      "source_sha256": "0f9fddadb63dde0821a5e77ad45ba5cc45ed30e90b21be1904d7033f079eeaf4",
+      "page": "articles/067-modelo-calculation-preparation-edits-and-evidence-gates.md",
+      "section": "article",
+      "body_sha256": "7828c69d44baf877ebcda949b085b1ccf941e92e3f58d51968e7fcef8d4db027"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-068.md",
+      "source_sha256": "ccb38e701ab06de81aaf212abd7ca14a0f27b362f1aa0c835f5d71ed2ca64108",
+      "page": "articles/068-modelo-reconciliation-advisories-and-work-projections.md",
+      "section": "article",
+      "body_sha256": "3bc1f1ab3e1f5d9fe0e7c5bc1a95f2e14a4c884ac3cd3034f16425021b9d1899"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-069.md",
+      "source_sha256": "61943e4d42ede920bbb46cac1069c3e741436bad23870d569494792660626659",
+      "page": "articles/069-aggregation-operations-amendments-and-profile-bindings.md",
+      "section": "article",
+      "body_sha256": "fcef55acfa784d6d5ebfc552f4e982cc3227d22bd14e44026311ed9562264fab"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-070.md",
+      "source_sha256": "7786f8806e26a0ec502f0983eed965204ae443f335f70bc7646d68307e75a50a",
+      "page": "articles/070-modelo-calculation-input-and-persistence-orchestration.md",
+      "section": "article",
+      "body_sha256": "2415461e21f8582f5a18be1d22fa88e99412d18fd621082d3bba2c77ac40bcec"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-071.md",
+      "source_sha256": "53eff48aa313a6d22888616e357b4e021373cd86698117b265be4bbb08812483",
+      "page": "articles/071-calculation-findings-reports-and-pdf-verification.md",
+      "section": "article",
+      "body_sha256": "c82074d7cd9884cfb64b0411bbe9988f03cf2001c14cf1fabb9755174e034213"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-072.md",
+      "source_sha256": "54a5b24ee723c9df6fd997cecf631e47c0540f87cedd99af764bd071cf8f58f4",
+      "page": "articles/072-declaration-projections-help-dependencies-and-edit-admission.md",
+      "section": "article",
+      "body_sha256": "1f2f39a9e055711aaf6ffb0f80082b44774b65b52c4f9a2dad1e2a342dd79fcd"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-073.md",
+      "source_sha256": "d21f4a0c7df2d229b3f25fd626cc7f0f75b8e69a90035ec4f081508df57cac75",
+      "page": "articles/073-edit-value-contracts-and-modelo-export.md",
+      "section": "article",
+      "body_sha256": "2304d3b0299980d1841612118635545482daca36267b75be6188ac18b109e4e8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-074.md",
+      "source_sha256": "1b3f4f51c50eca49cc38f9c37506c3717c8c41473721f76e9828ea40d808cff5",
+      "page": "articles/074-external-filing-evidence-local-filing-and-filing-views.md",
+      "section": "article",
+      "body_sha256": "426084337eb72b0f93c052ab677bf44d7ff132799c2e50b3678df6555debddf8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-075.md",
+      "source_sha256": "a9d6364d603c1a24a0805f7d953476998080e863a0d138654756991cdc26403c",
+      "page": "articles/075-modelo-history-invoice-withholding-capture-and-iva-wallet.md",
+      "section": "article",
+      "body_sha256": "9f343001515f7ae6efee65fbe64a3dbbd20c50e20d8cb0f2c8e99ae991c7dfcc"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-076.md",
+      "source_sha256": "c0f5f6279fc844a7a9fda89cb97e93f0b6154bbfaa694d8d839701cd5c925040",
+      "page": "articles/076-local-observations-m036-records-and-m145-communications.md",
+      "section": "article",
+      "body_sha256": "fc26f58d2a57749e50123318868694fc5139911f32cdd306056e6995ad68b78c"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-077.md",
+      "source_sha256": "382d2fc42dfbbb3629a8ed8c20eb12d81bb627b5a71e02b532ef42bb29ced8ca",
+      "page": "articles/077-tax-evidence-private-previews-and-spreadsheet-operations.md",
+      "section": "article",
+      "body_sha256": "31232b71c2d8393b98f4e57c054e42c62034cbd0826bbc12a0e8a26c61120b0a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-078.md",
+      "source_sha256": "4ff7d11e291a6d750489927ef65ab8cf613cc4cca87e8fb16f6f3cfbe88d6723",
+      "page": "articles/078-supervised-filing-lifecycle-and-operation-contracts.md",
+      "section": "article",
+      "body_sha256": "24bd413bf8018ada0bf0b602e19c173736b0f90d48e15eee667d484ed40852d4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-079.md",
+      "source_sha256": "f9d8ccd9e11aa4f965fc30102382b43547953b97afef314256129054eb7d47eb",
+      "page": "articles/079-profile-derived-bindings-and-filing-readiness.md",
+      "section": "article",
+      "body_sha256": "373d9b1e862cc88c858d2c005fdaf810a723aff815233a3e303d33b3194f0154"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-080.md",
+      "source_sha256": "d04735d465b5de1d5a72365b1682573cb3ce008d5ef5df871c1757cd8b73cb29",
+      "page": "articles/080-modelo-projections-queries-quickfile-and-recipient-encryption.md",
+      "section": "article",
+      "body_sha256": "9b9e637d05a5b86e1ecb582badf7e070d42b246c29003c9533dc109e9a2daf1d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-081.md",
+      "source_sha256": "b0bf80754447086a2d8f26f467c67cc88875538a5377bfe8ef0c2a94cc98e20b",
+      "page": "articles/081-reconciliation-filing-disposition-and-accountant-review-packages.md",
+      "section": "article",
+      "body_sha256": "0917ba00dab956cb3ee3f6f8bb0641b52c9348ee89397ecdb14550b132bf1ae2"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-082.md",
+      "source_sha256": "cf44a11a5754fb9b1ef9baf4edc638565fefdfa0194d19b7a913fa6823511d0e",
+      "page": "articles/082-review-package-exchange-and-modelo-revision-persistence.md",
+      "section": "article",
+      "body_sha256": "91630b00c9b2058e3641c8d28625f928e42ceb79b3441bf963d128a93cb3c6c9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-083.md",
+      "source_sha256": "5b0b801d7398d1523534751e23ac7c942949b391f3586ff4f9e2a86850223c2e",
+      "page": "articles/083-revision-selection-settlement-presentation-and-verification.md",
+      "section": "article",
+      "body_sha256": "4e77c569b9d2254bdeb3cdb6b2f068d5506000bbcc933e35339b6e0a8790449a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-084.md",
+      "source_sha256": "952fd0d58f47242092c3ba1699c5dcd5927429ffcd2cf9a9083d47933ad32876",
+      "page": "articles/084-cross-period-checks-verification-reports-and-work-addressing.md",
+      "section": "article",
+      "body_sha256": "e73f53f1564cbfe74b2a2bb4ee8cc2c7e1af2140887bf7a566397e0cedd249a7"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-085.md",
+      "source_sha256": "d31aee54ef0edced6e73f3a29e9fff25aa6a11cdbb9be71b69e8a7aeaef2bf03",
+      "page": "articles/085-work-creation-form-editing-and-inventory.md",
+      "section": "article",
+      "body_sha256": "ab497e08be1ad774d56caf0902ddb995cb95df70f71f31f33ab578af16b3dc31"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-086.md",
+      "source_sha256": "2bcae33040eec5f5c1f9759f6c9ae4940b12aa4009678f7da9475be69632b7cc",
+      "page": "articles/086-work-lifecycle-review-wizard-and-workflow-gate.md",
+      "section": "article",
+      "body_sha256": "29e9c57a3f00bde5eac726d5a690c18688710e387b7d515f0969bd8920686618"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-087.md",
+      "source_sha256": "091b2a7dcfcc3775323d6bba6a3a1a4233bd3c74766b0226d69bd4a115175664",
+      "page": "articles/087-modelo-workspace-read-projection.md",
+      "section": "article",
+      "body_sha256": "a5731162f381faae67486c4538cd9f0d08dd040ad1fa759948f4248d1ddb7b20"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-088.md",
+      "source_sha256": "9c34ac97606bffa1a61c95bd63f88a4f5fc9933b61fd2825dd8a8c8bc9ec6ca7",
+      "page": "articles/088-workspace-producer-contracts-and-capture-ports.md",
+      "section": "article",
+      "body_sha256": "3afa7b36700952a6451c9c4f8bbfff869d69ca432f8d184131258c8ff11e5e48"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-089.md",
+      "source_sha256": "09cf92ada527c26b121c77e704c9473736a14d747f80581160c7ba2ef7a16f3f",
+      "page": "articles/089-durable-operation-execution-access-and-public-projections.md",
+      "section": "article",
+      "body_sha256": "134bbab922a0176f9414a85ea1d8484300f5ad0e0bb917413109f576c535ec86"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-090.md",
+      "source_sha256": "72fe5d75750e0fcf7cc1804ed984b54bdf8765c103016a79d45ee464d600c7a1",
+      "page": "articles/090-operation-contracts-observation-and-transient-operands.md",
+      "section": "article",
+      "body_sha256": "2d8bb464bde179773c6941c46f40d8bd5832367a4681a4d51bc58ccd44541454"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-091.md",
+      "source_sha256": "b8408d7e50b5f2394772b856dd8aa3cf624846e59ab4486f20ce983934859742",
+      "page": "articles/091-operation-authority-registry-and-private-input-custody.md",
+      "section": "article",
+      "body_sha256": "93ef768a6c8c123b2eea89a1404cae75d6a72571716d74524d401f1644b07ba6"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-092.md",
+      "source_sha256": "a7a7f26a865e8b89ed6e4343a103f2f47d4a86fa6d08442a3d41f3302d47a53d",
+      "page": "articles/092-operator-action-and-command-surface-contracts.md",
+      "section": "article",
+      "body_sha256": "5660bc0d58d86436c0e813580590aaf8bf9ce9a643e6e9f2fe5398c2ed301918"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-093.md",
+      "source_sha256": "fb431e3682e4db445ccced1639a517054de78f677a46f2f5760660f69c52366d",
+      "page": "articles/093-overview-calendar-filing-evidence-and-readiness-views.md",
+      "section": "article",
+      "body_sha256": "be10215e926c091518be3f5bf7baaddbcf4986480c5bd0b5f0022322631ebc75"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-094.md",
+      "source_sha256": "f752fc7cad4465d89414ca1e4357db4110c0845f4eafc9319d4168370fe3f5db",
+      "page": "articles/094-overview-explain-home-pipeline-and-registered-read-projections.md",
+      "section": "article",
+      "body_sha256": "1134d2afb7f4c911cf52791e07abe71c31404c3f6d4281bc3ed198380b88ee77"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-095.md",
+      "source_sha256": "8345d1e2416f92d52f178f74ddfc4a9b619bd4d0eb7cd74e232bd56a7f316409",
+      "page": "articles/095-profile-scoped-iva-prorrata-register-operations.md",
+      "section": "article",
+      "body_sha256": "04fe6f03e0efe37fa9e0020f7a2e8d431edf6c37c993bba263f9c224ce2a7019"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-096.md",
+      "source_sha256": "1002f7f9911a6f6b69d4a79506054dd22927b0856b312e0ede1a4d0508869c90",
+      "page": "articles/096-unified-review-queue-and-local-runtime-contracts.md",
+      "section": "article",
+      "body_sha256": "0e968801099b04129c957f1d4349a4ff2cd44c487a13a9e4d5d4a09bc88e6eef"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-097.md",
+      "source_sha256": "16a21b885020fde74940335d8b771e5f46710c6efb44c3a0f0827d6ced0a141c",
+      "page": "articles/097-ephemeral-cross-workbench-search.md",
+      "section": "article",
+      "body_sha256": "67237045200b1b3ba7c568a2446b725f76b3e34e3f5efeae03dcece3da8dd637"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-098.md",
+      "source_sha256": "3b22d6cd8d7a3c59604f52eb6eef6d6a15c900044dd7e16a81fbae63c28b221c",
+      "page": "articles/098-registry-backed-calculation-workbook-plans-and-parity.md",
+      "section": "article",
+      "body_sha256": "3956b05ce1255ac6ba972afeb59d33383195c5ef0eafab5c97efcb07c7f1ac44"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-099.md",
+      "source_sha256": "73d029c0658d2153e33675ab9f4a255f1f5e322265f7c5f0cf795384e6847e6c",
+      "page": "articles/099-workbook-materialization-and-sync-run-provenance.md",
+      "section": "article",
+      "body_sha256": "44681ee48cf2169174573d0ada2f491e1a69d7acff48248eb78e869e4e8a2ae2"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-100.md",
+      "source_sha256": "fbe304581a4806192d02fb9ebd7fd7fb651b2bf6e4720acdc75b88835602612f",
+      "page": "articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md",
+      "section": "article",
+      "body_sha256": "f6d89c3cc9e219472001dc0e911d4f5a0c6d327f75590417eb14aa483b09a8f6"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-101.md",
+      "source_sha256": "a263a2fb3e57cc411b4998f99242ff3b400f60c51890d247ab99322cd22220e0",
+      "page": "articles/101-profile-access-automation-custody-and-portable-exports.md",
+      "section": "article",
+      "body_sha256": "e8a7229b086460b13fc59a8974e60aa22510f6787c285075d3e129b0a72af141"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-102.md",
+      "source_sha256": "09a102210ffbffaa1356a6ec08bb5c17c4f6fb6e83d1f72c71dde43c29cb0eb5",
+      "page": "articles/102-encrypted-profile-custody-and-censal-workflows.md",
+      "section": "article",
+      "body_sha256": "6b4a71d3136884982c8bc784008da76027db4082693dc1792827c99fe8b62455"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-103.md",
+      "source_sha256": "ad09c4c000627ca4358e6d542ace456cba78ba1edfdb9812ea8910419f4ec139",
+      "page": "articles/103-profile-custody-transactions-and-connected-configuration.md",
+      "section": "article",
+      "body_sha256": "71f5a62659f5c5cd3e1e4d7a832e421f6c751a30775bf240bef1e62f4bf40ebd"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-104.md",
+      "source_sha256": "0eb091c9486776240771e88221df1499c72cff06d127688424b277731cd3c8be",
+      "page": "articles/104-profile-login-maintenance-operations-and-history.md",
+      "section": "article",
+      "body_sha256": "be042299c3e1e7be08a3ff8e9bde2e919bb4a996406b090f43f085ca9661ff2e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-105.md",
+      "source_sha256": "e6ce029432b9a72f516e241df9250456e55435696e06667bf748eba626fb2d99",
+      "page": "articles/105-profile-facts-registration-recovery-and-session-selection.md",
+      "section": "article",
+      "body_sha256": "085de5ed50efcf7b03319b0e2c8ac8440c3c528185a6370e6548b4e70f1c36f9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-106.md",
+      "source_sha256": "734975088b808c57c30c69ee96efa7fb26d1e5950753902091ba91ddce1fd764",
+      "page": "articles/106-profile-session-authority-access-leases-and-delegation.md",
+      "section": "article",
+      "body_sha256": "d61e2c9913fb04881c6670cd7a89bc3a6a1acbfdef44d6828350815ebc0759ff"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-107.md",
+      "source_sha256": "1fb79f9d7617a278af2596a62b99c416e5bcb0eebb67a4d26befcf1a6408629b",
+      "page": "articles/107-setup-wizard-profile-editing-and-command-construction.md",
+      "section": "article",
+      "body_sha256": "20284cab239350edc70959db01dc85f2817852f992f66b20e145f4b73758da40"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-108.md",
+      "source_sha256": "bbd7debb409ab38467321da1db6bf3a71d62c8cdc96227467d9b5382502fcecb",
+      "page": "articles/108-wizard-contracts-and-validation.md",
+      "section": "article",
+      "body_sha256": "e50dab9569fff27cd676a5c05abaaa37de5ae7ec943b8a2e496e8c14bd26e36f"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-109.md",
+      "source_sha256": "2964426904cb49db7aaf6c63b3a2988803545e8ab81263bcf1a23bfa008b5ade",
+      "page": "articles/109-workflow-execution-and-local-filing-orchestration.md",
+      "section": "article",
+      "body_sha256": "46be8398b1b5bb7584dbf5668186083f43bfa9a4831f03e568dc11946f14222a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-110.md",
+      "source_sha256": "67d5e9f198dcbd1083e0bbb2d9f99cc69d21c374ca510afc6d83783987204619",
+      "page": "articles/110-workflow-results-snapshots-and-history-disclosure.md",
+      "section": "article",
+      "body_sha256": "89839cd9027b2016770642ee062c72be768b2303a62acbcfb0e661ac1be1500b"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-111.md",
+      "source_sha256": "2b6bc01eb4c02ee2bbc2c67e0930fc80442a0a1797c0ab663b6ec5d39d81a94c",
+      "page": "articles/111-core-configuration-profile-selection-and-durable-writes.md",
+      "section": "article",
+      "body_sha256": "2e21bd5e9a286757647bc43142a98bd75a1a4dab141a2688cd1dea2e8e64523f"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-112.md",
+      "source_sha256": "cc75ba9455dd0a37e7fdd4a4940aac21804bfde7930d84392e2ef57bca20a4c3",
+      "page": "articles/112-settings-storage-routing-corpus-citations-and-credentials.md",
+      "section": "article",
+      "body_sha256": "70c6c593675c5eb524348e315faa8b552b0435d85b6f6c28a1c2ab0775cd6275"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-113.md",
+      "source_sha256": "45baa321a4385403e1bae22e8a29bf9d0756e28ace3b522f27931a53651910ff",
+      "page": "articles/113-external-service-constants-field-provenance-and-filing-producers.md",
+      "section": "article",
+      "body_sha256": "6f6edc923976032c061b151a5be23f634a409697ef6408b999eee7d2d8b7cd9e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-114.md",
+      "source_sha256": "cfa020c1b551a7edc158064fde61a6f48c1a71699906a356c03c15290fce71d0",
+      "page": "articles/114-filing-projections-workflow-state-and-json-output-contracts.md",
+      "section": "article",
+      "body_sha256": "9e646fda0ec57a01e0210309fcb3a31506267d838bf52f2b92f59debbc3ea3f8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-115.md",
+      "source_sha256": "98a2de049d06ce2cb5957b032990b059f66511f130afb2ab4c36ec34b6d29bc1",
+      "page": "articles/115-logging-output-privacy-model-selection-and-periods.md",
+      "section": "article",
+      "body_sha256": "7a15bd877a7f7ffe00da0325e2e5661a17b606eb2edb96b431f34d67320c7eab"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-116.md",
+      "source_sha256": "509b48392aae06df16f0065a8036d92049add1199b70b9e2af16b925d368e7c8",
+      "page": "articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md",
+      "section": "article",
+      "body_sha256": "c4105a95934644bfdbddd5e789f7f33a3d3fd7c4139adb0982d2b3fb3d2a9fab"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-117.md",
+      "source_sha256": "51ce385d0e08e539b6ce14a7e5dce66066d9402ad97f686c74900d72281cbfdd",
+      "page": "articles/117-text-normalization-legal-categories-and-validity-contracts.md",
+      "section": "article",
+      "body_sha256": "4726e02c5f5217c39631ca0ff07cf0383bea962b594e049004575bbf7f627f59"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-118.md",
+      "source_sha256": "a3c83f0be904565b39986af4681dd6f04d72f771eb939e96ae5649d2c6de9d6b",
+      "page": "articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md",
+      "section": "article",
+      "body_sha256": "53eb8b0ad71e5452ae9afdad5a33cab928f172132983da59c26c0305413b649b"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-119.md",
+      "source_sha256": "a775eb031cfa23458bb5bad56b2d001fb2731482712766fc025c10bf384c0513",
+      "page": "articles/119-error-contracts-renderers-and-record-fault-projection.md",
+      "section": "article",
+      "body_sha256": "40fc1f013c6b2f808963a54ef01570dde2151621dff9f9f347d7a1f37a098b2d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-120.md",
+      "source_sha256": "5cd4296cc773937206e490bf01ff736f238bd599516cca4563d7dc8f6ff83b93",
+      "page": "articles/120-error-registry-catalogues-and-severity.md",
+      "section": "article",
+      "body_sha256": "217aa556002e8855f179500e3f50af0c975c7a82c1ae609e7c7f880dfc522463"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-121.md",
+      "source_sha256": "8383419e8981a6221b4ea3b535d0cbad4c49793d51a2792d4625e89920f63234",
+      "page": "articles/121-localization-identity-validation-run-traces-and-date-parsing.md",
+      "section": "article",
+      "body_sha256": "ec19783a1f271eead75ec3f9e05bb478e25fb6b2fc3a2aa8fc0fab3db86c5104"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-122.md",
+      "source_sha256": "18cdbe8b014de1242f05f61b8febea33dd5bffbbdaa0ca5977437791e7a6e143",
+      "page": "articles/122-redaction-bundled-resources-telemetry-and-time-contracts.md",
+      "section": "article",
+      "body_sha256": "cb0e43e3f058231224c78a274f2a8f55635c756318b8fa3b86029ec22d2ad51a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-123.md",
+      "source_sha256": "62f8be447e9559f8e28a433687a290700e826557028b48d60b557b5148d52d78",
+      "page": "articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md",
+      "section": "article",
+      "body_sha256": "f5eb2e3b1c48b23d8b0eced5793410f1280284fc7052cf92fa4d781ccc2ee714"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-124.md",
+      "source_sha256": "ce0220e6938694fe66d859e68fc350569b1212f3ec8f61c98ca5f41a801860a3",
+      "page": "articles/124-registry-formulas-and-filing-row-materialization.md",
+      "section": "article",
+      "body_sha256": "774bafff99e7c06a9382c46b41d2e88ee97ea4084fe91b3037dfb640a0b90084"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-125.md",
+      "source_sha256": "e48402ef82b293cdac2bb3c366317a97cfbc6d5f57d492236ef042cda016c020",
+      "page": "articles/125-taxpayer-applicability-and-indexed-registry-authority.md",
+      "section": "article",
+      "body_sha256": "c28d97e7209a4a14cdd4fdc8a940e4a134a987c3731e552a878a41c7a102da43"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-126.md",
+      "source_sha256": "401babfc8fac96e25f1c10e6d8890d20c15a231937873d04aa2f65c5dde56734",
+      "page": "articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.md",
+      "section": "article",
+      "body_sha256": "cb3880dc8abfda4b4662249ab053abb0415f898c059ea4d21333f6138a54b0e8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-127.md",
+      "source_sha256": "185dca01e8ba45dc77bc475d7108aeadf584f4936c33065a5703122512b05131",
+      "page": "articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md",
+      "section": "article",
+      "body_sha256": "93e747c032e29788cf0d7bd5b22a5e6ab9d03c430f8f3c697237cee096681500"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-128.md",
+      "source_sha256": "4cbb752dae89256e40a3d5124e6dd1c653e57b8b8a056e163c93f8426da2bd78",
+      "page": "articles/128-governed-facts-and-export-conversion.md",
+      "section": "article",
+      "body_sha256": "7e479d90b149375f01b4f780929d8bbbe8f2015010345dc1a31caa57d93d8ee4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-129.md",
+      "source_sha256": "896354e8be45a74c1a1af9f56a1e48d9cc1824eab4abeb2a5309c6733bc18fd2",
+      "page": "articles/129-formula-evaluation-traceability-and-row-source-bindings.md",
+      "section": "article",
+      "body_sha256": "0eaab856aa0a2419c2b50554b141ac998a71ca262f5261ebbfdb6327acbff791"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-130.md",
+      "source_sha256": "76db47037b0446acfc91c9106e708b51db6eeb2c63b40ed5bc9283bd34291701",
+      "page": "articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.md",
+      "section": "article",
+      "body_sha256": "e08516dd350bb4b701902a710b02fb81323852d8d279920ac5377489a9dc9dfc"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-131.md",
+      "source_sha256": "a4347a301debbfa38c98803400153e5cf886441c2c2c9f106281b09f266c2317",
+      "page": "articles/131-ledger-binding-families-and-modelo-303-evidence-projections.md",
+      "section": "article",
+      "body_sha256": "3571155270feafb22fb007edaedc9466c75b9420dd8f1c3ce4ef64d1852f9d54"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-132.md",
+      "source_sha256": "93e54888e611cb0365c84435a8b00d5c401db9e9aa9cfe598a3aec4ebf79105a",
+      "page": "articles/132-modelo-303-projections-profile-bindings-and-registry-scope.md",
+      "section": "article",
+      "body_sha256": "d74877bd6a6b3b4e61d64bc690c93d540f8fb09ae888f8a4a958dff6b5060b32"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-133.md",
+      "source_sha256": "d16d736b08d7baf4abdd379716037c2c655b08d9e935f359cc8df2de7a9abd7e",
+      "page": "articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.md",
+      "section": "article",
+      "body_sha256": "997affa3d6c2423792dffee6589e1bba7d5e6a50c1c70503d1a6c99608adf3e2"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-134.md",
+      "source_sha256": "bba5cff758dca2151fa46e6aa917fbb8eba6ebd63ee8372ead6eadbe5e943b2e",
+      "page": "articles/134-withholding-bindings-revision-validation-and-registry-schema.md",
+      "section": "article",
+      "body_sha256": "ae48983ebf56fe7d3d38f56a04af3312160c37e640c985a5cdca22cdb123ce6d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-135.md",
+      "source_sha256": "6aaf4daddd061c57230b725031b0abb72877720916ad0521fb60b0f42dcf763b",
+      "page": "articles/135-registry-schemas-for-exports-extraction-forms-and-governance.md",
+      "section": "article",
+      "body_sha256": "df995c1885531b61506cd36e39b8fe581ba8b574b678c8d7038361d9bc4719c2"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-136.md",
+      "source_sha256": "bea34a85970c4252d8b498d16a41a51d7cb656a5f2b55cf3c201e70e42dc246b",
+      "page": "articles/136-casilla-verification-contracts-and-filing-snapshots.md",
+      "section": "article",
+      "body_sha256": "47dde88d25c726558812ce7c67f51507f8da676373e57605d381dd1b6cb83b6f"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-137.md",
+      "source_sha256": "4dcd3645e98253d65f57cc119617c4d85b9cc1e3f582fbe8da5cc62a64854b0c",
+      "page": "articles/137-revision-selection-withholding-aggregation-and-row-provenance.md",
+      "section": "article",
+      "body_sha256": "aab482a1ddf66a60e3b0c1d3e893587be0f2171b5680b70fe043f77332a945f4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-138.md",
+      "source_sha256": "4b1ebb105741411dd94cc8a785be26b68ac6ab2d61cac03b6b30de8ed8cb33b1",
+      "page": "articles/138-spending-categories-proportionality-and-census-projections.md",
+      "section": "article",
+      "body_sha256": "c63885340aafaca53621c861e8403b418e23d209b24cca3215504cdd011a7d40"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-139.md",
+      "source_sha256": "ae29233e5a358f51926c465445098cf16f7c048727a0b4dd9b43edbcdf5a27ee",
+      "page": "articles/139-taxpayer-and-family-domain-records.md",
+      "section": "article",
+      "body_sha256": "011c299f3d3dddaa012565fd93a7a57933d1bfd854b9cef5c7bd3886e718a37f"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-140.md",
+      "source_sha256": "c7550caf9dc919d0c3ed0daefa88ad020efe1622f6b96ec44ce808303c51d547",
+      "page": "articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md",
+      "section": "article",
+      "body_sha256": "a2dab7bfa93d149aa84357687ee083f1682b64da95c5babf464443cb7b4bf0f6"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-141.md",
+      "source_sha256": "18bedb660e6a6069f2e7579124aef4c335d2178e7c212bfbabc4a8792541e95c",
+      "page": "articles/141-deadline-currency-and-evidence-consent-domain.md",
+      "section": "article",
+      "body_sha256": "d03788e5474eaf4430d42d8c2e697f1345d9cd0b179549f8d24fb4042a78b52d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-142.md",
+      "source_sha256": "ada7d2d4d316279c98b693c38e98b9e684044cecd0d79a996825d1653cd896cf",
+      "page": "articles/142-filing-drafts-and-invoice-records.md",
+      "section": "article",
+      "body_sha256": "0e5023d8eff0fae4938176a8d1671e1195b8e500ad2ac5c63de2c5f49fc65537"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-143.md",
+      "source_sha256": "dfbb6750d7d0c0e72ba8cbc3411ae2cd0b5b193fc2ff61c10e5b4c42f0b7837d",
+      "page": "articles/143-iva-classification-and-evidence-substrate.md",
+      "section": "article",
+      "body_sha256": "f81527be8e518ce85a50b4aaa5ebafb65a8d39cd80d926723db3cc4b6c4cb535"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-144.md",
+      "source_sha256": "0a823cc70daa437e8b80647de827e62fca6df91474ecb0706400fe5e4b058e89",
+      "page": "articles/144-iva-rates-settlement-and-statutory-projections.md",
+      "section": "article",
+      "body_sha256": "28b9ed79d43ebc6b47215ddfe1722e7d177978beeb8cae3dc57c3a6e30a88850"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-145.md",
+      "source_sha256": "6d4318405b19b14c18fc1b3843c6d5b962826ba00bf26cf77d44cc5f87b6082c",
+      "page": "articles/145-iva-compensation-carry-forward-and-filing-receipts.md",
+      "section": "article",
+      "body_sha256": "59197b49dabb3ebceab334ac20181c8d908e7640bdbe4213eea7411dfff32b2a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-146.md",
+      "source_sha256": "ca5d3b4618e8d7267034a8dbe92231614ae9711a925a5a67acc30de1afaeb10c",
+      "page": "articles/146-modelo-calculation-evidence-and-filing-lifecycle.md",
+      "section": "article",
+      "body_sha256": "48c1c757ec83e4cf6a8d56db1319bb6d64420aa6f03e73e3d23d5fdc64cd1333"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-147.md",
+      "source_sha256": "372fa2a6b434e64aa5a9cb505b825f2554c41be32f545dfc62af6d6f798609cf",
+      "page": "articles/147-ledger-evidence-detail-rows-and-modelo-verification.md",
+      "section": "article",
+      "body_sha256": "5f83b7b18a86fa24200daf8175f5876fae43fc38338a4b4b7c8e9b7b1815241a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-148.md",
+      "source_sha256": "56fdd7af569b98f5a6e2b4b78b681630fa2076fb9721a2a869a02059168cd054",
+      "page": "articles/148-portal-catalogue-and-annual-prorrata-register.md",
+      "section": "article",
+      "body_sha256": "83f8037e994b7cf7f422fdab3d040323d6c1ef6eefd17865118a34ffe3d10fc9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-149.md",
+      "source_sha256": "694e2b17a4b7f9aeafbf5e86bb6e10015e8d6aa22dc01c5ba44f70b3602d7c10",
+      "page": "articles/149-renta-expense-rules-and-activity-asset-amortization.md",
+      "section": "article",
+      "body_sha256": "9cb0ef9745dbd6bde3a644a545d9f057b50ac16a83e193aff6a8d2aa143821b6"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-150.md",
+      "source_sha256": "a7b87479b5cb9c5aa8a23da5491853825c76bde2242f1b997015b690a5000f56",
+      "page": "articles/150-local-submission-preflight-and-audit-records.md",
+      "section": "article",
+      "body_sha256": "91917aa9d70f20cd6cea8a026f1e67a82daa5065d69b84e34d925b1f5c39f172"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-151.md",
+      "source_sha256": "9ab45719c401243c7a86d4e8735783442d0d02d28fba449864eed1c4fa46ed91",
+      "page": "articles/151-transaction-ledger-domain-and-classifier-contracts.md",
+      "section": "article",
+      "body_sha256": "650580602abd1e868cc084e91215c5372c7000a2b59a870ff5b485e73be905ca"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-152.md",
+      "source_sha256": "373b99dc0ad554602f7967c5ad646fb6ba2c687f09aac9de7f65eeb5825392de",
+      "page": "articles/152-transaction-mutations-and-registry-backed-income-predicates.md",
+      "section": "article",
+      "body_sha256": "31c1f4bd4b4bece71c92c712f17c92ca51d8ebb012dc8795b62c20ba2c18f1e9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-153.md",
+      "source_sha256": "5511748a873d8b13b8be2d91bd49aa46fb78d9c8a91079c3f260371dd4a06861",
+      "page": "articles/153-usage-ratios-and-user-profile-domain.md",
+      "section": "article",
+      "body_sha256": "81d18d02851265e171ee37b4d2d5b73ce113b1f6d5173950e891d6af8e314370"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-154.md",
+      "source_sha256": "38f3f660c08847501237195f471c8c434669718ae26c79e27002795b9780cbf5",
+      "page": "articles/154-entrypoint-adapter-composition.md",
+      "section": "article",
+      "body_sha256": "f4fb6d4bbd3a8c36c700f98911e71c6d8aced9b952e6b8859906d75bd6f8bef2"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-155.md",
+      "source_sha256": "1f4bb11dc0a76ee15f6d2ae1e7096e7bca398f2055068755cfa7020ccf695c3c",
+      "page": "articles/155-entrypoint-operation-and-read-composition.md",
+      "section": "article",
+      "body_sha256": "26459715c28867092dadb4cd7a3dc1a2cea23b809e7f9df9beb5fcdb8a5e4030"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-156.md",
+      "source_sha256": "b012af299a7b552f417fa302c20b489eff04a4ca56a2332c6a1acde46ca4957e",
+      "page": "articles/156-cli-command-contracts-and-operator-surfaces.md",
+      "section": "article",
+      "body_sha256": "0e7eee640a9ab280809064f8ce17f746220ab0a87bb1dd75193be28fabcd0364"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-157.md",
+      "source_sha256": "c66c4309c52f12e0afde9c7622d885de1ab2835f061b794341280ba8d260971d",
+      "page": "articles/157-live-aeat-cli-capture-and-snapshot-surfaces.md",
+      "section": "article",
+      "body_sha256": "d35bdc9d43c8414662aca0036d418d479dd62b28282557907e5e24e2d2c53394"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-158.md",
+      "source_sha256": "f639e69625a65e19fa2d3e5d56dcdaf8a4db58ed18d4abd26f6f5c0e298e6796",
+      "page": "articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.md",
+      "section": "article",
+      "body_sha256": "981a64c17cea4b4abb8ce5e6984e4a2959fabf0768dec5a798ee96a4786d0a26"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-159.md",
+      "source_sha256": "1a768cd00b16d4c988a4dbbfd94f7c3803d94c8f2c7e0bb6e92d6233c34e515d",
+      "page": "articles/159-ledger-invoice-and-document-evidence-operator-flows.md",
+      "section": "article",
+      "body_sha256": "3d9fc681d0ff2593ab19d76f6d8eb31ae5a3c77bf401a5ae3c6eecbfee87846d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-160.md",
+      "source_sha256": "83540adf7977ad075424da236fceef0f48893079ed4ac38888a691d1f69fd9cf",
+      "page": "articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.md",
+      "section": "article",
+      "body_sha256": "333012b542e0f6dde6b885412a5dbb16a71d77c2e26adbbfca22362832fed420"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-161.md",
+      "source_sha256": "63d46846f62018cee2e006d51e7406fd9a9f420a1f09b0caa0f5f86f1bc68362",
+      "page": "articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.md",
+      "section": "article",
+      "body_sha256": "b6d538e8000d7a3d83efcaf413aa8a2cb51f39d3440a6fdbb364c3de05693956"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-162.md",
+      "source_sha256": "c7fd4fa6e892f3411c98d9ee320095aee37576594a7ab6be8afca777b21b1b66",
+      "page": "articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.md",
+      "section": "article",
+      "body_sha256": "44a086e6bb3b542d08a8ca0ba4cdaeff199e4c6fb318c50b4a068268fc6891f9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-163.md",
+      "source_sha256": "660c6b42572c16a45164dc66b25c1b465dc2b7d518f47a1b3b9c7aa308a4ff2a",
+      "page": "articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md",
+      "section": "article",
+      "body_sha256": "79664885d6dec12c3280af73d1f714239bc414285677feb6df3285b24365b2d7"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-164.md",
+      "source_sha256": "21a51b7384312bd2223ad70d714f9a9b616fe8b4951027af9d9b98622f605f63",
+      "page": "articles/164-work-inspection-overview-verification-and-profile-authentication.md",
+      "section": "article",
+      "body_sha256": "907303979e84ab81d4f669590feae9b1c94c69651ca221c7a66e64c15c5b3c3d"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-165.md",
+      "source_sha256": "1ad192a8e2225d16659bc0248ac11445c078f2952006484efd5173c6bce69d15",
+      "page": "articles/165-prorrata-review-root-cli-and-command-authority.md",
+      "section": "article",
+      "body_sha256": "376214da93cc45aa8ce4a39ff8b7c6078ba7094850573f1581a4ba75bf36c4dd"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-166.md",
+      "source_sha256": "c1d62358ade57da63ae236e5050c96663c932ebacef1a1e1e8944826516aec6b",
+      "page": "articles/166-shared-cli-transport-and-profile-configuration-surfaces.md",
+      "section": "article",
+      "body_sha256": "1556d1098c689456ff6faf11c8de7241fb3b679d298bd07570a47bc0474ebe30"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-167.md",
+      "source_sha256": "329906ea6b42b1571130c69ba6024d9b2465df5f6d964f638de7fb056ea01649",
+      "page": "articles/167-profile-maintenance-repair-and-google-operations.md",
+      "section": "article",
+      "body_sha256": "85b07b2ff650b143da6b6a2d0713eb607dfdbea6b735fd0b509534fc999f24f9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-168.md",
+      "source_sha256": "a1f15a195ef780452be201a5ccd5ce57ece6c406448fb1cca73a134fcc2dbcc2",
+      "page": "articles/168-profile-custody-provisioning-and-runtime-configuration.md",
+      "section": "article",
+      "body_sha256": "20204ab568867ae002b8e02599331ec2eac9076266809212fb9575f91aab321e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-169.md",
+      "source_sha256": "51ba0bf834efddd8caa6fa241c8188778565041434651168aa9267162de52db2",
+      "page": "articles/169-secure-cli-input-profile-bridges-and-storage-controls.md",
+      "section": "article",
+      "body_sha256": "28dfcdb2ea2c26db0a208afe5e2675115468ad044a0af6b68ea994ecaa331340"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-170.md",
+      "source_sha256": "126023f5b0690b0bd8163ff4d63ef61fc8b94fe38bfeeec013955686fce25518",
+      "page": "articles/170-cli-error-handling-ledger-actions-and-modelo-work.md",
+      "section": "article",
+      "body_sha256": "556c851199720ad24c9c0cac09ed5cb7d0ea163f874695746fc3e0fa9ba828ac"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-171.md",
+      "source_sha256": "93fea5c3e36de0d2d6be6344e95eb01547922e77b0f8c7b25f6eaf394e05ea63",
+      "page": "articles/171-cli-period-registered-operation-and-ledger-bridges.md",
+      "section": "article",
+      "body_sha256": "fe6263f752b83189403130cc1eb63d590822d3900bb69eb8062eb831a3b87633"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-172.md",
+      "source_sha256": "54d10a78178bc04359f3a8bc752a2bcb2dc7c98d134479bcf13bfcaa1904e1bd",
+      "page": "articles/172-ledger-and-modelo-cli-operations.md",
+      "section": "article",
+      "body_sha256": "1b8c07fea83fae203e485a1bab6c2d8db1220b75a4d4cd188c8eb8a15fd0d4aa"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-173.md",
+      "source_sha256": "e9e28c2f5c25a054b27957113fe480412da9ba0559e777990732c12eb528015a",
+      "page": "articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md",
+      "section": "article",
+      "body_sha256": "0c1ec207ed0b658dabab0f76a8b8a168410408d1a03502027a9ccff9abffcde5"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-174.md",
+      "source_sha256": "e162c45d79b07748151f06368bb81648fd66c76059dfaa385b67de5bffba781f",
+      "page": "articles/174-installed-runtime-profile-host-and-worker-authority.md",
+      "section": "article",
+      "body_sha256": "1104c0899c248b9bafbbf54636e3e642c6bcf80b994911c427fc0ed14bff2894"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-175.md",
+      "source_sha256": "bbca80da0fa0c34d5dc67ab8d477ca5bed27e808f8ca6530dc92fa71edd571b0",
+      "page": "articles/175-profile-worker-request-staging.md",
+      "section": "article",
+      "body_sha256": "7dcc2ea1a741cab43da914bd2c3886423091aace13c30b3b7bf9cf7974b3f562"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-176.md",
+      "source_sha256": "a343fbe050be1f625621d508c1e173068581d249c03a6e9f45fe094bafe57106",
+      "page": "articles/176-textual-terminal-workbench-and-declarations-calendar.md",
+      "section": "article",
+      "body_sha256": "652d90425cab1ebf53bb24935d2b0f8d180cbddd7670688645c0a746d9cbb518"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-177.md",
+      "source_sha256": "fb2185924ef0a7f66c7a707abe77c06764d62505084a8a7916ae66e4ba848f0b",
+      "page": "articles/177-home-declarations-portfolio-and-ledger-tui-flows.md",
+      "section": "article",
+      "body_sha256": "4654e1e5c655ea35feb709eb881224f66c2971714f505e2aa650b88db3fa1bb4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-178.md",
+      "source_sha256": "51af8e3fdc2eaa01520129edec0df9bba19614d3278dc2109ca3b75387485569",
+      "page": "articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md",
+      "section": "article",
+      "body_sha256": "9cc52d019f82186f29ae3c5d2ee5c8c905a1401f897d8488b3051ea963a2655e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-179.md",
+      "source_sha256": "b28794c1542a9fcf10d879b1d123ed3517ebddf195770e7f0ef506d50129b5b8",
+      "page": "articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md",
+      "section": "article",
+      "body_sha256": "c127b68c3e215f429320b8f28b81d73242c898725162c4a39d067e05b2a11b24"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-180.md",
+      "source_sha256": "2c1ab9d2796ab2596ce79706cad31ff11c98e130c12ad43ce2cfb5c0310ad42c",
+      "page": "articles/180-modelo-workbench-issue-review-progress-and-navigation.md",
+      "section": "article",
+      "body_sha256": "dfaa9602cf2e867ae80a31482c4170a9acdd20c3f450e97ec7e749816b2e25eb"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-181.md",
+      "source_sha256": "709a0737513195f18aa4571891c0eaa3b7ed4049db7983b544f43333c61db086",
+      "page": "articles/181-modelo-workbench-editing-source-map-and-operation-flow.md",
+      "section": "article",
+      "body_sha256": "0ec3d2405800b613e65e13080105ba285ab8eb46c7db3eb7ff0520dd79ea317e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-182.md",
+      "source_sha256": "3519abe9f6d7b3efdfdb3c97dfb0042209cc9eeb4cef7fb125fe7471e9935f3d",
+      "page": "articles/182-supervised-operation-modal-and-profile-manager.md",
+      "section": "article",
+      "body_sha256": "16b675fa397892f3b0a15ee51d91f4fe468bcae1048000d68ceccd86b3a282bd"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-183.md",
+      "source_sha256": "920c4559cf76a3d14ba9428505c8b458dc719ccd88f4f01944ba130e60830de2",
+      "page": "articles/183-runtime-tui-access-workbench-and-secret-entry-flows.md",
+      "section": "article",
+      "body_sha256": "9010621bd0772f4b8056785cb7dbf5738b79550ae0c24220d177a50ea3af1190"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-184.md",
+      "source_sha256": "ecd47b2ab14eef6ea62568384cef6108b2b411601a1a17fe1ce396e98be4e53f",
+      "page": "articles/184-profile-registration-recovery-and-runtime-login.md",
+      "section": "article",
+      "body_sha256": "63b583bd7a7f845c1085ce081095d989b5339cdbe4b1a4779b9b9be2886a8af4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-185.md",
+      "source_sha256": "512ac57e23c4f99752d5e4eb430cc723d139318a52b8a062f3bf41b95b01d596",
+      "page": "articles/185-python-typing-package-marker.md",
+      "section": "article",
+      "body_sha256": "184018645c2d0a556db7e2d1afd6e06466c608f08382aad290cd048ee4f02df0"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-186.md",
+      "source_sha256": "a14a34134a41325507be36f462e6fb5dbd8b6bdacd0fdcab8c8c7bc704d5cbea",
+      "page": "articles/186-agent-personas-operator-rules-and-workflow-skills.md",
+      "section": "article",
+      "body_sha256": "57d269c9d860c0c8cf23ce038734df352b198c9f4113ef3a77d66da5a8fb4963"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-187.md",
+      "source_sha256": "e5809c4d92e9aa2ae7c60ba08d339428b10a50b6b4450c2e67da70a7fc1b4bc5",
+      "page": "articles/187-filing-skills-and-the-mcp-operator-harness.md",
+      "section": "article",
+      "body_sha256": "a72f4631422c01171f993a402adb84d310a401c2b07501d8a417046ad7ae10d4"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-188.md",
+      "source_sha256": "0585dd1d2308fc8292f92b13e4b9dff0ba6eca92bd3796379860091b46c50ce2",
+      "page": "articles/188-bundled-data-package-marker.md",
+      "section": "article",
+      "body_sha256": "7526576632ae55143d25a506aa577bd2dcce5ebce46f2f089227db807b1f4f3f"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-189.md",
+      "source_sha256": "c85c93ec07d3c123212dcd5b0313a2d28a2420ece53839471450943a995786cd",
+      "page": "articles/189-pdf-color-profile-resource.md",
+      "section": "article",
+      "body_sha256": "7cb59098eb42248ec9a1ec3c0de2de4f0dc1ce30078661533a1faac55def10aa"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-190.md",
+      "source_sha256": "ad218417beafb80dd9acdce97dfc845e14395bb656f68e36a60baaa87622d332",
+      "page": "articles/190-pdf-summary-typography-assets.md",
+      "section": "article",
+      "body_sha256": "d89e4c1288a0a40c77a2e252203c7850e629edfb2c0141ac8b2d96c773499f37"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-191.md",
+      "source_sha256": "a04a9320e9234eb80f453f62ab30cedfd42b435ab2c8318c992876870b0b064e",
+      "page": "articles/191-corpus-package-marker.md",
+      "section": "article",
+      "body_sha256": "8fec4c61a512ecd9269a30750f4cc5a023c07eaff33d154d4aab4fa07922ab3c"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-192.md",
+      "source_sha256": "c79603bca123026fec2b70c3e0357f168649795d638d6f74aab76ebe6a881a00",
+      "page": "articles/192-aeat-official-reference-corpus.md",
+      "section": "article",
+      "body_sha256": "7a39efe684c174e91077c0ebee86be789769bfbd13ab36d3e6b28e9ead5d989a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-193.md",
+      "source_sha256": "3515a9ec63ea5499c97ebfd79670c20b3e474944cd10ce0f028f63ac8d306a67",
+      "page": "articles/193-eu-vat-rate-reference-sources.md",
+      "section": "article",
+      "body_sha256": "f42c366fb887f7d6b580a2deff057e999c0cf275e3a7894bb4a2d6981f0164e8"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-194.md",
+      "source_sha256": "0d9657de04d34257fc1487a9823269d7123e148438bbb27e6a4634c5234f9f1c",
+      "page": "articles/194-facturae-3-2-2-enumerations-and-total-composition.md",
+      "section": "article",
+      "body_sha256": "fe5b851acc79ba8d9833c4a4e77551bbed6f8625b5f2242f78f2b61d50a3827f"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-195.md",
+      "source_sha256": "4821e6b7c494cc0245c8ed9ce6db5284aae0064f34235ba95ac7f2f652fccab7",
+      "page": "articles/195-worked-example-reference-oracles.md",
+      "section": "article",
+      "body_sha256": "ac4bd342ab2a74ff4c1e1e35e4b1e3479e8f6a06cf9d696735b66e9b08402b94"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-196.md",
+      "source_sha256": "53e06c71143271eed4cc9e20fcc47b7dcb321dcdc4d28dafd47b1194445f4b71",
+      "page": "articles/196-aeat-practical-manual-corpus.md",
+      "section": "article",
+      "body_sha256": "ff3dc48cbdd51dd9e28fe8dcbacd5b8c7f5d63cf67db5f4c9640d661c8daffa9"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-197.md",
+      "source_sha256": "d8c3b11c4ea362505ddf7e650e79ce78fcdbc606b2386668350c317bcbcca226",
+      "page": "articles/197-normative-reference-corpus.md",
+      "section": "article",
+      "body_sha256": "a1774a4bf7d9e1d896f08ef7c3bf7ec018bdadd8a69ea767902e3150d4eeaa19"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-198.md",
+      "source_sha256": "4eff8d5ad41a150c16c902076cd1ffdc70ae091e7ffc42e175358b5ad3de1fb6",
+      "page": "articles/198-gnome-native-login-observation.md",
+      "section": "article",
+      "body_sha256": "0e429f4c3b3e295b0dc604a1679a49bff5d2bb2511ad08f160c27fad514b616a"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-199.md",
+      "source_sha256": "3bb8db1c7a834b0bbec1d6a993912c207726c034551d50d5d14fc0b0e0dfc8c7",
+      "page": "articles/199-aeat-official-manual-corpus-text.md",
+      "section": "article",
+      "body_sha256": "1d491bf543030b6a5b056648e140f087f019e37313ce50b997306139e26dc612"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-200.md",
+      "source_sha256": "120a405fa5181c1dcffa960c5b4a5ec9648db39b7cb73b7411aa672c64109ac1",
+      "page": "articles/200-eu-vat-reference-text.md",
+      "section": "article",
+      "body_sha256": "cd51b6d1b819253a1ad76f07a20d4e11745b1bc83d77bdc47326fdcbde9dc701"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-201.md",
+      "source_sha256": "22dde46102f0d83518da060eff1c5faa61c09085cb07061fc637593f8bfd046b",
+      "page": "articles/201-aeat-manuals-extracted-text.md",
+      "section": "article",
+      "body_sha256": "f0cf20cd4c5d32707ffbecafde166d200a3c9f9d29c5cbbd42e048d6b4dd16c7"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-202.md",
+      "source_sha256": "5d1a6f71a3749c6bbd312ef687e81c788f55ecf54efa775aa07e94332a4e746c",
+      "page": "articles/202-normative-pdf-text-corpus.md",
+      "section": "article",
+      "body_sha256": "3374e6e700746a54f89dfa4152ac6d8743de78877317deedceb30a20b4b5ef16"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-203.md",
+      "source_sha256": "262b5133042d127e6cdfd98dc3e38761c792a80833202695412df9ddb518cd2a",
+      "page": "articles/203-aeat-registry-and-model-declarations.md",
+      "section": "article",
+      "body_sha256": "adaff015066c46a87ac1bfbe484d1a336936be0e896559f0f06d7c9aa3e20954"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-204.md",
+      "source_sha256": "87a82c556155c0cc79df346daf754da60022277c2a2c81f1013aff9ab5429009",
+      "page": "articles/204-cadrumo-user-profile-schema.md",
+      "section": "article",
+      "body_sha256": "78cc32c961464cf46d1663ae33137852d11a8a9b66f5830481b63f0558ca864e"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-205.md",
+      "source_sha256": "40db8b41bc437035f9f53234cf25e58ce3ff3e75769a8a2db1231aeaf744c807",
+      "page": "articles/205-terminology-concept-corpus.md",
+      "section": "article",
+      "body_sha256": "17c86d1253bd17731188b8de84c55032d68b19399380790e2a6a021ba1bfa274"
+    },
+    {
+      "source": "map/stage-2/STAGE-2-206.md",
+      "source_sha256": "ec559a58ff44ba9f0f87a91cf68711705f9c237f457123bec3f772d98c7221ea",
+      "page": "articles/206-localized-interface-and-model-schema-labels.md",
+      "section": "article",
+      "body_sha256": "c44bd397389514b14140f928bdb8065f422cffc5e4befb86cbca47f5934329b0"
+    },
+    {
+      "source": "maps/stage-1/01-operator-interfaces-part-1.md",
+      "source_sha256": "7e1194437e0e6673ccaf4f17cfc788314adcc0b78588e0660bd9fa5e4e84229f",
+      "page": "topics/operator-interfaces-part-1.md",
+      "section": "topic",
+      "body_sha256": "579db0d60f8cf824afaa2f01d29476b9e1db09ab3beb97812f984d5948fcb0a4"
+    },
+    {
+      "source": "map/synthesis-briefs/01-operator-interfaces-part-1.md",
+      "source_sha256": "6f806a673f742f13b72d081947b935e9746af104e137977b44ed4e46b82ce30d",
+      "page": "topics/operator-interfaces-part-1.md",
+      "section": "summary",
+      "body_sha256": "36dc4a6a0b1146925c8bdeedb951aa392d448bd6b52e9fd58f23a6576abd174e"
+    },
+    {
+      "source": "maps/stage-1/01-operator-interfaces-part-2.md",
+      "source_sha256": "5f33c53a5e8ffbb0e267591610206662cec4afa3eab6480b2dad1e678d8e62e9",
+      "page": "topics/operator-interfaces-part-2.md",
+      "section": "topic",
+      "body_sha256": "a35c4b71a680f150b38c1d8de35456a6275cb1888f7a5831d51124744213050a"
+    },
+    {
+      "source": "map/synthesis-briefs/01-operator-interfaces-part-2.md",
+      "source_sha256": "f6dd436d5a87b527c369f3f8715c35eb1b9ccc8617b7c53b7ec70ca14e80fd6e",
+      "page": "topics/operator-interfaces-part-2.md",
+      "section": "summary",
+      "body_sha256": "d4585f30495a35de58730934b30961ed72eac0d76ab8abde4f1772e6b27316c7"
+    },
+    {
+      "source": "maps/stage-1/02-runtime-tui-and-agent-harness.md",
+      "source_sha256": "5d2f921ed1e0829757a6b2c332996cc3f94c4d66faa7690b339402bbef96f895",
+      "page": "topics/runtime-tui-and-agent-harness.md",
+      "section": "topic",
+      "body_sha256": "55d04b4166b8ebb1e3a0fae8287af72c8388391ec26603b1d962989d1ce3e98e"
+    },
+    {
+      "source": "map/synthesis-briefs/02-runtime-tui-and-agent-harness.md",
+      "source_sha256": "b54deeafef94ad25c00ef016de66278da5a761c71a13b742f3a211ee44c8299f",
+      "page": "topics/runtime-tui-and-agent-harness.md",
+      "section": "summary",
+      "body_sha256": "94286db4ca30b28386de2d6bce7c40212138ab6a6db845d8c5b61719d9219b94"
+    },
+    {
+      "source": "maps/stage-1/03-document-and-financial-imports.md",
+      "source_sha256": "1e44ab14d7d31b7a33cb71896e7e64ee7c72583e0ed3c3f01dd2cec864c21643",
+      "page": "topics/document-and-financial-imports.md",
+      "section": "topic",
+      "body_sha256": "d177cad6a47691a5c63e45a64fac099e7d935f2c5b2ebd79a1e1c9b20839b758"
+    },
+    {
+      "source": "map/synthesis-briefs/03-document-and-financial-imports.md",
+      "source_sha256": "f831d4ba66a01d89124e68e923b119f6a771f399123641670ea7df385984eb14",
+      "page": "topics/document-and-financial-imports.md",
+      "section": "summary",
+      "body_sha256": "9905fbd0e8c3173cdaebe73220b22486106b387841da99e2524925decfd5c0c2"
+    },
+    {
+      "source": "maps/stage-1/04-external-integrations-and-local-runtime.md",
+      "source_sha256": "79228e41503f0987b806fd7e543c048e45560be59d8d3bd36c58659062a684f2",
+      "page": "topics/external-integrations-and-local-runtime.md",
+      "section": "topic",
+      "body_sha256": "70a697c28b84ca97c39c52b679bc27380d0ae5ee86dd52ee0669fe8d45e5b69f"
+    },
+    {
+      "source": "map/synthesis-briefs/04-external-integrations-and-local-runtime.md",
+      "source_sha256": "8f679ecc7f236803cd4461051fd2866fae4b9c5a5364fbfd88e38cda9a6e68c6",
+      "page": "topics/external-integrations-and-local-runtime.md",
+      "section": "summary",
+      "body_sha256": "5445842439aec018f6f7530a4e1147e5e47a75f3beb726a02224cadb5e50855b"
+    },
+    {
+      "source": "maps/stage-1/05-persistence-and-secure-storage.md",
+      "source_sha256": "84ffeb7994d3d560f0311b4e303e8ae303702276d37e2588d9b4966bdabd0c1d",
+      "page": "topics/persistence-and-secure-storage.md",
+      "section": "topic",
+      "body_sha256": "07a248a6307dd7e807b816c583558878aceaad3114c51abcf3511437ea6503cd"
+    },
+    {
+      "source": "map/synthesis-briefs/05-persistence-and-secure-storage.md",
+      "source_sha256": "f146836eb75a8743730b05ff3091a96161f4d486d765bb89e7e5c85ad65ce9a4",
+      "page": "topics/persistence-and-secure-storage.md",
+      "section": "summary",
+      "body_sha256": "f29f4fde7f59a94790d1a5ad02452fcb4b2738921b079ba34e0a6111cbaffff9"
+    },
+    {
+      "source": "maps/stage-1/06-application-orchestration-and-diagnostics.md",
+      "source_sha256": "ebc9b97250603abb9127a99f24501140af9fc0f968fdf4a442f0c3f90aca1f6b",
+      "page": "topics/application-orchestration-and-diagnostics.md",
+      "section": "topic",
+      "body_sha256": "fb798f6f905db4c24fd62588946b8702fcf512cefc9cc7ebea521242a8dc7e3c"
+    },
+    {
+      "source": "map/synthesis-briefs/06-application-orchestration-and-diagnostics.md",
+      "source_sha256": "8f112cfb63bb003618bc16d7aa2e606c99f0afc4590687bd1a63614b41299b22",
+      "page": "topics/application-orchestration-and-diagnostics.md",
+      "section": "summary",
+      "body_sha256": "c6373d1b53c75fc4902ff81494c9aa523da99173c984078897de8eca6b2c6f28"
+    },
+    {
+      "source": "maps/stage-1/07-aggregation-and-calculation-services.md",
+      "source_sha256": "55c6a0a839a32883054c5dbfd5d12b5257412c5a54cb8df8b3593bb92b472294",
+      "page": "topics/aggregation-and-calculation-services.md",
+      "section": "topic",
+      "body_sha256": "4822795212664fd6163d0a3aa5f297d781ffc610920dfd1d0a646f5aa310b2bb"
+    },
+    {
+      "source": "map/synthesis-briefs/07-aggregation-and-calculation-services.md",
+      "source_sha256": "3de904b946f914ce35876f9a914f0599814559e6ba85af9792dc5cab5412315c",
+      "page": "topics/aggregation-and-calculation-services.md",
+      "section": "summary",
+      "body_sha256": "0645902cdc74443a5e1e1b099d589016d151190ce6ddf98b9f8c35bb70732e5e"
+    },
+    {
+      "source": "maps/stage-1/08-authentication-and-storage-management.md",
+      "source_sha256": "a769ec8afc7f7d3ee72a7b68136f7415cd4bb86d51ac79fbf97cb2027d88b660",
+      "page": "topics/authentication-and-storage-management.md",
+      "section": "topic",
+      "body_sha256": "1d62c5cfe95bd6636225a029799234a781d8cf3d7dc0ecd0e976892c59e0bbda"
+    },
+    {
+      "source": "map/synthesis-briefs/08-authentication-and-storage-management.md",
+      "source_sha256": "3bc76ed117c256427505335532aae8a08755316edb5cf91fb565001eedc8c0ab",
+      "page": "topics/authentication-and-storage-management.md",
+      "section": "summary",
+      "body_sha256": "bce84f65d0dae1974fb3ae43aa5e6ef9e0614d7c77e750b521dbe4621aafd6d5"
+    },
+    {
+      "source": "maps/stage-1/09-filing-and-live-state.md",
+      "source_sha256": "7bf70e284852c43a3934814d60eb0156a17fb44725c286e162c98b7c95dee534",
+      "page": "topics/filing-and-live-state.md",
+      "section": "topic",
+      "body_sha256": "35f3a16f6168cca97e22d41254e1108b24614a0089e0143cf1eb156e81fddd55"
+    },
+    {
+      "source": "map/synthesis-briefs/09-filing-and-live-state.md",
+      "source_sha256": "6c90db10b61b34928fd3c13df5e7cff07b4fc3de18db722e98eb1a1f12d18f84",
+      "page": "topics/filing-and-live-state.md",
+      "section": "summary",
+      "body_sha256": "5ce52eb9b5f0ac3374875d20c6ca7782d8af926009d0f8b52c0e38aa3b21b011"
+    },
+    {
+      "source": "maps/stage-1/10-ledger-invoices-and-registers.md",
+      "source_sha256": "4dd63db3f5efbbb052ac5dd11c6c4fb54525613a77e179e4cb52c5285fa70f9f",
+      "page": "topics/ledger-invoices-and-registers.md",
+      "section": "topic",
+      "body_sha256": "bdbe55e61d61c7730b9c99ab1abd069825ad5a9ba254648bdfe4c05f778beb9d"
+    },
+    {
+      "source": "map/synthesis-briefs/10-ledger-invoices-and-registers.md",
+      "source_sha256": "e80a359ea975e6a94d8ac8e4bc58d68d5be580625151b8b75b91dc5361ed8a05",
+      "page": "topics/ledger-invoices-and-registers.md",
+      "section": "summary",
+      "body_sha256": "5dcadb3c353ed417465ea022f8e4f74ea19877add57836a33a61bbdc2a8c33f8"
+    },
+    {
+      "source": "maps/stage-1/11-modelo-work-and-revision-lifecycle-part-1.md",
+      "source_sha256": "85ab4e3bb9af2132960af272356a542d8c8fad80bcb3179e8aef2b4165c3123b",
+      "page": "topics/modelo-work-and-revision-lifecycle-part-1.md",
+      "section": "topic",
+      "body_sha256": "68ed79526209416feb45850d02a26a93b12d2334bdcf58e1d3fa752ec403db84"
+    },
+    {
+      "source": "map/synthesis-briefs/11-modelo-work-and-revision-lifecycle-part-1.md",
+      "source_sha256": "a509ffbd3e927401368f770f25f65f37ef2a35bc253955e627627b503f7a7623",
+      "page": "topics/modelo-work-and-revision-lifecycle-part-1.md",
+      "section": "summary",
+      "body_sha256": "8e5cd9f60894dd625223f5a23b8322c3ed4543fc3796188336ca84c0146f1032"
+    },
+    {
+      "source": "maps/stage-1/11-modelo-work-and-revision-lifecycle-part-2.md",
+      "source_sha256": "f35b1f40ccac9e1bb46a439336c0d40e79c0f1f42117a7410fbb51433d27d892",
+      "page": "topics/modelo-work-and-revision-lifecycle-part-2.md",
+      "section": "topic",
+      "body_sha256": "6c57c30e3795e9f77f4455c96210b8d5fa5d4dcbbbc0c164f9a626b39aba3783"
+    },
+    {
+      "source": "map/synthesis-briefs/11-modelo-work-and-revision-lifecycle-part-2.md",
+      "source_sha256": "c7540d7c862418c73c0df45ddebeb016ac28ee0214b1de84cc207cf21074857f",
+      "page": "topics/modelo-work-and-revision-lifecycle-part-2.md",
+      "section": "summary",
+      "body_sha256": "b741f9d680a9f4adf505e7891e556b7f9d653f86a70b9976ba28b4ab44a64cc9"
+    },
+    {
+      "source": "maps/stage-1/12-operations-profiles-and-workflows.md",
+      "source_sha256": "f1aa064cbcfa055ca418657830853926d0d2c8fc750f626422ef2b05f696c72f",
+      "page": "topics/operations-profiles-and-workflows.md",
+      "section": "topic",
+      "body_sha256": "fa823235d83ac877a6c9dd6a540d8995aa4f0f7c8ea9cd9226fc542a99e92a1f"
+    },
+    {
+      "source": "map/synthesis-briefs/12-operations-profiles-and-workflows.md",
+      "source_sha256": "f08ee96c548afa257fe374cd0ec86a143e0297515d0aa183a71bcea4550fda25",
+      "page": "topics/operations-profiles-and-workflows.md",
+      "section": "summary",
+      "body_sha256": "3712075788536a27544b80ae0a43959955c3d8a417d914bf939619543b69ee92"
+    },
+    {
+      "source": "maps/stage-1/13-core-authority-and-shared-controls.md",
+      "source_sha256": "60aa11e7fe50ea04b76b071e18c99ac54ebcc815bf90f3d7e0a06b65b2b28c80",
+      "page": "topics/core-authority-and-shared-controls.md",
+      "section": "topic",
+      "body_sha256": "a2cc86e9de583de24557bc86563fe494498adf6717026959ab637a92412924cd"
+    },
+    {
+      "source": "map/synthesis-briefs/13-core-authority-and-shared-controls.md",
+      "source_sha256": "17325f2c75b4b5774d3813cb99ee810342e504c9d945c1d35c593ce498825b8a",
+      "page": "topics/core-authority-and-shared-controls.md",
+      "section": "summary",
+      "body_sha256": "d2fcf991bfcd0652e9ee238c1f0956f22b647beef8502b5231f51c90db6604c1"
+    },
+    {
+      "source": "maps/stage-1/14-tax-calculation-domain.md",
+      "source_sha256": "cf1904816f096c6cacfed20ede28384850d89ba2c38014a110280df7d12de4e7",
+      "page": "topics/tax-calculation-domain.md",
+      "section": "topic",
+      "body_sha256": "1f11ed2c179a1fd01001f69cec70b33430f03d42ec1cff227ec0ee6fd541d50c"
+    },
+    {
+      "source": "map/synthesis-briefs/14-tax-calculation-domain.md",
+      "source_sha256": "660a7361a06a189b24fd1a2e04760860cfd9ed0520f709422c6760d261fa0f9b",
+      "page": "topics/tax-calculation-domain.md",
+      "section": "summary",
+      "body_sha256": "e492f4bb5cc899f11729c8fea58f1a15be73e3e1fe4872cb2184afcc8bedaa83"
+    },
+    {
+      "source": "maps/stage-1/15-business-and-taxpayer-domain.md",
+      "source_sha256": "ab6540a1e40586f36ff2f157bc616333bebb61e237b0ed76fae9dadc9110adf4",
+      "page": "topics/business-and-taxpayer-domain.md",
+      "section": "topic",
+      "body_sha256": "3a2c8bf12ace21c2ebbdbaf7c2311638be341b0cccf8ebe18eacce1feaa201dc"
+    },
+    {
+      "source": "map/synthesis-briefs/15-business-and-taxpayer-domain.md",
+      "source_sha256": "e3e632b681d03fa3d62ce7148a0616d259a46ff0f9809c73de2354b4f2e0680a",
+      "page": "topics/business-and-taxpayer-domain.md",
+      "section": "summary",
+      "body_sha256": "686ef700ca26eb9fc9bb6895cd5907b64395e482991b74b792e9b76519f35641"
+    },
+    {
+      "source": "maps/stage-1/16-bundled-knowledge-and-localization.md",
+      "source_sha256": "cd40ee2c50a567805e97439771c319b832da81e3c4b0fa63d53dfefd7ab035c9",
+      "page": "topics/bundled-knowledge-and-localization.md",
+      "section": "topic",
+      "body_sha256": "22210374a177d40d6563513e2d5df78d24a81a8a74a9c1442faa4fe5ed703651"
+    },
+    {
+      "source": "map/synthesis-briefs/16-bundled-knowledge-and-localization.md",
+      "source_sha256": "6489938e3a0b320cdfb3fdd600623a05555d639fbe8f09558554d4360d36e7e1",
+      "page": "topics/bundled-knowledge-and-localization.md",
+      "section": "summary",
+      "body_sha256": "e2d35558935cc7fcf9cf8351335cac834242dfb9ed20c3057ca5c7fc35cc8e4b"
+    },
+    {
+      "source": "maps/stage-1/00-implementation-assessment.md",
+      "source_sha256": "dd2758fabd5f90df6f20c9f9c35fb8181ed148522c8d7d0d80e48f6aef8ff64e",
+      "page": "assessments/implementation-assessment.md",
+      "section": "assessment",
+      "body_sha256": "031ba7198ea5b7bfeed9947f5dcf31a281b38a0993420e3cfa80a7f97e0653b2"
+    },
+    {
+      "source": "maps/stage-1/00-knowledge-and-provenance.md",
+      "source_sha256": "eceee99b43c8682a42db739e02633813b476db2fca42e3dfeb3d6722f5d9e214",
+      "page": "assessments/knowledge-and-provenance.md",
+      "section": "assessment",
+      "body_sha256": "d0f76d2f08a4a845412f1069e8a5bf84283b3bf51821b78d9dd881b93dac9eb0"
+    },
+    {
+      "source": "maps/stage-1/00-product-capability-map.md",
+      "source_sha256": "07bb475218daa8edf42879e1cdf1a2bffdba9d9422b57ca9cfbe3a6076740633",
+      "page": "assessments/product-capability-map.md",
+      "section": "assessment",
+      "body_sha256": "fcaad358bcf0f8d505bf02b08b4ec3fca3ca920b347a6b3d672e0a9cb60d4351"
+    },
+    {
+      "source": "maps/stage-1/00-security-and-trust-boundaries.md",
+      "source_sha256": "76c78cdf3478752fd39940b40f28efa8aa00bff6eb3666e46a66710f613d281a",
+      "page": "assessments/security-and-trust-boundaries.md",
+      "section": "assessment",
+      "body_sha256": "6147afc531610ad300b30871f5ba855a8cc385115cc294131857b441491319e3"
+    },
+    {
+      "source": "maps/stage-1/00-architecture.md",
+      "source_sha256": "9b84f6cb2f386a2394097fae2f574cb73b9c167fbc6be1ce240884061b284d6b",
+      "page": "architecture.md",
+      "section": "architecture",
+      "body_sha256": "eee658b07bb00c94e8148db23a8d01afb69f398564a99d863b548613419ac209"
+    }
+  ]
+}

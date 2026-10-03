@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:56efce7c60530b4fc16ab1b6fd8ed0e476c9e32b467b41577d6a3fa5b15d2285'
+body_hash: 'sha256:912ffb499d37e95827aa3dac65d5a3024d40edc0223bf262bc4d940dd11af17e'
 related: []
 ---
 # `llm-package-split` audit: `Plan-to-code reconciliation: 50 steps landed against a tracker reading zero`
@@ -57,7 +57,7 @@ The plan structure itself is sound: 83 checkbox rows, 83 distinct identifiers, n
 
 ### One implementation-versus-plan deviation worth recording
 
-W03.P06 names `src/cadrumo/application/ledger/_llm_suggestions.py` as the interchange contract's home. It landed as `src/cadrumo/llm/_suggestions.py` — the extension side rather than the core side. W03.P07 is titled "Keep every durable artefact on the core side", so the two read in tension. The Step text is left unedited: the identifier is load-bearing, and whoever made the placement decision owns the rationale. This is flagged, not resolved.
+W03.P06 names the retired module as the interchange contract's home. It landed as the retired module — the extension side rather than the core side. W03.P07 is titled "Keep every durable artefact on the core side", so the two read in tension. The Step text is left unedited: the identifier is load-bearing, and whoever made the placement decision owns the rationale. This is flagged, not resolved.
 
 ### Loose ends this reconciliation closed
 

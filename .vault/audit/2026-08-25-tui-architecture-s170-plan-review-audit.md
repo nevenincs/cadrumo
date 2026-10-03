@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d677c2f5598be2d26937967ca4d57e26f605bc21d5c9bbecaa442b2a24796d4f'
+body_hash: 'sha256:ff6ca9add77313beffd6b7ac427d558d6c8c05739a2fd036265c29911d4d7d1b'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]"
@@ -38,18 +37,7 @@ execute that otherwise complete row without contradicting the same plan.
 
 ### downstream-defining-module | high | S160 and S174 resurrect the module and facade that S170 deletes
 
-S170 atomically deletes `src/cadrumo/application/modelo/_work_addressing.py` and
-all `src/cadrumo/application/modelo/__init__.py` work-addressing bindings. Later
-row S160 still assigns native WORK capture to `_work_addressing.py` and requires
-promotion through that package facade; S174 again assigns revision-identity
-cutover work to `_work_addressing.py` and requires facade promotion. S161, S164,
-S166, and S129 also require promotion or export through the same Modelo package
-facade after S170 has made it inert. The phase ordering makes all of those rows
-follow S170. The accepted canonical-defining-module amendment instead makes every
-package namespace inert and requires direct imports from one public defining
-module. Terra must therefore either recreate a deleted private home, add a
-forbidden re-export, or silently reinterpret later-row scope. The plan is not
-executable without architectural ambiguity.
+Later row S160 still assigns native WORK capture to `_work_addressing.py` and requires promotion through that package facade; S174 again assigns revision-identity cutover work to `_work_addressing.py` and requires facade promotion. S161, S164, S166, and S129 also require promotion or export through the same Modelo package facade after S170 has made it inert. The phase ordering makes all of those rows follow S170. The accepted canonical-defining-module amendment instead makes every package namespace inert and requires direct imports from one public defining module. Terra must therefore either recreate a deleted private home, add a forbidden re-export, or silently reinterpret later-row scope. The plan is not executable without architectural ambiguity.
 
 ### catalogue-scan-wording | medium | The teardown clause also deletes the canonical selector's necessary scan
 

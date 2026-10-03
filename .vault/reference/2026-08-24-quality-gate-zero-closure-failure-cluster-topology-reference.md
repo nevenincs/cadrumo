@@ -3,14 +3,15 @@ tags:
   - '#reference'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6086d256dab08d4b0c57a94260c78c7bee03a977dd86872b739c61ba1e9513e7'
+body_hash: 'sha256:df6bd7ef8cf8b9eba05cfd3c10ffe553ec04e0b61288785e5dc370c83d099324'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-static-gate-matrix-research]]"
   - "[[2026-06-04-repo-health-triage-reference]]"
   - "[[2026-08-16-test-harness-sanity-suite-performance-baseline-reference]]"
 ---
+
 # `quality-gate-zero-closure` reference: `Quality gate zero closure failure cluster topology`
 
 ## Summary
@@ -30,7 +31,6 @@ set beside the result.
 | Ruff format | `justfile:230-233` and `uv run --no-sync ruff format --check .` | Repository Python tree; exit 0, with formatter output reviewed for peer-owned paths. |
 | Types | `justfile:237-240`, `dev/quality/types.py:29-31,109-183,235-280` | ty over `src`; pyrefly and BasedPyright over configured strict domain/application surfaces; zero diagnostics and no unresolved-import allowance. |
 | Architecture imports | `justfile:242-245`, `dev/quality/suite.py:37-44` | Import-linter contracts remain kept; no new carve-out or pin without the owning architecture decision. |
-| Relative imports | `justfile:247-248`, `src/cadrumo/tests/test_relative_imports_only.py:82-91` | No absolute intra-`cadrumo` imports in the scanned test/source surface. |
 | Dependencies | `justfile:250-253` | `src/cadrumo` and `dev/registry`, with test trees excluded by the recipe; deptry emits no findings. |
 | Ratchets | `justfile:462-464` | Inventory, marker, shortcut, double, monkeypatch, broad-raise, bare-except, tautology, and related policies all pass. |
 | Vault | `uv run --no-sync vaultspec-core vault check all --json` | Hard-error count is zero. Warnings are a separately reported inventory, not silently converted to success. |
@@ -49,7 +49,6 @@ Vault hard errors. These numbers drift in a concurrent worktree and must not be
 used as a baseline.
 
 - **Type root causes.** The largest pyrefly cluster is
-  `src/cadrumo/application/calculations/_row_set_assembly.py`; ty is dominated
   by `call-non-callable` and `unresolved-attribute`; BasedPyright is dominated
   by unknown-member and unknown-argument families. Begin with the shared
   type-producing boundary or protocol that fans into the cluster, then rerun
@@ -57,7 +56,6 @@ used as a baseline.
   unresolved-import allowance; the empty allowance at
   `pyproject.toml:860-868` is part of the contract.
 - **Ruff and format.** The largest line-length cluster is
-  `src/cadrumo/application/filing/_export_producer.py:589-832`; import-order
   findings are distributed across profile, application, CLI, and test modules.
   Four syntax records were present in
   `src/cadrumo/entrypoints/cli/tests/test_action_reconciliation_invocation_scope.py:52-75`.

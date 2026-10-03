@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8fa9cd75ece084bbff0cfba388f197305eac1120977e3a085209ff9e3fc509e3'
+body_hash: 'sha256:54bdb1d6bf4fd7e2b76be98ed716a73bbbacf4e561aa497d702d02331047fad9'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
@@ -32,10 +32,7 @@ adapter requires an encrypted repository and excludes secret classification.
 The profile-custody repository can open without the ambient session only when
 the caller already has the target DEK. Thus a passphrase-bearing login request
 is circular before the password proof, while a non-secret request stored in
-the present secure store is also unavailable. `src/cadrumo/application/operations/_supervisor.py:119-205`
-`src/cadrumo/application/operations/_capabilities.py:28-35`
-`src/cadrumo/adapters/persistence/operations/_secure_refs.py:19-64`
-`src/cadrumo/application/user_profile/_custody_ports.py:1123-1172`
+the present secure store is also unavailable. the former source file
 
 ### The existing operation choices do not resolve the secret boundary
 
@@ -46,10 +43,8 @@ current reconciliation treats an unstarted created record as recovered rather
 than terminal. The ordinary response contract is also unsuitable: it carries
 only apply/reject decision fields and hashes its entire response into durable
 continuation evidence. Putting a password in either the request or a response
-would violate the accepted secret exclusion. `src/cadrumo/application/operations/_capabilities.py:62-75`
-`src/cadrumo/application/operations/_registry.py:112-128`
-`src/cadrumo/application/operations/_supervisor.py:690-736`
-`src/cadrumo/application/operations/_interactions.py:47-172`
+would violate the accepted secret exclusion. the former source file
+
 `.vault/adr/2026-08-11-tui-architecture-adr.md:91-94`
 
 ### A separate secret port is narrower than a secure specialization of respond
@@ -65,7 +60,6 @@ journal, events, receipts, and frontend-facing interaction remain secret-free.
 The ADR must still specify whether the durable safe requirement is a new
 interaction variant or a sibling state field. `.vault/adr/2026-08-11-tui-interface-adr.md:176-199`
 `.vault/adr/2026-08-11-tui-interface-adr.md:435-453`
-`src/cadrumo/application/operations/_journal.py:22-58`
 
 ### Restart before secret consumption can be classified more narrowly than restart after login entry
 
@@ -77,8 +71,6 @@ After the executor crosses into `login_profile`, current generic owner-loss
 reconciliation remains the honest `UNKNOWN` path unless its custody handover
 has an authoritative committed outcome. This split avoids either resuming from
 a lost password or falsely claiming no effect after an entered handover.
-`src/cadrumo/application/user_profile/_login_session.py:981-1057`
-`src/cadrumo/application/operations/_supervisor.py:738-852`
 
 ### The durable pre-DEK login target must be a typed credential-free request
 
@@ -90,9 +82,7 @@ policy, serialized atomically with the lifecycle journal and content-digested
 for idempotency, alongside the existing encrypted-reference policy for
 confidential operands. Deriving it later from an active-profile store would be
 circular; deriving it ad hoc from `subject_ref` would create a login-only
-executor exception. `src/cadrumo/application/user_profile/_login_session.py:920-1057`
-`src/cadrumo/application/operations/_models.py:63-107`
-`src/cadrumo/application/operations/_journal.py:22-121`
+executor exception. the former source file
 
 ### Existing custody and auth authorities remain composition targets
 
@@ -103,8 +93,7 @@ surfaces already require a serving custody session and explicitly refuse a
 target that cannot be opened without its password. Existing CLI login obtains
 the value at the transport boundary through an explicit channel, then passes a
 callback directly to the authority; a registered path must replace that
-callback-as-identity without adding a second login. `src/cadrumo/application/auth/_operator_scope.py:149-199`
-`src/cadrumo/entrypoints/cli/_config/_custody.py:187-247`
+callback-as-identity without adding a second login. the former source file
 
 ### Alternatives bounded by this research
 
@@ -130,17 +119,3 @@ whole-runtime erasure.
 - `.vault/adr/2026-08-11-tui-architecture-adr.md:91-94`
 - `.vault/adr/2026-08-11-tui-interface-adr.md:176-199`
 - `.vault/adr/2026-08-11-tui-interface-adr.md:435-453`
-- `src/cadrumo/adapters/persistence/operations/_secure_refs.py:19-64`
-- `src/cadrumo/application/auth/_operator_scope.py:149-199`
-- `src/cadrumo/application/operations/_capabilities.py:28-35`
-- `src/cadrumo/application/operations/_capabilities.py:62-75`
-- `src/cadrumo/application/operations/_interactions.py:47-172`
-- `src/cadrumo/application/operations/_journal.py:22-121`
-- `src/cadrumo/application/operations/_models.py:63-107`
-- `src/cadrumo/application/operations/_registry.py:112-128`
-- `src/cadrumo/application/operations/_supervisor.py:119-205`
-- `src/cadrumo/application/operations/_supervisor.py:690-736`
-- `src/cadrumo/application/operations/_supervisor.py:738-852`
-- `src/cadrumo/application/user_profile/_custody_ports.py:1123-1172`
-- `src/cadrumo/application/user_profile/_login_session.py:920-1057`
-- `src/cadrumo/entrypoints/cli/_config/_custody.py:187-247`

@@ -22,6 +22,7 @@ from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENA
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
+    ValidatedHistoricalStaticGeneratedExportTree,
 )
 from .export_fragment_provenance import (
     SHA256_PATTERN,
@@ -135,7 +136,7 @@ class GeneratedExportSupersession:
 class PublishedGeneratedExportTree:
     """The precise generated export tree selected through the loader boundary and cut over."""
 
-    validated: ValidatedGeneratedExportTree | None
+    validated: ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree | None
     export_root: Path
     provenance_manifest_path: Path
 

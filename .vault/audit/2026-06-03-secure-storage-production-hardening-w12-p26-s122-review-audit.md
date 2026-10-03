@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:d7c93faff70046b55f80c361b91df638d506517db549e2d9f7afedeb8ddff3c6'
+modified: '2026-10-03'
+body_hash: 'sha256:2fc38d2d1a6739edebca84d97832daf8030b051cf3cb8bc104ca2ba3e0ab2243'
 related: []
 ---
 
@@ -13,7 +13,7 @@ related: []
 ## Scope
 
 This review covers `AFR-020` for
-`src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
+the retired module.
 
 ## Findings
 
@@ -33,11 +33,11 @@ user-facing no-session path.
 
 ## Validation
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/sede/test_censo_live.py src/aeat/adapters/outbound/aeat/sede/test_playwright_wait_constants.py`
+- the historical check
   - Result: 6 passed.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/aeat/sede/_censo_live.py src/aeat/adapters/outbound/aeat/sede/test_censo_live.py src/aeat/adapters/outbound/aeat/sede/test_playwright_wait_constants.py`
+- the historical check
   - Result: all checks passed.
-- `rg -n "SecureObjectRepository|SecureBoundRepository|StorageProvider|GoogleDrive|LocalStorage|write_text\(|read_text\(|write_bytes\(|open\(|storage_path|aeat_database_url|override_settings|os\.environ|getenv" src/aeat/adapters/outbound/aeat/sede/_censo_live.py`
+- the historical check
   - Result: no matches.
 
 ## Disposition

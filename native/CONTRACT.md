@@ -52,7 +52,11 @@ The package test consumes the selected layout's manifest location, checks its
 complete file inventory, probes the delivered interpreter against every declared
 distribution version, and checks the original inventory again. It uses a disposable
 browser cache and calls the existing Python readiness owner. This checks the staged
-package; `verify-package` retains ZIP relocation and artifact acceptance ownership.
+package. `verify-package` runs both the Python acceptance suite and the CMake-selected
+Rust compatibility probe against the same freshly extracted ZIP. Its result records
+the archive hash, manifest hash, extracted root and application-probe outcome; a failed
+Rust probe prevents a passing result. The staged-package override does not redirect
+this artifact check.
 For a separately extracted or installed artifact, configure the absolute
 `CADRUMO_APPLICATION_TEST_PACKAGE_ROOT` and run
 `ctest -C Release -R "^application\." --output-on-failure` in that build directory. This verifies that

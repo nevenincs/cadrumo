@@ -36,7 +36,9 @@ from typing import Final, cast
 
 import psutil
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temporary_directory
+
+from cadrumo.core.storage_environment import resolve_storage_path
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
 
 from .import_authority import read_authority
@@ -209,7 +211,9 @@ def run_within_budget(
         raise StepBudgetExceededError(
             f"has no work budget ({budget.cpu_seconds:g} CPU-s, {budget.stall_seconds:g} s stall limit)"
         )
-    with tempfile.TemporaryFile() as stdout_file, tempfile.TemporaryFile() as stderr_file:
+    with tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stdout_file, tempfile.TemporaryFile(
+        dir=prepare_temporary_directory()
+    ) as stderr_file:
         returncode, cpu_seconds = asyncio.run(
             _supervise(
                 tuple(argv),
@@ -399,7 +403,9 @@ def run_subordinate(
                 CheckResult((), 0),
             )
         environment = _subordinate_environment(authority)
-        with tempfile.TemporaryDirectory(prefix="cadrumo-import-checker-") as temporary:
+        with tempfile.TemporaryDirectory(
+            prefix="cadrumo-import-checker-", dir=prepare_temporary_directory()
+        ) as temporary:
             report_path = Path(temporary) / "checker.json"
             command = (
                 resolved,
@@ -472,9 +478,11 @@ def run_loadability(
 
     artifact_directory = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
     try:
-        with tempfile.TemporaryDirectory(prefix="cadrumo-import-loadability-") as temporary:
+        with tempfile.TemporaryDirectory(
+            prefix="cadrumo-import-loadability-", dir=prepare_temporary_directory()
+        ) as temporary:
             if artifact_directory:
-                report_path = Path(artifact_directory).resolve() / "import-loadability.json"
+                report_path = resolve_storage_path(artifact_directory) / "import-loadability.json"
                 report_path.parent.mkdir(parents=True, exist_ok=True)
             else:
                 report_path = Path(temporary) / "import-loadability.json"

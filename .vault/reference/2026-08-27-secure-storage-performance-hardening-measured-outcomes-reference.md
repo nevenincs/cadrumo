@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:b802ab38eae2eb2f767d6013bc8f4e9a729f2402f8d83ee01d5bbd6631a3cbfd'
 related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
   - "[[2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit]]"
 ---

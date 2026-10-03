@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:96bf359b1bfe6a94ad396f2d9da6f3a85e8baf52038d1b8fbd91250187602619'
+body_hash: 'sha256:bd074befb416d8b51705ef7baf745180be7bcbea48df67b21fab1489a2610eb2'
 related:
   - "[[2026-09-02-object-name-declustering-adr]]"
   - "[[2026-09-07-object-name-declustering-s28-implementation-review-audit]]"
@@ -15,13 +15,7 @@ related:
 
 ## Scope
 
-Started with Step S29. Reviewed the current test-only diff in
-`dev/quality/tests/test_object_name_replay.py` against the accepted
-`object-name-declustering` ADR, W04.P10.S29, the S23/S24 closure audits, the receipt
-freshness conflict audit, the S28 implementation review, and the complete rehearsal and
-replay contracts. The review focused on detector intent, anti-vacuity, the authored/current
-inventory distinction, and whether the test reaches the production replay preflight. No
-implementation or test code was modified.
+Started with Step S29. The review focused on detector intent, anti-vacuity, the authored/current inventory distinction, and whether the test reaches the production replay preflight. No implementation or test code was modified.
 
 ## Findings
 

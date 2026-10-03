@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:42fb07b9c2ffd70acceb0910db8d5b72fe0ed3e9b7e040e82d0400a597cdc5f3'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
 # `tui-architecture` audit: `s36 filed history progress review`

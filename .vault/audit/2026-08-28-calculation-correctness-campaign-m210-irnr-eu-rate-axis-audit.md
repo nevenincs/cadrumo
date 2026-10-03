@@ -5,7 +5,7 @@ tags:
 date: '2026-08-28'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2cc8fecb60cf7630a5ea33206943f28b98cd7dbfba2503c19cc4ebc8589499c7'
+body_hash: 'sha256:bdffe2a28db0d5ad8db5dfed588e05e5f0d17f16b50996a55676195d7cc77711'
 related: []
 ---
 
@@ -53,12 +53,6 @@ royalties at source, and the `ceiling` / `flat` override machinery applied it.
 Two things in the original reading remain true and are worth recording, neither
 of which changes a computed liability:
 
-- The parameter table at
-  `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0001-m210-tipo-gravamen-2025.toml`
-  (byte-identical in `2026-y-siguientes/`, correctly so — art. 25 is year-stable)
-  carries `ue_residente` as a *value* of an income-type enum, beside `canones`,
-  `inmobiliaria` and `general`. Residence and income type are two axes of art.
-  25.1.a collapsed into one lookup key.
 - That file's own comment for `canones` — "La reduccion al 19% para residentes
   UE/EEE del art 25.1.a se alcanza por el concepto `ue_residente`" — describes a
   path that, as the table above shows, does not actually reach 19 % either: a

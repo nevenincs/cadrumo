@@ -22,6 +22,7 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
+from cadrumo.core.storage_environment import storage_directory
 
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
 from ..posix import posix_storage_identity
@@ -39,7 +40,9 @@ pytestmark = [
 @pytest.fixture
 def namespace() -> Iterator[Path]:
     # Unix socket path limits apply to the entire path, including pytest's name.
-    with tempfile.TemporaryDirectory(prefix="cr-ipc-", dir=Path("/") / "tmp") as root:
+    base = storage_directory("CADRUMO_RUNTIME_SOCKET_DIR", "runtime")
+    base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with tempfile.TemporaryDirectory(prefix="s-", dir=base) as root:
         yield Path(root) / "ipc"
 
 
@@ -384,3 +387,26 @@ def test_deadline_bounds_partial_frame() -> None:
         channel.close()
         with contextlib.suppress(OSError):
             right.close()
+
+
+def test_configured_socket_directory_separates_runtime_and_workers(
+    tmp_path: Path,
+    namespace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CADRUMO_RUNTIME_SOCKET_DIR", str(namespace))
+    worker_id = uuid4()
+    owner = PosixRuntimeEndpoint(storage_root=tmp_path)
+    worker = PosixRuntimeEndpoint(storage_root=tmp_path, worker_namespace=worker_id)
+    contender = PosixRuntimeEndpoint(storage_root=tmp_path, worker_namespace=worker_id)
+    try:
+        owner.listen()
+        worker.listen()
+        with pytest.raises(RuntimeRefusalError) as caught:
+            contender.listen()
+        assert caught.value.reason is RuntimeRefusalCode.OWNER_BUSY
+        assert len(tuple(namespace.glob("*.sock"))) == 2
+    finally:
+        contender.close()
+        worker.close()
+        owner.close()

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from pydantic import model_validator
 
+from ....application.user_profile.censal_observation import CensalObservation
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.json_contract import OutputSchema
 from ....domain.user_profile.values import UserProfileFact
@@ -93,6 +94,13 @@ class CensoPullResult(OutputSchema):
     adopted: tuple[CensoFactPayload, ...] = ()
     unchanged: tuple[CensoFactPayload, ...] = ()
     divergences: tuple[CensoPullDivergencePayload, ...] = ()
+    observation: CensalObservation | None = None
+
+
+class CensoStoredResult(OutputSchema):
+    """The latest persisted census capture, read without contacting AEAT."""
+
+    observation: CensalObservation | None
 
 
 __all__ = [
@@ -100,4 +108,5 @@ __all__ = [
     "CensoFileIngestResult",
     "CensoPullDivergencePayload",
     "CensoPullResult",
+    "CensoStoredResult",
 ]

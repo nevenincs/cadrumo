@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#m200-internal-casilla-discipline'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:807e1a6bb6f5e18e83f2802c2feb0d13771bcbcb7979ab46f171b4ed4241cd49'
+body_hash: 'sha256:d513bb7842bab6e89dbdb47bfe241fbad65ab0929dd74aa9dba7be9bf62bbaf1'
 related:
   - '[[2026-06-03-m200-internal-casilla-discipline-adr]]'
-  - '[[2026-06-03-m200-internal-casilla-discipline-ledger]]'
-  - '[[2026-06-03-m200-internal-casilla-discipline-plan]]'
   - '[[2026-06-03-m200-internal-casilla-discipline-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#m200-internal-casilla-discip
 ### adr
 
 - `2026-06-03-m200-internal-casilla-discipline-adr` - `m200-internal-casilla-discipline` adr: `Modelo 200 internal-only casilla schema field exempts app-internal ceilings from AEAT diseno-coverage gates` | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-03-m200-internal-casilla-discipline-ledger` - `m200-internal-casilla-discipline` ledger
-
-### plan
-
-- `2026-06-03-m200-internal-casilla-discipline-plan` - `m200-internal-casilla-discipline` `Modelo 200 internal-only casilla discipline: schema field, gate exemption, bin-aplicada-maxima migration` plan
 
 ### research
 

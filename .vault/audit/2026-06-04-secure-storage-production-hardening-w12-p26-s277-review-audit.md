@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:927cd940324f8744061c6fa1e1974c745f810772e5b05bb1de60803f3c74bfe0'
+modified: '2026-10-03'
+body_hash: 'sha256:4ab73cdbdfc5bce507224a3e9d5cb0ce513432cc73ab367baae9ed5ab4e0d555'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S277-001 | PASS | Wizard translation audit boundary
 
-The `W12.P26.S277` review found that `src/aeat/application/wizard/_translations.py`
+The `W12.P26.S277` review found that the retired module
 is a local locale-coverage audit helper. It walks wizard descriptors and statically
 referenced CLI translation keys, then checks them through `tr(...)`. It does not own
 secure-storage persistence, remote-provider mirroring, bucket manifests, master-key
@@ -41,8 +41,8 @@ parsing.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_translations.py src/aeat/application/wizard/test_translations_helpers.py src/aeat/application/wizard/test_wizard_translations_resolve.py src/aeat/application/wizard/test_flow_description_keys.py src/aeat/locales`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_translations_helpers.py src/aeat/application/wizard/test_wizard_translations_resolve.py src/aeat/application/wizard/test_flow_description_keys.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "wizard translations audit cli translation keys locales source introspection remote provider mirror" --type code --port 8766 --max-results 8`
 

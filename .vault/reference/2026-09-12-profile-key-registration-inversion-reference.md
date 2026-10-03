@@ -3,22 +3,15 @@ tags:
   - '#reference'
   - '#profile-key-registration-inversion'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d015f47fefbbfeaf42f83aef27531fc701e0ef51498078b4d40f65ae39585c9'
+body_hash: 'sha256:972806ca44d96b733106490a293e2d8a4bd458478807a0526f5adeee1ce3b83f'
 related: []
 ---
 
 # `profile-key-registration-inversion` reference: application-owned catalogue
 
-The implementation audit traced the profile-key read path, its wizard source,
-and the boundary checks that exposed the inversion. The former design put the
-`ProfileKey` record and a process-global registration slot in
-`src/cadrumo/domain/contribuyente/keys.py`; `src/cadrumo/application/wizard/compiler.py`
-compiled `WIZARD_FLOWS` and pushed into that slot during import. Domain test
-fixtures imported the compiler only to trigger that push. The production
-readers were application profile validation and workflow-health projections,
-so the domain slot was not domain authority.
+The implementation audit traced the profile-key read path, its wizard source, and the boundary checks that exposed the inversion. Domain test fixtures imported the compiler only to trigger that push. The production readers were application profile validation and workflow-health projections, so the domain slot was not domain authority.
 
 ## Summary
 

@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "20879d8fc357b32847815f39c3bd6231fad37711db2cc265afcf0fa0a9f8692f"
+source_state_digest = "ab2219d488410316e01daa94938cd2e77822151fe6343acbf8ee01670609198c"
 placements = [
     { casilla_id = "aportaciones-ejercicio", kind = "on_form" },
     { casilla_id = "base-retencion-practicada", kind = "on_form" },
@@ -27,7 +27,7 @@ placements = [
     { casilla_id = "numero-identificativo-anterior", kind = "on_form" },
     { casilla_id = "numero-identificativo-declaracion", kind = "on_form" },
     { casilla_id = "numero-total-declarados", kind = "on_form" },
-    { casilla_id = "persona-relacion", kind = "on_form" },
+    { casilla_id = "persona-relacion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "rendimientos-negativos-acumulados", kind = "on_form" },
     { casilla_id = "rendimientos-negativos-ejercicio", kind = "on_form" },
     { casilla_id = "rendimientos-negativos-imputables", kind = "on_form" },
@@ -48,13 +48,12 @@ id = "general"
 heading_key = "modelo.schema.280.form.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante-razon-social" },
-    { kind = "field", id = "field-2", casilla_id = "persona-relacion" },
-    { kind = "field", id = "field-3", casilla_id = "numero-identificativo-declaracion" },
-    { kind = "field", id = "field-4", casilla_id = "declaracion-complementaria-sustitutiva" },
-    { kind = "field", id = "field-5", casilla_id = "numero-identificativo-anterior" },
-    { kind = "field", id = "field-6", casilla_id = "numero-total-declarados" },
-    { kind = "field", id = "field-7", casilla_id = "importe-total-aportaciones" },
-    { kind = "field", id = "field-8", casilla_id = "base-retenciones" },
+    { kind = "field", id = "field-2", casilla_id = "numero-identificativo-declaracion" },
+    { kind = "field", id = "field-3", casilla_id = "declaracion-complementaria-sustitutiva" },
+    { kind = "field", id = "field-4", casilla_id = "numero-identificativo-anterior" },
+    { kind = "field", id = "field-5", casilla_id = "numero-total-declarados" },
+    { kind = "field", id = "field-6", casilla_id = "importe-total-aportaciones" },
+    { kind = "field", id = "field-7", casilla_id = "base-retenciones" },
 ]
 
 [[revisions.2025.form_layouts.pages]]

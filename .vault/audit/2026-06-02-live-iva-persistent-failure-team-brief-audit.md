@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:aff22fc0719cbc1576999a8a35361138015f1210fba55da6e80438e1ade4e1fc'
+modified: '2026-10-03'
+body_hash: 'sha256:ac3648c2267daffae2f49cdfa12698bceef225d7cf38b0540631f4cc714d1928'
 related:
   - '[[2026-06-02-live-iva-surface-diagnostics-review-audit]]'
 ---
@@ -32,7 +32,7 @@ state extraction, or calculation reconciliation against AEAT's binding state.
 - Declaration-query consultation: required and not optional. This is one of the
   intended live consultation surfaces for pulling filed Modelo 303 information
   for the declarante without filing anything. The current implementation has
-  reached the route once, but has not proven complete multiyear extraction or
+  reached the route once, but has not proven complete multiyear extraction
   current compensation-state reconstruction from AEAT records.
 - IVA wallet/cartera or Pre303 compensation state: required authority input if
   AEAT exposes the running balance there. The current implementation has not
@@ -100,26 +100,26 @@ evidence supports it.
 
 H5. The current "wallet" naming may be too narrow. The required feature is not a
 specific table name; it is the read-only AEAT consultation pipeline for the
-declarante's binding IVA compensation state. The team should discover and
+declarante's binding IVA compensation state. The team should discover
 implement the actual official surface, even if the final route is declaration
 query plus submitted-file extraction rather than `CarteraCuotas`.
 
 ## Code Surfaces To Assign
 
-- `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`
+- the retired module
   - `fetch_iva_compensation_wallet`
   - `_open_authenticated_surface`
   - `_submit_wallet_execute_gate_if_present`
   - `_wallet_page_shape_context`
   - `is_aeat_wallet_auth_gate_redirect`
-- `src/aeat/adapters/outbound/aeat/sede/_declarations.py`
+- the retired module
   - `_drive_search`
   - `_declarations_page_shape_context`
-- `src/aeat/application/live/__init__.py`
+- the retired module
   - `_capture_iva_remote_state_for_active_storage`
   - `_await_live_iva_surface`
   - `_redacted_failure_context`
-- `src/aeat/entrypoints/cli/_app_live.py`
+- the retired module
   - `_iva_remote_state_capture_lines`
   - `_compact_failure_context`
 

@@ -112,6 +112,6 @@ def test_the_single_language_build_recipe_renders_into_that_language_root() -> N
     body = _justfile_recipe("docs-lang LANG")
 
     assert "--language {{LANG}}" in body, f"docs-lang no longer selects a catalogue: {body}"
-    assert "--out-dir docs/_build/html/{{LANG}}" in body, (
+    assert '--out-dir "{{CADRUMO_DOCS_BUILD_ROOT}}/html/{{LANG}}"' in body, (
         f"docs-lang renders into the canonical English root instead of its own language root: {body}"
     )

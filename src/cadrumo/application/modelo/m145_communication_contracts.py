@@ -538,7 +538,7 @@ class M145CommunicationExecutionResult(BaseModel):
     result: M145CommunicationOperationResult
 
 
-M145_COMMUNICATION_REQUEST_TYPES: dict[M145CommunicationOperationId, type[BaseModel]] = {
+M145_COMMUNICATION_REQUEST_TYPES: dict[M145CommunicationOperationId, type[M145CommunicationRequest]] = {
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID: M145CommunicationCreateRequest,
     M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: M145CommunicationValidateRequest,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID: M145CommunicationExportRequest,

@@ -14,7 +14,12 @@ from ...core.operations import (
     OperationEffect,
     profile_operation_subject,
 )
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    require_declared_frontend_and_action,
+    require_period_independent_replay_or_authority,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -94,34 +99,6 @@ def _require_apoderado_access_request(
     return operation_id, payload, mutating
 
 
-def _require_apoderado_access_action(context: OperationAccessContext, *, mutating: bool) -> frozenset[AccessAction]:
-    frontends = _WRITE_FRONTENDS if mutating else ALL_OPERATION_FRONTENDS
-    actions = _WRITE_ACTIONS if mutating else _READ_ACTIONS
-    if context.frontend not in frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in actions:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    return actions
-
-
-def _require_apoderado_observation_authority(
-    operation_id: ApoderadoOperationId, context: OperationAccessContext
-) -> None:
-    admitted = context.admitted_request
-    if admitted is not None and context.action in {AccessAction.OBSERVE, AccessAction.RESULT}:
-        if (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != operation_id
-            or admitted.destination_id != context.destination_id
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods
-            or not admitted.period_independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    elif context.authority_operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-
 def _apoderado_disclosures(
     operation_id: ApoderadoOperationId, context: OperationAccessContext
 ) -> frozenset[DisclosurePermission]:
@@ -149,8 +126,11 @@ def _apoderado_disclosures(
 
 def _resolve_access(request: OperationRequest[BaseModel], context: OperationAccessContext) -> ResolvedOperationAccess:
     operation_id, payload, mutating = _require_apoderado_access_request(request, context)
-    actions = _require_apoderado_access_action(context, mutating=mutating)
-    _require_apoderado_observation_authority(operation_id, context)
+    actions = _WRITE_ACTIONS if mutating else _READ_ACTIONS
+    require_declared_frontend_and_action(
+        context, frontends=_WRITE_FRONTENDS if mutating else ALL_OPERATION_FRONTENDS, actions=actions
+    )
+    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=operation_id)
     disclosures = _apoderado_disclosures(operation_id, context)
     return ResolvedOperationAccess(
         request=OperationAccessRequest(

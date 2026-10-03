@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0b404daefe79d6e2d4994f6724368ab454119815fcf4759c0505253f671eccfd'
-related:
-  - "[[2026-09-30-modelo-editor-workbench-plan]]"
+body_hash: 'sha256:13f738d322f3871d1b781ee6b1cf7e4e553b4bec87c79f1b562699456bc2de5c'
+related: []
 ---
 
 # `modelo-editor-workbench` audit: `Plan-close review of the modelo editor workbench`
@@ -72,10 +71,7 @@ other (`src/cadrumo/entrypoints/tui/modelo/workbench/result.py`).
 
 ### retirement-atomicity | high | acceptance journeys still drove the retired workspace
 
-`dev/acceptance/iva/installed_m303_evidence_journey.py`, `dev/acceptance/income_tax/tui_journey.py`,
-`installed_tui_financial_child.py`, `installed_tui_continuations.py` and
-`dev/acceptance/retenciones/installed_tui_withholding.py` targeted deleted widgets. Resolved in `0452b64dcd`: every journey drives the workbench's keys, export dialog, confirmation and result
-statement, and no retired widget id or row key remains under `dev/`.
+Resolved in `0452b64dcd`: every journey drives the workbench's keys, export dialog, confirmation and result statement, and no retired widget id or row key remains under `dev/`.
 
 ### sources-hub-reason | high | a carry override records no reason and no displaced value, and the sources view offers no edit actions
 
@@ -135,12 +131,7 @@ Renta design or instructions.
 
 ### registry-pipeline-deadlock | medium | publishing authority in a fresh checkout can hang on Windows
 
-The preview worker found that `candidate_compile_process.exit_when_parent_exits` starts a thread
-blocked in `sys.stdin.buffer.read()`, and validation then imports numpy through openpyxl while
-extracting XLSX evidence (`dev/registry/validate_evidence.py:201`); the numpy extension load hangs
-beside that thread. Reproduced standalone. It bites any checkout that must re-extract XLSX text.
-Open, outside this feature: the registry pipeline's owner should import numpy/openpyxl before the
-watcher thread starts or stop reading stdin in a blocking thread.
+Reproduced standalone. It bites any checkout that must re-extract XLSX text. Open, outside this feature: the registry pipeline's owner should import numpy/openpyxl before the watcher thread starts or stop reading stdin in a blocking thread.
 
 ### money-declared-as-decimal | medium | Modelo 100 money boxes are declared decimal, so they render without a euro sign
 

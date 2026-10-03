@@ -1,0 +1,379 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:1
+msgid "Installed runtime, profile host, and worker authority"
+msgstr ""
+"Entorn d’execució instal·lat, amfitrió de perfils i autoritat dels "
+"processos de treball"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:7
+msgid ""
+"**Report:** `STAGE-2-174` · **Topic:** [Installed runtime, terminal "
+"workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
+msgstr ""
+"**Informe:** `STAGE-2-174` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:10
+msgid "Scope and method"
+msgstr "Abast i mètode"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:12
+msgid ""
+"This chunk covers 19 runtime modules, 5,544 lines and 47,532 measured "
+"`o200k_base` proxy tokens. Every manifest range was read in nine bounded "
+"pages. The review is static: no runtime process was started and no native"
+" login, storage, IPC or worker behavior was exercised. These modules "
+"define the installed runtime’s bootstrap and host, connection/login "
+"lifecycle, profile worker, canonical operation dispatch, access "
+"management, enrollment/approval, and bounded shutdown."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:14
+msgid "Runtime topology and capabilities"
+msgstr "Topologia i capacitats de l'entorn d'execució"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:16
+msgid ""
+"The installed entrypoint starts an isolated interpreter, filters ambient "
+"Python and dynamic-loader variables, disables Pydantic plugins, and uses "
+"a fixed Python module command without a shell. The runtime verifies its "
+"installed package version, requires an absolute storage root whose "
+"endpoint identity matches the requested identity, and chooses the "
+"platform-native endpoint. It builds the production operation registry "
+"before serving. A shutdown watchdog is armed around service; managed-stop"
+" hooks are composed where available. A Linux guardian checks the parent’s"
+" owner and process start identity, opens a pidfd, rechecks the exact "
+"process, then launches a contained worker with a minimal environment and "
+"no inherited descriptors (`bootstrap.py` "
+"(`src/cadrumo/entrypoints/runtime/bootstrap.py`), `main.py` "
+"(`src/cadrumo/entrypoints/runtime/main.py`), `linux_worker_guardian.py` "
+"(`src/cadrumo/entrypoints/runtime/linux_worker_guardian.py`)). This is "
+"strong process-boundary evidence in source, but OS behavior still "
+"requires platform tests."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:18
+msgid ""
+"`RuntimeProfileConnections` distinguishes each native connection, login "
+"evidence, client ID, profile and frontend. It lazily opens "
+"installation/profile custody only after a request, verifies OS owner and "
+"current automation-profile binding, and reuses a cached host only if the "
+"binding is unchanged. Password/receipt login is limited to CLI/TUI; a "
+"persisted human receipt is permitted only with password login. API-key "
+"routing can identify a candidate client from protected state, but the "
+"established authority still verifies the key and grants the lease. "
+"Password and receipt bytes travel through secret frames rather than "
+"ordinary request documents. Session refresh, lock, status, "
+"logout/connection loss, lock-generation change and periodic login "
+"observation retire stale access. A runtime that loses all positive "
+"unattended-login witnesses after seeing an eligible login sets its stop "
+"event (`profile_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/profile_connections.py`), "
+"`profile_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/profile_connections.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:20
+msgid ""
+"Profile access management wraps canonical services for session inventory,"
+" automation denial, global profile recovery preparation, and password-"
+"proven profile resume. Global denial is serialized by the profile guard; "
+"its in-memory denial fence is set before fallible durable publication, so"
+" a storage failure does not reopen the live process. Recovery is a "
+"separate no-session journey: it binds native login evidence, records a "
+"lock generation, sends a secret-ready signal, reads one password frame, "
+"and resumes only against that generation. Enrollment requests are tied to"
+" a live native connection, profile binding, OS owner, originating login, "
+"expiry and lock generation; they have bounded offer/record counts, use "
+"strict duplicate-free JSON parsing, and deliver one-time recipient work "
+"through a volatile protected channel. The handler retires offers on "
+"disconnect, expiry, lock or profile replacement. A helper `request()` "
+"path in worker automation administration is explicitly unavailable in "
+"this snapshot; that request door is not implemented by the worker adapter"
+" (`access_management.py` "
+"(`src/cadrumo/entrypoints/runtime/access_management.py`), "
+"`enrollment_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/enrollment_connections.py`), "
+"`automation_execution.py` "
+"(`src/cadrumo/entrypoints/runtime/automation_execution.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:22
+msgid "Operation execution and disclosure authority"
+msgstr "Execució d'operacions i autoritat de divulgació"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:24
+msgid ""
+"The profile host composes one pinned registry/authority, session owner, "
+"worker process and operation services per exact profile binding. It "
+"requires a readable current recovery inventory before the first hosted "
+"private operation; damaged, stale or refused entries block that path. On "
+"submission, the host binds the new operation ID to the exact session, "
+"frontend and typed request, then admits it under a `SUBMIT` guard. It "
+"captures admission provenance—including scope, authority generation, and "
+"a payload fingerprint—and retains the original response capability only "
+"in the same process. Replays do not revive that capability. Start, "
+"resume, commit, response, review and result access re-resolve current "
+"registered policy and authority; stored invocation identity and profile "
+"binding are checked before disclosure (`operation_host.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_host.py`), "
+"`operation_authority.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_authority.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:26
+msgid ""
+"The worker-side authority holds grants in task-local guards, so child "
+"tasks inherit no authorization permit. It checks definition and subject "
+"identity, exact invocation provenance, current authority generation, "
+"profile binding and operation scope at each relevant boundary. COMMIT "
+"guards retain native authority and stable custody through an effect. One-"
+"shot secret submission verifies the exact admitted "
+"submitter/definition/subject and expires after its declared deadline; the"
+" worker wipes its mutable buffer in a `finally` path. The host preflights"
+" before signaling the frontend, then releases the profile fence while "
+"waiting for secret bytes or worker callbacks and obtains fresh "
+"authorization for delivery and acknowledgement. Result and review "
+"projections are serialized under a matching disclosure guard, and "
+"response apply/reject/inspect require the original local response "
+"capability (`operation_authority.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_authority.py`), "
+"`operation_host.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_host.py`), "
+"`operation_projection.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_projection.py`), "
+"`profile_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/profile_connections.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:28
+msgid ""
+"Operation payload uploads use a four-slot semaphore, bounded deadlines "
+"and a host-generated upload ID. Each chunk is read as a secret frame, "
+"length-checked, staged in the worker, and rechecked against the session; "
+"abandoned uploads close only that frontend stream and trigger bounded "
+"abort cleanup. The isolated worker validates its live native parent "
+"before opening custody, uses two channels in the same verified runtime "
+"cohort, installs an exact profile lease, and routes typed "
+"submit/start/resume/observe/project/manage requests through the canonical"
+" operation host. Periodic expiry retires staged payloads and expired "
+"proof candidates. Worker failure and task cleanup retain cleanup owners "
+"rather than silently dropping failed releases (`submission_stream.py` "
+"(`src/cadrumo/entrypoints/runtime/submission_stream.py`), `worker.py` "
+"(`src/cadrumo/entrypoints/runtime/worker.py`), `worker.py` "
+"(`src/cadrumo/entrypoints/runtime/worker.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:30
+msgid ""
+"Automation approval follows a separate multi-phase path. The worker "
+"creates its cleanup proxy before the first cancellable exchange; proof "
+"preparation, recipient inspection and delivery occur outside publication "
+"authority. Review/candidate/activation/decline publication requires the "
+"same task’s held human `COMMIT` lease. Parent-side checks bind worker, "
+"runtime boot, profile, connection, session, operation and review digest; "
+"recipient consent is re-read before scoped delegation, and cleanup can "
+"retire a proof after expiry or disconnect (`automation_execution.py` "
+"(`src/cadrumo/entrypoints/runtime/automation_execution.py`), "
+"`profile_host.py` (`src/cadrumo/entrypoints/runtime/profile_host.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:32
+msgid "Shutdown and implementation assessment"
+msgstr "Aturada i avaluació de la implementació"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:34
+msgid ""
+"Shutdown stops new admissions, closes enrollment delivery, drains each "
+"worker under a deadline, retains original request/containment threads for"
+" retries, and only clears ownership after no worker is uncontained or "
+"unsettled. If the runtime cannot settle within its watchdog deadline, "
+"`terminate_runtime()` exits the installed process so root ownership is "
+"not released while callbacks or child processes may continue. This is a "
+"meaningful fail-closed containment design; its assurance depends on real "
+"Linux/Windows process and named-pipe behavior, which static reading "
+"cannot certify (`profile_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/profile_connections.py`), `shutdown.py`"
+" (`src/cadrumo/entrypoints/runtime/shutdown.py`))."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:36
+msgid ""
+"The code has strong separation of ordinary documents from secret frames, "
+"verified peer and boot identity, exact profile/session scoping, fresh "
+"authorization on private effects and disclosures, fail-closed "
+"uncertainty, and retained cleanup state. It is also large and "
+"concurrency-heavy: admission, cancellation, callback, profile replacement"
+" and drain logic span parent, worker and OS-specific adapters. No tests "
+"are included in these assigned files. Synthesis should inspect worker-"
+"authorization IPC framing and schemas, custody-store atomicity/locking, "
+"candidate-key lifetime, Windows containment/handle inheritance, Linux "
+"guardian and pidfd behavior, response capability storage, and every "
+"operation handler that uses this boundary. Review race tests for "
+"disconnect during secret upload, denial during COMMIT, profile-root "
+"replacement during worker callbacks, shutdown during construction, and "
+"interrupted native approval delivery."
+msgstr ""
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:38
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:40
+msgid ""
+"All 19 assigned files were fully read at their manifest-specified line "
+"ranges:"
+msgstr ""
+"Es van llegir íntegrament els 19 fitxers assignats en els intervals de "
+"línies especificats al manifest:"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:42
+msgid "`__init__.py` (`src/cadrumo/entrypoints/runtime/__init__.py`)"
+msgstr "`__init__.py` (`src/cadrumo/entrypoints/runtime/__init__.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:43
+msgid "`__main__.py` (`src/cadrumo/entrypoints/runtime/__main__.py`)"
+msgstr "`__main__.py` (`src/cadrumo/entrypoints/runtime/__main__.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:44
+msgid ""
+"`access_management.py` "
+"(`src/cadrumo/entrypoints/runtime/access_management.py`)"
+msgstr ""
+"`access_management.py` "
+"(`src/cadrumo/entrypoints/runtime/access_management.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:45
+msgid ""
+"`automation_execution.py` "
+"(`src/cadrumo/entrypoints/runtime/automation_execution.py`)"
+msgstr ""
+"`automation_execution.py` "
+"(`src/cadrumo/entrypoints/runtime/automation_execution.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:46
+msgid "`bootstrap.py` (`src/cadrumo/entrypoints/runtime/bootstrap.py`)"
+msgstr "`bootstrap.py` (`src/cadrumo/entrypoints/runtime/bootstrap.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:47
+msgid ""
+"`enrollment_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/enrollment_connections.py`)"
+msgstr ""
+"`enrollment_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/enrollment_connections.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:48
+msgid ""
+"`gnome_login_observer.py` "
+"(`src/cadrumo/entrypoints/runtime/gnome_login_observer.py`)"
+msgstr ""
+"`gnome_login_observer.py` "
+"(`src/cadrumo/entrypoints/runtime/gnome_login_observer.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:49
+msgid ""
+"`linux_worker_guardian.py` "
+"(`src/cadrumo/entrypoints/runtime/linux_worker_guardian.py`)"
+msgstr ""
+"`linux_worker_guardian.py` "
+"(`src/cadrumo/entrypoints/runtime/linux_worker_guardian.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:50
+msgid "`main.py` (`src/cadrumo/entrypoints/runtime/main.py`)"
+msgstr "`main.py` (`src/cadrumo/entrypoints/runtime/main.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:51
+msgid ""
+"`operation_authority.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_authority.py`)"
+msgstr ""
+"`operation_authority.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_authority.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:52
+msgid "`operation_host.py` (`src/cadrumo/entrypoints/runtime/operation_host.py`)"
+msgstr "`operation_host.py` (`src/cadrumo/entrypoints/runtime/operation_host.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:53
+msgid ""
+"`operation_projection.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_projection.py`)"
+msgstr ""
+"`operation_projection.py` "
+"(`src/cadrumo/entrypoints/runtime/operation_projection.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:54
+msgid ""
+"`profile_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/profile_connections.py`)"
+msgstr ""
+"`profile_connections.py` "
+"(`src/cadrumo/entrypoints/runtime/profile_connections.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:55
+msgid "`profile_host.py` (`src/cadrumo/entrypoints/runtime/profile_host.py`)"
+msgstr "`profile_host.py` (`src/cadrumo/entrypoints/runtime/profile_host.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:56
+msgid "`profile_login.py` (`src/cadrumo/entrypoints/runtime/profile_login.py`)"
+msgstr "`profile_login.py` (`src/cadrumo/entrypoints/runtime/profile_login.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:57
+msgid "`session_owner.py` (`src/cadrumo/entrypoints/runtime/session_owner.py`)"
+msgstr "`session_owner.py` (`src/cadrumo/entrypoints/runtime/session_owner.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:58
+msgid "`shutdown.py` (`src/cadrumo/entrypoints/runtime/shutdown.py`)"
+msgstr "`shutdown.py` (`src/cadrumo/entrypoints/runtime/shutdown.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:59
+msgid ""
+"`submission_stream.py` "
+"(`src/cadrumo/entrypoints/runtime/submission_stream.py`)"
+msgstr ""
+"`submission_stream.py` "
+"(`src/cadrumo/entrypoints/runtime/submission_stream.py`)"
+
+#: ../../technical/articles/174-installed-runtime-profile-host-and-worker-authority.md:60
+msgid "`worker.py` (`src/cadrumo/entrypoints/runtime/worker.py`)"
+msgstr "`worker.py` (`src/cadrumo/entrypoints/runtime/worker.py`)"

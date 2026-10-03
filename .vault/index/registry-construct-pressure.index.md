@@ -6,13 +6,11 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:aca84e4fc37b4757036b56cb846d611676d8f68fc9dead17792f542389952ce8'
+body_hash: 'sha256:49b2a9bbf91bb8748908523a98f462a4b5511515de973f07aa24623ed2febbaa'
 related:
   - '[[2026-06-03-registry-construct-pressure-audit]]'
   - '[[2026-06-03-registry-construct-pressure-code-review-audit]]'
   - '[[2026-06-03-registry-construct-pressure-headroom-audit]]'
-  - '[[2026-06-03-registry-construct-pressure-ledger]]'
-  - '[[2026-06-03-registry-construct-pressure-plan]]'
   - '[[2026-06-04-registry-construct-pressure-research]]'
 ---
 
@@ -27,14 +25,6 @@ Auto-generated index of all documents tagged with `#registry-construct-pressure`
 - `2026-06-03-registry-construct-pressure-audit` - `registry-construct-pressure` audit: `M200 construct fragment split boundary audit`
 - `2026-06-03-registry-construct-pressure-code-review-audit` - `registry-construct-pressure` Code Review
 - `2026-06-03-registry-construct-pressure-headroom-audit` - `registry-construct-pressure` audit: `Post-split registry fragment headroom`
-
-### exec
-
-- `2026-06-03-registry-construct-pressure-ledger` - `registry-construct-pressure` ledger
-
-### plan
-
-- `2026-06-03-registry-construct-pressure-plan` - `registry-construct-pressure` `M200 construct fragment pressure follow-up` plan
 
 ### research
 

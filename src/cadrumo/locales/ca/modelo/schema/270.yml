@@ -149,10 +149,5 @@ modelo:
           field:
             label: Model 270 (Ordre HAP/2368/2013), exercicis 2013 a 2022
         2023-y-siguientes:
-          casilla:
-            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
-              label: Ciutat de naixement
-            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
-              label: Codi del país de naixement
           field:
             label: Model 270 (Ordre HAP/2368/2013), exercicis 2023 a 2024

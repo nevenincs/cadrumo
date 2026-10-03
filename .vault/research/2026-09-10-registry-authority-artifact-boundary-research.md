@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d68a289649d37dcc6391191ce184aa37d7e0db88756738921c7e3a00d2d78f2f'
+body_hash: 'sha256:948d7c37be9ef8a076fe2db357b07919503ffe12859f6eb312b5bcc37474a1e2'
 related: []
 ---
 
@@ -21,11 +21,11 @@ The production package originally compiled its bundled registry from raw authori
 
 ### The compiled cache was not a publishable runtime boundary
 
-The cache was a mutable-root recompilation shortcut keyed to compiler/source-tree identity. Its frozen models-and-catalogues payload was suitable for publication, but its fallback and raw-root semantics were not. `src/cadrumo/domain/calculations/registry/_compiled_cache.py:1-37` `src/cadrumo/domain/calculations/registry/loader.py:257-335`
+The cache was a mutable-root recompilation shortcut keyed to compiler/source-tree identity. Its frozen models-and-catalogues payload was suitable for publication, but its fallback and raw-root semantics were not. the former source file the former source file
 
 ### Record-design parsing and repairs are authoring validation, not runtime behavior
 
-The PDF extraction/repair family establishes whether generated export layouts agree with official source material. It is enrolled through revision validation and has no production responsibility outside that development coverage gate. `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py:211` `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py:971-1001` `src/cadrumo/domain/calculations/registry/record_design.py:48-227`
+The PDF extraction/repair family establishes whether generated export layouts agree with official source material. It is enrolled through revision validation and has no production responsibility outside that development coverage gate. the former source file the former source file the former source file
 
 ### Development publication provides the transaction boundary
 
@@ -45,7 +45,7 @@ Production uses 41 named `Modelo` constants across 108 files and one direct enum
 
 ### Parallel raw runtime lanes remain outside the published authority
 
-IVA catalogue, place-of-supply, country/territory, recargo-band, and apoderamientos consumers parse authoring TOML and maintain caches independently of the authority artifact. Operative values embedded merely as source bytes would retain those parsing and management lanes; canonical runtime projection therefore requires typed catalogue data. `src/cadrumo/domain/iva/catalogue.py:33-119` `src/cadrumo/domain/iva/place_of_supply.py:187-263` `src/cadrumo/domain/deadlines/recargo.py:46-99` `src/cadrumo/domain/auth/apoderamientos/catalogue.py:76-95`
+IVA catalogue, place-of-supply, country/territory, recargo-band, and apoderamientos consumers parse authoring TOML and maintain caches independently of the authority artifact. Operative values embedded merely as source bytes would retain those parsing and management lanes; canonical runtime projection therefore requires typed catalogue data. the former source file `src/cadrumo/domain/iva/place_of_supply.py:187-263` `src/cadrumo/domain/deadlines/recargo.py:46-99` `src/cadrumo/domain/auth/apoderamientos/catalogue.py:76-95`
 
 ### Revision expansion and period selection are separate concerns
 
@@ -58,16 +58,6 @@ The release gate must reject defective publication, run a real installed workflo
 ## Sources
 
 `src/cadrumo/domain/calculations/registry/authority.py:931-1073`
-
-`src/cadrumo/domain/calculations/registry/_compiled_cache.py:1-37`
-
-`src/cadrumo/domain/calculations/registry/loader.py:257-335`
-
-`src/cadrumo/domain/calculations/registry/_validate_revision_sections.py:211`
-
-`src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py:971-1001`
-
-`src/cadrumo/domain/calculations/registry/record_design.py:48-227`
 
 `dev/registry/pipeline/cli.py:98-165`
 
@@ -88,8 +78,6 @@ The release gate must reject defective publication, run a real installed workflo
 `src/cadrumo/entrypoints/cli/common.py:72`
 
 `src/cadrumo/domain/submission/models.py:245`
-
-`src/cadrumo/domain/iva/catalogue.py:33-119`
 
 `src/cadrumo/domain/iva/place_of_supply.py:187-263`
 

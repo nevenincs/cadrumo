@@ -36,7 +36,7 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..review.filter import LedgerReviewStatus
@@ -147,13 +147,11 @@ class LedgerLinkExecutor:
         self, request: OperationRequest[BaseModel], context: OperationExecutorContext
     ) -> OperationExecutorResult:
         """Link the guarded records or return a closed prewrite refusal."""
-        payload = request.payload
-        if (
-            request.definition_id != LEDGER_LINK_OPERATION_DEFINITION_ID
-            or type(payload) is not LedgerLinkRequest
-            or not isinstance(payload, LedgerLinkRequest)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        payload = require_access_request_payload(
+            request,
+            definition_id=LEDGER_LINK_OPERATION_DEFINITION_ID,
+            payload_type=LedgerLinkRequest,
+        )
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
         tracker = LedgerCommitAttemptTracker()

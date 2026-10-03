@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-addressing-ux'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:1cab77c3e345218d279a967d35dc462b027bffced771e78984a087457e438d82'
+modified: '2026-10-03'
+body_hash: 'sha256:a2ae6425f9dee8db4aed2a50ddaed93143ed95e5c75af6d72e09e8954ee4022c'
 related:
   - '[[2026-06-03-cli-workflow-redesign-epic-adr]]'
   - '[[2026-06-04-cli-workflow-redesign-epic-research]]'
@@ -18,7 +18,7 @@ This research investigated whether the modelo CLI can stop exposing raw work-uni
 
 The current tutorial and quickstart flows require the operator to track two different 64-character identifiers during the first filing journey. The command sequence is internally coherent but externally hostile: `work calculate` consumes a work-unit id, `work verify` and `work file` consume a calculation-revision id, and `modelo export` consumes a work-unit id while optionally selecting an exportable calculation revision.
 
-The documentation surface reflects the same problem in several places. `docs/tutorials/index.md`, `docs/getting-started.md`, and `docs/how-to/quickstart.md` all instruct the operator to copy ids between steps. The generated CLI reference also documents raw `work_unit_id` and `calculation_revision_id` arguments as required for core lifecycle verbs.
+The documentation surface reflects the same problem in several places. the former source file, the former source file, and `docs/how-to/quickstart.md` all instruct the operator to copy ids between steps. The generated CLI reference also documents raw `work_unit_id` and `calculation_revision_id` arguments as required for core lifecycle verbs.
 
 The domain distinction is clear in code. A `WorkUnit` is the stable filing workspace keyed by bucket, modelo, filing year, period, and registry revision. A `CalculationRevision` is one immutable calculation attempt under that work unit. Multiple calculation revisions can exist under one work unit; recalculation produces a new content-addressed revision rather than mutating the prior result.
 

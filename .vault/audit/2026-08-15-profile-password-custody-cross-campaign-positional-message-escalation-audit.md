@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:10e04da5995cf820ead18941bbd6f76ac40b64e9ee62bfbd4a2ba009447ce0c3'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+body_hash: 'sha256:f88f32b68311c59371cd8672758aad35df0e1bf556fa4df15b358ee66799352f'
+related: []
 ---
 
 # `profile-password-custody` audit: `cross campaign positional message escalation`
@@ -24,7 +23,7 @@ outside this feature's own plan was edited, and no source producer was touched.
 
 ### owning-campaign-identified | high | the rehoming module's plan authority is `2026-08-09-cli-action-envelope-hardening-plan`
 
-`dev/quality/error_code_default_recovery_rehoming.py` hardcodes `_PLAN_PATH` to
+The retired module hardcoded `_PLAN_PATH` to
 `.vault/plan/2026-08-09-cli-action-envelope-hardening-plan.md`; every `owner_step` the
 ledger cites is a Step id in that plan, not in this campaign's own plan. That is the
 "owning campaign" the row names. This campaign's own `W04.P07.S70` triaged the ledger's
@@ -50,7 +49,7 @@ are in `2026-08-09-cli-action-envelope-hardening-plan.md` and all nine are check
 
 ### readiness-gate-module-confirmed | critical | `_profile_readiness_gate.py` carries migrated and unmigrated raise sites side by side
 
-`src/cadrumo/application/modelo/_profile_readiness_gate.py` raises
+The retired module raises
 `ModeloProfileReadinessError` at seven sites. Two -- line 351 and line 367 -- pass a
 runtime-built English sentence (`message`, an f-string assembled at line 394, e.g.
 `f"Modelo {modelo_code} is not applicable to the active profile: {applicability.reason}"`)

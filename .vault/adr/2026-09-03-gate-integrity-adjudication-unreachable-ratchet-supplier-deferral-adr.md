@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#gate-integrity-adjudication'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a01911c816b5092f71a7df239fe8fbd1c7aa4c95ab77b5063fc0a7c8b79e7ce'
+body_hash: 'sha256:b4bff0e304d1c7ed98164bb21a47299f0cc17005e6dc6e28645f3b2c6536da17'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -110,7 +110,7 @@ excluded, or every multi-module finding would report a non-empty importer set an
 distinction the field exists to draw would vanish. The reach categories are unchanged:
 these modules remain factual unreachable output.
 
-`dev/quality/unreachable_module_ratchet.py` grows the deferral to a fixpoint over
+the former source file grows the deferral to a fixpoint over
 exclusive suppliers. A finding whose every importer is frozen, or is itself deferred this
 way, is deferred too; a finding with no importers, or with any importer outside that set,
 stays actionable. The fixpoint rather than a single pass is what carries a supplier of a

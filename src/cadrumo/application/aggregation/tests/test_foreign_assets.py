@@ -23,6 +23,7 @@ from ....core.foreign_asset_obligation import (
 )
 from ....core.identity.transaction_ids import TransactionId
 from ....core.period import Period
+from ....domain.calculations.registry.binding_targets import BindingConsumerKind, binding_consumers
 from ....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -515,6 +516,13 @@ class TestForeignAssetSourceResolver:
         assert resolution.provenance == ()
 
         row_values = dict(resolution.row_binding_values)
+
+        application_consumers = binding_consumers(revision)
+        assert {binding_id for binding_id, _ in row_values} == {
+            binding.id
+            for binding in revision.bindings
+            if any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in application_consumers[binding.id])
+        }
 
         assert {index for _, index in row_values} == {1, 2}
         assert row_values[("modelo-720-asset-row-asset-ref", 1)] == asset_ref("AD-ACCOUNT-001")

@@ -1192,6 +1192,7 @@ modelo:
                 jegyeinek átruházása. A befektetési társaság vagy alap NIF száma
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               help: A Modelo 151 nyomtatvány 03. rovata, 2025. adóév.
+              label: Nyomtatvány
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
               help: A Modelo 151 nyomtatvány 01. rovata, 2025. adóév.
               label: A nyomtatvány- és oldalazonosító kezdete

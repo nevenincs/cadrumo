@@ -16,11 +16,12 @@ import sys
 from collections.abc import Callable, Generator
 from contextlib import ExitStack, contextmanager
 from importlib.resources import files
-from pathlib import Path
 from typing import cast
 from uuid import uuid4
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from .linux_gnome_lock import GNOME_LOGIN_EXTENSION_UUID
 
 _FILES = ("extension.js", "metadata.json")
@@ -30,17 +31,6 @@ _MAX_BYTES = 65536
 
 def _refusal(reason: RuntimeRefusalCode = RuntimeRefusalCode.UNAVAILABLE) -> RuntimeRefusalError:
     return RuntimeRefusalError(reason)
-
-
-def _native_home() -> Path:
-    if sys.platform != "linux":
-        raise _refusal()
-    import pwd
-
-    home = Path(pwd.getpwuid(os.getuid()).pw_dir)
-    if not home.is_absolute() or ".." in home.parts or len(str(home)) > 4096:
-        raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
-    return home
 
 
 def _directory_flags() -> int:
@@ -54,15 +44,16 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
     if sys.platform != "linux":
         raise _refusal()
     uid = os.getuid()
-    home = _native_home()
-    target = home / ".local" / "share" / "gnome-shell" / "extensions"
+    target = storage_path(StorageCategory.GNOME_EXTENSIONS)
+    if not target.is_absolute() or ".." in target.parts:
+        raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)
     descriptor = os.open("/", _directory_flags())
     try:
-        for index, part in enumerate(target.parts[1:], start=1):
+        for part in target.parts[1:]:
             try:
                 child = os.open(part, _directory_flags(), dir_fd=descriptor)
             except FileNotFoundError:
-                if not create or index < len(home.parts):
+                if not create:
                     raise
                 os.mkdir(part, mode=0o700, dir_fd=descriptor)
                 os.fsync(descriptor)
@@ -71,7 +62,6 @@ def _extensions_directory(*, create: bool) -> Generator[int]:
             if (
                 observed.st_uid not in (0, uid)
                 or observed.st_mode & 0o022
-                or (index >= len(home.parts) - 1 and observed.st_uid != uid)
             ):
                 os.close(child)
                 raise _refusal(RuntimeRefusalCode.PEER_UNTRUSTED)

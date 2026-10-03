@@ -2026,11 +2026,11 @@ def _require_m303_regimen_simplificado_annual_summary_arrival_values(
 def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
     """Raise if any binding source kind is unknown to the live mesh (the boundary gate).
 
-    A scalar binding whose ``source`` is not in the executable resolver union
-    would silently blank on every calculation. Row-producing bindings travel
-    through the detail-row and export channel instead, so requiring a scalar
-    resolver for them conflates two executable mechanisms. This gate converts
-    a genuinely unrouted scalar source into a loud
+    A binding whose ``source`` is not in the executable resolver union would
+    silently blank on every calculation, whether it produces a scalar or rows:
+    row shape earns no exemption, and a kind passes only on executable
+    ownership or its registered disposition. This gate converts a genuinely
+    unrouted source into a loud
     :exc:`ModeloAggregationBindingError` at calculation time so a novel TOML
     source cannot compile into a silently-zero revision.
 

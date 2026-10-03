@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#synced-history-consumption'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b6c9ed8267cff956f04bd2c6ac31ec33c79bba672bdee4687ca3f8ed3ffd090c'
-related:
-  - "[[2026-08-08-synced-history-consumption-plan]]"
+related: []
 ---
 
 # `synced-history-consumption` audit: `p02 s35`

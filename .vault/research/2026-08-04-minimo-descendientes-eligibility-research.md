@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:24d2d7db0fb3af23d540f1353f7665ba25fb331220858de03647d078fc47eaf3'
+body_hash: 'sha256:e99fde822aa79a8e2fc36826ac51371cafaf2b4b4eaa4e37aff2834dd55ee59c'
 related:
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
 ---
@@ -26,7 +26,7 @@ an operator override of the derived aggregate, and a concurrent campaign
 ### The eligibility predicate tests three conditions; the law states seven
 
 `RentaFamilyProfile` ranks descendants through `DescendantInfo.is_eligible_ordinary`
-(`src/cadrumo/domain/contribuyente/family.py:176-186`), which returns true when the
+, which returns true when the
 descendant cohabits AND (carries any `discapacidad_grado > 0` OR is under 25 at
 year-end). `minimo_descendientes_estatal` (`family.py:390-447`) multiplies each eligible
 descendant's birth-order tranche by a prorrata factor and sums.
@@ -73,7 +73,6 @@ over-declare the mínimo.
 `is_eligible_ordinary` feeds the estatal aggregate, the autonómico aggregate, and the
 anualidades Art. 64/75 eligibility flag. The first two share the defect and its
 direction; Madrid's divergent tranche table changes amounts, not eligibility
-(`src/cadrumo/application/modelo/_profile_binding.py:403-432`).
 
 The anualidades flag inverts it. The binding is
 `renta-2024-profile-anualidades-sin-minimo-descendientes` — true when the payer has NO
@@ -131,7 +130,7 @@ scope. Casilla `0515` (`.../revisions/2024/casillas/0497-0515.toml`) declares no
 the mínimo personal y familiar sum in
 `0072-renta-2024-minimo-personal-y-familiar-estatal.toml`. It is therefore a bare manual
 input, so there is no derivation to carry an incomplete predicate. No `AscendantInfo`
-model and no ascendant eligibility method exist in `src/cadrumo/domain/contribuyente/family.py`.
+model and no ascendant eligibility method exist .
 
 That is not the same as sound. The ascendientes axis carries the same partially-scaffolded
 shape the descendientes axis had before its engine landed: the profile schema declares a
@@ -144,13 +143,13 @@ repeating the incomplete-predicate sequence this research documents.
 
 ## Sources
 
-- `src/cadrumo/domain/contribuyente/family.py:83-120` — `DescendantInfo` field set
-- `src/cadrumo/domain/contribuyente/family.py:176-186` — `is_eligible_ordinary`
-- `src/cadrumo/domain/contribuyente/family.py:379-388` — `custodia_compartida_prorrata_factor`
-- `src/cadrumo/domain/contribuyente/family.py:390-447` — `minimo_descendientes_estatal`
-- `src/cadrumo/application/modelo/_profile_binding.py:388,405,413` — injector skip-if-present guards
-- `src/cadrumo/application/modelo/_profile_binding.py:403-432` — estatal and autonómico injection
-- `src/cadrumo/application/modelo/_profile_binding.py:471-475` — anualidades eligibility derivation
+- the former source file — `DescendantInfo` field set
+- the former source file — `is_eligible_ordinary`
+- the former source file — `custodia_compartida_prorrata_factor`
+- the former source file — `minimo_descendientes_estatal`
+- the former source file — injector skip-if-present guards
+- the former source file — estatal and autonómico injection
+- the former source file — anualidades eligibility derivation
 - `src/cadrumo/_data/corpus/normatives/html/ley-35-2006.html` — Arts. 58, 61, 64 consolidated text
 - `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0033-0037` — tranche parameters
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0148-renta-2024-cuota-escala-estatal-sobre-base-liquidable-general.toml` — Art. 64 base comparison
+- the former source file — Art. 64 base comparison

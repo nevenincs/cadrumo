@@ -1,16 +1,12 @@
 """Shared collection-time process-private storage-root derivation.
 
-Both the repo-root ``conftest.py`` and ``src/cadrumo/conftest.py`` must point
-``CADRUMO_LOCAL_STORAGE_ROOT`` at a process-private scratch directory BEFORE any
-Cadrumo import resolves ``Settings`` — otherwise collection-time imports (CLI
-and i18n modules transitively pulled in while pytest gathers tests) would
-resolve the real platform state root, which may hold retired former-product
-state and trip the cold-start guard. Both conftests derived the same
-``<gettempdir()>/cadrumo-pytest-<pid>`` path independently. Repository pytest
-runs bind ``gettempdir()`` to their run-local ``.logs/.../scratch`` directory;
-standalone consumers retain the platform temp fallback. This module is the
-single source for that derivation, plus a best-effort cleanup so the
-per-invocation directories stop accumulating in the OS temp directory forever.
+Both the repo-root ``conftest.py`` and ``src/cadrumo/conftest.py`` point
+``CADRUMO_LOCAL_STORAGE_ROOT`` at a process-private directory before imports
+resolve ``Settings``. That prevents collection-time imports from resolving an
+operator's application state. The collection root and frozen authority
+snapshot are siblings under ``CADRUMO_TEMP_DIR`` (defaulting below the
+configured Cadrumo storage root); this module provides their paths and a
+best-effort cleanup so per-invocation directories do not accumulate.
 
 Pure-stdlib on purpose: importing this module must never resolve Settings,
 configure logging, or trigger any other Cadrumo package side effect, so it is
@@ -28,9 +24,9 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from tempfile import gettempdir
 
 from ..core.directory_scan import scan_directory
+from ..core.storage_environment import prepare_temporary_directory
 
 _STEM = "cadrumo-pytest-"
 
@@ -283,7 +279,7 @@ def sweep_stale_roots(parent: Path, *, now: float | None = None, exclude: Path |
     next use, because a fresh PID never reuses an old directory.
 
     Args:
-        parent: Directory to sweep, normally the OS temp directory.
+        parent: Controlled temporary-storage directory to sweep.
         now: Reference time, defaulting to the wall clock. Injectable so a test
             can age a directory without waiting a day for it.
         exclude: A directory to leave alone regardless of every other rule,
@@ -349,7 +345,7 @@ def pytest_numbered_dir_root(temproot: Path | None = None) -> Path:
         user: str | None = getpass.getuser()
     except (OSError, ImportError, KeyError):
         user = None
-    root = temproot if temproot is not None else Path(gettempdir())
+    root = temproot if temproot is not None else prepare_temporary_directory()
     return root / f"pytest-of-{user or 'unknown'}"
 
 
@@ -469,21 +465,20 @@ def reap_abandoned_numbered_dirs(root: Path, *, now: float | None = None) -> tup
 def collection_storage_root() -> Path:
     """Return this process's private collection-time storage root.
 
-    ``<gettempdir()>/cadrumo-pytest-<pid>`` — run-local under repository pytest
-    and process-private by construction
+    ``<CADRUMO_TEMP_DIR>/cadrumo-pytest-<pid>`` and process-private by construction
     (keyed on the current PID), so concurrent pytest invocations, including
     parallel agents sharing this worktree, never collide.
     """
-    return Path(gettempdir()) / f"{_STEM}{os.getpid()}"
+    return prepare_temporary_directory() / f"{_STEM}{os.getpid()}"
 
 
 def authority_snapshot_root() -> Path:
     """Return this process's private directory for the frozen registry authority.
 
-    ``<gettempdir()>/cadrumo-frozen-authority-<pid>``, beside the collection storage
+    ``<CADRUMO_TEMP_DIR>/cadrumo-frozen-authority-<pid>``, beside the collection storage
     root and never inside it; :data:`AUTHORITY_SNAPSHOT_STEM` records why.
     """
-    return Path(gettempdir()) / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
+    return prepare_temporary_directory() / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
 
 
 def _release_log_handlers_under(root: Path) -> None:

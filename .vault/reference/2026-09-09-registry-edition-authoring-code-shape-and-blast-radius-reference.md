@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d20d414d441cc1ea5cc3cf9982d1598dd9c407e0446875955fdca5957eefae5d'
+body_hash: 'sha256:9151dd60474cfd9c5c07bb8f89e3716fee1864d93a28a77ac41c177f79605b49'
 related: []
 ---
 
@@ -21,11 +21,7 @@ reading a call site before editing it.
 
 ### The materialiser seam
 
-In `src/cadrumo/domain/calculations/registry/_loader_internals.py`, `_load_modelo_revisions`,
-`_merge_revision_file` and `_merge_revision_directory` assemble raw dictionaries per edition, and
-`_build_modelo_definition_from_data` turns them into typed objects. An expander producing the
-same merged mapping leaves that function's signature, its return type, and everything above it in
-`loader.py` and `authority.py` untouched.
+An expander producing the same merged mapping leaves that function's signature, its return type, and everything above it in `loader.py` and `authority.py` untouched.
 
 ### Consumers pass through one chokepoint
 

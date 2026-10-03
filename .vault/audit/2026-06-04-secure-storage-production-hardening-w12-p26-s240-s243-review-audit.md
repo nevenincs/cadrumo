@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:4c33b2784ebef900c23b1764c9338d3e2c4faa8bd85e1f8ab90948b11653dd53'
+modified: '2026-10-03'
+body_hash: 'sha256:edf8d6fb8786f44567eea825f757110cb31d3d41b227b0dc4dad84740e4c6917'
 related: []
 ---
 
@@ -40,8 +40,8 @@ logic.
 
 ## S240-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/operator_surface/_contract.py src/aeat/application/operator_surface/_models.py src/aeat/application/operator_surface/test_contract.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/operator_surface/test_contract.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-138` and `AFR-141` as `manifest-discovery`.

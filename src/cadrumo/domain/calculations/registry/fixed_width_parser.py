@@ -12,7 +12,6 @@ from .export_value_policy import (
     validate_export_wire_value,
 )
 from .fixed_width_codec import (
-    _NUMERIC_DATA_TYPES,
     ExportPadding,
     ExportSignPosition,
     _ExportField,
@@ -24,6 +23,7 @@ from .fixed_width_codec import (
     _zero_fill_is_only_absence,
     render_fixed_width_export_field,
 )
+from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES
 
 
 def parse_fixed_width_export_field(
@@ -134,7 +134,7 @@ def _fill_reads_as_absent_text(field: _ExportField, raw: str) -> bool:
     """
     if field.required or field.value_policy is not None:
         return False
-    if field.data_type in _NUMERIC_DATA_TYPES or field.data_type == "boolean":
+    if field.data_type in ZERO_PADDED_EXPORT_DATA_TYPES or field.data_type == "boolean":
         return False
     return raw == _render_absent_slot(field)
 

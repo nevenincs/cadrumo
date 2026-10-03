@@ -354,10 +354,6 @@ cli:
         year_help: Adóév.
       invoice:
         add_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
-        arrendamiento_local_negocio_help: Jelöld meg a kiállított számlát általad
-          bérbe adott üzlethelyiség bérleteként (arrendamiento de local de negocio);
-          a Modelo 347 külön és ingatlanrekordban is szerepelteti (RD 1065/2007 34.1.d
-          cikk).
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
@@ -404,8 +400,6 @@ cli:
         recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
           cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
         rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
-        referencia_catastral_help: A bérbe adott helyiség kataszteri hivatkozása (legfeljebb
-          25 karakter).
         remove_help: Egy egyeztetési katalógusbeli számla törlése.
         retention_amount_help: A kifizető által levont IRPF visszatartás összege euróban.
           Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
@@ -416,10 +410,6 @@ cli:
         series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
         simplificada_tax_id_expected_message: Ez az egyszerűsített számla nem tartalmazza
           a partner adóazonosítóját, noha a rögzített jogi környezet ezt elvárja.
-        situacion_inmueble_help: 'A bérbe adott ingatlan helyzete a Modelo 347 kódjai
-          szerint: 1 Spanyolország kataszteri hivatkozással (Baszkföld és Navarra
-          kivételével), 2 Baszkföld vagy Navarra, 3 kataszteri hivatkozás nélkül,
-          4 külföldön.'
         update_help: Üzleti számla adatainak frissítése.
         view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy
           egyértelmű előtag alapján.
@@ -2402,6 +2392,8 @@ cli:
         pull_withheld_notice: 'A(z) {count} mező értéke ki van takarva a kimenetben:
           {axes}. Hasonlítsd össze őket a népesség-nyilvántartó hatóság adataival;
           ez az eszköz nem írja ki őket.'
+        show_help: A teljes mentett nyilvántartási pillanatkép megjelenítése AEAT-kapcsolat
+          nélkül.
       complete_setup:
         already_complete: A profil már készként volt nyilvántartva; semmi nem került
           mentésre.

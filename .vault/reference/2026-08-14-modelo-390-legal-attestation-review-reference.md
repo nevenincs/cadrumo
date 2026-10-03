@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#modelo-390-legal-attestation-review'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:475c85077bba130f55bfad63d62278d0099d2f66238ccefc5423afa5adddaff5'
 related:
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]'
 ---
 

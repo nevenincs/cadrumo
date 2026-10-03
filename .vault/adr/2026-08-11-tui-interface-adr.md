@@ -3,18 +3,16 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:9f74bc002f00c55746d39f6b67fd246ed3fc198f5643bacc6b806536c5190d55'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-07-23-tui-wizard-substrate-adr]]"
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - "[[2026-07-24-profile-bundle-tui-adr]]"
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
-  - '[[2026-08-10-casilla-schema-plan]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---

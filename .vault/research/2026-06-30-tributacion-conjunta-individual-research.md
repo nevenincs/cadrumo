@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#tributacion-conjunta-individual'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:b55847ab271e24d82dba177e939bba597478473a481b7ae9b60503947b9c2c63'
+modified: '2026-10-03'
+body_hash: 'sha256:bb3a72388722acec9c8f717fd93189a810e4ca7586434d8978d151d5b1cde25d'
 related: []
 ---
 
@@ -14,10 +14,10 @@ Issue #547 (P1, NEEDS-DESIGN) asks for a surface that computes a Modelo 100 fili
 
 ## Headline: the comparator already exists at HEAD (committed, not WIP)
 
-- Application core: `src/aeat/application/modelo/_taxation_comparison.py` runs the registry formula engine twice over identical inputs, injecting `declaration_type=2` (conjunta) and `declaration_type=1` (individual), then diffs the result casillas. Returns a typed frozen `TaxationComparisonResult` (both cuota resultante 0595, both resultado 0610, signed `delta_resultado`, `TaxationRecommendation` StrEnum {conjunta, individual, indifferent} with a 1 EUR materiality threshold). Errors via `TaxationComparisonError`.
-- CLI verb: `aeat app modelo work compare-taxation [WORK_UNIT_ID] [--modelo/--year/--period/--revision/--bucket-id]` in `src/aeat/entrypoints/cli/_modelo.py` (registered on the `work_app` group). Resolves a work address, calls `compare_taxation_for_work_address`, emits a `WorkCompareTaxationResult` envelope.
-- Payload schema: `WorkCompareTaxationResult` registered under `modelo.work.compare_taxation` in `src/aeat/entrypoints/cli/_payloads_modelo_reconcile.py`.
-- Tests: `src/aeat/application/modelo/tests/test_taxation_comparison.py` (behavioural oracle: high-disparity 52000+0 and a 45000 single-earner both recommend CONJUNTA; typed structure; error-registry membership). Semantic-role resolution tested in `test_semantic_role_resolution.py`.
+- Application core: the former source file runs the registry formula engine twice over identical inputs, injecting `declaration_type=2` (conjunta) and `declaration_type=1` (individual), then diffs the result casillas. Returns a typed frozen `TaxationComparisonResult` (both cuota resultante 0595, both resultado 0610, signed `delta_resultado`, `TaxationRecommendation` StrEnum {conjunta, individual, indifferent} with a 1 EUR materiality threshold). Errors via `TaxationComparisonError`.
+- CLI verb: `aeat app modelo work compare-taxation [WORK_UNIT_ID] [--modelo/--year/--period/--revision/--bucket-id]`  (registered on the `work_app` group). Resolves a work address, calls `compare_taxation_for_work_address`, emits a `WorkCompareTaxationResult` envelope.
+- Payload schema: `WorkCompareTaxationResult` registered under `modelo.work.compare_taxation` .
+- Tests: the former source file (behavioural oracle: high-disparity 52000+0 and a 45000 single-earner both recommend CONJUNTA; typed structure; error-registry membership). Semantic-role resolution tested in `test_semantic_role_resolution.py`.
 - Locales: keys present in all four catalogues (en/es/ca/hu.yml).
 - Status: all four files are committed and clean (git status empty for them). Not peer WIP. Landed via the filing-workflow restructure line (history: fc0173d6b, bde0c27fb). Origin recommendation: audit `2026-05-27-marcos-cli-testimonial-audit` (Recommendation 3, "Conjunta vs individual comparator", which even named the compare-taxation verb).
 
@@ -55,7 +55,7 @@ The comparator reuses the shared registry engine core (`calculate_registry_snaps
 
 ## Sources
 
-- Code: `_taxation_comparison.py`, `_modelo.py:641-769`, `_payloads_modelo_reconcile.py:65-88`, `tests/test_taxation_comparison.py`.
+- Code: `_taxation_comparison.py`, `_modelo.py:641-769`, `_payloads_modelo_reconcile.py:65-88`, the former source file.
 - Registry: M100 2025 formulas/0179 art-84-conjunta, bindings/0009 declaration-type, bindings/0013..0020 spouse, bindings/0024 family-minor-children-in-unit.
 - Corpus: _data/corpus/manuals/renta/2022..2025/part1/source.pdf.extracted.md (3.400 / 2.150 confirmation).
 - Vault: audit `2026-05-27-marcos-cli-testimonial-audit` (origin recommendation).

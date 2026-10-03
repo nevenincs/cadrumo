@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e009513f1b3f8489877b3dcad3f1df754291e436dde693388700b9af3d661249'
+body_hash: 'sha256:ce886e0414d678267b0e3a76367e032d1d8be495a9967e8e7eefd31e68625eb7'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
+
 # `aeat-export-fragment-generator-authority` audit: `S57 typed FilingProjectionRef integration review`
 
 ## Scope
@@ -18,13 +18,13 @@ Independent review of W04.P07.S57 against the accepted M303 dual-keying ADR. The
 
 VaultSpec RAG was run before code discovery. The structural census found seven core union members, no remaining description/section/slot-offset/numeric/neighbour/string-key dispatch in the four projectors, typed exact-identity renderer keys, complete prorrata and differentiated matrices, complete exonerado population validation, and duplicate-ref refusal in every projector family. The focused real gate completed with 115 passed in 104.00 seconds across core, semantic-map, registry vocabulary, all four projector families, renderer policy and M303 applicability/evidence tests.
 
-Verdict: NOT APPROVED. Three high-severity findings remain. During review, concurrent uncommitted changes appeared in `src/cadrumo/application/filing/_export.py`, `src/cadrumo/application/filing/_m303_export_applicability.py`, `src/cadrumo/application/filing/tests/test_export_value_policy.py`, and `src/cadrumo/domain/calculations/registry/_schema_surfaces.py`; they partially address the third finding but are shared WIP, are not a complete generator-to-renderer correction, and are not accepted by this audit.
+Verdict: NOT APPROVED. Three high-severity findings remain. During review, concurrent uncommitted changes appeared in the retired module, `src/cadrumo/application/filing/_m303_export_applicability.py`, `src/cadrumo/application/filing/tests/test_export_value_policy.py`, and the retired module; they partially address the third finding but are shared WIP, are not a complete generator-to-renderer correction, and are not accepted by this audit.
 
 ## Findings
 
 ### projection-ref-wire-coercion | high | Both authored loaders accept noncanonical projection-reference scalar types
 
-- [ ] `src/cadrumo/domain/calculations/registry/_loader.py` and `dev/registry/_semantic_map_loader.py` both invoke `TypeAdapter(FilingProjectionRef).validate_python(..., strict=False)`. This overrides the strict/frozen member models at the authored wire boundary: direct execution accepted slot values `"1"`, `1.0`, and `true` and coerced each to integer slot `1`, while `strict=True` refused them. The semantic-map test proves only the happy string-to-enum path and does not prove rejection of noncanonical scalar types. S57 requires a strict core-owned discriminated union, so broad Pydantic coercion is an unauthorized fallback authority.
+- [ ] the retired module and the retired module both invoke `TypeAdapter(FilingProjectionRef).validate_python(..., strict=False)`. This overrides the strict/frozen member models at the authored wire boundary: direct execution accepted slot values `"1"`, `1.0`, and `true` and coerced each to integer slot `1`, while `strict=True` refused them. The semantic-map test proves only the happy string-to-enum path and does not prove rejection of noncanonical scalar types. S57 requires a strict core-owned discriminated union, so broad Pydantic coercion is an unauthorized fallback authority.
 
 ### projection-none-preseed | high | Blanket None pre-seeding launders missing projector output into valid blank fields
 
@@ -32,7 +32,7 @@ Verdict: NOT APPROVED. Three high-severity findings remain. During review, concu
 
 ### projection-row-occurrence | high | The generator does not declare repeated projection records, so DP30302 occurrence is lost
 
-- [ ] `project_m303_regimen_simplificado_rows` emits values keyed by record occurrence and `validate_m303_export_applicability` carries them as row indices `0..2`, but the committed `ExportRecordDefinition.repeat` admits only `binding_rows`, `_record_render_rows` gives every non-binding record `row_index=None`, and `dev/registry/_export_tree.py::_render_records` emits no repeat semantics at all. Thus generated DP30302 projection fields cannot select their occurrence keys. Concurrent WIP adds `repeat="projection_rows"` and renderer selection from typed values, but the generator and semantic record authority still do not emit that mode, so the live generated route remains incomplete.
+- [ ] `project_m303_regimen_simplificado_rows` emits values keyed by record occurrence and `validate_m303_export_applicability` carries them as row indices `0..2`, but the committed `ExportRecordDefinition.repeat` admits only `binding_rows`, `_record_render_rows` gives every non-binding record `row_index=None`, and the retired module emits no repeat semantics at all. Thus generated DP30302 projection fields cannot select their occurrence keys. Concurrent WIP adds `repeat="projection_rows"` and renderer selection from typed values, but the generator and semantic record authority still do not emit that mode, so the live generated route remains incomplete.
 
 ## Recommendations
 

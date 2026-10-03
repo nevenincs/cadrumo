@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#profile-login-session'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-10-03'
 body_hash: 'sha256:ef38ff08c255abc818d1249951ab1e6fcd0d93b17fe3b24b83aa31fc7e3c1ad2'
-related:
-  - "[[2026-07-24-profile-login-session-plan]]"
+related: []
 ---
 
 # `profile-login-session` audit: `model facing digest delta`

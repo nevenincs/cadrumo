@@ -6,8 +6,7 @@ date: '2026-09-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:2ea1fd2d755b867b63bd3e8cfb2a3846f1eac5a437df668f332e610f3ea88172'
-related:
-  - '[[2026-08-11-tui-architecture-plan]]'
+related: []
 ---
 # `tui-architecture` audit: `W08.P27.S392 Declarations workspace projection review`
 

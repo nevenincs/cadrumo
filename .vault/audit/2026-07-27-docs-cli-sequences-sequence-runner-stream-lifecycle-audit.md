@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#docs-cli-sequences'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:3fc75cfac51453c79028784bbeca03f1b53cf0a4d5fa5a964445504d3ca331f3'
+modified: '2026-10-03'
+body_hash: 'sha256:75a7be1051fb9f5c5564557a53c81dad515cd235f13e8174ce6ea95e81ad3dff'
 related:
   - '[[2026-07-13-docs-cli-sequences-adr]]'
 ---
@@ -19,7 +19,7 @@ defect with its evidence. The speed campaign deliberately did NOT fix it: it is
 a separate defect with a separate owner, and folding a runner-lifecycle fix
 into a performance change would have made the campaign's before/after
 unattributable. Audited surface: the sequence engine's in-process frame
-execution (`dev/docs/sequences/_runner.py`, `cadrumo.tests.cli_runner`) and the
+execution (the retired module, `cadrumo.tests.cli_runner`) and the
 application's logging configuration as exercised by an unscoped
 `python -m dev.docs.sequences check`.
 

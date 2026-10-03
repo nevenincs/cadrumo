@@ -1316,6 +1316,34 @@ def test_the_filing_history_reads_the_bucket_event_log(
     assert [row.kind for row in declarations.lifecycle] == [DeclarationsLifecycleKind.CREATED]
 
 
+def test_secure_generation_refuses_a_census_capture_changed_during_read(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A concurrent pull cannot publish a generation with mismatched census evidence."""
+    from dataclasses import replace
+
+    from ..user_profile.censal_observation import (
+        CensalObservation,
+        CensalObservationAddress,
+        CensalObservationIdentity,
+    )
+
+    observation = CensalObservation(
+        identity=CensalObservationIdentity(nif="00000001R"),
+        domicilio_fiscal=CensalObservationAddress(),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=_NOW,
+        source_url="https://sede.agenciatributaria.gob.es/censo",
+    )
+    reads = iter((None, observation))
+    door = replace(
+        _plain_generation_door(authority_operation, profile=_Repository(_profile_record(authority_operation))),
+        census_observation_reader=lambda: next(reads),
+    )
+    with pytest.raises(InternalInvariantError, match="changed during capture"):
+        door.read_workbench_generation_inputs()
+
+
 def test_a_resident_s_holiday_territory_survives_the_registered_result_round_trip(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:

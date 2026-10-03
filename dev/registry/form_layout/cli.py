@@ -10,10 +10,14 @@ that carry no acknowledgement.
 from __future__ import annotations
 
 import json
+from hashlib import sha256
 from pathlib import Path
 from typing import Annotated, Final
 
 import typer
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState
 
 from ..compiler.loader import load_registry_tree
 from ..record_design_labels import DATA_ROOT
@@ -22,7 +26,7 @@ from .generator import LayoutGeneration, generate_modelo_layouts
 from .serialization import FORM_LAYOUT_DIRECTORY, form_layout_fragment_path, render_form_layout_toml
 from .stability import moved_placements, read_acknowledgements, unacknowledged_moves
 
-__all__ = ["REGISTRY_ROOT", "app", "synchronise_form_layouts"]
+__all__ = ["REGISTRY_ROOT", "app", "synchronise_form_layouts", "synchronise_selected_form_layout"]
 
 REGISTRY_ROOT: Final[Path] = DATA_ROOT / "registry" / "aeat"
 
@@ -107,6 +111,39 @@ def synchronise_form_layouts(
                 undeclared=undeclared,
             )
     return changed, undeclared
+
+
+def synchronise_selected_form_layout(
+    registry_root: Path,
+    data_root: Path,
+    *,
+    modelo_id: str,
+    revision_id: str,
+    expected_old_sha256: str,
+    expected_new_sha256: str,
+) -> bool:
+    """Write only one generated form after exact old/new byte preconditions."""
+    loaded, catalogues = load_registry_tree(registry_root)
+    modelo = next((item for item in loaded if str(item.id) == modelo_id), None)
+    if modelo is None or revision_id not in modelo.revisions:
+        raise RegistryValidationError("selected form owner revision is absent")
+    revision = modelo.revisions[revision_id]
+    if len(revision.form_layouts) != 1 or revision.form_layouts[0].review.state is FormLayoutReviewState.REVIEWED:
+        raise RegistryValidationError("selected form owner requires one unreviewed generated layout")
+    path = form_layout_fragment_path(registry_root / "modelos" / modelo_id / "revisions" / revision_id)
+    if not path.is_file() or sha256(path.read_bytes()).hexdigest() != expected_old_sha256:
+        raise RegistryValidationError("selected form owner old fragment changed")
+    outcome = generate_modelo_layouts(modelo, sources=catalogues.sources, data_root=data_root)[revision_id]
+    if outcome.layout is None:
+        raise RegistryValidationError(f"selected form owner cannot generate its layout: {outcome.failure}")
+    text = render_form_layout_toml(revision_id, outcome.layout)
+    if sha256(text.encode("utf-8")).hexdigest() != expected_new_sha256:
+        raise RegistryValidationError("selected form owner output differs from the reviewed candidate")
+    changed: list[str] = []
+    _record_generated_layout(path, text, check=False, changed=changed)
+    if changed not in ([], [path.as_posix()]):
+        raise RegistryValidationError("selected form owner changed an unexpected path")
+    return bool(changed)
 
 
 @app.command()

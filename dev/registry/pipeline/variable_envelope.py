@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from typing import Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -230,6 +230,7 @@ def compile_filing_envelope_definition(
         ),
         closer_derivation=FilingEnvelopeCloserDerivation.RELATIVE_CLOSER_V1,
         total_derivation=FilingEnvelopeTotalDerivation.EMITTED_BYTE_TOTAL_V1,
+        record_terminator=_source_record_terminator(envelope, source=source),
     )
 
 
@@ -265,6 +266,7 @@ def validate_variable_envelope(
         _require_source_content(modelo, semantic_field.role, parser_field)
     _require_body_anchor(semantic, envelope)
     _require_relative_closer(semantic, envelope, modelo=modelo)
+    _source_record_terminator(envelope, source=source)
     _require_total_anchor(semantic, envelope)
     declared_body_record_ids = tuple(semantic.body_record_ids)
     actual_body_record_ids = tuple(body_record_ids)
@@ -273,6 +275,55 @@ def validate_variable_envelope(
             "variable envelope body records must match the exact reviewed source order; "
             f"declared={declared_body_record_ids!r}, actual={actual_body_record_ids!r}",
         )
+
+
+def _source_record_terminator(
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    *,
+    source: RecordDesignIntermediateSource,
+) -> Literal["crlf"] | None:
+    """Admit only the trailing CRLF row printed in the pinned 2016 M232 design."""
+    reviewed_source = (
+        source.source_ref == "aeat-dr-232-2016"
+        and source.source_sha256 == "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
+        and envelope.record_identity == "DR23200"
+        and envelope.sheet == "DR23200"
+    )
+    marker = envelope.terminator
+    if not reviewed_source:
+        if marker is not None:
+            raise RegistryValidationError("variable envelope has an unreviewed trailing record terminator")
+        return None
+    if not isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker):
+        raise RegistryValidationError("reviewed M232 record terminator requires one relative closer")
+    if (
+        marker is None
+        or (
+            marker.source_row,
+            marker.source_cell,
+            marker.ordinal,
+            marker.offset,
+            marker.length,
+            marker.aeat_type,
+            marker.normalized_description,
+            marker.validation,
+            marker.content,
+        )
+        != (
+            21,
+            "A21",
+            16,
+            "***",
+            2,
+            "An",
+            "Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)",
+            None,
+            None,
+        )
+        or (envelope.closing.source_row, envelope.closing.ordinal) != (20, 15)
+    ):
+        raise RegistryValidationError("reviewed M232 record terminator differs from exact source row A21")
+    return "crlf"
 
 
 def _require_same_anchor(
@@ -472,7 +523,9 @@ def _require_relative_closer(
             f"{_CLOSER_EXTENT}-byte relative closer",
         )
     _require_relative_suffix_anchor(semantic, envelope, closing)
-    if _is_exact_m341_missing_t_closer(semantic, envelope, modelo=modelo):
+    if _is_exact_m341_missing_t_closer(semantic, envelope, modelo=modelo) or _is_exact_m309_missing_t_closer(
+        semantic, envelope, modelo=modelo
+    ):
         return
     _require_standard_relative_closer(semantic, closing, modelo=modelo)
 
@@ -575,6 +628,62 @@ def _is_exact_m341_missing_t_closer(
         '"</3410AAAAPP0000>"',
     ):
         raise RegistryValidationError("modelo 341 closer adjudication no longer matches its exact printed row")
+    return True
+
+
+_M309_MISSING_T_CLOSER_SOURCE_DIGESTS: Final[dict[str, str]] = {
+    "aeat-dr-309-2018": "7f46a0301f27345c19530a6a12acfa976ab5b60a67e563afa68277c12f2b07a8",
+    "aeat-dr-309-2023": "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
+}
+
+
+def _is_exact_m309_missing_t_closer(
+    semantic: VariableEnvelopeSemantic,
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    *,
+    modelo: str,
+) -> bool:
+    """Adjudicate only two verified M309 rows whose own description supplies the missing T.
+
+    Both official workbooks state an 18-byte closer and describe
+    ``</T3090+Ejercicio+periodo+0000>``, but their Contenido cell omits the T.
+    Their opening row states ``<T``. The source bytes and parser output remain
+    unchanged; every other closer still passes the ordinary grammar or refuses.
+    """
+    closing = envelope.closing
+    if not isinstance(closing, RecordDesignIntermediateRelativeSuffixMarker):
+        return False
+    expected_digest = _M309_MISSING_T_CLOSER_SOURCE_DIGESTS.get(str(semantic.source_ref))
+    if modelo != "309" or expected_digest is None:
+        return False
+    if semantic.source_sha256 != expected_digest:
+        raise RegistryValidationError("modelo 309 closer adjudication source digest changed")
+    if (
+        envelope.sheet,
+        envelope.record_identity,
+        closing.source_row,
+        closing.source_cell,
+        closing.ordinal,
+        closing.offset,
+        closing.length,
+        closing.aeat_type,
+        closing.normalized_description,
+        closing.validation,
+        closing.content,
+    ) != (
+        "M30900",
+        "M30900",
+        20,
+        "A20",
+        15,
+        "***",
+        18,
+        "An",
+        "Constante. </T3090+Ejercicio+periodo+0000>",
+        None,
+        '"</3090AAAAPP0000>"',
+    ):
+        raise RegistryValidationError("modelo 309 closer adjudication no longer matches its exact printed row")
     return True
 
 

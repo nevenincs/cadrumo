@@ -1,0 +1,375 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:1
+msgid "Workflow execution and local filing orchestration"
+msgstr "Munkafolyamat-végrehajtás és helyi bevallásvezérlés"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:7
+msgid ""
+"**Report:** `STAGE-2-109` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+"**Jelentés:** `STAGE-2-109` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:10
+msgid "Scope and method"
+msgstr "Hatókör és módszer"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:12
+msgid ""
+"This chunk contains 19 workflow application modules, totaling 5,615 "
+"lines, 222,233 bytes, and 44,424 measured `o200k_base` proxy tokens. I "
+"read every assigned line range across all eight bounded helper pages. The"
+" report distinguishes local orchestration from live reads and from actual"
+" submission. This is static analysis only; external service behavior and "
+"legal correctness were not tested."
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:14
+msgid "Workflow execution"
+msgstr "Munkafolyamat-végrehajtás"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:16
+msgid ""
+"`WorkflowEngine` coordinates a staged local filing pipeline: load the "
+"typed taxpayer profile, compute/select an obligation, optionally inspect "
+"notifications and prior filings, load inputs and build a registry-backed "
+"draft, check identity/schema alignment and findings, then run local "
+"preflight. The engine accepts narrow Protocol collaborators for "
+"deadlines, data inputs, drafts, auth provider descriptions, and live "
+"reads. A successful result records a draft and terminal stages, while "
+"`submission_id` remains `None`: this chunk orchestrates validation and "
+"local filing work, it does not itself transmit a declaration to AEAT. "
+"engine.py (`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) protocols.py "
+"(`src/cadrumo/application/workflow/protocols.py`) protocols.py "
+"(`src/cadrumo/application/workflow/protocols.py`) protocols.py "
+"(`src/cadrumo/application/workflow/protocols.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:18
+msgid ""
+"Deadline selection shares the domain schedule producer used by state "
+"projections. `FILE` requires a matching open obligation for the ordinary "
+"next-work path; an explicitly targeted late period can continue as a "
+"locally marked extemporaneous workflow, while an absent or closed "
+"untargeted obligation aborts. `VERIFY` treats the filing window as "
+"informational and can build against a synthetic `NOT_APPLICABLE` "
+"obligation when no calendar row matches its explicit target. More than "
+"one exact schedule match is an integrity failure rather than an "
+"application-level choice. engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) _deadline_stage.py "
+"(`src/cadrumo/application/workflow/_deadline_stage.py`) "
+"_deadline_stage.py "
+"(`src/cadrumo/application/workflow/_deadline_stage.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:20
+msgid ""
+"When wired, the inbox stage blocks on formal `notificacion` rows not "
+"marked read; absent session/source is represented as a skip. The prior-"
+"expediente probe is likewise conditional on the session and source and "
+"blocks a matching already-filed year. Draft construction uses bucket-"
+"scoped input providers, then checks draft profile tax ID, modelo, period,"
+" and current registry schema version. It rejects non-ready states and "
+"ERROR findings before submission preflight. These sources may perform "
+"AEAT-side reads when a production host supplies them, even though this "
+"engine has no submission stage. engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) protocols.py "
+"(`src/cadrumo/application/workflow/protocols.py`) protocols.py "
+"(`src/cadrumo/application/workflow/protocols.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:22
+msgid ""
+"Preflight records certificate provider state and expiry severity when a "
+"bundle is present, and can abort on unavailable, expired, or critically "
+"near-expiry credentials. Its local submission-engine call skips deadline "
+"and auth-readiness flags for both VERIFY and FILE because these are local"
+" workflows. There is a scope question worth verifying: "
+"`_stage_running_preflight` still calls `_resolve_certificate_preflight` "
+"before that skip, so a present but invalid certificate bundle can block "
+"VERIFY/FILE; a missing bundle is merely recorded as not wired. Also, "
+"inbox and already-filed reads can still be contacted when their optional "
+"sources are supplied. Confirm which local workflow modes are intended to "
+"remain independent of configured credentials and external reads. "
+"engine.py (`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`) protocols.py "
+"(`src/cadrumo/application/workflow/protocols.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:24
+msgid ""
+"Each outcome is a typed sequence of stage records with closed abort "
+"reasons, timestamps, bounded finding codes, and fact-based precondition "
+"verdicts. Site-health and unexpected component failures become structured"
+" step failures and include a site-health alert with the same computed run"
+" ID; aborts become results rather than exceptions unless a caller "
+"explicitly opts into exception behavior. abort.py "
+"(`src/cadrumo/application/workflow/abort.py`) engine_recording.py "
+"(`src/cadrumo/application/workflow/engine_recording.py`) "
+"engine_recording.py "
+"(`src/cadrumo/application/workflow/engine_recording.py`) engine.py "
+"(`src/cadrumo/application/workflow/engine.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:26
+msgid "Profile state, persistence, and recovery"
+msgstr "Profilállapot, perzisztencia és helyreállítás"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:28
+msgid ""
+"Active-profile discovery resolves only committed capsule summaries. It "
+"distinguishes no capsule from an unreadable discovery source, refuses "
+"ambiguous labels, and does not read manifests or encrypted facts just to "
+"list profiles. Active-record resolution then requires an authenticated "
+"profile session and the caller's pinned decode context; it returns typed "
+"reasons for unavailable record, absent capsule, or misaddressed session. "
+"profile_bucket_scan.py "
+"(`src/cadrumo/application/workflow/profile_bucket_scan.py`) "
+"profile_bucket_scan.py "
+"(`src/cadrumo/application/workflow/profile_bucket_scan.py`) "
+"active_profile.py (`src/cadrumo/application/workflow/active_profile.py`) "
+"active_profile.py (`src/cadrumo/application/workflow/active_profile.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:30
+msgid ""
+"The health projection carefully separates a committed but locked profile "
+"from a dangling pointer, missing/unreadable record, unreadable capsule, "
+"and incomplete profile. It is observational and never unlocks or creates "
+"credentials. It keeps the resolved label as a private in-process witness,"
+" excluding it from serialized health output while allowing the correct "
+"login/edit action to be resolved. Confirmed pointer repair takes the "
+"pointer transaction and re-assesses eligibility under lock before clear, "
+"then re-assesses the result. profile_health.py "
+"(`src/cadrumo/application/workflow/profile_health.py`) profile_health.py "
+"(`src/cadrumo/application/workflow/profile_health.py`) profile_health.py "
+"(`src/cadrumo/application/workflow/profile_health.py`) profile_health.py "
+"(`src/cadrumo/application/workflow/profile_health.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:32
+msgid ""
+"Workflow state and run history are persisted through an explicitly "
+"composed encrypted secure-object port. State supports optimistic revision"
+" checks, bounded retries, and transactional sibling writes such as bucket"
+" events. Run records are stored in the secure backend rather than the "
+"nominal `runs_dir`; loads verify the requested run identity. Reset "
+"fingerprints read metadata and readability, append a plaintext-free "
+"bucket event before deleting only the workflow-state row, and retain "
+"recoverable state if event emission fails. persistence.py "
+"(`src/cadrumo/application/workflow/persistence.py`) persistence.py "
+"(`src/cadrumo/application/workflow/persistence.py`) persistence.py "
+"(`src/cadrumo/application/workflow/persistence.py`) persistence.py "
+"(`src/cadrumo/application/workflow/persistence.py`) persistence.py "
+"(`src/cadrumo/application/workflow/persistence.py`) persistence.py "
+"(`src/cadrumo/application/workflow/persistence.py`) events.py "
+"(`src/cadrumo/application/workflow/events.py`) events.py "
+"(`src/cadrumo/application/workflow/events.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:34
+msgid ""
+"One confirmed documentation mismatch: `reset_workflow_state` says its "
+"fingerprint includes a hash of the deleted state, but the typed "
+"fingerprint and emitted payload contain only optional schema version, "
+"write time, byte length, reason class, and recovered bucket ID. No "
+"content hash is computed in these modules. Align the description with "
+"actual fields or add the promised digest if downstream audit relies on "
+"it. persistence.py (`src/cadrumo/application/workflow/persistence.py`) "
+"events.py (`src/cadrumo/application/workflow/events.py`) events.py "
+"(`src/cadrumo/application/workflow/events.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:36
+msgid "Resume and assessment"
+msgstr "Folytatás és értékelés"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:38
+msgid ""
+"Resume first captures an exact persisted run and permits a fresh attempt "
+"only when it is terminally aborted, has an obligation and an abort "
+"reason, and is not a designed terminal case (`NO_PENDING_OBLIGATION`, "
+"`ALREADY_FILED`, `USER_CANCELLED`). Selectors support exact run ID, work-"
+"unit ID, calculation-revision ID, or a complete visible "
+"modelo/year/period target. Model work-addressing remains the authority "
+"for revision and period resolution; multiple natural-key candidates are "
+"shown as an ambiguity rather than guessed. resume.py "
+"(`src/cadrumo/application/workflow/resume.py`) resume.py "
+"(`src/cadrumo/application/workflow/resume.py`) resume.py "
+"(`src/cadrumo/application/workflow/resume.py`) resume.py "
+"(`src/cadrumo/application/workflow/resume.py`) resume.py "
+"(`src/cadrumo/application/workflow/resume.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:40
+msgid ""
+"The registered resume-context operation binds run and calculation readers"
+" to the requested profile, verifies the active profile and selected-"
+"period scope, captures success/refusal/ambiguity without starting a "
+"workflow, and stores the result as a secure operand. Its effect is "
+"explicitly `NONE`; release requires a terminal receipt matching "
+"definition, profile subject, terminal condition, and refusal references. "
+"The frontend receives typed candidate data to choose an exact attempt. "
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`) "
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`) "
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`) "
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`)"
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:42
+msgid ""
+"Strengths include the separation between local draft workflow and actual "
+"submission, typed collaborators, exact draft identity checks, "
+"distinguishing benign locked state from damage, CAS state updates, and "
+"refusal rather than guess on ambiguous resume. Main follow-ups are to "
+"validate the certificate behavior for local purposes, resolve the "
+"promised-but-absent reset digest, and trace the production host's "
+"optional live-source wiring and access scope. This chunk contains no "
+"executed tests or external adapter behavior, so atomic storage, actual "
+"network touchpoints, and resume-to-engine wiring remain to be checked "
+"elsewhere."
+msgstr ""
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:44
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:46
+msgid "__init__.py (`src/cadrumo/application/workflow/__init__.py`)"
+msgstr "__init__.py (`src/cadrumo/application/workflow/__init__.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:47
+msgid "_deadline_stage.py (`src/cadrumo/application/workflow/_deadline_stage.py`)"
+msgstr "_deadline_stage.py (`src/cadrumo/application/workflow/_deadline_stage.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:48
+msgid "_identity.py (`src/cadrumo/application/workflow/_identity.py`)"
+msgstr "_identity.py (`src/cadrumo/application/workflow/_identity.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:49
+msgid "abort.py (`src/cadrumo/application/workflow/abort.py`)"
+msgstr "abort.py (`src/cadrumo/application/workflow/abort.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:50
+msgid "active_profile.py (`src/cadrumo/application/workflow/active_profile.py`)"
+msgstr "active_profile.py (`src/cadrumo/application/workflow/active_profile.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:51
+msgid "adapters.py (`src/cadrumo/application/workflow/adapters.py`)"
+msgstr "adapters.py (`src/cadrumo/application/workflow/adapters.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:52
+msgid "engine.py (`src/cadrumo/application/workflow/engine.py`)"
+msgstr "engine.py (`src/cadrumo/application/workflow/engine.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:53
+msgid "engine_helpers.py (`src/cadrumo/application/workflow/engine_helpers.py`)"
+msgstr "engine_helpers.py (`src/cadrumo/application/workflow/engine_helpers.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:54
+msgid ""
+"engine_recording.py "
+"(`src/cadrumo/application/workflow/engine_recording.py`)"
+msgstr ""
+"engine_recording.py "
+"(`src/cadrumo/application/workflow/engine_recording.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:55
+msgid "errors.py (`src/cadrumo/application/workflow/errors.py`)"
+msgstr "errors.py (`src/cadrumo/application/workflow/errors.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:56
+msgid "events.py (`src/cadrumo/application/workflow/events.py`)"
+msgstr "events.py (`src/cadrumo/application/workflow/events.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:57
+msgid "persistence.py (`src/cadrumo/application/workflow/persistence.py`)"
+msgstr "persistence.py (`src/cadrumo/application/workflow/persistence.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:58
+msgid ""
+"profile_bucket_models.py "
+"(`src/cadrumo/application/workflow/profile_bucket_models.py`)"
+msgstr ""
+"profile_bucket_models.py "
+"(`src/cadrumo/application/workflow/profile_bucket_models.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:59
+msgid ""
+"profile_bucket_scan.py "
+"(`src/cadrumo/application/workflow/profile_bucket_scan.py`)"
+msgstr ""
+"profile_bucket_scan.py "
+"(`src/cadrumo/application/workflow/profile_bucket_scan.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:60
+msgid "profile_health.py (`src/cadrumo/application/workflow/profile_health.py`)"
+msgstr "profile_health.py (`src/cadrumo/application/workflow/profile_health.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:61
+msgid "protocols.py (`src/cadrumo/application/workflow/protocols.py`)"
+msgstr "protocols.py (`src/cadrumo/application/workflow/protocols.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:62
+msgid "resume.py (`src/cadrumo/application/workflow/resume.py`)"
+msgstr "resume.py (`src/cadrumo/application/workflow/resume.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:63
+msgid ""
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`)"
+msgstr ""
+"resume_operation.py "
+"(`src/cadrumo/application/workflow/resume_operation.py`)"
+
+#: ../../technical/articles/109-workflow-execution-and-local-filing-orchestration.md:64
+msgid "review_models.py (`src/cadrumo/application/workflow/review_models.py`)"
+msgstr "review_models.py (`src/cadrumo/application/workflow/review_models.py`)"

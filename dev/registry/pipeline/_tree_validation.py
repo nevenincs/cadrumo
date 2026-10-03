@@ -19,8 +19,11 @@ from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory, select_authored_revision_metadata
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.authority import compile_registry_tree, compile_validated_authority
@@ -30,13 +33,18 @@ from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.registry_scope import validate_registry_scope
+from ..edition_delta_chain_materialisation import chain_materialisation, member_identities
+from ..edition_delta_proof_source import read_staged_edition
 from .export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     verify_export_fragment_provenance_manifest,
 )
 from .export_tree_models import RenderedExportTree
+from .generated_export_inheritance import require_generated_export_inheritance
+from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .joined_record_design import JoinedRecordDesign
+from .render_check import _select_record_design_source
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
@@ -45,6 +53,7 @@ from .tree_paths import require_existing_non_link
 __all__ = [
     "GeneratedExportTreeValidationContext",
     "ValidatedGeneratedExportTree",
+    "ValidatedHistoricalStaticGeneratedExportTree",
     "validate_generated_export_tree",
 ]
 
@@ -91,6 +100,11 @@ class GeneratedExportTreeValidationContext:
     #: the selected revision's declared grade because a static generated layout
     #: does not establish calculation or filing readiness.
     required_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING
+    inheritance: GeneratedExportInheritanceContext | None = None
+    #: The exact selected official source for a static target below the
+    #: product's filing support floor. The normal None route still requires a
+    #: runtime snapshot at required_grade and refuses that historical year.
+    historical_static_source_ref: SourceRefId | None = None
 
     def __post_init__(self) -> None:
         if not self.period.strip():
@@ -111,6 +125,16 @@ class ValidatedGeneratedExportTree:
     provenance_manifest: ExportFragmentProvenanceManifest
 
 
+@dataclass(frozen=True, slots=True)
+class ValidatedHistoricalStaticGeneratedExportTree:
+    """A complete historical generated target with no runtime filing admission."""
+
+    target: ExportFragmentTarget
+    layout: ExportLayoutDefinition
+    inspection: RegistryRevisionInspection
+    provenance_manifest: ExportFragmentProvenanceManifest
+
+
 def validate_generated_export_tree(
     *,
     context: GeneratedExportTreeValidationContext,
@@ -119,13 +143,16 @@ def validate_generated_export_tree(
     rendered: RenderedExportTree,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-) -> ValidatedGeneratedExportTree:
-    """Prove that one complete, isolated generated tree selects at its required grade.
+) -> ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree:
+    """Prove an isolated generated tree at its requested admission boundary.
 
-    The input is deliberately a target-only directory-mode registry.  Reusing a
-    published registry, a direct revision file, an extra modelo, or a sibling
-    under ``export/`` is a refusal because each would allow the real loader to
-    admit facts that the current renderer did not produce.
+    An ordinary candidate contains only its target edition. An attested
+    inherited candidate contains exactly its pinned ancestor chain and thin
+    child; every staged edition must preserve its canonical effective meaning,
+    and the child must hydrate to the freshly rendered layout. Extra revisions,
+    modelos, or export files remain refusals. A pinned pre-floor target yields
+    only a static revision inspection; ordinary callers still select a runtime
+    snapshot at the requested grade and retain the support-floor refusal.
     """
     registry_root = _require_directory(context.registry_root, subject="generated registry root")
     source_root = _require_directory(context.source_root, subject="generation source root")
@@ -139,7 +166,22 @@ def validate_generated_export_tree(
         modelo_id=modelo_id,
         revision_id=revision_id,
         supporting_modelos=context.supporting_modelos,
+        baseline_revisions=(
+            tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors)
+            if context.inheritance is not None
+            else ()
+        ),
     )
+    if context.inheritance is not None:
+        if context.scope_authority is None:
+            raise RegistryValidationError("generated export inheritance requires the complete validated source")
+        require_generated_export_inheritance(
+            context.inheritance,
+            context.scope_authority,
+            source_root / "registry" / "aeat",
+            modelo=modelo_id,
+            revision=revision_id,
+        )
     _require_exact_generated_outputs(export_root, rendered.output_files)
 
     definition = load_modelo_directory(modelo_root)
@@ -147,11 +189,31 @@ def validate_generated_export_tree(
         raise RegistryValidationError(
             f"generated modelo directory loads modelo {definition.id!r}, expected {modelo_id!r}",
         )
-    if tuple(definition.revisions) != (revision_id,):
+    expected_revisions = (
+        (revision_id,)
+        if context.inheritance is None
+        else (*tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors), revision_id)
+    )
+    if tuple(definition.revisions) != expected_revisions:
         raise RegistryValidationError(
-            f"isolated generated modelo must load exactly revision {revision_id!r}, "
+            f"isolated generated modelo must load exactly revisions {expected_revisions!r}, "
             f"got {tuple(definition.revisions)!r}",
         )
+    if context.inheritance is not None and (
+        definition.revisions[expected_revisions[-2]].export_layouts != (context.inheritance.baseline_layout,)
+    ):
+        raise RegistryValidationError("generated export inheritance staged baseline layout changed")
+    if context.inheritance is not None:
+        source_modelo_root = source_root / "registry" / "aeat" / "modelos" / modelo_id
+        for selected_id in expected_revisions:
+            original = read_staged_edition(source_modelo_root, selected_id, side="source")
+            staged = read_staged_edition(modelo_root, selected_id, side="staged")
+            if member_identities(staged) != member_identities(original) or chain_materialisation(
+                staged,
+            ) != chain_materialisation(original):
+                raise RegistryValidationError(
+                    f"generated export inheritance changed hydrated {modelo_id}/{selected_id} source facts",
+                )
     loaded_revision = definition.revisions[revision_id]
     loaded_layout = _require_exact_generated_layout(
         loaded_revision.export_layouts,
@@ -167,7 +229,25 @@ def validate_generated_export_tree(
         field_derivations=rendered.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=(context.inheritance.attestation if context.inheritance is not None else None),
     )
+
+    if context.historical_static_source_ref is not None:
+        inspection = _validated_historical_static_target(
+            context=context,
+            registry_root=registry_root,
+            source_root=source_root,
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+            target_definition=definition,
+            joined=joined,
+        )
+        return ValidatedHistoricalStaticGeneratedExportTree(
+            target=context.target,
+            layout=loaded_layout,
+            inspection=inspection,
+            provenance_manifest=provenance,
+        )
 
     snapshot = _validated_target_snapshot(
         context=context,
@@ -232,6 +312,70 @@ def _validated_target_snapshot(
         modelo_id=modelo_id,
         revision_id=revision_id,
         target_definition=target_definition,
+    )
+
+
+def _validated_historical_static_target(
+    *,
+    context: GeneratedExportTreeValidationContext,
+    registry_root: Path,
+    source_root: Path,
+    modelo_id: str,
+    revision_id: str,
+    target_definition: ModeloDefinition,
+    joined: JoinedRecordDesign,
+) -> RegistryRevisionInspection:
+    """Fully validate an authored pre-floor target without a filing snapshot."""
+    authority = context.scope_authority
+    source_ref = context.historical_static_source_ref
+    if authority is None or source_ref is None:
+        raise RegistryValidationError("historical static target requires its complete validated source and source pin")
+    loaded_modelos, catalogues = compile_registry_tree(registry_root, source_root)
+    _require_loaded_candidate_target(loaded_modelos, modelo_id=modelo_id, target_definition=target_definition)
+    scoped_modelos = _scope_modelos_with_candidate(
+        context, loaded_modelos, modelo_id=modelo_id, revision_id=revision_id, target_definition=target_definition
+    )
+    _validate_scoped_candidate(source_root, loaded_modelos, catalogues, scoped_modelos)
+    support = catalogues.require_supported_filing_years()
+    if support != authority.catalogues.require_supported_filing_years():
+        raise RegistryValidationError("historical static target changed the supported filing years catalogue")
+    if context.filing_year >= support.floor:
+        raise RegistryValidationError("historical static target must be below the unchanged filing support floor")
+    scoped_modelo = next(modelo for modelo in scoped_modelos if str(modelo.id) == modelo_id)
+    selected = select_authored_revision_metadata(
+        ModeloRevisionDirectory.from_modelo(scoped_modelo),
+        filing_year=context.filing_year,
+        period=context.period,
+        on=context.on,
+    )
+    if str(selected.id) != revision_id:
+        raise RegistryValidationError(
+            f"historical static target selected authored revision {selected.id!r}, expected {revision_id!r}"
+        )
+    selected_source_ref, epoch = _select_record_design_source(
+        target_definition.revisions[revision_id],
+        catalogues.sources,
+        modelo=modelo_id,
+        revision=revision_id,
+        filing_year=context.filing_year,
+        period=context.period,
+        source_ref=None,
+    )
+    if (
+        selected_source_ref != source_ref
+        or joined.source.source_ref != source_ref
+        or epoch != context.target.design_epoch
+    ):
+        raise RegistryValidationError("historical static target source differs from the exact selected official design")
+    source = catalogues.sources.get(source_ref)
+    if source is None or joined.source.source_sha256 != source.sha256:
+        raise RegistryValidationError("historical static target source digest differs from the candidate catalogue")
+    return RegistryRevisionInspection.from_revision(
+        modelo=scoped_modelo,
+        revision=target_definition.revisions[revision_id],
+        source_root=source_root,
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
     )
 
 
@@ -439,6 +583,7 @@ def _require_isolated_target_context(
     modelo_id: str,
     revision_id: str,
     supporting_modelos: frozenset[str] = frozenset(),
+    baseline_revisions: tuple[str, ...] = (),
 ) -> tuple[Path, Path, Path]:
     modelos_root = _require_directory(registry_root / "modelos", subject="generated registry modelos root")
     modelo_root = modelos_root / modelo_id
@@ -458,9 +603,16 @@ def _require_isolated_target_context(
     revision_root = revisions_root / revision_id
     _require_exact_children(
         revisions_root,
-        expected={revision_id},
+        expected={revision_id, *baseline_revisions},
         subject="generated modelo revisions directory",
     )
+    if len(set((*baseline_revisions, revision_id))) != len(baseline_revisions) + 1:
+        raise RegistryValidationError("generated export inheritance repeats a target or ancestor revision")
+    for baseline_revision in baseline_revisions:
+        baseline_root = _require_directory(
+            revisions_root / baseline_revision, subject="generated export inheritance baseline revision"
+        )
+        require_existing_non_link(baseline_root / "export", subject="generated export inheritance baseline target")
     _require_directory(revision_root, subject="generated target revision directory")
     for name in ("revision.toml", "export"):
         require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")

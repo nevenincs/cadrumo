@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#operator-deferred-actions-runbook'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:80a30bf1c25df9a6b169ded2ed6c987d71e44841d8eb20c0566c65d4beb139ec'
+modified: '2026-10-03'
+body_hash: 'sha256:79647a37f282a23afb3a3cbc63ee491f885d517df5909ae6f23c1b8600e982f4'
 related: []
 ---
 
@@ -53,7 +53,6 @@ repository's tracker.
     `.release-please-manifest.json`) agree at `0.1.1`, and no
     `.github/workflows/release-please.yml` exists — GitHub Actions stays
     permanently disabled on this repo).
-  - `dev/packaging/tests/test_aeat_data_distribution.py::test_companion_version_matches_root_distribution`
     — 2/2 passed (both `packaging/aeat_data_manuals/pyproject.toml` and
     `packaging/aeat_data_official/pyproject.toml` read `0.1.1`, matching root).
   - `just check-dependencies` (deptry) — clean, zero findings.
@@ -78,18 +77,7 @@ environment does not hold (PyPI token, plugin marketplace push).
 
 **Operator action:** from a clean `main` checkout, in order:
 
-1. `just release` — review `var/release/release-please.log`.
-2. `just release-apply` — follow the printed checklist to hand-edit the four
-   version/changelog files (reconcile against the existing `0.2.0` summary
-   already in `CHANGELOG.md`) and the two `packaging/aeat_data_*/pyproject.toml`
-   files, then commit `chore(release): vX.Y.Z` and tag `vX.Y.Z`.
-3. `just packaging-smoke-dependencies`, `just check-dependencies`,
-   `just packaging-smoke`, `uv run --no-sync python dev/packaging/smoke_plugin_validate.py`.
-4. `git push origin main --tags` (human decision only).
-5. `UV_PUBLISH_TOKEN=... just publish yes-publish-to-pypi`.
-6. `just publish-data yes-publish-to-pypi`.
-7. Regenerate and push the plugin/marketplace tree; update `docs/updates.md`
-   if the release changes filing behaviour.
+Regenerate and push the plugin/marketplace tree; update `docs/updates.md`    if the release changes filing behaviour.
 
 **Acceptance signal:** the new version tag exists on the pushed `main`,
 `pypi.org` renders the new `aeat-cli` version page, and
@@ -115,7 +103,6 @@ checkout.
   boundaries, in-scope/out-of-scope), the security posture (local-only
   processing, no live AEAT submission, encrypted-at-rest sensitive data,
   master-key handling), and a pointer to the bundled-data disposition at
-  `src/cadrumo/_data/SECURITY.md`.
 - README.md and CONTRIBUTING.md were checked for a disclosure-channel
   cross-reference. No `CONTRIBUTING.md` exists in this repository (contributor
   guidance lives in the README's "For contributors" section and in
@@ -229,7 +216,6 @@ handshake success is neither required nor sufficient.
   `provisional_pending_specimen` is set.
 - At HEAD, only ONE `declaracion_pdf` profile carries
   `provisional_pending_specimen = true`: Modelo 202
-  (`src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/extraction_profiles/0001-modelo-202-declaracion-pdf.toml`).
   Its own in-file comment names the reason precisely: it is the only profile
   using `bbox_anchored` matching (anchor on the printed box number, read the
   value to its right), because the bundled AEAT Diseño de Registro confirms

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s40-split-install'
 date: '2026-07-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:7bd67cdeffc261fe6307850f087b2fcc819fefd446b98c964541a62a9327dd02'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s40-split-install` audit: `Cadrumo product rename S40 split install audit`

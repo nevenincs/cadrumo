@@ -192,6 +192,24 @@ def _evaluate_cap_le_when_positive(
     return limited <= ceiling
 
 
+def _evaluate_positive_application_le_present_stock(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    """Bound positive elective application to a present stock operand."""
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) != 2:
+        return True
+    application_id, stock_id = ids
+    application = casilla_values.get(application_id, Decimal(0))
+    if application <= Decimal(0):
+        return True
+    if stock_id not in casilla_values:
+        return False
+    return application <= casilla_values[stock_id]
+
+
 def _evaluate_equals(
     predicate: ParsedVerificationPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -292,6 +310,9 @@ _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Blocking
         VerificationPredicateOperator.ANY_NONZERO: _evaluate_any_nonzero,
         VerificationPredicateOperator.AT_MOST_ONE_POSITIVE: _evaluate_at_most_one_positive,
         VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _evaluate_cap_le_when_positive,
+        VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: (
+            _evaluate_positive_application_le_present_stock
+        ),
         VerificationPredicateOperator.EQUALS: _evaluate_equals,
         VerificationPredicateOperator.EQUALS_SUM: _evaluate_equals_sum,
         VerificationPredicateOperator.IMPLIES_NONZERO: _evaluate_implies_nonzero,
@@ -318,6 +339,9 @@ def evaluate_predicate_expression(
       casilla may be strictly positive.
     - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
       casilla is strictly positive, the limited casilla MUST NOT exceed it.
+    - positive_application_le_present_stock(["application_id", "stock_id"]) —
+      an omitted/non-positive elective application holds; a positive one
+      requires a present stock value and must not exceed that value.
     - ``equals(["lhs_id", "rhs_id"])`` — binary consistency invariant: predicate
       holds iff the two named casillas hold the same value.
     - ``equals_sum(["total_id", "addend_id", "addend_id", ...])`` — printed-total

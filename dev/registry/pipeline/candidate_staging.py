@@ -19,6 +19,7 @@ from .edition_candidate_staging import (
     edition_requires_detachment,
     write_complete_edition,
 )
+from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 
 __all__ = [
     "ignore_export_authority_directories",
@@ -59,14 +60,13 @@ def stage_generated_export_candidate(
     revision: str,
     supporting_modelos: Collection[str],
     bootstrap_target: GeneratedExportBootstrapTarget | None = None,
+    inheritance: GeneratedExportInheritanceContext | None = None,
 ) -> Path:
-    """Stage one revision's complete non-export authority through a single boundary.
+    """Stage the target's complete authority through the canonical loader.
 
-    The candidate holds the target as its modelo's only edition. An edition
-    naming a predecessor states only the rows it changed, and pruning its
-    siblings deletes the chain the rest come from, so such a target is staged as
-    the complete edition the loader resolves for it, naming no predecessor. An
-    edition whose named predecessor is absent is refused by that resolution.
+    An ordinary candidate contains one detached complete edition. An attested
+    generated-export child instead contains exactly its pinned ancestor chain
+    and thin child, retaining every storage link needed to hydrate its layout.
     """
     if bootstrap_target is not None and (bootstrap_target.modelo, bootstrap_target.revision) != (modelo, revision):
         raise ValueError(
@@ -93,17 +93,75 @@ def stage_generated_export_candidate(
             f"unreviewed hydrated manual export layout for {modelo}/{revision}; "
             "declare an exact bootstrap supersession before staging",
         )
-    edition = materialise_edition(source_modelo_root, revision)
     _stage_shared_candidate_authority(source_root, candidate_root, modelos={modelo, *supporting_modelos})
-    staged_modelo_root = _stage_candidate_modelo(
-        source_modelo_root,
-        candidate_root,
-        modelo,
-        revision,
-        edition,
-        bootstrap_target,
-    )
+    if inheritance is None:
+        edition = materialise_edition(source_modelo_root, revision)
+        staged_modelo_root = _stage_candidate_modelo(
+            source_modelo_root,
+            candidate_root,
+            modelo,
+            revision,
+            edition,
+            bootstrap_target,
+        )
+    else:
+        if bootstrap_target is not None:
+            raise ValueError("generated export inheritance cannot share a manual-layout bootstrap")
+        staged_modelo_root = stage_attested_inherited_modelo(
+            source_modelo_root,
+            candidate_root / "modelos" / modelo,
+            revision=revision,
+            inheritance=inheritance,
+            include_target_export=False,
+        )
     _stage_supporting_modelos(source_root, candidate_root, supporting_modelos)
+    return staged_modelo_root
+
+
+def stage_attested_inherited_modelo(
+    source_modelo_root: Path,
+    staged_modelo_root: Path,
+    *,
+    revision: str,
+    inheritance: GeneratedExportInheritanceContext,
+    include_target_export: bool,
+) -> Path:
+    """Stage the exact pinned ancestor chain and original thin child."""
+    from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
+
+    ancestors = inheritance.pinned_ancestors
+    ancestor_ids = tuple(revision_id for revision_id, _digest in ancestors)
+    if len(set((*ancestor_ids, revision))) != len(ancestor_ids) + 1:
+        raise ValueError("generated export inheritance contains a repeated ancestor revision")
+    for ancestor_id, digest in ancestors:
+        ancestor_root = source_modelo_root / "revisions" / ancestor_id
+        if bootstrap_layout_supersession_fingerprint(ancestor_root) != digest:
+            raise ValueError(f"generated export inheritance ancestor {ancestor_id} changed before staging")
+    if staged_modelo_root.exists():
+        raise ValueError("generated export inheritance refuses an occupied staged modelo")
+    revisions_root = staged_modelo_root / "revisions"
+    revisions_root.mkdir(parents=True)
+    shutil.copy2(source_modelo_root / "manifest.toml", staged_modelo_root / "manifest.toml")
+    for selected_id in (*ancestor_ids, revision):
+        source_revision_root = source_modelo_root / "revisions" / selected_id
+        staged_revision_root = revisions_root / selected_id
+        shutil.copytree(source_revision_root, staged_revision_root, ignore=ignore_export_authority_directories)
+    root_id = ancestor_ids[0]
+    root_edition = materialise_edition(source_modelo_root, root_id)
+    write_complete_edition(revisions_root / root_id, root_edition)
+    for ancestor_id in ancestor_ids:
+        shutil.copytree(
+            source_modelo_root / "revisions" / ancestor_id / "export",
+            revisions_root / ancestor_id / "export",
+        )
+    if include_target_export:
+        shutil.copytree(source_modelo_root / "revisions" / revision / "export", revisions_root / revision / "export")
+    if include_target_export:
+        loaded = load_modelo_directory(staged_modelo_root)
+        if tuple(loaded.revisions) != (*ancestor_ids, revision):
+            raise ValueError("generated export inheritance staged an unexpected revision")
+        if loaded.revisions[ancestor_ids[-1]].export_layouts != (inheritance.baseline_layout,):
+            raise ValueError("generated export inheritance staged a different baseline layout")
     return staged_modelo_root
 
 

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#censal-profile-autofill'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-10-03'
 body_hash: 'sha256:8ccefe57724de609dd5a1106f36f501cdd35f3e19b561dda124e9bd2a5dee4c7'
-related:
-  - "[[2026-07-25-censal-profile-autofill-plan]]"
+related: []
 ---
 
 # `censal-profile-autofill` audit: `repeatable required field emission`

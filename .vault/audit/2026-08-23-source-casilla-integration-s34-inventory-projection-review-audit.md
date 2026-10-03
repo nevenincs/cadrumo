@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a2e35f1727874fd9d53a974cde5e080d58e18d2a572ad3b24ebe3b4e1a19abd2'
+body_hash: 'sha256:fe9f52ecb6b8f6770db51b5e3d05f943676e490f5508753079e252abaaa582fe'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-23-inventory-casilla-mapping-adr]]"
 ---
 
@@ -15,18 +14,7 @@ related:
 
 ## Scope
 
-Formal review of `W02.P06.S34` against the accepted inventory mapping decision,
-its official-source grounding research, and the source-casilla integration plan.
-The review covered only `src/cadrumo/domain/contribuyente/inventory/__init__.py`,
-`src/cadrumo/domain/contribuyente/inventory/tests/test_anexo_d_projection.py`,
-`src/cadrumo/_data/source_connectivity/census.toml`, and
-`docs/architecture/index.md`. It checked the 2025 boundary, activity/year grain,
-variation arithmetic and rounding, strict result validation, explicit-closing
-refusal, removal of the obsolete signed `0155` API, census truthfulness, and test
-quality. The six projection tests pass and the scoped diff has no whitespace
-errors. The broader census-completeness gate could not reach this slice because
-concurrent CLI command-spec work currently fails discovery first at
-`src/cadrumo/entrypoints/cli/_modelo_work_command_specs.py`.
+Formal review of `W02.P06.S34` against the accepted inventory mapping decision, its official-source grounding research, and the source-casilla integration plan. It checked the 2025 boundary, activity/year grain, variation arithmetic and rounding, strict result validation, explicit-closing refusal, removal of the obsolete signed `0155` API, census truthfulness, and test quality. The six projection tests pass and the scoped diff has no whitespace errors.
 
 ## Findings
 

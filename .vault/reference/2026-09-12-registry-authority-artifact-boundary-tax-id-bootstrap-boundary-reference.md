@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8234a5101b7effd3a818721948e90c24ff2d1bbb67c5de3bc90ffd45dfa6b10b'
+body_hash: 'sha256:3a36fee8d51bfb06ca0f87b8b8dec648e47035cc633e309a225d70f74bf58779'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
 ---
+
 # `registry-authority-artifact-boundary` reference: `tax id bootstrap boundary`
 
 This reference traces the current Spanish tax-identifier migration from authored
@@ -183,18 +184,14 @@ the candidate authority/format they are testing.
 - Add a resource-bootstrap test importing `core.resources.bundled_data` and resolving
   the artifact path while asserting that `core.identity.tax_id`, registry authority,
   and registry schema modules were not imported.
-- Extend `dev/registry/tests/test_authority_publication.py` with an isolated candidate
   whose fact `0102` differs from the installed artifact. A NIF accepted only by the
   candidate mapping must validate and publish; one accepted only by the old artifact
   must be refused. This proves candidate ownership rather than mere successful lookup.
-- Extend `dev/registry/tests/test_authority_artifact_round_trip.py` and
-  `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py` with a
   self-contained artifact carrying its own tax-ID format and a NIF-bearing schema
   value. Decode it with `bundled_authority()` unavailable. Mutating or removing a
   required declaration, with the digest recomputed through the canonical writer, must
   fail typed decoding rather than recurse or fall back.
 - Extend
-  `src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py`
   to prove missing/corrupt tax-ID declarations refuse on every call and never reach
   authoring inputs. Preserve the existing missing/corrupt artifact and no-source-
   fallback probes.

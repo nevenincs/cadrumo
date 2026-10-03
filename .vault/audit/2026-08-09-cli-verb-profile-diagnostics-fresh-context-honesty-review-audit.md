@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7e8d09a725473ab2d7c725c2d1bd6af650bb29180a1a193612d55de35d8083a2'
 related:
-  - "[[2026-08-09-cli-verb-profile-diagnostics-plan]]"
   - "[[2026-08-09-cli-verb-profile-diagnostics-adr]]"
 ---
 # `cli-verb-profile-diagnostics` audit: `Fresh-context honesty review`

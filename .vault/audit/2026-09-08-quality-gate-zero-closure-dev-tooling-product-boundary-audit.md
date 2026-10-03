@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:369fc9f6f6a2b402b01b7d87085f535e53025bd5958cb63de77bc41c61931f66'
+body_hash: 'sha256:92a58cf569da96872d381e45372fe5d2ad98647f66195d8300e868946aad2b72'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
 ---
@@ -41,7 +41,7 @@ The user's explicit product-boundary decision supersedes that mandate. A follow-
 
 ### duplicate-tautology-interpreter | medium | the off-lane inline predecessor remains after the dedicated scanners were deleted
 
-`dev/tests/test_no_tautology.py` is a 296-line second home-grown AST interpreter. It models literal truth, Boolean short-circuiting, constant and chained comparisons, membership, and identity, then tests that model with a large list of fabricated source statements. It is invoked only through `test-ratchets`, not the per-push product lane. Although it scans product tests, it duplicates the deleted tautology scanner's maintenance burden and protects an assertion-syntax taxonomy rather than a tax-product invariant.
+It models literal truth, Boolean short-circuiting, constant and chained comparisons, membership, and identity, then tests that model with a large list of fabricated source statements. It is invoked only through `test-ratchets`, not the per-push product lane. Although it scans product tests, it duplicates the deleted tautology scanner's maintenance burden and protects an assertion-syntax taxonomy rather than a tax-product invariant.
 
 Delete this file and its `test-ratchets` recipe entry. Existing Ruff `F` and `SIM` coverage already catches several high-yield shapes. If the live tree is clean, enabling narrow built-in rules such as `PLW0129` and `PLR0124` is a proportionate replacement; do not rebuild the full Python-semantics model locally.
 
@@ -61,7 +61,7 @@ The first `application_link_consumers` prototype was not acceptable: it reparsed
 
 ### duplicate-tautology-interpreter-closure | low | the inline predecessor and its recipe entry were removed during reconciliation
 
-Resolved in the reviewed worktree. `dev/tests/test_no_tautology.py` is deleted and `test-ratchets` no longer names it. No replacement local AST interpreter was introduced.
+No replacement local AST interpreter was introduced.
 
 ### advisory-report-parser-closure | low | the report now projects import-linter exit status directly
 
@@ -77,16 +77,9 @@ The replacement was narrowed after the broader sweep encountered registry consum
 
 ### residual-roundtrip-inventory-closure | low | the hardcoded inventory and its CI pin are removed
 
-Resolved after explicit authorization from the workflow owner. `dev/tests/test_roundtrip_coverage.py`, its explicit `ci-full.yml` pytest argument, and the command-pin assertion are deleted atomically. The full-lane step continues to invoke the real ledger, storage, and profile roundtrip suites directly; no shim, duplicate test, shadow inventory, or re-export replaces it.
-### historical-shape-detector-closure | low | narrowing and production-metastate parsers are removed
+The full-lane step continues to invoke the real ledger, storage, and profile roundtrip suites directly; no shim, duplicate test, shadow inventory, or re-export replaces it. ### historical-shape-detector-closure | low | narrowing and production-metastate parsers are removed
 
 Resolved in the reviewed worktree. The narrowing-delegator and production-metastate gates were custom AST and textual classifiers whose paired tests constructed synthetic Python modules around historical removed shapes. Their underlying product cleanups remain; the detectors, fixtures, tests, recipes, and aggregate-suite rows are deleted.
 ## Recommendations
 
-1. Keep the current deletion of the six detector modules, all paired gates and mutation-shaped fixtures, the taxonomy declaration residue, the source-inspection revision census, and all `mutmut` dependency/configuration. Do not replace them with another mutation engine or an equivalent local parser.
-2. Keep the direct product-test strengthenings found during the campaign, the authority-backed application-link consumer gate, the real newmodelo cache-effect test, and focused gates that directly exercise registry compilation, revision refusal, filing, calculation, persistence, and serialization.
-3. Retain the completed deletion of `dev/tests/test_no_tautology.py` and its `test-ratchets` reference. Prefer narrow Ruff rules over a local Python-semantics implementation.
-4. Retain the completed simplification of `dev/audit/report.py` layering status to external-tool availability plus exit status, bounded native diagnostic output, and no second verdict grammar or declaration counter.
-5. Reconcile governance through a superseding architecture decision and plan retirement so accepted records no longer require the deleted mutation/meta-detector stack.
-6. Repair the known real registry-conformance failure, make the full green registry suite blocking in its scheduled/full lane, and promote only a bounded real-authority smoke subset to per-push CI.
-7. Minimal verification for this reconciliation is: prove no deleted detector, fixture, mutation dependency, or `PINNED_TAXONOMY_LITERALS` reference remains; run the two authority-backed application-link tests; run the newmodelo cache-effect test; execute `lint-imports` itself; run the real registry closure outcomes; then run Ruff and the type checker over changed development files. Do not rerun or recreate mutation evidence for removed development analyzers.
+1. Keep the current deletion of the six detector modules, all paired gates and mutation-shaped fixtures, the taxonomy declaration residue, the source-inspection revision census, and all `mutmut` dependency/configuration. Do not replace them with another mutation engine or an equivalent local parser. 2. Keep the direct product-test strengthenings found during the campaign, the authority-backed application-link consumer gate, the real newmodelo cache-effect test, and focused gates that directly exercise registry compilation, revision refusal, filing, calculation, persistence, and serialization. 3. Prefer narrow Ruff rules over a local Python-semantics implementation. 4. Retain the completed simplification of `dev/audit/report.py` layering status to external-tool availability plus exit status, bounded native diagnostic output, and no second verdict grammar or declaration counter. 5. Reconcile governance through a superseding architecture decision and plan retirement so accepted records no longer require the deleted mutation/meta-detector stack. 6. Repair the known real registry-conformance failure, make the full green registry suite blocking in its scheduled/full lane, and promote only a bounded real-authority smoke subset to per-push CI. 7. Minimal verification for this reconciliation is: prove no deleted detector, fixture, mutation dependency, or `PINNED_TAXONOMY_LITERALS` reference remains; run the two authority-backed application-link tests; run the newmodelo cache-effect test; execute `lint-imports` itself; run the real registry closure outcomes; then run Ruff and the type checker over changed development files. Do not rerun or recreate mutation evidence for removed development analyzers.

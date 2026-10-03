@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0cd37df36c6998061780bc51f02c64f3ee09371a379329584954cc69e32e910d'
+body_hash: 'sha256:5ad483cbc850d4ff445ee09556ad78f9d4af4a3bd11538d3aff3a0563aa4f0a6'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
   - "[[2026-08-10-casilla-schema-research]]"
@@ -34,11 +33,11 @@ and selected zero tests; the explicit integration rerun executed four tests.
 ### atribucion-profile-source | medium | A profile-backed source is labelled as a live observation
 
 `_LIVE_OBSERVATION_SOURCE_KINDS` in
-`src/cadrumo/application/modelo/_data_inventory.py` includes
+The retired module includes
 `BindingSourceKind.ATRIBUCION_MEMBER`, so every bound M184 attribution-member
 row is emitted under `live_observation`. The production owner
 `AtribucionMemberSourceResolver` in
-`src/cadrumo/application/aggregation/_atribucion_member.py` instead loads
+The retired module instead loads
 `UserProfileRecord` facts from the active taxpayer profile and identifies
 itself as `atribucion_member_profile`. This contradicts the bucket contract,
 which distinguishes `profile_derivable` from the observation, register, and

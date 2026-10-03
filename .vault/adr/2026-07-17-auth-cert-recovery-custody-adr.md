@@ -5,12 +5,11 @@ tags:
 date: '2026-07-17'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
-  - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]"
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
 superseded_by: '2026-08-13-auth-certificate-lifecycle-successor-adr'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_hash: 'sha256:4d46b508eae4180455e6c163742e6ad6c0992d09f18c181ee0100b9fdc1e9cb6'
 ---
 # `auth-cert-recovery-custody` adr: `auth-cert-recovery-custody rescope grounding` | (**status:** `superseded`)

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c9479d1c9dab650774ec49be0e66fbe8f49b966345aa842bd7a40fd2df095f1'
+body_hash: 'sha256:c41031aa01b8e37c9d480f968afb7a63896341bca87a12ca19c796285c2a11d2'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -21,7 +21,7 @@ Two structural findings from a swarm sweep, both verified against the loaded sch
 
 **Pathway:** blocking gate / `config profile preflight` / `app modelo readiness`.
 
-`src/cadrumo/application/user_profile/_preflight.py:164` builds the target prefix `f"modelo_{modelo.strip()}"`, and `:168-172` keeps a field only when one of its `model_selectors` starts with that prefix. Loading the shipped schema through `load_user_profile_schema()` measures **161 fields, 15 required, 143 `model_selectors` values, and exactly 0 beginning with `modelo_`**. The single selector containing the substring is `withholding.modelo_111_no_retenciones_periods` (`_data/registry/cadrumo/user_profile/schema.toml:1124`), which is a field path, not an operation token — it does not start with `modelo_`.
+The retired module built the target prefix `f"modelo_{modelo.strip()}"`, and `:168-172` keeps a field only when one of its `model_selectors` starts with that prefix. Loading the shipped schema through `load_user_profile_schema()` measures **161 fields, 15 required, 143 `model_selectors` values, and exactly 0 beginning with `modelo_`**. The single selector containing the substring is `withholding.modelo_111_no_retenciones_periods` (`_data/registry/cadrumo/user_profile/schema.toml:1124`), which is a field path, not an operation token — it does not start with `modelo_`.
 
 The per-modelo branch of `ProfilePreflightService.report()` is therefore unreachable for every modelo. The codebase already records the behaviour without naming it a defect: `application/user_profile/tests/test_services.py:172` is called `test_preflight_returns_ready_when_no_modelo_selectors_match`.
 
@@ -33,7 +33,7 @@ The per-modelo branch of `ProfilePreflightService.report()` is therefore unreach
 
 **Pathway:** every CLI command reading the active profile through the shared adapter.
 
-`src/cadrumo/application/user_profile/_projections.py:248` declares `tax_id_default: str = "00000000T"` alongside `iva_regime_default: IVARegime = IVARegime.GENERAL`. `src/cadrumo/entrypoints/cli/_common.py:667-673` reaches it with an empty mapping whenever no profile record exists:
+The retired module declared `tax_id_default: str = "00000000T"` alongside `iva_regime_default: IVARegime = IVARegime.GENERAL`. the retired module reaches it with an empty mapping whenever no profile record exists:
 
 ```python
 record = state.active_profile_record()

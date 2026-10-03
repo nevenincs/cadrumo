@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#tui-operation-observation'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2dc5bcd838c16d3678c629308368db30e44cf6c3b4dd4b1a44fa5d5ef401bd01'
+body_hash: 'sha256:edfacdb38ac354d766c1e69fcca9e53e93edff74598363868b73171e69aa0da3'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -69,11 +69,7 @@ safe public definition. Python module and class identity is not a stable public
 schema contract, and the existing generic `OperationReference` does not say
 which schema or resolver owns a reference. The ADR must settle a canonical,
 registered public-definition manifest without publishing Python or persistence
-topology. `src/cadrumo/application/operations/_registry.py:125`,
-`src/cadrumo/application/operations/_registry.py:130`,
-`src/cadrumo/application/operations/_registry.py:132`,
-`src/cadrumo/application/operations/_registry.py:139`,
-`src/cadrumo/application/operations/_models.py:42`.
+topology. the former source file,
 
 ### A REVIEW reference needs a registered safe resolver
 
@@ -88,11 +84,7 @@ reference would invert projection ownership. The evidence favors a pure,
 definition-registered projector invoked behind an operation-owned resolver,
 with exact schema validation and typed refusal. The ADR must separately settle
 observation authority and response bearer authority: rendering a review cannot
-grant APPLY or REJECT. `src/cadrumo/application/operations/_interactions.py:25`,
-`src/cadrumo/application/operations/_interactions.py:92`,
-`src/cadrumo/application/operations/_executor.py:140`,
-`src/cadrumo/application/operations/_supervisor.py:1082`,
-`src/cadrumo/application/operations/_registry.py:125`.
+grant APPLY or REJECT. the former source file,
 
 ### Financial edit operands require a distinct transient custody contract
 
@@ -118,9 +110,7 @@ must not weaken the rule that the canonical committed financial value lives
 only in encrypted secure storage. `.vault/adr/2026-08-11-tui-architecture-adr.md:221`,
 `.vault/adr/2026-08-11-tui-architecture-adr.md:248`,
 `.vault/adr/2026-08-11-tui-architecture-adr.md:282`,
-`src/cadrumo/application/operations/_secret_submission.py:58`,
-`src/cadrumo/application/operations/_secret_submission.py:84`,
-`src/cadrumo/application/operations/_executor.py:106`,
+
 `.codex/rules/sensitive-financial-data-secure-storage-only.md:8`.
 
 ### An opaque operation result cannot drive a typed Workspace refresh
@@ -134,8 +124,8 @@ adapter invoked through the operation facade. It can validate a terminal result
 against the exact operation definition and public contract digest, then return
 a safe typed refresh target or refusal. The ADR must keep target derivation in
 the domain registration while keeping Workspace assembly and baseline minting
-with the Workspace owner. `src/cadrumo/application/operations/_models.py:129`,
-`src/cadrumo/application/operations/_models.py:139`,
+with the Workspace owner. the former source file,
+
 `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:153`,
 `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:307`,
 `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:409`.
@@ -151,13 +141,6 @@ journal and reconciliation boundary but exceed the modal's observation needs
 and make storage evolution a frontend change. `OperationSnapshot` is not a
 replacement: it retains the concrete request payload and omits deadlines,
 cancellation checkpoints, current progress, and pending interaction.
-`src/cadrumo/application/operations/_supervisor.py:481`,
-`src/cadrumo/application/operations/_supervisor.py:498`,
-`src/cadrumo/application/operations/_journal.py:39`,
-`src/cadrumo/application/operations/_journal.py:49`,
-`src/cadrumo/application/operations/_journal.py:69`,
-`src/cadrumo/application/operations/_journal.py:71`,
-`src/cadrumo/application/operations/_models.py:151`.
 
 ### Snapshot and event state require one atomic observation anchor
 
@@ -168,14 +151,9 @@ batch to it. The supervisor currently loads the snapshot and replays history
 through separate calls, so a commit between those calls can combine state and
 events from different revisions. A frontend-side retry cannot prove which
 combination was authoritative.
-`src/cadrumo/application/operations/_journal.py:56`,
-`src/cadrumo/application/operations/_journal.py:67`,
-`src/cadrumo/application/operations/_journal.py:69`,
+
 `src/cadrumo/adapters/persistence/operations/_journal_validation.py:25`,
 `src/cadrumo/adapters/persistence/operations/_journal_validation.py:31`,
-`src/cadrumo/adapters/persistence/operations/_journal.py:143`,
-`src/cadrumo/application/operations/_supervisor.py:482`,
-`src/cadrumo/application/operations/_supervisor.py:496`.
 
 The evidence favors an application port that returns the current internal
 snapshot and the requested bounded history slice from one persistence read.
@@ -195,13 +173,6 @@ anchor cursor. If retention later compacts history, the application boundary
 will need an authoritative fold checkpoint or restart projection; the current
 filesystem adapter retains full history and does not yet exercise its modeled
 `EXPIRED` or `COMPACTED` replay statuses.
-`src/cadrumo/application/operations/_events.py:60`,
-`src/cadrumo/application/operations/_models.py:151`,
-`src/cadrumo/application/operations/_journal.py:39`,
-`src/cadrumo/application/operations/_replay.py:18`,
-`src/cadrumo/application/operations/_replay.py:23`,
-`src/cadrumo/application/operations/_replay.py:89`,
-`src/cadrumo/adapters/persistence/operations/_journal.py:223`.
 
 ### Terminal condition must remain explicit and independent
 
@@ -212,9 +183,6 @@ Any public contract listing lifecycle and effect while reducing terminal
 condition to result/refusal or localized terminal copy loses an accepted state
 axis and cannot distinguish failed, cancelled, timed-out, and interrupted
 settlement. `.vault/adr/2026-08-11-tui-architecture-adr.md:175`,
-`src/cadrumo/application/operations/_models.py:160`,
-`src/cadrumo/application/operations/_journal.py:58`,
-`src/cadrumo/application/operations/_journal.py:68`.
 
 ### Replay needs resynchronization semantics as well as a cursor
 
@@ -225,10 +193,6 @@ only page, caught-up, or unknown-operation because it retains complete history.
 A public contract should preserve these dispositions without exposing
 `OperationJournalRecord`, and should tell a consumer when to replace its local
 fold with the observation anchor instead of silently skipping history.
-`src/cadrumo/application/operations/_replay.py:18`,
-`src/cadrumo/application/operations/_replay.py:71`,
-`src/cadrumo/application/operations/_replay.py:89`,
-`src/cadrumo/adapters/persistence/operations/_journal.py:223`.
 
 ### Initial interaction observation is narrower than the core enum
 
@@ -239,11 +203,6 @@ response token; `respond` still requires the raw token. A fresh observer can
 therefore see a waiting review but cannot derive response authority from public
 state, and the projection must never disclose that token or its digest.
 `src/cadrumo/core/operations.py:84`,
-`src/cadrumo/application/operations/_interactions.py:25`,
-`src/cadrumo/application/operations/_interactions.py:46`,
-`src/cadrumo/application/operations/_interactions.py:86`,
-`src/cadrumo/application/operations/_interactions.py:98`,
-`src/cadrumo/application/operations/_supervisor.py:585`.
 
 The implementable initial surface is review observation with apply/reject
 affordances enabled only when the caller separately holds the exact secure
@@ -264,9 +223,8 @@ because validation fails before version-specific parsing. A minimal version
 header followed by exact model dispatch is needed, analogous to the operation
 registry's minimal definition header. Pre-release version changes must replace
 all in-tree consumers atomically and delete the old public model rather than
-introduce read-tolerance. `src/cadrumo/application/operations/_journal.py:49`,
-`src/cadrumo/application/operations/_models.py:29`,
-`src/cadrumo/application/operations/_registry.py:53`,
+introduce read-tolerance. the former source file,
+
 `.codex/rules/no-legacy-compatibility.md:8`,
 `.codex/rules/no-legacy-compatibility.md:36`.
 
@@ -279,7 +237,7 @@ interaction, or journal shape is refused, and its readers, migrators, fixtures,
 and tests are deleted rather than retained for a conversion pass. A future
 post-release upgrader is governed only by the one-way compatibility checkpoint;
 operation architecture cannot authorize one while the checkpoint has not
-flipped. `src/cadrumo/core/compatibility_lifecycle.py:53`,
+flipped. the former source file,
 `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:18`,
 `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:84`,
 `.vault/adr/2026-08-10-current-schema-only-purge-adr.md:152`,
@@ -320,7 +278,7 @@ The ADR must settle which public contract set and conformance evidence make
 C0 artifact
 `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`
 as `TuiOperationObservationDependencyReceiptV1`, validated by
-`src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
+
 Its live-tree gate must verify the accepted parent amendment and rejected
 staging record, source ancestry, public definition/schema manifest, atomic
 observation, cursor/resynchronization, independent terminal axes, safe REVIEW
@@ -411,49 +369,9 @@ receipt. Implementation and full-suite health remain for the canonical plan.
 - `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:18`
 - `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md:84`
 - `.vault/adr/2026-08-10-current-schema-only-purge-adr.md:152`
-- `src/cadrumo/core/compatibility_lifecycle.py:53`
+
 - `src/cadrumo/core/operations.py:84`
-- `src/cadrumo/application/operations/_events.py:60`
-- `src/cadrumo/application/operations/_interactions.py:25`
-- `src/cadrumo/application/operations/_interactions.py:46`
-- `src/cadrumo/application/operations/_interactions.py:86`
-- `src/cadrumo/application/operations/_interactions.py:98`
-- `src/cadrumo/application/operations/_interactions.py:92`
-- `src/cadrumo/application/operations/_journal.py:39`
-- `src/cadrumo/application/operations/_journal.py:49`
-- `src/cadrumo/application/operations/_journal.py:56`
-- `src/cadrumo/application/operations/_journal.py:58`
-- `src/cadrumo/application/operations/_journal.py:67`
-- `src/cadrumo/application/operations/_journal.py:68`
-- `src/cadrumo/application/operations/_journal.py:69`
-- `src/cadrumo/application/operations/_journal.py:71`
-- `src/cadrumo/application/operations/_models.py:29`
-- `src/cadrumo/application/operations/_models.py:42`
-- `src/cadrumo/application/operations/_models.py:129`
-- `src/cadrumo/application/operations/_models.py:139`
-- `src/cadrumo/application/operations/_models.py:151`
-- `src/cadrumo/application/operations/_models.py:160`
-- `src/cadrumo/application/operations/_registry.py:53`
-- `src/cadrumo/application/operations/_registry.py:125`
-- `src/cadrumo/application/operations/_registry.py:130`
-- `src/cadrumo/application/operations/_registry.py:132`
-- `src/cadrumo/application/operations/_registry.py:139`
-- `src/cadrumo/application/operations/_replay.py:18`
-- `src/cadrumo/application/operations/_replay.py:23`
-- `src/cadrumo/application/operations/_replay.py:71`
-- `src/cadrumo/application/operations/_replay.py:89`
-- `src/cadrumo/application/operations/_supervisor.py:481`
-- `src/cadrumo/application/operations/_supervisor.py:482`
-- `src/cadrumo/application/operations/_supervisor.py:496`
-- `src/cadrumo/application/operations/_supervisor.py:498`
-- `src/cadrumo/application/operations/_supervisor.py:585`
-- `src/cadrumo/application/operations/_supervisor.py:1082`
-- `src/cadrumo/application/operations/_executor.py:106`
-- `src/cadrumo/application/operations/_executor.py:140`
-- `src/cadrumo/application/operations/_secret_submission.py:58`
-- `src/cadrumo/application/operations/_secret_submission.py:84`
-- `src/cadrumo/adapters/persistence/operations/_journal.py:143`
-- `src/cadrumo/adapters/persistence/operations/_journal.py:223`
+
 - `src/cadrumo/adapters/persistence/operations/_journal_validation.py:25`
 - `src/cadrumo/adapters/persistence/operations/_journal_validation.py:31`
 - commit `6122cae70f53b4ef8a2301d96524de3088d4df14`

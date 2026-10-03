@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:3a4c8d3466acce4b2d012e52b5ea7de4d69733e6c184aa4d0c6d06a8e77deea7'
+modified: '2026-10-03'
+body_hash: 'sha256:5906d678a961e82eb417bb513c7469d1c7bd9c2cc1cce4125a2427e1c310e967'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S449-001 | PASS | IVA wallet CLI delegates runtime custody
 
-Reviewed the S449 scope as `vaultspec-code-reviewer`. `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`
+Reviewed the S449 scope as `vaultspec-code-reviewer`. The retired module
 uses the active bucket callback supplied by the root CLI, delegates wallet balance and
 seed operations to application services, and emits typed payload envelopes. It does not
 construct secure storage, inspect manifests, read raw environment variables, or parse

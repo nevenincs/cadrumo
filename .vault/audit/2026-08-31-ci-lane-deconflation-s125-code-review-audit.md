@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a97e9608d323e9b09ef1f4de4491bb4ef42edf3040c1d3cf021881c6f71766c6'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+body_hash: 'sha256:776e04afb44798a97ab224a4ca0873741dcb71499b141809cabb368e515f0516'
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `P05 S125 code review`
@@ -20,7 +19,7 @@ Independent review of `P05.S125` at `65a66fe68b74e336505e1eab8ecc9eb461da87de`, 
 
 ### P05 S125 code review | high | registry relocation changes the canonical 77-member iteration order
 
-`src/cadrumo/adapters/persistence/storage/_namespace_registry.py` preserves all 77 namespace definitions but moves `MODELO_EDIT_RECEIPT_NAMESPACE` from index 19 in the former `STORAGE_NAMESPACE_REGISTRY.namespaces` tuple to index 63, after `MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`. Every member that lay between those positions now has a different iteration position. `StorageHierarchyRegistry` exposes this tuple as part of its hierarchy contract, while the changed tests assert membership and lookups but not the full ordered sequence. P05.S125 is an extraction with no authorized lifecycle or hierarchy semantic change, so restore the former ordering and add a source-backed sequence assertion.
+Every member that lay between those positions now has a different iteration position. `StorageHierarchyRegistry` exposes this tuple as part of its hierarchy contract, while the changed tests assert membership and lookups but not the full ordered sequence. P05.S125 is an extraction with no authorized lifecycle or hierarchy semantic change, so restore the former ordering and add a source-backed sequence assertion.
 
 ### P05 S125 code review | high | execution evidence contains unreproducible placeholder commands
 
@@ -28,7 +27,7 @@ Independent review of `P05.S125` at `65a66fe68b74e336505e1eab8ecc9eb461da87de`, 
 
 ### P05 S125 code review | low | final repair verification resolves both high findings
 
-Source/test repair `37f1b786154ee6db12643e793af696d8d00c529f` restores `MODELO_EDIT_RECEIPT_NAMESPACE` between `MODELO_RECONCILIATION_RECORDS_NAMESPACE` and `SYNC_RUN_RECORDS_NAMESPACE`. Immutable predecessor comparison confirms the full 77-member sequence is now exactly equal, and `test_secure_object_registry_preserves_the_declared_namespace_sequence` makes that contract explicit with a literal expected key tuple rather than deriving expectations from the registry. Focused `test_namespace_registry.py` passed 30 tests. Record repair `130fdc663f7e8b9cfd6567420dd00822dd89d5ba` supplies all 17 original source/test paths for both ruff gates and a complete two-subject `measure_module_lines` command with `174/1250` and `1203/1250` results. No placeholder remains; neither repair changes the CI-lane plan or `dev/audit/size_budget_baseline.json`. Both prior high findings are resolved.
+Source/test repair `37f1b786154ee6db12643e793af696d8d00c529f` restores `MODELO_EDIT_RECEIPT_NAMESPACE` between `MODELO_RECONCILIATION_RECORDS_NAMESPACE` and `SYNC_RUN_RECORDS_NAMESPACE`. Immutable predecessor comparison confirms the full 77-member sequence is now exactly equal, and `test_secure_object_registry_preserves_the_declared_namespace_sequence` makes that contract explicit with a literal expected key tuple rather than deriving expectations from the registry. Focused `test_namespace_registry.py` passed 30 tests. Record repair `130fdc663f7e8b9cfd6567420dd00822dd89d5ba` supplies all 17 original source/test paths for both ruff gates and a complete two-subject `measure_module_lines` command with `174/1250` and `1203/1250` results. Both prior high findings are resolved.
 
 ## Recommendations
 
@@ -37,4 +36,4 @@ Source/test repair `37f1b786154ee6db12643e793af696d8d00c529f` restores `MODELO_E
 
 No additional P05.S125 corrective work is required.
 
-The relocation otherwise has the intended ownership shape: `_secure_object_namespaces.py` retains namespace contracts and declarations, `_namespace_registry.py` owns only the aggregate hierarchy and logical-path helpers, direct consumers import the aggregate from its canonical module, and no legacy aggregate/helper facade remains. The commit does not change `dev/audit/size_budget_baseline.json`.
+The relocation otherwise has the intended ownership shape: `_secure_object_namespaces.py` retains namespace contracts and declarations, `_namespace_registry.py` owns only the aggregate hierarchy and logical-path helpers, direct consumers import the aggregate from its canonical module, and no legacy aggregate/helper facade remains.

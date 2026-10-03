@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:570b953c8d3816cc8c1217a771d0addfe11ab2f27bf803578c63cf7e2b501e52'
+modified: '2026-10-03'
+body_hash: 'sha256:9b33803eafc0c0cbf52fb7ca7db0e0d59a6954fbfb076b6b598e342758073a0f'
 related: []
 ---
 
@@ -20,8 +20,8 @@ The setup service creates a fresh immutable profile id, enters `profile_create_s
 
 ## S254-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/setup/_service.py src/aeat/application/setup/test_service_provisions_bucket.py src/aeat/application/setup/test_contracts_output_language_roundtrip.py src/aeat/application/setup/test_atomic_create_rollback.py src/aeat/application/setup/test_atomic_create_roundtrip.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/setup/test_service_provisions_bucket.py src/aeat/application/setup/test_contracts_output_language_roundtrip.py` passed with 9 tests.
+- the historical check passed.
+- the historical check passed with 9 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-152` as `manifest-discovery` with the silent refusal fixed.

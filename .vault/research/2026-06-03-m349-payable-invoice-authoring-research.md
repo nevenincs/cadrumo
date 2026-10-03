@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m349-payable-invoice-authoring'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:f1279d91d45488ec8cf2e47bc41aafa43874b22f00c5b540d9175e8c4e06653a'
+modified: '2026-10-03'
+body_hash: 'sha256:6388356edcb55d722acf4806ffc85f023582255b83ba339bc88ba3b9cf49ecc1'
 related:
   - "[[2026-06-03-m349-legal-grounding-debt-research]]"
 ---
@@ -25,9 +25,9 @@ Executable registry inventory over Modelo 349 `2020-y-siguientes` reports:
 The current implementation is not the original draft plan:
 
 - Collectible bindings remain in
-  `src/aeat/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/bindings/0007-bindings.toml`.
+
 - Payable mirror bindings live in the dedicated fragment
-  `src/aeat/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/bindings/0008-payable-bindings.toml`.
+
 - Payable mirrors use `claves = ["A", "I", "T"]`, covering received
   acquisitions, intra-community services, and triangular-operation rows.
 - The public declarante summary casillas keep their existing binding ids. The
@@ -52,7 +52,6 @@ That historical state is no longer current.
 ## Current Verification
 
 The current registry tests pin the closed state in
-`src/aeat/domain/calculations/registry/tests/test_modelo_349_registry.py`:
 
 - `test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs`
   asserts 34 invoice bindings, split 17 collectible and 17 payable, with all

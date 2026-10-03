@@ -146,6 +146,9 @@ def _verify_recovery_package_against_current_authorities(
         field_derivations=rendered.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=(
+            context.validation.inheritance.attestation if context.validation.inheritance is not None else None
+        ),
     )
     if verified != package_manifest:
         raise RegistryValidationError("recovered export package does not match current provenance authority")

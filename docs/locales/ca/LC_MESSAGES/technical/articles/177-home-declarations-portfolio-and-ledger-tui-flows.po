@@ -1,0 +1,491 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:1
+msgid "Home, Declarations portfolio, and Ledger TUI flows"
+msgstr "Inici, cartera de Declaracions i fluxos TUI del llibre major"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:7
+msgid ""
+"**Report:** `STAGE-2-177` · **Topic:** [Installed runtime, terminal "
+"workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)"
+msgstr ""
+"**Informe:** `STAGE-2-177` · **Tema:** [Entorn d’execució instal·lat, "
+"banc de treball de terminal i entorn d’agents](../topics/runtime-tui-and-"
+"agent-harness.md)"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:10
+msgid "Scope and limits"
+msgstr "Abast i límits"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:12
+msgid ""
+"This report covers the 25 files assigned under the TUI Declarations, "
+"Home, installed-session, launcher, and Ledger packages: 5,112 lines, "
+"228,380 bytes, and 47,378 measured `o200k_base` proxy tokens. All "
+"assigned source ranges were read in nine bounded pages. Static inspection"
+" only: no application code was imported or run, and no runtime, terminal,"
+" persistence, or external-service behavior was exercised. The supplied "
+"snapshot omits tests and build material."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:14
+msgid "Product capabilities"
+msgstr "Capacitats del producte"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:16
+msgid ""
+"The installed TUI session boundary discovers profiles, registers the "
+"first profile through a bootstrap screen when the inventory is empty, and"
+" authenticates existing profiles through an installed runtime client. "
+"Human credential sessions enter the full workbench; API key/reference "
+"sessions are routed to a restricted session app. Profile change ends the "
+"current owned runtime session before the loop reads a fresh inventory. "
+"Headless mode without an explicit autopilot exits without waiting for "
+"credentials (session orchestration "
+"(`src/cadrumo/entrypoints/tui/installed_session.py`), session loop "
+"(`src/cadrumo/entrypoints/tui/installed_session.py`), launcher "
+"(`src/cadrumo/entrypoints/tui/launcher.py`))."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:18
+msgid ""
+"Home is a display-only projection of next actions, resumable "
+"declarations, agenda items, source/evidence freshness, ledger counts, and"
+" messages needing attention. It uses stable semantic identities rather "
+"than table positions and sends selected targets to the owning app for "
+"admission and dispatch (Home projection rendering "
+"(`src/cadrumo/entrypoints/tui/home.py`), selection message "
+"(`src/cadrumo/entrypoints/tui/home.py`)). Availability includes "
+"available, locked, stale, never-captured, and unavailable states; stale "
+"timestamps are shown explicitly and empty measured zones can be "
+"distinguished from unavailable sources (availability copy "
+"(`src/cadrumo/entrypoints/tui/home.py`))."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:20
+msgid ""
+"The Declarations workspace offers a searchable, filterable, sortable, "
+"foldable filing portfolio with status/result/next-action wording. "
+"Operators can open local work, choose an admitted Modelo and registry-"
+"backed period to create or reopen a work unit, inspect an AEAT filing "
+"without implying it reconciles local work, or open the calculation-"
+"revision, filing-history, and calendar routes (portfolio actions "
+"(`src/cadrumo/entrypoints/tui/declarations/grouped.py`), creation flow "
+"(`src/cadrumo/entrypoints/tui/declarations/grouped.py`), picker "
+"(`src/cadrumo/entrypoints/tui/declarations/picker.py`), external details "
+"(`src/cadrumo/entrypoints/tui/declarations/external_details.py`)). Filing"
+" history presents lifecycle and filing records in chronological order "
+"while keeping local record status distinct from AEAT confirmation and "
+"evidence. Calculation revisions display current/filed flags with stable "
+"focus IDs (filing history "
+"(`src/cadrumo/entrypoints/tui/declarations/filing_history.py`), revisions"
+" (`src/cadrumo/entrypoints/tui/declarations/revisions.py`))."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:22
+msgid ""
+"The Ledger controller exposes seven areas and the assigned screens "
+"implement entry browsing, a per-transaction classification flow, "
+"activity-asset actions, and evidence queue/document review. "
+"Classification is an explicit choose/edit/confirm operation that builds a"
+" typed patch; import preview/apply, evidence "
+"registration/extraction/confirmation, invoice entry, and reconciliation-"
+"link submission are exposed as typed injected controller doors, though "
+"their screens or route implementations are outside this chunk (Ledger "
+"controller doors (`src/cadrumo/entrypoints/tui/ledger/controller.py`), "
+"link admission (`src/cadrumo/entrypoints/tui/ledger/controller.py`)). "
+"Activity-asset controls delegate create, inspect, correct, forecast, "
+"claim, and filing projection requests through one injected action "
+"interface; screen code parses dates and public request shapes but leaves "
+"asset arithmetic to application services (activity-asset actions "
+"(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`), dispatch "
+"(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`))."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:24
+msgid "How data and effects move"
+msgstr "Com es mouen les dades i els efectes"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:26
+msgid ""
+"Controllers hold injected application projections and typed handoffs. "
+"Declarations validates the workbench context, projection contract "
+"version, and canonical action references; refresh accepts a replacement "
+"only when the profile bucket remains the same. Its closed route catalogue"
+" admits only available/stale zones with a concrete screen/factory and "
+"otherwise displays an explicit unavailable screen (Declarations "
+"controller (`src/cadrumo/entrypoints/tui/declarations/controller.py`), "
+"bucket-bound refresh "
+"(`src/cadrumo/entrypoints/tui/declarations/controller.py`), route "
+"admission (`src/cadrumo/entrypoints/tui/declarations/routes.py`)). "
+"Calendar recovery rows are checked against the canonical work-create "
+"command and their declared Modelo/year/period bindings before UI "
+"selection (recovery validation "
+"(`src/cadrumo/entrypoints/tui/declarations/controller.py`)). "
+"Creation/recovery calls run off the UI thread, and screen state prevents "
+"duplicate work while a request is active."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:28
+msgid ""
+"Ledger similarly checks projection version and carries selection in a "
+"validated semantic focus object. Classification target identities must "
+"exist in the visible projection; result identities are checked against "
+"submitted transaction IDs. Link submission is allowed only for a pair "
+"present in the displayed reconciliation projection, and returned "
+"identities must match the admitted pair (Ledger controller "
+"(`src/cadrumo/entrypoints/tui/ledger/controller.py`), classification "
+"identity (`src/cadrumo/entrypoints/tui/ledger/controller.py`), link "
+"identity (`src/cadrumo/entrypoints/tui/ledger/controller.py`)). Refresh "
+"runs off the event loop and coalesces a second refresh request behind the"
+" running one (refresh "
+"(`src/cadrumo/entrypoints/tui/ledger/controller.py`)). Entry tables adapt"
+" columns to terminal width while retaining complete records in the "
+"projection and preserving the selected transaction identity across resize"
+" (entries screen (`src/cadrumo/entrypoints/tui/ledger/entries.py`))."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:30
+msgid ""
+"Evidence views distinguish an application-supplied review queue from "
+"registered local documents. The queue shows safe metadata and stable "
+"attachment identities; local records can be extracted into a draft and "
+"then explicitly confirmed as an invoice. Draft wording preserves unread "
+"values as “unread,” presents discrepancies and field provenance, and "
+"includes competing candidates rather than silently choosing one (evidence"
+" screen (`src/cadrumo/entrypoints/tui/ledger/evidence.py`), draft "
+"rendering (`src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`)). The "
+"full draft can contain supplier/customer names, tax identifiers, postal "
+"details, invoice values, and source metadata, so this is a sensitive "
+"operator-facing surface even though the renderer itself does not persist "
+"it."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:32
+msgid "Security and safety"
+msgstr "Seguretat i protecció"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:34
+msgid ""
+"The installed-session module explicitly confines local bootstrap custody "
+"to profile discovery and first-profile registration, releases active "
+"local profile/key sessions, and opens existing-profile clients against "
+"the verified runtime. It does not give the TUI ambient registration "
+"custody for ordinary login (module boundary "
+"(`src/cadrumo/entrypoints/tui/installed_session.py`), bootstrap release "
+"(`src/cadrumo/entrypoints/tui/installed_session.py`)). The launcher owns "
+"cleanup after Textual exits and releases bundled registry authority only "
+"after an orderly session return (cleanup and orderly exit "
+"(`src/cadrumo/entrypoints/tui/launcher.py`), main "
+"(`src/cadrumo/entrypoints/tui/launcher.py`)). These local properties "
+"still need synthesis to trace through runtime admission and persistence "
+"implementations."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:36
+msgid ""
+"Mutation flows require explicit operator choices, validated typed inputs,"
+" and injected command doors. The classification UI does not infer a "
+"business classification, treats blanks as absent rather than zero, "
+"validates the business-percentage coupling and IVA fraction convention, "
+"then disables cancel and confirm while submission is in flight "
+"(classification validation "
+"(`src/cadrumo/entrypoints/tui/ledger/classification.py`), confirm and "
+"submit (`src/cadrumo/entrypoints/tui/ledger/classification.py`)). "
+"Activity-asset flows require a forecast before claim and carry the "
+"forecast’s superseded-claim identity into the claim request. On an "
+"expired session, the screen clears private form values, forecast state, "
+"and displayed revision identity (activity-asset expiry handling "
+"(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`))."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:38
+msgid ""
+"Canonical action guards bind offered Declarations and Ledger references "
+"to expected command keys; optional Ledger doors are checked when present,"
+" with absence treated as an unoffered area (Ledger action guard "
+"(`src/cadrumo/entrypoints/tui/ledger/action_guards.py`)). However, two "
+"query destinations remain explicitly incomplete in this layer: selecting "
+"a Ledger review row or evidence-review row posts a request that the "
+"shared screen answers with “destination pending”; the comments state that"
+" no production consumer executes the query yet (pending query response "
+"(`src/cadrumo/entrypoints/tui/ledger/controller.py`)). This is an "
+"observed capability gap in the assigned UI path, not a claim that the "
+"underlying application queries are absent."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:40
+msgid "Assessment and follow-up"
+msgstr "Avaluació i seguiment"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:42
+msgid ""
+"The clearest strengths are truthful separation of local and external "
+"filing evidence, stable semantic identity through filtering/resizing, "
+"typed operation boundaries, bucket-preserving projection refresh, and "
+"explicit refusal states. The UI retains provenance and uncertainty for "
+"document extraction and gives operators visible controls for confirming "
+"writes. No test sources were included in this code-only snapshot, so "
+"these behaviors are not verified dynamically."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:44
+msgid ""
+"For synthesis, trace installed login and API-restricted admission to "
+"runtime permissions and secret custody; trace Declarations creation, "
+"refresh, and filing handoffs to the application layer; and resolve Ledger"
+" review/evidence query messages against the route catalogue to document "
+"the currently pending path. Also follow activity-asset and invoice-"
+"evidence operations into their application and domain validation. The "
+"assigned screens show sensitive invoice data, but do not establish "
+"logging, storage, or terminal-session privacy outside their own rendering"
+" paths."
+msgstr ""
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:46
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa dels fitxers assignats"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:48
+msgid "All 25 manifest files and their complete declared line ranges were read."
+msgstr ""
+"Es van llegir els 25 fitxers del manifest i els seus intervals de línies "
+"declarats complets."
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:50
+msgid ""
+"declarations/controller.py "
+"(`src/cadrumo/entrypoints/tui/declarations/controller.py`) — 530 lines"
+msgstr ""
+"declarations/controller.py "
+"(`src/cadrumo/entrypoints/tui/declarations/controller.py`) — 530 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:51
+msgid ""
+"declarations/external_details.py "
+"(`src/cadrumo/entrypoints/tui/declarations/external_details.py`) — 74 "
+"lines"
+msgstr ""
+"declarations/external_details.py "
+"(`src/cadrumo/entrypoints/tui/declarations/external_details.py`) — 74 "
+"línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:52
+msgid ""
+"declarations/filing_history.py "
+"(`src/cadrumo/entrypoints/tui/declarations/filing_history.py`) — 194 "
+"lines"
+msgstr ""
+"declarations/filing_history.py "
+"(`src/cadrumo/entrypoints/tui/declarations/filing_history.py`) — 194 "
+"línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:53
+msgid ""
+"declarations/grouped.py "
+"(`src/cadrumo/entrypoints/tui/declarations/grouped.py`) — 327 lines"
+msgstr ""
+"declarations/grouped.py "
+"(`src/cadrumo/entrypoints/tui/declarations/grouped.py`) — 327 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:54
+msgid ""
+"declarations/models.py "
+"(`src/cadrumo/entrypoints/tui/declarations/models.py`) — 148 lines"
+msgstr ""
+"declarations/models.py "
+"(`src/cadrumo/entrypoints/tui/declarations/models.py`) — 148 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:55
+msgid ""
+"declarations/overview.py "
+"(`src/cadrumo/entrypoints/tui/declarations/overview.py`) — 25 lines"
+msgstr ""
+"declarations/overview.py "
+"(`src/cadrumo/entrypoints/tui/declarations/overview.py`) — 25 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:56
+msgid ""
+"declarations/picker.py "
+"(`src/cadrumo/entrypoints/tui/declarations/picker.py`) — 164 lines"
+msgstr ""
+"declarations/picker.py "
+"(`src/cadrumo/entrypoints/tui/declarations/picker.py`) — 164 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:57
+msgid ""
+"declarations/portfolio_interactions.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_interactions.py`) — "
+"38 lines"
+msgstr ""
+"declarations/portfolio_interactions.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_interactions.py`) — "
+"38 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:58
+msgid ""
+"declarations/portfolio_rendering.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`) — 194"
+" lines"
+msgstr ""
+"declarations/portfolio_rendering.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`) — 194"
+" línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:59
+msgid ""
+"declarations/portfolio_rows.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`) — 97 lines"
+msgstr ""
+"declarations/portfolio_rows.py "
+"(`src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`) — 97 "
+"línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:60
+msgid ""
+"declarations/revisions.py "
+"(`src/cadrumo/entrypoints/tui/declarations/revisions.py`) — 86 lines"
+msgstr ""
+"declarations/revisions.py "
+"(`src/cadrumo/entrypoints/tui/declarations/revisions.py`) — 86 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:61
+msgid ""
+"declarations/routes.py "
+"(`src/cadrumo/entrypoints/tui/declarations/routes.py`) — 193 lines"
+msgstr ""
+"declarations/routes.py "
+"(`src/cadrumo/entrypoints/tui/declarations/routes.py`) — 193 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:62
+msgid ""
+"declarations/row_words.py "
+"(`src/cadrumo/entrypoints/tui/declarations/row_words.py`) — 136 lines"
+msgstr ""
+"declarations/row_words.py "
+"(`src/cadrumo/entrypoints/tui/declarations/row_words.py`) — 136 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:63
+msgid ""
+"destination_alias.py (`src/cadrumo/entrypoints/tui/destination_alias.py`)"
+" — 14 lines"
+msgstr ""
+"destination_alias.py (`src/cadrumo/entrypoints/tui/destination_alias.py`)"
+" — 14 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:64
+msgid "home.py (`src/cadrumo/entrypoints/tui/home.py`) — 500 lines"
+msgstr "home.py (`src/cadrumo/entrypoints/tui/home.py`) — 500 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:65
+msgid ""
+"installed_session.py (`src/cadrumo/entrypoints/tui/installed_session.py`)"
+" — 267 lines"
+msgstr ""
+"installed_session.py (`src/cadrumo/entrypoints/tui/installed_session.py`)"
+" — 267 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:66
+msgid "launcher.py (`src/cadrumo/entrypoints/tui/launcher.py`) — 103 lines"
+msgstr "launcher.py (`src/cadrumo/entrypoints/tui/launcher.py`) — 103 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:67
+msgid ""
+"ledger/__init__.py (`src/cadrumo/entrypoints/tui/ledger/__init__.py`) — 1"
+" line"
+msgstr ""
+"ledger/__init__.py (`src/cadrumo/entrypoints/tui/ledger/__init__.py`) — 1"
+" línia"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:68
+msgid ""
+"ledger/action_guards.py "
+"(`src/cadrumo/entrypoints/tui/ledger/action_guards.py`) — 74 lines"
+msgstr ""
+"ledger/action_guards.py "
+"(`src/cadrumo/entrypoints/tui/ledger/action_guards.py`) — 74 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:69
+msgid ""
+"ledger/actividad_asset.py "
+"(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`) — 241 lines"
+msgstr ""
+"ledger/actividad_asset.py "
+"(`src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`) — 241 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:70
+msgid ""
+"ledger/classification.py "
+"(`src/cadrumo/entrypoints/tui/ledger/classification.py`) — 262 lines"
+msgstr ""
+"ledger/classification.py "
+"(`src/cadrumo/entrypoints/tui/ledger/classification.py`) — 262 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:71
+msgid ""
+"ledger/controller.py (`src/cadrumo/entrypoints/tui/ledger/controller.py`)"
+" — 791 lines"
+msgstr ""
+"ledger/controller.py (`src/cadrumo/entrypoints/tui/ledger/controller.py`)"
+" — 791 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:72
+msgid ""
+"ledger/entries.py (`src/cadrumo/entrypoints/tui/ledger/entries.py`) — 208"
+" lines"
+msgstr ""
+"ledger/entries.py (`src/cadrumo/entrypoints/tui/ledger/entries.py`) — 208"
+" línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:73
+msgid ""
+"ledger/evidence.py (`src/cadrumo/entrypoints/tui/ledger/evidence.py`) — "
+"153 lines"
+msgstr ""
+"ledger/evidence.py (`src/cadrumo/entrypoints/tui/ledger/evidence.py`) — "
+"153 línies"
+
+#: ../../technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.md:74
+msgid ""
+"ledger/evidence_draft.py "
+"(`src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`) — 292 lines"
+msgstr ""
+"ledger/evidence_draft.py "
+"(`src/cadrumo/entrypoints/tui/ledger/evidence_draft.py`) — 292 línies"

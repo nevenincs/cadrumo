@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:832c1d70e4d41b989217e7a3e9f3a985b2c6486ba13117684ef25eee1ec719ed'
+modified: '2026-10-03'
+body_hash: 'sha256:52fe29d566c1f8ee61c6ed411c8a2b1b0cfb94ef33162bf407cde3c6cbe4f49a'
 related:
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-reader-review-audit]]'
 ---
@@ -63,11 +62,11 @@ for the backlog steps already in the plan (S20, S26, S32, S37, S52).
 
 The CLI's own verification-report failure hint pointed at a nonexistent
 command path (`aeat app modelo work verification-report list`); fixed in
-`src/aeat/entrypoints/cli/_modelo_rendering.py` and
-`src/aeat/application/workflow/_engine.py`, now pinned by tests. The
+The retired module and
+The retired module, now pinned by tests. The
 `aeat.locales set` writer corrupted multi-line values (single-quoted scalars
 with raw line breaks fold on the next YAML parse); fixed in
-`src/aeat/locales/manager.py` with a real-behavior roundtrip regression test.
+The retired module with a real-behavior roundtrip regression test.
 The `integrity registry` help string said "profile registry" while the probe
 checks the calculation registry; corrected in all four locales via the locale
 CLI.

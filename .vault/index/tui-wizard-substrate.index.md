@@ -6,11 +6,9 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:52f897e6f1b074f088c921f96d2253d67e09e6680ec139d4b2f8cae23f0516ca'
+body_hash: 'sha256:a6234f4f7b09748986034165afe0e6d72c4ec4f40ed15e9be69c9bbeb1bc9b42'
 related:
   - '[[2026-07-23-tui-wizard-substrate-adr]]'
-  - '[[2026-07-23-tui-wizard-substrate-ledger]]'
-  - '[[2026-07-23-tui-wizard-substrate-plan]]'
   - '[[2026-07-23-tui-wizard-substrate-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#tui-wizard-substrate`.
 ### adr
 
 - `2026-07-23-tui-wizard-substrate-adr` - `tui-wizard-substrate` adr: `paged TUI wizard substrate` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-23-tui-wizard-substrate-ledger` - `tui-wizard-substrate` ledger
-
-### plan
-
-- `2026-07-23-tui-wizard-substrate-plan` - `tui-wizard-substrate` plan
 
 ### research
 

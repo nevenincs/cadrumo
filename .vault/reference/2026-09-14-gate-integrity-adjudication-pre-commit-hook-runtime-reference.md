@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#gate-integrity-adjudication'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0b0ec591ef181e744072b6c51e43cdd7dddd594973610ef0cd051a4837b6c41'
+body_hash: 'sha256:7d73f0dcebffef26963d453afac3cc28208adb8370d492e821cbed1fb9b61865'
 related:
   - "[[2026-09-02-gate-integrity-adjudication-research]]"
 ---
@@ -68,8 +68,6 @@ worktree-safety boundary relevant to commit-time mutation.
 - `prek.toml:3-18` intentionally declares the hook uninstalled, but its claim
   that verify-only hooks never stash contradicts the accepted decision and
   live runner behavior.
-- `dev/init/hooks.py:73-108` would install a supplied hook config, but defaults
-  to absent `.pre-commit-config.yaml` at `dev/init/hooks.py:124-129` and is not
   enrolled in `dev/init/plan.py:101-126`.
 - The worktree has no active pre-commit script; its shared `core.hooksPath`
   names a missing path from an older worktree.

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:cf0605fb57325b9cb80b857f01e7578ef320cf7660c9911d95f2cba012098543'
+modified: '2026-10-03'
+body_hash: 'sha256:86a3b17b0a6d58f5eb43f2c2724d6331aac2093c176abd3ec3890e368287c278'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
 ---
@@ -18,7 +18,7 @@ campaign. Two structural problems remain after the campaign's discovery pass
 (recorded in the sibling research):
 
 1. **A byte-custody leak.** `add_link_attachment`
-   (`src/cadrumo/domain/attachments/_service.py`), reachable through
+, reachable through
    `aeat app ledger doclink`, records a Gmail/Drive/URL *reference* as the
    stored payload (`mime_type = "text/uri-list"`) and never fetches the remote
    document. The resulting attachment manifest looks like evidence — it carries
@@ -44,7 +44,7 @@ re-framing, and the test obligations.
   a **locked campaign decision**; this ADR does not relitigate it, it specifies
   how to satisfy it for the doclink path.
 - The fetch-and-refuse machinery already exists. `resolve_document_link`
-  (`src/cadrumo/adapters/outbound/google/_document_link_resolver.py`) fetches Drive
+   fetches Drive
   bytes within the granted `drive.file` scope and raises a typed, scope-named
   `OutboundStoragePermissionError` for Gmail links, out-of-scope Drive files,
   and arbitrary URLs. The byte-bearing `add_attachment` path already
@@ -104,8 +104,8 @@ back to storing a link. A record that cannot obtain bytes is rejected. The
 today it succeeds only for Drive files reachable under `drive.file`.
 
 Affected symbols: delete `add_link_attachment`
-(`src/cadrumo/domain/attachments/_service.py`); rewire `ledger_doclink`
-(`src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py`) to the resolve →
+; rewire `ledger_doclink`
+ to the resolve →
 `add_attachment` → `attach_manual_transaction_evidence` sequence. Namespaces are
 unchanged: bytes ride `ATTACHMENT_BLOB_NAMESPACE`, manifests ride
 `ATTACHMENT_MANIFEST_NAMESPACE`.

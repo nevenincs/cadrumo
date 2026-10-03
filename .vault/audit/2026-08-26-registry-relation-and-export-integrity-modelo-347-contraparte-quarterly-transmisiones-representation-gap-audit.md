@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-26'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:321c1366154ac58cdf222efc6e3523b085ade9b8e816519024f4fdc14f50b0d3'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:4840a040aeeb9fc704cf50c11bce93b50a1cc54c6ae848cb79d3a1b45d0d7164'
+related: []
 ---
 
 # `registry-relation-and-export-integrity` audit: `modelo 347 contraparte quarterly transmisiones representation gap`
@@ -25,19 +24,7 @@ no code changed.
 
 ### modelo 347 contraparte quarterly transmisiones representation gap | high | the model has no field for a quarterly amount the diseño de registro declares
 
-`Modelo347ContraparteRow` (`src/cadrumo/domain/modelos/_row_models.py:620-623`)
-declares exactly `importe_Q1` through `importe_Q4` and nothing else per
-quarter. The bundled diseño de registro
-(`corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md`)
-pairs each quarter's "IMPORTE DE LAS OPERACIONES" field with a separate
-"IMPORTE PERCIBIDO POR TRANSMISIONES DE [...]" sub-field at an adjacent byte
-position (for example, positions 136-151 for 1T operaciones at line 459,
-paired with positions 152-167 for 1T percibido-por-transmisiones at line
-495; the same pairing repeats for 2T/3T/4T). No field on
-`Modelo347ContraparteRow` carries this second quarterly amount for any
-quarter -- this is not a naming or mapping mismatch, it is an absence: there
-is nowhere on the row to put that value even if an operator or a future
-resolver produced it.
+The bundled diseño de registro (`corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md`) pairs each quarter's "IMPORTE DE LAS OPERACIONES" field with a separate "IMPORTE PERCIBIDO POR TRANSMISIONES DE [...]" sub-field at an adjacent byte position (for example, positions 136-151 for 1T operaciones at line 459, paired with positions 152-167 for 1T percibido-por-transmisiones at line 495; the same pairing repeats for 2T/3T/4T). No field on `Modelo347ContraparteRow` carries this second quarterly amount for any quarter -- this is not a naming or mapping mismatch, it is an absence: there is nowhere on the row to put that value even if an operator or a future resolver produced it.
 
 What is lost, if the omission is not legitimate: a counterparty relation
 whose declarable figure for a quarter includes transmisiones de inmuebles

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#source-mesh-evidence-resolver'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:2d1704ee058bbc9c32a73beed81df862394b312ab410f6c4fbeccb95c4343346'
+modified: '2026-10-03'
+body_hash: 'sha256:451bdbe8062d34ee83ffa1bc2db5416c546511c9eb69e2d3f1de279a2044f164'
 related: []
 ---
 
@@ -16,11 +16,10 @@ invoice evidence records into source mesh resolution).
 ## Proposed resolver shape
 
 The subagent's analysis follows the existing
-`InvoiceCatalogueSourceResolver` template at
-`src/aeat/application/invoices/_source_resolver.py`. The intended
+`InvoiceCatalogueSourceResolver` template . The intended
 landing path:
 
-- New file `src/aeat/application/ledger/_evidence_source_resolver.py`
+- New file the former source file
   (sibling to `_evidence.py`, not inside it — `_evidence.py` is
   service-CRUD and peer-WIP frequently).
 - Class `PurchaseInvoiceEvidenceSourceResolver` with
@@ -42,8 +41,7 @@ landing path:
 
 ## Data-shape blocker
 
-`PurchaseInvoiceEvidence` (defined at
-`src/aeat/application/ledger/_evidence.py:67`) carries
+`PurchaseInvoiceEvidence` (defined ) carries
 `evidence_id`, `bucket_id`, `source_path`, `source_sha256`,
 `media_kind`, `supplier?`, `invoice_number?`, `invoice_date?`,
 `taxable_base?`, `iva_rate?`, `iva_amount?`, `notes`,
@@ -120,9 +118,7 @@ land S26 against the extended schema.
 
 Subagent ground-truth discovery 2026-06-03 against #635 W02.P05.S26.
 Cited file:line evidence:
-- `src/aeat/application/ledger/_evidence.py:67` (PurchaseInvoiceEvidence)
-- `src/aeat/application/invoices/_source_resolver.py` (template)
-- `src/aeat/application/aggregation/_source_mesh.py:87,265,338`
-- `src/aeat/application/aggregation/_modelo_bindings.py:47,50,141,428`
-- `src/aeat/domain/calculations/registry/_bindings.py:3006`
+- the former source file (PurchaseInvoiceEvidence)
+- the former source file (template)
+
   (PurchaseInvoiceEvidence already mapped to `_InvoiceSelector`)

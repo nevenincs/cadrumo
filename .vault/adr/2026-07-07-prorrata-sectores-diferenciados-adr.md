@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-sectores-diferenciados'
 date: '2026-07-07'
-modified: '2026-09-07'
-body_hash: 'sha256:96ae2251be952aa14a7613225b9abbd8ea20422343e597e5d4f4646a63f68bd4'
+modified: '2026-10-03'
+body_hash: 'sha256:813dcbf3e66a9214ac0934c2051fea190a02877a698d965388f2f829a003e850'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -181,14 +181,14 @@ report):
   existing `sector_id` axis; a sector-definition model. **SHARED with `prorrata-especial`
   (especial-complete signal) and `prorrata-art105-cinco-interrupted` (interrupted-year
   representation).**
-- `src/cadrumo/application/aggregation/_iva_ledger.py` — sector-aware apportionment
+- the former source file — sector-aware apportionment
   (route each input to its sector percentage; common-use → art. 104.Dos). **SHARED with
   `prorrata-especial` (regime routing) and `prorrata-art104-tres-exclusions` (exclusion
   filtering) — hottest shared surface.**
-- `src/cadrumo/domain/transactions/_models.py` — a sector reference on the ledger row.
+- the former source file — a sector reference on the ledger row.
   **SHARED with `prorrata-especial` (input_classification) and
   `prorrata-art104-tres-exclusions` (exclusion tag).**
-- `src/cadrumo/domain/iva/_prorrata.py` — consume `requires_sectoral_separation` /
+- the former source file — consume `requires_sectoral_separation` /
   `compute_sectoral_prorrata` (read-mostly). **SHARED (additive) with the sibling ADRs.**
 - taxpayer profile model (`src/cadrumo/domain/contribuyente/...`) — optional activity/IAE
   code axis. Mostly unique to this ADR.
@@ -199,7 +199,7 @@ report):
   **SHARED with `prorrata-especial` and `prorrata-art104-tres-exclusions`.**
 - CLI ledger surface / a `prorrata` verb group — sector declaration + per-row sector
   assignment. **SHARED with `prorrata-especial` and `prorrata-art104-tres-exclusions`.**
-- `src/cadrumo/core/_prorrata_register.py` — the register regime enum is per-sector already;
+- the former source file — the register regime enum is per-sector already;
   read-mostly. **SHARED (additive) with `prorrata-art105-cinco-interrupted`.**
 - `src/cadrumo/core/external_constants.py` — `PRORRATA_SECTORAL_SEPARATION_SPREAD_PP`
   already exists; read-only, no write.

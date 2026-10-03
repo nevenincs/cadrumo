@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#test-docstring-dev-metadata'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:a6866ae8e86fba9b56372bee363a6ed66f3ae9403ecfdb1c3908bfe9cc41522b'
+modified: '2026-10-03'
+body_hash: 'sha256:36277552832af9b8402d9a120a8812c410ed514209b65d1c83ae5c5e607bea4a'
 related:
   - '[[2026-07-10-test-docstring-dev-metadata-research]]'
 ---
@@ -26,7 +26,7 @@ campaign closes, and they train readers to look up a vault document instead
 of reading the test's own contract. During the perf-and-test-hardening
 campaign the enforcing gate —
 `test_source_test_comments_and_docstrings_do_not_reference_campaign_metadata`
-in `src/cadrumo/tests/test_marker_integrity.py`, driven by the
+, driven by the
 `_CAMPAIGN_METADATA_PATTERNS` tuple (~lines 67-85) — surfaced these
 citations at scale, and the question was ruled on by the operator: is the
 gate over-strict, or is the metadata genuinely forbidden?
@@ -101,8 +101,7 @@ gate over-strict, or is the metadata genuinely forbidden?
 
 ## Implementation
 
-The enforcement already ships: the gate in
-`src/cadrumo/tests/test_marker_integrity.py` scans test docstrings and
+The enforcement already ships: the gate  scans test docstrings and
 comments against `_CAMPAIGN_METADATA_PATTERNS` and fails with
 file-and-line violations. The tree was brought to conformance by the
 ~96-file sweep in commits `a527048116` (core/domain/application docstring

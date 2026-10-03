@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.modelo_localization import binding_locale_key
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
 )
@@ -30,17 +31,25 @@ def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
 
 
 def _published_surface() -> tuple[
-    tuple[CasillaOccurrence, ...], dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]]
+    tuple[CasillaOccurrence, ...],
+    dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]],
+    frozenset[str],
 ]:
-    """Read occurrences and their declared evolutions from one authority operation."""
+    """Read occurrences, evolutions and binding keys from one authority operation."""
     found: list[CasillaOccurrence] = []
     evolutions: dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]] = {}
+    binding_keys: set[str] = set()
     with bundled_indexed_authority().operation() as operation:
         for modelo_id in operation.modelo_ids():
             model_evolutions: list[CasillaContinuidadEvolutionDefinition] = []
             for metadata in operation.modelo_directory(modelo_id).revisions:
                 revision = operation.revision(modelo_id, str(metadata.id))
                 model_evolutions.extend(revision.casilla_continuidad_evolutions)
+                binding_keys.update(
+                    binding_locale_key(str(modelo_id), str(binding.id), field)
+                    for binding in revision.bindings
+                    for field in ("label", "help", "box_number")
+                )
                 found.extend(
                     CasillaOccurrence(
                         modelo=str(modelo_id),
@@ -67,7 +76,7 @@ def _published_surface() -> tuple[
                     for construct in revision.constructs
                 )
             evolutions[str(modelo_id)] = tuple(model_evolutions)
-    return tuple(found), evolutions
+    return tuple(found), evolutions, frozenset(binding_keys)
 
 
 def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:

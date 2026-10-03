@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-08-15'
-body_hash: 'sha256:671eee9975539c553ff20e4086eb81f1140f9ad9d13e8ca83963f46a9c96311a'
+modified: '2026-10-03'
+body_hash: 'sha256:6a1a65602590fac7d8a5da30176a5198d6a2af6b96fdbdcc8309f3bfb98e4123'
 related: []
 ---
 
@@ -16,8 +16,6 @@ Renta dependency slice.
 - Modified: `registry/aeat/modelos/202.toml`
 - Modified: `registry/aeat/modelos/232.toml`
 - Modified: `registry/aeat/modelos/349.toml`
-- Created: `src/aeat/domain/calculations/registry/test_modelo_202_registry.py`
-- Created: `src/aeat/domain/calculations/registry/test_modelo_349_registry.py`
 
 ## Description
 
@@ -47,4 +45,3 @@ definitions and do not silently break the cross-dependency contract.
 - `uv run ty check src\aeat\domain\calculations\registry\test_modelo_202_registry.py src\aeat\domain\calculations\registry\test_modelo_232_registry.py src\aeat\domain\calculations\registry\test_modelo_349_registry.py`
   passed.
 - `git diff --check` passed with a pre-existing CRLF warning in
-  `src/aeat/locales/en.yml`.

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:2a616c2cec299776a9100e9bf1e5f571c1cbabf36439079aad50df5dfed9c22d'
+modified: '2026-10-03'
+body_hash: 'sha256:cbfbf9791907b7bd5e0a51e235ea51bce16bee02842f049c448d88d54927d302'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S394-001 | PASS | Locale CLI is a developer catalogue boundary
 
-`src/aeat/locales/cli.py` is a Typer wrapper around `LocaleManager`. It resolves the in-tree locale directory, delegates catalogue reads/writes to the manager, and does not construct secure-storage repositories, inspect active profiles, manage master-key material, or write arbitrary plaintext paths.
+The retired module was a Typer wrapper around `LocaleManager`. It resolves the in-tree locale directory, delegates catalogue reads/writes to the manager, and does not construct secure-storage repositories, inspect active profiles, manage master-key material, or write arbitrary plaintext paths.
 
 ## S394-002 | PASS | User-facing CLI output is localized
 
@@ -24,8 +24,8 @@ Vaultspec RAG semantic search clustered this slice with `LocaleManager`, locale 
 
 ## S394-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/locales/cli.py src/aeat/locales/test_cli.py src/aeat/locales/test_parity.py`
-- `uv run --no-sync pytest -q src/aeat/locales/test_cli.py src/aeat/locales/test_parity.py::test_locale_set_cli_rejects_path_like_locale_without_writing`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 - `uvx vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
 

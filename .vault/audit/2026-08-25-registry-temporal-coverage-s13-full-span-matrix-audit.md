@@ -3,17 +3,17 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f6bf305cf7223ef43d9ec2510d0a625381201905a895b50c705797598996ec3'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+body_hash: 'sha256:939693d716343db33830700bd001c904ec4887edec0d4086f8e20b8c750b81b1'
+related: []
 ---
+
 # `registry-temporal-coverage` audit: `s13 full span matrix`
 
 ## Scope
 
-Independent review of `W02.P06.S13` at `915a66a5bc` and corrective provenance `7bbbd2c777`, against the temporal-coverage plan, its governing ADRs, the S13 and S24 execution records, and the current implementation. Vaultspec-RAG located the plan, ADR and execution epicentre. The shared code index remained in a continuous refresh and the explicit local fallback reported a published-but-empty index, so it was not used to establish any absence claim. Whole-file reads of `src/cadrumo/domain/calculations/registry/_coverage.py`, `src/cadrumo/domain/calculations/registry/_temporal.py`, `src/cadrumo/application/registry/_temporal_coverage.py`, and `src/cadrumo/application/registry/_filing_export_coverage.py`, plus targeted `rg`, supplied the code evidence.
+Independent review of `W02.P06.S13` at `915a66a5bc` and corrective provenance `7bbbd2c777`, against the temporal-coverage plan, its governing ADRs, the S13 and S24 execution records, and the current implementation. Vaultspec-RAG located the plan, ADR and execution epicentre. The shared code index remained in a continuous refresh and the explicit local fallback reported a published-but-empty index, so it was not used to establish any absence claim.
 
 Verdict: S13 passes. The derived selector expansion uses the registry-supported filing-year horizon and produces one canonical `(modelo, revision, filing_year, period)` row per declared coordinate. The model-law audit reselects through the authority for every cell, sub-filing grades remain inspection-only, construct evidence probes every coordinate, and conformance aggregates complete cell sets without retaining an arbitrary later or representative cell. Targeted `rg` found no executable `_representative_year` or representative-coordinate consumer; the remaining matches are explanatory text only. The real bundled temporal property suite passed 39 tests.
 

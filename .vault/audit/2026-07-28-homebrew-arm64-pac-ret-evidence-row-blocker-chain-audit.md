@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#homebrew-arm64-pac-ret'
 date: '2026-07-28'
-modified: '2026-07-28'
+modified: '2026-10-03'
 body_hash: 'sha256:782d349b1a3724397ec465fe7e5852447196d486963ca91bb2fad196ff2d31b5'
 related:
-  - "[[2026-07-25-homebrew-arm64-pac-ret-plan]]"
   - "[[2026-07-22-homebrew-arm64-pac-ret-adr]]"
   - "[[2026-07-27-publication-lane-consolidation-adr]]"
 ---

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-07-17'
-body_hash: 'sha256:7145d9285cd26ef84de5c1ab99d62db7dcfc307288cdeba4123c9661883a7341'
+modified: '2026-10-03'
+body_hash: 'sha256:ec19f319e020f5f5fc7de223e50b02c5f8a91c810ba8365d8155da2eab78b254'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"
   - "[[2026-06-10-ledger-input-localization-adr]]"
@@ -33,7 +33,7 @@ written by this pass. The findings below record the verified state.
 
 - **P01 (shared validator consolidation)** — landed. The canonical
   `parse_decimal_amount(raw, *, label, signed=True)` and
-  `parse_optional_decimal_amount(...)` live in `src/aeat/entrypoints/cli/_common.py`
+  `parse_optional_decimal_amount(...)` live in the retired module
   with the dot-decimal regex (`_DECIMAL_RE` non-negative, `_SIGNED_DECIMAL_RE`
   signed, two-digit fractional cap), an `InvalidOperation` guard, and an
   `is_finite()` defence-in-depth check, all routing the localised
@@ -81,8 +81,8 @@ extraction.
   `_ledger_support.py` (delegators + `_parse_amount_magnitude`),
   `_ledger_business_invoice_cli.py`, `_ledger_evidence_cli.py`,
   `_ledger_inventory_cli.py`, `_ledger_ratios_cli.py`, `_ledger_lifecycle_cli.py`.
-- Tests (commit `aab1b534e`): `tests/test_common_decimal_parser.py`,
-  `tests/test_common_date_parser.py`, `tests/test_localised_parser_errors.py`.
+- Tests (commit `aab1b534e`): the retired test,
+  The retired test, the retired test.
 
 ### Tests / checks run by this closure pass
 

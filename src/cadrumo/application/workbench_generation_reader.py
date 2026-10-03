@@ -96,6 +96,7 @@ from .overview.home import (
     HomeAvailability,
     HomeZoneState,
 )
+from .user_profile.censal_observation import CensalObservation
 from .user_profile.projections import record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
 from .workbench_generation_calendar import (
@@ -312,6 +313,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     zero the operator can act on.
     """
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None
+    census_observation_reader: Callable[[], CensalObservation | None] | None = None
     """Names the casilla that settles one modelo revision, or nothing.
 
     Injected rather than resolved in the door, which holds repositories and no
@@ -375,6 +377,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=ledger_sources,
         )
         custody_count = self._load_custody_count()
+        census_observation = None if self.census_observation_reader is None else self.census_observation_reader()
         ledger_ports = self.ledger_action_ports
         ledger = (
             None
@@ -388,6 +391,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=tuple(filings.records.values()),
             custody_count=custody_count,
             censo_values=raw_values,
+            census_observation=census_observation,
             filed_evidence=aeat_projection,
         )
         account_session = self.account_session_reader()
@@ -401,6 +405,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             verification=verification,
             bucket_events=bucket_events,
             custody_count=custody_count,
+            census_observation=census_observation,
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
         return _build_workbench_generation_inputs(
@@ -551,6 +556,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         verification: VerificationReportCatalogue | None,
         bucket_events: BucketEventHistoryCatalogue | None,
         custody_count: int | None,
+        census_observation: CensalObservation | None = None,
     ) -> bool:
         final_record = self.profile_repository.load(self.profile_id)
         _, final_work_units_revision = self.work_unit_repository.load_revisioned()
@@ -565,6 +571,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             and self._load_verification_reports() == verification
             and (None if self.bucket_event_repository is None else self.bucket_event_repository.load()) == bucket_events
             and self._load_custody_count() == custody_count
+            and (None if self.census_observation_reader is None else self.census_observation_reader())
+            == census_observation
         )
 
     def _ledger_revision(self) -> tuple[str, str] | None:
@@ -685,6 +693,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: tuple[ModeloRecord, ...],
         custody_count: int | None,
         censo_values: Mapping[str, object],
+        census_observation: CensalObservation | None = None,
         filed_evidence: CalendarEvidenceProjection | None = None,
     ) -> tuple[AeatSyncWorkspaceProjectionV1 | None, NamespacedId]:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
@@ -716,6 +725,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     operation_contracts=self.operation_contracts,
                     custody_count=custody_count,
                     censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
+                    census_observation=census_observation,
                     filed_evidence=filed_evidence,
                 ),
                 _AEAT_SYNC_READER_UNAVAILABLE,

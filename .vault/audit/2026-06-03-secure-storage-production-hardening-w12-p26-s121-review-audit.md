@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:9121fd9dd4b7507b485d5a7d04d77def0255a7144a2009d3861ec9f9c289ed7d'
+modified: '2026-10-03'
+body_hash: 'sha256:5055c1f27a393125e6eb8a3faf082991e5ba231af03c0de4fd326c44c67f8ab8'
 related: []
 ---
 
@@ -13,7 +13,7 @@ related: []
 ## Scope
 
 This review covers `AFR-019` for
-`src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`.
+the retired module.
 
 ## Findings
 
@@ -32,11 +32,11 @@ settings, filesystem, and provider APIs returned no matches in `_record_spec.py`
 
 ## Validation
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/export/_formats/test_record_spec.py src/aeat/adapters/outbound/aeat/export/_formats/test_currency_edge_cases.py src/aeat/adapters/outbound/aeat/export/_formats/test_date_edge_cases.py src/aeat/adapters/outbound/aeat/export/_formats/test_envelope.py`
+- the historical check
   - Result: 101 passed.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py src/aeat/adapters/outbound/aeat/export/_formats/test_record_spec.py src/aeat/adapters/outbound/aeat/export/_formats/test_currency_edge_cases.py src/aeat/adapters/outbound/aeat/export/_formats/test_date_edge_cases.py src/aeat/adapters/outbound/aeat/export/_formats/test_envelope.py`
+- the historical check
   - Result: all checks passed.
-- `rg -n "SecureObjectRepository|SecureBoundRepository|StorageProvider|GoogleDrive|LocalStorage|write_text\(|read_text\(|open\(|Path\(|storage_path|aeat_database_url|override_settings|load_settings" src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`
+- the historical check
   - Result: no matches.
 
 ## Disposition

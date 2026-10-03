@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:70bfa182e4f01eb628c8dcf5069dc8c177f0efa2f2ae48c718b3dc9908519ccd'
+modified: '2026-10-03'
+body_hash: 'sha256:422e5bcacecd3718fe2bb5260ac22a81727e3704cc1f90ae0e8dd5d726136367'
 related:
-  - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-research]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-audit]]"
@@ -31,7 +30,7 @@ against the live registry tree at HEAD
 (`src/aeat/_data/registry/aeat/modelos/202/revisions/`), the bundled LIS art.
 40 corpus, and the closed operator set in
 `KNOWN_VERIFICATION_PREDICATE_OPERATORS`
-(`src/aeat/domain/calculations/registry/_schema.py:1011`), and either author a
+, and either author a
 false-positive-free `implies_nonzero` ADVISORY where one exists or record a
 documented non-guard with legal rationale and a concrete prerequisite. Per
 `no-silent-under-declaration` and the advisory-must-distinguish discipline
@@ -200,7 +199,6 @@ prerequisite this audit specified: sourcing the official AEAT Modelo 202
 instructions text for the `modalidad-40-3-resultado` formula.
 
 **Grounding.** The bundled corpus this codebase already ships --
-`src/aeat/_data/corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones.html`
 (line 289, `source_ref = "aeat-modelo-202-instructions"`, the 2025+
 instructions) and the sibling
 `modelo-202-instrucciones-2023-2024.html` (line 240, `source_ref =
@@ -283,8 +281,7 @@ casilla is a false-positive-free guard candidate -- consistent with the
 `m202-minimo-cn-10m` and M714-class reasoning already established in this
 audit and in `ledger-iva-advisory-only-on-cuota-bearing-categories`.
 
-**Verification.** `uv run --no-sync pytest
-src/aeat/domain/calculations/registry/tests/test_modelo_202_registry.py -q`
+**Verification.** the historical check
 (18 passed) and the full M202-scoped registry suite
 (`pytest src/aeat/domain/calculations/registry -k 202`, 1277 passed) are
 green. No unrelated regression was introduced; a single pre-existing,

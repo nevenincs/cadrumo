@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:60590d7c22804df96059eddb6bfb17e3c7a2c7bd992118e2f708eeec8d005f26'
+modified: '2026-10-03'
+body_hash: 'sha256:d447162e3e6c4219637c05c0146688541df97fdba9ef9ae8c0f820f43e2c7062'
 related: []
 ---
 
@@ -195,7 +195,7 @@ provision that sets them (`registry-calculation-legal-grounding`). All corrected
 
 The módulos volume-exclusion limits are now codified as grounded legal parameters in
 `irpf-estimacion-objetiva.toml`, the user-profile schema declares the four prior-year
-volume fields, and `src/aeat/application/modelo/_objective_estimation_advisory.py`
+volume fields, and the retired module
 consumes those fields to emit Modelo 100/131 warnings when an objective-estimation
 profile exceeds a supported official-source magnitude. This is intentionally advisory,
 not hard enforcement: the warning surfaces the legal risk while leaving the operator to

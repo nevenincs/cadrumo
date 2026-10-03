@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-08-15'
-body_hash: 'sha256:5e5ff9fcf37464dbc5c4c5e417ec0a1224906357a855b81045a8144ec4392bbc'
+modified: '2026-10-03'
+body_hash: 'sha256:717b3791a23a439bb5db16607ff8a3dfb217c48558e1813f6ca6d8891889c022'
 related: []
 ---
 
@@ -12,18 +12,6 @@ related: []
 
 Modelo 131 DPA/DID export schema foundation.
 
-- Modified: `src/aeat/domain/calculations/registry/_schema.py`
-- Modified: `src/aeat/domain/calculations/registry/_validate.py`
-- Modified: `src/aeat/domain/calculations/registry/_export_parse.py`
-- Modified: `src/aeat/application/filing/_export.py`
-- Modified: `src/aeat/application/filing/__init__.py`
-- Modified: `src/aeat/application/filing/test_filing.py`
-- Modified: `src/aeat/application/filing/test_testing_registry.py`
-- Modified: `src/aeat/domain/filing/_schema.py`
-- Modified: `src/aeat/domain/filing/__init__.py`
-- Modified: `src/aeat/domain/calculations/registry/test_registry_schema.py`
-- Created: `src/aeat/domain/calculations/registry/_record_design.py`
-- Created: `src/aeat/domain/calculations/registry/test_record_design.py`
 - Modified: `registry/aeat/modelos/131.toml`
 - Modified: `.vault/plan/2026-05-03-calculation-truth-registry-rebuild-plan.md`
 

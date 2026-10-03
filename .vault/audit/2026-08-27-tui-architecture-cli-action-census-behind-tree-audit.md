@@ -5,7 +5,7 @@ tags:
 date: '2026-08-27'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cf05760bfa0a952ba61a992bec7775c225db5450fc38491ba98e5b1db1ac358'
+body_hash: 'sha256:0ef5bf7bfc8791559d34799132e60aca5a1fb17f3e3c3cd206f78fc762c609c2'
 related: []
 ---
 # `tui-architecture` audit: `the cli action census lost its modelo rows, so the s24 gate compares nothing`
@@ -18,12 +18,12 @@ Check whether the CLI action-disposition census and its S24 partition gate still
 
 ### Finding
 
-`dev/quality/cli_action_census_dispositions.toml` carries 195 rows and NOT ONE
+The retired data file carried 195 rows and NOT ONE
 of them is under `src/cadrumo/application/modelo/`. The modelo rows were there
 once and are gone.
 
 The code they described is not. All 24 modules named by
-`dev/tests/test_s24_precondition_campaign.py` still exist under that prefix,
+The retired test existed at the time under that prefix,
 with their symbols. So the ledger lost rows describing live code rather than
 recording a campaign that finished.
 
@@ -39,8 +39,7 @@ abandoned.
 
 ### It is not an isolated slip
 
-`dev/tests/test_cli_action_census_dispositions.py`
-::`test_current_tree_ledger_exactly_matches_the_mechanical_live_census` is red
+`test_current_tree_ledger_exactly_matches_the_mechanical_live_census` is red
 for the reciprocal reason: the mechanical census finds current candidates the
 committed ledger does not adjudicate, among them
 `application/ledger/actions_classification.py::apply_classification_rules`,

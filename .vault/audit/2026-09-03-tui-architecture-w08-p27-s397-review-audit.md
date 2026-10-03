@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture-w08-p27-s397-review'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:4eabf7d840397578c54a5e2532c6e9e6c43c81175d11326dcdbb1698dc858361'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 
 # `tui-architecture-w08-p27-s397-review` audit: `AEAT Sync workspace projection review`

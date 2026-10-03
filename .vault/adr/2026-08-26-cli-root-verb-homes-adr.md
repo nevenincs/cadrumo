@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:59690fd568b81b5d37ed11b60d3441131b5b43302abc1160743f7c1d5771fe0f'
+body_hash: 'sha256:47acb8fcbf24725a6dc274867f4ec296fac5fe683af0019730ce9f29ec4d42fc'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
 ---
@@ -67,7 +67,7 @@ an assumption into a precondition.
   `if request.revision_id and ...`, so the projection already tolerates an omitted
   id. Only the CLI spec makes it required.
 - `config google sync probe` verifies OAuth credentials and root-folder resolution
-  (`src/cadrumo/entrypoints/cli/_config/_google.py:356`). It never reads the
+. It never reads the
   secure-object mirror; it is Google configuration.
 - `docs/_sequences/contracts/**/*.seq` is gate-covered by
   `test_documented_command_conformance.py`, so a rename reds there rather than
@@ -132,8 +132,8 @@ The change is larger than the first draft claimed. Beyond entrypoint specs it
 touches roughly 78 locale keys in each of four catalogues (312 leaves) under a
 hard parity gate and an honesty ratchet that forbids the placeholder; gate-covered
 `.seq` contracts and their JSON goldens; three non-gate-covered `docs/locales`
-catalogues; `src/cadrumo/application/operator_actions/_catalogue.py:512`;
-`dev/quality/cli_action_census_dispositions.toml`; and `dev/benchmarks/cli`
+catalogues; the former source file;
+the former source file; and `dev/benchmarks/cli`
 goldens.
 
 `aeat-cli-contract` must be amended, and D7 enumerates the specific sentences.

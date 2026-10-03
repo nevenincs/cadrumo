@@ -8,7 +8,6 @@ body_schema: 'body-v2'
 body_hash: 'sha256:4bdf98a1141bdda2bfd8ef2fbf4c1a13e4a64cebc231b709cfcf752bbea60ad7'
 related:
   - "[[2026-09-12-binding-schema-tooling-review-audit]]"
-  - "[[2026-09-11-binding-schema-plan]]"
 ---
 
 # `binding-schema` audit: `Binding-schema overnight repair and hardening`

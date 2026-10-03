@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-08-15'
-body_hash: 'sha256:ea06da94094532add67ec87b1008a7c31c5affe08ae5ae059564797c271ea5dd'
+modified: '2026-10-03'
+body_hash: 'sha256:34b8cb5b93e5e35a4d1eef07e08f2117eea56c4efb615fe246d25e6b269daf94'
 related: []
 ---
 
@@ -14,27 +14,13 @@ Created the first central Modelo 100 registry scaffold under the accepted
 calculation truth registry architecture.
 
 - Created: `registry/aeat/modelos/100.toml`
-- Created: `src/aeat/domain/calculations/registry/test_modelo_100_registry.py`
 - Created: `corpus/aeat_official/renta_web_open/renta-web-open.html`
 - Updated: `registry/aeat/legal/irpf.toml`
-- Updated: `src/aeat/domain/calculations/registry/_ids.py`
-- Created: `src/aeat/domain/calculations/registry/_constructs.py`
 - Created: `corpus/aeat_official/instructions/modelo_100/files/modelo-100-procedure.html`
-- Updated: `src/aeat/domain/calculations/registry/_schema.py`
-- Updated: `src/aeat/domain/calculations/registry/_remote_state_guard.py`
-- Updated: `src/aeat/domain/calculations/registry/_snapshot.py`
-- Updated: `src/aeat/domain/calculations/registry/_validate.py`
-- Updated: `src/aeat/domain/calculations/registry/_export_parse.py`
-- Updated: `src/aeat/adapters/outbound/aeat/sede/_declarations.py`
-- Updated: `src/aeat/adapters/outbound/aeat/sede/_schema.py`
-- Updated: `src/aeat/adapters/outbound/aeat/sede/test_declarations.py`
-- Updated: `src/aeat/core/errors/registry/_entrypoints.py`
 - Updated: `pyproject.toml`
 - Updated: `uv.lock`
-- Updated: `src/aeat/domain/calculations/registry/__init__.py`
 - Updated: `.vault/plan/2026-05-03-calculation-truth-registry-rebuild-plan.md`
 - Updated: `.vault/audit/2026-05-05-modelo-100-renta-aggregation-audit.md`
-- Created: `tests/fixtures/aeat-sede/submitted-files/modelo-100-2023-0A-redacted.xml`
 
 ## Description
 

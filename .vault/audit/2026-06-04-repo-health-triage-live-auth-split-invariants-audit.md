@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:1000c036ddfdf90f072a7ac899a086e1e7ebc48ff4e7e9b00eac00d1de2c4c0a'
+modified: '2026-10-03'
+body_hash: 'sha256:24c44096a4d4f549a9c2c31aa8d907c79b1749c4fe20cc2bc5b95258fdd54ee6'
 related:
-  - '[[2026-06-04-repo-health-triage-plan]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
 ---
 
@@ -16,15 +15,15 @@ Scope: W03.P11.S36, a pre-implementation audit for decomposing live AEAT/auth su
 
 ## Surfaces Audited
 
-- `src/aeat/application/auth/_sessions.py`: central session acquisition, persisted-session probing, acquisition locking, and active-profile/provider identity fail-closed checks.
-- `src/aeat/application/auth/_operator.py`: operator-safe auth configuration, status, test, and live preflight projections.
-- `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`: certificate-backed session record, persisted-state validation, invalidation, and browser-context marker checks.
-- `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`: Clave Movil provider, encrypted session metadata, live browser flow, diagnostics, and teardown.
-- `src/aeat/adapters/outbound/aeat/auth/_session_store.py`: encrypted browser-session persistence through the secure-object repository.
-- `src/aeat/adapters/outbound/aeat/browser/session.py`: Playwright context construction, storage-state injection, certificate-provisioner kwargs, and retained-browser lifecycle.
-- `src/aeat/adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py`: Playwright client-certificate construction and context-marker validation.
-- `src/aeat/application/live/__init__.py` and `src/aeat/entrypoints/cli/_app_live.py`: shared live-read gate, session acquisition call sites, capture/read CLI preflight rendering, and live result surfaces.
-- `src/aeat/domain/calculations/registry/_remote_state_guard.py`: authenticated-read policy vocabulary and AEAT write-action denylist used by remote-state surfaces.
+- the retired module: central session acquisition, persisted-session probing, acquisition locking, and active-profile/provider identity fail-closed checks.
+- the retired module: operator-safe auth configuration, status, test, and live preflight projections.
+- the retired module: certificate-backed session record, persisted-state validation, invalidation, and browser-context marker checks.
+- the retired module: Clave Movil provider, encrypted session metadata, live browser flow, diagnostics, and teardown.
+- the retired module: encrypted browser-session persistence through the secure-object repository.
+- the retired module: Playwright context construction, storage-state injection, certificate-provisioner kwargs, and retained-browser lifecycle.
+- the retired module: Playwright client-certificate construction and context-marker validation.
+- the retired module and the retired module: shared live-read gate, session acquisition call sites, capture/read CLI preflight rendering, and live result surfaces.
+- the retired module: authenticated-read policy vocabulary and AEAT write-action denylist used by remote-state surfaces.
 
 ## Invariants
 

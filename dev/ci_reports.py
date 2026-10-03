@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import hashlib
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING
+
+from dev.report_storage import report_directory
 
 if TYPE_CHECKING:
     import pytest
@@ -49,8 +50,8 @@ def _ci_report_path(args: tuple[str, ...] | list[str]) -> str | None:
         The report path, or ``None`` when reporting is not enabled or the
         caller already named a report.
     """
-    directory = os.environ.get(_CI_REPORTS_ENV, "").strip()
-    if not directory:
+    target = report_directory()
+    if target is None:
         return None
     if any(arg == "--junitxml" or arg.startswith("--junitxml=") for arg in args):
         return None
@@ -58,7 +59,6 @@ def _ci_report_path(args: tuple[str, ...] | list[str]) -> str | None:
     if not name:
         digest = hashlib.sha256(" ".join(args).encode("utf-8")).hexdigest()[:8]
         name = f"pytest-{digest}"
-    target = Path(directory)
     target.mkdir(parents=True, exist_ok=True)
     return str(target / f"{name}.xml")
 

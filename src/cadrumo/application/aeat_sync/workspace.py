@@ -27,6 +27,7 @@ from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationPublicContractSetV1
 from ..operator_actions.catalogue import ActionCatalogue
 from ..operator_actions.models import ActionReference
+from ..user_profile.censal_observation import CensalObservation
 
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
@@ -304,14 +305,7 @@ class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
-    """One census field's local-versus-AEAT status.
-
-    Carries no value yet, and the docstring no longer claims that as a safety
-    property: it is a GAP. Nothing produces these rows outside fixtures, and
-    their AEAT side stays never-captured until a pull happens, so there is no
-    captured value to carry. When a producer exists the values belong here, on
-    the same reasoning as every other authenticated surface.
-    """
+    """One profile field compared with its stored AEAT census evidence."""
 
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
@@ -511,6 +505,7 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
     zones: tuple[AeatSyncWorkspaceZoneStateV1, ...]
     overview: tuple[AeatSyncWorkspaceOverviewRowV1, ...] = ()
     census: tuple[AeatSyncWorkspaceCensusRowV1, ...] = ()
+    census_observation: CensalObservation | None = None
     filed_declarations: tuple[AeatSyncWorkspaceFiledDeclarationRowV1, ...] = ()
     notifications: tuple[AeatSyncWorkspaceNotificationRowV1, ...] = ()
     evidence_comparison: tuple[AeatSyncWorkspaceEvidenceComparisonRowV1, ...] = ()
@@ -624,6 +619,7 @@ class _AeatSyncWorkspaceProjectionArguments(TypedDict):
     operation_contracts: OperationPublicContractSetV1
     overview: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...]]
     census: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...]]
+    census_observation: NotRequired[AeatSyncWorkspaceFactV1[CensalObservation] | None]
     filed_declarations: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...]]
     notifications: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...]]
     evidence_comparison: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...]]

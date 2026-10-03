@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:70453109f6c8c0f45c2b94a9e3a80f5913965ac81dd4abfdfbbc0aa8ede99f9c'
-related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
+related: []
 ---
 # `modelo-parity-rollup` audit: `Modelo parity rollup remediation review`
 

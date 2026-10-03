@@ -49,6 +49,7 @@ from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ....tests.cli_envelope import require_error_document
+from ....tests.env_scope import isolated_aeat_env
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
 
@@ -265,6 +266,10 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     # this half, the stderr assertions above could be satisfied by deleting the
     # log call outright and the crash would become untriageable.
     state_root = tmp_path / "state"
+    # The runner pins explicit category paths, and the child inherits them; the
+    # log location under test is the one derived from the root alone.
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(state_root)):
+        child_environment = dict(os.environ)
     logged_run = subprocess.run(
         [sys.executable, str(script), "boom", "--json"],
         capture_output=True,
@@ -272,7 +277,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         encoding="utf-8",
         timeout=120,
         check=False,
-        env=os.environ | {"CADRUMO_LOCAL_STORAGE_ROOT": str(state_root)},
+        env=child_environment,
     )
     assert logged_run.returncode == 6, logged_run.stderr
     assert "Traceback" not in logged_run.stderr

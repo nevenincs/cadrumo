@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:711f623c5d260891c1abad79d0020335a36770f239ca7c6f13c1faa69c3a7308'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:8c7bfa510117c38ff40c12a3bbae14fbbbda8f266c3dc097e4a066b928f5fe9f'
+related: []
 ---
 # `source-casilla-integration` research: `M182 row source grounding`
 
@@ -27,15 +26,15 @@ For type-1 nature `3`, the official design identifies the declarant as the prote
 
 ### The current donor carrier is partial and has synthetic identity
 
-`DonativoDonorObservation` carries only a worksheet `source_id`, donor NIF/name, country, a derived transaction date, amount, deduction percentage, and a boolean recurrence flag. Its bindings expose just five row fields. It does not retain the type-1 declarant/header family; type-2 representative, province, key, in-kind marker, regional-deduction, declared-person nature, revocation/year, asset identity, or administrator-holder facts; or the official recurrence coding and conditions. `src/cadrumo/domain/calculations/registry/_donativo_bindings.py:90` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/bindings/0001-bindings.toml:3`
+`DonativoDonorObservation` carries only a worksheet `source_id`, donor NIF/name, country, a derived transaction date, amount, deduction percentage, and a boolean recurrence flag. Its bindings expose just five row fields. It does not retain the type-1 declarant/header family; type-2 representative, province, key, in-kind marker, regional-deduction, declared-person nature, revocation/year, asset identity, or administrator-holder facts; or the official recurrence coding and conditions. the former source file the former source file
 
-The carrier is also lossy at the required record grain. Its fold keys only by country and donor NIF, sums all amounts into the first observed deduction percentage, collapses recurrence to `1`/`0`, and cannot distinguish cash from in-kind donations. AEAT requires independent type-2 records for a single declared person with different deduction percentages and for a mix of cash and in-kind donations; recurrence is `1` or `2` in the circumstances the design names. `src/cadrumo/domain/calculations/registry/_donativo_bindings.py:209` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:443` https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf
+The carrier is also lossy at the required record grain. Its fold keys only by country and donor NIF, sums all amounts into the first observed deduction percentage, collapses recurrence to `1`/`0`, and cannot distinguish cash from in-kind donations. AEAT requires independent type-2 records for a single declared person with different deduction percentages and for a mix of cash and in-kind donations; recurrence is `1` or `2` in the circumstances the design names. the former source file `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:443` https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf
 
-The worksheet assembler assigns `detalle:per_donativo_donor:row-{row_index}` and defaults the date to 31 December of the filing year. The scoped persistence search finds no Modelo-182/donativo secure repository or secure-object namespace. The census therefore correctly identifies an assembler, not an authority, and the mesh keeps `DONATIVO_DONOR` deferred. The active Censo read is only the authenticated taxpayer's own identity, refuses representation, does not persist the read itself, and deliberately does not project a parsed identity name; it cannot be treated as an owner of a recipient entity, political-party filing class, protected-estate administrator, or protected-estate holder. `src/cadrumo/application/calculations/_row_set_assembly.py:1035` `src/cadrumo/application/aggregation/_source_mesh.py:302` `src/cadrumo/_data/source_connectivity/census.toml:270` `src/cadrumo/application/live/__init__.py:494` `src/cadrumo/application/user_profile/_censo_sync.py:224`
+The worksheet assembler assigns `detalle:per_donativo_donor:row-{row_index}` and defaults the date to 31 December of the filing year. The scoped persistence search finds no Modelo-182/donativo secure repository or secure-object namespace. The census therefore correctly identifies an assembler, not an authority, and the mesh keeps `DONATIVO_DONOR` deferred. The active Censo read is only the authenticated taxpayer's own identity, refuses representation, does not persist the read itself, and deliberately does not project a parsed identity name; it cannot be treated as an owner of a recipient entity, political-party filing class, protected-estate administrator, or protected-estate holder. the former source file the former source file the former source file `src/cadrumo/application/live/__init__.py:494` the former source file
 
 ### The current temporal and export boundaries reinforce a bounded deferral
 
-The temporal S44 record selects only the exact 2025 design and preserves refusal for 2007--2024 and 2026 onward. The revision remains `authority_grade = "applicability"` and has no export layout. Its current five bindings are explicit deferred-source scaffolding, not a declaration that the design, owner, persistence path, or fixed-width output is complete. `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml:2` `src/cadrumo/domain/calculations/registry/_export.py:100` `.vault/exec/2026-08-14-registry-temporal-coverage/2026-08-14-registry-temporal-coverage-W02-P05-S44.md`
+The temporal S44 record selects only the exact 2025 design and preserves refusal for 2007--2024 and 2026 onward. The revision remains `authority_grade = "applicability"` and has no export layout. Its current five bindings are explicit deferred-source scaffolding, not a declaration that the design, owner, persistence path, or fixed-width output is complete. `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml:2` the former source file `.vault/exec/2026-08-14-registry-temporal-coverage/2026-08-14-registry-temporal-coverage-W02-P05-S44.md`
 
 The evidence favours retaining the existing donor ingress-blocked disposition and treating the unowned header and administrator-holder axes as explicit prerequisites, not donor-row defaults. A future decision must select one secure owner per official fact family, preserve the type-1/type-2 relationship and official row cardinality, define immutable source identities and fingerprints, and establish the conditional field matrix before S101 can propose resolver enrollment. This research neither chooses such owners nor authorizes a resolver, binding, registry, export, or census-disposition mutation.
 
@@ -45,10 +44,7 @@ The evidence favours retaining the existing donor ingress-blocked disposition an
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:22`
 - `src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.corpus_text.json:1`
-- `src/cadrumo/domain/calculations/registry/_donativo_bindings.py:90`
-- `src/cadrumo/application/calculations/_row_set_assembly.py:1035`
-- `src/cadrumo/application/aggregation/_source_mesh.py:302`
-- `src/cadrumo/_data/source_connectivity/census.toml:270`
+
 - `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml:2`
 - `src/cadrumo/_data/registry/aeat/legal/modelo-182.toml:75`
 - `.vault/exec/2026-08-14-registry-temporal-coverage/2026-08-14-registry-temporal-coverage-W02-P05-S44.md`

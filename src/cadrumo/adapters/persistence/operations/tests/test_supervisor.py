@@ -11,6 +11,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import BaseModel, Field
@@ -1103,6 +1104,128 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
 
         assert asyncio.run(journal.load(first_operation)).identity.subject_ref == "subject:shared"
         assert asyncio.run(journal.load(separate_operation)).identity.subject_ref == "subject:separate"
+
+
+class UnregisteredSupervisorRequestRefinement(SupervisorRequest):
+    """Is-a registered request, with identical fields, without being the registered request type."""
+
+
+class PayloadTypeRecordingExecutor:
+    """Record the concrete payload type the supervisor hands its executor."""
+
+    def __init__(self) -> None:
+        self.payload_types: list[type[BaseModel]] = []
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del context
+        self.payload_types.append(type(request.payload))
+        return "result:exact-payload"
+
+
+class SubclassResolvingOperands:
+    """Real encrypted store whose resolve breaks the port by answering with a subclass of the asked type."""
+
+    def __init__(self, store: OperationSecureReferenceRepository) -> None:
+        self._store = store
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        return await self._store.put(operand, written_at=written_at)
+
+    async def resolve[OperandT: BaseModel](self, reference: str, operand_type: type[OperandT]) -> OperandT:
+        resolved = await self._store.resolve(reference, operand_type)
+        if operand_type is not SupervisorRequest:
+            return resolved
+        return cast(OperandT, UnregisteredSupervisorRequestRefinement.model_validate(resolved.model_dump()))
+
+
+def test_submit_refuses_a_subclass_of_the_registered_request_type(tmp_path: Path) -> None:
+    """Admission is exact: a subclass is refused before any lease or journal write, the registered type is not."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = "3" * 64
+        refined = OperationRequest[BaseModel](
+            definition_id="operation.supervisor.test",
+            subject_ref="subject:one",
+            payload=UnregisteredSupervisorRequestRefinement(value="encrypted-operation-input"),
+        )
+
+        with pytest.raises(ValueError, match="request payload does not match definition"):
+            asyncio.run(supervisor.submit(refined, operation_id=operation_id))
+
+        assert asyncio.run(journal.inventory_page(after=None, limit=128)).entries == ()
+        observation = asyncio.run(
+            leases.inspect(
+                operation_conflict_scope_reference(
+                    definition_id=refined.definition_id, subject_ref=refined.subject_ref
+                ),
+                operation_id,
+                observed_at=_NOW,
+            )
+        )
+        assert observation.current is None
+        assert asyncio.run(supervisor.submit(_request(), operation_id=operation_id)) == operation_id
+
+
+def test_start_hands_the_executor_exactly_the_registered_request_type(tmp_path: Path) -> None:
+    """The real encrypted store restores the submitted operand as the registered type itself."""
+    executor = PayloadTypeRecordingExecutor()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=PayloadTypeRecordingExecutor, build=lambda: executor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
+
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert executor.payload_types == [SupervisorRequest]
+
+
+def test_start_refuses_a_restored_operand_that_is_not_exactly_the_registered_type(tmp_path: Path) -> None:
+    """Restore is exact whatever store is wired: a look-alike operand never reaches the executor."""
+    executor = PayloadTypeRecordingExecutor()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, store = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=PayloadTypeRecordingExecutor, build=lambda: executor),
+            journal=journal,
+            leases=leases,
+            operands=SubclassResolvingOperands(store),
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+
+        with pytest.raises(ValueError, match="request payload does not match definition"):
+            asyncio.run(supervisor.start(operation_id))
+
+        persisted = asyncio.run(journal.load(operation_id))
+        assert persisted.lifecycle is OperationLifecycle.CREATED
+        assert persisted.executor_entered_at is None
+        assert executor.payload_types == []
 
 
 @pytest.mark.parametrize(

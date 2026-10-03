@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:e02d8c30fba4cd47ff4281af7d58854fdb2ef4a333dcc32eba4e7d541a1aadbb'
+modified: '2026-10-03'
+body_hash: 'sha256:35f0f7dd8214891d26134b98a33c6ac4043db740d2a9d64635d0b532c0899335'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The new foundation test constructs a real `RemoteMirrorObjectManifest` through P
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_foundation.py src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_adverse_conditions.py` passed with 33 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_records.py src/aeat/adapters/outbound/storage/test_foundation.py` passed.
+- the historical check passed with 33 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - The touched-file source scan found no direct settings construction, project-root wrangling, environment access, print/typer output, suppressing pragmas, monkeypatch/fake/stub markers, skipped/xfail tests, or broad exception catches.
 

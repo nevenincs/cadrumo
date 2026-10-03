@@ -1,0 +1,398 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:1
+msgid "Profile custody transactions and connected configuration"
+msgstr "Profilőrzési tranzakciók és kapcsolt beállítások"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:7
+msgid ""
+"**Report:** `STAGE-2-103` · **Topic:** [Operations, profiles and "
+"workflows](../topics/operations-profiles-and-workflows.md)"
+msgstr ""
+"**Jelentés:** `STAGE-2-103` · **Téma:** [Műveletek, profilok és "
+"munkafolyamatok](../topics/operations-profiles-and-workflows.md)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:10
+msgid ""
+"**Scope:** 16 modules under `src/cadrumo/application/user_profile`, "
+"totaling 5,763 lines, 237,182 bytes, and 47,539 measured `o200k_base` "
+"proxy tokens. All nine bounded-reader pages and assigned ranges were "
+"read. Static inspection only; no deletion, capsule publication, Google-"
+"provider call, or application test was run."
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:12
+msgid "Capabilities and mechanisms"
+msgstr "Képességek és mechanizmusok"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:14
+msgid ""
+"Profile custody makes create, restore/delete, and recovery decisions "
+"through a single application service backed by a composed persistence "
+"port. The port contracts keep crypto, encrypted-object repositories, "
+"filesystem records, bucket paths, and locking behind an outward-bound "
+"capability. It provides anchored bounded local-record reads/writes and "
+"compare-and-replace operations; capsule archives and encrypted profile "
+"records pass opaque bytes across this boundary. Password records use the "
+"adapter’s Argon2id policy and authenticated encryption, while recovery "
+"enrollment mints a high-entropy code in a wipeable container, uses an "
+"independent salt, and binds its wrapper to the same DEK epoch. These are "
+"interface-level guarantees; the concrete KDF, AEAD, filesystem hardening,"
+" and key erasure are outside this chunk. Custody capability boundary "
+"(`src/cadrumo/application/user_profile/custody_ports.py`), recovery-code "
+"handoff (`src/cadrumo/application/user_profile/custody_ports.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:16
+msgid ""
+"Capsule creation records a bounded canonical journal before building a "
+"transaction-owned stage. It verifies stage inventory and label "
+"provenance, publishes the capsule, then compare-and-swaps the active "
+"profile pointer and writes a receipt. Recovery recognizes prior durable "
+"states and refuses to overwrite an independently changed pointer. When "
+"selection displaces another profile, it retires that profile’s local "
+"session acceleration before swapping the pointer, preventing the old "
+"bucket key from remaining recoverable without a password. A global root "
+"lock currently serializes custody transactions across all profiles; the "
+"inner per-profile lock expresses a fixed lock order but does not yield "
+"per-profile parallelism. Create and recovery flow "
+"(`src/cadrumo/application/user_profile/custody_service.py`), root-before-"
+"profile lock "
+"(`src/cadrumo/application/user_profile/custody_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:18
+msgid ""
+"Deletion is a journaled, local-only operation. Preflight refreshes "
+"independently owned legal and filing evidence, captures the exact capsule"
+" inventory and active-pointer state, and creates a random confirmation "
+"challenge. A retention override must include a nonempty reason and can "
+"bypass only a filing hold; a legal hold remains absolute. Execution "
+"requires the exact transaction, profile, inventory digest, and challenge,"
+" then rechecks active-target restrictions, hold state, and inventory "
+"before proceeding. Ordered effects revoke process secrets, remove local "
+"session acceleration, clear the pointer, rename the marked capsule to a "
+"transaction tombstone, verify/remove that tombstone, and finally write "
+"idempotent owner and transaction receipts. Receipt fields disclose "
+"external registrations, backups, recovery artefacts, and "
+"certificate/token state as retained; the operation does not claim remote "
+"deletion. Hold evidence join "
+"(`src/cadrumo/application/user_profile/custody_hold.py`), override "
+"boundary (`src/cadrumo/application/user_profile/custody_hold_models.py`),"
+" delete preflight "
+"(`src/cadrumo/application/user_profile/custody_service.py`), ordered "
+"delete/recovery "
+"(`src/cadrumo/application/user_profile/custody_service.py`), digest-bound"
+" journal (`src/cadrumo/application/user_profile/custody_transactions.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:20
+msgid ""
+"Profile facts have one shared mutation door for wizard, manager, "
+"capability, descendant, and language-preference changes. It replaces "
+"named paths against the authenticated current record, validates the full "
+"resulting fact set with the current profile schema, and records exactly "
+"one `PROFILE_VALUES_UPDATED` event with the writer identity. Effective-"
+"value equality suppresses no-op revisions; explicit clears remain real "
+"changes. Manager field edits can also compare an expected revision/digest"
+" and normalize blank input to a clear. Descendant replacement validates "
+"the whole row family against one pinned governed-fact authority and exact"
+" record baseline, refuses unsupported or noncanonical fields instead of "
+"silently dropping them, and clears stale indexed paths in the same write."
+" Filing-baseline helpers separate identity omissions from conditional "
+"filing omissions for accurate refusal guidance. Shared fact writer "
+"(`src/cadrumo/application/user_profile/fact_write.py`), descendant "
+"replacement (`src/cadrumo/application/user_profile/descendant_rows.py`), "
+"filing baseline groups "
+"(`src/cadrumo/application/user_profile/filing_baseline.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:22
+msgid ""
+"Nine human-facing Google configuration operations cover credential-source"
+" and folder selection/view, login/logout, provider probe, client "
+"registration, and status. Requests bind an explicit profile. Registration"
+" carries an absolute client-JSON path and digest in the ordinary request "
+"while the JSON bytes enter through a five-minute ephemeral-secret "
+"channel. Result projections expose account/client orientation, scopes, "
+"reachability and status without token fields. Ordinary configuration "
+"leaves are recorded and CLI-only; login consent is resumable and requires"
+" an exact terminal review/response checkpoint bound to operation "
+"identity, revision, request digest, and profile. Request and result "
+"contracts "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`),"
+" ephemeral declaration and operation definitions "
+"(`src/cadrumo/application/user_profile/google_configuration_operation.py`),"
+" consent proposal digest "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:24
+msgid ""
+"The Google executor rechecks the profile at local commit and outbound "
+"handoff boundaries. Its effect tracker records `UNKNOWN` before a "
+"provider/local write can become ambiguous, then changes the effect only "
+"after canonical acknowledgements; an error after an acknowledged change "
+"becomes `PARTIAL`. Register input is consumed from the ephemeral secret "
+"scope. Provider refusals are narrowed to closed code/message/fact "
+"contracts and stored as encrypted operation detail; terminal result "
+"projection checks the exact invocation and terminal receipt before "
+"release. Effect tracking "
+"(`src/cadrumo/application/user_profile/google_configuration_executor.py`),"
+" operation execution "
+"(`src/cadrumo/application/user_profile/google_configuration_executor.py`),"
+" closed refusal contract "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`),"
+" receipt-bound release "
+"(`src/cadrumo/application/user_profile/google_configuration_result_projection.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:26
+msgid ""
+"History contracts accept an exact profile plus inclusive UTC time bounds "
+"and optional event-type, object, and actor filters. Returned projections "
+"require count/identity agreement, canonical event ordering, exact profile"
+" membership, and every supplied filter to match each event. History "
+"request and projection "
+"(`src/cadrumo/application/user_profile/history_contracts.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:28
+msgid "Security and implementation assessment"
+msgstr "Biztonsági és megvalósítási értékelés"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:30
+msgid ""
+"Strong local controls include self-digested canonical journals and "
+"receipts, bounded record sizes, exact stage and inventory witnesses, "
+"target-bound human confirmation, pointer compare-and-swap, idempotent "
+"per-owner receipts, and recoverable tombstone ordering. Hold evidence is "
+"derived from separate legal and filing owners, bound to profile and "
+"canonical source digests, and timestamped; its registry-backed retention "
+"projection is read under a pinned authority. The code explicitly avoids "
+"treating a retention override as a false “no hold” fact. Evidence model "
+"and digest "
+"(`src/cadrumo/application/user_profile/custody_hold_models.py`), journal "
+"repository (`src/cadrumo/application/user_profile/custody_repository.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:32
+msgid ""
+"One documented freshness limitation deserves focused verification: "
+"immediately before deletion, the service compares current legal/filing "
+"hold dispositions rather than the evidence digests or source-record "
+"identities. With no retention override, a still-held filing assessment "
+"continues to block deletion, and a legal hold always blocks it. With an "
+"override, however, a changed filing source that remains `held` may pass "
+"the unchanged-disposition comparison while the journal’s recorded "
+"override still names the earlier retained-record count/date. The service "
+"comments identify the omitted source-record digest. Consider binding and "
+"rechecking the filing evidence relevant to the override, then test a "
+"changed-held-source race. This is a conditional concern around overridden"
+" filing holds, not evidence that every delete is unsafe. Disposition-only"
+" comparison (`src/cadrumo/application/user_profile/custody_service.py`), "
+"override fields "
+"(`src/cadrumo/application/user_profile/custody_hold_models.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:34
+msgid ""
+"The global lock is a known scalability tradeoff: one long custody "
+"operation blocks publication or deletion for unrelated profiles. Google "
+"handoff callbacks synchronously bridge worker-thread work to the event "
+"loop; the design keeps authority checks adjacent to side effects, but "
+"integration tests should exercise callback ordering, cancellation, and "
+"worker settlement. The Google request/result layer itself does not "
+"establish which third-party API scopes are least-privileged or what data "
+"a concrete adapter logs. The custody port similarly cannot prove its "
+"provider actually honors its no-follow, atomic-write, KDF, AEAD, and wipe"
+" contracts. No tests are included in these assigned files, and none were "
+"executed. Global lock behavior "
+"(`src/cadrumo/application/user_profile/custody_repository.py`), "
+"handoff/effect boundary "
+"(`src/cadrumo/application/user_profile/google_configuration_executor.py`)"
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:36
+msgid "Dependencies and follow-up"
+msgstr "Függőségek és további vizsgálatok"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:38
+msgid ""
+"Trace `ProfileCapsuleLifecycle` into this transaction service, then "
+"inspect the concrete custody filesystem/crypto adapter, profile-pointer "
+"transaction, session revocation and acceleration owner, and legal/filing "
+"hold owners. Verify recovery at each journal state, concurrent pointer "
+"movement, rollback, tombstone tampering, and retention override behavior "
+"when hold source records change. For profile edits, follow "
+"`ProfileRecordRepository` and validation/schema authority; for Google "
+"operations, follow the canonical configuration service, OAuth and "
+"outbound-storage adapters, ephemeral-secret runtime, and terminal "
+"projection publisher. Exercise receipt mismatch, unacknowledged provider "
+"writes, partial local/remote success, exact consent replay, and result-"
+"release filtering. History read execution and its access policy are "
+"outside this contract-focused slice."
+msgstr ""
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:40
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:42
+msgid ""
+"All 16 assigned files were read fully across pages 1–9; no portions "
+"remain unread."
+msgstr ""
+"Mind a 16 kijelölt fájlt teljes egészében elolvastam az 1–9. oldalakon; "
+"nem maradt olvasatlan rész."
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:44
+msgid "custody_hold.py (`src/cadrumo/application/user_profile/custody_hold.py`)"
+msgstr "custody_hold.py (`src/cadrumo/application/user_profile/custody_hold.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:45
+msgid ""
+"custody_hold_models.py "
+"(`src/cadrumo/application/user_profile/custody_hold_models.py`)"
+msgstr ""
+"custody_hold_models.py "
+"(`src/cadrumo/application/user_profile/custody_hold_models.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:46
+msgid "custody_ports.py (`src/cadrumo/application/user_profile/custody_ports.py`)"
+msgstr "custody_ports.py (`src/cadrumo/application/user_profile/custody_ports.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:47
+msgid ""
+"custody_repository.py "
+"(`src/cadrumo/application/user_profile/custody_repository.py`)"
+msgstr ""
+"custody_repository.py "
+"(`src/cadrumo/application/user_profile/custody_repository.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:48
+msgid ""
+"custody_service.py "
+"(`src/cadrumo/application/user_profile/custody_service.py`)"
+msgstr ""
+"custody_service.py "
+"(`src/cadrumo/application/user_profile/custody_service.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:49
+msgid ""
+"custody_transactions.py "
+"(`src/cadrumo/application/user_profile/custody_transactions.py`)"
+msgstr ""
+"custody_transactions.py "
+"(`src/cadrumo/application/user_profile/custody_transactions.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:50
+msgid ""
+"descendant_rows.py "
+"(`src/cadrumo/application/user_profile/descendant_rows.py`)"
+msgstr ""
+"descendant_rows.py "
+"(`src/cadrumo/application/user_profile/descendant_rows.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:51
+msgid "fact_write.py (`src/cadrumo/application/user_profile/fact_write.py`)"
+msgstr "fact_write.py (`src/cadrumo/application/user_profile/fact_write.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:52
+msgid ""
+"filing_baseline.py "
+"(`src/cadrumo/application/user_profile/filing_baseline.py`)"
+msgstr ""
+"filing_baseline.py "
+"(`src/cadrumo/application/user_profile/filing_baseline.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:53
+msgid ""
+"google_configuration_executor.py "
+"(`src/cadrumo/application/user_profile/google_configuration_executor.py`)"
+msgstr ""
+"google_configuration_executor.py "
+"(`src/cadrumo/application/user_profile/google_configuration_executor.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:54
+msgid ""
+"google_configuration_operation.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation.py`)"
+msgstr ""
+"google_configuration_operation.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:55
+msgid ""
+"google_configuration_operation_contracts.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`)"
+msgstr ""
+"google_configuration_operation_contracts.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:56
+msgid ""
+"google_configuration_operation_ports.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_ports.py`)"
+msgstr ""
+"google_configuration_operation_ports.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_ports.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:57
+msgid ""
+"google_configuration_operation_refusal.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`)"
+msgstr ""
+"google_configuration_operation_refusal.py "
+"(`src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:58
+msgid ""
+"google_configuration_result_projection.py "
+"(`src/cadrumo/application/user_profile/google_configuration_result_projection.py`)"
+msgstr ""
+"google_configuration_result_projection.py "
+"(`src/cadrumo/application/user_profile/google_configuration_result_projection.py`)"
+
+#: ../../technical/articles/103-profile-custody-transactions-and-connected-configuration.md:59
+msgid ""
+"history_contracts.py "
+"(`src/cadrumo/application/user_profile/history_contracts.py`)"
+msgstr ""
+"history_contracts.py "
+"(`src/cadrumo/application/user_profile/history_contracts.py`)"

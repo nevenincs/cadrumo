@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#ledger-hardening-close'
 date: '2026-06-11'
-modified: '2026-07-17'
-body_hash: 'sha256:0efb3ee2ff16ca650e538eaab626445e04c4b349d0bba3280c35653864e31d14'
+modified: '2026-10-03'
+body_hash: 'sha256:7ac8f76baff9de368906eee9e4872ca1030e3ce1e9dd8b5d7d2b9c0d5b6e382c'
 related:
-  - '[[2026-06-10-ledger-interface-contract-plan]]'
-  - '[[2026-06-10-ledger-invoice-unification-plan]]'
   - '[[2026-06-11-ledger-hardening-close-audit]]'
 ---
 
@@ -73,13 +71,13 @@ The focused C5 completion gate passed `79/79`: transaction roundtrip, ledger ver
 
 ### OPEN - Repository-wide default test lane is not closable from ledger
 
-The default full-suite lane was started with `uv run --no-sync pytest src/aeat -q` and progressed to 40 percent before the 15-minute foreground tool timeout. The partial log had already surfaced a non-ledger failure in `src/aeat/core/errors/tests/test_exception_base_hygiene.py`. Replaying that test directly fails because `src/aeat/core/_period.py` defines `PeriodError(ValueError)`, which violates the production exception root hygiene gate.
+The default full-suite lane was started with `uv run --no-sync pytest src/aeat -q` and progressed to 40 percent before the 15-minute foreground tool timeout. The partial log had already surfaced a non-ledger failure in the retired test. Replaying that test directly fails because the retired module defined `PeriodError(ValueError)`, which violates the production exception root hygiene gate.
 
 Tracking: this is a core-period exception-hygiene issue, not a ledger hardening implementation issue. Do not close the full default lane as green until the owning period/core campaign resolves or records that exception root.
 
 ### OPEN - Explicit integration-or-not full lane is blocked before ledger
 
-The explicit lane `uv run --no-sync pytest src/aeat -m "integration or not integration" -q -x` fails before reaching ledger with `fixture '_settings_factory' not found` in `src/aeat/adapters/outbound/aeat/auth/tests/test_authenticator_part1.py::test_invalid_persisted_session_redacts_path_and_reason`. The fail-fast run reached `887 passed, 2 skipped` before that auth fixture error.
+The explicit lane `uv run --no-sync pytest src/aeat -m "integration or not integration" -q -x` fails before reaching ledger with `fixture '_settings_factory' not found` in the retired test. The fail-fast run reached `887 passed, 2 skipped` before that auth fixture error.
 
 Tracking: this is an outbound AEAT auth test fixture issue, not a ledger hardening implementation issue. It remains a campaign-close blocker for repository-wide green, but not an owner-surface blocker for C1-C7 ledger authoring.
 
@@ -104,6 +102,6 @@ Focused verification passed after these repairs: exception hygiene / registry / 
 
 ### OPEN - Explicit integration-or-not full lane now blocks in storage runtime migration
 
-After the repairs above, `uv run --no-sync pytest src/aeat -m "integration or not integration" -q -x` advances to `2570 passed, 32 skipped` before failing in `src/aeat/adapters/persistence/storage/tests/test_runtime_migrated_repositories_part1.py::test_workflow_state_default_isolates_active_profile_writes`. The assertion still expects declaration key `303:bucket-b`, while the loaded workflow state now carries the canonical period-qualified key `303:2026:1T`.
+After the repairs above, `uv run --no-sync pytest src/aeat -m "integration or not integration" -q -x` advances to `2570 passed, 32 skipped` before failing in the retired test. The assertion still expects declaration key `303:bucket-b`, while the loaded workflow state now carries the canonical period-qualified key `303:2026:1T`.
 
 Tracking: this is a storage/workflow runtime-migration test expectation drift, not a ledger hardening implementation issue. It is now the first known repository-wide closeout blocker after the ledger and early shared blockers are cleared.

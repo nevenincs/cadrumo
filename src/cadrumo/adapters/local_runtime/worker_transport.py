@@ -7,7 +7,6 @@ from pathlib import Path
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .posix import posix_owner_uid
 from .posix_channel import PosixRuntimeChannel
 from .posix_endpoint import PosixRuntimeEndpoint
 from .windows import WindowsRuntimeEndpoint
@@ -22,10 +21,9 @@ def worker_endpoint(*, storage_root: Path, worker_namespace: UUID) -> WorkerEndp
     if sys.platform == "win32":
         return WindowsRuntimeEndpoint(storage_root=storage_root, worker_namespace=worker_namespace)
     if sys.platform == "linux":
-        # The endpoint itself creates and verifies an owner-only namespace
-        # under the sticky root-owned temporary directory.
+        # The endpoint creates and verifies the configured owner-only socket directory.
         return PosixRuntimeEndpoint(
             storage_root=storage_root,
-            namespace=Path("/tmp") / f"cdr-{posix_owner_uid()}-worker-{worker_namespace.hex}",  # noqa: S108
+            worker_namespace=worker_namespace,
         )
     raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)

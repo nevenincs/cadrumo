@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b260d3858d860463a24f192775eb6e573e1216216b3451afd89615451923b65a'
+body_hash: 'sha256:be25a34f8168473d851eb36e4de9ad890c137eba411fcf03c492f6d5d5329d29'
 related:
   - "[[2026-09-02-object-name-audit-implementation-review-audit]]"
   - "[[2026-07-01-import-centralization-adr]]"
@@ -37,11 +37,11 @@ The need for byte preconditions was demonstrated during this research: the live 
 
 Each operation should state an operation ID, finding ID, old qualified locator and path, proposed target and path, disposition (`lexical-singular`, `rename-distinct`, `merge-authority`, or `keep-distinct`), owner, rationale, source byte hashes, advisory AST fingerprint, expected reference classes, exact moves, changed-path allowlist, generator commands, focused gates, and lifecycle status. Planning must reject duplicate or already-claimed targets, stale hashes, ambiguous ownership, unresolved dynamic references, and any merge without a substitutability decision.
 
-The manifest should be authored intent, using the bidirectional and no-stale-row discipline in `dev/quality/name_collision_dispositions.toml:1`; inventories and rehearsal receipts remain generated evidence. Current object-name JSON lacks full declarations, stable IDs, import reach, ownership, and hashes (`dev/audit/object_names.py:336`).
+The manifest should be authored intent, using the bidirectional and no-stale-row discipline ; inventories and rehearsal receipts remain generated evidence. Current object-name JSON lacks full declarations, stable IDs, import reach, ownership, and hashes .
 
 ### Existing repository analyzers compose into the planner but none is the whole solution
 
-`dev/audit/object_names.py:277` owns exact collision and lexical-singularity findings. `dev/audit/semantic_duplication.py:1` treats fingerprints as candidates and provides enum, literal, call, derivation, field, import, and package overlap evidence. `dev/audit/duplication.py` wraps jscpd for token clones. `dev/quality/import_hygiene_scan.py:2189` detects dangling imports and later families inspect dynamic strings, shims, wrappers, and multi-sourced symbols. These should feed typed evidence edges and postconditions, not be reimplemented in a parallel scanner.
+the former source file owns exact collision and lexical-singularity findings. `dev/audit/semantic_duplication.py:1` treats fingerprints as candidates and provides enum, literal, call, derivation, field, import, and package overlap evidence. `dev/audit/duplication.py` wraps jscpd for token clones. the former source file detects dangling imports and later families inspect dynamic strings, shims, wrappers, and multi-sourced symbols. These should feed typed evidence edges and postconditions, not be reimplemented in a parallel scanner.
 
 jscpd emits token-clone JSON and SARIF, so it is useful for copy/paste evidence but not architectural ownership or semantic equivalence. https://github.com/kucherenko/jscpd/blob/master/apps/jscpd/README.md
 
@@ -66,10 +66,10 @@ Exact-name collision is not proof of interchangeability, and different names can
 ### Raw-zero global uniqueness is intentionally stricter than existing policy
 
 The current scanner groups by bare name across `src` and `dev`
-(`dev/audit/object_names.py:282`). Existing policy instead permits cross-layer
+. Existing policy instead permits cross-layer
 restatement and records `extract_pages_text`, `review_view`, and
 `active_profile_label` as `distinct_by_design`
-(`dev/quality/name_collision_dispositions.toml:12-14,93-139`). The accepted import
+. The accepted import
 decision requires exact defining-module imports but does not require repository-global
 leaf-stem uniqueness (`.vault/adr/2026-07-01-import-centralization-adr.md:23-31`). The
 operator's raw-zero objective therefore cannot be achieved by preserving those older
@@ -86,17 +86,11 @@ components from qualified sites before scheduling work.
 
 ## Sources
 
-- `dev/audit/object_names.py:277`
-- `dev/audit/object_names.py:336`
 - `dev/audit/semantic_duplication.py:1`
 - `dev/audit/semantic_duplication.py:253`
 - `dev/audit/semantic_duplication.py:374`
 - `dev/audit/semantic_duplication.py:408`
-- `dev/quality/import_hygiene_scan.py:2189`
-- `dev/quality/name_collision_dispositions.toml:1`
-- `dev/quality/name_collision_dispositions.toml:12-14`
-- `dev/quality/name_collision_dispositions.toml:93-139`
-- `dev/quality/namespace_retirement_sweep.py:1`
+
 - `pyproject.toml:353`
 - `uv.lock:1998`
 - `.vault/adr/2026-07-01-import-centralization-adr.md:23-31`

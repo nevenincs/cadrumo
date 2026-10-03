@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-architecture'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:4057026f1d65ed5587d413837baeaa9c6231e920d6ebbbc8935be192b7c8f699'
-related:
-  - "[[2026-08-11-tui-interface-plan]]"
+related: []
 ---
 
 # `tui-architecture` reference: `evidence ancestry practice`

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-15'
-modified: '2026-08-16'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9fa257c1e4c6762cdb58efc8071786cce5fcac63f3bba0249349fe3a459a48b7'
+body_hash: 'sha256:0be1a1f4ceec2cf665f76f7654da16e917630b1b66ffb13e866aef92ca5a55f3'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-14-registry-temporal-coverage-audit]]"
@@ -56,14 +56,14 @@ their own finding, one of them this audit's.
 `Literal["reviewed"]` with no unreviewed state. That is true of one vocabulary
 and not of the other, and the two govern different subjects.
 
-`ReviewStatus` in `src/cadrumo/domain/calculations/registry/_schema_base.py:389`
+`ReviewStatus` in the retired module
 is indeed the degenerate `Literal["reviewed"]`. It is scoped to the **legal
 catalogue** rows — legal references, source references, legal parameters. It has
 no unreviewed member, and `SourceReference.review_status` in
-`src/cadrumo/domain/calculations/registry/_schema_references.py:258` is required
+The retired module was required
 with no default.
 
-`RevisionReviewStatus` in `src/cadrumo/core/_revision_review.py:39` is a
+`RevisionReviewStatus` in the retired module was a
 different vocabulary for a different subject, and it already carries the missing
 state: `PENDING_REVIEW`, `AGENT_REVIEWED`, `OPERATOR_REVIEWED`, with
 `PENDING_REVIEW` documented as the fail-closed default. `ModeloRevision`
@@ -109,9 +109,9 @@ except the operator.
 ### eedd-envelope-generalisation | high | Two envelope role vocabularies are the same thirteen roles under two names
 
 **Verified here.** `M303EnvelopePrefixRole` in
-`src/cadrumo/domain/calculations/registry/_schema_exports.py:81` and
+The retired module and
 `RecordDesignAuxiliaryEnvelopeHeaderRole` in
-`src/cadrumo/domain/calculations/registry/_record_design_schema.py:73` declare
+The retired module declare
 thirteen members each, in the same order, for the same thirteen positions. The
 member lists differ only in naming: `PERIOD` against `ANNUAL_PERIOD`,
 `AUX_OPENING_TAG` against `AUXILIARY_OPENING_TAG`, `DEVELOPER_TAX_ID` against
@@ -277,7 +277,7 @@ tile them exactly. Nothing else in the census matches that shape.
 
 **A window-based design selector already exists, already works, and is already
 exercised in production — but only for one modelo.**
-`src/cadrumo/domain/calculations/registry/_m303_orden_resolution.py` at lines 100
+The retired module at lines 100
 to 113 filters candidate designs by `applies_from <= filing_date <= applies_to`
 and refuses unless exactly one candidate survives. That is precisely the
 resolution Group B needs, generalised to no modelo but 303.
@@ -373,7 +373,7 @@ stated it.** A lane reported the comparison as vacuous on the ground that
 `total_positions` is derived. **Verified here**, the truth is narrower than
 either phrasing. On the narrative-PDF path `total_positions` is derived as the
 terminal extent — `max(offset + length - 1)` at
-`src/cadrumo/domain/calculations/registry/_record_design.py:2117` — while the
+The retired module — while the
 workbook path parses a genuinely declared TOTAL row. So on a PDF design the
 comparison is Σ lengths against the terminal extent, which **does** detect
 interior holes and overlaps: that is exactly how the two defects above were
@@ -450,7 +450,7 @@ Verified anchors. `FilingProducerKey` declares 35 members, of which 15 are
 Modelo 303 specific and exactly one is specific to any withholding modelo
 (`m111.colegio_concertado`); there are no Modelo 202 or Modelo 390 scoped
 members, consistent with the reported gap. `WithholdingObservation` in
-`src/cadrumo/domain/calculations/registry/_withholding_bindings.py` carries
+The retired module carried
 eleven fields — `source_id`, `perceptor_tax_id`, `perceptor_legal_name`,
 `country_code`, `transaction_date`, `clave`, `subclave`, `percibido_dinerario`,
 `percibido_especie`, `retencion_practicada`, `ingreso_a_cuenta` — and its

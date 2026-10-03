@@ -23,6 +23,8 @@ from typing import Protocol
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...application.user_profile.access_contracts import LoginEligibility
 from .linux_pidfd import open_linux_pidfd
 
@@ -285,15 +287,13 @@ def _require_user_bus_socket(path: Path, uid: int) -> None:
 
 
 def require_gnome_login_producer(uid: int) -> None:
-    """Verify exact installed resources in the passwd-derived private extension."""
+    """Verify exact installed resources in the configured private extension."""
     if sys.platform != "linux" or uid != os.getuid():
         raise _unavailable()
-    import pwd
-
-    home = Path(pwd.getpwuid(uid).pw_dir)
-    if not home.is_absolute() or ".." in home.parts:
+    extensions_root = storage_path(StorageCategory.GNOME_EXTENSIONS)
+    if not extensions_root.is_absolute() or ".." in extensions_root.parts:
         raise _unavailable()
-    components = (*home.parts[1:], ".local", "share", "gnome-shell", "extensions", GNOME_LOGIN_EXTENSION_UUID)
+    components = (*extensions_root.parts[1:], GNOME_LOGIN_EXTENSION_UUID)
     directory = _open_producer_directory(components, uid)
     try:
         _require_producer_files(directory, uid)

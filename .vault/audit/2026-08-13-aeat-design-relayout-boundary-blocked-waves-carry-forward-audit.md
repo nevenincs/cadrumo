@@ -5,12 +5,11 @@ tags:
 date: '2026-08-13'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b62eaa974ebab5d2545c1543aa52efc18817135f9b5eb1c5ae6473007f443aa'
+body_hash: 'sha256:7d070fb3ca1873cdceb74cd6c6e550dad497f8fe834c15eb519e4a615f2a626a'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr]]"
   - "[[2026-08-13-aeat-design-relayout-boundary-audit]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
 ---
 
@@ -69,8 +68,8 @@ all, split or unsplit.
 
 `dev/registry/mappings` does not exist (`ls` reports "No such file or
 directory"). A targeted search for `modelo_390` or `modelo-390` inside `dev/`
-matches only test and audit-run artifacts (`dev/registry/tests/test_workbook_parity.py`,
-`dev/audit/.runs/summary.json`), never mapping content. No semantic map or
+matches only test and audit-run artifacts (the retired test,
+The retired data file), never mapping content. No semantic map or
 render profile has been authored for Modelo 303, Modelo 390 or Modelo 200 at
 the time of writing.
 

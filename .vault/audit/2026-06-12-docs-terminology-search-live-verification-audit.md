@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#docs-terminology-search'
 date: '2026-06-12'
-modified: '2026-07-17'
-body_hash: 'sha256:3c6effe3b773d7e5e2c2b76252b6e08ee940ba78ee009246a61123e2921fe4aa'
+modified: '2026-10-03'
+body_hash: 'sha256:4d563bfef0f5993853fc29b98031ce33ec031dcafce28f55a182cda1a7090c29'
 related:
-  - '[[2026-06-10-docs-terminology-search-plan]]'
   - '[[2026-06-12-docs-terminology-search-close-honesty-audit]]'
   - '[[2026-06-12-docs-terminology-search-rung2-adjudication-audit]]'
 ---
@@ -62,7 +61,7 @@ CUDA enabled, and models loaded.
   - Passed after formatting three existing terminology files and one typed test edit.
 - `uv run ty check dev/docs/terminology src/aeat/terminology`
   - Passed after tightening test helper annotations.
-- `uv run pytest src/aeat/tests/test_wheel_bundles_corpus_and_registry.py src/aeat/core/tests/test_resources.py -q`
+- the historical check
   - `22 passed`.
 - `uv run python -m dev.docs.apidocs scaffold --check`
   - Passed; no API stub drift.
@@ -83,9 +82,9 @@ CUDA enabled, and models loaded.
 
 ## Files Touched By This Verification Pass
 
-- `src/aeat/terminology/_schema.py`
-- `src/aeat/terminology/_seed_import.py`
-- `src/aeat/terminology/tests/test_scaffold.py`
+- the retired module
+- the retired module
+- the retired test
 - `dev/docs/terminology/tests/test_casilla_projection.py`
 - `dev/docs/terminology/tests/test_cli_projection.py`
 - `dev/docs/terminology/tests/test_relevance_data.py`
@@ -97,7 +96,7 @@ CUDA enabled, and models loaded.
 - `.vault/plan/2026-06-10-docs-terminology-search-plan.md`
 
 The worktree also already contains a same-package localization edit in
-`src/aeat/terminology/cli.py`; it was observed and tested in this pass, but not
+The retired module; it was observed and tested in this pass, but not
 authored by this audit update.
 
 ## Findings

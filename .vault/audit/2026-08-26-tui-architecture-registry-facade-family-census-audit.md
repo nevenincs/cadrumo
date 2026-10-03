@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:4801f9a91feab404eba8c5ff2b1b79e93c18eb33441ce416a666847106068136'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:34e208bbec8a9a87627d2e020f2c3b1dfa79de81728c9a20200639e0bf6d6ab1'
+related: []
 ---
+
 # `tui-architecture` audit: `registry facade family census`
 
 ## Scope
@@ -23,13 +23,13 @@ The checked matrix records one independent future disposition per pair. It is ev
 
 The historic `git diff-tree -r -M` evidence names exactly 78 one-to-one renames beneath `src/cadrumo/domain/calculations/registry`. The checked matrix refuses a missing, extra, duplicate, unrelated, grouped, unresolved, or many-to-one pair. Every row records parent-facade exports, immutable source locators, categorized consumers, literal dynamic imports, unresolved nonliteral dynamic-import sites, a structured per-row owner locator census, competing in-family sites, substitutability rationale, terminal destinations, and a distinct canonical follow-on Step.
 
-Relative `ImportFrom` targets are resolved to absolute modules. Once a resolved target matches a candidate, the consumer source path is placed in both the candidate's direct-module set and its operational category, even where the relative import contains neither candidate module string. The end-to-end regression anchors `src/cadrumo/adapters/inbound/declaracion/_parser.py` as a direct `production` consumer of `_authority.py`, not merely a transitive consumer. Legacy annotations and `ast.TypeAlias` nodes are included; package member attributes are attributed to one owning facade member rather than every row. The immutable measurement record is regenerated with the evidence commit, not a hard-coded test number, so source evolution cannot silently retain stale edge evidence.
+Relative `ImportFrom` targets are resolved to absolute modules. Once a resolved target matches a candidate, the consumer source path is placed in both the candidate's direct-module set and its operational category, even where the relative import contains neither candidate module string. Legacy annotations and `ast.TypeAlias` nodes are included; package member attributes are attributed to one owning facade member rather than every row. The immutable measurement record is regenerated with the evidence commit, not a hard-coded test number, so source evolution cannot silently retain stale edge evidence.
 
 `R01` through `R78` follow deterministic bytewise old/new-pair order. The Sol disposition packet is normalized by named module: `schema.py` is the hard-move special while `schema_verification.py` remains keep-public. The inventory is 54 `keep_public`, 9 `hard_move_complete`, 13 `privatize_external_elimination`, and 2 `delete`. The hard-move cases reserve the remote-authority move to `src/cadrumo/core/remote_authority.py`, `ENCODING_ALIAS_MAP` to `src/cadrumo/domain/calculations/registry/schema_exports.py`, and the `schema.py` local-definition cut with borrowed bindings routed to their existing owners.
 
 ### registry-facade-rag-owner-anchors | medium | semantic discovery is distinct from immutable AST evidence
 
-The Sol HIGH remediation executed two `vaultspec-rag` production-code searches in the isolated remediation worktree and retained their actual request/result fields only on their reviewed rows. R01 queried `AEAT remote read host authority canonical hostname only:prod` under request `eec115fcf1ae4225b7e9209afc205b2b` and selected `src/cadrumo/domain/calculations/registry/aeat_hosts.py:19-51`; the complete module read and exact confirmation cover `canonical_remote_hostname` and `REMOTE_READ_SCHEME`. R55 queried `ENCODING_ALIAS_MAP registry schema export value policy only:prod` under request `f8cff429a3cd4d8fa1dc335774db9e47` and selected `src/cadrumo/domain/calculations/registry/schema_exports.py:1-41`; the complete module read and exact confirmation cover its `ENCODING_ALIAS_MAP` use and the current `record_spec` import pending the hard move.
+The Sol HIGH remediation executed two `vaultspec-rag` production-code searches in the isolated remediation worktree and retained their actual request/result fields only on their reviewed rows. R55 queried `ENCODING_ALIAS_MAP registry schema export value policy only:prod` under request `f8cff429a3cd4d8fa1dc335774db9e47` and selected `src/cadrumo/domain/calculations/registry/schema_exports.py:1-41`; the complete module read and exact confirmation cover its `ENCODING_ALIAS_MAP` use and the current `record_spec` import pending the hard move.
 
 Those structured RAG records carry query text, corpus/domain/preference, request ID, result ID, path, score, source, range, and returned structural fields. They are not immutable AST locators. The `semantic_evidence` owner-definition and competing-site locators remain a separately generated, machine-checked census from `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8`; the schema rejects an AST-locator-shaped object in the RAG result field. The other 76 rows deliberately carry null RAG fields rather than claiming unperformed semantic searches.
 

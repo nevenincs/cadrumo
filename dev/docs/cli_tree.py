@@ -58,6 +58,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.entrypoints.cli._command_parameter_contracts import ArgumentSpec
 from cadrumo.entrypoints.cli._command_shared_contracts import DefaultKind
+from dev._paths import prepare_temporary_directory
 
 from .cli_reference import _reference_subprocess_environment
 
@@ -292,7 +293,7 @@ def build_cli_tree_in_subprocess() -> CliTree:
         sys.stdout.write(serialise_cli_tree(_build_cli_tree_loaded()))
         """,
     )
-    with TemporaryDirectory(prefix="cadrumo-cli-tree-") as storage_root:
+    with TemporaryDirectory(prefix="cadrumo-cli-tree-", dir=prepare_temporary_directory()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
             env=_reference_subprocess_environment(Path(storage_root)),

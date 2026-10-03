@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:deb2b2f1d717a14b552889ff09fadbfb0ad7621076655ddc9e36c8be2ec5f4e0'
+modified: '2026-10-03'
+body_hash: 'sha256:78f99cecb37a9094292227b13e341ef55fa45960ea6ccaf9ba2307d5d65bbe12'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S274-001 | PASS | Wizard persistence delegates profile storage writes
 
-`src/aeat/application/wizard/_persistence.py` projects wizard answers into
+The retired module projects wizard answers into
 `UserProfileFact` records and delegates create/edit writes to `register_active_profile`
 and `set_active_fields`. It does not construct repositories, open bucket paths, write
 bucket manifests, or manage master-key material directly.
@@ -42,9 +42,9 @@ was introduced.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_persistence.py src/aeat/application/wizard/test_persistence_canonical.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_create_pointer_atomicity.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_persistence_canonical.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_create_pointer_atomicity.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_persistence_canonical.py`
+- the historical check
+- the historical check
+- the historical check
 - `python -m aeat.locales audit`
 
 Disposition: close `AFR-172`.

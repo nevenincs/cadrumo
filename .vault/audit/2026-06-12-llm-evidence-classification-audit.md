@@ -4,7 +4,7 @@ tags:
   - '#llm-evidence-classification'
 date: '2026-06-12'
 modified: '2026-10-03'
-body_hash: 'sha256:60146f3f25934216614234dbaeb90f34c31de3411fbe2f803e0eadeb5f8a3485'
+body_hash: 'sha256:14ea175a44b4d119de5c411069fde6ef0602d12988078737c6f3cb1aec8d54bc'
 related:
   - "[[2026-06-11-llm-evidence-classification-audit]]"
 ---
@@ -44,7 +44,7 @@ address (never the bytes) enters the key.
 
 `test_cache_key_distinguishes_multimodal_evidence` proves two evidence
 documents under one prompt yield distinct keys and that the same content
-address reproduces the same key. File: `tests/test_cache.py`.
+address reproduces the same key. File: the retired test.
 
 ### W02.P05.S20 — on-host vision read test — COMPLETED
 

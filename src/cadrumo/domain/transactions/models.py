@@ -38,7 +38,10 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from ..calculations.registry.eu_member_state_catalogue import (
+    require_eu_member_state,
+    resolve_eu_member_state_catalogue,
+)
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ..calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
@@ -54,7 +57,6 @@ from ..iva.schema import (
     IvaCategory,
     IvaExemptionArticle,
     default_iva_cash_accounting_treatment,
-    require_eu_member_state,
 )
 from .cash_accounting_validation import validate_cash_accounting_axis
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

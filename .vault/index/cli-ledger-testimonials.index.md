@@ -4,17 +4,14 @@ tags:
   - '#index'
   - '#cli-ledger-testimonials'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d186cb61da764fc75bf4e7bcc1982ae6538cb3fc6e2f08dd181ef72ae6eeb025'
+body_hash: 'sha256:af5d7eca405a6f00e84a4521509f6d3b318c246aa1734bbaf43d5716a8cca9fe'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-adr]]'
   - '[[2026-06-03-cli-ledger-testimonials-audit]]'
-  - '[[2026-06-03-cli-ledger-testimonials-plan]]'
   - '[[2026-06-04-cli-ledger-testimonials-research]]'
-  - '[[2026-06-09-cli-ledger-testimonials-P05-S13]]'
   - '[[2026-06-09-cli-ledger-testimonials-audit]]'
-  - '[[2026-06-10-cli-ledger-testimonials-P05-S14]]'
 ---
 
 # `cli-ledger-testimonials` feature index
@@ -31,15 +28,6 @@ Auto-generated index of all documents tagged with `#cli-ledger-testimonials`.
 
 - `2026-06-03-cli-ledger-testimonials-audit` - `cli-ledger-testimonials` audit: `CLI ledger-operator persona testimonials — graded findings + hardening`
 - `2026-06-09-cli-ledger-testimonials-audit` - `cli-ledger-testimonials` audit: `P05.S13 persona re-run: skeptic/foreign/crossyear post-fix verification`
-
-### exec
-
-- `2026-06-09-cli-ledger-testimonials-P05-S13` - `cli-ledger-testimonials` `P05.S13` step record
-- `2026-06-10-cli-ledger-testimonials-P05-S14` - `cli-ledger-testimonials` `P05.S14` step record
-
-### plan
-
-- `2026-06-03-cli-ledger-testimonials-plan` - `cli-ledger-testimonials` `CLI ledger-operator hardening: testimonial findings to fixes` plan
 
 ### research
 

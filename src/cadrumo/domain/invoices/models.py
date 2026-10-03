@@ -17,9 +17,9 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, Self, override
+from typing import TYPE_CHECKING, Final, Self, override
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
@@ -35,6 +35,7 @@ from ...core.money.rounding import CENT, round_to_cents
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.iva_category_catalogue import require_iva_category
@@ -44,7 +45,7 @@ from ..identifiers import canonical_decimal_string
 from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
-from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, require_eu_member_state, spanish_eu_member_state
+from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
@@ -123,39 +124,6 @@ _COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
     {PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID},
 )
 """Payment states consistent with LIVA art. 75.Dos's "cobro total o parcial"."""
-
-type SituacionInmueble = Literal["1", "2", "3", "4"]
-"""SITUACIÓN DEL INMUEBLE of a leased local de negocio, as the Modelo 347 record design codes it.
-
-Both designs (aeat-dr-347-2011 and aeat-dr-347-2025, inmueble record position
-115): "1. Inmueble con referencia catastral situado en cualquier punto del
-territorio español, excepto País Vasco y Navarra. 2. Inmueble situado en la
-Comunidad Autónoma del País Vasco o en la Comunidad Foral de Navarra. 3.
-Inmueble en cualquiera de las situaciones anteriores pero sin referencia
-catastral. 4. Inmueble situado en el extranjero."
-"""
-
-_SITUACION_INMUEBLE_ADAPTER: Final[TypeAdapter[SituacionInmueble]] = TypeAdapter(SituacionInmueble)
-
-
-def require_situacion_inmueble(value: str) -> SituacionInmueble:
-    """Return the record design's situación code an operator typed, refusing any other.
-
-    Raises:
-        InvoiceValidationError: When ``value`` is not one of the four codes.
-    """
-    try:
-        return _SITUACION_INMUEBLE_ADAPTER.validate_python(value.strip())
-    except ValidationError as exc:
-        raise InvoiceValidationError("situacion_inmueble must be one of the codes 1, 2, 3 or 4") from exc
-
-
-SITUACIONES_CON_REFERENCIA_CATASTRAL: Final[frozenset[str]] = frozenset({"1", "2"})
-"""The situaciones whose definition implies a referencia catastral.
-
-Code 3 is "Inmueble en cualquiera de las situaciones anteriores pero sin
-referencia catastral" and code 4 a premises abroad, so neither carries one.
-"""
 
 
 def derive_invoice_id(
@@ -398,21 +366,6 @@ class Invoice(BaseModel):
     # business-adjacent acquisitions too, so neither a blanket ``True`` nor
     # ``False`` default is safe for its population either.
     outside_economic_activity: bool | None = None
-    # RD 1065/2007 art. 34.1.d: "se harán constar separadamente de otras
-    # operaciones que, en su caso, se realicen entre las mismas partes, los
-    # arrendamientos de locales de negocios ... el arrendador consignará el
-    # nombre y apellidos o razón social o denominación completa y el número de
-    # identificación fiscal de los arrendatarios, así como las referencias
-    # catastrales y los datos necesarios para la localización de los inmuebles
-    # arrendados". An ISSUED invoice documenting such a lease carries the fact
-    # and the leased premises; the arrendatario is the invoice counterparty.
-    # The premises facts are optional so a lease recorded without them stays
-    # visible to the declaration's advisories instead of being refused.
-    arrendamiento_local_negocio: bool = False
-    situacion_inmueble: SituacionInmueble | None = None
-    # Position 116 of both 347 designs, 25 positions: "Se consignará la
-    # referencia catastral correspondiente al local de negocio arrendado."
-    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=25)
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None
@@ -1046,40 +999,6 @@ class Invoice(BaseModel):
                     f"operation_date_role {advance_payment_role.value} requires a collected payment_status "
                     "(PAID or PARTIALLY_PAID); LIVA art. 75.Dos devengues on actual cobro",
                 )
-        return self
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_arrendamiento_local_negocio(self) -> Self:
-        """Keep the leased-premises facts on the issued invoice of a business-premises lease.
-
-        The lessor relates the lease (RD 1065/2007 art. 34.1.d), so the facts
-        belong to an ISSUED invoice that states the lease; a situación or
-        referencia catastral on any other invoice describes nothing. Situación
-        3 ("sin referencia catastral") and 4 ("situado en el extranjero") are
-        defined by the absence of a Spanish referencia catastral, so one stated
-        beside them contradicts the code.
-        """
-        has_premises_facts = self.situacion_inmueble is not None or self.referencia_catastral is not None
-        if has_premises_facts and not self.arrendamiento_local_negocio:
-            raise InvoiceValidationError(
-                "situacion_inmueble and referencia_catastral describe a business-premises lease; "
-                "set arrendamiento_local_negocio on the invoice that documents it",
-            )
-        if self.arrendamiento_local_negocio and self.kind is not InvoiceKind.ISSUED:
-            raise InvoiceValidationError(
-                "arrendamiento_local_negocio is the lessor's fact (RD 1065/2007 art. 34.1.d) and belongs "
-                "on an issued invoice",
-            )
-        if (
-            self.situacion_inmueble is not None
-            and self.situacion_inmueble not in SITUACIONES_CON_REFERENCIA_CATASTRAL
-            and self.referencia_catastral is not None
-        ):
-            raise InvoiceValidationError(
-                f"situacion_inmueble {self.situacion_inmueble} is a premises without a Spanish referencia "
-                "catastral, so it cannot carry one",
-            )
         return self
 
     @model_validator(mode="after")

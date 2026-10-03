@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:8438c369ca86d99d3513f2995397962b853e2ce6dc1c96b732c02220fda11825'
+modified: '2026-10-03'
+body_hash: 'sha256:8e7923c07855fc30ff9f397b3acecd5f059997b78ce32531780ad523125f7b9d'
 related:
   - "[[2026-06-03-cli-workflow-redesign-research]]"
   - "[[2026-06-03-cross-domain-continuity-audit]]"
@@ -132,7 +132,7 @@ bucket-search ADR.
 
 Pydantic command and result contracts (`RenameBucketCommand` /
 `RenameBucketResult`, etc.) live in `_contracts.py`. They use the existing
-`BucketId` core identity type from `src/cadrumo/core/identity.py`, the existing
+`BucketId` core identity type, the existing
 `SensitivityClass` core enum for browse redaction, and the existing
 `BucketEventType` / `BucketEventObjectType` closed catalogues for event
 construction. The closed-set typing rule (per the architecture-boundaries
@@ -140,9 +140,8 @@ rule's "Type every constant-like axis" clause) means the contracts MUST type
 every closed-value field as its enum, never as a bare string.
 
 Three preconditions land alongside or before the per-verb implementation
-Steps: (1) `BUCKET = "bucket"` is added to `BucketEventObjectType` in
-`src/cadrumo/domain/buckets/_event.py` with a corresponding value-equality test
-in `src/cadrumo/domain/buckets/test_event_catalogue.py`; (2)
+Steps: (1) `BUCKET = "bucket"` is added to `BucketEventObjectType`  with a corresponding value-equality test
+; (2)
 `serialize_profile_bundle`, `deserialize_profile_bundle`,
 `UserProfilePortableExport`, and `SUPPORTED_BUNDLE_SCHEMA_VERSIONS` are
 promoted to the application package `__all__`; (3) the service-side error

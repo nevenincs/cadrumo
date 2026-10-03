@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
-modified: '2026-08-15'
-body_hash: 'sha256:a24d3a1a2829d7599b6fa14bb9bb53b0f64622aee0fd41e5b80d6b318321cd6e'
+modified: '2026-10-03'
+body_hash: 'sha256:d512582e67750f71bf8a3ea3d9b6202fdfa1bef7240479099e7feb337e0c2645'
 related:
   - "[[2026-07-14-calculation-export-import-adjudication-reference]]"
 ---
@@ -21,16 +21,12 @@ owns the detailed implementation map and candidate registers.
 
 ### The engines already exist
 
-`ValidatedRegistryAuthority` at
-`src/cadrumo/domain/calculations/registry/_authority.py:36` is the single
-validated registry authority. `export_draft` at
-`src/cadrumo/application/filing/_export.py:278` renders registry layouts, and
-`parse_export_payload` at
-`src/cadrumo/domain/calculations/registry/_export_parse.py:65` parses the same
-layout data. `parse_declaracion_bytes` at
-`src/cadrumo/adapters/inbound/declaracion/_parser.py:158` is the generic
+`ValidatedRegistryAuthority`  is the single
+validated registry authority. `export_draft`  renders registry layouts, and
+`parse_export_payload`  parses the same
+layout data. `parse_declaracion_bytes`  is the generic
 declaration-PDF parser. `write_sealed_archive` and `read_sealed_archive` at
-`src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py:62`
+
 and `_sealed_archive_reader.py:75` form a separate persistence boundary.
 
 An absent layout or profile is therefore not evidence that a new renderer,
@@ -38,7 +34,7 @@ parser, registry provider, or archive format is missing.
 
 ### Source availability is not a mandate
 
-The capability matrix in `dev/registry/matrix/manager.py:70` reports what a
+The capability matrix  reports what a
 revision declares. The new-modelo checklist at
 `dev/registry/newmodelo/checklist.py:87` makes layouts and profiles conditional
 on supported filing and reconciliation surfaces. A bundled record design can

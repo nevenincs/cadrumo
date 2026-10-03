@@ -53,6 +53,8 @@ from pydantic_core import core_schema
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.registry_token import StrictRegistryToken
 from ...core.time.clock import today_madrid
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import unique_mapping_tokens
 from ._classification_engine import (
     _fallback_classification,
     _first_matching_classification,
@@ -310,10 +312,15 @@ def _required_classification_entry(entries: Mapping[str, str], key: str) -> str:
 
 
 def _classification_csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required_classification_entry(entries, key).split(",") if token.strip())
-    if not tokens or len(set(tokens)) != len(tokens):
-        raise IvaValidationError(f"IVA classification mapping {key!r} must declare unique tokens")
-    return tokens
+    try:
+        tokens = unique_mapping_tokens(
+            entries, key, subject="IVA classification mapping", requirement="must declare unique tokens"
+        )
+    except RegistryValidationError as error:
+        message = str(error)
+    else:
+        return tokens
+    raise IvaValidationError(message)
 
 
 _TERRITORIAL_SCOPE_ALIAS_NAMES = frozenset({"mainland", "canarias", "ceuta_melilla", "eu_member", "third_country"})

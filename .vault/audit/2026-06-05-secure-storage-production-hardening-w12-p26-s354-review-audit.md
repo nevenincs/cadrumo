@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:2704e61bc7f9f7e8a8b6d28ad923886aeb5201541f502ae0c9db3b851ce10454'
+modified: '2026-10-03'
+body_hash: 'sha256:f8cc8ba2890112b6557924c475359b88b333d547f7e8fd02e18a2f7a53e1c735'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S354-001 | PASS | Filing record model is not a persistence authority
 
-`src/aeat/domain/modelos/_filing_record.py` defines strict Pydantic models, lifecycle
+The retired module defined strict Pydantic models, lifecycle
 enums, external-evidence metadata, and content-addressed filing-record IDs. It does not
 open files, read environment values, resolve active buckets, construct secure-object
 repositories, or persist catalogue data.
@@ -40,8 +40,8 @@ runtime logic failures.
 
 ## S354-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_filing_record.py src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py src/aeat/domain/modelos/test_external_evidence.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py src/aeat/domain/modelos/test_external_evidence.py` passed with 8 tests.
+- the historical check passed.
+- the historical check passed with 8 tests.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - `uv run --no-sync vaultspec-rag search "ModeloRecord ModeloRecordCatalogue ExternalEvidence derive_filing_record_id manifest bucket discovery no persistence" --type code --port 8766 --max-results 8` returned filing record model, repository, and application consumers.
 

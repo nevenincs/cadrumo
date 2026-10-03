@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:40d9e6615be39dc5ae1272a25312529d36c6a53e3aec8e3b2160f8086983a9ec'
+body_hash: 'sha256:6e53fee6eaa8c004957320c677e98faea8cc242e6e8dbaf49e8e4c9b27a801b6'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r03-view-contract-closure-audit]]"
 ---
@@ -24,7 +24,7 @@ Authorized work:
 
 Not authorized, and not done: commit, push, authority publication, and any TUI, calculation, filing or packaging work.
 
-Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`. HEAD was `eedac16053` at the start. At that point `queries.py` and the test file carried only the uncommitted r03 diff (79 insertions, 14 deletions). Other contributors had changed `snapshot.py`, `tests/published_authority.py` and `tests/test_modelo_100_imputed_real_estate_art85.py`, and added `tests/test_irnr_registry_tokens.py` untracked. None of those was touched.
+Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`. HEAD was `eedac16053` at the start. At that point `queries.py` and the test file carried only the uncommitted r03 diff (79 insertions, 14 deletions). None of those was touched.
 
 Commit state, distinguishing what was tested from later HEAD movement:
 
@@ -40,7 +40,6 @@ Changed files, committed by sync automation in `735b1247a6` rather than left unc
 
 - `src/cadrumo/domain/calculations/registry/support_matrix.py`
 - `src/cadrumo/domain/calculations/registry/queries.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py`
 
 Reused evidence, not rerun:
 
@@ -78,7 +77,7 @@ Correction:
 - The old function had one consumer. It was deleted, along with its `__all__` entry, and `queries.py:918` was updated.
 - No further revision is loaded, and the directory is the one already loaded to choose the latest revision. Filtering does not exist here. Ordering and capability semantics are unchanged.
 
-Regression: `test_a_directory_backed_support_matrix_reports_every_declared_revision` uses 038 through a `FakeAuthorityComponentReader` holding the compiled directory and both revisions. The shared `_pinned_service` helper (`tests/test_modelo_revision_directory_view.py:55`) builds that reader. The test first asserts, independently of the code, that `2024-desde-06` starts before `2025-y-siguientes`. It then checks the three separate sets:
+Regression: `test_a_directory_backed_support_matrix_reports_every_declared_revision` uses 038 through a `FakeAuthorityComponentReader` holding the compiled directory and both revisions. The test first asserts, independently of the code, that `2024-desde-06` starts before `2025-y-siguientes`. It then checks the three separate sets:
 
 - The materialized view carries only `2025-y-siguientes`.
 - `latest_revision_id` is `2025-y-siguientes`.

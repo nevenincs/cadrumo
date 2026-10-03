@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:931fa7cdb1f5693a4c10a4b9e7cf817025eff27c77a92b815db06816c8b823a3'
+modified: '2026-10-03'
+body_hash: 'sha256:b49e012a4917a716821e8766fb556e3501640c541d71cbfa79fb32ea5885dcd2'
 related: []
 ---
 
@@ -115,9 +115,9 @@ Execution sandbox (strongly feasible, harness exists):
 `src/cadrumo/entrypoints/cli/tests/test_app_quickfile.py` already runs the
 full readiness→create→calculate→verify→export chain in-process with real
 KEK/DEK encrypted SQLite, no mocks, no live AEAT. Reusable primitives:
-`invoke_cached_cli(args)` in `src/cadrumo/tests/cli_runner.py` (cached Click
+`invoke_cached_cli(args)`  (cached Click
 tree via `CliRunner`, accepts `env=` and `input=`) and
-`isolated_profile_storage_root()` in `src/cadrumo/tests/secure_sql.py` (real
+`isolated_profile_storage_root()`  (real
 `bucket-dek-v1` bucket, `EphemeralMasterKeyProvider`, isolated storage root
 under `override_settings`).
 

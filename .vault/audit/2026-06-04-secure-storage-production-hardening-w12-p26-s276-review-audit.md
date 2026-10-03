@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:42beb0aa8245252806df97a778af8fed9f1dd88206b7d13801514a803183cef9'
+modified: '2026-10-03'
+body_hash: 'sha256:ec41357f0620ecc3fa07a8702ed74586bba013a530f6ac784225afdcbd79ae95'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S276-001 | PASS | Wizard status storage ownership
 
-The `W12.P26.S276` review found that `src/aeat/application/wizard/_status.py`
+The `W12.P26.S276` review found that the retired module
 does not own secure-storage persistence. It projects the active workflow state into
 `WizardStatusReport` and reshapes active profile facts into `TaxpayerProfile` for
 deadline and filing consumers. It does not construct repositories, write bucket
@@ -42,8 +42,8 @@ duplicating profile schema or manifest resolution logic.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_status.py src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py src/aeat/application/workflow/_models.py src/aeat/core/_bucket_pointer_io.py src/aeat/application/workflow/_profile_bucket_scan.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/application/workflow/test_profile_bucket_scan.py`
+- the historical check
+- the historical check
 - `uv run --no-sync vaultspec-rag search "wizard status build_wizard_status active profile record resolve_active_bucket_id manifest discovery profile bucket" --type code --port 8766 --max-results 8`
 
 Disposition: close `AFR-174`.

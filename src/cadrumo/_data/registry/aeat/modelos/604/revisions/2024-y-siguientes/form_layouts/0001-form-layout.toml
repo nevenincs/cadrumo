@@ -7,7 +7,7 @@ revision_id = "2024-y-siguientes"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "7be8d0e3cd23107fe6588378faa588c878b253347284fe7aac601652b398b011"
+source_state_digest = "ff9f15d680e4ccbae1963f96c12f4b94877912153dcc3eba8e5e511b5af2c9f1"
 design_sources = [
     { source_ref = "aeat-dr-604-2024", sha256 = "e4d7d8319656f3456834d2e92328fc7de8436d69228e1c61dca104f980bcb15b" },
 ]
@@ -16,7 +16,7 @@ placements = [
     { casilla_id = "compl.declaracion-complementaria", kind = "on_form" },
     { casilla_id = "compl.numero-justificante-anterior", kind = "on_form" },
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
-    { casilla_id = "decl.idioma", kind = "on_form" },
+    { casilla_id = "decl.idioma", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "decl.periodo", kind = "working_figure" },
     { casilla_id = "decl.tipo-autoliquidacion", kind = "on_form" },
     { casilla_id = "dom-es.bloque", kind = "on_form" },
@@ -91,18 +91,6 @@ placements = [
     { casilla_id = "terr.vizcaya.importe-operaciones-exentas", kind = "on_form", box_number = "27" },
     { casilla_id = "terr.vizcaya.porcentaje-atribuible", kind = "on_form", box_number = "26" },
     { casilla_id = "terr.vizcaya.signo-cuota-rectificaciones", kind = "on_form", box_number = "24" },
-]
-
-[[revisions.2024-y-siguientes.form_layouts.pages]]
-id = "pag-0"
-official_ref = "Pág. 0"
-heading_key = "modelo.schema.604.form.page.pag-0.heading"
-
-[[revisions.2024-y-siguientes.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.604.form.section.general.heading"
-blocks = [
-    { kind = "field", id = "field", casilla_id = "decl.idioma" },
 ]
 
 [[revisions.2024-y-siguientes.form_layouts.pages]]

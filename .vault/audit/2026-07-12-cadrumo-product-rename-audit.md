@@ -4,12 +4,11 @@ tags:
   - "#cadrumo-product-rename"
 date: '2026-07-12'
 related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-product-rename-adr]]"
 promoted_to:
   - 'rule:cadrumo-product-authority-names'
-modified: '2026-07-17'
-body_hash: 'sha256:66b3dc0110f4b56ddf30e0dcfa554160ec1c3eba308d27354d136f3f454d461f'
+modified: '2026-10-03'
+body_hash: 'sha256:2ff06d5fc43d9dcc8818c430c071f45673e0e21b7917bb4f42673138a5ca86b6'
 ---
 # `cadrumo-product-rename` audit: `Cadrumo rename rolling formal review`
 
@@ -128,7 +127,7 @@ registered rule was not moved or duplicated.
 ### s11-missed-i18n-resource-anchors | high | Locale loading retained two former product package anchors
 
 The completed S11 resource-boundary change covered `core.resources`, but
-`src/cadrumo/core/i18n/_render.py` independently called
+The retired module independently called
 `importlib.resources.files("aeat")` in both the python-i18n load path and direct
 YAML catalogue reader. After removal of the former import root, either fallback
 translation or direct locale loading could fail despite the primary bundled-data

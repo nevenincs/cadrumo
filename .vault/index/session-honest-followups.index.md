@@ -6,10 +6,8 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:386e220a015057f83355fdc63535debb77caa339d27c4046776b36aa6c34a69c'
+body_hash: 'sha256:a4844aca56d0d680046d8e57c6d4a37ab2214c4cfa7bb91cfa2ad3e7e7bbfa7c'
 related:
-  - '[[2026-06-02-session-honest-followups-ledger]]'
-  - '[[2026-06-02-session-honest-followups-plan]]'
   - '[[2026-06-04-session-honest-followups-research]]'
 ---
 
@@ -18,14 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#session-honest-followups`.
 
 ## Documents
-
-### exec
-
-- `2026-06-02-session-honest-followups-ledger` - `session-honest-followups` ledger
-
-### plan
-
-- `2026-06-02-session-honest-followups-plan` - `session-honest-followups` `Session-honest follow-ups and substrate hardening` plan
 
 ### research
 

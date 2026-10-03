@@ -10,7 +10,6 @@ related:
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
   - '[[2026-06-04-fichero-boe-golden-sha-contract-shape-research]]'
   - '[[2026-06-03-suite-redgreen-2026-06-02-code-review-audit]]'
-  - '[[2026-06-02-session-honest-followups-plan]]'
 ---
 
 # `fichero-boe-golden-sha-contract-shape` adr: golden SHA stays as the byte-identity lock; DR303 conformance is a sibling assertion | (**status:** `accepted`)

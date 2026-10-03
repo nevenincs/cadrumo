@@ -3,13 +3,14 @@ tags:
   - '#reference'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3a992681e09b0e0f173898b3f41ee1a450161c19f1bedd13dbbc32dc233f72e7'
+body_hash: 'sha256:54f5a9f3b96721df90627a2898cb78a83edd9dacec7eaa586ae6b9c8163081c7'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"
 ---
+
 # `registry-authority-artifact-boundary` reference: `Post-delta authority backend architecture review`
 
 ## Summary
@@ -153,7 +154,7 @@ Evidence inventory under bundled data is cached for ten seconds (`dev/registry/c
 | D — Make builds reproducible and selective | F7 and the durable incremental form of F2; compiler dependency manifests and uncached/staged publication inputs. | Clean/partial equivalence, compiler-change invalidation, concurrent-input refusal and stable no-op publication. |
 | E — Decide the physical backend from measured workloads | Prototype indexed section loading only if Pass C leaves fresh-process cost unacceptable. | Same semantic corpus and refusal tests across candidates; measured startup, memory, package size, full-scan and publication costs. Record the chosen format in an ADR before migration. |
 
-Passes A and B are prerequisites for calling this a dependable backend. Performance work must not hide failing semantic gates or turn unsupported capability into filing grade. The existing `dev/registry/tests/test_authority_artifact_round_trip.py:37,67–79` has a 64 MiB size budget and clean-publication equality check; retain their distinct purposes and add workload budgets rather than treating file size as latency evidence.
+Passes A and B are prerequisites for calling this a dependable backend. Performance work must not hide failing semantic gates or turn unsupported capability into filing grade.
 
 ### Recommended backend direction
 
@@ -168,10 +169,6 @@ Likewise, gzip shrinks transfer/storage substantially but does not avoid whole-c
 ## Validation and reproducibility
 
 Executed:
-
-```powershell
-uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py -q --tb=short
-```
 
 **Exit 1: 24 passed, 7 failed, 32.76 seconds reported by pytest.** Six failures occur while staging minimal artifacts because their runtime catalogues are incomplete. They prevent their intended cache/corruption/citation assertions from running; they are fixture failures, not six separately established production failures. The remaining failure is the live temporal-offset immutability defect reproduced above. The committed artifact canonical read/write test passed.
 

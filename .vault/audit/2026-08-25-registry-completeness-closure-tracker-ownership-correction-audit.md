@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0c93e923adb340b0959a1e856f38830ece8fd04002dbf9c994bab01530e05856'
-related:
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
-  - '[[2026-08-24-registry-completeness-closure-plan]]'
+body_hash: 'sha256:f9d6bf5ad326ecd3fb46f9bfd5141e57ee3e25f8cd00dc8bfc1305b7b0aa420b'
+related: []
 ---
+
 # `registry-completeness-closure` audit: superseded tracker ownership correction
 
 ## Scope
@@ -35,14 +33,7 @@ release predicate is green.
 
 ### claimed-year-gate | high | Twelve divergences remain under exact live owners
 
-The current claimed-year gate fails with twelve modelos: 126, 128, 165, 181,
-184, 200, 270, 308, 309, 341, 353, and 576. This was reproduced with
-`uv run --no-sync pytest -q -n 0 src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`:
-one failed and nine passed. The eleven non-200 divergences are owned by
-`registry-temporal-coverage` `W02.P05.S51`. Modelo 200 is owned by
-`aeat-export-fragment-generator-authority` `W04.P08.S22` and `W04.P08.S34`.
-No implementation work is orphaned, and reviving the old umbrella rows would
-duplicate those active homes.
+The current claimed-year gate fails with twelve modelos: 126, 128, 165, 181, 184, 200, 270, 308, 309, 341, 353, and 576. The eleven non-200 divergences are owned by `registry-temporal-coverage` `W02.P05.S51`. Modelo 200 is owned by `aeat-export-fragment-generator-authority` `W04.P08.S22` and `W04.P08.S34`. No implementation work is orphaned, and reviving the old umbrella rows would duplicate those active homes.
 
 ### release-predicate | high | Registry validation is green while completeness is red
 

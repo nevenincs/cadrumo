@@ -1,0 +1,58 @@
+# Edit value contracts and Modelo export
+
+[Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-073` · **Topic:** [Modelo work and revision lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-part-1.md)
+
+<!-- preserved:article -->
+**Scope:** 16 implementation files in `src/cadrumo/application/modelo`; 5,066 lines, 216,151 bytes, and 47,013 manifest-measured tokens. All files were statically read; the 1,700-line `export.py` was read in ten consecutive bounded ranges. No application execution or tests were run.
+
+## Capabilities and mechanism
+
+**Governed edit requests.** The edit contract uses strict, frozen versioned models for scalar, binding, row-group, and detail-row intents. Addresses are business identities or client correlation tokens rather than list positions; detail rows are addressed by declared natural-key components, while row-group operations can add, update, delete, and move. A value-free baseline carries the current work-unit and calculation-head digests, a bounded permitted surface, schema identity, compatibility information, and expiry. Each intent is checked against that surface. Shared service functions recompute the work-unit record digest and complete current-head digest, so lifecycle changes on the same calculation head invalidate a baseline too. See edit_models.py (`src/cadrumo/application/modelo/edit_models.py`), edit_services.py (`src/cadrumo/application/modelo/edit_services.py`), and edit_services.py (`src/cadrumo/application/modelo/edit_services.py`).
+
+The baseline publishes a registry-derived grammar without taxpayer values. It describes type, engine input channel, precision, sign and bounds, choices, text shape, requiredness, money limits, and whether ratios are percentages, fractions, or undeclared. Date/year casillas and bindings without a supported engine channel remain non-writable. This keeps the editor from guessing how input maps into calculation execution. See edit_value_grammar.py (`src/cadrumo/application/modelo/edit_value_grammar.py`), edit_value_grammar.py (`src/cadrumo/application/modelo/edit_value_grammar.py`), and edit_value_grammar.py (`src/cadrumo/application/modelo/edit_value_grammar.py`).
+
+The parser separates localized lexeme reading from validation of already-typed values. Number parsing applies locale-specific decimal and grouping marks, refuses ambiguous or malformed grouping, explicit plus signs, scientific notation, and non-finite values, and then checks precision, sign, declared bounds, and the money operand ceiling without rounding. Boolean and text paths canonicalize registry choices and types; NIF and IBAN values receive dedicated validation, including IBAN shape and mod-97 checks. Parse errors return stable reason codes rather than raw input. Preflight rechecks the baseline and evaluates all scalar and binding intents, reporting addressable errors, warnings for source-value overrides or required empty fields, and informational no-op restores. A green result is advisory only; execution must repeat the checks. See edit_number_parsing.py (`src/cadrumo/application/modelo/edit_number_parsing.py`), edit_number_parsing.py (`src/cadrumo/application/modelo/edit_number_parsing.py`), edit_text_parsing.py (`src/cadrumo/application/modelo/edit_text_parsing.py`), and edit_preflight.py (`src/cadrumo/application/modelo/edit_preflight.py`).
+
+Other edit-support pieces keep application boundaries narrow. The refusal projection retains at most 16 refused-Apply prerequisites in private process memory and consumes one only when operation, work unit, renewed baseline, and calculation head match. The receipt port lets an executor prepare a secure-object write without exposing encrypted storage details to the application. The shared edit service centralizes stale-coordinate comparisons and intent admissibility; it does not itself write. edit_refusal_projection.py (`src/cadrumo/application/modelo/edit_refusal_projection.py`) and edit_receipt_ports.py (`src/cadrumo/application/modelo/edit_receipt_ports.py`).
+
+**Effective deadlines.** One resolver applies the pinned holiday authority’s business-day shift to a registry window. Its result retains both nominal and effective dates, coverage, jurisdictions, and holiday references. If the holiday calendar cannot be resolved, it keeps the nominal date and marks coverage unavailable instead of presenting that date as verified; ambiguous matching windows still propagate as errors. effective_deadline.py (`src/cadrumo/application/modelo/effective_deadline.py`).
+
+**Local declaration export.** Export accepts only sealed calculation revisions, resolves them with their parent work unit, requires the active bucket, checks registry coordinates and filing-instance evidence, and validates the output path before producing bytes. It checks model-specific authority and evidence gates, profile readiness, required bindings, ledger evidence, IVA wallet consistency, cross-period cleanliness, and prior-domiciliation requirements. M303 export reconstructs filing facts from persisted filing evidence and current IVA/prorrata/investment registers and ledger observations; M123 and M193 authority gates are applied before export as well. Amendment evidence is reconstructed from persisted filing records and AEAT justificantes, with exact target coordinates checked; caller-supplied evidence is accepted only when it matches the persisted result. export.py (`src/cadrumo/application/modelo/export.py`), export.py (`src/cadrumo/application/modelo/export.py`), and export_amendment_evidence.py (`src/cadrumo/application/modelo/export_amendment_evidence.py`).
+
+The service replays persisted inputs into a transient draft, attaches row-source identities, approves it, and creates one typed producer snapshot for declaration identity, profile facts, elections, accounts, and model-specific fields. The registry provides the export layout. For a local BOE file, the sink stages output beside the destination, the service records a `MODELO_EXPORTED` event, then publishes the staged file and verifies the final artifact against the byte-size and digest receipt. Failures before publication discard staged cleartext. The event records the destination path and file fingerprint; its wallet join is redacted and uses digests/source kinds rather than taxpayer or wallet amounts. The flow is explicitly offline and does not claim that local output is AEAT filing evidence. export.py (`src/cadrumo/application/modelo/export.py`), export.py (`src/cadrumo/application/modelo/export.py`), and export.py (`src/cadrumo/application/modelo/export.py`).
+
+The public result projection carries either a complete BOE receipt or a calculation-report receipt, plus matching summary fields. Validators require the summary fingerprints, path, size, revision, and software-identity grade to match the nested receipt. It publishes receipt metadata but not the exported bytes. Fixed-width BOE output is explicitly flagged as completeness-unverified when the registry lacks a completeness manifest; absence of a warning does not itself constitute a separate completeness claim. export_projection.py (`src/cadrumo/application/modelo/export_projection.py`) and export_projection.py (`src/cadrumo/application/modelo/export_projection.py`).
+
+## Knowledge, security, and quality
+
+The implementation encodes registry-owned layout and value constraints, persisted revision and filing facts, profile authority, and pinned holiday data. It does not independently establish that the operator later filed the document or that AEAT accepted it. Both the direct export result and public projection state the local-evidence limit; a report receipt makes the same distinction for calculation reports. Software identity is surfaced only when the selected layout actually carries an identity slot or development identity literals.
+
+Input privacy is considered throughout the edit path: raw lexemes are excluded from model representations and parse outcomes contain canonical typed values plus normalization codes; refusal projections and preflight findings carry reason codes and bounded facts, not entered values. Export projections omit the document bytes and taxpayer identity facts, but retain operational metadata such as output path, actor, bucket and revision identifiers, and the event records the path. That metadata is useful for traceability and may itself be sensitive in shared logs or transports. Staged output plus a final-path digest check reduce cleartext residue and TOCTOU risk.
+
+Two boundaries deserve follow-up during runtime/integration review. First, the event is appended before the staged file is published. This ordering avoids a visible file with no event, but a later publish failure can leave an event for an artifact that never became visible unless an outer mutation mechanism compensates; this module does not show rollback of the event. Second, compound detail-row keys join identity components with `|`. The implementation correctly treats original components as authoritative and never tries to recover them by splitting, but callers should ensure registry identity values cannot create ambiguous joined keys. Neither point was runtime-tested here.
+
+The port bundles make repository and product-identity dependencies explicit, and shared functions keep admission and export gates from being redefined by individual callers. The available evidence is static: this pass did not exercise locale variants, registry renderability, file publication failures, M303 authority, or report round-trips.
+
+## Full file coverage
+
+- Edit intent models and bounded baselines: edit_models.py (`src/cadrumo/application/modelo/edit_models.py`)
+- Locale-aware decimal parsing and numeric validation: edit_number_parsing.py (`src/cadrumo/application/modelo/edit_number_parsing.py`)
+- Parse refusal without raw input: edit_parse_errors.py (`src/cadrumo/application/modelo/edit_parse_errors.py`)
+- Shared parse-text entrypoint: edit_parse_text.py (`src/cadrumo/application/modelo/edit_parse_text.py`)
+- Typed and lexeme parsing dispatch: edit_parsing.py (`src/cadrumo/application/modelo/edit_parsing.py`)
+- Addressable edit preflight findings: edit_preflight.py (`src/cadrumo/application/modelo/edit_preflight.py`)
+- Secure-object receipt persistence capability: edit_receipt_ports.py (`src/cadrumo/application/modelo/edit_receipt_ports.py`)
+- Bounded one-time refused-Apply prerequisite projection: edit_refusal_projection.py (`src/cadrumo/application/modelo/edit_refusal_projection.py`)
+- Baseline digest, intent and detail-key checks: edit_services.py (`src/cadrumo/application/modelo/edit_services.py`)
+- Boolean, identity and registry text parsing: edit_text_parsing.py (`src/cadrumo/application/modelo/edit_text_parsing.py`)
+- Value-free writable grammar projection: edit_value_grammar.py (`src/cadrumo/application/modelo/edit_value_grammar.py`)
+- Holiday-aware effective filing date: effective_deadline.py (`src/cadrumo/application/modelo/effective_deadline.py`)
+- End-to-end BOE export orchestration: export.py (`src/cadrumo/application/modelo/export.py`)
+- Persisted amendment / justificante authority: export_amendment_evidence.py (`src/cadrumo/application/modelo/export_amendment_evidence.py`)
+- Explicit export repository and identity ports: export_ports.py (`src/cadrumo/application/modelo/export_ports.py`)
+- Canonical public BOE and report receipt projections: export_projection.py (`src/cadrumo/application/modelo/export_projection.py`)
+<!-- /preserved:article -->

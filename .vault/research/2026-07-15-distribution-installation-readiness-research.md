@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-15'
-body_hash: 'sha256:1b19453216fb2b3c97245853a96fae1723e3d90d3724aa03b51cef67c40c8dbc'
+modified: '2026-10-03'
+body_hash: 'sha256:0e26a8ee401b182efbd3fc888cff28eafa0ac5f4a5da8e0fb99d75e3db65ab1f'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
@@ -110,8 +110,7 @@ safety gates, but not yet the combination of installed-wheel acquisition and tha
 calculation in one retained cohort record.
 
 An apparent installed-wheel full MCP success was subsequently invalidated. The MCP
-dispatcher constructs subprocess argv as bare `aeat` at
-`src/cadrumo/entrypoints/mcp/_server.py:312`, so it resolved the developer environment's
+dispatcher constructs subprocess argv as bare `aeat` , so it resolved the developer environment's
 ambient executable rather than the wheel environment's CLI. Launching installed
 `cadrumo-mcp.exe` by absolute path with `PATH` reduced to `C:\Windows\System32` made the
 first real command fail with `[WinError 2]`. Restricting `PATH` instead to the exact
@@ -125,10 +124,8 @@ main packaging recipes never run it from the installed wheel. The manual proof m
 promoted into a tracked cohort lane before release approval. It also cannot establish
 PyPI or plugin acquisition while the package is unpublished.
 
-Source locators: `src/cadrumo/entrypoints/mcp/tests/test_client_handshake.py:57-84`,
-`src/cadrumo/entrypoints/mcp/_server.py:717-920`,
-`src/cadrumo/entrypoints/mcp/_call_runtime.py:35-55`,
-`src/cadrumo/entrypoints/mcp/_server.py:283-320`,
+Source locators: the former source file,
+
 `justfile:176-247`, `.github/workflows/packaging-smoke.yml:49-69`.
 
 ### F4 - The all-extras gate contains identity drift
@@ -139,13 +136,13 @@ the correct installed CLI output is `CADRUMO 0.2.1`. The artifact started; the g
 rename migration is incomplete. A release still fails because its required gate cannot
 certify the correct product identity.
 
-Source locator: `dev/packaging/smoke_extras.py:56-68`.
+Source locator: the former source file.
 
 ### F5 - Claude plugin proof stops at schema validation and its real bootstrap is broken
 
 On Claude Code 2.1.210, a fresh generated plugin passed
 `claude plugin validate --strict` and contained 34 skills and 7 agents. Validation is
-only schema proof. `dev/packaging/smoke_plugin_validate.py:43-75` returns success with a
+only schema proof. the former source file returns success with a
 `skipped` status when Claude is unavailable and is not part of the aggregate packaging
 or CI matrix.
 
@@ -159,8 +156,8 @@ public marketplace, installed into Claude Code/Desktop/Cowork, booted its MCP se
 or completed a claimed tool call. The Claude ecosystem plan nevertheless marks those
 operator-gated steps complete; its own close-honesty audit says they were deferred.
 
-Source locators: `src/cadrumo/agent/_workspace.py`,
-`dev/packaging/smoke_plugin_validate.py:1-95`, `packaging/mcpb/manifest.json:1`,
+Source locators: the former source file,
+the former source file, `packaging/mcpb/manifest.json:1`,
 `pyproject.toml:144-201`,
 `.vault/plan/2026-07-03-claude-ecosystem-packaging-plan.md:138-147`,
 `.vault/audit/2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit.md:76-100`.
@@ -225,7 +222,7 @@ there. Scoop is Windows-specific; Homebrew is proved independently on each claim
 macOS/Linux row; Python/PyPI, Claude plugin, and MCPB claims need their own applicable
 platform rows.
 
-Source locators: `dev/packaging/smoke_docker.py:208-222`,
+Source locators: the former source file,
 `.github/workflows/packaging-smoke.yml:1-69`.
 
 ### F10 - A real tax calculation is the minimum behavioral acceptance oracle
@@ -267,8 +264,6 @@ They may not be documented as standalone product installs.
 Source locators: `src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py:189-261`,
 `src/cadrumo/entrypoints/cli/tests/test_modelo_200_stored_calculation_drift_cli.py:17-78`,
 `src/cadrumo/entrypoints/cli/_modelo_revision_payload_parts.py:38-70`,
-`src/cadrumo/entrypoints/mcp/_dispatch.py:86-102`,
-`src/cadrumo/entrypoints/mcp/tests/test_toolsets.py:43`.
 
 ### F11 - Distribution authority is contradictory
 

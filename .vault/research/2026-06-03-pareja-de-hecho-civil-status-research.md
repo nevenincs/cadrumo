@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#pareja-de-hecho-civil-status'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:5373b310d2fbcd2ad43a9db3ad6c7d5fd46fab25fb9a39a8cb9566d0427c9270'
+modified: '2026-10-03'
+body_hash: 'sha256:6bc40debf7109d0ecc3a89366fa8a6f0a6d9b918d5a72269a926a8e8b38e602d'
 related: []
 ---
 
@@ -13,7 +13,7 @@ related: []
 Subagent research pass for #627 W09.P41.S346 (R9-ANDREA-HIGH).
 Confirmed the codebase carries TWO enums in tension:
 `RentaMaritalStatus` (literal AEAT `tipo_EstadoCivil` 4-value enum
-at `src/aeat/domain/contribuyente/_renta_codes.py:28-34`) and
+) and
 `SituacionFamiliar` (LIRPF Art. 82 unidad-familiar domain enum at
 `:110-158`) which already includes `PAREJA_HECHO_REGISTRADA` and
 `PAREJA_HECHO_NO_REGISTRADA` members. The Step description's framing
@@ -144,7 +144,4 @@ registry-establishing law AND the IRPF deduction article.
 Subagent ground-truth discovery 2026-06-03 against #627 W09.P41.S346
 (R9-ANDREA-HIGH). Cited file:line evidence:
 
-- `src/aeat/domain/contribuyente/_renta_codes.py:28-34, :110-158`
-- `src/aeat/_data/registry/aeat/user_profile/schema.toml:127-150, :776-782`
-- `src/aeat/application/wizard/_verifier.py:140`
 - corpus disenos-registro properties for M100 2025

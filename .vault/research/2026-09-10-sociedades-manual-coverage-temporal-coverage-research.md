@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#sociedades-manual-coverage'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e83eb8ed469e1fde6f93964ef18bb4957d4ce4a3a470fba20fdc839d01e742e6'
+body_hash: 'sha256:c43b235d7d72889ef404d7a6d214af8d21b6843c060b13386fcf8544eea1b87b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -35,7 +35,7 @@ The `2025-y-siguientes` revision has no upper bound, while its annual manual sou
 
 ### Discovery is present-only and therefore hides the deficit
 
-`list_registry_manuals` scans directories under the configured manuals root rather than comparing discovered parts with the canonical horizon: `src/cadrumo/application/registry/corpus.py:1091-1120`. The live command consequently reports only 2024 and 2025 without a missing-year condition. A coverage contract/gate must make absent published years visible and distinguish the documented 2026 publication absence.
+`list_registry_manuals` scans directories under the configured manuals root rather than comparing discovered parts with the canonical horizon: the former source file. The live command consequently reports only 2024 and 2025 without a missing-year condition. A coverage contract/gate must make absent published years visible and distinguish the documented 2026 publication absence.
 
 ### Options for the ADR
 
@@ -47,7 +47,7 @@ The `2025-y-siguientes` revision has no upper bound, while its annual manual sou
 
 - `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml:4-5`
 - `dev/corpus/tests/test_extraction_sidecar_freshness.py:52-60`
-- `src/cadrumo/application/registry/corpus.py:1091-1120`
+
 - `src/cadrumo/_data/registry/aeat/legal/is.toml:1525-1549`
 - `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml:24-27`
 - `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml:25-28`

@@ -14,7 +14,7 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef
 
 from ..posix_endpoint import PosixRuntimeEndpoint
 from ..windows import WindowsRuntimeEndpoint
-from .process_support import launch_fixture
+from .process_support import launch_fixture, runtime_namespace_base
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 
@@ -37,9 +37,8 @@ async def _start(process: asyncio.subprocess.Process) -> None:
 @pytest.mark.asyncio
 async def test_launch_race_converges_and_abrupt_owner_death_allows_replacement(tmp_path: Path) -> None:
     processes: list[asyncio.subprocess.Process] = []
-    # A short namespace is needed for the native Unix socket path limit.
-    temporary_parent = None if sys.platform == "win32" else Path("/") / "tmp"
-    with tempfile.TemporaryDirectory(prefix="cr-race-", dir=temporary_parent) as folder:
+    # Operators can refine the socket base when a checkout exceeds the Unix path limit.
+    with tempfile.TemporaryDirectory(prefix="s-", dir=runtime_namespace_base()) as folder:
         namespace = Path(folder) / "ipc"
         try:
             first = await _launch(tmp_path, namespace)

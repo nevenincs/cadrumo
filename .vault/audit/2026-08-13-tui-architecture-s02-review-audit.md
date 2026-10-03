@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2af2568f85465fe0d34ed99927623371273f4f9d144c767eed30cbefb01f9cef'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:e9b3813b2d8c22efe61f21e64e9811def3b1ca8e508aceded6853a0a99f7c948'
+related: []
 ---
 
 # `tui-architecture` audit: `W01.P01.S02 TUI import-linter boundary review`
 
 ## Scope
 
-Independent review of `W01.P01.S02` against the accepted TUI architecture decision, research, live `.importlinter` changes, `dev/tests/test_importlinter_tui_boundaries.py`, the S02 execution record, and applicable architecture, quality, RAG, and worktree rules.
+Independent review of `W01.P01.S02` against the accepted TUI architecture decision, research, live `.importlinter` changes, the retired test, the S02 execution record, and applicable architecture, quality, RAG, and worktree rules.
 
 ## Findings
 

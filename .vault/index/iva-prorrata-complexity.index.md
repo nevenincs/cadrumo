@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#iva-prorrata-complexity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:629a173b56de101112392ca0fd3bf41317dbdb1a4a7418addc579cf4645d55ff'
+body_hash: 'sha256:4c382ca3b9988094bc5322e514f626d37a55e9d189e7234d7d9a345f89ec8a9c'
 related:
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
-  - '[[2026-07-07-iva-prorrata-complexity-ledger]]'
-  - '[[2026-07-07-iva-prorrata-complexity-plan]]'
   - '[[2026-07-08-iva-prorrata-complexity-adr]]'
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-10-iva-prorrata-complexity-research]]'
@@ -30,14 +28,6 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 ### audit
 
 - `2026-07-08-iva-prorrata-complexity-audit` - `iva-prorrata-complexity` audit: `prorrata-especial +10% advisory dormant: live-emit plumbing gap`
-
-### exec
-
-- `2026-07-07-iva-prorrata-complexity-ledger` - `iva-prorrata-complexity` ledger
-
-### plan
-
-- `2026-07-07-iva-prorrata-complexity-plan` - `iva-prorrata-complexity` plan
 
 ### research
 

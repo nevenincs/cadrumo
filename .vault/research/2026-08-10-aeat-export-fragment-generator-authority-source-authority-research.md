@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:919357bb74ba61e894c2274b8f7fc5d7d54fa4a970f870a7190d581ff62bb55b'
+body_hash: 'sha256:588c2ce16641a72499ded5691a3f21ee0ff3e169fd6b29d77e31118d5f5b16d3'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]"
   - "[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]"
@@ -45,6 +45,5 @@ The delegated Sol medium architecture review concluded that the accepted re-coor
 - `2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr`
 - `2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research`
 - `2026-08-08-aeat-design-relayout-boundary-plan`, steps W01.P02.S77-S80
-- `src/cadrumo/domain/calculations/registry/_record_design.py`
-- `src/cadrumo/domain/calculations/registry/_export.py`
+
 - `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/`

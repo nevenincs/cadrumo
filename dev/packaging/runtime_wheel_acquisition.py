@@ -15,6 +15,8 @@ from typing import Final
 from urllib.parse import urlsplit
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 from .hashing import sha256_path
@@ -88,7 +90,11 @@ def wheel_cache_dir() -> Path | None:
     """
     override = os.environ.get(_CACHE_DIR_ENV)
     if override is not None:
-        return Path(override) if override.strip() else None
+        return (
+            resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+            if override.strip()
+            else None
+        )
     return dev_cache_dir("runtime-wheel-cache")
 
 

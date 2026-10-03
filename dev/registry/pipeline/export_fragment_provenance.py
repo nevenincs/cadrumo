@@ -34,6 +34,7 @@ from .export_fragment_provenance_projection import (
 from .export_fragment_provenance_projection import (
     semantic_map_digest as _semantic_map_digest,
 )
+from .generated_export_inheritance_model import GeneratedExportInheritance
 from .joined_record_design import JoinedRecordDesign
 from .pydantic_error_detail import validation_error_detail
 from .record_design_intermediate import (
@@ -361,6 +362,7 @@ class ExportFragmentProvenanceManifest(_StrictModel):
     output_files: tuple[ExportFragmentOutputDigest, ...] = Field(min_length=1)
     field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
     variable_envelope_contract: FilingEnvelopeProvenance | None = None
+    generated_export_inheritance: GeneratedExportInheritance | None = None
 
     @model_validator(mode="after")
     def _refuse_unknown_schema_or_unordered_outputs(self) -> ExportFragmentProvenanceManifest:
@@ -476,6 +478,7 @@ def build_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    generated_export_inheritance: GeneratedExportInheritance | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Assemble provenance only from the exact joined and rendered authorities."""
     _validate_generation_scope(
@@ -506,6 +509,7 @@ def build_export_fragment_provenance_manifest(
             joined,
             loaded_layout=loaded_layout,
         ),
+        generated_export_inheritance=generated_export_inheritance,
     )
     _require_field_derivations_match_layout(manifest.field_derivations, loaded_layout)
     return manifest
@@ -521,6 +525,7 @@ def emit_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    generated_export_inheritance: GeneratedExportInheritance | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Write one complete canonical sibling manifest after a fresh tree renders.
 
@@ -536,6 +541,7 @@ def emit_export_fragment_provenance_manifest(
         field_derivations=field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=generated_export_inheritance,
     )
     manifest_path = export_fragment_provenance_path(export_root)
     if is_link_like(manifest_path):
@@ -556,6 +562,7 @@ def verify_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    generated_export_inheritance: GeneratedExportInheritance | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Refuse current-authority, file, loader-semantic, or derivation drift."""
     manifest_path = export_fragment_provenance_path(export_root)
@@ -564,6 +571,10 @@ def verify_export_fragment_provenance_manifest(
     if not manifest_path.is_file():
         raise RegistryValidationError(f"export provenance manifest is missing: {manifest_path}")
     manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    if manifest.generated_export_inheritance != generated_export_inheritance:
+        raise RegistryValidationError(
+            "export provenance generated-inheritance attestation differs from the selected baseline"
+        )
     _require_manifest_matches_current_authorities(
         manifest,
         joined=joined,
@@ -601,6 +612,8 @@ def verify_export_fragment_provenance_manifest(
 def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProvenanceManifest) -> bytes:
     """Return the sole canonical JSON serialisation for a provenance manifest."""
     payload = manifest.model_dump(mode="json")
+    if payload["generated_export_inheritance"] is None:
+        del payload["generated_export_inheritance"]
     for derivation in payload["field_derivations"]:
         _omit_undeclared_field_keys(derivation["field"])
         if derivation["semantic_entry"]["part"] is None:

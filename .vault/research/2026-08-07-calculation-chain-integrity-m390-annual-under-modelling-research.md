@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca15c98747eb82174e7175806ca1952d19fbb3039fd7fcb0679bec531f181e17'
+body_hash: 'sha256:eff5c5ecbbac7cbabff682a9af2c01c5a1d3819b8428e54b35366126f9eee5e1'
 related: []
 ---
 # `calculation-chain-integrity` research: scoping the Modelo 390 annual under-modelling
@@ -68,5 +68,5 @@ Offered as a starting frame, not a plan:
 
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx` — the 2024 Modelo 390 record-design workbook and its section inventory.
 - `src/cadrumo/_data/registry/aeat/modelos/390/revisions` — the declared Modelo 390 casilla surface.
-- `src/cadrumo/domain/iva/_prorrata.py` — the existing prorrata calculation substrate.
+- the former source file — the existing prorrata calculation substrate.
 - `.vault/plan/2026-08-07-calculation-chain-integrity-plan.md` — campaign steps W06.P08.S46, S48, S50, S54, and S55 cited for scope and dependencies.

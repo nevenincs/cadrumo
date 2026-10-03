@@ -3,13 +3,13 @@ tags:
   - '#reference'
   - '#synced-history-consumption'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1dcfe22b3eac7a88d7a564bad3581a86d3237422b1078daaf190dc3152108e1e'
+body_hash: 'sha256:d7d8475f31d7acd4e7495851db7f8c74503beca481aacdd223449cf8f2290341'
 related:
-  - "[[2026-08-08-synced-history-consumption-plan]]"
   - "[[2026-08-08-synced-history-consumption-pulled-fact-consumption-census-reference]]"
 ---
+
 # `synced-history-consumption` reference: `calculation input, reconciliation target, or display only`
 
 ## Summary
@@ -88,11 +88,7 @@ the census subtotal of nine, and no other bucket contributes to it.
 
 This is the finding that matters for the ruling.
 
-`relation_source_requirements` in
-`src/cadrumo/domain/calculations/registry/_relations.py` reads
-`classification.treatment` and folds it into the requirement's GROUPING KEY. That
-is the only production use of the field on the resolution path: it discriminates
-which requirements bucket together. It gates nothing.
+That is the only production use of the field on the resolution path: it discriminates which requirements bucket together. It gates nothing.
 
 So a `factual_evidence` relation and a `direct_annual_settlement` relation
 resolve identically into binding values, and the engine consumes both the same

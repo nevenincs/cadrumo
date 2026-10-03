@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:70ceaba517bbc8c76696205fe2b7101ac3490112a68a9b764fbe1e6beaaf4ae7'
 related:
   - "[[2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 ---
 # `ci-lane-deconflation` adr: `the gate measures a real target and names the wrong one` | (**status:** `accepted`)

@@ -16,7 +16,6 @@ from ....core.money.rounding import round_to_cents
 from .errors import RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
-    policy_admits_wire_value,
     policy_defines_absent_slot,
     project_export_value,
     validate_export_wire_value,
@@ -514,9 +513,6 @@ def _require_allowed_value(field: _ExportField, value: object) -> None:
         )
 
 
-_NUMERIC_DATA_TYPES = ZERO_PADDED_EXPORT_DATA_TYPES
-
-
 def _is_absent_slot(field: _ExportField, value: object) -> bool:
     """Report a field slot carrying no value once its policy has projected.
 
@@ -528,20 +524,16 @@ def _is_absent_slot(field: _ExportField, value: object) -> bool:
 
 
 def _zero_fill_is_only_absence(field: _ExportField) -> bool:
-    """Whether a numeric zero fill cannot be a value, so it can only be the absent slot.
-
-    It cannot when the field's allowed values exclude zero, or when its value
-    policy cannot carry the all-zero token at all: a four-digit year, a month,
-    a day or a calendar date has no zero, so the zeros AEAT's designs write in
-    an empty numeric slot ("los campos numéricos que no tengan contenido se
-    rellenarán a ceros") read back as absence rather than as a malformed value.
-    """
+    """Whether a zero fill cannot carry a value under the field's declared domain or policy."""
     if field.allowed_values is not None and "0" not in field.allowed_values:
         return True
-    return field.value_policy is not None and not policy_admits_wire_value(
-        field.value_policy,
-        "0" * _require_length(field),
-    )
+    if field.value_policy is None:
+        return False
+    try:
+        validate_export_wire_value(field.value_policy, "0" * _require_length(field))
+    except RegistryValidationError:
+        return True
+    return False
 
 
 def _render_absent_slot(field: _ExportField) -> str:
@@ -571,7 +563,7 @@ def _render_absent_slot(field: _ExportField) -> str:
         rendered = _render_typed_value(field, project_export_value(field.value_policy, 0))
         validate_export_wire_value(field.value_policy, rendered)
         return rendered
-    if field.data_type in _NUMERIC_DATA_TYPES:
+    if field.data_type in ZERO_PADDED_EXPORT_DATA_TYPES:
         return _render_numeric_digits(field, "", negative=False)
     return _pad(field, "")
 

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b16e45e74d4bdbd0c4b8058041cd31c7f4e3dcf30d11683c78cd7199b893b3a4'
+body_hash: 'sha256:376bc8c9bf5657dc8a1a08434b71127f560f24bccd2c999fcbfa2c72eb59aca5'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-s08-independent-review-audit]]"
@@ -59,20 +59,6 @@ The amendment must determine, first, whether `DP200000` is excluded as a workboo
 - `src/cadrumo/_data/registry/aeat/legal/is.toml:1222`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx`, SHA-256 `a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505`; cells `DP200000!A14:C16`, `DP200001!A119:C124`, and `DP200DID!A49:C49`
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls
-- `src/cadrumo/domain/calculations/registry/_record_design.py:132`
-- `src/cadrumo/domain/calculations/registry/_record_design.py:298`
-- `src/cadrumo/domain/calculations/registry/_record_design.py:362`
-- `src/cadrumo/domain/calculations/registry/_record_design.py:501`
-- `dev/registry/_record_design_ir.py:73`
-- `dev/registry/_record_design_ir.py:89`
-- `dev/registry/_record_design_ir.py:172`
-- `dev/registry/_export_tree.py:70`
-- `dev/registry/_export_tree.py:227`
-- `dev/registry/_export_tree.py:336`
-- `dev/registry/_semantic_map.py:60`
-- `dev/registry/_semantic_map.py:129`
+
 - `.vault/adr/2026-08-10-aeat-export-fragment-generator-authority-adr.md:38`
 - `.vault/audit/2026-08-10-aeat-export-fragment-generator-authority-s08-independent-review-audit.md:25`
-- `dev/registry/tests/test_record_design_ir.py:22`
-- `dev/registry/tests/test_export_tree.py:278`
-- `dev/registry/tests/test_export_tree.py:305`

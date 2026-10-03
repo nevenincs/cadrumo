@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#live-pull-verification-sweep'
 date: '2026-07-12'
-modified: '2026-07-12'
-body_hash: 'sha256:83f654f963cc873100d9f35b020faedf3362c4213a17c2fc6854555a894d89fb'
-related:
-  - "[[2026-06-12-live-pull-verification-sweep-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:46c0fca9e20562d84233704e6b720fceba2dc6039bc2bbfb6f2a5dc0f2332f51'
+related: []
 ---
 
 # `live-pull-verification-sweep` audit: `censo supersession reconciliation code review`
@@ -27,7 +26,7 @@ The two new exec records state that no authenticated censo data was fetched,
 that the original G313/snapshot targets were deleted, and that a future
 consulta-only AEAT endpoint would need a new ADR. That wording is consistent
 with the accepted operator-manual decision and the current
-`src/aeat/application/user_profile/_censo_sync.py` source, which retains only
+The retired module source, which retains only
 operator-declared, non-official fact projection. No production assertion is
 recast as a successful live pull.
 

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s50-marketplace-regeneration'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:c2f12fd1f69ca6bc026e7f5eab2dfc14cd7c7b5012a2431d5e0be9d78f4741ce'
 related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
 

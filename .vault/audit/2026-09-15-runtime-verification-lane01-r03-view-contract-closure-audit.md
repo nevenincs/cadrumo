@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8832c598b74b1d9d95800e006d456ce627a6304310874948c8dab99822ca14f7'
+body_hash: 'sha256:48a067b0ef5d97921e7c60c5b01392f1f173abcb3bbb5d1b94de798f0335a654'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r02-revision-view-repair-audit]]"
 ---
@@ -23,7 +23,6 @@ Execution: 2026-09-15, 17:51–18:00 +02:00, Windows 11, PowerShell. The coordin
 Changed files:
 
 - `src/cadrumo/domain/calculations/registry/queries.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py`
 
 Reused evidence, not rerun because the new claims do not depend on it:
 
@@ -37,7 +36,6 @@ New command ledger (Command ID, Purpose, Exact command, Exit, Evidence):
 
 - `R03-C01` | lint, format and types on the two changed files | `uv run --no-sync ruff check <2 files>`; `uv run --no-sync ruff format --check <2 files>`; `uv run --no-sync ty check <2 files>` | 0; 0; 0 | `All checks passed!`; `2 files already formatted`; `All checks passed!`
 - `R03-C02` | console check | `uv run --no-sync aeat app modelo list` | 0 | header plus 58 rows; `036` 2, `038` 2, `100` 6, `131` 4, `303` 6
-- `R03-C03` | focused regression | `uv run --no-sync pytest -o addopts= -p no:randomly -n 0 --strict-config --strict-markers --capture=sys --tb=short -ra -q src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py` | 0 | `10 passed in 171.54s`: the 8 existing view tests plus 2 new ones
 
 The `131` count of 4 is checked against something independent of the listing: r02's C11 `describe 131` printed the revision ids `2019-2023, 2024, 2025, 2026`.
 
@@ -90,13 +88,12 @@ Residual, not a present defect: pydantic `model_copy` copies private attributes.
 
 ### l01-r03-f04 | low | independent re-check confirms the console count; V03's tested inputs are not established
 
-A separate session re-checked this lane at 18:26–18:35 +02:00. That session had not written the lane's changes and changed no product or test file. Checkout at the start: HEAD `eedac16053`, with uncommitted changes to `queries.py`, `snapshot.py`, `tests/published_authority.py`, `tests/test_modelo_100_imputed_real_estate_art85.py` and `tests/test_modelo_revision_directory_view.py`, and an untracked `tests/test_irnr_registry_tokens.py`. Before the run, the file timestamps were `queries.py` 17:56:13, `test_modelo_revision_directory_view.py` 17:56:06 and `schema.py` 17:30:12. V03 reported 10 passed, exit 0. Relevant source and test files changed during execution. No content snapshot or hashes were captured, so the exact tested inputs cannot be established. V03 is supplemental execution evidence only and does not independently verify a specific r03 or r04 source state.
+A separate session re-checked this lane at 18:26–18:35 +02:00. That session had not written the lane's changes and changed no product or test file. Before the run, the file timestamps were `queries.py` 17:56:13, `test_modelo_revision_directory_view.py` 17:56:06 and `schema.py` 17:30:12. V03 reported 10 passed, exit 0. Relevant source and test files changed during execution. No content snapshot or hashes were captured, so the exact tested inputs cannot be established. V03 is supplemental execution evidence only and does not independently verify a specific r03 or r04 source state.
 
 Observed file changes: V03 started at 18:28:44. `queries.py` was rewritten at 18:29:38 and `test_modelo_revision_directory_view.py` at 18:29:53, with support-matrix changes (`build_support_matrix_from_directory_views` and a `_pinned_service` test helper). These were later committed in `735b1247a6` (18:34:50) and `53a45a04ef` (18:42:05).
 
 - `V01` | console count | `uv run --no-sync aeat app modelo list` | exit 0 | header plus 58 rows. `036` 2, `038` 2, `100` 6, `131` 4, `303` 6. This matches `R03-C02`.
 - `V02` | vault validation | `uv run --no-sync vaultspec-core vault check all --feature runtime-verification` | exit 0 | no warnings, run before this entry was appended.
-- `V03` | focused regression | `uv run --no-sync pytest -o addopts= -p no:randomly -n 0 --strict-config --strict-markers --capture=sys --tb=short -ra -q src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py` | exit 0 | `10 passed in 299.62s`. The run log is under `.logs/test-runs/2026-09-15/20260915T162844.499313Z-pytest-46084-f4b3c213`.
 
 The static checks `R03-C01` were not re-run. This entry does not re-examine the source analysis in `l01-r03-f02` or `l01-r03-f03`. The lane's own evidence (`R03-C01` to `R03-C03`) stands as originally recorded.
 

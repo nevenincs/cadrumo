@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:3f36863ea97af60874a4e9ad8358777a25175ca2a23206db8f1e4e5c15f23264'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 
 # `registry-authority-artifact-boundary` audit: `identifier enumeration tax domain review`

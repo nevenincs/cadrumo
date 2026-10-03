@@ -1,0 +1,2018 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/catalogue.md:1
+msgid "Detailed technical articles"
+msgstr "Részletes műszaki cikkek"
+
+#: ../../technical/articles/catalogue.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/catalogue.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/catalogue.md:7
+msgid ""
+"The 206 articles are grouped by their original topic assignments. Each "
+"article retains its scope, mechanisms, findings, qualifications, and "
+"coverage appendix. Report identifiers preserve correspondence with the "
+"original analysis."
+msgstr ""
+
+#: ../../technical/articles/catalogue.md:9
+msgid "Operator interfaces, part 1: command graph and principal workflows"
+msgstr "Kezelői felületek, 1. rész: parancsgráf és fő munkafolyamatok"
+
+#: ../../technical/articles/catalogue.md:11
+msgid "[Read the topic overview](../topics/operator-interfaces-part-1.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/operator-interfaces-"
+"part-1.md)."
+
+#: ../../technical/articles/catalogue.md:13
+msgid ""
+"[Entrypoint adapter composition](154-entrypoint-adapter-composition.md) —"
+" `STAGE-2-154`"
+msgstr ""
+"[Belépésipont-adapterek összeállítása](154-entrypoint-adapter-"
+"composition.md) — `STAGE-2-154`"
+
+#: ../../technical/articles/catalogue.md:14
+msgid ""
+"[Entrypoint operation and read composition](155-entrypoint-operation-and-"
+"read-composition.md) — `STAGE-2-155`"
+msgstr ""
+"[Belépésipont-műveletek és olvasások összeállítása](155-entrypoint-"
+"operation-and-read-composition.md) — `STAGE-2-155`"
+
+#: ../../technical/articles/catalogue.md:15
+msgid ""
+"[CLI command contracts and operator surfaces](156-cli-command-contracts-"
+"and-operator-surfaces.md) — `STAGE-2-156`"
+msgstr ""
+"[CLI-parancsszerződések és kezelői felületek](156-cli-command-contracts-"
+"and-operator-surfaces.md) — `STAGE-2-156`"
+
+#: ../../technical/articles/catalogue.md:16
+msgid ""
+"[Live AEAT CLI capture and snapshot surfaces](157-live-aeat-cli-capture-"
+"and-snapshot-surfaces.md) — `STAGE-2-157`"
+msgstr ""
+"[Élő AEAT CLI-rögzítés és pillanatképfelületek](157-live-aeat-cli-"
+"capture-and-snapshot-surfaces.md) — `STAGE-2-157`"
+
+#: ../../technical/articles/catalogue.md:17
+msgid ""
+"[CLI contracts, execution projection, diagnostics and evidence "
+"notices](158-cli-contracts-execution-projection-diagnostics-and-evidence-"
+"notices.md) — `STAGE-2-158`"
+msgstr ""
+"[CLI-szerződések, végrehajtási vetület, diagnosztika és "
+"bizonyítékjelzések](158-cli-contracts-execution-projection-diagnostics-"
+"and-evidence-notices.md) — `STAGE-2-158`"
+
+#: ../../technical/articles/catalogue.md:18
+msgid ""
+"[Ledger, invoice and document-evidence operator flows](159-ledger-"
+"invoice-and-document-evidence-operator-flows.md) — `STAGE-2-159`"
+msgstr ""
+"[Főkönyvi, számla- és dokumentumbizonyíték-kezelői folyamatok](159"
+"-ledger-invoice-and-document-evidence-operator-flows.md) — `STAGE-2-159`"
+
+#: ../../technical/articles/catalogue.md:19
+msgid ""
+"[Ledger review, imports, rules, inventory and read surfaces](160-ledger-"
+"review-imports-rules-inventory-and-read-surfaces.md) — `STAGE-2-160`"
+msgstr ""
+"[Főkönyvi felülvizsgálat, importok, szabályok, készlet és olvasási "
+"felületek](160-ledger-review-imports-rules-inventory-and-read-"
+"surfaces.md) — `STAGE-2-160`"
+
+#: ../../technical/articles/catalogue.md:20
+msgid ""
+"[Modelo command support, discovery, amendment and export surfaces](161"
+"-modelo-command-support-discovery-amendment-and-export-surfaces.md) — "
+"`STAGE-2-161`"
+msgstr ""
+"[Modelo-parancstámogatás, felderítés, módosítás és exportfelületek](161"
+"-modelo-command-support-discovery-amendment-and-export-surfaces.md) — "
+"`STAGE-2-161`"
+
+#: ../../technical/articles/catalogue.md:21
+msgid ""
+"[Modelo local records, wallet, preview, and non-work command "
+"contracts](162-modelo-local-records-wallet-preview-and-non-work-command-"
+"contracts.md) — `STAGE-2-162`"
+msgstr ""
+"[Modelo helyi rekordok, pénztárca, előnézet és munkán kívüli "
+"parancsszerződések](162-modelo-local-records-wallet-preview-and-non-work-"
+"command-contracts.md) — `STAGE-2-162`"
+
+#: ../../technical/articles/catalogue.md:22
+msgid ""
+"[Modelo projection, readiness, filing evidence and sharing surfaces](163"
+"-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md) — "
+"`STAGE-2-163`"
+msgstr ""
+"[Modelo-vetület, készenlét, bevallási bizonyíték és megosztási "
+"felületek](163-modelo-projection-readiness-filing-evidence-and-sharing-"
+"surfaces.md) — `STAGE-2-163`"
+
+#: ../../technical/articles/catalogue.md:23
+msgid ""
+"[Work inspection, overview, verification and profile authentication](164"
+"-work-inspection-overview-verification-and-profile-authentication.md) — "
+"`STAGE-2-164`"
+msgstr ""
+"[Munkavizsgálat, áttekintés, ellenőrzés és profilhitelesítés](164-work-"
+"inspection-overview-verification-and-profile-authentication.md) — "
+"`STAGE-2-164`"
+
+#: ../../technical/articles/catalogue.md:24
+msgid ""
+"[Prorrata, review, root CLI and command authority](165-prorrata-review-"
+"root-cli-and-command-authority.md) — `STAGE-2-165`"
+msgstr ""
+"[Prorrata, felülvizsgálat, gyökér-CLI és parancsfelhatalmazás](165"
+"-prorrata-review-root-cli-and-command-authority.md) — `STAGE-2-165`"
+
+#: ../../technical/articles/catalogue.md:25
+msgid ""
+"[Shared CLI transport and profile configuration surfaces](166-shared-cli-"
+"transport-and-profile-configuration-surfaces.md) — `STAGE-2-166`"
+msgstr ""
+"[Közös CLI-átvitel és profilbeállítási felületek](166-shared-cli-"
+"transport-and-profile-configuration-surfaces.md) — `STAGE-2-166`"
+
+#: ../../technical/articles/catalogue.md:26
+msgid ""
+"[Profile maintenance, repair, and Google operations](167-profile-"
+"maintenance-repair-and-google-operations.md) — `STAGE-2-167`"
+msgstr ""
+"[Profilkarbantartás, javítás és Google-műveletek](167-profile-"
+"maintenance-repair-and-google-operations.md) — `STAGE-2-167`"
+
+#: ../../technical/articles/catalogue.md:27
+msgid ""
+"[Profile custody, provisioning, and runtime configuration](168-profile-"
+"custody-provisioning-and-runtime-configuration.md) — `STAGE-2-168`"
+msgstr ""
+"[Profilőrzés, előkészítés és futtatókörnyezeti beállítások](168-profile-"
+"custody-provisioning-and-runtime-configuration.md) — `STAGE-2-168`"
+
+#: ../../technical/articles/catalogue.md:29
+msgid "Operator interfaces, part 2: secure transport and operation bridges"
+msgstr "Kezelői felületek, 2. rész: biztonságos átvitel és műveleti hidak"
+
+#: ../../technical/articles/catalogue.md:31
+msgid "[Read the topic overview](../topics/operator-interfaces-part-2.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/operator-interfaces-"
+"part-2.md)."
+
+#: ../../technical/articles/catalogue.md:33
+msgid ""
+"[Secure CLI input, profile bridges, and storage controls](169-secure-cli-"
+"input-profile-bridges-and-storage-controls.md) — `STAGE-2-169`"
+msgstr ""
+"[Biztonságos CLI-bemenet, profilhidak és tárolási ellenőrzések](169"
+"-secure-cli-input-profile-bridges-and-storage-controls.md) — "
+"`STAGE-2-169`"
+
+#: ../../technical/articles/catalogue.md:34
+msgid ""
+"[CLI error handling, ledger actions, and Modelo work](170-cli-error-"
+"handling-ledger-actions-and-modelo-work.md) — `STAGE-2-170`"
+msgstr ""
+"[CLI-hibakezelés, főkönyvi műveletek és Modelo-munka](170-cli-error-"
+"handling-ledger-actions-and-modelo-work.md) — `STAGE-2-170`"
+
+#: ../../technical/articles/catalogue.md:35
+msgid ""
+"[CLI period, registered-operation, and ledger bridges](171-cli-period-"
+"registered-operation-and-ledger-bridges.md) — `STAGE-2-171`"
+msgstr ""
+"[CLI-időszak-, regisztráltművelet- és főkönyvi hidak](171-cli-period-"
+"registered-operation-and-ledger-bridges.md) — `STAGE-2-171`"
+
+#: ../../technical/articles/catalogue.md:36
+msgid ""
+"[Ledger and Modelo CLI operations](172-ledger-and-modelo-cli-"
+"operations.md) — `STAGE-2-172`"
+msgstr ""
+"[Főkönyvi és Modelo CLI-műveletek](172-ledger-and-modelo-cli-"
+"operations.md) — `STAGE-2-172`"
+
+#: ../../technical/articles/catalogue.md:37
+msgid ""
+"[Modelo discovery, review exchange, profile admission, and workflow "
+"reads](173-modelo-discovery-review-exchange-profile-admission-and-"
+"workflow-reads.md) — `STAGE-2-173`"
+msgstr ""
+"[Modelo-felderítés, felülvizsgálati csere, profilbeléptetés és "
+"munkafolyamat-olvasások](173-modelo-discovery-review-exchange-profile-"
+"admission-and-workflow-reads.md) — `STAGE-2-173`"
+
+#: ../../technical/articles/catalogue.md:39
+msgid "Installed runtime, terminal workbench, and agent harness"
+msgstr "Telepített futtatókörnyezet, terminálos munkafelület és ügynökkeret"
+
+#: ../../technical/articles/catalogue.md:41
+msgid "[Read the topic overview](../topics/runtime-tui-and-agent-harness.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/runtime-tui-and-agent-"
+"harness.md)."
+
+#: ../../technical/articles/catalogue.md:43
+msgid ""
+"[Installed runtime, profile host, and worker authority](174-installed-"
+"runtime-profile-host-and-worker-authority.md) — `STAGE-2-174`"
+msgstr ""
+"[Telepített futtatókörnyezet, profilgazda és munkafolyamat-"
+"felhatalmazás](174-installed-runtime-profile-host-and-worker-"
+"authority.md) — `STAGE-2-174`"
+
+#: ../../technical/articles/catalogue.md:44
+msgid ""
+"[Profile-worker request staging](175-profile-worker-request-staging.md) —"
+" `STAGE-2-175`"
+msgstr ""
+"[Profil-munkafolyamat kéréseinek előkészítése](175-profile-worker-"
+"request-staging.md) — `STAGE-2-175`"
+
+#: ../../technical/articles/catalogue.md:45
+msgid ""
+"[Textual terminal workbench and Declarations calendar](176-textual-"
+"terminal-workbench-and-declarations-calendar.md) — `STAGE-2-176`"
+msgstr ""
+"[Textual terminálos munkafelület és Bevallások naptár](176-textual-"
+"terminal-workbench-and-declarations-calendar.md) — `STAGE-2-176`"
+
+#: ../../technical/articles/catalogue.md:46
+msgid ""
+"[Home, Declarations portfolio, and Ledger TUI flows](177-home-"
+"declarations-portfolio-and-ledger-tui-flows.md) — `STAGE-2-177`"
+msgstr ""
+"[Kezdőlap, Bevallások portfólió és Főkönyv TUI-folyamatok](177-home-"
+"declarations-portfolio-and-ledger-tui-flows.md) — `STAGE-2-177`"
+
+#: ../../technical/articles/catalogue.md:47
+msgid ""
+"[Ledger operations and Modelo lifecycle TUI doors](178-ledger-operations-"
+"and-modelo-lifecycle-tui-doors.md) — `STAGE-2-178`"
+msgstr ""
+"[Főkönyvi műveletek és a Modelo-életciklus TUI-belépési pontjai](178"
+"-ledger-operations-and-modelo-lifecycle-tui-doors.md) — `STAGE-2-178`"
+
+#: ../../technical/articles/catalogue.md:48
+msgid ""
+"[Modelo workbench, casilla editing, and lifecycle screens](179-modelo-"
+"workbench-casilla-editing-and-lifecycle-screens.md) — `STAGE-2-179`"
+msgstr ""
+"[Modelo-munkafelület, casillaszerkesztés és életciklus-képernyők](179"
+"-modelo-workbench-casilla-editing-and-lifecycle-screens.md) — "
+"`STAGE-2-179`"
+
+#: ../../technical/articles/catalogue.md:49
+msgid ""
+"[Modelo workbench issue review, progress and navigation](180-modelo-"
+"workbench-issue-review-progress-and-navigation.md) — `STAGE-2-180`"
+msgstr ""
+"[Modelo-munkafelületi problémafelülvizsgálat, előrehaladás és "
+"navigáció](180-modelo-workbench-issue-review-progress-and-navigation.md) "
+"— `STAGE-2-180`"
+
+#: ../../technical/articles/catalogue.md:50
+msgid ""
+"[Modelo workbench editing, source map, and operation flow](181-modelo-"
+"workbench-editing-source-map-and-operation-flow.md) — `STAGE-2-181`"
+msgstr ""
+"[Modelo-munkafelületi szerkesztés, forrástérkép és műveletfolyam](181"
+"-modelo-workbench-editing-source-map-and-operation-flow.md) — "
+"`STAGE-2-181`"
+
+#: ../../technical/articles/catalogue.md:51
+msgid ""
+"[Supervised operation modal and profile manager](182-supervised-"
+"operation-modal-and-profile-manager.md) — `STAGE-2-182`"
+msgstr ""
+"[Felügyelt műveleti párbeszédablak és profilkezelő](182-supervised-"
+"operation-modal-and-profile-manager.md) — `STAGE-2-182`"
+
+#: ../../technical/articles/catalogue.md:52
+msgid ""
+"[Runtime TUI access, workbench and secret-entry flows](183-runtime-tui-"
+"access-workbench-and-secret-entry-flows.md) — `STAGE-2-183`"
+msgstr ""
+"[Futtatókörnyezeti TUI-hozzáférés, munkafelület és titokbeviteli "
+"folyamatok](183-runtime-tui-access-workbench-and-secret-entry-flows.md) —"
+" `STAGE-2-183`"
+
+#: ../../technical/articles/catalogue.md:53
+msgid ""
+"[Profile registration, recovery and runtime login](184-profile-"
+"registration-recovery-and-runtime-login.md) — `STAGE-2-184`"
+msgstr ""
+"[Profilregisztráció, helyreállítás és futtatókörnyezeti "
+"bejelentkezés](184-profile-registration-recovery-and-runtime-login.md) — "
+"`STAGE-2-184`"
+
+#: ../../technical/articles/catalogue.md:54
+msgid ""
+"[Python typing package marker](185-python-typing-package-marker.md) — "
+"`STAGE-2-185`"
+msgstr ""
+"[A Python-csomag típusjelölője](185-python-typing-package-marker.md) — "
+"`STAGE-2-185`"
+
+#: ../../technical/articles/catalogue.md:55
+msgid ""
+"[Agent personas, operator rules and workflow skills](186-agent-personas-"
+"operator-rules-and-workflow-skills.md) — `STAGE-2-186`"
+msgstr ""
+"[Ügynökszerepek, kezelői szabályok és munkafolyamat-készségek](186-agent-"
+"personas-operator-rules-and-workflow-skills.md) — `STAGE-2-186`"
+
+#: ../../technical/articles/catalogue.md:56
+msgid ""
+"[Filing skills and the MCP operator harness](187-filing-skills-and-the-"
+"mcp-operator-harness.md) — `STAGE-2-187`"
+msgstr ""
+"[Bevallási készségek és az MCP-kezelőkeret](187-filing-skills-and-the-"
+"mcp-operator-harness.md) — `STAGE-2-187`"
+
+#: ../../technical/articles/catalogue.md:58
+msgid "Document and financial imports"
+msgstr "Dokumentum- és pénzügyi importok"
+
+#: ../../technical/articles/catalogue.md:60
+msgid "[Read the topic overview](../topics/document-and-financial-imports.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/document-and-financial-"
+"imports.md)."
+
+#: ../../technical/articles/catalogue.md:62
+msgid "[Package namespaces](001-package-namespaces.md) — `STAGE-2-001`"
+msgstr "[Csomagnévterek](001-package-namespaces.md) — `STAGE-2-001`"
+
+#: ../../technical/articles/catalogue.md:63
+msgid ""
+"[Inbound document and financial adapters](002-inbound-document-and-"
+"financial-adapters.md) — `STAGE-2-002`"
+msgstr ""
+"[Bemeneti dokumentum- és pénzügyi adapterek](002-inbound-document-and-"
+"financial-adapters.md) — `STAGE-2-002`"
+
+#: ../../technical/articles/catalogue.md:64
+msgid ""
+"[Financial providers, receipts, and notification PDFs](003-financial-"
+"providers-receipts-and-notification-pdfs.md) — `STAGE-2-003`"
+msgstr ""
+"[Pénzügyi szolgáltatók, bizonylatok és értesítési PDF-ek](003-financial-"
+"providers-receipts-and-notification-pdfs.md) — `STAGE-2-003`"
+
+#: ../../technical/articles/catalogue.md:65
+msgid ""
+"[Shared PDF text and provenance boundary](004-shared-pdf-text-and-"
+"provenance-boundary.md) — `STAGE-2-004`"
+msgstr ""
+"[Közös PDF-szöveg és származási határ](004-shared-pdf-text-and-"
+"provenance-boundary.md) — `STAGE-2-004`"
+
+#: ../../technical/articles/catalogue.md:67
+msgid "External integrations and local runtime"
+msgstr "Külső integrációk és helyi futtatókörnyezet"
+
+#: ../../technical/articles/catalogue.md:69
+msgid ""
+"[Read the topic overview](../topics/external-integrations-and-local-"
+"runtime.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/external-integrations-and-"
+"local-runtime.md)."
+
+#: ../../technical/articles/catalogue.md:71
+msgid ""
+"[Local runtime clients and native OS bindings](005-local-runtime-clients-"
+"and-native-os-bindings.md) — `STAGE-2-005`"
+msgstr ""
+"[Helyi futtatókörnyezeti ügyfelek és natív operációsrendszer-kötések](005"
+"-local-runtime-clients-and-native-os-bindings.md) — `STAGE-2-005`"
+
+#: ../../technical/articles/catalogue.md:72
+msgid ""
+"[Local runtime transport, worker custody, and lifecycle](006-local-"
+"runtime-transport-worker-custody-and-lifecycle.md) — `STAGE-2-006`"
+msgstr ""
+"[Helyi futtatókörnyezeti átvitel, munkafolyamat-őrzés és életciklus](006"
+"-local-runtime-transport-worker-custody-and-lifecycle.md) — `STAGE-2-006`"
+
+#: ../../technical/articles/catalogue.md:73
+msgid ""
+"[Windows login, task control, and worker authority](007-windows-login-"
+"task-control-and-worker-authority.md) — `STAGE-2-007`"
+msgstr ""
+"[Windows-bejelentkezés, feladatvezérlés és munkafolyamat-"
+"felhatalmazás](007-windows-login-task-control-and-worker-authority.md) — "
+"`STAGE-2-007`"
+
+#: ../../technical/articles/catalogue.md:74
+msgid ""
+"[AEAT certificate and Cl@ve browser authentication](008-aeat-certificate-"
+"and-cl-ve-browser-authentication.md) — `STAGE-2-008`"
+msgstr ""
+"[AEAT-tanúsítványos és Cl@ve böngészős hitelesítés](008-aeat-certificate-"
+"and-cl-ve-browser-authentication.md) — `STAGE-2-008`"
+
+#: ../../technical/articles/catalogue.md:75
+msgid ""
+"[Cl@ve Permanente, browser support, and Sede read primitives](009-cl-ve-"
+"permanente-browser-support-and-sede-read-primitives.md) — `STAGE-2-009`"
+msgstr ""
+"[Cl@ve Permanente, böngészőtámogatás és Sede-olvasási alapműveletek](009"
+"-cl-ve-permanente-browser-support-and-sede-read-primitives.md) — "
+"`STAGE-2-009`"
+
+#: ../../technical/articles/catalogue.md:76
+msgid ""
+"[Censal reads, filed-declaration capture, and GROI checks](010-censal-"
+"reads-filed-declaration-capture-and-groi-checks.md) — `STAGE-2-010`"
+msgstr ""
+"[Adózóitörzs-olvasások, benyújtott bevallások rögzítése és GROI-"
+"ellenőrzések](010-censal-reads-filed-declaration-capture-and-groi-"
+"checks.md) — `STAGE-2-010`"
+
+#: ../../technical/articles/catalogue.md:77
+msgid ""
+"[IVA wallet, notifications, VIES checks, and expediente reads](011-iva-"
+"wallet-notifications-vies-checks-and-expediente-reads.md) — `STAGE-2-011`"
+msgstr ""
+"[IVA-pénztárca, értesítések, VIES-ellenőrzések és expediente-"
+"olvasások](011-iva-wallet-notifications-vies-checks-and-expediente-"
+"reads.md) — `STAGE-2-011`"
+
+#: ../../technical/articles/catalogue.md:78
+msgid ""
+"[PDF summaries, ECB rates, and Google Sheets exports](012-pdf-summaries-"
+"ecb-rates-and-google-sheets-exports.md) — `STAGE-2-012`"
+msgstr ""
+"[PDF-összefoglalók, ECB-árfolyamok és Google Sheets-exportok](012-pdf-"
+"summaries-ecb-rates-and-google-sheets-exports.md) — `STAGE-2-012`"
+
+#: ../../technical/articles/catalogue.md:79
+msgid ""
+"[Google Sheets readback, Drive evidence, and Google credentials](013"
+"-google-sheets-readback-drive-evidence-and-google-credentials.md) — "
+"`STAGE-2-013`"
+msgstr ""
+"[Google Sheets-visszaolvasás, Drive-bizonyítékok és Google-hitelesítő "
+"adatok](013-google-sheets-readback-drive-evidence-and-google-"
+"credentials.md) — `STAGE-2-013`"
+
+#: ../../technical/articles/catalogue.md:80
+msgid ""
+"[LLM dispatch, consent, and invoice-reading pipeline](014-llm-dispatch-"
+"consent-and-invoice-reading-pipeline.md) — `STAGE-2-014`"
+msgstr ""
+"[LLM-küldés, hozzájárulás és számlaolvasási folyamat](014-llm-dispatch-"
+"consent-and-invoice-reading-pipeline.md) — `STAGE-2-014`"
+
+#: ../../technical/articles/catalogue.md:81
+msgid ""
+"[LLM provider adapters and Google Drive storage](015-llm-provider-"
+"adapters-and-google-drive-storage.md) — `STAGE-2-015`"
+msgstr ""
+"[LLM-szolgáltatói adapterek és Google Drive-tárolás](015-llm-provider-"
+"adapters-and-google-drive-storage.md) — `STAGE-2-015`"
+
+#: ../../technical/articles/catalogue.md:82
+msgid ""
+"[Local storage, remote ciphertext mirroring, and offline workbooks](016"
+"-local-storage-remote-ciphertext-mirroring-and-offline-workbooks.md) — "
+"`STAGE-2-016`"
+msgstr ""
+"[Helyi tárolás, titkosított tartalom távoli tükrözése és offline "
+"munkafüzetek](016-local-storage-remote-ciphertext-mirroring-and-offline-"
+"workbooks.md) — `STAGE-2-016`"
+
+#: ../../technical/articles/catalogue.md:84
+msgid "Persistence and secure storage"
+msgstr "Adatmegőrzés és biztonságos tárolás"
+
+#: ../../technical/articles/catalogue.md:86
+msgid "[Read the topic overview](../topics/persistence-and-secure-storage.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/persistence-and-secure-"
+"storage.md)."
+
+#: ../../technical/articles/catalogue.md:88
+msgid ""
+"[Persistence for LLM records, durable operations, and profile state](017"
+"-persistence-for-llm-records-durable-operations-and-profile-state.md) — "
+"`STAGE-2-017`"
+msgstr ""
+"[LLM-rekordok, tartós műveletek és profilállapot tárolása](017"
+"-persistence-for-llm-records-durable-operations-and-profile-state.md) — "
+"`STAGE-2-017`"
+
+#: ../../technical/articles/catalogue.md:89
+msgid ""
+"[Profile persistence for invoices, filings, and calculation evidence](018"
+"-profile-persistence-for-invoices-filings-and-calculation-evidence.md) — "
+"`STAGE-2-018`"
+msgstr ""
+"[Számlák, bevallások és számítási bizonyítékok profiltárolása](018"
+"-profile-persistence-for-invoices-filings-and-calculation-evidence.md) — "
+"`STAGE-2-018`"
+
+#: ../../technical/articles/catalogue.md:90
+msgid ""
+"[Profile persistence for transactions, review exchange, and "
+"workflows](019-profile-persistence-for-transactions-review-exchange-and-"
+"workflows.md) — `STAGE-2-019`"
+msgstr ""
+"[Tranzakciók, felülvizsgálati csere és munkafolyamatok "
+"profiltárolása](019-profile-persistence-for-transactions-review-exchange-"
+"and-workflows.md) — `STAGE-2-019`"
+
+#: ../../technical/articles/catalogue.md:91
+msgid ""
+"[Encrypted blobs, bucket archives, and custody filesystem](020-encrypted-"
+"blobs-bucket-archives-and-custody-filesystem.md) — `STAGE-2-020`"
+msgstr ""
+"[Titkosított bináris objektumok, rekeszarchívumok és őrzési "
+"fájlrendszer](020-encrypted-blobs-bucket-archives-and-custody-"
+"filesystem.md) — `STAGE-2-020`"
+
+#: ../../technical/articles/catalogue.md:92
+msgid ""
+"[Supervised key derivation and automation custody](021-supervised-key-"
+"derivation-and-automation-custody.md) — `STAGE-2-021`"
+msgstr ""
+"[Felügyelt kulcsszármaztatás és automatizálási őrzés](021-supervised-key-"
+"derivation-and-automation-custody.md) — `STAGE-2-021`"
+
+#: ../../technical/articles/catalogue.md:93
+msgid ""
+"[Profile capsule lifecycle and custody proof](022-profile-capsule-"
+"lifecycle-and-custody-proof.md) — `STAGE-2-022`"
+msgstr ""
+"[Profilkapszula-életciklus és őrzési bizonyíték](022-profile-capsule-"
+"lifecycle-and-custody-proof.md) — `STAGE-2-022`"
+
+#: ../../technical/articles/catalogue.md:94
+msgid ""
+"[Profile custody primitives, session state, and secure envelopes](023"
+"-profile-custody-primitives-session-state-and-secure-envelopes.md) — "
+"`STAGE-2-023`"
+msgstr ""
+"[Profilőrzési alapműveletek, munkamenet-állapot és biztonságos "
+"borítékok](023-profile-custody-primitives-session-state-and-secure-"
+"envelopes.md) — `STAGE-2-023`"
+
+#: ../../technical/articles/catalogue.md:95
+msgid ""
+"[Profile custody adapter, storage routing, and secure-object "
+"contracts](024-profile-custody-adapter-storage-routing-and-secure-object-"
+"contracts.md) — `STAGE-2-024`"
+msgstr ""
+"[Profilőrzési adapter, tárolási útválasztás és biztonságosobjektum-"
+"szerződések](024-profile-custody-adapter-storage-routing-and-secure-"
+"object-contracts.md) — `STAGE-2-024`"
+
+#: ../../technical/articles/catalogue.md:96
+msgid ""
+"[Encrypted SQL repository, revision writes, and workflow storage](025"
+"-encrypted-sql-repository-revision-writes-and-workflow-storage.md) — "
+"`STAGE-2-025`"
+msgstr ""
+"[Titkosított SQL-adattár, revízióírások és munkafolyamat-tárolás](025"
+"-encrypted-sql-repository-revision-writes-and-workflow-storage.md) — "
+"`STAGE-2-025`"
+
+#: ../../technical/articles/catalogue.md:98
+msgid "Application orchestration and diagnostics"
+msgstr "Alkalmazásvezérlés és diagnosztika"
+
+#: ../../technical/articles/catalogue.md:100
+msgid ""
+"[Read the topic overview](../topics/application-orchestration-and-"
+"diagnostics.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/application-orchestration-"
+"and-diagnostics.md)."
+
+#: ../../technical/articles/catalogue.md:102
+msgid ""
+"[Configuration reset, diagnostics, and consent-gated telemetry](026"
+"-configuration-reset-diagnostics-and-consent-gated-telemetry.md) — "
+"`STAGE-2-026`"
+msgstr ""
+"[Konfiguráció-visszaállítás, diagnosztika és hozzájáruláshoz kötött "
+"telemetria](026-configuration-reset-diagnostics-and-consent-gated-"
+"telemetry.md) — `STAGE-2-026`"
+
+#: ../../technical/articles/catalogue.md:103
+msgid ""
+"[Local reader provisioning, workstation health, and application "
+"contracts](027-local-reader-provisioning-workstation-health-and-"
+"application-contracts.md) — `STAGE-2-027`"
+msgstr ""
+"[Helyi olvasó előkészítése, munkaállomás-állapot és alkalmazási "
+"szerződések](027-local-reader-provisioning-workstation-health-and-"
+"application-contracts.md) — `STAGE-2-027`"
+
+#: ../../technical/articles/catalogue.md:104
+msgid ""
+"[Runtime admission, canonical state, and storage-route policy](028"
+"-runtime-admission-canonical-state-and-storage-route-policy.md) — "
+"`STAGE-2-028`"
+msgstr ""
+"[Futtatókörnyezeti beléptetés, kanonikus állapot és tárolásiútvonal-"
+"szabályzat](028-runtime-admission-canonical-state-and-storage-route-"
+"policy.md) — `STAGE-2-028`"
+
+#: ../../technical/articles/catalogue.md:105
+msgid ""
+"[Installed workbench generations and workstation checks](029-installed-"
+"workbench-generations-and-workstation-checks.md) — `STAGE-2-029`"
+msgstr ""
+"[Telepített munkafelületi generációk és munkaállomás-ellenőrzések](029"
+"-installed-workbench-generations-and-workstation-checks.md) — "
+"`STAGE-2-029`"
+
+#: ../../technical/articles/catalogue.md:106
+msgid ""
+"[Activity-asset claims and AEAT Sync workspace projection](030-activity-"
+"asset-claims-and-aeat-sync-workspace-projection.md) — `STAGE-2-030`"
+msgstr ""
+"[Tevékenységi eszközigények és az AEAT-szinkronizálás "
+"munkatérvetülete](030-activity-asset-claims-and-aeat-sync-workspace-"
+"projection.md) — `STAGE-2-030`"
+
+#: ../../technical/articles/catalogue.md:107
+msgid ""
+"[Offline search, evidence bundles, and export boundaries](044-offline-"
+"search-evidence-bundles-and-export-boundaries.md) — `STAGE-2-044`"
+msgstr ""
+"[Offline keresés, bizonyítékcsomagok és exporthatárok](044-offline-"
+"search-evidence-bundles-and-export-boundaries.md) — `STAGE-2-044`"
+
+#: ../../technical/articles/catalogue.md:108
+msgid ""
+"[Interactive flows and profile-bound inventory operations](048"
+"-interactive-flows-and-profile-bound-inventory-operations.md) — "
+"`STAGE-2-048`"
+msgstr ""
+"[Interaktív folyamatok és profilhoz kötött készletműveletek](048"
+"-interactive-flows-and-profile-bound-inventory-operations.md) — "
+"`STAGE-2-048`"
+
+#: ../../technical/articles/catalogue.md:110
+msgid "Aggregation and calculation services"
+msgstr "Összesítési és számítási szolgáltatások"
+
+#: ../../technical/articles/catalogue.md:112
+msgid ""
+"[Read the topic overview](../topics/aggregation-and-calculation-"
+"services.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/aggregation-and-calculation-"
+"services.md)."
+
+#: ../../technical/articles/catalogue.md:114
+msgid ""
+"[Aggregation, IVA screening, and fiscal evidence](031-aggregation-iva-"
+"screening-and-fiscal-evidence.md) — `STAGE-2-031`"
+msgstr ""
+"[Összesítés, IVA-szűrés és adóügyi bizonyítékok](031-aggregation-iva-"
+"screening-and-fiscal-evidence.md) — `STAGE-2-031`"
+
+#: ../../technical/articles/catalogue.md:115
+msgid ""
+"[Aggregation sources, evidence, and withholding projections](032"
+"-aggregation-sources-evidence-and-withholding-projections.md) — "
+"`STAGE-2-032`"
+msgstr ""
+"[Összesítési források, bizonyítékok és forrásadó-vetületek](032"
+"-aggregation-sources-evidence-and-withholding-projections.md) — "
+"`STAGE-2-032`"
+
+#: ../../technical/articles/catalogue.md:116
+msgid ""
+"[IVA ledger, filing drift, and withholding arrivals](033-iva-ledger-"
+"filing-drift-and-withholding-arrivals.md) — `STAGE-2-033`"
+msgstr ""
+"[IVA-főkönyv, bevallási eltérés és forrásadó-beérkezések](033-iva-ledger-"
+"filing-drift-and-withholding-arrivals.md) — `STAGE-2-033`"
+
+#: ../../technical/articles/catalogue.md:117
+msgid ""
+"[Model bindings, OSS/IOSS, and Renta expenses](034-model-bindings-oss-"
+"ioss-and-renta-expenses.md) — `STAGE-2-034`"
+msgstr ""
+"[Űrlapkötések, OSS/IOSS és Renta-költségek](034-model-bindings-oss-ioss-"
+"and-renta-expenses.md) — `STAGE-2-034`"
+
+#: ../../technical/articles/catalogue.md:118
+msgid ""
+"[Renta ledgers, withholding rollups, and aggregation service](035-renta-"
+"ledgers-withholding-rollups-and-aggregation-service.md) — `STAGE-2-035`"
+msgstr ""
+"[Renta-főkönyvek, forrásadó-összesítések és összesítési szolgáltatás](035"
+"-renta-ledgers-withholding-rollups-and-aggregation-service.md) — "
+"`STAGE-2-035`"
+
+#: ../../technical/articles/catalogue.md:119
+msgid ""
+"[Source resolution contracts and withholding capture](036-source-"
+"resolution-contracts-and-withholding-capture.md) — `STAGE-2-036`"
+msgstr ""
+"[Forrásfeloldási szerződések és forrásadó-rögzítés](036-source-"
+"resolution-contracts-and-withholding-capture.md) — `STAGE-2-036`"
+
+#: ../../technical/articles/catalogue.md:120
+msgid ""
+"[Filing carries, cross-period clean state, and calculation "
+"advisories](041-filing-carries-cross-period-clean-state-and-calculation-"
+"advisories.md) — `STAGE-2-041`"
+msgstr ""
+"[Bevallási továbbvitelek, időszakok közötti tiszta állapot és számítási "
+"figyelmeztetések](041-filing-carries-cross-period-clean-state-and-"
+"calculation-advisories.md) — `STAGE-2-041`"
+
+#: ../../technical/articles/catalogue.md:121
+msgid ""
+"[IVA compensation, M303 evidence, and annual handoffs](042-iva-"
+"compensation-m303-evidence-and-annual-handoffs.md) — `STAGE-2-042`"
+msgstr ""
+"[IVA-kompenzáció, M303-bizonyítékok és éves átadások](042-iva-"
+"compensation-m303-evidence-and-annual-handoffs.md) — `STAGE-2-042`"
+
+#: ../../technical/articles/catalogue.md:122
+msgid ""
+"[Prorrata settlement, relation prefill, and row-set reconstruction](043"
+"-prorrata-settlement-relation-prefill-and-row-set-reconstruction.md) — "
+"`STAGE-2-043`"
+msgstr ""
+"[Prorrata-elszámolás, kapcsolati előkitöltés és sorhalmaz-"
+"rekonstrukció](043-prorrata-settlement-relation-prefill-and-row-set-"
+"reconstruction.md) — `STAGE-2-043`"
+
+#: ../../technical/articles/catalogue.md:124
+msgid "Authentication and storage management"
+msgstr "Hitelesítés és tároláskezelés"
+
+#: ../../technical/articles/catalogue.md:126
+msgid ""
+"[Read the topic overview](../topics/authentication-and-storage-"
+"management.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/authentication-and-storage-"
+"management.md)."
+
+#: ../../technical/articles/catalogue.md:128
+msgid ""
+"[Authentication, certificate sources, and diagnostic privacy](037"
+"-authentication-certificate-sources-and-diagnostic-privacy.md) — "
+"`STAGE-2-037`"
+msgstr ""
+"[Hitelesítés, tanúsítványforrások és diagnosztikai adatvédelem](037"
+"-authentication-certificate-sources-and-diagnostic-privacy.md) — "
+"`STAGE-2-037`"
+
+#: ../../technical/articles/catalogue.md:129
+msgid ""
+"[Operator authentication, session custody, and access contracts](038"
+"-operator-authentication-session-custody-and-access-contracts.md) — "
+"`STAGE-2-038`"
+msgstr ""
+"[Kezelői hitelesítés, munkamenet-felügyelet és hozzáférési "
+"szerződések](038-operator-authentication-session-custody-and-access-"
+"contracts.md) — `STAGE-2-038`"
+
+#: ../../technical/articles/catalogue.md:130
+msgid ""
+"[Authenticated session lifecycle and identity binding](039-authenticated-"
+"session-lifecycle-and-identity-binding.md) — `STAGE-2-039`"
+msgstr ""
+"[Hitelesített munkamenetek életciklusa és azonosságkötése](039"
+"-authenticated-session-lifecycle-and-identity-binding.md) — `STAGE-2-039`"
+
+#: ../../technical/articles/catalogue.md:131
+msgid ""
+"[Capital-goods register and bucket deletion assessment](040-capital-"
+"goods-register-and-bucket-deletion-assessment.md) — `STAGE-2-040`"
+msgstr ""
+"[Beruházási javak nyilvántartása és rekesztörlési értékelés](040-capital-"
+"goods-register-and-bucket-deletion-assessment.md) — `STAGE-2-040`"
+
+#: ../../technical/articles/catalogue.md:132
+msgid ""
+"[Registry-backed calculation workbook plans and parity](098-registry-"
+"backed-calculation-workbook-plans-and-parity.md) — `STAGE-2-098`"
+msgstr ""
+"[Regiszterre épülő számítási munkafüzettervek és egyezőség](098-registry-"
+"backed-calculation-workbook-plans-and-parity.md) — `STAGE-2-098`"
+
+#: ../../technical/articles/catalogue.md:133
+msgid ""
+"[Workbook materialization and sync-run provenance](099-workbook-"
+"materialization-and-sync-run-provenance.md) — `STAGE-2-099`"
+msgstr ""
+"[Munkafüzet-előállítás és szinkronizálási futások származása](099"
+"-workbook-materialization-and-sync-run-provenance.md) — `STAGE-2-099`"
+
+#: ../../technical/articles/catalogue.md:134
+msgid ""
+"[Storage lifecycle management and ledger-import diagnostics](100-storage-"
+"lifecycle-management-and-ledger-import-diagnostics.md) — `STAGE-2-100`"
+msgstr ""
+"[Tárolási életciklus kezelése és főkönyvimport-diagnosztika](100-storage-"
+"lifecycle-management-and-ledger-import-diagnostics.md) — `STAGE-2-100`"
+
+#: ../../technical/articles/catalogue.md:136
+msgid "Filing exports and live state"
+msgstr "Bevallásexportok és élő állapot"
+
+#: ../../technical/articles/catalogue.md:138
+msgid "[Read the topic overview](../topics/filing-and-live-state.md)."
+msgstr "[A téma áttekintésének elolvasása](../topics/filing-and-live-state.md)."
+
+#: ../../technical/articles/catalogue.md:140
+msgid ""
+"[Filing draft, approval, and local export pipeline](045-filing-draft-"
+"approval-and-local-export-pipeline.md) — `STAGE-2-045`"
+msgstr ""
+"[Bevallási tervezet, jóváhagyás és helyi exportfolyamat](045-filing-"
+"draft-approval-and-local-export-pipeline.md) — `STAGE-2-045`"
+
+#: ../../technical/articles/catalogue.md:141
+msgid ""
+"[Filing-envelope integrity, export parity, and producer values](046"
+"-filing-envelope-integrity-export-parity-and-producer-values.md) — "
+"`STAGE-2-046`"
+msgstr ""
+"[Bevallásiboríték-épség, exportegyezőség és előállítói értékek](046"
+"-filing-envelope-integrity-export-parity-and-producer-values.md) — "
+"`STAGE-2-046`"
+
+#: ../../technical/articles/catalogue.md:142
+msgid ""
+"[Filing producer facts, repeated-record projection, and runtime "
+"schema](047-filing-producer-facts-repeated-record-projection-and-runtime-"
+"schema.md) — `STAGE-2-047`"
+msgstr ""
+"[Bevallási előállítói tényadatok, ismétlődő rekordok vetülete és "
+"futásidejű séma](047-filing-producer-facts-repeated-record-projection-"
+"and-runtime-schema.md) — `STAGE-2-047`"
+
+#: ../../technical/articles/catalogue.md:143
+msgid ""
+"[Live snapshots and filed-data capture operations](063-live-snapshots-"
+"and-filed-data-capture-operations.md) — `STAGE-2-063`"
+msgstr ""
+"[Élő pillanatképek és benyújtottadat-rögzítési műveletek](063-live-"
+"snapshots-and-filed-data-capture-operations.md) — `STAGE-2-063`"
+
+#: ../../technical/articles/catalogue.md:144
+msgid ""
+"[Filed declaration capture, evidence enrollment, and history sweep](064"
+"-filed-declaration-capture-evidence-enrollment-and-history-sweep.md) — "
+"`STAGE-2-064`"
+msgstr ""
+"[Benyújtott bevallások rögzítése, bizonyítékfelvétel és "
+"előzménybejárás](064-filed-declaration-capture-evidence-enrollment-and-"
+"history-sweep.md) — `STAGE-2-064`"
+
+#: ../../technical/articles/catalogue.md:145
+msgid ""
+"[IVA, receipt, and notification evidence surfaces](065-iva-receipt-and-"
+"notification-evidence-surfaces.md) — `STAGE-2-065`"
+msgstr ""
+"[IVA-, bizonylat- és értesítési bizonyítékfelületek](065-iva-receipt-and-"
+"notification-evidence-surfaces.md) — `STAGE-2-065`"
+
+#: ../../technical/articles/catalogue.md:146
+msgid ""
+"[Notifications, verification, and shared live-state contracts](066"
+"-notifications-verification-and-shared-live-state-contracts.md) — "
+"`STAGE-2-066`"
+msgstr ""
+"[Értesítések, ellenőrzés és közös élőállapot-szerződések](066"
+"-notifications-verification-and-shared-live-state-contracts.md) — "
+"`STAGE-2-066`"
+
+#: ../../technical/articles/catalogue.md:148
+msgid "Ledger, invoices, evidence, and registers"
+msgstr "Főkönyv, számlák, bizonyítékok és nyilvántartások"
+
+#: ../../technical/articles/catalogue.md:150
+msgid "[Read the topic overview](../topics/ledger-invoices-and-registers.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/ledger-invoices-and-"
+"registers.md)."
+
+#: ../../technical/articles/catalogue.md:152
+msgid ""
+"[Invoice intake, catalogue lifecycle, and operation boundaries](049"
+"-invoice-intake-catalogue-lifecycle-and-operation-boundaries.md) — "
+"`STAGE-2-049`"
+msgstr ""
+"[Számlabeolvasás, katalógus-életciklus és műveleti határok](049-invoice-"
+"intake-catalogue-lifecycle-and-operation-boundaries.md) — `STAGE-2-049`"
+
+#: ../../technical/articles/catalogue.md:153
+msgid ""
+"[Invoice profile advisories, source-mesh resolution, and linking](050"
+"-invoice-profile-advisories-source-mesh-resolution-and-linking.md) — "
+"`STAGE-2-050`"
+msgstr ""
+"[Számlaprofil-figyelmeztetések, forrásháló-feloldás és kapcsolás](050"
+"-invoice-profile-advisories-source-mesh-resolution-and-linking.md) — "
+"`STAGE-2-050`"
+
+#: ../../technical/articles/catalogue.md:154
+msgid ""
+"[Ledger classification, import/export, and lifecycle services](051"
+"-ledger-classification-import-export-and-lifecycle-services.md) — "
+"`STAGE-2-051`"
+msgstr ""
+"[Főkönyvi besorolás, import/export és életciklus-szolgáltatások](051"
+"-ledger-classification-import-export-and-lifecycle-services.md) — "
+"`STAGE-2-051`"
+
+#: ../../technical/articles/catalogue.md:155
+msgid ""
+"[Manual ledger services, evidence operations, and batch ingestion](052"
+"-manual-ledger-services-evidence-operations-and-batch-ingestion.md) — "
+"`STAGE-2-052`"
+msgstr ""
+"[Kézi főkönyvi szolgáltatások, bizonyítékműveletek és kötegelt "
+"beolvasás](052-manual-ledger-services-evidence-operations-and-batch-"
+"ingestion.md) — `STAGE-2-052`"
+
+#: ../../technical/articles/catalogue.md:156
+msgid ""
+"[IVA classification assembly, confirmation checks, and readiness](053"
+"-iva-classification-assembly-confirmation-checks-and-readiness.md) — "
+"`STAGE-2-053`"
+msgstr ""
+"[IVA-besorolás összeállítása, megerősítési ellenőrzések és készenlét](053"
+"-iva-classification-assembly-confirmation-checks-and-readiness.md) — "
+"`STAGE-2-053`"
+
+#: ../../technical/articles/catalogue.md:157
+msgid ""
+"[Confirmation gate, counterparty establishment, and evidence "
+"provenance](054-confirmation-gate-counterparty-establishment-and-"
+"evidence-provenance.md) — `STAGE-2-054`"
+msgstr ""
+"[Megerősítési kapu, partnerletelepedés és bizonyítékszármazás](054"
+"-confirmation-gate-counterparty-establishment-and-evidence-provenance.md)"
+" — `STAGE-2-054`"
+
+#: ../../technical/articles/catalogue.md:158
+msgid ""
+"[Evidence custody, review, and ingestion operations](055-evidence-"
+"custody-review-and-ingestion-operations.md) — `STAGE-2-055`"
+msgstr ""
+"[Bizonyítékőrzési, felülvizsgálati és beolvasási műveletek](055-evidence-"
+"custody-review-and-ingestion-operations.md) — `STAGE-2-055`"
+
+#: ../../technical/articles/catalogue.md:159
+msgid ""
+"[Document grounding, evidence routing, history, and import/export](056"
+"-document-grounding-evidence-routing-history-and-import-export.md) — "
+"`STAGE-2-056`"
+msgstr ""
+"[Dokumentumalátámasztás, bizonyítékirányítás, előzmények és "
+"import/export](056-document-grounding-evidence-routing-history-and-"
+"import-export.md) — `STAGE-2-056`"
+
+#: ../../technical/articles/catalogue.md:160
+msgid ""
+"[Invoice evidence extraction and reviewed confirmation](057-invoice-"
+"evidence-extraction-and-reviewed-confirmation.md) — `STAGE-2-057`"
+msgstr ""
+"[Számlabizonyíték-kinyerés és felülvizsgált megerősítés](057-invoice-"
+"evidence-extraction-and-reviewed-confirmation.md) — `STAGE-2-057`"
+
+#: ../../technical/articles/catalogue.md:161
+msgid ""
+"[Deterministic invoice labels and core ledger surfaces](058"
+"-deterministic-invoice-labels-and-core-ledger-surfaces.md) — "
+"`STAGE-2-058`"
+msgstr ""
+"[Determinisztikus számlacímkék és alapvető főkönyvi felületek](058"
+"-deterministic-invoice-labels-and-core-ledger-surfaces.md) — "
+"`STAGE-2-058`"
+
+#: ../../technical/articles/catalogue.md:162
+msgid ""
+"[LLM ledger review, diagnostics, and merge](059-llm-ledger-review-"
+"diagnostics-and-merge.md) — `STAGE-2-059`"
+msgstr ""
+"[LLM-főkönyvfelülvizsgálat, diagnosztika és egyesítés](059-llm-ledger-"
+"review-diagnostics-and-merge.md) — `STAGE-2-059`"
+
+#: ../../technical/articles/catalogue.md:163
+msgid ""
+"[Ledger contracts, attribution, readiness, and ratios](060-ledger-"
+"contracts-attribution-readiness-and-ratios.md) — `STAGE-2-060`"
+msgstr ""
+"[Főkönyvi szerződések, hozzárendelés, készenlét és arányok](060-ledger-"
+"contracts-attribution-readiness-and-ratios.md) — `STAGE-2-060`"
+
+#: ../../technical/articles/catalogue.md:164
+msgid ""
+"[Ledger operations, rule application, and filing readiness](061-ledger-"
+"operations-rule-application-and-filing-readiness.md) — `STAGE-2-061`"
+msgstr ""
+"[Főkönyvi műveletek, szabályalkalmazás és bevallási készenlét](061"
+"-ledger-operations-rule-application-and-filing-readiness.md) — "
+"`STAGE-2-061`"
+
+#: ../../technical/articles/catalogue.md:165
+msgid ""
+"[Ledger workspace projection and read boundaries](062-ledger-workspace-"
+"projection-and-read-boundaries.md) — `STAGE-2-062`"
+msgstr ""
+"[Főkönyvi munkatérvetület és olvasási határok](062-ledger-workspace-"
+"projection-and-read-boundaries.md) — `STAGE-2-062`"
+
+#: ../../technical/articles/catalogue.md:166
+msgid ""
+"[Profile-scoped IVA prorrata register operations](095-profile-scoped-iva-"
+"prorrata-register-operations.md) — `STAGE-2-095`"
+msgstr ""
+"[Profilhatókörű IVA-prorrata-nyilvántartási műveletek](095-profile-"
+"scoped-iva-prorrata-register-operations.md) — `STAGE-2-095`"
+
+#: ../../technical/articles/catalogue.md:168
+msgid "Modelo work and revision lifecycle, part 1"
+msgstr "Modelo-munka és revíziós életciklus, 1. rész"
+
+#: ../../technical/articles/catalogue.md:170
+msgid ""
+"[Read the topic overview](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/modelo-work-and-revision-"
+"lifecycle-part-1.md)."
+
+#: ../../technical/articles/catalogue.md:172
+msgid ""
+"[Modelo calculation preparation, edits, and evidence gates](067-modelo-"
+"calculation-preparation-edits-and-evidence-gates.md) — `STAGE-2-067`"
+msgstr ""
+"[Modelo-számítás előkészítése, szerkesztések és bizonyítékkapuk](067"
+"-modelo-calculation-preparation-edits-and-evidence-gates.md) — "
+"`STAGE-2-067`"
+
+#: ../../technical/articles/catalogue.md:173
+msgid ""
+"[Modelo reconciliation, advisories, and work projections](068-modelo-"
+"reconciliation-advisories-and-work-projections.md) — `STAGE-2-068`"
+msgstr ""
+"[Modelo-egyeztetés, figyelmeztetések és munkavetületek](068-modelo-"
+"reconciliation-advisories-and-work-projections.md) — `STAGE-2-068`"
+
+#: ../../technical/articles/catalogue.md:174
+msgid ""
+"[Aggregation operations, amendments, and profile bindings](069"
+"-aggregation-operations-amendments-and-profile-bindings.md) — "
+"`STAGE-2-069`"
+msgstr ""
+"[Összesítési műveletek, módosítások és profilkötések](069-aggregation-"
+"operations-amendments-and-profile-bindings.md) — `STAGE-2-069`"
+
+#: ../../technical/articles/catalogue.md:175
+msgid ""
+"[Modelo calculation input and persistence orchestration](070-modelo-"
+"calculation-input-and-persistence-orchestration.md) — `STAGE-2-070`"
+msgstr ""
+"[Modelo-számítási bemenet és tárolásvezérlés](070-modelo-calculation-"
+"input-and-persistence-orchestration.md) — `STAGE-2-070`"
+
+#: ../../technical/articles/catalogue.md:176
+msgid ""
+"[Calculation findings, reports, and PDF verification](071-calculation-"
+"findings-reports-and-pdf-verification.md) — `STAGE-2-071`"
+msgstr ""
+"[Számítási megállapítások, jelentések és PDF-ellenőrzés](071-calculation-"
+"findings-reports-and-pdf-verification.md) — `STAGE-2-071`"
+
+#: ../../technical/articles/catalogue.md:177
+msgid ""
+"[Declaration projections, help, dependencies, and edit admission](072"
+"-declaration-projections-help-dependencies-and-edit-admission.md) — "
+"`STAGE-2-072`"
+msgstr ""
+"[Bevallásvetületek, súgó, függőségek és szerkesztési befogadás](072"
+"-declaration-projections-help-dependencies-and-edit-admission.md) — "
+"`STAGE-2-072`"
+
+#: ../../technical/articles/catalogue.md:178
+msgid ""
+"[Edit value contracts and Modelo export](073-edit-value-contracts-and-"
+"modelo-export.md) — `STAGE-2-073`"
+msgstr ""
+"[Szerkesztési értékszerződések és Modelo-export](073-edit-value-"
+"contracts-and-modelo-export.md) — `STAGE-2-073`"
+
+#: ../../technical/articles/catalogue.md:179
+msgid ""
+"[External filing evidence, local filing and filing views](074-external-"
+"filing-evidence-local-filing-and-filing-views.md) — `STAGE-2-074`"
+msgstr ""
+"[Külső bevallási bizonyíték, helyi bevallás és bevallási nézetek](074"
+"-external-filing-evidence-local-filing-and-filing-views.md) — "
+"`STAGE-2-074`"
+
+#: ../../technical/articles/catalogue.md:180
+msgid ""
+"[Modelo history, invoice withholding capture, and IVA wallet](075-modelo-"
+"history-invoice-withholding-capture-and-iva-wallet.md) — `STAGE-2-075`"
+msgstr ""
+"[Modelo-előzmények, számlaforrásadó-rögzítés és IVA-pénztárca](075"
+"-modelo-history-invoice-withholding-capture-and-iva-wallet.md) — "
+"`STAGE-2-075`"
+
+#: ../../technical/articles/catalogue.md:181
+msgid ""
+"[Local observations, M036 records, and M145 communications](076-local-"
+"observations-m036-records-and-m145-communications.md) — `STAGE-2-076`"
+msgstr ""
+"[Helyi megfigyelések, M036-rekordok és M145-közlések](076-local-"
+"observations-m036-records-and-m145-communications.md) — `STAGE-2-076`"
+
+#: ../../technical/articles/catalogue.md:182
+msgid ""
+"[Tax evidence, private previews, and spreadsheet operations](077-tax-"
+"evidence-private-previews-and-spreadsheet-operations.md) — `STAGE-2-077`"
+msgstr ""
+"[Adóbizonyítékok, privát előnézetek és táblázatműveletek](077-tax-"
+"evidence-private-previews-and-spreadsheet-operations.md) — `STAGE-2-077`"
+
+#: ../../technical/articles/catalogue.md:183
+msgid ""
+"[Supervised filing lifecycle and operation contracts](078-supervised-"
+"filing-lifecycle-and-operation-contracts.md) — `STAGE-2-078`"
+msgstr ""
+"[Felügyelt bevallási életciklus és műveleti szerződések](078-supervised-"
+"filing-lifecycle-and-operation-contracts.md) — `STAGE-2-078`"
+
+#: ../../technical/articles/catalogue.md:184
+msgid ""
+"[Profile-derived bindings and filing readiness](079-profile-derived-"
+"bindings-and-filing-readiness.md) — `STAGE-2-079`"
+msgstr ""
+"[Profilból származtatott kötések és bevallási készenlét](079-profile-"
+"derived-bindings-and-filing-readiness.md) — `STAGE-2-079`"
+
+#: ../../technical/articles/catalogue.md:185
+msgid ""
+"[Modelo projections, queries, quickfile, and recipient encryption](080"
+"-modelo-projections-queries-quickfile-and-recipient-encryption.md) — "
+"`STAGE-2-080`"
+msgstr ""
+"[Modelo-vetületek, lekérdezések, quickfile és címzetti titkosítás](080"
+"-modelo-projections-queries-quickfile-and-recipient-encryption.md) — "
+"`STAGE-2-080`"
+
+#: ../../technical/articles/catalogue.md:186
+msgid ""
+"[Reconciliation, filing disposition, and accountant review packages](081"
+"-reconciliation-filing-disposition-and-accountant-review-packages.md) — "
+"`STAGE-2-081`"
+msgstr ""
+"[Egyeztetés, bevallási rendelkezés és könyvelői felülvizsgálati "
+"csomagok](081-reconciliation-filing-disposition-and-accountant-review-"
+"packages.md) — `STAGE-2-081`"
+
+#: ../../technical/articles/catalogue.md:187
+msgid ""
+"[Review-package exchange and Modelo revision persistence](082-review-"
+"package-exchange-and-modelo-revision-persistence.md) — `STAGE-2-082`"
+msgstr ""
+"[Felülvizsgálaticsomag-csere és Modelo-revíziótárolás](082-review-"
+"package-exchange-and-modelo-revision-persistence.md) — `STAGE-2-082`"
+
+#: ../../technical/articles/catalogue.md:188
+msgid ""
+"[Revision selection, settlement presentation, and verification](083"
+"-revision-selection-settlement-presentation-and-verification.md) — "
+"`STAGE-2-083`"
+msgstr ""
+"[Revízióválasztás, elszámolásmegjelenítés és ellenőrzés](083-revision-"
+"selection-settlement-presentation-and-verification.md) — `STAGE-2-083`"
+
+#: ../../technical/articles/catalogue.md:190
+msgid ""
+"Modelo work and revision lifecycle, part 2: verification, workbench and "
+"workspace"
+msgstr ""
+"Modelo-munka és revíziós életciklus, 2. rész: ellenőrzés, munkafelület és"
+" munkatér"
+
+#: ../../technical/articles/catalogue.md:192
+msgid ""
+"[Read the topic overview](../topics/modelo-work-and-revision-lifecycle-"
+"part-2.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/modelo-work-and-revision-"
+"lifecycle-part-2.md)."
+
+#: ../../technical/articles/catalogue.md:194
+msgid ""
+"[Cross-period checks, verification reports, and work addressing](084"
+"-cross-period-checks-verification-reports-and-work-addressing.md) — "
+"`STAGE-2-084`"
+msgstr ""
+"[Időszakok közötti ellenőrzések, ellenőrzési jelentések és "
+"munkacímzés](084-cross-period-checks-verification-reports-and-work-"
+"addressing.md) — `STAGE-2-084`"
+
+#: ../../technical/articles/catalogue.md:195
+msgid ""
+"[Work creation, form editing, and inventory](085-work-creation-form-"
+"editing-and-inventory.md) — `STAGE-2-085`"
+msgstr ""
+"[Munkalétrehozás, űrlapszerkesztés és leltár](085-work-creation-form-"
+"editing-and-inventory.md) — `STAGE-2-085`"
+
+#: ../../technical/articles/catalogue.md:196
+msgid ""
+"[Work lifecycle, review, wizard, and workflow gate](086-work-lifecycle-"
+"review-wizard-and-workflow-gate.md) — `STAGE-2-086`"
+msgstr ""
+"[A munka életciklusa, felülvizsgálat, varázsló és munkafolyamat-kapu](086"
+"-work-lifecycle-review-wizard-and-workflow-gate.md) — `STAGE-2-086`"
+
+#: ../../technical/articles/catalogue.md:197
+msgid ""
+"[Modelo workspace read projection](087-modelo-workspace-read-"
+"projection.md) — `STAGE-2-087`"
+msgstr ""
+"[A Modelo-munkatér olvasási vetülete](087-modelo-workspace-read-"
+"projection.md) — `STAGE-2-087`"
+
+#: ../../technical/articles/catalogue.md:198
+msgid ""
+"[Workspace producer contracts and capture ports](088-workspace-producer-"
+"contracts-and-capture-ports.md) — `STAGE-2-088`"
+msgstr ""
+"[Munkatér-előállítói szerződések és rögzítési portok](088-workspace-"
+"producer-contracts-and-capture-ports.md) — `STAGE-2-088`"
+
+#: ../../technical/articles/catalogue.md:200
+msgid "Operations, profiles and workflows"
+msgstr "Műveletek, profilok és munkafolyamatok"
+
+#: ../../technical/articles/catalogue.md:202
+msgid "[Read the topic overview](../topics/operations-profiles-and-workflows.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/operations-profiles-and-"
+"workflows.md)."
+
+#: ../../technical/articles/catalogue.md:204
+msgid ""
+"[Durable operation execution, access and public projections](089-durable-"
+"operation-execution-access-and-public-projections.md) — `STAGE-2-089`"
+msgstr ""
+"[Tartós művelet-végrehajtás, hozzáférés és nyilvános vetületek](089"
+"-durable-operation-execution-access-and-public-projections.md) — "
+"`STAGE-2-089`"
+
+#: ../../technical/articles/catalogue.md:205
+msgid ""
+"[Operation contracts, observation and transient operands](090-operation-"
+"contracts-observation-and-transient-operands.md) — `STAGE-2-090`"
+msgstr ""
+"[Műveleti szerződések, megfigyelés és átmeneti operandusok](090"
+"-operation-contracts-observation-and-transient-operands.md) — "
+"`STAGE-2-090`"
+
+#: ../../technical/articles/catalogue.md:206
+msgid ""
+"[Operation authority, registry and private input custody](091-operation-"
+"authority-registry-and-private-input-custody.md) — `STAGE-2-091`"
+msgstr ""
+"[Műveleti felhatalmazás, regiszter és privát bemenetőrzés](091-operation-"
+"authority-registry-and-private-input-custody.md) — `STAGE-2-091`"
+
+#: ../../technical/articles/catalogue.md:207
+msgid ""
+"[Operator action and command-surface contracts](092-operator-action-and-"
+"command-surface-contracts.md) — `STAGE-2-092`"
+msgstr ""
+"[Kezelői műveleti és parancsfelületi szerződések](092-operator-action-"
+"and-command-surface-contracts.md) — `STAGE-2-092`"
+
+#: ../../technical/articles/catalogue.md:208
+msgid ""
+"[Overview calendar, filing evidence, and readiness views](093-overview-"
+"calendar-filing-evidence-and-readiness-views.md) — `STAGE-2-093`"
+msgstr ""
+"[Áttekintő naptár, bevallási bizonyíték és készenléti nézetek](093"
+"-overview-calendar-filing-evidence-and-readiness-views.md) — "
+"`STAGE-2-093`"
+
+#: ../../technical/articles/catalogue.md:209
+msgid ""
+"[Overview explain, Home, pipeline, and registered read projections](094"
+"-overview-explain-home-pipeline-and-registered-read-projections.md) — "
+"`STAGE-2-094`"
+msgstr ""
+"[Áttekintő magyarázat, Kezdőlap, feldolgozási lánc és regisztrált "
+"olvasási vetületek](094-overview-explain-home-pipeline-and-registered-"
+"read-projections.md) — `STAGE-2-094`"
+
+#: ../../technical/articles/catalogue.md:210
+msgid ""
+"[Unified review queue and local runtime contracts](096-unified-review-"
+"queue-and-local-runtime-contracts.md) — `STAGE-2-096`"
+msgstr ""
+"[Egységes felülvizsgálati sor és helyi futtatókörnyezeti szerződések](096"
+"-unified-review-queue-and-local-runtime-contracts.md) — `STAGE-2-096`"
+
+#: ../../technical/articles/catalogue.md:211
+msgid ""
+"[Ephemeral cross-workbench search](097-ephemeral-cross-workbench-"
+"search.md) — `STAGE-2-097`"
+msgstr ""
+"[Rövid életű keresés munkafelületek között](097-ephemeral-cross-"
+"workbench-search.md) — `STAGE-2-097`"
+
+#: ../../technical/articles/catalogue.md:212
+msgid ""
+"[Profile access, automation custody, and portable exports](101-profile-"
+"access-automation-custody-and-portable-exports.md) — `STAGE-2-101`"
+msgstr ""
+"[Profilhozzáférés, automatizálási őrzés és hordozható exportok](101"
+"-profile-access-automation-custody-and-portable-exports.md) — "
+"`STAGE-2-101`"
+
+#: ../../technical/articles/catalogue.md:213
+msgid ""
+"[Encrypted profile custody and censal workflows](102-encrypted-profile-"
+"custody-and-censal-workflows.md) — `STAGE-2-102`"
+msgstr ""
+"[Titkosított profilőrzés és adózóitörzs-munkafolyamatok](102-encrypted-"
+"profile-custody-and-censal-workflows.md) — `STAGE-2-102`"
+
+#: ../../technical/articles/catalogue.md:214
+msgid ""
+"[Profile custody transactions and connected configuration](103-profile-"
+"custody-transactions-and-connected-configuration.md) — `STAGE-2-103`"
+msgstr ""
+"[Profilőrzési tranzakciók és kapcsolt beállítások](103-profile-custody-"
+"transactions-and-connected-configuration.md) — `STAGE-2-103`"
+
+#: ../../technical/articles/catalogue.md:215
+msgid ""
+"[Profile login, maintenance operations, and history](104-profile-login-"
+"maintenance-operations-and-history.md) — `STAGE-2-104`"
+msgstr ""
+"[Profilbejelentkezés, karbantartási műveletek és előzmények](104-profile-"
+"login-maintenance-operations-and-history.md) — `STAGE-2-104`"
+
+#: ../../technical/articles/catalogue.md:216
+msgid ""
+"[Profile facts, registration, recovery, and session selection](105"
+"-profile-facts-registration-recovery-and-session-selection.md) — "
+"`STAGE-2-105`"
+msgstr ""
+"[Profiltények, regisztráció, helyreállítás és munkamenet-választás](105"
+"-profile-facts-registration-recovery-and-session-selection.md) — "
+"`STAGE-2-105`"
+
+#: ../../technical/articles/catalogue.md:217
+msgid ""
+"[Profile session authority, access leases, and delegation](106-profile-"
+"session-authority-access-leases-and-delegation.md) — `STAGE-2-106`"
+msgstr ""
+"[Profilmunkamenet-felhatalmazás, hozzáférési bérletek és delegálás](106"
+"-profile-session-authority-access-leases-and-delegation.md) — "
+"`STAGE-2-106`"
+
+#: ../../technical/articles/catalogue.md:218
+msgid ""
+"[Setup wizard, profile editing, and command construction](107-setup-"
+"wizard-profile-editing-and-command-construction.md) — `STAGE-2-107`"
+msgstr ""
+"[Beállítási varázsló, profilszerkesztés és parancsépítés](107-setup-"
+"wizard-profile-editing-and-command-construction.md) — `STAGE-2-107`"
+
+#: ../../technical/articles/catalogue.md:219
+msgid ""
+"[Wizard contracts and validation](108-wizard-contracts-and-validation.md)"
+" — `STAGE-2-108`"
+msgstr ""
+"[Varázslószerződések és ellenőrzés](108-wizard-contracts-and-"
+"validation.md) — `STAGE-2-108`"
+
+#: ../../technical/articles/catalogue.md:220
+msgid ""
+"[Workflow execution and local filing orchestration](109-workflow-"
+"execution-and-local-filing-orchestration.md) — `STAGE-2-109`"
+msgstr ""
+"[Munkafolyamat-végrehajtás és helyi bevallásvezérlés](109-workflow-"
+"execution-and-local-filing-orchestration.md) — `STAGE-2-109`"
+
+#: ../../technical/articles/catalogue.md:221
+msgid ""
+"[Workflow results, snapshots, and history disclosure](110-workflow-"
+"results-snapshots-and-history-disclosure.md) — `STAGE-2-110`"
+msgstr ""
+"[Munkafolyamat-eredmények, pillanatképek és előzményközlés](110-workflow-"
+"results-snapshots-and-history-disclosure.md) — `STAGE-2-110`"
+
+#: ../../technical/articles/catalogue.md:223
+msgid "Core authority and shared controls"
+msgstr "Alapvető felhatalmazás és közös ellenőrzések"
+
+#: ../../technical/articles/catalogue.md:225
+msgid ""
+"[Read the topic overview](../topics/core-authority-and-shared-"
+"controls.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/core-authority-and-shared-"
+"controls.md)."
+
+#: ../../technical/articles/catalogue.md:227
+msgid ""
+"[Core configuration, profile selection, and durable writes](111-core-"
+"configuration-profile-selection-and-durable-writes.md) — `STAGE-2-111`"
+msgstr ""
+"[Alapkonfiguráció, profilválasztás és tartós írások](111-core-"
+"configuration-profile-selection-and-durable-writes.md) — `STAGE-2-111`"
+
+#: ../../technical/articles/catalogue.md:228
+msgid ""
+"[Settings, storage routing, corpus citations, and credentials](112"
+"-settings-storage-routing-corpus-citations-and-credentials.md) — "
+"`STAGE-2-112`"
+msgstr ""
+"[Beállítások, tárolási útválasztás, korpuszhivatkozások és hitelesítő "
+"adatok](112-settings-storage-routing-corpus-citations-and-credentials.md)"
+" — `STAGE-2-112`"
+
+#: ../../technical/articles/catalogue.md:229
+msgid ""
+"[External-service constants, field provenance, and filing producers](113"
+"-external-service-constants-field-provenance-and-filing-producers.md) — "
+"`STAGE-2-113`"
+msgstr ""
+"[Külső szolgáltatási állandók, mezőszármazás és bevallás-előállítók](113"
+"-external-service-constants-field-provenance-and-filing-producers.md) — "
+"`STAGE-2-113`"
+
+#: ../../technical/articles/catalogue.md:230
+msgid ""
+"[Filing projections, workflow state, and JSON output contracts](114"
+"-filing-projections-workflow-state-and-json-output-contracts.md) — "
+"`STAGE-2-114`"
+msgstr ""
+"[Bevallásvetületek, munkafolyamat-állapot és JSON-kimeneti "
+"szerződések](114-filing-projections-workflow-state-and-json-output-"
+"contracts.md) — `STAGE-2-114`"
+
+#: ../../technical/articles/catalogue.md:231
+msgid ""
+"[Logging, output privacy, model selection, and periods](115-logging-"
+"output-privacy-model-selection-and-periods.md) — `STAGE-2-115`"
+msgstr ""
+"[Naplózás, kimeneti adatvédelem, modellválasztás és időszakok](115"
+"-logging-output-privacy-model-selection-and-periods.md) — `STAGE-2-115`"
+
+#: ../../technical/articles/catalogue.md:232
+msgid ""
+"[Identity, profile sessions, result disposition, and storage "
+"taxonomy](116-identity-profile-sessions-result-disposition-and-storage-"
+"taxonomy.md) — `STAGE-2-116`"
+msgstr ""
+"[Azonosság, profilmunkamenetek, eredményrendelkezés és tárolási "
+"taxonómia](116-identity-profile-sessions-result-disposition-and-storage-"
+"taxonomy.md) — `STAGE-2-116`"
+
+#: ../../technical/articles/catalogue.md:233
+msgid ""
+"[Text normalization, legal categories, and validity contracts](117-text-"
+"normalization-legal-categories-and-validity-contracts.md) — `STAGE-2-117`"
+msgstr ""
+"[Szövegnormalizálás, jogi kategóriák és érvényességi szerződések](117"
+"-text-normalization-legal-categories-and-validity-contracts.md) — "
+"`STAGE-2-117`"
+
+#: ../../technical/articles/catalogue.md:234
+msgid ""
+"[Live access policy, corpus integrity, and decimal contracts](118-live-"
+"access-policy-corpus-integrity-and-decimal-contracts.md) — `STAGE-2-118`"
+msgstr ""
+"[Élő hozzáférési szabályzat, korpuszintegritás és decimális "
+"szerződések](118-live-access-policy-corpus-integrity-and-decimal-"
+"contracts.md) — `STAGE-2-118`"
+
+#: ../../technical/articles/catalogue.md:235
+msgid ""
+"[Error contracts, renderers, and record-fault projection](119-error-"
+"contracts-renderers-and-record-fault-projection.md) — `STAGE-2-119`"
+msgstr ""
+"[Hibaszerződések, megjelenítők és rekordhiba-vetület](119-error-"
+"contracts-renderers-and-record-fault-projection.md) — `STAGE-2-119`"
+
+#: ../../technical/articles/catalogue.md:236
+msgid ""
+"[Error registry catalogues and severity](120-error-registry-catalogues-"
+"and-severity.md) — `STAGE-2-120`"
+msgstr ""
+"[Hibaregiszter-katalógusok és súlyosság](120-error-registry-catalogues-"
+"and-severity.md) — `STAGE-2-120`"
+
+#: ../../technical/articles/catalogue.md:237
+msgid ""
+"[Localization, identity validation, run traces, and date parsing](121"
+"-localization-identity-validation-run-traces-and-date-parsing.md) — "
+"`STAGE-2-121`"
+msgstr ""
+"[Lokalizáció, azonosság-ellenőrzés, futásnyomok és dátumfeldolgozás](121"
+"-localization-identity-validation-run-traces-and-date-parsing.md) — "
+"`STAGE-2-121`"
+
+#: ../../technical/articles/catalogue.md:238
+msgid ""
+"[Redaction, bundled resources, telemetry, and time contracts](122"
+"-redaction-bundled-resources-telemetry-and-time-contracts.md) — "
+"`STAGE-2-122`"
+msgstr ""
+"[Kitakarás, csomagolt erőforrások, telemetria és időszerződések](122"
+"-redaction-bundled-resources-telemetry-and-time-contracts.md) — "
+"`STAGE-2-122`"
+
+#: ../../technical/articles/catalogue.md:240
+msgid "Tax calculation domain"
+msgstr "Az adószámítás szakterülete"
+
+#: ../../technical/articles/catalogue.md:242
+msgid "[Read the topic overview](../topics/tax-calculation-domain.md)."
+msgstr "[A téma áttekintésének elolvasása](../topics/tax-calculation-domain.md)."
+
+#: ../../technical/articles/catalogue.md:244
+msgid ""
+"[Registry formulas and filing-row materialization](124-registry-formulas-"
+"and-filing-row-materialization.md) — `STAGE-2-124`"
+msgstr ""
+"[Regiszterképletek és bevallási sorok előállítása](124-registry-formulas-"
+"and-filing-row-materialization.md) — `STAGE-2-124`"
+
+#: ../../technical/articles/catalogue.md:245
+msgid ""
+"[Taxpayer applicability and indexed registry authority](125-taxpayer-"
+"applicability-and-indexed-registry-authority.md) — `STAGE-2-125`"
+msgstr ""
+"[Adózói alkalmazhatóság és indexelt regiszterszabályforrás](125-taxpayer-"
+"applicability-and-indexed-registry-authority.md) — `STAGE-2-125`"
+
+#: ../../technical/articles/catalogue.md:246
+msgid ""
+"[Binding enrollment, prior filings, deadlines, and lineage](126-binding-"
+"enrollment-prior-filings-deadlines-and-lineage.md) — `STAGE-2-126`"
+msgstr ""
+"[Kötésfelvétel, korábbi bevallások, határidők és leszármazás](126"
+"-binding-enrollment-prior-filings-deadlines-and-lineage.md) — "
+"`STAGE-2-126`"
+
+#: ../../technical/articles/catalogue.md:247
+msgid ""
+"[Casilla identity, legal vocabularies, and fixed-width exports](127"
+"-casilla-identity-legal-vocabularies-and-fixed-width-exports.md) — "
+"`STAGE-2-127`"
+msgstr ""
+"[Casillaazonosság, jogi szókészletek és rögzített szélességű "
+"exportok](127-casilla-identity-legal-vocabularies-and-fixed-width-"
+"exports.md) — `STAGE-2-127`"
+
+#: ../../technical/articles/catalogue.md:248
+msgid ""
+"[Governed facts and export conversion](128-governed-facts-and-export-"
+"conversion.md) — `STAGE-2-128`"
+msgstr ""
+"[Szabályozott tények és exportátalakítás](128-governed-facts-and-export-"
+"conversion.md) — `STAGE-2-128`"
+
+#: ../../technical/articles/catalogue.md:249
+msgid ""
+"[Formula evaluation, traceability, and row-source bindings](129-formula-"
+"evaluation-traceability-and-row-source-bindings.md) — `STAGE-2-129`"
+msgstr ""
+"[Képletkiértékelés, nyomon követhetőség és sorforrás-kötések](129"
+"-formula-evaluation-traceability-and-row-source-bindings.md) — "
+"`STAGE-2-129`"
+
+#: ../../technical/articles/catalogue.md:250
+msgid ""
+"[Dated tax vocabularies, inheritance, and IVA carries](130-dated-tax-"
+"vocabularies-inheritance-and-iva-carries.md) — `STAGE-2-130`"
+msgstr ""
+"[Dátumozott adószókészletek, öröklés és IVA-továbbvitelek](130-dated-tax-"
+"vocabularies-inheritance-and-iva-carries.md) — `STAGE-2-130`"
+
+#: ../../technical/articles/catalogue.md:251
+msgid ""
+"[Ledger binding families and Modelo 303 evidence projections](131-ledger-"
+"binding-families-and-modelo-303-evidence-projections.md) — `STAGE-2-131`"
+msgstr ""
+"[Főkönyvi kötéscsaládok és Modelo 303-bizonyítékvetületek](131-ledger-"
+"binding-families-and-modelo-303-evidence-projections.md) — `STAGE-2-131`"
+
+#: ../../technical/articles/catalogue.md:252
+msgid ""
+"[Modelo 303 projections, profile bindings, and registry "
+"scope](132-modelo-303-projections-profile-bindings-and-registry-scope.md)"
+" — `STAGE-2-132`"
+msgstr ""
+"[Modelo 303-vetületek, profilkötések és regiszterhatókör](132-modelo-303"
+"-projections-profile-bindings-and-registry-scope.md) — `STAGE-2-132`"
+
+#: ../../technical/articles/catalogue.md:253
+msgid ""
+"[Registry reporting, cross-filing relations, and coverage checks](133"
+"-registry-reporting-cross-filing-relations-and-coverage-checks.md) — "
+"`STAGE-2-133`"
+msgstr ""
+"[Regiszterjelentések, bevallások közötti kapcsolatok és lefedettség-"
+"ellenőrzések](133-registry-reporting-cross-filing-relations-and-coverage-"
+"checks.md) — `STAGE-2-133`"
+
+#: ../../technical/articles/catalogue.md:254
+msgid ""
+"[Withholding bindings, revision validation, and registry schema](134"
+"-withholding-bindings-revision-validation-and-registry-schema.md) — "
+"`STAGE-2-134`"
+msgstr ""
+"[Forrásadókötések, revízióellenőrzés és regiszterséma](134-withholding-"
+"bindings-revision-validation-and-registry-schema.md) — `STAGE-2-134`"
+
+#: ../../technical/articles/catalogue.md:255
+msgid ""
+"[Registry schemas for exports, extraction, forms, and governance](135"
+"-registry-schemas-for-exports-extraction-forms-and-governance.md) — "
+"`STAGE-2-135`"
+msgstr ""
+"[Regisztersémák exporthoz, kinyeréshez, űrlapokhoz és szabályozáshoz](135"
+"-registry-schemas-for-exports-extraction-forms-and-governance.md) — "
+"`STAGE-2-135`"
+
+#: ../../technical/articles/catalogue.md:256
+msgid ""
+"[Casilla verification contracts and filing snapshots](136-casilla-"
+"verification-contracts-and-filing-snapshots.md) — `STAGE-2-136`"
+msgstr ""
+"[Casillaellenőrzési szerződések és bevallási pillanatképek](136-casilla-"
+"verification-contracts-and-filing-snapshots.md) — `STAGE-2-136`"
+
+#: ../../technical/articles/catalogue.md:257
+msgid ""
+"[Revision selection, withholding aggregation, and row provenance](137"
+"-revision-selection-withholding-aggregation-and-row-provenance.md) — "
+"`STAGE-2-137`"
+msgstr ""
+"[Revízióválasztás, forrásadó-összesítés és sorszármazás](137-revision-"
+"selection-withholding-aggregation-and-row-provenance.md) — `STAGE-2-137`"
+
+#: ../../technical/articles/catalogue.md:259
+msgid "Business and taxpayer domain"
+msgstr "Üzleti és adózói szakterület"
+
+#: ../../technical/articles/catalogue.md:261
+msgid "[Read the topic overview](../topics/business-and-taxpayer-domain.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/business-and-taxpayer-"
+"domain.md)."
+
+#: ../../technical/articles/catalogue.md:263
+msgid ""
+"[Domain evidence, filing periods, and capital-goods registers](123"
+"-domain-evidence-filing-periods-and-capital-goods-registers.md) — "
+"`STAGE-2-123`"
+msgstr ""
+"[Szakterületi bizonyítékok, bevallási időszakok és beruházásijavak-"
+"nyilvántartások](123-domain-evidence-filing-periods-and-capital-goods-"
+"registers.md) — `STAGE-2-123`"
+
+#: ../../technical/articles/catalogue.md:264
+msgid ""
+"[Spending categories, proportionality, and census projections](138"
+"-spending-categories-proportionality-and-census-projections.md) — "
+"`STAGE-2-138`"
+msgstr ""
+"[Kiadási kategóriák, arányosítás és adózóitörzs-vetületek](138-spending-"
+"categories-proportionality-and-census-projections.md) — `STAGE-2-138`"
+
+#: ../../technical/articles/catalogue.md:265
+msgid ""
+"[taxpayer and family domain records](139-taxpayer-and-family-domain-"
+"records.md) — `STAGE-2-139`"
+msgstr ""
+"[Adózói és családi szakterületi rekordok](139-taxpayer-and-family-domain-"
+"records.md) — `STAGE-2-139`"
+
+#: ../../technical/articles/catalogue.md:266
+msgid ""
+"[inventory valuation and taxpayer-profile mechanics](140-inventory-"
+"valuation-and-taxpayer-profile-mechanics.md) — `STAGE-2-140`"
+msgstr ""
+"[Készletértékelés és adózóiprofil-mechanizmusok](140-inventory-valuation-"
+"and-taxpayer-profile-mechanics.md) — `STAGE-2-140`"
+
+#: ../../technical/articles/catalogue.md:267
+msgid ""
+"[deadline, currency, and evidence-consent domain](141-deadline-currency-"
+"and-evidence-consent-domain.md) — `STAGE-2-141`"
+msgstr ""
+"[Határidő-, deviza- és bizonyítékhozzájárulási szakterület](141-deadline-"
+"currency-and-evidence-consent-domain.md) — `STAGE-2-141`"
+
+#: ../../technical/articles/catalogue.md:268
+msgid ""
+"[filing drafts and invoice records](142-filing-drafts-and-invoice-"
+"records.md) — `STAGE-2-142`"
+msgstr ""
+"[Bevallástervezetek és számlarekordok](142-filing-drafts-and-invoice-"
+"records.md) — `STAGE-2-142`"
+
+#: ../../technical/articles/catalogue.md:269
+msgid ""
+"[IVA classification and evidence substrate](143-iva-classification-and-"
+"evidence-substrate.md) — `STAGE-2-143`"
+msgstr ""
+"[IVA-besorolás és bizonyítékalapréteg](143-iva-classification-and-"
+"evidence-substrate.md) — `STAGE-2-143`"
+
+#: ../../technical/articles/catalogue.md:270
+msgid ""
+"[IVA rates, settlement and statutory projections](144-iva-rates-"
+"settlement-and-statutory-projections.md) — `STAGE-2-144`"
+msgstr ""
+"[IVA-kulcsok, elszámolás és törvényi vetületek](144-iva-rates-settlement-"
+"and-statutory-projections.md) — `STAGE-2-144`"
+
+#: ../../technical/articles/catalogue.md:271
+msgid ""
+"[IVA compensation carry-forward and filing receipts](145-iva-"
+"compensation-carry-forward-and-filing-receipts.md) — `STAGE-2-145`"
+msgstr ""
+"[IVA-kompenzáció továbbvitele és bevallási bizonylatok](145-iva-"
+"compensation-carry-forward-and-filing-receipts.md) — `STAGE-2-145`"
+
+#: ../../technical/articles/catalogue.md:272
+msgid ""
+"[modelo calculation, evidence and filing lifecycle](146-modelo-"
+"calculation-evidence-and-filing-lifecycle.md) — `STAGE-2-146`"
+msgstr ""
+"[Modelo-számítási, bizonyíték- és bevallási életciklus](146-modelo-"
+"calculation-evidence-and-filing-lifecycle.md) — `STAGE-2-146`"
+
+#: ../../technical/articles/catalogue.md:273
+msgid ""
+"[ledger evidence, detail rows and modelo verification](147-ledger-"
+"evidence-detail-rows-and-modelo-verification.md) — `STAGE-2-147`"
+msgstr ""
+"[Főkönyvi bizonyíték, részletsorok és Modelo-ellenőrzés](147-ledger-"
+"evidence-detail-rows-and-modelo-verification.md) — `STAGE-2-147`"
+
+#: ../../technical/articles/catalogue.md:274
+msgid ""
+"[portal catalogue and annual prorrata register](148-portal-catalogue-and-"
+"annual-prorrata-register.md) — `STAGE-2-148`"
+msgstr ""
+"[Portálkatalógus és éves prorrata-nyilvántartás](148-portal-catalogue-"
+"and-annual-prorrata-register.md) — `STAGE-2-148`"
+
+#: ../../technical/articles/catalogue.md:275
+msgid ""
+"[Renta expense rules and activity-asset amortization](149-renta-expense-"
+"rules-and-activity-asset-amortization.md) — `STAGE-2-149`"
+msgstr ""
+"[Renta-költségszabályok és tevékenységi eszközök amortizációja](149"
+"-renta-expense-rules-and-activity-asset-amortization.md) — `STAGE-2-149`"
+
+#: ../../technical/articles/catalogue.md:276
+msgid ""
+"[Local submission preflight and audit records](150-local-submission-"
+"preflight-and-audit-records.md) — `STAGE-2-150`"
+msgstr ""
+"[Helyi beküldési előellenőrzés és auditrekordok](150-local-submission-"
+"preflight-and-audit-records.md) — `STAGE-2-150`"
+
+#: ../../technical/articles/catalogue.md:277
+msgid ""
+"[Transaction ledger domain and classifier contracts](151-transaction-"
+"ledger-domain-and-classifier-contracts.md) — `STAGE-2-151`"
+msgstr ""
+"[Tranzakciós főkönyvi szakterület és osztályozói szerződések](151"
+"-transaction-ledger-domain-and-classifier-contracts.md) — `STAGE-2-151`"
+
+#: ../../technical/articles/catalogue.md:278
+msgid ""
+"[Transaction mutations and registry-backed income predicates](152"
+"-transaction-mutations-and-registry-backed-income-predicates.md) — "
+"`STAGE-2-152`"
+msgstr ""
+"[Tranzakciómódosítások és regiszterre épülő jövedelempredikátumok](152"
+"-transaction-mutations-and-registry-backed-income-predicates.md) — "
+"`STAGE-2-152`"
+
+#: ../../technical/articles/catalogue.md:279
+msgid ""
+"[Usage ratios and user-profile domain](153-usage-ratios-and-user-profile-"
+"domain.md) — `STAGE-2-153`"
+msgstr ""
+"[Használati arányok és felhasználóiprofil-szakterület](153-usage-ratios-"
+"and-user-profile-domain.md) — `STAGE-2-153`"
+
+#: ../../technical/articles/catalogue.md:281
+msgid "Bundled knowledge and localization"
+msgstr "Csomagolt tudás és lokalizáció"
+
+#: ../../technical/articles/catalogue.md:283
+msgid ""
+"[Read the topic overview](../topics/bundled-knowledge-and-"
+"localization.md)."
+msgstr ""
+"[A téma áttekintésének elolvasása](../topics/bundled-knowledge-and-"
+"localization.md)."
+
+#: ../../technical/articles/catalogue.md:285
+msgid ""
+"[Bundled data package marker](188-bundled-data-package-marker.md) — "
+"`STAGE-2-188`"
+msgstr ""
+"[A csomagolt adatok csomagjelölője](188-bundled-data-package-marker.md) —"
+" `STAGE-2-188`"
+
+#: ../../technical/articles/catalogue.md:286
+msgid ""
+"[PDF color profile resource](189-pdf-color-profile-resource.md) — "
+"`STAGE-2-189`"
+msgstr ""
+"[PDF-színprofil-erőforrás](189-pdf-color-profile-resource.md) — "
+"`STAGE-2-189`"
+
+#: ../../technical/articles/catalogue.md:287
+msgid ""
+"[PDF summary typography assets](190-pdf-summary-typography-assets.md) — "
+"`STAGE-2-190`"
+msgstr ""
+"[A PDF-összefoglaló tipográfiai erőforrásai](190-pdf-summary-typography-"
+"assets.md) — `STAGE-2-190`"
+
+#: ../../technical/articles/catalogue.md:288
+msgid "[Corpus package marker](191-corpus-package-marker.md) — `STAGE-2-191`"
+msgstr "[A korpusz csomagjelölője](191-corpus-package-marker.md) — `STAGE-2-191`"
+
+#: ../../technical/articles/catalogue.md:289
+msgid ""
+"[AEAT official reference corpus](192-aeat-official-reference-corpus.md) —"
+" `STAGE-2-192`"
+msgstr ""
+"[Hivatalos AEAT-referenciakorpusz](192-aeat-official-reference-corpus.md)"
+" — `STAGE-2-192`"
+
+#: ../../technical/articles/catalogue.md:290
+msgid ""
+"[EU VAT-rate reference sources](193-eu-vat-rate-reference-sources.md) — "
+"`STAGE-2-193`"
+msgstr ""
+"[Az EU áfakulcsainak referenciaforrásai](193-eu-vat-rate-reference-"
+"sources.md) — `STAGE-2-193`"
+
+#: ../../technical/articles/catalogue.md:291
+msgid ""
+"[Facturae 3.2.2 enumerations and total composition](194-facturae-3-2-2"
+"-enumerations-and-total-composition.md) — `STAGE-2-194`"
+msgstr ""
+"[A Facturae 3.2.2 felsorolásai és összegösszetétele](194-facturae-3-2-2"
+"-enumerations-and-total-composition.md) — `STAGE-2-194`"
+
+#: ../../technical/articles/catalogue.md:292
+msgid ""
+"[Worked-example reference oracles](195-worked-example-reference-"
+"oracles.md) — `STAGE-2-195`"
+msgstr ""
+"[Kidolgozott példák mint ellenőrzési referenciák](195-worked-example-"
+"reference-oracles.md) — `STAGE-2-195`"
+
+#: ../../technical/articles/catalogue.md:293
+msgid ""
+"[AEAT practical-manual corpus](196-aeat-practical-manual-corpus.md) — "
+"`STAGE-2-196`"
+msgstr ""
+"[AEAT gyakorlati kézikönyvkorpusz](196-aeat-practical-manual-corpus.md) —"
+" `STAGE-2-196`"
+
+#: ../../technical/articles/catalogue.md:294
+msgid ""
+"[Normative reference corpus](197-normative-reference-corpus.md) — "
+"`STAGE-2-197`"
+msgstr ""
+"[Normatív referenciakorpusz](197-normative-reference-corpus.md) — "
+"`STAGE-2-197`"
+
+#: ../../technical/articles/catalogue.md:295
+msgid ""
+"[GNOME native login observation](198-gnome-native-login-observation.md) —"
+" `STAGE-2-198`"
+msgstr ""
+"[GNOME natív bejelentkezés-megfigyelés](198-gnome-native-login-"
+"observation.md) — `STAGE-2-198`"
+
+#: ../../technical/articles/catalogue.md:296
+msgid ""
+"[AEAT official manual corpus text](199-aeat-official-manual-corpus-"
+"text.md) — `STAGE-2-199`"
+msgstr ""
+"[Hivatalos AEAT-kézikönyvkorpusz szövege](199-aeat-official-manual-"
+"corpus-text.md) — `STAGE-2-199`"
+
+#: ../../technical/articles/catalogue.md:297
+msgid "[EU VAT reference text](200-eu-vat-reference-text.md) — `STAGE-2-200`"
+msgstr "[Uniós áfareferenciaszöveg](200-eu-vat-reference-text.md) — `STAGE-2-200`"
+
+#: ../../technical/articles/catalogue.md:298
+msgid ""
+"[AEAT manuals, extracted text](201-aeat-manuals-extracted-text.md) — "
+"`STAGE-2-201`"
+msgstr ""
+"[AEAT-kézikönyvek kinyert szövege](201-aeat-manuals-extracted-text.md) — "
+"`STAGE-2-201`"
+
+#: ../../technical/articles/catalogue.md:299
+msgid ""
+"[Normative PDF text corpus](202-normative-pdf-text-corpus.md) — "
+"`STAGE-2-202`"
+msgstr ""
+"[Normatív PDF-szövegkorpusz](202-normative-pdf-text-corpus.md) — "
+"`STAGE-2-202`"
+
+#: ../../technical/articles/catalogue.md:300
+msgid ""
+"[AEAT registry and model declarations](203-aeat-registry-and-model-"
+"declarations.md) — `STAGE-2-203`"
+msgstr ""
+"[AEAT-regiszter és űrlapdeklarációk](203-aeat-registry-and-model-"
+"declarations.md) — `STAGE-2-203`"
+
+#: ../../technical/articles/catalogue.md:301
+msgid ""
+"[Cadrumo user-profile schema](204-cadrumo-user-profile-schema.md) — "
+"`STAGE-2-204`"
+msgstr ""
+"[A Cadrumo felhasználóiprofil-sémája](204-cadrumo-user-profile-schema.md)"
+" — `STAGE-2-204`"
+
+#: ../../technical/articles/catalogue.md:302
+msgid ""
+"[Terminology concept corpus](205-terminology-concept-corpus.md) — "
+"`STAGE-2-205`"
+msgstr ""
+"[Terminológiai fogalomkorpusz](205-terminology-concept-corpus.md) — "
+"`STAGE-2-205`"
+
+#: ../../technical/articles/catalogue.md:303
+msgid ""
+"[Localized interface and model-schema labels](206-localized-interface-"
+"and-model-schema-labels.md) — `STAGE-2-206`"
+msgstr ""
+"[Lokalizált felület- és űrlapséma-címkék](206-localized-interface-and-"
+"model-schema-labels.md) — `STAGE-2-206`"

@@ -72,6 +72,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnitState
 
 from ..core.models import STRICT_FROZEN_CONFIG
 from .operations.public_period import PublicPeriod
+from .user_profile.censal_observation import CensalObservation
 from .workbench_generation_modelo_contracts import (
     PublicActionArgumentBinding,
     PublicModeloGenerationStateV1,
@@ -118,6 +119,7 @@ class PublicAeatSyncWorkspaceProjectionV1(BaseModel):
     zones: tuple[AeatSyncWorkspaceZoneStateV1, ...]
     overview: tuple[AeatSyncWorkspaceOverviewRowV1, ...]
     census: tuple[AeatSyncWorkspaceCensusRowV1, ...]
+    census_observation: CensalObservation | None
     filed_declarations: tuple[PublicAeatSyncWorkspaceFiledDeclarationRowV1, ...]
     notifications: tuple[AeatSyncWorkspaceNotificationRowV1, ...]
     evidence_comparison: tuple[PublicAeatSyncWorkspaceEvidenceComparisonRowV1, ...]

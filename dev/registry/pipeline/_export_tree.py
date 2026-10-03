@@ -27,7 +27,13 @@ from .export_fragment_provenance import (
 )
 from .export_tree_field_derivation import _normalise_field
 from .export_tree_models import ExportTreeTransportProfile, RenderedExportTree
-from .export_tree_serialization import SERIALIZER_CONVENTION, render_tree_files, require_safe_identifier
+from .export_tree_serialization import (
+    SERIALIZER_CONVENTION,
+    render_inherited_tree_file,
+    render_tree_files,
+    require_safe_identifier,
+)
+from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .generated_tree_dispositions import type_column_rulings_for
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignRecord
 from .note_literals import NoteLiteralDeclaration, note_literals_for
@@ -61,6 +67,7 @@ def render_complete_export_tree(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    inheritance: GeneratedExportInheritanceContext | None = None,
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
 
@@ -93,7 +100,15 @@ def render_complete_export_tree(
         derivations=derivations,
     )
     _require_semantic_map_attestation(joined, semantic_map)
-    rendered_files = render_tree_files(revision_id=revision_id, layout=layout)
+    if inheritance is not None and layout != inheritance.baseline_layout:
+        raise RegistryValidationError(
+            "generated export inheritance refuses a changed ordered layout, field, or byte contract"
+        )
+    rendered_files = (
+        render_tree_files(revision_id=revision_id, layout=layout)
+        if inheritance is None
+        else render_inherited_tree_file(revision_id=revision_id)
+    )
     _prepare_target(target_export_dir)
     for relative_path, payload in rendered_files:
         (target_export_dir / relative_path).write_bytes(payload)
@@ -111,6 +126,7 @@ def render_complete_export_tree(
         field_derivations=tuple(derivations),
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=inheritance.attestation if inheritance is not None else None,
     )
     return RenderedExportTree(
         layout=layout,

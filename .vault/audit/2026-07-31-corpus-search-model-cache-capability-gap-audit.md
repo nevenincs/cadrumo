@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#corpus-search-model-cache-capability-gap'
 date: '2026-07-31'
-modified: '2026-08-02'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:39bb1b5b77f1fa254676e4cfd1d64aed0688d991948797cfa81cc948d74d70cf'
+body_hash: 'sha256:07bf4f839a2b82100d69437fd3d27856122cac736146089ee79c94968b5204a3'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-07-02-agent-harness-refoundation-audit]]"
@@ -34,7 +34,7 @@ Three consequences follow from the same silent drop:
 
 ### existing-test-cannot-catch-any-of-the-three | high | `test_cache_dir_is_rooted_in_storage_root` asserts the wrapper's own stored attribute, never what model2vec receives
 
-`src/cadrumo/application/corpus_search/tests/test_query_embed.py::test_cache_dir_is_rooted_in_storage_root` constructs a `QueryEmbedder` and asserts `embedder.cache_dir == tmp_path / "search-models"`. `QueryEmbedder.__init__` sets `self._cache_dir` directly from `search_model_cache_dir(settings)` before any model2vec call is made; the `cache_dir` property simply returns that stored value. The test therefore proves only that the constructor computed the expected `Path` and stored it as an attribute. It never calls `_ensure_model` or `load_static_model`, never inspects what `model2vec.StaticModel.from_pretrained` is actually invoked with, and never crosses the boundary where the silent drop happens. A version of `load_static_model` that computed `cache_dir` correctly and then discarded it entirely (as the installed model2vec version in fact causes it to do) would pass this test identically to a version that threaded it through correctly, because the test's assertion sits entirely on the near side of the pass-through. The test is real and not tautological on its own narrow claim, but its narrow claim is not the claim that matters: it verifies construction-time bookkeeping, not runtime delivery of the guarantee the surrounding docstrings promise.
+the retired test constructs a `QueryEmbedder` and asserts `embedder.cache_dir == tmp_path / "search-models"`. `QueryEmbedder.__init__` sets `self._cache_dir` directly from `search_model_cache_dir(settings)` before any model2vec call is made; the `cache_dir` property simply returns that stored value. The test therefore proves only that the constructor computed the expected `Path` and stored it as an attribute. It never calls `_ensure_model` or `load_static_model`, never inspects what `model2vec.StaticModel.from_pretrained` is actually invoked with, and never crosses the boundary where the silent drop happens. A version of `load_static_model` that computed `cache_dir` correctly and then discarded it entirely (as the installed model2vec version in fact causes it to do) would pass this test identically to a version that threaded it through correctly, because the test's assertion sits entirely on the near side of the pass-through. The test is real and not tautological on its own narrow claim, but its narrow claim is not the claim that matters: it verifies construction-time bookkeeping, not runtime delivery of the guarantee the surrounding docstrings promise.
 
 ### general-shape | high | a capability check quietly converts "the installed library cannot honour this contract" into "proceed without the contract"
 

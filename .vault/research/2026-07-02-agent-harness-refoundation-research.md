@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:103504a08d29c844424a61d6979683a0108b0353445b475a262b6d136ace71e5'
+modified: '2026-10-03'
+body_hash: 'sha256:bdd23116ebb5af7b299002e327e78f4061b3bb4c08479ea5c9eda9caa45b3f89'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-01-agent-harness-research]]'
@@ -100,7 +100,7 @@ live serving path.
 
 **MCP server (the console shell today).**
 
-- Transport is stdio only (`src/aeat/entrypoints/mcp/_server.py:211-215`);
+- Transport is stdio only ;
   no HTTP/SSE. Launched via the `aeat-mcp` console script
   (`pyproject.toml:92`), gated behind the `aeat[agent]` extra
   (`mcp>=1.12,<2`); bare-core refuses with an install hint and exit 3.
@@ -197,7 +197,7 @@ hits. Skills/rules/personas cannot ship through the protocol today.
 **The operating layer is shipped, reachable, and completely unsurfaced.**
 `aeat.agent` exposes `iter_operator_rules()`, `iter_personas()`,
 `iter_skill_documents()`, `operator_rules_text()` via
-`importlib.resources` (`src/aeat/agent/__init__.py:29-75`) — the server
+`importlib.resources`  — the server
 process could load every document with no new dependency, but never
 imports `aeat.agent`. The `AEAT_MCP_PERSONA` wiring maps only to a
 family/mutability scope; persona prose is never loaded. The terminology
@@ -361,7 +361,7 @@ directly applicable to the bundled BOE/AEAT corpus.
 skill path exists at all despite the registry directory existing.
 
 **Skill-selection predicates already exist as typed profile facts.**
-`TaxpayerProfile` (`src/aeat/domain/deadlines/_models.py:404`) carries the
+`TaxpayerProfile`  carries the
 axes: `entity_type` (most consequential), `legal_entity_form`,
 `irpf_income_categories`, `irpf_estimation_regime`, `iva_regime`,
 `irpf_special_regime` (impatriado→151), `fiscal_residency` (→IRNR 210),

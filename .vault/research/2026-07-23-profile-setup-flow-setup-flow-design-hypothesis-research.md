@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#profile-setup-flow'
 date: '2026-07-23'
-modified: '2026-07-23'
-body_hash: 'sha256:f14d38203f53871a61d283864fafa9487b0c91439348abdbe90d3790748d8f2b'
+modified: '2026-10-03'
+body_hash: 'sha256:c92c33f386fa4427a7334bb3c9a88467751f04b0d032c02dd3268f1f508a8b71'
 related: []
 ---
 
@@ -257,7 +257,7 @@ supersede the hypothesis's assumptions:
 
 ### G1 — The real catalogue is richer and already declarative
 
-`src/cadrumo/application/wizard/_catalogue.py` declares one `WizardFlow`
+the former source file declares one `WizardFlow`
 (`SETUP_FLOW`, id `setup`) of ELEVEN sections in this order: `taxpayer-type`,
 `profile`, `taxpayer`, `spouse`, `family`, `iva`, `enrollment`,
 `obligations`, `residence`, `capabilities`, `notes` — ~70 questions, each a
@@ -273,7 +273,7 @@ F4's extend-vs-supersede question resolves to EXTEND.
 
 ### G2 — The runner is strictly forward-only
 
-`src/cadrumo/application/wizard/_runner.py:122` (`run_flow`) walks sections
+the former source file (`run_flow`) walks sections
 in order, evaluates visibility incrementally, asks, validates
 (`_widgets.py`), accumulates canonical tokens, returns the typed
 `answers_model`. No back, no jump, no review, no checkpoint — the operator's
@@ -282,17 +282,17 @@ correct evolution seam.
 
 ### G3 — Create/edit already share the flow; edit seeds defaults
 
-`src/cadrumo/entrypoints/cli/_config/__init__.py:55` builds `create` and
+the former source file builds `create` and
 `edit` as two closures over the SAME flow via `build_wizard_command(...,
 mode=...)`; edit mode seeds canonical defaults from the existing profile and
 `--quiet` / `--accept-defaults` drive the non-interactive path through the
-same descriptor (`src/cadrumo/application/wizard/_commands.py:807-923`).
+same descriptor .
 Satellite surfaces remain separate: `_config/_apoderado.py`,
 `_config/_descendiente.py`, `_config/_repair_profile.py`.
 
 ### G4 — Copy is already keyed; failure copy is typed
 
-`src/cadrumo/locales/en.yml` carries 318 `wizard.*` keys — 81 `prompt`, 96
+the former source file carries 318 `wizard.*` keys — 81 `prompt`, 96
 `help`, 72 choice `label`, 13 `description`, plus typed widget-failure keys
 (`wizard.errors.invalid_tax_id`, `.invalid_postcode`, `.blank_text`, …) and
 cross-field verifier keys (`wizard.verifier.*`, produced by
@@ -304,7 +304,7 @@ CONFIRMED as continuity, not migration.
 
 101 registry binding files declare `source = "profile"` with
 `selector = { profile_key = "..." }` plus `legal_refs` / `source_refs`
-(e.g. `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/bindings/0001-profile-censo-status.toml`
+(e.g. the former source file
 binds `censo.status` with RD 1065/2007 arts. 9-11). A reverse index
 profile_key → consuming bindings → legal_refs yields each question's legal
 grounding and "feeds modelo X" provenance from the compiled registry

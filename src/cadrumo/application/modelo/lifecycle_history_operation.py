@@ -133,7 +133,6 @@ def _validated_history_access_payload(
         definition_id=MODELO_HISTORY_OPERATION_DEFINITION_ID,
         payload_type=ModeloHistoryOperationRequest,
         access_profile_id=context.profile_id,
-        exact_type=True,
     )
 
 

@@ -39,6 +39,7 @@ PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTI
 # here rather than rendering English inside a localized site.
 site_chrome = import_module("dev.docs.site_chrome").site_chrome
 site_labels = import_module("dev.docs.site_chrome").site_labels
+_DOCS_HTML_ROOT = import_module("dev.docs.build_paths").docs_html_root(_PROJECT_ROOT)
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
@@ -353,7 +354,7 @@ intersphinx_mapping = {
     "pydantic": ("https://docs.pydantic.dev/latest", None),
     "typer": ("https://typer.tiangolo.com/", None),
 }
-_SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"
+_SELF_INVENTORY = _DOCS_HTML_ROOT / "objects.inv"
 if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
     intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]

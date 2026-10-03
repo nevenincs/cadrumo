@@ -1,15 +1,16 @@
 """Configured Chromium working roots preserve isolation and bounded lifetime."""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import psutil
 import pytest
 
 from ......core.config import Settings, override_settings
-from ......core.paths import resolve_project_path
 from ..errors import BrowserError
 from ..factory import create_browser_session
 from ..profile import Profile
+from ..session import BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -23,7 +24,11 @@ def test_root_follows_storage_policy_independently_of_cwd(tmp_path, monkeypatch,
     if override is not None:
         monkeypatch.setenv("CADRUMO_CHROMIUM_DATA_ROOT", override)
     root = tmp_path / "application-storage"
-    expected = resolve_project_path(override) if override else root / "chromium-data"
+    if override:
+        override_path = Path(override)
+        expected = override_path.resolve() if override_path.is_absolute() else (root / override_path).resolve()
+    else:
+        expected = root / "chromium-data"
     settings = Settings(cadrumo_local_storage_root=root)
     assert settings.cadrumo_chromium_data_root == expected
     monkeypatch.chdir(tmp_path.parent)
@@ -75,6 +80,72 @@ async def test_working_profiles_are_isolated_and_removed(tmp_path: Path):
     finally:
         await first.close()
         await second.close()
+
+
+@pytest.mark.asyncio
+async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    storage_root = tmp_path / "storage"
+    managed_root = storage_root / "chromium"
+    temporary_root = storage_root / "tmp"
+    hostile_root = tmp_path / "hostile"
+    path_variables = (
+        "HOME",
+        "USERPROFILE",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_STATE_HOME",
+        "APPDATA",
+        "LOCALAPPDATA",
+    )
+    for variable in (*path_variables, "TEMP", "TMP", "TMPDIR"):
+        monkeypatch.setenv(variable, str(hostile_root / variable.lower()))
+    monkeypatch.setenv("PATH", "controlled-test-path")
+
+    captured: dict[str, object] = {}
+
+    class FakeBrowser:
+        async def close(self) -> None:
+            return None
+
+    class FakeChromium:
+        async def launch_persistent_context(self, **kwargs: object) -> SimpleNamespace:
+            captured.update(kwargs)
+            return SimpleNamespace(browser=FakeBrowser())
+
+    session = BrowserSession(
+        playwright=SimpleNamespace(chromium=FakeChromium()),
+        settings=Settings(
+            cadrumo_local_storage_root=storage_root,
+            cadrumo_chromium_data_root=managed_root,
+            cadrumo_temp_dir=temporary_root,
+        ),
+        profile=Profile(name="isolated-environment"),
+    )
+    monkeypatch.setattr(session, "_require_bundled_browser_provisioned", lambda: None)
+    try:
+        await session._launch_chromium(None)
+        environment = captured["env"]
+        assert isinstance(environment, dict)
+        downloads_path = captured["downloads_path"]
+        assert isinstance(downloads_path, Path)
+        working_path = downloads_path.parent
+        assert working_path.is_dir()
+        for variable in path_variables:
+            value = environment[variable]
+            assert isinstance(value, str)
+            path = Path(value)
+            assert path.is_absolute()
+            assert path.is_relative_to(working_path)
+            assert path.is_dir()
+            assert path != hostile_root / variable.lower()
+        assert environment["PATH"] == "controlled-test-path"
+        assert {environment[name] for name in ("TEMP", "TMP", "TMPDIR")} == {str(temporary_root.resolve())}
+        assert temporary_root.is_dir()
+        assert not hostile_root.exists()
+    finally:
+        await session.close()
+    assert list(managed_root.iterdir()) == []
 
 
 @pytest.mark.asyncio

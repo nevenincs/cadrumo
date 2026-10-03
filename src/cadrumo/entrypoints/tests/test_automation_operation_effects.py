@@ -58,7 +58,7 @@ def _services(
     execution_authority: OperationExecutionAuthority | None = None,
 ) -> tuple[OperationComposedServices, OperationJournalRepository, OperationSecureReferenceStore]:
     registry = build_production_operation_registry(
-        automation_administration_factory=lambda _context, _profile: ThreadedAutomationAdministration(subject.service)
+        automation_administration_factory=lambda _identity, _profile: ThreadedAutomationAdministration(subject.service)
     )
     journal = OperationJournalRepository(storage_root=subject.store.root / "operations")
     operands = operation_secure_reference_repository()

@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6feb75415d5a45701736ac79c06589adb4349668c835a3a1981658bd2d761e77'
+body_hash: 'sha256:9a1d0d40d2953ba0c8184ca40732fd8e411ac243f6b13d7fe3dae9e4351b119e'
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
-  - '[[2026-06-26-binding-source-kind-taxonomy-unification-ledger]]'
-  - '[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-reference]]'
   - '[[2026-07-05-binding-source-kind-taxonomy-unification-audit]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#binding-source-kind-taxonomy
 ### audit
 
 - `2026-07-05-binding-source-kind-taxonomy-unification-audit` - `binding-source-kind-taxonomy-unification` audit: `exec record reconciliation review`
-
-### exec
-
-- `2026-06-26-binding-source-kind-taxonomy-unification-ledger` - `binding-source-kind-taxonomy-unification` ledger
-
-### plan
-
-- `2026-06-26-binding-source-kind-taxonomy-unification-plan` - `binding-source-kind-taxonomy-unification` plan
 
 ### reference
 

@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f879acac2496fe783cceaafa64ce447f21c525f16c520122d5212f39582e0b2e'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:a790350a81c89566da3ffcadad71e29fb4f8f4940f83c0007431033f1c543346'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `modelo 187 design era coverage`
 
 ## Summary
@@ -121,10 +121,7 @@ selected revision be considered for filing grade.
   https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html
 - AEAT current Modelo 187 procedure, retrieved 2026-08-24:
   https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/modelo-187.html
-- `src/cadrumo/_data/registry/aeat/modelos/187/revisions/2019-y-siguientes/revision.toml`
 - `src/cadrumo/_data/registry/aeat/legal/enrolled-forms-sources.toml`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_187/manifest.json`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_187_188_194_registry.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

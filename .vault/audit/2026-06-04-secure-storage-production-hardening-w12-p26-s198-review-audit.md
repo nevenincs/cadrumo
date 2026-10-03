@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d329cad09057895f1b6cf5cd4533d08c86d6ab3675e192e60ff1a004f95014ce'
+modified: '2026-10-03'
+body_hash: 'sha256:7b325a41e1c804f4420c4339afe2d8e7e26f56680f9fd9b195ac57e2fb071f32'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S198-001 | FIXED | Operator auth clear failed after profile storage session closed
 
-`src/aeat/application/auth/_operator.py` cleared persisted sessions inside an
+The retired module cleared persisted sessions inside an
 active-profile storage span, but then loaded and updated workflow state after
 that span had closed. In the production-shaped state where the active-profile
 pointer exists but the per-process bucket session is closed, the workflow
@@ -64,9 +64,9 @@ preflight shape and the probe verdict share the same settings source.
 
 Validation:
 
-- `uv run --no-sync pytest src/aeat/application/auth/test_operator.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py -q` passed with 35 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py` passed with 26 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/application/auth/_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_operator.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py` passed.
+- the historical check passed with 35 tests.
+- the historical check passed with 26 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit

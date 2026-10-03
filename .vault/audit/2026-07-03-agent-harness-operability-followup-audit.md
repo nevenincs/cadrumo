@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#agent-harness-operability-followup'
 date: '2026-07-03'
-modified: '2026-07-03'
-body_hash: 'sha256:3c2d2d1c6d70f2efd84592b04e854388d552a7418716ebe6095cfb986a4e7f3f'
+modified: '2026-10-03'
+body_hash: 'sha256:4738af4ee3c7070d10c4b2460dfc6dfba1976fcf55946d13407a5a1d66398ea1'
 related:
   - '[[2026-07-02-agent-harness-operability-followup-research]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
@@ -62,7 +62,7 @@ name reasonably expects it to unblock and it does not. This is the SAME
 operability class the backlog fix (`59317b5b47`) addressed: the calendar's
 event-evidence loaders (`_local_live_calendar_events` /
 `_local_modelo_record_calendar_events` / the filing-evidence loader in
-`src/aeat/entrypoints/cli/_overview.py`) hard-refuse when their optional
+The retired module) hard-refuse when their optional
 persisted evidence is absent, rather than degrading to a schedule-only calendar
 with a WARNING notice the way `backlog` now does. A taxpayer who follows the
 natural "show me the calendar of what I owe" instinct after backlog hits a wall;

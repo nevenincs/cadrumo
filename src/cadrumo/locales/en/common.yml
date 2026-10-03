@@ -831,12 +831,13 @@ sheets:
       ascendants_under_75_whole: Ascendants under 75 (whole)
       asset_class_code: Asset class code
       asset_identifier: Asset identifier
+      asset_ref: Internal asset reference
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
       block: Block
-      business_premises_lease_mark: Business premises lease
       cadastral_reference: Cadastral reference
+      cash_accounting_mark: Cash accounting
       clave: Clave
       clave_codigo: Code key
       clave_declarado: Property ownership key
@@ -845,6 +846,7 @@ sheets:
       codigo_cuenta: Securities account / loan operation no.
       codigo_emisor: Issuer code
       codigo_provincia: Province code
+      community_vat_number: EU operator VAT number
       compensaciones: Compensations
       complement: Address complement
       complemento_infancia_clave: Child support supplement
@@ -856,6 +858,7 @@ sheets:
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
       currency_code: Currency code
+      declarado_tax_id: Declared party tax ID
       deduction_percentage: Deduction percentage
       descendants_disabled_33_65_total: Disabled descendants 33-65% (total)
       descendants_disabled_33_65_whole: Disabled descendants 33-65% (whole)
@@ -949,8 +952,8 @@ sheets:
       porcentaje_titularidad_inmueble: Property ownership percentage
       portal: Entrance
       postal_code: Postal code
-      premises_address: Leased premises address
       province_code: Province
+      provincia_code: Province code
       recipient_province_code: Recipient province code
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
@@ -965,8 +968,10 @@ sheets:
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
       representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
+      residence_country_code: Residence country code
       retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
+      reverse_charge_mark: Reverse charge
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
       situacion_inmueble: Property location status
@@ -986,6 +991,8 @@ sheets:
       transfer_pricing_method_code: Transfer pricing method
       unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation
+      valuation_event: Valuation event
+      valuation_event_date: Valuation event date
       withholding_percentage: Withholding rate
 topic:
   authentication:
@@ -1917,7 +1924,6 @@ tui:
         added.
       failure: The invoice was not recorded.
       field:
-        arrendamiento_local_negocio: Business premises lease (issued invoices)
         counterparty_name: Counterparty name
         counterparty_nif: Counterparty NIF
         country_code: Counterparty country (two letters)
@@ -1933,18 +1939,13 @@ tui:
         operation_type: Modelo 349 operation key
         recargo_amount: Equivalence surcharge amount
         rectifies_invoice_number: Number of the invoice this one corrects
-        referencia_catastral: Referencia catastral of the leased premises
         retention_amount: IRPF withholding amount
         retention_rate: IRPF withholding rate (%)
         series: Series
-        situacion_inmueble: Situación of the leased premises
         taxable_base: Taxable base
       kind:
         issued: Issued
         received: Received
-      lease:
-        'no': Not a business premises lease
-        'yes': Lease of business premises you let
       line:
         add: Add line
         field:
@@ -1976,19 +1977,11 @@ tui:
       prompt: Enter the invoice as it is printed. It is checked and recorded only
         after you review it.
       review: Review
-      situacion:
-        '1': 1 · Spain with referencia catastral (not País Vasco or Navarra)
-        '2': 2 · País Vasco or Navarra
-        '3': 3 · Without referencia catastral
-        '4': 4 · Abroad
-      situacion_none: Not stated
       success: 'Invoice {number} recorded: base {base}, VAT {iva}, total {total} {currency}.'
       summary:
         amounts: Taxable base {base} {currency} · VAT rate {rate}
         counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
         identity: '{kind} invoice {number} dated {date}'
-        lease: Business premises lease · situación {situacion} · referencia catastral
-          {referencia}
         operation: Modelo 349 key {code} · operation date {date}
         recargo: Equivalence surcharge {amount} {currency}
         rectifies: Corrects invoice {number}

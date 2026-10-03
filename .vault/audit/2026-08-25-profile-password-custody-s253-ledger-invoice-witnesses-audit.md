@@ -7,7 +7,6 @@ modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:940b32cd59cb6ca007be902c57a2d220d15910745d5b1045f4c28423c4d32f50'
 related:
-  - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-07-24-evidence-revision-identity-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#deterministic-output-replay-substrate'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:14ec272c8301a3bdca78d2590690597977dfee425e2343c81acab2ad68858a8d'
+modified: '2026-10-03'
+body_hash: 'sha256:8dca48927bcbc3ebe8d8e94725e4aac247ef0bf00894fbe69d9b956ded18578e'
 related: []
 ---
 
@@ -12,38 +12,38 @@ related: []
 
 The `agent-harness` ADR (`2026-07-02-agent-harness-refoundation-adr`, accepted) commits, in its Q5 eval-substrate decision, to a golden-task replay gate that captures the expected tool trajectory AND the expected result payloads, plus a determinism-replay mode that re-runs a captured trajectory and asserts identical output — non-determinism is itself an assurance failure in regulated tax work. This research grounds whether the substrate that gate needs exists at HEAD, and finds it does not: a record/replay subsystem exists but captures inputs plus state fingerprints and never the result JSON, and several `--format json` payloads carry wall-clock and uuid fields that cannot be isolated for replay. The deliverable is the reusable substrate — clock seam, identity-determinism levers, golden result-payload capture, and a canonicalise/mask compare layer — that makes any `--format json` run deterministic and assertable. Authoring the AEAT-worked-example tax scenarios and the trajectory assertions is out of scope; that work belongs to the harness eval gate and stands on this substrate.
 
-Scope and confirmation: every cited source file was read at HEAD and confirmed to have no working-tree modification, so the findings reflect committed state. The one nearby peer edit found (`src/aeat/application/user_profile/_bundle.py`) is not a file this design touches.
+Scope and confirmation: every cited source file was read at HEAD and confirmed to have no working-tree modification, so the findings reflect committed state. The one nearby peer edit found  is not a file this design touches.
 
 ## Findings
 
 ### F1 — The replay subsystem captures inputs and fingerprints, never the result payload
 
-`replay_run` (`src/aeat/core/observability/_replay.py:118-185`) loads a persisted `RunTrace`, recomputes the corpus fingerprint, refuses on drift (`AeatCorpusDriftError`), reconstructs argv from captured `ArgumentRecord` values, and re-enters the Typer CLI. It is a deterministic read-only re-execution harness — but it asserts nothing about output. The drift gate compares `corpus_sha256` only (`:150-157`) and explicitly ignores the captured `db_sha256`.
+`replay_run`  loads a persisted `RunTrace`, recomputes the corpus fingerprint, refuses on drift (`AeatCorpusDriftError`), reconstructs argv from captured `ArgumentRecord` values, and re-enters the Typer CLI. It is a deterministic read-only re-execution harness — but it asserts nothing about output. The drift gate compares `corpus_sha256` only (`:150-157`) and explicitly ignores the captured `db_sha256`.
 
-`RunTrace` (`src/aeat/core/observability/_models.py:363-409`) is a strict, frozen pydantic header carrying `run_id`, `started_at`/`finished_at`, `entrypoint`, `arguments`, `corpus_sha256`, `db_sha256`, `cert_fingerprint`, `outcome`, and `replay_of`. There is no field for stdout or the emitted result JSON. The per-run store (`src/aeat/core/observability/_store.py`) writes `trace.json` plus `events.jsonl` per `run_id`; the `RunEvent` payload union (`_models.py:276-312`) models navigation/form-fill/assertion/cache/error/step/workflow/generic events but never the command's `SchemaEnvelope`. Consequence: replay proves "the same argv re-runs without corpus drift", not "the same JSON came out". The Q5 golden gate needs the latter and the capture surface does not exist.
+`RunTrace`  is a strict, frozen pydantic header carrying `run_id`, `started_at`/`finished_at`, `entrypoint`, `arguments`, `corpus_sha256`, `db_sha256`, `cert_fingerprint`, `outcome`, and `replay_of`. There is no field for stdout or the emitted result JSON. The per-run store  writes `trace.json` plus `events.jsonl` per `run_id`; the `RunEvent` payload union (`_models.py:276-312`) models navigation/form-fill/assertion/cache/error/step/workflow/generic events but never the command's `SchemaEnvelope`. Consequence: replay proves "the same argv re-runs without corpus drift", not "the same JSON came out". The Q5 golden gate needs the latter and the capture surface does not exist.
 
 ### F2 — The captured payload would be the typed `SchemaEnvelope` spine
 
-Every `--format json` success response is the `SchemaEnvelope` (`src/aeat/core/json_contract.py:195-229`): a shared spine of `schema_version` (pinned `ENVELOPE_SCHEMA_VERSION = "2"`, `:65`), `command`, `status` (`EnvelopeStatus`, derived from notice severity by `derive_status`, `:141-152`), the strict per-command `result` (an `OutputSchema` subclass registered in `SCHEMA_REGISTRY`, `:235`), and the typed `notices` list (`Notice`, `:101-138`). `emit_json_success` (`:315-368`) assembles the mapping, derives `status`, runs the redaction pass (`redact_structured_for_cli_output`), and writes via `emit_json_document`. The capture target is therefore a fully-typed, registered envelope — the substrate must capture and re-validate it through that registered schema, never reduce it to a `dict[str, Any]` bag (per `aeat-architecture-boundaries`), and the spine `status`/`notices` are part of the contract an agent reads (per `cli-notices-are-the-only-diagnostic-channel`), so the golden must lock the whole envelope, not only `result`.
+Every `--format json` success response is the `SchemaEnvelope` : a shared spine of `schema_version` (pinned `ENVELOPE_SCHEMA_VERSION = "2"`, `:65`), `command`, `status` (`EnvelopeStatus`, derived from notice severity by `derive_status`, `:141-152`), the strict per-command `result` (an `OutputSchema` subclass registered in `SCHEMA_REGISTRY`, `:235`), and the typed `notices` list (`Notice`, `:101-138`). `emit_json_success` (`:315-368`) assembles the mapping, derives `status`, runs the redaction pass (`redact_structured_for_cli_output`), and writes via `emit_json_document`. The capture target is therefore a fully-typed, registered envelope — the substrate must capture and re-validate it through that registered schema, never reduce it to a `dict[str, Any]` bag (per `aeat-architecture-boundaries`), and the spine `status`/`notices` are part of the contract an agent reads (per `cli-notices-are-the-only-diagnostic-channel`), so the golden must lock the whole envelope, not only `result`.
 
 ### F3 — The clock model is explicit injection; global freezing is banned in live tests
 
-`core.time.now()` is a plain module-level function returning `datetime.now(tz=UTC)` (`src/aeat/core/time/_clock.py:18-25`). Determinism today is achieved by threading `clock=` / `occurred_at=` parameters into action functions; `freezegun` and `time_machine` are in `BANNED_LIVE_IMPORTS` and any file holding an `aeat_live` test that imports them is a hard `pytest.exit` (`src/aeat/tests/conftest.py:44-58`). The established convention is explicit per-call injection, not process-global freezing.
+`core.time.now()` is a plain module-level function returning `datetime.now(tz=UTC)` . Determinism today is achieved by threading `clock=` / `occurred_at=` parameters into action functions; `freezegun` and `time_machine` are in `BANNED_LIVE_IMPORTS` and any file holding an `aeat_live` test that imports them is a hard `pytest.exit` . The established convention is explicit per-call injection, not process-global freezing.
 
 Already isolatable (a `clock=`/`occurred_at=` seam exists at the call site): ledger add/classify/verify-report, work-unit timestamps, modelo export `exported_at`, and the observability `run_id` (injectable as `run_id=` to `run_context`, `_context.py:104-125`).
 
 Not isolatable at the call site (direct `now()` / `_utc_now()` with no override), confirmed at HEAD:
 
-- filing/declaracion export `exported_at` — `src/aeat/application/filing/_export.py:336`.
-- overview `generated_at` — `src/aeat/application/overview/_agenda.py:170`, `_calendar.py:1298` and `:1386` (`_backlog.py` / `_explain.py` per brief).
-- calc-sheets `exported_at` — `src/aeat/application/storage/calc_sheets/_engine.py:128` (via `_utc_now()`; the engine docstring at `:838` already notes two runs yield the same plan "modulo the `exported_at` timestamp").
+- filing/declaracion export `exported_at` — the former source file.
+- overview `generated_at` — the former source file, `_calendar.py:1298` and `:1386` (`_backlog.py` / `_explain.py` per brief).
+- calc-sheets `exported_at` — the former source file (via `_utc_now()`; the engine docstring at `:838` already notes two runs yield the same plan "modulo the `exported_at` timestamp").
 - `RunTrace.started_at` and `finished_at` — both `now()` calls inside `run_context` (`_context.py:130` for `started_at`, `:304` for `finished_at`).
 
 The critical structural fact for the clock decision: the golden gate replays a whole CLI invocation through reconstructed argv (`replay_run` re-enters the CLI), so it cannot thread a `clock=` parameter into these sites. Threading reaches unit-level action tests but cannot freeze an argv-driven whole-run re-entry. The calc-sheets `_utc_now()` is a parallel helper to `core.time.now()`; any seam must be the single clock both route through.
 
 ### F4 — Identity fields: `profile_id` is already injectable, `snapshot_id` carries an unseedable uuid tail
 
-`new_profile_id()` returns `str(uuid4())` (`src/aeat/domain/user_profile/_values.py:102-112`) — intrinsically nondeterministic. But the orchestration already accepts a caller-minted `profile_id`: `register_active_profile(..., profile_id=...)` (`src/aeat/application/user_profile/_orchestration.py:224-283`) threads it straight to `ProfileRepository.create(profile_id=...)`, and it keys the bucket directory, keystore, secure-object key, and active-profile pointer. Injection is a viable, already-supported lever for `profile_id`.
+`new_profile_id()` returns `str(uuid4())`  — intrinsically nondeterministic. But the orchestration already accepts a caller-minted `profile_id`: `register_active_profile(..., profile_id=...)`  threads it straight to `ProfileRepository.create(profile_id=...)`, and it keys the bucket directory, keystore, secure-object key, and active-profile pointer. Injection is a viable, already-supported lever for `profile_id`.
 
 `new_profile_snapshot_id(profile_id, created_at=...)` returns `f"{profile_id}:{instant.strftime(...)}:{uuid4().hex}"` (`_values.py:115-118`). Of its three components: `profile_id` is deterministic when injected, the timestamp is deterministic when the clock is frozen, and the trailing `uuid4().hex` is intrinsically nondeterministic with no injection parameter. It accepts a `created_at` but not a uuid override. `snapshot_id` is an opaque surrogate key, not an assertable business value.
 

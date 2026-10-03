@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#release-readiness-gate'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:c39c2ef135d65992003ba66be984f941afa70ed190516aca583886c3b52a00fa'
+modified: '2026-10-03'
+body_hash: 'sha256:701bcc9d63e7f3cb92983d2c92d5e308dda9bcfd23ebe4ca8d057d09005a4656'
 related: []
 ---
 
@@ -37,7 +37,7 @@ the human release-apply checklist. `RELEASING.md` documents that the check is
 read-only and that a real open P0 blocker stops the release path.
 
 The step record confirms the landed behavior with real-behavior tests under
-`dev/release/tests` and `src/aeat/tests/test_release_config.py`, plus a live
+`dev/release/tests` and the former source file, plus a live
 gate run that reported BLOCKED on issue `#116`.
 
 ### Permanent safety charter interaction

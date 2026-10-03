@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:021e569c4e891f4cbdca771ecd15984a494b3f3074c096c9a7b55c0ac7f0601c'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `S47 and S49 final close review`

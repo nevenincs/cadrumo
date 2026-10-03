@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev._paths import UTF_8, prepare_temporary_directory
 from dev.packaging.command_execution import CommandResult, run_command
 
 _HERE = Path(__file__).resolve().parent
@@ -490,7 +490,7 @@ def build_release_cohort(
     # only moment that survives a kill.
     with contextlib.suppress(OSError):
         sweep_var_scratch(var)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-release-", dir=prepare_temporary_directory()) as temporary:
         clean_root = Path(temporary) / "source"
         # An isolated copy of the enumerated tree, not the live one: the rest
         # of this build runs in a child process against `clean_root`, so a

@@ -1,0 +1,880 @@
+[[revisions.2019-2022.export_layouts]]
+id = 'modelo-180-fichero-boe-2014'
+
+[[revisions.2019-2022.export_layouts.records]]
+id = 'modelo-180-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = false
+repeat = 'binding_rows'
+binding_record = 'perceptor'
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '180'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-decl-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-nif'
+offset = 18
+length = 9
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-nif-representante-legal'
+offset = 27
+length = 9
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-representative-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-nombre'
+offset = 36
+length = 40
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-provincia'
+offset = 76
+length = 2
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-recipient-province'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '10',
+    '11',
+    '12',
+    '13',
+    '14',
+    '15',
+    '16',
+    '17',
+    '18',
+    '19',
+    '2',
+    '20',
+    '21',
+    '22',
+    '23',
+    '24',
+    '25',
+    '26',
+    '27',
+    '28',
+    '29',
+    '3',
+    '30',
+    '31',
+    '32',
+    '33',
+    '34',
+    '35',
+    '36',
+    '37',
+    '38',
+    '39',
+    '4',
+    '40',
+    '41',
+    '42',
+    '43',
+    '44',
+    '45',
+    '46',
+    '47',
+    '48',
+    '49',
+    '5',
+    '50',
+    '51',
+    '52',
+    '6',
+    '7',
+    '8',
+    '9',
+]
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-modalidad'
+offset = 78
+length = 1
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-modality'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+]
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-base'
+offset = 79
+length = 14
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-base'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-porcentaje-retencion-integer-part'
+offset = 93
+length = 2
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-withholding-percentage'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-porcentaje-retencion-fractional-part'
+offset = 95
+length = 2
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-withholding-percentage'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-retenciones'
+offset = 97
+length = 13
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-retenciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-ejercicio-devengo'
+offset = 110
+length = 4
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-accrual-year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-situacion-inmueble'
+offset = 114
+length = 1
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-property-situation'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-referencia-catastral'
+offset = 115
+length = 20
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-cadastral-reference'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-tipo-via'
+offset = 135
+length = 5
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-street-type'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-nombre-via'
+offset = 140
+length = 50
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-street-name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-tipo-numeracion'
+offset = 190
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-number-type'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-numero-casa'
+offset = 193
+length = 5
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-house-number'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-calificador-numero'
+offset = 198
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-number-qualifier'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-bloque'
+offset = 201
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-block'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-portal'
+offset = 204
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-portal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-escalera'
+offset = 207
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-staircase'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-planta'
+offset = 210
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-floor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-puerta'
+offset = 213
+length = 3
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-door'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-complemento'
+offset = 216
+length = 40
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-complement'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-localidad'
+offset = 256
+length = 30
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-locality'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-municipio'
+offset = 286
+length = 30
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-municipality'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-codigo-municipio'
+offset = 316
+length = 5
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-municipality-code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-provincia'
+offset = 321
+length = 2
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-property-province'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '10',
+    '11',
+    '12',
+    '13',
+    '14',
+    '15',
+    '16',
+    '17',
+    '18',
+    '19',
+    '2',
+    '20',
+    '21',
+    '22',
+    '23',
+    '24',
+    '25',
+    '26',
+    '27',
+    '28',
+    '29',
+    '3',
+    '30',
+    '31',
+    '32',
+    '33',
+    '34',
+    '35',
+    '36',
+    '37',
+    '38',
+    '39',
+    '4',
+    '40',
+    '41',
+    '42',
+    '43',
+    '44',
+    '45',
+    '46',
+    '47',
+    '48',
+    '49',
+    '5',
+    '50',
+    '51',
+    '52',
+    '6',
+    '7',
+    '8',
+    '9',
+]
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-inmueble-codigo-postal'
+offset = 323
+length = 5
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-postal-code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = [
+    'aeat-dr-180-2014',
+    'aeat-modelo-180-procedure',
+]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'modelo-180-perc-resto'
+offset = 328
+length = 173
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[revisions.2019-2022.export_layouts.records.row_field_casilla_ids]
+accrual_year = 'perc.ejercicio-devengo'
+block = 'perc.inmueble-bloque'
+cadastral_reference = 'perc.referencia-catastral'
+complement = 'perc.inmueble-complemento'
+door = 'perc.inmueble-puerta'
+floor = 'perc.inmueble-planta'
+house_number = 'perc.inmueble-numero-casa'
+locality = 'perc.inmueble-localidad'
+modality = 'perc.modalidad'
+municipality = 'perc.inmueble-municipio'
+municipality_code = 'perc.inmueble-codigo-municipio'
+number_qualifier = 'perc.inmueble-calificador-numero'
+number_type = 'perc.inmueble-tipo-numeracion'
+perceptor_name = 'perc.nombre'
+perceptor_nif = 'perc.nif'
+portal = 'perc.inmueble-portal'
+postal_code = 'perc.inmueble-codigo-postal'
+province_code = 'perc.inmueble-provincia'
+recipient_province_code = 'perc.provincia'
+representative_nif = 'perc.nif-representante-legal'
+retencion_amount = 'perc.retenciones'
+situation = 'perc.situacion-inmueble'
+staircase = 'perc.inmueble-escalera'
+street_name = 'perc.inmueble-nombre-via'
+street_type = 'perc.inmueble-tipo-via'
+taxable_base = 'perc.base'
+withholding_percentage = 'perc.porcentaje-retencion'

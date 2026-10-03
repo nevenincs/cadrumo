@@ -87,7 +87,7 @@ wizard:
             description: Discapacidad reconocida del 65% o más - mayor incremento
               del mínimo personal.
             label: Discapacidad del 65% o superior
-          assistance-or-mobility:
+          assistance-or-reduced-mobility:
             description: Necesidad acreditada de ayuda de terceros o movilidad reducida
               - añade el incremento por asistencia.
             label: Ayuda de terceros o movilidad reducida
@@ -599,8 +599,11 @@ wizard:
       irpf-special-regime:
         choices:
           general:
+            description: Tributas en IRPF por el régimen general (modelo 100).
             label: Régimen general
           impatriado:
+            description: Has optado por el régimen especial del art. 93 LIRPF (modelo
+              151).
             label: Impatriado - Ley Beckham (Art. 93 LIRPF)
         help: El régimen de impatriados (Ley Beckham) se aplica durante los primeros
           6 años tras el traslado. La mayoría tributa en régimen general.

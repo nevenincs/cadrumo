@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:02d35e8495f124d2285168e2c8baf89edff170da7ebd46a1e05c7e0c33a467d9'
+modified: '2026-10-03'
+body_hash: 'sha256:08eaf1caf6c9bd6d8b8600758ed01e708306684741a186364dd99c57f54ced60'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The SQL constraint tests create a real SQLite schema from ORM metadata and issue
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_constraints.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py::test_peek_metadata_reflects_on_disk_schema_version_drift` passed with 8 tests and existing SQLAlchemy datetime-adapter warnings.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/_orm.py src/aeat/adapters/persistence/storage/sql/test_constraints.py` passed.
+- the historical check passed with 8 tests and existing SQLAlchemy datetime-adapter warnings.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: supervisor review found no critical or high issues in the S186 slice. The constraints align the database schema with existing repository/pydantic invariants, preserve future positive schema-version drift behavior, add no exception swallowing, and add no pragma/noqa suppression.

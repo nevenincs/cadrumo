@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-08-15'
-body_hash: 'sha256:ef8c34d21697a2b57e22c70cc60a54f290d64ac16a3c9c5bdf8aeb817863e772'
+modified: '2026-10-03'
+body_hash: 'sha256:37b8ad2b9c9d3d2297497cabdbd79619a7538b85e8718a6896a8a9a99fe572c9'
 related: []
 ---
 
@@ -13,9 +13,6 @@ related: []
 Implemented the Modelo 100 dependency-classification gate described by the
 ADR and the Renta source-dependency reference.
 
-- Modified: `src/aeat/domain/calculations/registry/_schema.py`
-- Modified: `src/aeat/domain/calculations/registry/_validate.py`
-- Modified: `src/aeat/domain/calculations/registry/test_modelo_100_registry.py`
 - Modified: `registry/aeat/modelos/100.toml`
 
 ## Description

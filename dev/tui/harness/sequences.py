@@ -33,6 +33,8 @@ from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
 from uuid import UUID
 
+from dev._paths import prepare_temporary_directory
+
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot
@@ -553,7 +555,9 @@ def capture_scenario(
     golden_digest = sha256(golden_path(item.page, item.sequence_id).read_bytes()).hexdigest()
 
     with (
-        TemporaryDirectory(prefix="cadrumo-tui-scenario-", ignore_cleanup_errors=True) as scratch,
+        TemporaryDirectory(
+            prefix="cadrumo-tui-scenario-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+        ) as scratch,
         executed_sequence_sandbox(item.sequence, sandbox_root=Path(scratch)) as (sandbox, transcript),
     ):
         divergences = check_transcript(item.sequence, transcript, golden, page=item.page)

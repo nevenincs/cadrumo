@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7b8a0ed0753433a6829521af12c844760df9209dbd2e6482977540e9c4572725'
-related:
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `S49 Modelo 721 package review`

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:dad649aa0026f7c1c3aa944979860410a8dc2abeee6d510267b56301d6af6818'
+modified: '2026-10-03'
+body_hash: 'sha256:ebf4b067dc2fea2bb96b9fb5adf5e3c6342d49df6f0f0b4139f97773a0eac2d1'
 related: []
 ---
 
@@ -33,8 +33,8 @@ record with the file name and exception type, then raises from the original
 
 ## S214-004 | PASS | Validation
 
-- `uv run --no-sync pytest -q src/aeat/application/invoices/test_importing.py src/aeat/application/invoices/test_importing_helpers.py` passed.
-- `uv run --no-sync ruff check src/aeat/application/invoices/_importing.py src/aeat/application/invoices/test_importing.py src/aeat/application/invoices/test_importing_helpers.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for S214.

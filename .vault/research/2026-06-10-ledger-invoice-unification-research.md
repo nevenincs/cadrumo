@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-invoice-unification'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:647d01712fceb59866ff2da8d19d3d22dc88eff124dcfb2662cfe771394eb26e'
+modified: '2026-10-03'
+body_hash: 'sha256:29ad2c786d3b9c4bf757858b3cb63797177e28d69f011a62f5cc3413bbd5b4e7'
 related: []
 ---
 
@@ -27,8 +27,7 @@ finding below was verified against the working tree at the date of writing.
 The codebase carries two distinct invoice models that are NOT duplicates of
 each other — they serve different layers and must both be kept.
 
-The **rich calculation aggregate** is `Invoice` in
-`src/aeat/domain/invoices/_models.py`. It is strict, frozen, extra-forbidden,
+The **rich calculation aggregate** is `Invoice` . It is strict, frozen, extra-forbidden,
 and identity-bearing: `invoice_id` is a SHA-256 derived hash over
 (`kind`, `invoice_number`, `issued_at`, `counterparty_tax_id`, `currency`,
 `grand_total`) computed in a `model_validator`. Its direction axis is
@@ -42,8 +41,7 @@ member-state accessors. It is held in `InvoiceCatalogue` (keyed by
 `invoice_id`) and feeds modelo aggregation (M349 / M303 / M369 / M390) via the
 source resolver. It is the reconciliation and calculation authority.
 
-The **slim operator-CRUD record** is `BusinessOperationInvoice` in
-`src/aeat/application/ledger/_business_operation_invoice.py`. Its discriminator
+The **slim operator-CRUD record** is `BusinessOperationInvoice` . Its discriminator
 is `source_kind: BusinessOperationInvoiceSourceKind` (`PAYABLE_INVOICE` /
 `COLLECTIBLE_INVOICE`). It is intentionally flat: `counterparty_nif`,
 `counterparty_name`, `invoice_number`, `invoice_date` (a 10-char `str`, not a
@@ -59,7 +57,7 @@ scope and is explicitly rejected.
 
 ### Two CLI noun-groups have byte-identical bodies over the slim model
 
-`src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py` defines two Typer
+the former source file defines two Typer
 sub-apps, `payable_invoice_app` (mounted as `payable-invoice`) and
 `collectible_invoice_app` (mounted as `collectible-invoice`), each carrying the
 five-verb CRUD spine (`add` / `view` / `list` / `update` / `remove`). The two
@@ -72,12 +70,12 @@ same `_emit_envelope` contract. The only difference is the service factory:
 concrete services are thin subclasses of `_BusinessOperationInvoiceService`
 that bind a single `source_kind` class attribute. `register_business_invoice_commands`
 mounts both onto the ledger app; the ledger app calls it at module bottom
-(`src/aeat/entrypoints/cli/_ledger.py`). This duplication is the redundancy the
+. This duplication is the redundancy the
 unified command removes.
 
 ### The source-kind mapping is real, load-bearing, and currently implicit
 
-`src/aeat/application/invoices/_source_resolver.py:107-108` maps the rich
+the former source file maps the rich
 aggregate's `InvoiceKind` onto the source-kind string:
 
 ```
@@ -101,8 +99,7 @@ labels — they are persisted contract values:
 - **Registry TOML.** M349 `0007-bindings.toml` carries 17 `collectible_invoice`
   occurrences (intracom entrega bindings); the M349 filing-schedule TOML carries
   one more. These are authored authority and cannot change.
-- **Binding taxonomy.** `INVOICE_BINDING_SOURCE_KINDS` in
-  `src/aeat/domain/calculations/registry/_invoice_bindings.py:33` is the single
+- **Binding taxonomy.** `INVOICE_BINDING_SOURCE_KINDS`  is the single
   source for "is this an invoice binding?" — the frozenset
   `{collectible_invoice, payable_invoice, purchase_invoice_evidence}`.
 - **Events.** `BucketEventType.{PAYABLE,COLLECTIBLE}_INVOICE_{CREATED,UPDATED,REMOVED}`
@@ -112,7 +109,7 @@ labels — they are persisted contract values:
   `LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE` uses
   `object_key_grammar="{bucket_id}:{source_kind}"`; the slim repository keys each
   document by `{bucket_id}:{source_kind}` via `_document_key`.
-- **Core taxonomy.** `AggregationSourceKind` in `src/aeat/core/aggregation.py`
+- **Core taxonomy.** `AggregationSourceKind`
   enumerates `PAYABLE_INVOICE` / `COLLECTIBLE_INVOICE` (and the retired bare
   `INVOICE = "invoice"` remnant — see below).
 
@@ -126,7 +123,7 @@ The slim records ride the per-profile encrypted bucket-scoped repository.
 `SecureBoundRepository[BusinessOperationInvoiceDocument]` and binds
 `namespace` / `sensitivity` / `schema_version` from
 `LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`
-(`src/aeat/adapters/persistence/storage/_namespace_registry.py:375`), which
+, which
 declares `sensitivity=SensitivityClass.FINANCIAL` and
 `scope=StorageNamespaceScope.BUCKET_LOCAL`. The repository is constructed via
 `secure_object_repository_for_bucket(bucket_id, settings)`. The rich `Invoice`
@@ -140,7 +137,7 @@ every defaultable field populated non-default.
 
 ### The `link` verb targets the RICH aggregate, not the slim model
 
-`aeat app ledger link --invoice-id` in `src/aeat/entrypoints/cli/_ledger.py`
+`aeat app ledger link --invoice-id`
 (around line 1111) resolves `--invoice-id` against the **rich** catalogue:
 it imports `InvoiceCatalogueRepository` from `domain.invoices`, loads the
 snapshot, looks the id up in `invoices_snapshot.invoices`, runs a pre-write
@@ -223,10 +220,10 @@ pre-existing taxonomy values, not new authoring.
 
 ### Tests in scope
 
-`src/aeat/entrypoints/cli/tests/test_business_invoice_verbs.py` (CLI verbs),
+the former source file (CLI verbs),
 `src/aeat/domain/invoices/tests/*` (rich aggregate + secure-storage roundtrip),
-`src/aeat/application/ledger/tests/test_business_operation_invoice.py` (slim
-service), `src/aeat/application/operator_surface/tests/test_crud_registry.py`
+the former source file (slim
+service), the former source file
 (CRUD contract conformance), and the locale parity / honesty gates. These move
 from the dual-noun shape to the single-`invoice` shape; the CRUD-registry
 conformance test must assert the single `INVOICE` contract with the LINK axis.

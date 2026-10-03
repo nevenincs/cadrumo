@@ -8,10 +8,12 @@ from pydantic import BaseModel
 
 from ...core.operations import profile_operation_subject as _profile_subject
 from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
     COMMITTING_LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
+    require_period_independent_admission,
 )
 from ..operations.models import OperationRequest
 from .access_contracts import AccessDenialCode
@@ -75,9 +77,18 @@ def resolve_profile_view_access(
 def _bind_exact_profile_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, profile_id: UUID
 ) -> ResolvedOperationAccess:
-    """Bind the active profile's own period-independent maintenance, refusing any other subject."""
+    """Bind the active profile's own period-independent maintenance, refusing any other subject.
+
+    A replay must replay this profile's period-independent submission of the
+    same operation. It need not come from the submitting destination or
+    frontend: observing and reading an admitted operation are caller-independent,
+    and the runtime still checks the current destination's own disclosure scope.
+    """
     if profile_id != context.profile_id or request.subject_ref != _profile_subject(str(profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    admitted = context.admitted_request
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_period_independent_admission(admitted, profile_id=profile_id, definition_id=request.definition_id)
     return bind_operation_access_profile(
         context,
         COMMITTING_LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-operation-observation'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8f44be175c879eed50517f3590a50885714f8152b9d69892c9c97e05a29ac9a'
+body_hash: 'sha256:9a5193777c98554a9cd1b5c296466bdc0a4b6fc3f19f753a10b60b9dc935c19f'
 related:
   - '[[2026-08-24-tui-operation-observation-research]]'
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -566,7 +566,7 @@ After adoption, the canonical `tui-architecture` plan adds the exact C0 artifact
 `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
 It validates as `TuiOperationObservationDependencyReceiptV1` under the sole
 live-tree validator
-`src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
+
 No alternate path, schema alias, prose attestation, fixture-only validator, or
 receipt from another commit opens C0.
 

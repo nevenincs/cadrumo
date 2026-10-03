@@ -6,8 +6,7 @@ date: '2026-09-12'
 modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5c9ea432e93c5348b072506c453a173eccbb7422e1124f16550bab33362c9f87'
-related:
-  - "[[2026-09-11-binding-schema-plan]]"
+related: []
 ---
 
 # `binding-schema` audit: `binding order gate, family identities, lift, 714 rename, predecessor cause, period overrides`

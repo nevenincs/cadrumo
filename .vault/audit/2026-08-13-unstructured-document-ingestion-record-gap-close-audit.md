@@ -6,8 +6,7 @@ date: '2026-08-13'
 modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:418471f5542319a1ac80794374cdc6c1774bc6b803524f1fe26b3d2c7fe19ab5'
-related:
-  - "[[2026-08-07-unstructured-document-ingestion-plan]]"
+related: []
 ---
 # `unstructured-document-ingestion` audit: `thirty-four closed steps with no execution record`
 

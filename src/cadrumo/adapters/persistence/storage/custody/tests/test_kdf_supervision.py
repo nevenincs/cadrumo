@@ -212,15 +212,19 @@ def test_ready_without_a_secret_then_failure_reaps_the_real_worker_tree() -> Non
     assert process.poll() is not None
 
 
-def test_ready_attestation_proves_the_real_os_containment_environment_and_handle_boundary() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
+def test_ready_attestation_proves_the_real_os_containment_environment_and_handle_boundary(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS, settings=settings)
 
     with worker:
         process = worker._process
         job = worker._job
         attestation = worker._ready_payload
+        neutral_directory = worker._neutral_directory
         assert process is not None
         assert attestation is not None
+        assert neutral_directory is not None
+        assert Path(neutral_directory.name).parent == settings.cadrumo_temp_dir
         assert attestation["cwd"] != str(Path.cwd())
         environment_keys = attestation["environment_keys"]
         assert isinstance(environment_keys, list)

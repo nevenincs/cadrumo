@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-registry-api-gate'
 date: '2026-09-23'
-modified: '2026-09-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:71f2bea6613c7bafaed8c7fa3ba51177c7e168609349b34287f83e89231ace37'
+body_hash: 'sha256:6c2aea42f3bf688dbe1cc7a74177377d002348f2ad9a1e2ab5e449223152ba28'
 related:
   - "[[2026-09-23-tui-registry-api-gate-plan]]"
 ---
@@ -33,7 +33,7 @@ related:
 - `S04` `verify:` `pytest-modelo-workspace` -> `pass`
 - `S04` `verify:` `ruff` -> `pass`
 - `S04` `verify:` `ty` -> `pass`
-- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_workspace_destinations.py`
+- `S05` `T`
 - `S05` `verify:` `pytest-projection-reader` -> `pass`
 - `S05` `verify:` `pytest-installed-workspace` -> `pass`
 - `S05` `verify:` `pytest-destinations-neighbour-refusal` -> `pass`
@@ -56,13 +56,11 @@ related:
 - `S02` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
 - `S02` `M` `src/cadrumo/core/i18n/locale_catalogue.py`
 - `S02` `M` `src/cadrumo/entrypoints/tui/launcher.py`
-- `S02` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_lifecycle.py`
-- `S02` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_modelo_projection_reader.py`
 - `S02` `verify:` `pytest-workspace-admission-module` -> `pass`
 - `S02` `verify:` `pytest-s02-wide-1952` -> `pass`
 - `S02` `verify:` `ruff` -> `pass`
 - `S02` `verify:` `ty-linux-win32` -> `pass`
-- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_workspace_destinations.py`
+- `S06` `T`
 - `S06` `verify:` `pytest-destinations` -> `pass`
 - `S06` `verify:` `scenario-render-336-captures` -> `pass`
 - `S06` `verify:` `results-refusing-0-of-48` -> `pass`

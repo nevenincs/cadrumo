@@ -8,7 +8,6 @@ body_schema: 'body-v1'
 body_hash: 'sha256:8f36e1124d2ef1673f1c89eb4740c1b518e17e6bb7c76602cebfabc8e46b510a'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
-  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-08-04-profile-derived-selectors-audit]]"
 ---

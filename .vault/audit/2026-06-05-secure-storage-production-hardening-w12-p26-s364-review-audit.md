@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:0f7f8492fe04fc2000064969e7a08889911d3d5314f491271e3376a6325039c8'
+modified: '2026-10-03'
+body_hash: 'sha256:459a4bbb57ffc9f48f42955bb6bbf50548f1e253b86728cc11fc41854f02d275'
 related: []
 ---
 
@@ -32,8 +32,8 @@ underscore-prefixed to satisfy lint while preserving the structural signature.
 
 ## S364-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/submission/_protocols.py src/aeat/domain/submission/_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_errors.py src/aeat/adapters/outbound/aeat/export/tests/test_engine.py` passed.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/export/tests/test_preflight.py src/aeat/adapters/outbound/aeat/export/tests/test_errors.py src/aeat/adapters/outbound/aeat/export/tests/test_engine.py -k "preflight or error"` passed with 14 selected tests.
+- the historical check passed.
+- the historical check passed with 14 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 ## S364-005 | INFO | RAG semantic search unavailable during closure

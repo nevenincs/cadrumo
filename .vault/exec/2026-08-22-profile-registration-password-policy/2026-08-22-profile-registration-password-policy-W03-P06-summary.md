@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:000cbbbaa2a8b4a6058f68f9c3a308908416372c46a8d80b6e867c65edfae52c'
+body_hash: 'sha256:43ec065d0cbeec592bfdfce114cba93536247a0bfd63836757666e880dee2bb4'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
 ---
@@ -18,6 +18,5 @@ S09 routed live TUI feedback and submitted registration through the same exporte
 application refusal projection and removed the duplicate TUI mapping. The matching Step
 Record and commit `fbfaa7cb84` record 14 focused integration cases and clean Ruff checks.
 
-- Modified: `src/cadrumo/adapters/inbound/tui/_registration_screen.py`
 - Modified: TUI registration-screen tests recorded by S09
 - Modified: manager-frontend expected-error presentation recorded by S09

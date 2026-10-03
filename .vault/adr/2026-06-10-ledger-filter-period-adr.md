@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ledger-filter-period'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:ebd853bb3412a282d65d02ead7745c0b1cbff90fbf82cc538f8e3d4847cb265f'
+modified: '2026-10-03'
+body_hash: 'sha256:cdb3f1b6b2990bbf60fc7cfd01043648aa5c7c721c2a436281856b91a215ece1'
 related:
   - "[[2026-06-10-ledger-filter-period-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
@@ -42,7 +42,7 @@ that the CLI filter and the calc engine already converge on one boundary impleme
 and `Period.end` are computed fields; quarter and month ends use
 `calendar.monthrange(...)` for the true last calendar day; `contains` is the fully-closed
 `start <= value <= end`. The closed set of accepted tokens is `StandardPeriodCode`
-(`src/cadrumo/core/_period.py`): `1T`-`4T`, `0A`, `01`-`12` are ledger-filterable spans;
+: `1T`-`4T`, `0A`, `01`-`12` are ledger-filterable spans;
 `1P`-`4P` are payment events with no date span; `EXT-*` / `AD-HOC` / `EVENT-N` are not
 ledger spans. The binding ADRs `2026-06-10-cli-operator-surface-adr` (D4 grammar) and
 `2026-06-01-registry-period-code-union-cli-boundary-adr` (the registry-union CLI

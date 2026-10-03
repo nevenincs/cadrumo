@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:bca169f8c3052b966c3fcd59e5c0af27ca658c055e5b71bbed29b2732ba5bb31'
+body_hash: 'sha256:a7f9273de37e3b2c3f00c48513c98f53776821047a0a2b33fab6aceeadb18a6d'
 related: []
 ---
 
@@ -35,13 +35,7 @@ fingerprint-certified authority that skips a newer validator still performs the
 canonical selection at projection time, so stale non-owner copies are not
 returned.
 
-Ruff passed for `src/cadrumo/domain/calculations/registry/_authority.py`. The
-focused ownership suite passed. The existing authority suite reached five setup
-errors because the in-progress bundled corpus still contains the known M184,
-M303, and M322 violations allocated to corpus-repair steps; those errors occur
-during registry validation before the S21 projection test and do not identify an
-S21 regression. Fourteen focused tests completed as nine passes and five setup
-errors.
+The focused ownership suite passed. The existing authority suite reached five setup errors because the in-progress bundled corpus still contains the known M184, M303, and M322 violations allocated to corpus-repair steps; those errors occur during registry validation before the S21 projection test and do not identify an S21 regression. Fourteen focused tests completed as nine passes and five setup errors.
 
 ## Recommendations
 

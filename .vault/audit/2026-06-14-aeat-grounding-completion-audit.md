@@ -7,7 +7,7 @@ related: []
 promoted_to:
   - 'rule:legal-grounding-verifies-bundled-authoritative-corpus'
 modified: '2026-10-03'
-body_hash: 'sha256:28476e36d2104a0bda9914ce77777c70e6bb65736486bfafae196dad4a6adadd'
+body_hash: 'sha256:e0a30155b0a635d09939d8787826f02a4a04b71f7c3b61834b5d1b175fcb1f2e'
 ---
 
 # `aeat-grounding-completion` audit: `Campaign-Close Honesty Review — Centralization + Grounding`
@@ -60,7 +60,7 @@ single-probe `_casilla_value` lookup — behaviour-preserving and correct.
 ### M2 (MEDIUM — CLOSED 2026-06-29) — EO exclusion parameters now feed the advisory gate
 
 The módulos magnitudes are now consumed by
-`src/aeat/application/modelo/_objective_estimation_advisory.py`. The advisory reads the
+The retired module. The advisory reads the
 current structured profile inputs
 `objective_estimation_prior_year_gross_income_eur`,
 `objective_estimation_prior_year_invoice_gross_income_eur`,

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f723543dbd3193cca8952dfebe621708b5688bc6a6bb6ce9c874be1376c4db50'
+body_hash: 'sha256:51ab835e99acaeededbb9b2e2b778fcb04cebaab684c2b05f04c9dde5dea824c'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
 ---
 # `quality-gate-zero-closure` audit: `Blind-green implementation review`
@@ -23,29 +22,13 @@ change, the S108 scanner and two historical-record corrections, the two
 quality-gate plan checkboxes, and their execution records. Concurrent changes
 in every other path were excluded.
 
-Focused verification completed during this review: `uv lock --check`, Ruff on
-`dev/quality/tautological_assertion_scan.py`, the 31-test tautology gate, and a
-targeted diff check all passed. The pinned mutmut 3.7.0 runner was also read to
-verify how `source_paths`, test selection, and the generated `mutants/` tree
-interact. Two findings remain below; no additional findings were found in the
-reviewed S108 record or in the lockfile contents.
+The pinned mutmut 3.7.0 runner was also read to verify how `source_paths`, test selection, and the generated `mutants/` tree interact. Two findings remain below; no additional findings were found in the reviewed S108 record or in the lockfile contents.
 
 ## Findings
 
 ### mutmut-selection-cannot-collect-gate | high | the recorded mutation invocation does not copy its selected gate into the mutant tree
 
-`pyproject.toml` limits mutation generation to
-`dev/quality/tautological_assertion_scan.py` and selects
-`dev/tests/test_tautological_assertion_gate.py`. In mutmut 3.7.0, the runner
-copies the configured source paths into `mutants/`, then runs pytest from that
-directory. Its default `also_copy` set includes `tests/` and `test/`, but not
-`dev/tests/`; this repository has no `also_copy` entry for that path. Therefore
-the exact invocation recorded by S104 cannot collect the selected gate from a
-fresh run unless an operator manually seeds an undeclared copy. A manually
-prepared measurement scratch would not prove the checked-in invocation is
-reproducible. This blocks the prerequisite's reproducible mutation evidence
-and must be resolved before the measurement or detector bite claims can rely on
-this configuration.
+In mutmut 3.7.0, the runner copies the configured source paths into `mutants/`, then runs pytest from that directory. Its default `also_copy` set includes `tests/` and `test/`, but not `dev/tests/`; this repository has no `also_copy` entry for that path. Therefore the exact invocation recorded by S104 cannot collect the selected gate from a fresh run unless an operator manually seeds an undeclared copy. A manually prepared measurement scratch would not prove the checked-in invocation is reproducible. This blocks the prerequisite's reproducible mutation evidence and must be resolved before the measurement or detector bite claims can rely on this configuration.
 
 ### boundary-wording-overstates-corpus-join | low | the corrected scanner prose presents source-corpus absence as runtime non-emission
 
@@ -97,15 +80,7 @@ immediately limits corpus absence to a diagnostic floor rather than proof
 against runtime composition. No wording regression is present; this finding
 remains closed.
 
-**2026-09-07 follow-up — `mutmut-selection-cannot-collect-gate`.** Static
-re-review confirms that `also_copy = ["dev/tests"]` is now present in
-`pyproject.toml`. Mutmut 3.7.0 appends that configured directory to its
-default copy set; its generated tree therefore contains
-`mutants/dev/tests/test_tautological_assertion_gate.py` alongside the selected
-`mutants/dev/quality/tautological_assertion_scan.py`, and its pytest runner
-executes from that tree. The original collectability defect is resolved. A
-fresh POSIX mutation run remains S105 evidence and is deliberately not claimed
-by this static re-review.
+**2026-09-07 follow-up — `mutmut-selection-cannot-collect-gate`.** Static re-review confirms that `also_copy = ["dev/tests"]` is now present in `pyproject.toml`. The original collectability defect is resolved. A fresh POSIX mutation run remains S105 evidence and is deliberately not claimed by this static re-review.
 
 **2026-09-07 follow-up — `boundary-wording-overstates-corpus-join`.** The
 current scanner wording now says “absence literals with no producer in a
@@ -254,7 +229,7 @@ Satisfied. The locale gate derives the runtime nodes from the detector's own rea
 
 ### End condition 5: taxonomy accessor or checked site declaration
 
-Satisfied. The real-tree conformance gate accepts a taxonomy-related absence assertion only when it reaches the canonical accessor or when its token is named by `PINNED_TAXONOMY_LITERALS` and the adjacent rationale names the containing function and token. Isolated controls fail both drift directions as `undeclared-site` and `stale-declaration`, and further controls reject unrelated same-named accessors and undocumented declarations. The former off-lane `src/cadrumo/tests/test_pinned_taxonomy_literal_conformance.py` is absent. Searches of `src` and `dev` find neither `PENDING_UNDECLARED` nor the rejected `PINNED_TAXONOMY_ABSENCE_SITES`; the only live sanctioned declaration symbol is `PINNED_TAXONOMY_LITERALS`. The exact taxonomy mutation run and individual inert dispositions are recorded.
+Satisfied. The real-tree conformance gate accepts a taxonomy-related absence assertion only when it reaches the canonical accessor or when its token is named by `PINNED_TAXONOMY_LITERALS` and the adjacent rationale names the containing function and token. Isolated controls fail both drift directions as `undeclared-site` and `stale-declaration`, and further controls reject unrelated same-named accessors and undocumented declarations. Searches of `src` and `dev` find neither `PENDING_UNDECLARED` nor the rejected `PINNED_TAXONOMY_ABSENCE_SITES`; the only live sanctioned declaration symbol is `PINNED_TAXONOMY_LITERALS`. The exact taxonomy mutation run and individual inert dispositions are recorded.
 
 ### verdict-exact-mutation-proof-pending | high | the sixth detector has not yet been killed at its current identities
 
@@ -276,7 +251,7 @@ The live whole `pyproject.toml` hash has since advanced to `F58C68B2DCDD35A83509
 
 ### 2026-09-08 S112 evidence-identity correction
 
-The preceding S112 identity qualification is superseded. SHA-256 `EECF07EF6C2F204655E89AB0329C6363BCCD5E1B0F73090CBF0D26E7A6317ECF` identifies `dev/quality/tests/fixtures/subsuming_disjunction_cases.toml`, not `pyproject.toml`. The supplied and current `pyproject.toml` SHA-256 is `F58C68B2DCDD35A83509DB62EE0233A042D0541F1CBC4267311C4F04C9BBAD23`; no S112 mutation-configuration drift occurred. The detector, gate, fixture, and configuration evidence is exact, and the S112 closure remains approved without that qualification. The campaign's separately recorded outstanding findings are unaffected.
+The preceding S112 identity qualification is superseded. The supplied and current `pyproject.toml` SHA-256 is `F58C68B2DCDD35A83509DB62EE0233A042D0541F1CBC4267311C4F04C9BBAD23`; no S112 mutation-configuration drift occurred. The detector, gate, fixture, and configuration evidence is exact, and the S112 closure remains approved without that qualification. The campaign's separately recorded outstanding findings are unaffected.
 
 ## 2026-09-08 simplified verdict-detector semantic disposition
 

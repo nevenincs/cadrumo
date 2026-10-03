@@ -3,13 +3,14 @@ tags:
   - '#reference'
   - '#modelo-work-binding-architecture'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:08e7258eefb1be89b26f0152099db9dfcce80bb1760eb595a25db9e1d5d4d020'
+body_hash: 'sha256:a5bbc596c1d74a18367fded37e83d6009a53a3e16b6e8571c1cfe778557089ad'
 related:
   - "[[2026-08-22-modelo-work-binding-architecture-reference]]"
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
 ---
+
 # `modelo-work-binding-architecture` reference: `inventory gap verification`
 
 This reference falsifies or verifies the claim that the completed casilla-schema work does not integrate the secure stock-inventory register into modelo calculations. It distinguishes schema/read-model completion, inventory-domain completeness, foreign-asset row integration, and the missing stock-inventory handoff.
@@ -18,13 +19,13 @@ This reference falsifies or verifies the claim that the completed casilla-schema
 
 **Verdict: verified, with a correction.** Inventory-related M100 casillas already exist, and secure inventory storage plus FIFO/PMP valuation already exist. What is absent is the governed source bridge that resolves an `InventoryLedger` into those casillas and freezes its provenance in a `CalculationRevision`. Modelo 720 foreign-asset rows are already integrated through a different typed resolver and must not be conflated with stock inventory.
 
-The casilla-schema campaign was read-side and canonical-derivation work. Its plan describes a registry read side and one assembled review record at `.vault/plan/2026-08-10-casilla-schema-plan.md:21`, `:25`, and `:100`. The accepted read-model ADR requires `ModeloWorkReview` to remain a pure read model at `.vault/adr/2026-08-10-casilla-schema-read-model-adr.md:45-57`. `CasillaDefinition` in `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:199-275` describes an official filing box and its type, input kind, formula or binding, constraints, export references, and grounding. `RegistrySnapshot` in `src/cadrumo/domain/calculations/registry/_schema.py:1448-1468` pins the legal modelo/revision/filing coordinate. Neither owns taxpayer inventory movements.
+The casilla-schema campaign was read-side and canonical-derivation work. Its plan describes a registry read side and one assembled review record at `.vault/plan/2026-08-10-casilla-schema-plan.md:21`, `:25`, and `:100`. Neither owns taxpayer inventory movements.
 
 Stock inventory is a separate business aggregate. `InventoryLedger` in `src/cadrumo/domain/contribuyente/inventory/__init__.py:202-243` is keyed by activity and year and carries valuation method, opening and closing stock, stock layers, and typed movement rows. `InventoryService` persists it through the bucket-local repository, and `src/cadrumo/adapters/persistence/profile/inventory.py:108-185` stores the document as encrypted FINANCIAL secure-object state. `compute_inventory_variation` and `compute_anexo_d_inventory_variation` at `src/cadrumo/domain/contribuyente/inventory/__init__.py:322-386` already calculate signed closing-minus-opening variation, but exact consumer search found no production calculation consumer.
 
-The absent bridge is proven at all enrollment points. `DataBindingDefinition.source` must be the closed `BindingSourceKind` at `src/cadrumo/domain/calculations/registry/_schema.py:656-665`; the enum at `src/cadrumo/core/aggregation.py:223-369` has no inventory member. Live source policy at `src/cadrumo/application/modelo/_calculation_source_policy.py:43-68` has no inventory disposition. Calculation explicitly instantiates its resolver set at `src/cadrumo/application/modelo/_calculation_actions.py:775-873` and never imports or reads `InventoryLedgerRepository`. Novel source kinds are refused at `src/cadrumo/application/modelo/_calculation_actions.py:1664-1702`. Consequently registry TOML cannot declare `source = "inventory"`, and calculation has no route by which secure inventory movements can produce binding or casilla values.
+Consequently registry TOML cannot declare `source = "inventory"`, and calculation has no route by which secure inventory movements can produce binding or casilla values.
 
-The project states the gap directly. `src/cadrumo/application/inventory/_source_readiness.py:1-51` says the readiness record does not resolve values, enroll a source, participate in the source mesh, or emit diagnostics; it returns `ready=False` because movements and valuations do not cross the canonical calculation-revision boundary. This is executable production behavior, not an inference from missing names.
+This is executable production behavior, not an inference from missing names.
 
 Current M100 schema proves the distinction between absent casillas and absent automation. In revision 2025, casilla `0177` is inventory increase and `0182` is inventory decrease; neither declares a binding, so the `CasillaDefinition` default makes it manual. Purchases are represented separately by `0181`. These feed downstream income and expense formulas. The application can therefore calculate correctly when an operator supplies the numbers, but it cannot demonstrate that those numbers came from the stored inventory ledger, reject a conflicting caller replacement, or replay the inventory source from its fingerprint.
 

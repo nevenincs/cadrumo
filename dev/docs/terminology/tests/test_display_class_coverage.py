@@ -176,7 +176,7 @@ def test_concept_domain_splits_modelo_from_general_fact() -> None:
 
 
 def test_full_text_page_splits_by_path_prefix() -> None:
-    """A full-text hit splits ``cli/`` -> CLI, ``api/`` -> TECHNICAL, else DOC."""
+    """CLI and technical trees retain their classes; user guides remain DOC."""
     from ..search_record import ResultDisplayClass, SearchRecordKind
     from ..unified_record import (
         RankingTier,
@@ -199,5 +199,10 @@ def test_full_text_page_splits_by_path_prefix() -> None:
 
     assert derive_display_class(page("cli/app.html#x")) is ResultDisplayClass.CLI
     assert derive_display_class(page("api/cadrumo.core.html#x")) is ResultDisplayClass.TECHNICAL
+    assert derive_display_class(page("technical/index.html")) is ResultDisplayClass.TECHNICAL
+    assert derive_display_class(page("technical/topics/runtime.html")) is ResultDisplayClass.TECHNICAL
+    assert derive_display_class(page("/technical/articles/runtime.html#scope")) is ResultDisplayClass.TECHNICAL
     assert derive_display_class(page("how-to/import-ledger.html#x")) is ResultDisplayClass.DOC
+    assert derive_display_class(page("explanation/from-records-to-figures.html")) is ResultDisplayClass.DOC
+    assert derive_display_class(page("technical-overview.html")) is ResultDisplayClass.DOC
     assert derive_display_class(page("index.html")) is ResultDisplayClass.DOC

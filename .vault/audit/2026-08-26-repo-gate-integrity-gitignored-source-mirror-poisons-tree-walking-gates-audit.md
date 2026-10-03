@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-26'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e1bcaeabb385ca4b507916ee25c2b0e487009f1f1220c45ecca4678840e65b0'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:269dd25b25ccab51f8cab1b3b53f2bc1baa5a5d7d2f6acdc6c02bd15d57d6062'
+related: []
 ---
 
 # `repo-gate-integrity` audit: `gitignored source mirror poisons tree-walking gates`
@@ -45,12 +44,7 @@ Two campaigns, two gates, one cause, neither aware of the other.
 
 ### The exposed surface is wider than the two known cases
 
-Enumerating tracked scanners that both walk a tree and reference `dev`, fifteen
-further candidates exist, among them `dev/audit/vacuity_screen.py`,
-`dev/ci/lane_reachability.py`, `dev/quality/fixture_census.py`,
-`dev/packaging/release_cohort.py` and several `test_command_spec_*` lane gates.
-Not audited individually here: a scan restricted to `src/` is unaffected, and
-which of the fifteen genuinely reach into `dev/` needs reading each one.
+Not audited individually here: a scan restricted to `src/` is unaffected, and which of the fifteen genuinely reach into `dev/` needs reading each one.
 
 The failure mode is quiet in the dangerous direction. A gate that counts
 remnants over-reports and goes red, which gets noticed. A gate computing a

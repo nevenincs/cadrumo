@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:5261c4c8cea51c37b43a7231f32d73ed503118b2465540ff1ef112aa14f9ca6a'
+modified: '2026-10-03'
+body_hash: 'sha256:0ba86226a369fd750139280e6a0de5e6fe5abf2470fff30c98ff316efb924ad0'
 related: []
 ---
 
@@ -20,15 +20,15 @@ filesystem IO.
 ## S359-002 | PASS | Persistence ownership is already enrolled elsewhere
 
 The encrypted persistence boundary for `WorkUnitCatalogue` is
-`src/aeat/domain/modelos/_repository.py`, closed in `W12.P26.S356` as
+The retired module, closed in `W12.P26.S356` as
 `runtime-default`. Keeping `_work_unit.py` as `manifest-discovery` prevents the model
 surface from being misclassified as a repository owner.
 
 ## S359-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_work_unit.py src/aeat/domain/modelos/test_work_unit_censo_stale.py src/aeat/domain/modelos/test_secure_storage_roundtrip.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_work_unit_censo_stale.py src/aeat/domain/modelos/test_secure_storage_roundtrip.py` passed with 9 tests.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_repository_sensitivity_class.py` passed with 6 tests.
+- the historical check passed.
+- the historical check passed with 9 tests.
+- the historical check passed with 6 tests.
 
 Reviewer note: no critical, high, medium, or low secure-storage findings remain for
 the S359 model slice.

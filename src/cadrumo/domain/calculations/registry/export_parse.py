@@ -112,6 +112,8 @@ def parse_export_payload(
             parsed=parsed,
         )
     trailing = payload[cursor:]
+    if layout.filing_envelope is not None and trailing:
+        raise RegistryValidationError(f"filing envelope has {len(trailing)} undeclared body byte(s) after its records")
     if trailing and trailing.strip(b"\r\n"):
         raise RegistryValidationError(f"payload has {len(payload) - cursor} trailing byte(s) after export layout")
     casillas = tuple(value for value in parsed if value.casilla_id is not None)
@@ -132,7 +134,18 @@ def _filing_envelope_body(envelope: FilingEnvelopeDefinition, payload: bytes) ->
             f"{envelope.prefix_extent}-byte prefix"
         )
     closer = envelope.closer_for(payload[: envelope.opening_tag_extent])
-    body_end = len(payload.rstrip(b"\r\n"))
+    if envelope.record_terminator == "crlf":
+        if not payload.endswith(b"\r\n"):
+            raise RegistryValidationError(
+                f"filing envelope {envelope.record_identity!r} requires its source-declared CRLF terminator"
+            )
+        body_end = len(payload) - 2
+    else:
+        if payload.endswith((b"\r", b"\n")):
+            raise RegistryValidationError(
+                f"filing envelope {envelope.record_identity!r} has an undeclared trailing record terminator"
+            )
+        body_end = len(payload)
     if payload[body_end - len(closer) : body_end] != closer:
         raise RegistryValidationError(
             f"filing envelope {envelope.record_identity!r} payload does not end with its relative closer"

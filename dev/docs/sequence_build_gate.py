@@ -143,13 +143,14 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             (the incremental changed-page set); ``None`` checks every enrolled
             page (a full build).
     """
+    if not should_check_sequences():
+        return
+
     from .sequences.authority_currency import require_current_authority
     from .sequences.checks import check_sequences_in_subprocess
     from .sequences.errors import SequenceEngineError
     from .sequences.golden_store import refresh_invocation
 
-    if not should_check_sequences():
-        return
     docs_root = Path(app.srcdir)
     goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
     # Ahead of verdict reuse: a clean verdict recorded under a generation that has

@@ -64,6 +64,15 @@ def render_tree_files(
     return tuple(rendered_files)
 
 
+def render_inherited_tree_file(*, revision_id: RevisionId) -> tuple[tuple[str, bytes], ...]:
+    """Emit the complete keyed delta when the reviewed child changes no layout leaf."""
+    path = "0000-export-layout.toml"
+    payload = {"revisions": {str(revision_id): {"export_layouts": []}}}
+    encoded = render_toml_bytes(path, payload)
+    _require_reviewable_fragment(path, encoded)
+    return ((path, encoded),)
+
+
 def _render_record_parts(
     *,
     revision_id: RevisionId,

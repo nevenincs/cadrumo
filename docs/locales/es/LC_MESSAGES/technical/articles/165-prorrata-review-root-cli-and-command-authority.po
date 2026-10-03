@@ -1,0 +1,405 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:1
+msgid "Prorrata, review, root CLI and command authority"
+msgstr "Prorrata, revisión, CLI raíz y autoridad de comandos"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:7
+msgid ""
+"**Report:** `STAGE-2-165` · **Topic:** [Operator interfaces, part 1: "
+"command graph and principal workflows](../topics/operator-interfaces-"
+"part-1.md)"
+msgstr ""
+"**Informe:** `STAGE-2-165` · **Tema:** [Interfaces de operador, parte 1: "
+"grafo de comandos y flujos principales](../topics/operator-interfaces-"
+"part-1.md)"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:10
+msgid "Scope"
+msgstr "Ámbito"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:12
+msgid ""
+"This 27-file slice covers the registered prorrata CLI, review reads, "
+"profile-session admission, root dispatch and landing surfaces, terminal "
+"error handling, secret-channel bootstrapping, installed-runtime "
+"management, and the shared command graph/schema projections. I read all "
+"5,550 assigned lines (46,629 measured tokens) across the nine planned "
+"pages, including each sliced-file continuation. This is static analysis: "
+"I did not run commands, authenticate, or exercise storage, terminal, "
+"Windows-handle, or runtime-manager behavior."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:14
+msgid "Registered work and review knowledge"
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:16
+msgid ""
+"The prorrata interface is a local, profile-bound record of election and "
+"sector inputs, not a registry of official tax decisions. Its command "
+"handlers take typed requests through the registered workflow operations "
+"for declaring a sector, selecting special or general treatment, seeding "
+"prior data, settling annual sector volumes, and listing the resulting "
+"records. Decimal inputs use nonnegative parsing where the operation "
+"requires amounts or percentages. Whole-entity seeding is distinct from "
+"`seed-sector`; it refuses a sector argument and directs the operator to "
+"the sector operation. The result projection carries source model, year, "
+"period, casilla, stamped revision, authority, and findings/notices, so a "
+"prior local observation remains visibly identified as its source. The "
+"payload contract itself documents the prior M303 percentage as a "
+"taxpayer-observed, locally stamped value, not an AEAT-issued value for "
+"the new period. That is useful provenance, but it is not an independent "
+"legal or source-data verification (prorrata handlers "
+"(`src/cadrumo/entrypoints/cli/_prorrata_register_cli.py`), prorrata "
+"payloads (`src/cadrumo/entrypoints/cli/_prorrata_register_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:18
+msgid ""
+"The review surface is read-only. `review queue` binds to the active "
+"bucket and can filter by finding kind, source kind, state, model, and a "
+"confidence threshold; the threshold is parsed as a decimal and "
+"constrained to the unit interval. State names are parsed case-"
+"insensitively. `review view` resolves one item. Text output includes "
+"legal references only when `--explain` is selected, while the JSON row "
+"schema always carries them as typed `LegalRefId` values. The row also "
+"fixes the timestamp as `UtcInstant`, avoiding acceptance of arbitrary or "
+"naive date strings at this transport edge. Queue and view payloads "
+"preserve severity/state enums and distinguish blocking state, owner "
+"surface, next command, reason, and summary (review handler "
+"(`src/cadrumo/entrypoints/cli/_review.py`), review result schemas "
+"(`src/cadrumo/entrypoints/cli/_review_payloads.py`), review command "
+"declarations (`src/cadrumo/entrypoints/cli/_review_command_specs.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:20
+msgid ""
+"The profile-session gate normalizes profile labels to UUID bucket "
+"identities and binds a target to the current invocation. It performs "
+"argument-only refusals before write-policy admission, then distinguishes "
+"a profile with no session, a serving session, and a path requiring resume"
+" or authentication. Root secrets are not consumed when an existing "
+"session already serves the request; unavailable keyring plus "
+"noninteractive input leads to a typed refusal instead of a hidden prompt."
+" If a terminal can prompt, passphrase input is requested without echo. "
+"These are command-boundary controls; credential storage and cryptographic"
+" operations belong to delegated profile and adapter layers (session "
+"admission (`src/cadrumo/entrypoints/cli/_profile_session_gate.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:22
+msgid "Root behavior and operator transport"
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:24
+msgid ""
+"Root dispatch captures format, logging level, language override, profile "
+"override, and the declared profile-secret source. Version and help exit "
+"before adapter composition. Introspection-only invocations avoid opening "
+"a bucket session. The bare invocation resolves the active profile and "
+"emits a cold-start landing card when no profile/session is available; "
+"only an already-open session enters the heavier overview path. Root "
+"profile labels are resolved through the application resolver and pinned "
+"to UUIDs for storage routing; ambiguous labels receive a distinct refusal"
+" rather than an arbitrary selection. Help, landing, and active-session "
+"overview JSON payloads are validated against deferred canonical DTO "
+"branches, with later branches imported only if earlier ones do not "
+"validate (root callback (`src/cadrumo/entrypoints/cli/_root_cli.py`), "
+"root routing and landing "
+"(`src/cadrumo/entrypoints/cli/_root_support.py`), root payload validation"
+" (`src/cadrumo/entrypoints/cli/_root_payloads.py`), landing renderer "
+"(`src/cadrumo/entrypoints/cli/_root_landing.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:26
+msgid ""
+"The terminal funnel preserves exit codes while aligning parse failures "
+"with the common text/JSON error contract. It captures argv because parse-"
+"time failures may lack a live Click context, re-applies an explicit "
+"language for rendering, and localizes missing arguments, unknown options,"
+" invalid choices, and unknown commands with structured facts. An unknown "
+"rejected option is removed before checking whether argv requested JSON, "
+"so a typo named `--json` alone does not switch an otherwise text request "
+"into JSON mode. JSON parse errors go to stderr without discovering "
+"profile or storage state; if Click already resolved the command, the "
+"error document can identify it. Typed product errors that escape dispatch"
+" retain their registered classification, while unexpected exceptions "
+"become INTERNAL failures and are logged off the stderr document stream. "
+"The module documents its limit: if its own emitter fails, or `--format` "
+"is malformed with no value, the default/text fallback can still appear "
+"(terminal error boundary "
+"(`src/cadrumo/entrypoints/cli/_terminal_errors.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:28
+msgid ""
+"Startup forces plain Typer/Click rendering and best-effort UTF-8 streams,"
+" using replacement for unencodable output and debug logging when wrappers"
+" cannot be reconfigured. Windows console code-page changes are best-"
+"effort. TTY color resolution combines active CLI flags, explicit caller "
+"overrides, settings-backed `NO_COLOR`/force-color behavior, and the "
+"actual output stream probe. This centralizes presentation policy, but "
+"changing the process streams is global and the fallback intentionally may"
+" leave a custom stream unchanged (stdio setup "
+"(`src/cadrumo/entrypoints/cli/_stdio.py`), TTY policy "
+"(`src/cadrumo/entrypoints/cli/_tty.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:30
+msgid ""
+"The Windows secret wrapper converts supervisor-allowlisted inherited "
+"HANDLEs into CRT descriptors, places the root profile channel before the "
+"command and leaf/recovery channels after it, and closes owned descriptors"
+" after dispatch. A shared HANDLE used for both root and leaf is aliased "
+"rather than opened twice; partially opened descriptors are closed if a "
+"later conversion fails. HANDLE integers are Windows-specific and the "
+"wrapper itself relies on its launcher to enforce the inheritance "
+"allowlist. Root and leaf secret-channel shape, field limits, exclusivity,"
+" duplicate-key rejection, and extra-field rejection are also projected as"
+" value-free command metadata (Windows handle bootstrap "
+"(`src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py`), "
+"root option authority "
+"(`src/cadrumo/entrypoints/cli/_root_command_specs.py`), secret metadata "
+"projection (`src/cadrumo/entrypoints/cli/command_schema.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:32
+msgid "Runtime and command graph"
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:34
+msgid ""
+"The profile-free `app runtime` family reports listener readiness "
+"separately from native-manager availability, and exposes explicit start, "
+"login-autostart enable/disable, and stop operations. Stop requires an "
+"all-profiles-and-work acknowledgement, requests a preview/consent "
+"exchange, and emits the accepted boot ID and scope separately from later "
+"release/drain. An uncertain exchange is reported as an unknown stop "
+"outcome rather than asserted as completed shutdown. The command metadata "
+"classifies configuration and start/stop as local-storage/subprocess "
+"effects; these are local runtime-management effects, not taxpayer-bucket "
+"writes. Native manager and listener guarantees remain in the delegated "
+"runtime-management layer (runtime handlers "
+"(`src/cadrumo/entrypoints/cli/app_runtime.py`), runtime command policies "
+"(`src/cadrumo/entrypoints/cli/app_runtime_command_specs.py`), runtime "
+"payloads (`src/cadrumo/entrypoints/cli/app_runtime_payloads.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:36
+msgid ""
+"The shared command graph is assembled from import-light root declarations"
+" and demand-loaded families. A path lookup loads only the mounted "
+"families along that path; whole-graph metadata queries load all families."
+" Each family addition revalidates the graph, and exact invocation "
+"resolution refuses to relax a policy when an option or path is unknown. "
+"`CommandSpec` validates command identity, callback parameters, parameter "
+"declarations, execution policy/capability relationships, and "
+"secret/recovery contracts when declarations are constructed. The schema "
+"projector exposes declared parameters, choices, effects, secret shapes, "
+"profile-authentication posture, result schema identities, and handler "
+"owner without importing each handler. Secret values are not part of that "
+"projection. Its live-node record currently sets loader owner and source "
+"hash to `None`, so this projection is useful for declared authority but "
+"is not a source-integrity attestation. Wire scalar helpers similarly "
+"validate enum values and extended ISO dates while preserving JSON strings"
+" where a canonical model dump would otherwise conflict with strict output"
+" typing (graph loading and resolution "
+"(`src/cadrumo/entrypoints/cli/command_graph.py`), command declarations "
+"(`src/cadrumo/entrypoints/cli/command_spec.py`), family inventory "
+"(`src/cadrumo/entrypoints/cli/command_specs.py`), metadata projection "
+"(`src/cadrumo/entrypoints/cli/command_schema.py`), wire scalar contracts "
+"(`src/cadrumo/entrypoints/cli/_wire_scalars.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:38
+msgid ""
+"The remaining assigned files support that command surface: reusable "
+"invoice and inventory option contracts keep CLI parameter "
+"names/defaults/help metadata centralized, while activity-asset receipts "
+"add derived revision and claim identities omitted from ordinary model "
+"dumps. They do not replace validation and persistence owned by the "
+"application/domain operations (inventory parameters "
+"(`src/cadrumo/entrypoints/cli/app_ledger_inventory_common_command_parameters.py`),"
+" invoice parameters "
+"(`src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py`),"
+" activity-asset receipts "
+"(`src/cadrumo/entrypoints/cli/actividad_asset_receipts.py`)). Bootstrap "
+"also delays file-backed logging until parsed dispatch preflight, disables"
+" Pydantic plugin auto-discovery unless explicitly configured, and "
+"installs the live exchange-rate composition around the console "
+"entrypoint; optional-extra import failures receive the project’s "
+"actionable boundary message when a known extra owns the missing module "
+"(CLI bootstrap (`src/cadrumo/entrypoints/cli/bootstrap.py`))."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:40
+msgid "Evidence and limits"
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:42
+msgid ""
+"The strongest controls visible here are explicit local-versus-official "
+"provenance for prorrata inputs, typed review/root JSON boundaries, "
+"session-gated profile work, parse-time errors that avoid storage "
+"discovery, and command declarations that validate policy/secret structure"
+" before graph use. The main review limits are delegated operation "
+"semantics (including the tax correctness of calculations, registered "
+"writes, authentication, and runtime manager actions), the external "
+"Windows launcher’s handle allowlist, and lack of process-level "
+"verification in this static pass. Command metadata describes authored "
+"policy; it does not itself prove every handler’s effects match that "
+"policy."
+msgstr ""
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:44
+msgid "Coverage appendix"
+msgstr "Apéndice de cobertura"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:46
+msgid "All 27 assigned files are linked below."
+msgstr "Los 27 archivos asignados se referencian a continuación."
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:48
+msgid "`src/cadrumo/entrypoints/cli/_profile_session_gate.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_profile_session_gate.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:49
+msgid "`src/cadrumo/entrypoints/cli/_prorrata_register_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_prorrata_register_cli.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:50
+msgid "`src/cadrumo/entrypoints/cli/_prorrata_register_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_prorrata_register_payloads.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:51
+msgid "`src/cadrumo/entrypoints/cli/_review.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_review.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:52
+msgid "`src/cadrumo/entrypoints/cli/_review_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_review_command_specs.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:53
+msgid "`src/cadrumo/entrypoints/cli/_review_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_review_payloads.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:54
+msgid "`src/cadrumo/entrypoints/cli/_root_cli.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_root_cli.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:55
+msgid "`src/cadrumo/entrypoints/cli/_root_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_root_command_specs.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:56
+msgid "`src/cadrumo/entrypoints/cli/_root_landing.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_root_landing.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:57
+msgid "`src/cadrumo/entrypoints/cli/_root_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_root_payloads.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:58
+msgid "`src/cadrumo/entrypoints/cli/_root_support.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_root_support.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:59
+msgid "`src/cadrumo/entrypoints/cli/_stdio.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_stdio.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:60
+msgid "`src/cadrumo/entrypoints/cli/_terminal_errors.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_terminal_errors.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:61
+msgid "`src/cadrumo/entrypoints/cli/_tty.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_tty.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:62
+msgid "`src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:63
+msgid "`src/cadrumo/entrypoints/cli/_wire_scalars.py`"
+msgstr "`src/cadrumo/entrypoints/cli/_wire_scalars.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:64
+msgid "`src/cadrumo/entrypoints/cli/actividad_asset_receipts.py`"
+msgstr "`src/cadrumo/entrypoints/cli/actividad_asset_receipts.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:65
+msgid "`src/cadrumo/entrypoints/cli/app_ledger_inventory_common_command_parameters.py`"
+msgstr "`src/cadrumo/entrypoints/cli/app_ledger_inventory_common_command_parameters.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:66
+msgid "`src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py`"
+msgstr "`src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:67
+msgid "`src/cadrumo/entrypoints/cli/app_runtime.py`"
+msgstr "`src/cadrumo/entrypoints/cli/app_runtime.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:68
+msgid "`src/cadrumo/entrypoints/cli/app_runtime_command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/app_runtime_command_specs.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:69
+msgid "`src/cadrumo/entrypoints/cli/app_runtime_payloads.py`"
+msgstr "`src/cadrumo/entrypoints/cli/app_runtime_payloads.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:70
+msgid "`src/cadrumo/entrypoints/cli/bootstrap.py`"
+msgstr "`src/cadrumo/entrypoints/cli/bootstrap.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:71
+msgid "`src/cadrumo/entrypoints/cli/command_graph.py`"
+msgstr "`src/cadrumo/entrypoints/cli/command_graph.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:72
+msgid "`src/cadrumo/entrypoints/cli/command_schema.py`"
+msgstr "`src/cadrumo/entrypoints/cli/command_schema.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:73
+msgid "`src/cadrumo/entrypoints/cli/command_spec.py`"
+msgstr "`src/cadrumo/entrypoints/cli/command_spec.py`"
+
+#: ../../technical/articles/165-prorrata-review-root-cli-and-command-authority.md:74
+msgid "`src/cadrumo/entrypoints/cli/command_specs.py`"
+msgstr "`src/cadrumo/entrypoints/cli/command_specs.py`"

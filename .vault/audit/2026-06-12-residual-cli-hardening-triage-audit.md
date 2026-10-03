@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#residual-cli-hardening'
 date: '2026-06-12'
-modified: '2026-08-15'
-body_hash: 'sha256:c9252f087384cb8dcc32784fb357fd58dde9dddd0d7d49b960dae1332c17d0dd'
+modified: '2026-10-03'
+body_hash: 'sha256:ed007738359e64e541d4c59b990121d726026fd637e957a23e52869d5099f758'
 related:
-  - '[[2026-06-10-cli-operator-surface-plan]]'
-  - '[[2026-06-10-cli-envelope-notice-standardisation-plan]]'
   - '[[2026-06-10-cli-operator-surface-closure-review-audit]]'
   - '[[2026-06-03-cli-workflow-redesign-audit]]'
 ---
@@ -37,8 +35,8 @@ backfill notes now cover the older checked rows that predated this closeout, so
 the plan status no longer reports missing exec ids.
 Key checks:
 
-- `pytest src/aeat/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py::test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows src/aeat/entrypoints/cli/tests/test_cli_module_size.py src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py -m "unit or integration" -q`: 195 passed.
-- `pytest src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py src/aeat/entrypoints/cli/tests/test_modelo_compare.py src/aeat/entrypoints/cli/tests/test_modelo_projection.py src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py -m "unit or integration" -q`: 16 passed.
+- the historical check: 195 passed.
+- the historical check: 16 passed.
 - `pytest src/aeat/entrypoints/cli -q`: 77 passed, 1746 deselected.
 - `vaultspec-core vault plan status .vault/plan/2026-06-10-cli-envelope-notice-standardisation-plan.md`: 25 of 25 complete, `exec_missing_ids: []`.
 - `vaultspec-core vault plan check .vault/plan/2026-06-10-cli-envelope-notice-standardisation-plan.md`: passed with only existing `PLAN022`.
@@ -51,7 +49,7 @@ One workflow-redesign stale row from the setup cluster was safely closed:
 checked in the epic plan. The existing 2026-06-03 audit states the required
 setup event emissions are structurally wired and the optional pair is dormant;
 the focused regression test passed during this triage
-(`src/aeat/application/setup/tests/test_event_emission_contract.py`: 5 passed).
+(the retired test: 5 passed).
 The vault plan CLI printed `Closed Step S2281` and then failed only in its graph
 cache invalidation hook due to missing workspace context; the plan checkbox was
 written and the unrelated CLI-inserted comment churn was removed.
@@ -156,30 +154,30 @@ not an open implementation row.
 - `.vault/adr/2026-05-12-cli-workflow-redesign-adr.md`
 - `.vault/adr/2026-05-12-cli-workflow-redesign-bucket-adr.md`
 - `.vault/adr/2026-06-03-cli-workflow-redesign-adr.md`
-- `src/aeat/entrypoints/cli/_config/_bucket_history.py`
-- `src/aeat/entrypoints/cli/_config/_repair_cli.py`
-- `src/aeat/application/bucket_maintenance/__init__.py`
-- `src/aeat/application/bucket_maintenance/_service.py`
-- `src/aeat/application/bucket_maintenance/tests/test_service_import_export.py`
-- `src/aeat/core/errors/registry/_application_part2.py`
-- `src/aeat/entrypoints/cli/_app_live.py`
-- `src/aeat/entrypoints/cli/_ledger_payloads.py`
-- `src/aeat/entrypoints/cli/_ledger_rule_payloads.py`
-- `src/aeat/entrypoints/cli/_modelo_payloads.py`
-- `src/aeat/entrypoints/cli/_payloads_modelo_reconcile.py`
-- `src/aeat/entrypoints/cli/tests/_m130_source_support.py`
-- `src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py`
-- `src/aeat/entrypoints/cli/tests/test_modelo_compare.py`
-- `src/aeat/entrypoints/cli/tests/test_modelo_projection.py`
-- `src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py`
-- `src/aeat/entrypoints/cli/tests/test_ledger_verb_spine.py`
-- `src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`
-- `src/aeat/entrypoints/cli/_config/tests/test_repair_reset_progress.py`
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired test
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired test
+- the retired test
+- the retired test
+- the retired test
+- the retired test
+- the retired test
+- the retired test
+- the retired test
 - `dev/docs/cli_reference.py`
-- `dev/docs/tests/test_cli_reference_conformance.py`
+- the retired test
 - `docs/how-to/profile-setup.md`
 - `docs/how-to/troubleshooting.md`
-- `src/aeat/domain/modelos/__init__.py`
+- the retired module
 - `.vault/exec/2026-06-10-cli-envelope-notice-standardisation`
 - `.vault/exec/2026-06-10-cli-operator-surface/2026-06-12-cli-operator-surface-W03-P07-S36.md`
 - `.vault/exec/2026-06-10-cli-operator-surface/2026-06-12-cli-operator-surface-W03-P06-S32.md`

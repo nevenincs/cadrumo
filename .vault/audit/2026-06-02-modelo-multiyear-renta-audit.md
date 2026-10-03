@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:8702182f7db26a92793f5e609056209bd6fb68325420ed3c34cf3bf13f8507a3'
+modified: '2026-10-03'
+body_hash: 'sha256:3988cd47e2debbaee9c458dc2fd7be45189212148f21acada274128f9600eacc'
 related:
-  - '[[2026-06-02-modelo-multiyear-renta-plan]]'
   - '[[2026-06-02-modelo-multiyear-renta-income-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'
 ---
@@ -46,9 +45,9 @@ invariant rather than a hand-computed value. The recorder enforces its
 its own type boundary, and `assert_enrollment_matches_manifest` converts the
 manifest from an honour claim into a verified one.
 
-Structural completeness originally remained **gated on the remaining HIGH and
+Structural completeness originally remained **gated on the remaining HIGH
 MEDIUM findings below**. HIGH-1 and HIGH-2 were closed on the 2026-06-29
-corpus/registry path; HIGH-3 and the MEDIUM findings still required closure or
+corpus/registry path; HIGH-3 and the MEDIUM findings still required closure
 formal deferral before the campaign could be declared complete. The 2026-07-06
 current-state review below records the later closures and supersessions.
 
@@ -56,8 +55,8 @@ current-state review below records the later closures and supersessions.
 
 The current registry/corpus closes the two legal-grounding findings from this audit:
 
-- HIGH-1 is closed: `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_721/manifest.json`
-  exists, and `src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml` anchors
+- HIGH-1 is closed: the retired data file
+  exists, and the retired data file anchors
   Modelo 721 to Orden HFP/886/2023 / `BOE-A-2023-17429`. Unreferenced stale
   `orden-hfp-887-2023` corpus files that carried obsolete Modelo 721 text were
   removed from the shipped corpus so search cannot re-ground the model on the
@@ -79,9 +78,9 @@ The current registry/corpus closes the two legal-grounding findings from this au
   A reviewed-but-unresolvable source is higher risk than an absent one — a
   casilla author trusts it.
 - **Current closure:** the bundled corpus now includes
-  `src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_721/manifest.json`.
-  The manifest identifies the Modelo 721 record design as Orden HFP/886/2023, and
-  `src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml` points Modelo 721
+  the retired data file.
+  The manifest identifies the Modelo 721 record design as Orden HFP/886/2023,
+  the retired data file points Modelo 721
   legal/source refs to `BOE-A-2023-17429`, not the custodian-side Orden HFP/887/2023.
   The obsolete unreferenced `orden-hfp-887-2023` corpus artifacts were removed to
   keep shipped search authority aligned with the current registry.
@@ -100,7 +99,7 @@ The current registry/corpus closes the two legal-grounding findings from this au
   compensación de la base imponible general). The general-base carry was grounded
   against the ahorro article — a mis-citation that the
   registry-calculation-legal-grounding rule forbids.
-- **Current closure:** `src/aeat/_data/registry/aeat/legal/irpf.toml` defines
+- **Current closure:** the retired data file defines
   `ley-35-2006:art-48` with resolving BOE corpus text. The 2024 previous-filing
   binding cites `ley-35-2006:art-48` and `ley-35-2006:art-50`; the 2025 binding
   cites `ley-35-2006:art-48` plus the current annual order. Casilla 1388 carries
@@ -111,8 +110,8 @@ The current registry/corpus closes the two legal-grounding findings from this au
 
 ## Current State — 2026-07-06 Post-S89 Review
 
-The post-S89 current-state pass rechecked every remaining HIGH/MEDIUM blocker and
-the LOW softness items against the live tree after commits `8f5442bc0d` and
+The post-S89 current-state pass rechecked every remaining HIGH/MEDIUM blocker
+the LOW softness items against the live tree after commits `8f5442bc0d`
 `55d04363fd`:
 
 - HIGH-3 is closed: `test_modelo_353_grupo_aggregation_continuity.py` no longer
@@ -234,7 +233,7 @@ they are recorded so a future audit need not re-derive them.
   evidence token the caller cannot fabricate (calculation mode: a strictly
   positive produced-value count from a real engine run; context mode: a named
   real two-year context). `EnrollmentEvidence` enforces the `>=2 distinct renta
-  years` and per-observation evidence contract at its pydantic boundary, and
+  years` and per-observation evidence contract at its pydantic boundary,
   `assert_enrollment_matches_manifest` requires the recorded year-set to equal the
   manifest's declared `renta_years`. A stub records nothing; a single-period test
   records one year; both turn the gate RED.
@@ -245,7 +244,7 @@ they are recorded so a future audit need not re-derive them.
   oracle.
 - **RECONCILIATION class genuine.** 190←111, 180←115, 193←123 (periodic→annual
   retenciones roll-up) and 390←303 reconcile a real same-/cross-year source set.
-- **DATA_FIDELITY class genuine.** 347, 184, 232, 721, 308, 360, 349 persist and
+- **DATA_FIDELITY class genuine.** 347, 184, 232, 721, 308, 360, 349 persist
   reload typed observations across two renta years with strict pydantic equality
   and per-year isolation.
 - **THRESHOLD_CONTINUITY class genuine.** 036, 840, 720 assert a real

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#remote-telemetry'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:68fe3e7b4ed4deaf445703145d60969d6990ce525cc774424b9daa864718e1ba'
+modified: '2026-10-03'
+body_hash: 'sha256:bbb178c25c1d485700fb384e2031ec559770a8dcfb44c5d075b8681272e5848f'
 related:
   - "[[2026-06-10-llm-evidence-classification-adr]]"
   - '[[2026-07-10-remote-telemetry-research]]'
@@ -45,7 +45,7 @@ transport itself is deliberately NOT part of this first slice.
   into the telemetry payload in the first place".
 - **The `llm-evidence-classification` off-host consent precedent**
   (`2026-06-10-llm-evidence-classification-adr`,
-  `src/cadrumo/application/ledger/_evidence_input.py`): the codebase already has exactly
+  the former source file): the codebase already has exactly
   one off-host-transmission gate, `cloud_evidence_read_permitted`. Its shape —
   default-off deployment flag, gestor-mode absolute bar, per-invocation
   (never-sticky) acknowledgement, single resolver function — is the template this ADR

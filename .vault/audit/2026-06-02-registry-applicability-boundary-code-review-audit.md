@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-applicability-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:df55cae8ac5cd67b477218e574d52476b7ecd7ae00937e5979629739c805a1b8'
+modified: '2026-10-03'
+body_hash: 'sha256:0be42bed7a1f9f0dfd6c8d757eb5d06de2de5380e42f3ea91c92a09820b2a077'
 related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-applicability-boundary-audit]]"
 ---
 
@@ -16,7 +15,7 @@ related:
 
 No issue found. The slice-owned diff records the extraction assessment
 and closes P04.S23 while leaving
-`src/aeat/domain/calculations/registry/_applicability.py` untouched
+the retired module untouched
 despite active peer formatting WIP.
 
 ## APPLICABILITY-S23-002 | PASS | Canonical rule-table ownership is preserved
@@ -28,6 +27,6 @@ the rule table without an ADR and canonical-test change.
 ## APPLICABILITY-S23-003 | PASS | Public facade compatibility is preserved
 
 No issue found. The recommendation preserves both
-`aeat.domain.calculations.registry` and
-`aeat.domain.calculations.registry.applicability` public surfaces, and
+`aeat.domain.calculations.registry`
+`aeat.domain.calculations.registry.applicability` public surfaces,
 sets focused tests for future extraction commits.

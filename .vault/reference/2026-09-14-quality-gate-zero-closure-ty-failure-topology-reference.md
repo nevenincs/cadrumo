@@ -3,14 +3,15 @@ tags:
   - '#reference'
   - '#quality-gate-zero-closure'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbbddbd0804280647d60b7cbed981b8c4bb5d8f4f708442e0749e3ff5608cd36'
+body_hash: 'sha256:8672e6ceb6869bec6391c242bb6cf4d3e0ee55d8f3498a5640e61af1f94874b3'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-adr]]"
   - "[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]"
   - "[[2026-09-08-quality-gate-zero-closure-product-boundary-adr]]"
 ---
+
 # `quality-gate-zero-closure` reference: `ty failure topology`
 
 This reference records a static analysis of the live type-check output and the source contracts that produce its dominant patterns. It is a revision-scoped observation, not a diagnostic baseline or an implementation plan.
@@ -55,7 +56,7 @@ A separate part of the `missing-argument` population reflects newly explicit aut
 
 After the dominant families, the main populations are 279 `missing-override-decorator`, 151 `unsound-return-statement`, 73 `not-iterable`, 40 `unresolved-import`, 36 `unresolved-reference`, 33 `not-subscriptable`, 24 `invalid-return-type`, and 23 `unsound-assignment` diagnostics. These should not be bulk-labelled as cascades.
 
-The override family is mechanically uniform but distributed over real protocol and visitor implementations. Return and assignment findings often expose `Any` or `Unknown` crossing a typed boundary and need source-local review after upstream import and call-signature repairs. The unresolved imports include retired module members and incorrect relative depth; they are high-confidence defects individually. Production-heavy files include `src/cadrumo/entrypoints/live_state_composition.py`, `dev/registry/facts.py`, `dev/quality/import_health.py`, `dev/registry/bindings.py`, and `src/cadrumo/entrypoints/adapter_composition.py`. Concrete independent signals include raw-object subscripting in `dev/quality/import_health.py:63-94`, optional AST values crossing required AST boundaries in `dev/registry/facts.py:1635`, and incompatible projected-token return types in `src/cadrumo/domain/calculations/registry/prorrata_register_catalogue.py:119-143`.
+The override family is mechanically uniform but distributed over real protocol and visitor implementations. Return and assignment findings often expose `Any` or `Unknown` crossing a typed boundary and need source-local review after upstream import and call-signature repairs. The unresolved imports include retired module members and incorrect relative depth; they are high-confidence defects individually.
 
 ## Dependable measurement protocol
 

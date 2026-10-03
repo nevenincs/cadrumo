@@ -55,8 +55,9 @@ from ...application.ledger.counterparty_operation import (
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
-from ...domain.iva.schema import EUMemberState, require_eu_member_state
+from ...domain.iva.schema import EUMemberState
 from ._ledger_counterparty_payloads import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,

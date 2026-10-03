@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-backend-passkey-safety'
 date: '2026-07-10'
-modified: '2026-08-15'
-body_hash: 'sha256:0f021e2136f1ff96c527aea6125faa4941fd00b379cc17d5d91e160c2cebf230'
+modified: '2026-10-03'
+body_hash: 'sha256:58499587ca4405579533345f81e9e6996dc81196da4cbeb88d64e2f6bb0de6de'
 related: []
 ---
 
@@ -42,7 +42,7 @@ setup service.
 ### passkey-custody-verbs-landed-under-different-modules | medium | rekey/recover/show-recovery/verify-recovery/switch/lock exist, but as secret-store custody verbs, not the planned per-verb files
 
 ADR decision 7's canonical verb set is satisfied at HEAD, but the verbs live in
-`src/aeat/entrypoints/cli/_config/_custody_secret.py` (`config rekey`, `config recover
+The retired module (`config rekey`, `config recover
 --recovery-key`, `config show-recovery`, `config verify-recovery`, `config lock`) and
 `_custody.py` (`config switch`), driven by a `secret_store` / `user_profile` application
 abstraction (`rekey_secret_store`, `recover_secret_store`, `mint_recovery_code`,
@@ -67,7 +67,7 @@ P08 terminology denylist tests (`test_no_storage_vault_identifier.py`,
 `test_error_message_terminology.py`, `test_locale_storage_terminology.py`), the P09
 legacy-layout refusal gate (`LegacyLayoutDetectedError` in `application/setup`), the P10 e2e
 test files at the planned `_config/tests/test_e2e_*.py` paths, and the P11 docs
-(`docs/cli/config.md`, `docs/concepts/lock-unlock-recovery.md`, the README data-loss banner,
+(the retired document, the retired document, the README data-loss banner,
 the vault reference doc) do not exist at HEAD. P09 is additionally moot under the
 `no-legacy-compatibility` rule (unreleased pre-beta, no released data to refuse).
 

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance-s09-review'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-10-03'
 body_hash: 'sha256:fb704ce77696d009fa1ee83ae4dd187932d49fa6ea48935733cb49e6794e52fd'
-related:
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
+related: []
 ---
 
 # `cli-authority-verb-conformance-s09-review` audit: `S09 invoice protocol boundary`

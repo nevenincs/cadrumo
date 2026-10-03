@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#release-asset-transport'
 date: '2026-07-20'
-modified: '2026-08-15'
-body_hash: 'sha256:32bcd097db3c6d9abdba7a972e2be8cceaca2bc9d6104f4e0fa77a7e7b1ddecb'
+modified: '2026-10-03'
+body_hash: 'sha256:b41055192e4d8915a2be4334381a3d54fc76153cd65e3a5f58d0432fb527ee62'
 related:
   - "[[2026-07-20-release-asset-transport-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
@@ -78,7 +78,7 @@ The 2026-07-19 holistic review's open gaps G4/G5/G6 prescribe artifact uploads
 and a `gh run download` aggregation recipe. Superseded on mechanism by the
 transport ADR; a note now marks the diagnoses as still valid but the remedies
 as transport-shaped. Code-level routing: whoever implements the Homebrew row
-emission and claude-row aggregation must build on `dev/packaging/evidence_release.py`
+emission and claude-row aggregation must build on the retired module
 draft-release verify/aggregate, not run artifacts.
 
 ### releasing-md-lag-risk | low | Operator runbook surfaces must be re-checked once the transport implementation lands

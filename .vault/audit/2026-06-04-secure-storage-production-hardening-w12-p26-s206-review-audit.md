@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:5d7fea9048182172e1ec82b8751860ae5e53aa1402d3ccb10f0c8c53604bc711'
+modified: '2026-10-03'
+body_hash: 'sha256:30bfcb0a0c6ba9b01bc62415e6781ecb73d6535a8c2671f60053fc61bbd26d3c'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
@@ -59,16 +59,16 @@ The locale gate surfaced stale `cli.diagnostics.profile` and
 `src/aeat/diagnostics` CLI package. The leaves were removed through the
 canonical `python -m aeat.locales remove` workflow followed by
 `python -m aeat.locales scaffold` to prune empty namespace parents. The stale
-inventory ratchet was removed from `src/aeat/test_locale_coverage_inventory.py`.
+inventory ratchet was removed from the retired test.
 
 ## S206-007 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/export/_tabular.py src/aeat/application/export/test_tabular.py` passed.
-- `uv run --no-sync pytest src/aeat/application/export/test_tabular.py -q` passed with 21 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py src/aeat/application/export/_tabular.py src/aeat/application/export/test_tabular.py src/aeat/core/external_constants.py src/aeat/core/test_external_constants.py` passed.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py -k "browser_action or representation_own_name or own_name_representation or wallet"` passed with 33 selected tests.
-- `uv run --no-sync pytest -q src/aeat/application/export/test_tabular.py src/aeat/core/test_external_constants.py -k "export or mime_type or tabular or pre303 or live_safety"` passed with 39 selected tests.
-- `uv run --no-sync pytest -q src/aeat/test_locale_coverage_inventory.py src/aeat/locales/test_parity.py -k "operator_error_locale_key or codebase_to_locale_parity"` passed with 125 selected tests.
+- the historical check passed.
+- the historical check passed with 21 tests.
+- the historical check passed.
+- the historical check passed with 33 selected tests.
+- the historical check passed with 39 selected tests.
+- the historical check passed with 125 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S206

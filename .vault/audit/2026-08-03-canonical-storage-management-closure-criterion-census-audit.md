@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-04'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9bac4cac1959e29bb3d903f84dd9f5da0161e31d982b3dd3da11d6e4ec26baec'
+body_hash: 'sha256:f851a0b74bed566220426f925a202f0182f39d37324347668e915a1ee73f0d7f'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
-  - '[[2026-08-03-canonical-storage-management-plan]]'
   - '[[2026-08-03-canonical-storage-management-closure-criterion-reference]]'
   - '[[2026-08-03-canonical-storage-management-closure-statement-reference]]'
   - '[[2026-08-03-canonical-storage-management-honesty-review-audit]]'
@@ -70,7 +69,7 @@ provenance classification all came from the untruncated terminal output, and the
 audit's conclusion rests on those. Only the subtraction was wrong.
 
 The durable fix is the one this audit itself recommended, now applied to its own
-number: the census ships as `dev/write_site_census.py` (commit `30f2493ee1`) with
+number: the census ships as the retired module (commit `30f2493ee1`) with
 a test pinning both selector discriminations, and the count is obtained by
 running `python -m dev.write_site_census <revision>` rather than by reading a
 figure out of prose. A count in prose has no maintainer; that is what produced

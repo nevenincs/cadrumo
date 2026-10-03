@@ -5,13 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bfe47d25ad2415b8ade910817913b0baa123f313e3aeb91cd3eb656ff76e1ffa'
+body_hash: 'sha256:cc78bb49c8e3e310e02e2754c76f1e3e1a03b4d24b89c749475daffc48c39c00'
 related:
   - '[[2026-08-28-registry-narrow-mechanism-widening-adr]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
 ---
 
 # `registry-temporal-coverage` research: `registry temporal coverage`
@@ -58,7 +56,7 @@ covered: 390 (1 of 5), 184 (2 of 6), 322 (3 of 4), 200 (1 of 2), 185 (1 of 2).
 ### Why this is a conformance gap, not a missing capability
 
 The corrective standard already exists in this repository and is documented in
-its own words. `src/cadrumo/tests/registry_conformance.py` composes "exactly one
+its own words. the former source file composes "exactly one
 RevisionConformanceRow per modelo revision in the loaded tree", and says why a
 per-modelo scalar cannot stand for a range:
 
@@ -119,7 +117,7 @@ A DETECTION GAP in the existing census, not a new class.
 
 S32 counts files PEGGED BY A YEAR TOKEN IN THE FILENAME. `_GENERATED_TREES` is a
 literal `(modelo, revision)` list INSIDE ONE FILE -
-`dev/registry/tests/test_generated_export_trees.py` - whose name carries no year
+the former source file - whose name carries no year
 token. The existing metric cannot see it, and it is the larger instance:
 
     29 of 128 declared revisions enrolled          23 percent
@@ -187,8 +185,7 @@ in-file enrolment lists as well as year-pegged filenames.
 refuses `m390-2022` at `literal 'modelo-390-page-07-close'` because
 `_render_candidate()` in `dev/registry/pipeline/cli.py` calls
 `render_complete_export_tree` WITHOUT `source_defects`, while the adjudication for
-a genuine typo in the official file is declared only in
-`dev/registry/tests/test_generated_export_trees.py`. Mechanism is pipeline-owned;
+a genuine typo in the official file is declared only . Mechanism is pipeline-owned;
 data is test-owned; the CLI cannot read it. The test harness renders this tree and
 the CLI cannot, for the same tree and the same design.
 
@@ -212,8 +209,8 @@ named by S79, S112, S113 or S115.
 
 ## Sources
 
-- `src/cadrumo/tests/registry_conformance.py` — revision-wide projection over the loaded registry.
-- `dev/registry/tests/test_generated_export_trees.py` — the hand-enrolled generated-tree list and source-defect pins.
+- the former source file — revision-wide projection over the loaded registry.
+- the former source file — the hand-enrolled generated-tree list and source-defect pins.
 - `dev/registry/pipeline/cli.py` — the publication path that omits source-defect adjudications.
 - `.vault/adr/2026-08-28-registry-narrow-mechanism-widening-adr.md` — the accepted explicit-subject widening constraint.
 - `.vault/adr/2026-08-24-registry-completeness-closure-adr.md` — the governing law-selectable revision coverage boundary.

@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:0b1d23db7ea8a1db1ac8b672bb02a8ad4bbe4d81d67a3ab6c79fad0b0140efc7'
 related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-13-profile-password-custody-research]]'
 ---
 # `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `rejected`)

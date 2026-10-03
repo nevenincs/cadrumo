@@ -4,23 +4,16 @@ tags:
   - '#index'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:be7215dcba4a7019442357a49d05012fc0661e33862e84068af66728f0116a18'
+body_hash: 'sha256:c145ae674e1addd4fa0152ee9351bb6a612673891ceb467c7939fdddb34979c5'
 related:
-  - '[[2026-08-22-source-casilla-integration-W05-P15-summary]]'
-  - '[[2026-08-22-source-casilla-integration-W05-P16-summary]]'
-  - '[[2026-08-22-source-casilla-integration-W05-P17-summary]]'
-  - '[[2026-08-22-source-casilla-integration-W05-P18-summary]]'
-  - '[[2026-08-22-source-casilla-integration-W05-P19-summary]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
-  - '[[2026-08-22-source-casilla-integration-ledger]]'
   - '[[2026-08-22-source-casilla-integration-m182-row-source-grounding-research]]'
   - '[[2026-08-22-source-casilla-integration-m232-row-source-grounding-research]]'
   - '[[2026-08-22-source-casilla-integration-m360-row-source-grounding-research]]'
-  - '[[2026-08-22-source-casilla-integration-plan]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
   - '[[2026-08-22-source-casilla-integration-s135-phase-quality-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-s141-workflow-authority-review-audit]]'
@@ -230,19 +223,6 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit` - `source-casilla-integration` audit: `w05 p19 s108 m296 grounding review`
 - `2026-08-25-source-casilla-integration-w05-p19-s109-m296-registry-refusal-review-audit` - `source-casilla-integration` audit: `W05 P19 S109 Modelo 296 registry refusal review`
 - `2026-08-25-source-casilla-integration-w05-p19-s110-m296-refusal-lifecycle-review-audit` - `source-casilla-integration` audit: `W05 P19 S110 Modelo 296 refusal lifecycle review`
-
-### exec
-
-- `2026-08-22-source-casilla-integration-ledger` - `source-casilla-integration` ledger
-- `2026-08-22-source-casilla-integration-W05-P15-summary` - `source-casilla-integration` `W05.P15` summary
-- `2026-08-22-source-casilla-integration-W05-P16-summary` - `source-casilla-integration` `W05.P16` summary
-- `2026-08-22-source-casilla-integration-W05-P17-summary` - `source-casilla-integration` `W05.P17` summary
-- `2026-08-22-source-casilla-integration-W05-P18-summary` - `source-casilla-integration` `W05.P18` summary
-- `2026-08-22-source-casilla-integration-W05-P19-summary` - `source-casilla-integration` `W05.P19` summary
-
-### plan
-
-- `2026-08-22-source-casilla-integration-plan` - `source-casilla-integration` plan
 
 ### research
 

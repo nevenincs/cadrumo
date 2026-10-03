@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5fdc21ab2ba9296a5a775f7a600cb512ac2c3f5cf5aafbcff0df29b8ed6d8b6d'
+body_hash: 'sha256:3ef9f6b7b887d8d258c8270925a3bc70a0014a7c06f3b1f1033a215b5e346c91'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
 ---
@@ -23,17 +23,16 @@ repair; output-layer deduplication would conceal contradictory authority.
 
 The resolver contract requires the window year and embedded `Period.filing_year` to
 name the work unit's tax year. A following-January campaign belongs in `opens_on` and
-`closes_on`, not a changed identity year (`src/cadrumo/domain/deadlines/_plazo.py:28`,
-`src/cadrumo/domain/calculations/registry/_schema.py:572`). Modelo 190 and 193 each
+`closes_on`, not a changed identity year (the former source file,
+the former source file). Modelo 190 and 193 each
 violate this axis.
 
 ### The current authority projects every authored copy
 
 `deadline_windows` scans every revision, filters only on `window.filing_year`, and
 appends every match without law-selecting the revision
-(`src/cadrumo/domain/calculations/registry/_authority.py:318`). Existing validation
+. Existing validation
 checks revision-selector overlap, not nested-window ownership
-(`src/cadrumo/domain/calculations/registry/_validate_revision_rules.py:25`).
 
 ### The fleet inventory exposes 27 duplicated obligations
 
@@ -46,8 +45,8 @@ M303's seven sampled 2025 periods each occur under five revisions
 ### Every calendar and CLI surface amplifies the defect
 
 `DeadlineEngine.compute` emits one obligation per tuple
-(`src/cadrumo/domain/deadlines/_engine.py:197`). Overview projection preserves all rows
-(`src/cadrumo/application/overview/_calendar.py:780`); CLI calendar, agenda, backlog,
+. Overview projection preserves all rows
+; CLI calendar, agenda, backlog,
 workflow gates, filing-window lookup, and explain inherit the same defect.
 
 ### Modelo 210 needs canonical plazo keying, not an exemption
@@ -91,12 +90,6 @@ changed date against its declared source and authoritative corpus.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_authority.py:318`
-- `src/cadrumo/domain/calculations/registry/_schema.py:572`
-- `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py:25`
-- `src/cadrumo/domain/deadlines/_engine.py:197`
-- `src/cadrumo/domain/deadlines/_plazo.py:28`
-- `src/cadrumo/application/overview/_calendar.py:780`
 - `src/cadrumo/domain/deadlines/tests/test_engine.py:463`
 - `src/cadrumo/_data/registry/aeat/modelos/303/revisions`
 - `.vault/adr/2026-07-09-m210-plazo-keying-adr.md`

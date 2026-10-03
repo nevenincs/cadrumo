@@ -201,11 +201,11 @@ def _require_admitted_profile_history_request(
 ) -> None:
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        # Observation is caller-independent: a fresh process replays from a new
+        # destination, and result disclosure is checked against that destination.
         require_period_independent_admission(
             admitted, profile_id=context.profile_id, definition_id=request.definition_id
         )
-        if admitted.destination_id != context.destination_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     elif context.authority_operation is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 

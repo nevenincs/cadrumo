@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#profile-setup-flow'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae938b8e55c0f87425a5bc3e39b2e50b613b04ec4e09f96ec57b36a307254f30'
+body_hash: 'sha256:409fa72a1fa10fd1ccf2e9f9785f347cf133af23e89385d296237c430076e7bb'
 related:
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-23-profile-setup-flow-integration-shape-audit]]'
-  - '[[2026-07-23-profile-setup-flow-ledger]]'
   - '[[2026-07-23-profile-setup-flow-page-catalogue-mapping-reference]]'
-  - '[[2026-07-23-profile-setup-flow-plan]]'
   - '[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]'
   - '[[2026-07-24-profile-setup-flow-close-honesty-review-audit]]'
   - '[[2026-08-02-profile-setup-flow-tui-trigger-audit]]'
@@ -34,14 +32,6 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 - `2026-07-23-profile-setup-flow-integration-shape-audit` - `profile-setup-flow` audit: `taxpayer profile integration shape and ADR grounding audit`
 - `2026-07-24-profile-setup-flow-close-honesty-review-audit` - `profile-setup-flow` audit: `Close honesty review`
 - `2026-08-02-profile-setup-flow-tui-trigger-audit` - `profile-setup-flow` audit: `profile create TUI trigger`
-
-### exec
-
-- `2026-07-23-profile-setup-flow-ledger` - `profile-setup-flow` ledger
-
-### plan
-
-- `2026-07-23-profile-setup-flow-plan` - `profile-setup-flow` plan
 
 ### reference
 

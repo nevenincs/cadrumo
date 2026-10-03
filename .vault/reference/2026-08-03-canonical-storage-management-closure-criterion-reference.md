@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:66106f39ab97b6523814e9703ccfc33200a25356a4f49b762092cf46c868ae75'
+body_hash: 'sha256:4a4db076acd81094c6f732c276e94774907fa033745be3471b2440300a1d598e'
 related: []
 ---
 
@@ -470,7 +470,6 @@ clean face.
   `core/tests/test_storage_fingerprint_participation_gate.py`,
   `core/tests/test_storage_default_parity.py`,
   `core/tests/test_config_state_root.py`, `core/tests/test_config_override.py`,
-  `tests/test_storage_scope.py`, `tests/test_config.py` (all under
   `src/cadrumo/`). These are the oracles and gates for the taxonomy; their
   literals are the independent check, and re-pointing any of them at the
   accessor would make the taxonomy assert against itself while the suite

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..operations.models import OperationTerminalReceipt
+from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from .catalogue_intake_contracts import (
     INVOICE_INTAKE_PROJECTION_TYPES,
     InvoiceImportProjection,
@@ -59,13 +59,10 @@ def _require_invoice_wizard_refusal_receipt(receipt: OperationTerminalReceipt) -
 
 
 def _require_invoice_intake_success_receipt(receipt: OperationTerminalReceipt) -> None:
-    if (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-    ):
-        raise ValueError("invoice intake outcome differs from its terminal receipt")
+    message = "invoice intake outcome differs from its terminal receipt"
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
+        raise ValueError(message)
+    require_succeeded_receipt_references(receipt, message=message)
 
 
 def _require_invoice_intake_effect(

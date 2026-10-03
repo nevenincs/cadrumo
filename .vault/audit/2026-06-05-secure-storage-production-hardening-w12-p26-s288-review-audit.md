@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:5f18a1777bc4464e492b1c1ad72bea7e16e9a4d685a1f13a16566acca1e945cc'
+modified: '2026-10-03'
+body_hash: 'sha256:c24ec0a2b1e667fbb0075fede7d68124b4d4f9264eb2a6a6a1d1cdf2c616e917'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S288-001 | PASS | Shared TOML helper is a plaintext parser boundary
 
-`src/aeat/core/_toml.py` centralizes TOML parse, string-key validation, and recursive
+The retired module centralizes TOML parse, string-key validation, and recursive
 freeze behavior for committed TOML and already-loaded TOML text. The helper does not
 open secure-object repositories, resolve active profiles, scan bucket directories, call
 remote providers, or handle master-key material. Its `parse_toml_text()` entrypoint is
@@ -31,7 +31,7 @@ exception is swallowed or converted to a silent default in this module.
 
 ## S288-003 | PASS | Settings and environment isolation
 
-No settings or environment wrangling is present in `src/aeat/core/_toml.py` or its
+No settings or environment wrangling is present in the retired module or its
 unit tests. The module has no `os.environ`, `getenv`, `load_settings`, settings object,
 runtime-route, or active-profile access. This keeps configuration resolution with the
 callers that own storage or domain loading context.
@@ -40,15 +40,15 @@ callers that own storage or domain loading context.
 
 Direct usage search shows the helper is reused by access-gate authorization manifests,
 domain registry loaders, user-profile schema loading, IVA/deadline/category catalogues,
-and bucket manifest I/O. Vaultspec RAG clustered the slice with `src/aeat/core/_toml.py`,
-`src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`, bucket manifest
+and bucket manifest I/O. Vaultspec RAG clustered the slice with the retired module,
+The retired module, bucket manifest
 roundtrip tests, and workflow manifest error compaction. No duplicate TOML parser or
 freeze helper was found in the secure-bucket runtime path.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/_toml.py src/aeat/core/test_toml.py src/aeat/adapters/persistence/storage/bucket/_manifest_io.py src/aeat/adapters/persistence/storage/bucket/test_manifest_io.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py src/aeat/core/access_gate/test_authorization_manifest.py src/aeat/domain/user_profile/test_schema.py`
-- `uv run --no-sync pytest -q src/aeat/core/test_toml.py src/aeat/adapters/persistence/storage/bucket/test_manifest_io.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py src/aeat/core/access_gate/test_authorization_manifest.py src/aeat/domain/user_profile/test_schema.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "parse_toml_text bucket manifest toml text loader error_factory no duplicate TOML parser" --type code --port 8766 --max-results 8`
 

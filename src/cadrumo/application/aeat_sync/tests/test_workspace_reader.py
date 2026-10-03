@@ -379,6 +379,72 @@ def test_an_uncomposed_custody_reader_leaves_notifications_unobserved() -> None:
     assert row.local_observed_at is None
 
 
+def test_saved_census_is_available_and_compares_only_observed_facts() -> None:
+    """A reopened workspace reads stored evidence without fabricating absent values."""
+    from ...user_profile.censal_observation import (
+        CensalCell,
+        CensalConsultation,
+        CensalObservation,
+        CensalObservationAddress,
+        CensalObservationIdentity,
+        CensalRow,
+        CensalSection,
+    )
+
+    observation = CensalObservation(
+        identity=CensalObservationIdentity(nif=_SUBJECT),
+        domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=_NOW,
+        source_url="https://sede.agenciatributaria.gob.es/censo",
+        consultations=(
+            CensalConsultation(
+                kind="obligaciones",
+                source_url="https://sede.agenciatributaria.gob.es/obligaciones",
+                sections=(
+                    CensalSection(
+                        title="Mis Obligaciones",
+                        rows=(
+                            CensalRow(
+                                cells=(CensalCell(role="value", column="Nueva columna", text="Dato conservado"),),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id=_BUCKET,
+        subject_key=_SUBJECT,
+        observed_at=_NOW,
+        filings=(),
+        operation_contracts=_unrelated_contracts(),
+        censo_values={"contact.postcode": "08001"},
+        census_observation=observation,
+    )
+    assert projection.census_observation == observation
+    assert type(projection).model_validate_json(projection.model_dump_json()).census_observation == observation
+    overview = _overview_row(projection, AeatSyncOverviewArea.CENSUS)
+    assert overview.aeat_state is AeatSyncSourceState.PRESENT
+    assert overview.aeat_observed_at == _NOW
+    rows = {row.path: row for row in projection.census}
+    assert rows["contact.postcode"].status is AeatSyncCensusStatus.CONFLICT
+    assert rows["contact.postcode"].aeat_value == "28001"
+    assert rows["contact.fiscal_address_cadastral_reference"].status is AeatSyncCensusStatus.NOT_COMPARED
+    assert rows["contact.fiscal_address_cadastral_reference"].aeat_value is None
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="another profile or taxpayer"):
+        read_local_aeat_sync_workspace_projection(
+            bucket_id=_BUCKET,
+            subject_key="00000002W",
+            observed_at=_NOW,
+            filings=(),
+            operation_contracts=_unrelated_contracts(),
+            censo_values={},
+            census_observation=observation,
+        )
+
+
 _FILED_SUBJECT = "X1234567L"
 _CAPTURED_AT = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
 

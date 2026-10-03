@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:8e2d310b691bdde73794b66e8be2f019e0d6343d7acb205116b4641b5683f0b4'
+modified: '2026-10-03'
+body_hash: 'sha256:89e456f1d284b7d349512d674d804cd87a7a04e5109bcd71fb725168c92a2bd0'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
 ---
@@ -20,7 +20,7 @@ constraint into a project-wide, mechanically-gated inventory.
 
 ## The scanner
 
-`dev/import_hygiene_scan.py` is the campaign's mechanical, read-only discovery
+the former source file is the campaign's mechanical, read-only discovery
 tool. It AST-walks every `.py` file under `src/aeat`, resolves every `import` /
 `from ... import ...` statement (including relative imports) to an absolute
 dotted module name, and classifies cross-package reaches into three violation
@@ -30,8 +30,8 @@ modifies nothing.
 Re-run with:
 
 ```
-python dev/import_hygiene_scan.py --top 30
-python dev/import_hygiene_scan.py --json inventory.json --top 30
+Historical command omitted; its target file was removed.
+Historical command omitted; its target file was removed.
 ```
 
 Ownership rule the scanner encodes: for a private module `A.B._C...` (first
@@ -46,7 +46,7 @@ a live grep sweep: the only discrepancy is 2 sites in `aeat.core.setup_answers`
 that use dynamic `importlib.import_module(...)` calls (not static
 `import`/`from` statements) as a deliberate circular-import-avoidance
 technique — `rg` finds the string but the AST walk cannot resolve a dynamic
-target. `rg -n "import_module"` against `src/aeat/core/setup_answers.py`
+target. `rg -n "import_module"` against the former source file
 confirms exactly these two call sites; every other family-1/2/3 count the
 scanner reports matches an independent `rg` count for the same target module or
 symbol name.
@@ -104,16 +104,12 @@ import statements plus an `__all__`, zero real function/class definitions) and
 the `aeat-swarm-audit-cadence` substitutability discipline) shows most are
 legitimate documented bridges rather than accidental duplication:
 
-- `src/aeat/adapters/outbound/aeat/_playwright.py`,
-  `src/aeat/application/workflow/_utils.py`,
-  `src/aeat/domain/calculations/registry/applicability.py`,
-  `src/aeat/domain/deadlines/taxpayer_model.py`,
-  `src/aeat/domain/transactions/_ids.py`, and
-  `src/aeat/entrypoints/cli/_schemas.py` — six pure-reexport bridge modules.
-- `src/aeat/locales/__main__.py` — a false positive: an entry-point module is
+  the former source file, and
+  the former source file — six pure-reexport bridge modules.
+- the former source file — a false positive: an entry-point module is
   expected to be a thin `import` + dispatch shape; the classifier should
   exclude `__main__.py` from this heuristic.
-- `src/aeat/application/aggregation/_withholding_observations_repository.py` —
+- the former source file —
   the one genuine violation: a real 282-line M190 percepciones implementation
   under an English-stem name, sitting beside the distinct
   `_retencion_observations_repository.py` (the M180/193 store). This is a
@@ -195,9 +191,9 @@ and `aeat.application.workflow` (15 / 51).
 
 Two existing tests enforce a narrower version of this boundary today and are
 candidates for retirement once the ratcheting gate lands:
-`src/aeat/domain/calculations/registry/tests/test_public_api_boundaries.py`
+
 (registry-package-scoped) and
-`src/aeat/entrypoints/cli/tests/test_architecture_boundaries.py`
+
 (CLI-package-scoped). Their existing allowlisted exceptions should be seeded
 into the new gate's Family-2 shim allowlist / Family-3 pinned-symbol set rather
 than dropped.

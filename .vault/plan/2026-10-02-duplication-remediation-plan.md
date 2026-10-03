@@ -12,9 +12,11 @@ related:
   - '[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]'
   - '[[2026-09-11-binding-schema-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-10-03-duplication-remediation-m200-stock-verification-adr]]'
+  - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:360a3d5b04a6cb561c6f10368ffd9dd1c0e0085e85f8887167ad90cbadd857e2'
+body_hash: 'sha256:05a93648d6715018cadf024f0d56eeb74ed0cba19451e3acccc9b7219123cd1f'
 ---
 
 # `duplication-remediation` plan
@@ -118,11 +120,11 @@ Raw-signal coverage is reconciled by semantic contract cluster as well as by the
 - [ ] `S13` - Consolidate residual receipt and result-budget checks without duplicating receipt model authority; `src/cadrumo/application/operations/models.py, operation projectors and access-scope resolvers, owning tests`.
 - [ ] `S14` - Consolidate equal runtime deadline, admission, exchange and result-page primitives while preserving each frontend lifecycle; `src/cadrumo/application/runtime, src/cadrumo/adapters/local_runtime, src/cadrumo/entrypoints/cli, src/cadrumo/entrypoints/tui/operations, src/cadrumo_harness/mcp, owning tests`.
 - [ ] `S15` - Consolidate generic cleanup failure composition and preserve owner-specific diagnostic retention; `src/cadrumo/core/async_cleanup.py, local_runtime and entrypoint cleanup consumers, src/cadrumo_harness/mcp/runtime_cleanup.py, owning tests`.
-- [ ] `S16` - Refuse zero-progress persistence writes and distinguish Windows sharing contention from access denial; `src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py, src/cadrumo/adapters/persistence/storage/custody/filesystem.py, owning tests`.
+- [ ] `S16` - Refuse zero-progress persistence writes, distinguish Windows sharing contention from access denial and refuse linked bucket containers before acquiring deletion locks; `src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py, src/cadrumo/adapters/persistence/storage/custody/filesystem.py, src/cadrumo/application/bucket_maintenance/_deletion_paths.py, src/cadrumo/adapters/persistence/storage/tests/test_service_assess_deletion.py, owning tests`.
 - [ ] `S17` - Consolidate equal governed-map payload mechanics with typed catalogue-specific policies; `src/cadrumo/domain/calculations/registry/facts/resolution.py, governed-fact catalogue defining modules, owning tests`.
-- [ ] `S18` - Unify binding validator mechanics and casilla indexing against provider registration and canonical aggregation; `src/cadrumo/domain/calculations/registry/binding_provider_registration.py, ledger_*_bindings.py, shared selector and indexing defining modules, owning tests`.
+- [ ] `S18` - Unify binding validator mechanics and casilla indexing against provider registration and canonical aggregation; refuse unrouted sources through the existing production ownership gate while preserving intrinsic channels; `src/cadrumo/domain/calculations/registry/binding_provider_registration.py, ledger_*_bindings.py, shared selector and indexing defining modules, src/cadrumo/application/modelo/calculation_actions.py, src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py, src/cadrumo/application/modelo/tests/test_unrouted_source_refusal.py, owning tests`.
 - [ ] `S19` - Consolidate frontend presentation mechanics and verify focus, display-cell fitting and accent search; `src/cadrumo/entrypoints/tui/components, src/cadrumo/entrypoints/tui/modelo/workbench, src/cadrumo/entrypoints/tui/profile, workspace and widget consumers, owning tests`.
-- [ ] `S20` - Resolve deadline presentation through one application-owned projection with explicit nominal and effective dates; `src/cadrumo/application/modelo/work_plazo.py, src/cadrumo/application/modelo/work_form_service.py, src/cadrumo/application/overview/calendar.py, CLI and TUI projections, owning tests`.
+- [x] `S20` - Resolve deadline presentation through one application-owned projection with explicit nominal and effective dates; `src/cadrumo/application/modelo/work_plazo.py, src/cadrumo/application/modelo/work_form_service.py, src/cadrumo/application/overview/calendar.py, CLI and TUI projections, owning tests`.
 - [ ] `S21` - Reconcile locale register and proven equivalent translation concepts through the catalogue owner; `src/cadrumo/locales, dev/locales, CLI help sources, owning tests`.
 - [ ] `S22` - Consolidate cloud error classification and persistence error authority while preserving operation-specific retry safety; `src/cadrumo/adapters/outbound/google, src/cadrumo/adapters/outbound/storage, src/cadrumo/adapters/persistence, owning ports and tests`.
 - [ ] `S23` - Replace development copies of product mechanics and correct tooling outcome and translation-import detection; `dev/registry, dev/quality/write_path_coverage.py, dev/locales/wizard_translation_audit.py, dev/packaging, dev/acceptance, existing product identity, authority descriptor, TOML and hashing owners, owning tests`.

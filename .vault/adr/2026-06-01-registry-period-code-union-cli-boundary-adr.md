@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#registry-period-code-union'
 date: '2026-06-01'
-modified: '2026-08-15'
-body_hash: 'sha256:4274de2543f2be8a565880bdf9a1ed8d2325f0994e8741702efc47820b7fdda4'
+modified: '2026-10-03'
+body_hash: 'sha256:9714a2ea51ba11765754f9c0b9876054ec0a912908aa7ba038e05b5a59ba5efb'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - '[[2026-06-04-registry-period-code-union-research]]'
@@ -20,7 +20,7 @@ Authored via the Write tool following the canonical frontmatter shape — the ar
 
 The CLI exposes ~15 `--period` sites (per the S801 α-survey at commit `b9ff9dc09`) that span multi-modelo contexts. The legitimate value space at the CLI boundary is the UNION of four sub-vocabularies:
 
-- **StandardPeriodCode** (closed StrEnum at `src/cadrumo/core/_period.py`): `1T-4T`, `1P-4P`, `0A`, `01-12`. 21 members. Covers the dominant case for M100/M130/M131/M200/M303 quarterly + monthly periods.
+- **StandardPeriodCode** (closed StrEnum ): `1T-4T`, `1P-4P`, `0A`, `01-12`. 21 members. Covers the dominant case for M100/M130/M131/M200/M303 quarterly + monthly periods.
 - **Extended OSS/IOSS scheme**: `EXT-1T`, `EXT-2T`, `EXT-3T`, `EXT-4T`. Used by M369 (Régimen Especial de la Unión OSS).
 - **Ad-hoc lifecycle filings**: `AD-HOC` literal. Used by M308 (devolución a sujetos no establecidos), M309 (declaración no periódica), M360 (devolución intracomunitaria).
 - **Event-driven informativas**: `EVENT-N` where `N` is a per-event counter integer. Used by event-triggered informativa filings (M180/M193/M210 event mode, etc.). The integer is operator-supplied per filing event.
@@ -121,7 +121,7 @@ The α-scope CLI typing for `--period` becomes `RegistryPeriodCode` (a `str` ali
 
 The β-scope ~50-site application-layer migration uses the same alias. Data-class fields declare `period: RegistryPeriodCode`. Pydantic v2 applies the `BeforeValidator` automatically during model_validate; roundtrip through JSON serialises as plain `str`, deserialises back through the validator. No discriminator field needed.
 
-### D2 — Define `RegistryPeriodCode` at `src/cadrumo/core/_period.py`
+### D2 — Define `RegistryPeriodCode`
 
 Co-locate with `StandardPeriodCode`. Module-level constants for the regex patterns. Module-level frozen set for the literal members.
 
@@ -152,11 +152,11 @@ The validator is Python today (no period-vocabulary TOML). If a future ADR estab
 
 - ~15 CLI `--period` sites. Each receives the new type annotation. Per-site `--help` text gets an explicit accepted-set list. Estimated 1 commit, ~30 LOC + 15 help-text updates.
 - ~50 application-layer data-class fields under `aggregation/`, `calculations/`, `workflow/`, `modelos/`. Each gains the new type annotation. Pydantic roundtrip tests verify JSON encode/decode preserves the original string verbatim. Estimated 2-3 commits, ~80 LOC + new roundtrip-discipline tests.
-- One new module entry-point at `src/cadrumo/core/_period.py` exporting `RegistryPeriodCode`, `accepted_period_codes`, `accepted_period_patterns`. ~50 LOC.
+- One new module entry-point exporting `RegistryPeriodCode`, `accepted_period_codes`, `accepted_period_patterns`. ~50 LOC.
 
 ### Migration order
 
-1. Land `RegistryPeriodCode` + validator + tests at `src/cadrumo/core/_period.py`. Standalone commit; no consumers yet.
+1. Land `RegistryPeriodCode` + validator + tests. Standalone commit; no consumers yet.
 2. Migrate CLI sites first (α scope). Each site picks up the new type; `--help` text updated; CLI tests assert the parse-failure error message lists the accepted set.
 3. Migrate application-layer data-class fields (β scope). Roundtrip tests per `aeat-roundtrip-discipline` confirm encrypted-envelope persistence preserves the string verbatim and the validator re-runs on deserialise.
 

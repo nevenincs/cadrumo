@@ -37,7 +37,6 @@ from ...application.operations.models import (
     OperationStoredInvocation,
     new_operation_id,
 )
-from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.persistence.journal import OperationRecoveryInventoryDisposition
 from ...application.operations.registry import (
     OperationFrontendProjection,
@@ -83,6 +82,7 @@ if TYPE_CHECKING:
     from ...application.operations.supervisor import OperationSupervisor
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+_PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 
 
 class ProfileWorkerOperationHost:
@@ -146,15 +146,15 @@ class ProfileWorkerOperationHost:
         return projection_for_taxpayer(record, schema=repository.session.profile_decode_context.schema)
 
     async def _finalize_password_rotation(
-        self, context: OperationExecutorContext, outcome: ProfilePassphraseRotationOutcome
+        self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome
     ) -> None:
         """Retire original custody after encrypted result persistence in COMMIT."""
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        self._execution.retire_password_successor(context.identity, outcome)
+        self._execution.retire_password_successor(identity, outcome)
 
     async def _workbench_generation(
-        self, context: OperationExecutorContext, payload: WorkbenchGenerationOperationRequest
+        self, identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
         """Retain native read authority through one exact-profile generation capture."""
         execution, services = self._execution, self._services
@@ -162,11 +162,11 @@ class ProfileWorkerOperationHost:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
         def account_session() -> HomeAccountSession:
-            execution.workbench_session(context.identity, payload)
+            execution.workbench_session(identity, payload)
             profile = read_profile_bucket_by_id(str(payload.profile_id), root=self.custody.root)
             if profile is None or profile.bucket_id != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            lease = execution.workbench_session(context.identity, payload)
+            lease = execution.workbench_session(identity, payload)
             return HomeAccountSession(
                 posture=HomeSessionPosture.ACTIVE, profile_label=profile.label, expires_at=lease.expires_at
             )
@@ -183,23 +183,23 @@ class ProfileWorkerOperationHost:
                 account_session()
                 return result
 
-        async with execution.guard(context.identity, AccessAction.START):
+        async with execution.guard(identity, AccessAction.START):
             return await await_cancellation_complete(
                 asyncio.to_thread(capture), task_name="runtime-workbench-generation"
             )
 
     def _automation_administration(
-        self, context: OperationExecutorContext, profile_id: UUID
+        self, identity: OperationIdentity, profile_id: UUID
     ) -> WorkerAutomationAdministration:
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return WorkerAutomationAdministration(self._execution, context.identity, profile_id)
+        return WorkerAutomationAdministration(self._execution, identity, profile_id)
 
-    async def _automation_inventory(self, context: OperationExecutorContext, profile_id: UUID) -> AutomationInventory:
+    async def _automation_inventory(self, identity: OperationIdentity, profile_id: UUID) -> AutomationInventory:
         """Use the canonical operation identity, never caller-supplied authority facts."""
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return await self._execution.automation_inventory(context.identity, profile_id)
+        return await self._execution.automation_inventory(identity, profile_id)
 
     def _pinned(self) -> PinnedAuthorityOperation:
         if self._authority is None:
@@ -445,7 +445,13 @@ class ProfileWorkerOperationHost:
             invocation = await self._stored_invocation(operation_id)
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
             async with execution.guard_binding(invocation.identity, action, binding) as authorization:
-                if invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID:
+                # The full-owner workbench projection is released only to the
+                # human session that generated it; observing its lifecycle
+                # discloses operation metadata alone and stays caller-independent.
+                if (
+                    action in _PRIVATE_RESULT_RELEASE_ACTIONS
+                    and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+                ):
                     execution.require_owner(operation_id, session_id, frontend=frontend)
                 yield authorization
         finally:
