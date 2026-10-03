@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import re
 import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Final, Literal, cast
+from typing import Final, Literal
 
-import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.directory_scan import iter_directory
@@ -37,9 +35,9 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ProjectionEndpointDeclaration,
 )
 
-from .export_field_derivation import (
-    _literal_derivation,
-    _numeric_derivation,
+from .export_field_literal_derivation import _literal_derivation
+from .export_field_numeric_derivation import _numeric_derivation
+from .export_field_render_profile_derivation import (
     _profile_signed_composite_derivation,
     _render_profile_anchor,
     _render_profile_numeric_derivation,
@@ -53,6 +51,7 @@ from .export_fragment_provenance import (
     attach_field_verdicts,
     emit_export_fragment_provenance_manifest,
 )
+from .export_tree_serialization import SERIALIZER_CONVENTION, render_tree_files, require_safe_identifier
 from .generated_tree_dispositions import type_column_rulings_for
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord, design_view
 from .note_literals import NoteLiteralDeclaration, note_literals_for
@@ -61,6 +60,8 @@ from .render_profile_eligibility import (
     _has_absent_naturaleza,
     _is_numeric_aeat_type,
     _states_no_wire_fact,
+    source_contact_name_field,
+    source_iban_country_text_field,
 )
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
@@ -75,20 +76,15 @@ from .source_defects import (
     validate_note_stated_applicability_declarations,
     validate_source_defect_declarations,
 )
+from .source_signed_components import signed_component_policy_for
+from .source_signed_triples import signed_triple_policy_for
+from .source_stated_year_constant import source_stated_year_constant_for
+from .source_text_date_components import text_date_component_policy_for
 from .variable_envelope import (
     compile_auxiliary_envelope_header_definition,
     compile_filing_envelope_definition,
 )
 from .year_constraints import bounded_year_for
-
-SERIALIZER_CONVENTION: Final[Literal["rtoml-pretty-v1"]] = "rtoml-pretty-v1"
-
-
-_SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
-
-
-_SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
-
 
 _ENCODING_ALIAS_MAP: Final[Mapping[str, str]] = {
     LATIN_1_ENCODING: "iso-8859-1",
@@ -125,18 +121,6 @@ _ALPHANUMERIC_TYPES: Final[frozenset[str]] = frozenset({"an", "alfanumerico", "a
 _BLANK_RUN_TYPES: Final[frozenset[str]] = frozenset({"blancos"})
 
 
-_MAX_FRAGMENT_LINES: Final[int] = 1_399
-
-
-_MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
-
-
-#: Zero-padded width this renderer gives an administrative fragment prefix. It is the
-#: single place the width is stated: the same value formats the prefix and checks that
-#: the formatting did not overflow, so the guard cannot drift from the format it guards.
-_FRAGMENT_PREFIX_DIGITS: Final[int] = 4
-
-
 class _StrictModel(BaseModel):
     """Frozen development-tool boundary with no untyped extras."""
 
@@ -160,7 +144,7 @@ class ExportTreeTransportProfile(_StrictModel):
     def _require_supported_encoding_and_safe_ids(self) -> ExportTreeTransportProfile:
         if self.encoding.casefold() not in _ENCODING_ALIAS_MAP:
             raise ValueError(f"export tree transport profile declares unsupported encoding {self.encoding!r}")
-        _require_safe_identifier(str(self.layout_id), subject="export layout id")
+        require_safe_identifier(str(self.layout_id), subject="export layout id")
         return self
 
 
@@ -215,7 +199,7 @@ def render_complete_export_tree(
         derivations=derivations,
     )
     _require_semantic_map_attestation(joined, semantic_map)
-    rendered_files = _render_tree_files(revision_id=revision_id, layout=layout)
+    rendered_files = render_tree_files(revision_id=revision_id, layout=layout)
     _prepare_target(target_export_dir)
     for relative_path, payload in rendered_files:
         (target_export_dir / relative_path).write_bytes(payload)
@@ -449,7 +433,7 @@ def _render_records(
     record_ids: set[str] = set()
     for order, joined_record in enumerate(joined_records):
         record_id = str(joined_record.semantic_record.export_record_id)
-        _require_safe_identifier(record_id, subject="export record id")
+        require_safe_identifier(record_id, subject="export record id")
         if record_id in record_ids:
             raise RegistryValidationError(f"generated export tree has duplicate record id {record_id!r}")
         record_ids.add(record_id)
@@ -476,6 +460,7 @@ def _render_records(
                     "required": joined_record.semantic_record.required,
                     "repeat": joined_record.semantic_record.repeat,
                     "binding_record": joined_record.semantic_record.binding_record,
+                    "requires_positive_casilla_id": joined_record.semantic_record.requires_positive_casilla_id,
                     # The map carries these as sorted pairs to stay hashable; the
                     # registry record takes the mapping they stand for.
                     "row_field_casilla_ids": dict(joined_record.semantic_record.row_field_casilla_ids),
@@ -630,7 +615,7 @@ def _normalise_cell(
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     semantic_entry = joined_field.semantic_entry
-    _require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
+    require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
     year_derivation = _source_bounded_year_derivation(
         joined_field,
         transport_profile,
@@ -639,6 +624,82 @@ def _normalise_cell(
     )
     if year_derivation is not None:
         return year_derivation
+    constant_year_derivation = _source_stated_year_constant_derivation(
+        joined_field,
+        transport_profile,
+        export_record_id=export_record_id,
+    )
+    if constant_year_derivation is not None:
+        return constant_year_derivation
+    component_policy = signed_component_policy_for(
+        joined_field,
+        modelo=str(transport_profile.modelo),
+        source_ref=str(transport_profile.source_ref),
+        source_sha256=transport_profile.source_sha256,
+        epoch=transport_profile.design_epoch,
+    )
+    if component_policy is not None:
+        return _schema_field(
+            joined_field,
+            data_type="text" if component_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN else "money",
+            required=_is_required(joined_field.parser_field.validation),
+            padding=(
+                ExportPadding.NONE
+                if component_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN
+                else ExportPadding.LEFT_ZERO
+            ),
+            justification=(
+                ExportJustification.NONE
+                if component_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN
+                else ExportJustification.RIGHT
+            ),
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=component_policy,
+            derivation_code="source-signed-component-v1",
+        )
+    triple_policy = signed_triple_policy_for(
+        joined_field,
+        modelo=str(transport_profile.modelo),
+        epoch=transport_profile.design_epoch,
+        source_ref=str(transport_profile.source_ref),
+        source_sha256=transport_profile.source_sha256,
+    )
+    if triple_policy is not None:
+        sign_part = triple_policy in {
+            ExportValuePolicy.SIGNED_COMPONENT_SIGN,
+            ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        }
+        return _schema_field(
+            joined_field,
+            data_type="text" if sign_part else "integer",
+            required=_is_required(joined_field.parser_field.validation),
+            padding=ExportPadding.NONE if sign_part else ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.NONE if sign_part else ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=triple_policy,
+            derivation_code="source-signed-triple-v1",
+        )
+    date_policy = text_date_component_policy_for(
+        joined_field,
+        modelo=str(transport_profile.modelo),
+        epoch=transport_profile.design_epoch,
+        source_ref=str(transport_profile.source_ref),
+        source_sha256=transport_profile.source_sha256,
+    )
+    if date_policy is not None:
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(joined_field.parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=date_policy,
+            derivation_code="source-text-date-component-v1",
+        )
     return _derive_declared_field(
         joined_field,
         transport_profile,
@@ -691,6 +752,44 @@ def _source_bounded_year_derivation(
         value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
         minimum_year=year_constraint.minimum_year,
         derivation_code="numeric-source-bounded-year-v1",
+    )
+
+
+def _source_stated_year_constant_derivation(
+    joined_field: JoinedRecordDesignField,
+    transport_profile: ExportTreeTransportProfile,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation | None:
+    """Read M131's pinned EEEE exercise without inventing a fixed year literal."""
+    field = joined_field.parser_field
+    declaration = source_stated_year_constant_for(
+        source_ref=str(transport_profile.source_ref),
+        source_sha256=transport_profile.source_sha256,
+        field=field,
+    )
+    if declaration is None:
+        return None
+    entry = joined_field.semantic_entry
+    if not (
+        field.aeat_type == "Num"
+        and field.length == 4
+        and field.offset == 103
+        and field.ordinal == "10"
+        and entry.kind is CasillaFieldKind.DRAFT
+        and entry.draft_attribute == "filing_year"
+    ):
+        raise RegistryValidationError("source-stated year constant requires its exact four-digit filing_year slot")
+    return _schema_field(
+        joined_field,
+        data_type="integer",
+        required=_is_required(field.validation),
+        padding=ExportPadding.LEFT_ZERO,
+        justification=ExportJustification.RIGHT,
+        signed=False,
+        export_record_id=export_record_id,
+        value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
+        derivation_code="numeric-source-stated-year-constant-v1",
     )
 
 
@@ -777,6 +876,39 @@ def _derive_by_aeat_type(
             applicability_notes=applicability_notes,
         )
     if _has_absent_naturaleza(parser_field):
+        identity = render_profile.design_identity
+        if source_iban_country_text_field(
+            parser_field,
+            source_ref=str(identity.source_ref),
+            source_sha256=identity.source_sha256,
+        ):
+            if (
+                semantic_entry.kind is not CasillaFieldKind.CASILLA
+                or str(semantic_entry.casilla_id) != "iban-codigo-pais"
+            ):
+                raise RegistryValidationError("IBAN country source row lacks its exact typed casilla")
+            return _text_field_derivation(
+                joined_field,
+                render_profile,
+                "alfabetico",
+                export_record_id=export_record_id,
+            )
+        if source_contact_name_field(
+            parser_field,
+            source_ref=str(identity.source_ref),
+            source_sha256=identity.source_sha256,
+        ):
+            if (
+                semantic_entry.kind is not CasillaFieldKind.HEADER
+                or str(semantic_entry.producer_key) != "contact_person.full_name"
+            ):
+                raise RegistryValidationError("contact-name source row lacks its exact typed contact producer")
+            return _text_field_derivation(
+                joined_field,
+                render_profile,
+                "alfanumerico",
+                export_record_id=export_record_id,
+            )
         # The official design printed no naturaleza, so there is nothing to
         # derive a representation from; the reviewed profile governs this field.
         return _render_profile_numeric_derivation(
@@ -843,234 +975,6 @@ def _numeric_field_derivation(
     )
 
 
-def _render_tree_files(
-    *,
-    revision_id: RevisionId,
-    layout: ExportLayoutDefinition,
-) -> tuple[tuple[str, bytes], ...]:
-    layout_payload = layout.model_dump(mode="json", exclude_none=True)
-    records = tuple(layout_payload.pop("records"))
-    metadata_payload = {"revisions": {str(revision_id): {"export_layouts": [layout_payload]}}}
-    metadata_bytes = render_toml_bytes("0000-export-layout.toml", metadata_payload)
-    _require_reviewable_fragment("0000-export-layout.toml", metadata_bytes)
-    rendered_files = [("0000-export-layout.toml", metadata_bytes)]
-    planned_paths = {"0000-export-layout.toml"}
-    # One prefix per emitted fragment, not per record. A partitioned record occupies
-    # several consecutive prefixes: the loader admits one fragment per administrative
-    # prefix, and merges records in prefix order, so the prefix sequence is what makes
-    # field order survive the round trip.
-    prefix = 0
-    for record in records:
-        record_id = record.get("id")
-        if not isinstance(record_id, str):
-            raise RegistryValidationError("validated generated export record has no string id")
-        record_parts = _render_record_parts(revision_id=revision_id, layout_id=layout.id, record=record)
-        for fragment_bytes in record_parts:
-            prefix += 1
-            relative_path = _record_relative_path(prefix, record_id)
-            if relative_path in planned_paths:
-                raise RegistryValidationError(f"generated export path collision at {relative_path!r}")
-            planned_paths.add(relative_path)
-            rendered_files.append((relative_path, fragment_bytes))
-    return tuple(rendered_files)
-
-
-def _render_record_parts(
-    *,
-    revision_id: RevisionId,
-    layout_id: object,
-    record: Mapping[str, object],
-) -> tuple[bytes, ...]:
-    fields = _require_record_fields(record)
-    record_without_fields = {key: value for key, value in record.items() if key != "fields"}
-    rendered_parts: list[bytes] = []
-    current_fields: list[Mapping[str, object]] = []
-    for field in fields:
-        current_fields, completed_part = _append_reviewable_record_field(
-            revision_id=revision_id,
-            layout_id=layout_id,
-            record_without_fields=record_without_fields,
-            current_fields=current_fields,
-            field=field,
-        )
-        if completed_part is not None:
-            rendered_parts.append(completed_part)
-    rendered_parts.append(
-        _render_record_fragment(
-            revision_id=revision_id,
-            layout_id=layout_id,
-            record={**record_without_fields, "fields": current_fields},
-        ),
-    )
-    return tuple(rendered_parts)
-
-
-def _require_record_fields(record: Mapping[str, object]) -> list[Mapping[str, object]]:
-    """Require a nonempty validated record field table and preserve its order."""
-    raw_fields = record.get("fields")
-    if not isinstance(raw_fields, list) or not raw_fields:
-        raise RegistryValidationError(f"validated generated export record {record.get('id')!r} has no fields")
-    fields: list[Mapping[str, object]] = []
-    for field in cast(list[object], raw_fields):
-        if not isinstance(field, Mapping):
-            raise RegistryValidationError(
-                f"validated generated export record {record.get('id')!r} contains a non-table field",
-            )
-        fields.append(cast(Mapping[str, object], field))
-    return fields
-
-
-def _append_reviewable_record_field(
-    *,
-    revision_id: RevisionId,
-    layout_id: object,
-    record_without_fields: Mapping[str, object],
-    current_fields: list[Mapping[str, object]],
-    field: Mapping[str, object],
-) -> tuple[list[Mapping[str, object]], bytes | None]:
-    """Append one field or close the current reviewable record fragment."""
-    candidate_fields: list[Mapping[str, object]] = [*current_fields, field]
-    candidate = _render_record_fragment(
-        revision_id=revision_id,
-        layout_id=layout_id,
-        record={**record_without_fields, "fields": candidate_fields},
-    )
-    if _is_reviewable_fragment(candidate):
-        return candidate_fields, None
-    if not current_fields:
-        _raise_field_exceeds_reviewability(field)
-    completed_part = _render_record_fragment(
-        revision_id=revision_id,
-        layout_id=layout_id,
-        record={**record_without_fields, "fields": current_fields},
-    )
-    next_fields = [field]
-    candidate = _render_record_fragment(
-        revision_id=revision_id,
-        layout_id=layout_id,
-        record={**record_without_fields, "fields": next_fields},
-    )
-    if not _is_reviewable_fragment(candidate):
-        _raise_field_exceeds_reviewability(field)
-    return next_fields, completed_part
-
-
-def _raise_field_exceeds_reviewability(field: Mapping[str, object]) -> None:
-    field_id = field.get("id")
-    raise RegistryValidationError(
-        f"generated export field {field_id!r} cannot fit the repository TOML reviewability baseline",
-    )
-
-
-def _render_record_fragment(
-    *,
-    revision_id: RevisionId,
-    layout_id: object,
-    record: Mapping[str, object],
-) -> bytes:
-    return render_toml_bytes(
-        str(record.get("id", "record")),
-        {
-            "revisions": {
-                str(revision_id): {
-                    "export_layouts": [
-                        {
-                            "id": layout_id,
-                            "records": [record],
-                        },
-                    ],
-                },
-            },
-        },
-    )
-
-
-def render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> bytes:
-    try:
-        rendered = rtoml.dumps(_order_toml_values_before_tables(payload), pretty=True, none_value=None)
-    except (TypeError, ValueError) as exc:
-        # rtoml raises TomlSerializationError (a ValueError subclass) whose sole
-        # ``args[0]`` bakes the offending value's own ``repr`` into the message,
-        # with no structured field that omits it -- measured:
-        # ``rtoml.dumps({"bad": Foo()})`` produces "<Foo object at 0x...> (Foo)
-        # is not serializable to TOML". Unlike ``json.dumps``'s purely
-        # positional "Object of type X is not JSON serializable", there is no
-        # accessor here that separates the offending value from the message, so
-        # this refusal names only the exception's type, never its rendered text.
-        raise RegistryValidationError(
-            f"cannot serialize generated export TOML {relative_path!r}: {type(exc).__name__} refused the payload",
-        ) from exc
-    return rendered.encode("utf-8")
-
-
-def _order_toml_values_before_tables(value: object) -> object:
-    """Recursively order scalars before TOML tables and arrays of tables.
-
-    The generated M303 declaration introduces a nested prefix-field table.
-    ``rtoml`` correctly requires every scalar in that declaration to be
-    emitted before the nested table, so preserve values while presenting its
-    serializer a valid TOML order.
-    """
-    if isinstance(value, Mapping):
-        # Partitioned in ONE pass: the shape test was evaluated twice per item,
-        # once to reject it from the scalars and again to admit it to the
-        # tables, and this recursion reaches every node of every generated
-        # tree -- 8.9M calls for one modelo.
-        values: list[tuple[str, object]] = []
-        tables: list[tuple[str, object]] = []
-        for key, item in value.items():
-            ordered = _order_toml_values_before_tables(item)
-            (tables if _toml_table_like(ordered) else values).append((str(key), ordered))
-        return dict((*values, *tables))
-    if isinstance(value, list):
-        return [_order_toml_values_before_tables(item) for item in value]
-    if isinstance(value, tuple):
-        return [_order_toml_values_before_tables(item) for item in value]
-    return value
-
-
-def _toml_table_like(value: object) -> bool:
-    """Return whether TOML must emit ``value`` as a table-shaped value."""
-    if isinstance(value, Mapping):
-        return True
-    return isinstance(value, list) and any(isinstance(item, Mapping) for item in value)
-
-
-def _is_reviewable_fragment(payload: bytes) -> bool:
-    lines = payload.decode("utf-8").splitlines()
-    return (
-        len(lines) <= _MAX_FRAGMENT_LINES and max((len(line) for line in lines), default=0) <= _MAX_FRAGMENT_LINE_CHARS
-    )
-
-
-def _require_reviewable_fragment(relative_path: str, payload: bytes) -> None:
-    if not _is_reviewable_fragment(payload):
-        raise RegistryValidationError(
-            f"generated export TOML {relative_path!r} exceeds the repository reviewability baseline",
-        )
-
-
-def _record_relative_path(prefix: int, record_id: object) -> str:
-    """Return the fragment filename for one rendered record part.
-
-    The administrative prefix carries the whole ordering, so the filename states no
-    second one: a partitioned record appears as consecutive prefixes sharing a slug.
-    """
-    raw_record_id = str(record_id)
-    _require_safe_identifier(raw_record_id, subject="export record id")
-    slug = _SLUG_RE.sub("-", raw_record_id.casefold()).strip("-")
-    if not slug:
-        raise RegistryValidationError(f"export record id {raw_record_id!r} cannot form a stable output slug")
-    rendered_prefix = f"{prefix:0{_FRAGMENT_PREFIX_DIGITS}d}"
-    if len(rendered_prefix) != _FRAGMENT_PREFIX_DIGITS:
-        raise RegistryValidationError(
-            f"generated export record {raw_record_id!r} needs fragment prefix {prefix}, which overflows the "
-            f"{_FRAGMENT_PREFIX_DIGITS}-digit prefix width; an overflowed prefix does not sort late, it stops "
-            "being a readable fragment name",
-        )
-    return f"{rendered_prefix}-record-{slug}.toml"
-
-
 def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:
     compiled_map = _require_semantic_map_source(joined, semantic_map)
     _require_semantic_map_identity(joined, semantic_map, compiled_map)
@@ -1116,11 +1020,6 @@ def _require_semantic_map_records(joined: JoinedRecordDesign, compiled_map: Sema
     joined_records = frozenset(record.semantic_record for record in joined.records)
     if len(joined_records) != len(joined.records) or joined_records != frozenset(compiled_map.records):
         raise RegistryValidationError("joined records do not attest the supplied complete semantic map")
-
-
-def _require_safe_identifier(value: str, *, subject: str) -> None:
-    if not value or value in {".", ".."} or ".." in value or _SAFE_IDENTIFIER_RE.fullmatch(value) is None:
-        raise RegistryValidationError(f"{subject} is unsafe for generated export output: {value!r}")
 
 
 def _sorted_refs(refs: Iterable[object]) -> tuple[str, ...]:

@@ -111,6 +111,65 @@ def test_overlapping_parts_are_refused(m347_split_cell) -> None:
 
 
 @pytest.fixture(scope="module")
+def m349_rectification_parts():
+    root = Path("src/cadrumo/_data")
+    intermediate = load_record_design_intermediate(
+        root,
+        load_shared_catalogues(root / "registry/aeat").sources,
+        source_ref="aeat-dr-349-2020-current",
+        filing_year=2024,
+        design_epoch="2020",
+    )
+    sheet = next(
+        sheet for sheet in intermediate.sheets if sheet.record_identity == "Tipo 2 - Registro De Retificaciones"
+    )
+    parent, revised, previous = (
+        next(field for field in sheet.fields if field.offset == offset) for offset in (147, 153, 166)
+    )
+    assert (parent.length, revised.length, previous.length) == (32, 13, 13)
+    assert parent.content is not None
+    anchor = {key: getattr(parent, key) for key in ("sheet", "source_row", "ordinal", "record_identity")}
+    entries = tuple(
+        SemanticMapEntry.model_validate_json(
+            json.dumps(
+                {
+                    "export_field_id": f"m349-rectification-{name}",
+                    "kind": "filler",
+                    "anchor": anchor,
+                    "legal_refs": ["orden-hac-174-2020:art-1"],
+                    "source_refs": ["aeat-dr-349-2020-current"],
+                    "part": {
+                        "offset": offset,
+                        "length": length,
+                        "aeat_type": aeat_type,
+                        "statement": statement,
+                    },
+                }
+            )
+        )
+        for name, offset, length, aeat_type, statement in (
+            ("year", 147, 4, "Numérico", "147-150 Ejercicio Numérico de 4 posiciones"),
+            ("period", 151, 2, "Alfanumérico", "151-152 Periodo Alfanumérico de 2 posiciones"),
+        )
+    )
+    return (parent, revised, previous), entries
+
+
+def test_rectification_parent_parts_and_separately_printed_bases_tile_exactly(m349_rectification_parts) -> None:
+    fields, entries = m349_rectification_parts
+    validate_declared_parts(entries, fields)
+
+
+def test_rectification_parent_part_cannot_hide_missing_or_overlapping_base(m349_rectification_parts) -> None:
+    (parent, revised, previous), entries = m349_rectification_parts
+    with pytest.raises(RegistryValidationError, match="not tiled exactly"):
+        validate_declared_parts(entries, (parent, revised))
+    overlapping = previous.model_copy(update={"offset": 165})
+    with pytest.raises(RegistryValidationError, match="unaccounted or claimed twice"):
+        validate_declared_parts(entries, (parent, revised, overlapping))
+
+
+@pytest.fixture(scope="module")
 def m193_single_position_parts():
     root = Path("src/cadrumo/_data")
     source_ref = "aeat-dr-193-2025"

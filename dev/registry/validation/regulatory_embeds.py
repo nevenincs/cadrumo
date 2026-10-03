@@ -35,7 +35,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
@@ -251,17 +251,25 @@ def _is_non_policy_decimal(call: ast.Call, argument: ast.Constant, parents: dict
         return False
     if numeric in {0.0, 1.0}:
         return True
+    if _inside_class_scope(call, parents):
+        return True
+    parent = parents.get(id(call))
+    if _is_percentage_unit_conversion(numeric, parent):
+        return True
+    return numeric in {365.0, 366.0} and isinstance(parent, ast.Compare)
+
+
+def _inside_class_scope(call: ast.Call, parents: dict[int, ast.AST]) -> bool:
     ancestor = parents.get(id(call))
     while ancestor is not None and not isinstance(ancestor, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
         ancestor = parents.get(id(ancestor))
-    if isinstance(ancestor, ast.ClassDef):
-        return True
-    parent = parents.get(id(call))
-    if numeric == 100.0 and (
+    return isinstance(ancestor, ast.ClassDef)
+
+
+def _is_percentage_unit_conversion(numeric: float, parent: ast.AST | None) -> bool:
+    return numeric == 100.0 and (
         isinstance(parent, ast.Compare) or (isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div))
-    ):
-        return True
-    return numeric in {365.0, 366.0} and isinstance(parent, ast.Compare)
+    )
 
 
 def _excerpt(value: str, limit: int = 72) -> str:
@@ -275,42 +283,76 @@ def _collect_evidence(tree: ast.Module, relative: str) -> tuple[EmbedEvidence, .
     names = _assigned_name(tree)
     parents = _parents(tree)
     found: set[EmbedEvidence] = set()
-
-    def record(node: ast.AST, kind: EvidenceKind, excerpt: str) -> None:
-        found.add(
-            EmbedEvidence(
-                path=relative,
-                enclosing_symbol=scopes.get(id(node), _MODULE_SCOPE),
-                kind=kind,
-                symbol=names.get(id(node), ""),
-                excerpt=excerpt,
-            )
-        )
-
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Decimal":
-            argument = node.args[0] if node.args else None
-            if (
-                isinstance(argument, ast.Constant)
-                and isinstance(argument.value, (str, int))
-                and not _is_non_policy_decimal(node, argument, parents)
-            ):
-                record(node, EvidenceKind.DECIMAL_LITERAL, f"Decimal({argument.value!r})")
+        if _is_decimal_call(node):
+            evidence = _decimal_call_evidence(cast(ast.Call, node), relative, names, scopes, parents)
+            if evidence is not None:
+                found.add(evidence)
             continue
-        if not isinstance(node, ast.Constant) or id(node) in docstrings:
-            continue
-        if isinstance(node.value, bool):
-            continue
-        symbol = _semantic_name(node, names, parents)
-        if (
-            isinstance(node.value, int)
-            and node.value in _FILING_YEAR_SPAN
-            and scopes.get(id(node), _MODULE_SCOPE) == _MODULE_SCOPE
-        ):
-            record(node, EvidenceKind.FILING_YEAR_LITERAL, str(node.value))
-        elif isinstance(node.value, str) and _is_prose(node.value, symbol):
-            record(node, EvidenceKind.REGULATORY_PROSE_LITERAL, _excerpt(node.value))
+        evidence = _constant_evidence(node, relative, docstrings, scopes, names, parents)
+        if evidence is not None:
+            found.add(evidence)
     return tuple(sorted(found))
+
+
+def _is_decimal_call(node: ast.AST) -> bool:
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Decimal"
+
+
+def _decimal_call_evidence(
+    node: ast.Call,
+    relative: str,
+    names: dict[int, str],
+    scopes: dict[int, str],
+    parents: dict[int, ast.AST],
+) -> EmbedEvidence | None:
+    argument = node.args[0] if node.args else None
+    if not isinstance(argument, ast.Constant) or not isinstance(argument.value, (str, int)):
+        return None
+    if _is_non_policy_decimal(node, argument, parents):
+        return None
+    return _evidence_record(node, EvidenceKind.DECIMAL_LITERAL, f"Decimal({argument.value!r})", relative, names, scopes)
+
+
+def _constant_evidence(
+    node: ast.AST,
+    relative: str,
+    docstrings: set[int],
+    scopes: dict[int, str],
+    names: dict[int, str],
+    parents: dict[int, ast.AST],
+) -> EmbedEvidence | None:
+    if not isinstance(node, ast.Constant) or id(node) in docstrings or isinstance(node.value, bool):
+        return None
+    symbol = _semantic_name(node, names, parents)
+    if (
+        isinstance(node.value, int)
+        and node.value in _FILING_YEAR_SPAN
+        and scopes.get(id(node), _MODULE_SCOPE) == _MODULE_SCOPE
+    ):
+        return _evidence_record(node, EvidenceKind.FILING_YEAR_LITERAL, str(node.value), relative, names, scopes)
+    if isinstance(node.value, str) and _is_prose(node.value, symbol):
+        return _evidence_record(
+            node, EvidenceKind.REGULATORY_PROSE_LITERAL, _excerpt(node.value), relative, names, scopes
+        )
+    return None
+
+
+def _evidence_record(
+    node: ast.AST,
+    kind: EvidenceKind,
+    excerpt: str,
+    relative: str,
+    names: dict[int, str],
+    scopes: dict[int, str],
+) -> EmbedEvidence:
+    return EmbedEvidence(
+        path=relative,
+        enclosing_symbol=scopes.get(id(node), _MODULE_SCOPE),
+        kind=kind,
+        symbol=names.get(id(node), ""),
+        excerpt=excerpt,
+    )
 
 
 def census(
@@ -375,34 +417,45 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="emit the derived census as JSON")
     args = parser.parse_args(argv)
 
+    records = _registry_records(args.package_root, args.registry_root)
+    if args.json:
+        return _write_json_census(records)
+    return _write_text_census(records)
+
+
+def _registry_records(package_root: Path, registry_root: Path) -> tuple[ModeloModuleRecord, ...]:
     if str(SOURCE_ROOT.parent) not in sys.path:
         sys.path.insert(0, str(SOURCE_ROOT.parent))
     from dev.registry.compiler.loader import load_registry_tree
 
-    modelos, _catalogues = load_registry_tree(args.registry_root)
-    records = census(args.package_root, known_modelo_codes=frozenset(str(modelo.id) for modelo in modelos))
-    if args.json:
-        payload = [
-            {
-                "path": record.path,
-                "modelo_codes": list(record.modelo_codes),
-                "signals": [str(signal) for signal in record.signals],
-                "evidence": [
-                    {
-                        "enclosing_symbol": item.enclosing_symbol,
-                        "kind": str(item.kind),
-                        "symbol": item.symbol,
-                        "excerpt": item.excerpt,
-                    }
-                    for item in record.evidence
-                ],
-            }
-            for record in records
-        ]
-        sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))
-        sys.stdout.write("\n")
-        return 0
+    modelos, _catalogues = load_registry_tree(registry_root)
+    return census(package_root, known_modelo_codes=frozenset(str(modelo.id) for modelo in modelos))
 
+
+def _write_json_census(records: tuple[ModeloModuleRecord, ...]) -> int:
+    payload = [
+        {
+            "path": record.path,
+            "modelo_codes": list(record.modelo_codes),
+            "signals": [str(signal) for signal in record.signals],
+            "evidence": [
+                {
+                    "enclosing_symbol": item.enclosing_symbol,
+                    "kind": str(item.kind),
+                    "symbol": item.symbol,
+                    "excerpt": item.excerpt,
+                }
+                for item in record.evidence
+            ],
+        }
+        for record in records
+    ]
+    sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))
+    sys.stdout.write("\n")
+    return 0
+
+
+def _write_text_census(records: tuple[ModeloModuleRecord, ...]) -> int:
     evidence = tuple(item for record in records for item in record.evidence)
     for item in evidence:
         sys.stdout.write(f"{item.render()}\n")

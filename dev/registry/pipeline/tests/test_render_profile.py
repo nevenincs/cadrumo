@@ -17,12 +17,16 @@ from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.export_value_policy import (
+    ExportValuePolicy,
+    project_export_value,
+    validate_export_wire_value,
+)
 
 from ...compiler.loader import load_catalogue_file
 from ...maintenance_support import resolve_record_design_binary
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
-from .. import export_field_derivation as _field_derivation
+from .. import export_field_render_profile_derivation as _field_derivation
 from .. import render_profile, render_profile_eligibility, render_profile_source_reader
 from ..joined_record_design import (
     JoinedRecordDesign,
@@ -396,7 +400,7 @@ def test_empty_rules_fragment_refusal_never_carries_a_sibling_fields_value(tmp_p
         assert secret not in message
         assert "input_value" not in message
         assert "errors.pydantic.dev" not in message
-        assert "at least one authored rule" in message
+        assert "requires rules or an exclusive empty eligibility assertion" in message
 
 
 @pytest.mark.parametrize(
@@ -734,7 +738,29 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
     assert derivation.field.date_format == date_format
     expected_allowed_values = allowed_values or None if policy is ExportValuePolicy.ENUMERATED_DIGITS else None
     assert derivation.field.allowed_values == expected_allowed_values
-    assert set(_field_derivation._SINGLETON_POLICY_SHAPES) == set(ExportValuePolicy)
+    # Sign bytes are source-printed semantic parts, governed by the signed
+    # component route rather than a numeric singleton profile rule.
+    signed_part_only = {ExportValuePolicy.SIGNED_COMPONENT_SIGN, ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN}
+    assert not set(_field_derivation._SINGLETON_POLICY_SHAPES) & signed_part_only
+    assert set(_field_derivation._SINGLETON_POLICY_SHAPES) | signed_part_only == set(ExportValuePolicy)
+
+
+def test_source_part_sign_policies_project_and_refuse_their_distinct_wire_domains() -> None:
+    assert project_export_value(ExportValuePolicy.SIGNED_COMPONENT_SIGN, "-1") == "N"
+    assert project_export_value(ExportValuePolicy.SIGNED_COMPONENT_SIGN, "1") == " "
+    assert project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, "-1") == "N"
+    assert project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, "0") == "0"
+    for policy, accepted in (
+        (ExportValuePolicy.SIGNED_COMPONENT_SIGN, ("N", " ")),
+        (ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, ("N", "0")),
+    ):
+        for wire in accepted:
+            validate_export_wire_value(policy, wire)
+        for refused in {"N", " ", "0"} - set(accepted):
+            with pytest.raises(RegistryValidationError):
+                validate_export_wire_value(policy, refused)
+    with pytest.raises(RegistryValidationError, match="cannot encode a positive amount"):
+        project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, "1")
 
 
 def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drift(tmp_path: Path) -> None:

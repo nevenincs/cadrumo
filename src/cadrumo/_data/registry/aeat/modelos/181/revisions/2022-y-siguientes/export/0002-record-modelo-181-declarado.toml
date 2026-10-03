@@ -1,0 +1,1087 @@
+[[revisions.2022-y-siguientes.export_layouts]]
+id = 'modelo-181-fichero'
+
+[[revisions.2022-y-siguientes.export_layouts.records]]
+id = 'modelo-181-declarado'
+record_type = 'declarado'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '181'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-ejercicio'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-nif-declarante'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-declarado-nif'
+offset = 18
+length = 9
+kind = 'casilla'
+casilla_id = 'declarado-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-representante-legal-nif'
+offset = 27
+length = 9
+kind = 'casilla'
+casilla_id = 'representante-legal-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-declarado-nombre'
+offset = 36
+length = 40
+kind = 'casilla'
+casilla_id = 'declarado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-codigo-provincia'
+offset = 76
+length = 2
+kind = 'casilla'
+casilla_id = 'codigo-provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-clave-tipo-identificacion'
+offset = 78
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-tipo-identificacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-iban-codigo-pais'
+offset = 79
+length = 2
+kind = 'casilla'
+casilla_id = 'iban-codigo-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-iban-digitos-control'
+offset = 81
+length = 2
+kind = 'casilla'
+casilla_id = 'iban-digitos-control'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-identificacion-operacion'
+offset = 83
+length = 20
+kind = 'casilla'
+casilla_id = 'identificacion-operacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-fecha-operacion-year'
+offset = 103
+length = 4
+kind = 'casilla'
+casilla_id = 'fecha-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-year'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-fecha-operacion-month'
+offset = 107
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-month'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-fecha-operacion-day'
+offset = 109
+length = 2
+kind = 'casilla'
+casilla_id = 'fecha-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'yyyymmdd-text-day'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-duracion-operacion'
+offset = 111
+length = 3
+kind = 'casilla'
+casilla_id = 'duracion-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-operacion-integer'
+offset = 114
+length = 11
+kind = 'casilla'
+casilla_id = 'importe-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-operacion-fractional'
+offset = 125
+length = 2
+kind = 'casilla'
+casilla_id = 'importe-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-amortizacion-capital-integer'
+offset = 127
+length = 11
+kind = 'casilla'
+casilla_id = 'importe-amortizacion-capital'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-amortizacion-capital-fractional'
+offset = 138
+length = 2
+kind = 'casilla'
+casilla_id = 'importe-amortizacion-capital'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-intereses-integer'
+offset = 140
+length = 11
+kind = 'casilla'
+casilla_id = 'importe-intereses'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-intereses-fractional'
+offset = 151
+length = 2
+kind = 'casilla'
+casilla_id = 'importe-intereses'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-gastos-financiacion-integer'
+offset = 153
+length = 11
+kind = 'casilla'
+casilla_id = 'importe-gastos-financiacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-gastos-financiacion-fractional'
+offset = 164
+length = 2
+kind = 'casilla'
+casilla_id = 'importe-gastos-financiacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-porcentaje-participacion-integer'
+offset = 166
+length = 3
+kind = 'casilla'
+casilla_id = 'porcentaje-participacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-porcentaje-participacion-fractional'
+offset = 169
+length = 3
+kind = 'casilla'
+casilla_id = 'porcentaje-participacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-origen-operacion'
+offset = 172
+length = 1
+kind = 'casilla'
+casilla_id = 'origen-operacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-tipo-operacion'
+offset = 173
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo-operacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-subclave-operacion'
+offset = 174
+length = 1
+kind = 'casilla'
+casilla_id = 'subclave-operacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-situacion-inmueble'
+offset = 175
+length = 1
+kind = 'casilla'
+casilla_id = 'situacion-inmueble'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-referencia-catastral'
+offset = 176
+length = 20
+kind = 'casilla'
+casilla_id = 'referencia-catastral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-valor-tasacion-inmueble-integer'
+offset = 196
+length = 10
+kind = 'casilla'
+casilla_id = 'valor-tasacion-inmueble'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-valor-tasacion-inmueble-fractional'
+offset = 206
+length = 2
+kind = 'casilla'
+casilla_id = 'valor-tasacion-inmueble'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-saldo-pendiente-integer'
+offset = 208
+length = 10
+kind = 'casilla'
+casilla_id = 'saldo-pendiente'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-saldo-pendiente-fractional'
+offset = 218
+length = 2
+kind = 'casilla'
+casilla_id = 'saldo-pendiente'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-tipo-via'
+offset = 220
+length = 5
+kind = 'casilla'
+casilla_id = 'inmueble-tipo-via'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-nombre-via'
+offset = 225
+length = 50
+kind = 'casilla'
+casilla_id = 'inmueble-nombre-via'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-tipo-numeracion'
+offset = 275
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-tipo-numeracion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-numero-casa'
+offset = 278
+length = 5
+kind = 'casilla'
+casilla_id = 'inmueble-numero-casa'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-calificador-numero'
+offset = 283
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-calificador-numero'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-bloque'
+offset = 286
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-bloque'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-portal'
+offset = 289
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-portal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-escalera'
+offset = 292
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-escalera'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-planta'
+offset = 295
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-planta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-puerta'
+offset = 298
+length = 3
+kind = 'casilla'
+casilla_id = 'inmueble-puerta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-complemento'
+offset = 301
+length = 40
+kind = 'casilla'
+casilla_id = 'inmueble-complemento'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-localidad'
+offset = 341
+length = 30
+kind = 'casilla'
+casilla_id = 'inmueble-localidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-municipio'
+offset = 371
+length = 30
+kind = 'casilla'
+casilla_id = 'inmueble-municipio'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-codigo-municipio'
+offset = 401
+length = 5
+kind = 'casilla'
+casilla_id = 'inmueble-codigo-municipio'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-codigo-provincia'
+offset = 406
+length = 2
+kind = 'casilla'
+casilla_id = 'inmueble-codigo-provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-inmueble-codigo-postal'
+offset = 408
+length = 5
+kind = 'casilla'
+casilla_id = 'inmueble-codigo-postal'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-clave-intervencion'
+offset = 413
+length = 1
+kind = 'casilla'
+casilla_id = 'clave-intervencion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+]
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-prestamista-nombre'
+offset = 414
+length = 35
+kind = 'casilla'
+casilla_id = 'prestamista-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-prestamista-nif'
+offset = 449
+length = 9
+kind = 'casilla'
+casilla_id = 'prestamista-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-porcentaje-financiacion-vivienda-integer'
+offset = 458
+length = 3
+kind = 'casilla'
+casilla_id = 'porcentaje-financiacion-vivienda-habitual'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-porcentaje-financiacion-vivienda-fractional'
+offset = 461
+length = 2
+kind = 'casilla'
+casilla_id = 'porcentaje-financiacion-vivienda-habitual'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-importe-reintegro-intereses'
+offset = 463
+length = 10
+kind = 'casilla'
+casilla_id = 'importe-reintegro-intereses'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-intereses-indemnizatorios'
+offset = 473
+length = 9
+kind = 'casilla'
+casilla_id = 'intereses-indemnizatorios'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-otras-cantidades-indemnizatorias'
+offset = 482
+length = 9
+kind = 'casilla'
+casilla_id = 'otras-cantidades-indemnizatorias'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[[revisions.2022-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-181-t2-cantidades-minorar-principal'
+offset = 491
+length = 10
+kind = 'casilla'
+casilla_id = 'cantidades-minorar-principal'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3514-2009:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-181-2022']
+
+[revisions.2022-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -1,0 +1,709 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "345"
+design_epoch = "2025"
+source_ref = "aeat-dr-345-2025"
+source_sha256 = "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 25
+ordinal = "1"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-25-enumeration"
+decision_statement = "The type 1 record starts with the literal digit 1."
+justification = "The official tipo de registro row at position 1 says Constante número 1."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 25
+ordinal = "1"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["345"]
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 27
+ordinal = "2"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-27-enumeration"
+decision_statement = "The declaration model is the three-digit literal 345."
+justification = "The official modelo declaración row at positions 2-4 says Constante 345."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 27
+ordinal = "2"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 29
+ordinal = "3"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-29-year-yyyy"
+decision_statement = "The exercise is four calendar-year digits."
+justification = "The official ejercicio row at positions 5-8 calls for las cuatro cifras del ejercicio fiscal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 29
+ordinal = "3"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 61
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-61-digit-string"
+decision_statement = "The contact telephone carries nine digits with leading zeros preserved."
+justification = "The official persona con quien relacionarse subdivision at positions 59-67 says TELÉFONO: Campo numérico de 9 posiciones; its naturaleza cell is absent."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 61
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 63
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-63-mistyped-alphanumeric-text"
+decision_statement = "The contact name is forty characters of text."
+justification = "The official subdivision at positions 68-107 says APELLIDOS Y NOMBRE, so its absent naturaleza does not make the name numeric."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 63
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 67
+ordinal = "8"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-67-identifier-digits"
+decision_statement = "The declaration identifier carries thirteen digits, without arithmetic scaling."
+justification = "The official número identificativo row at positions 108-120 calls it a campo de contenido numérico de 13 posiciones and specifies the 345 prefix."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 67
+ordinal = "8"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 101
+ordinal = "10"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-101-identifier-digits"
+decision_statement = "The prior declaration identifier carries thirteen digits."
+justification = "The official previous identifier row at positions 123-135 references the declaration being complemented or replaced and says campo de contenido numérico de 13 posiciones."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 101
+ordinal = "10"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 117
+ordinal = "11"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-117-integer"
+decision_statement = "The count of declared records is an unsigned nine-digit integer."
+justification = "The official número total de declarados row at positions 136-144 says campo numérico de 9 posiciones and counts type 2 records."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 117
+ordinal = "11"
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 141
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-141-amount-integer-part"
+decision_statement = "This is the thirteen-digit integer part of the total amount."
+justification = "The official total amount subdivision labels positions 145-157 Parte Entera del Importe Total de las aportaciones."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 141
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 144
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-144-amount-fractional-digits"
+decision_statement = "This is the two-digit decimal part of the total amount."
+justification = "The official total amount subdivision labels positions 158-159 Parte Decimal del Importe Total de las Aportaciones."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 144
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 165
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-165-enumeration"
+decision_statement = "The type 2 record starts with the literal digit 2."
+justification = "The official tipo de registro row at position 1 says Constante 2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 165
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["345"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 167
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-167-enumeration"
+decision_statement = "The type 2 record carries the three-digit literal 345."
+justification = "The official modelo declaración row at positions 2-4 says Constante 345."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 167
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 169
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-169-year-yyyy"
+decision_statement = "The type 2 exercise repeats the four-digit type 1 exercise."
+justification = "The official ejercicio row at positions 5-8 says to copy the same positions from the type 1 record."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 169
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 223
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-223-year-yyyy"
+decision_statement = "The birth year is four digits."
+justification = "The official año de nacimiento row at positions 76-79 requires the four digits corresponding to the declared person’s birth year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 223
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 226
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-226-digit-string"
+decision_statement = "The province code is a two-digit label with a significant leading zero."
+justification = "The official código provincia row at positions 80-81 enumerates two-digit codes, including 01 and 99; the code is not arithmetic."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 226
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 587
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-587-digit-string"
+decision_statement = "The subclave is a two-digit code with a significant leading zero."
+justification = "The official subclave row at positions 83-84 enumerates key-dependent codes such as 01, 02, 03 and 04."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 587
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 877
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-877-amount-integer-part"
+decision_statement = "This is the eleven-digit integer part of the declared amount."
+justification = "The official importe subdivision labels positions 94-104 Parte entera del importe and says to fill zeros when empty."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 877
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 879
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-879-amount-fractional-digits"
+decision_statement = "This is the two-digit decimal part of the declared amount."
+justification = "The official importe subdivision labels positions 105-106 Parte decimal del importe and says to fill zeros when empty."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 879
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 893
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-893-mistyped-alphanumeric-text"
+decision_statement = "The plan name is forty characters of text."
+justification = "The official positions 107-146 are DENOMINACIÓN DEL PLAN DE PENSIONES, campo alfanumérico de 40 posiciones; naturaleza is absent on the child row."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 893
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 898
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-898-mistyped-alphanumeric-text"
+decision_statement = "The fund registration number is a five-character alphanumeric identifier."
+justification = "The official positions 147-151 are NÚMERO DE REGISTRO DEL FONDO DE PENSIONES, campo alfanumérico de 5 posiciones; it is not a numeric quantity."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 898
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 904
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-904-mistyped-alphanumeric-text"
+decision_statement = "The fund tax identifier is nine characters of text."
+justification = "The official positions 152-160 are N.I.F. DEL FONDO DE PENSIONES, campo alfanumérico de 9 posiciones."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 904
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 927
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-927-date-yyyymmdd"
+decision_statement = "The first-premium date is eight digits in AAAAMMDD order."
+justification = "The official positions 170-177 require four year digits, two month digits and two day digits in the explicit AAAAMMDD format."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 927
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 10
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 938
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-938-decimal"
+decision_statement = "The accumulated PIAS amount has ten integer and two decimal digits."
+justification = "The official positions 178-189 are a twelve-position amount subdivided into Parte entera at 178-187 and Parte decimal at 188-189."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 938
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 1027
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-1027-mistyped-alphanumeric-text"
+decision_statement = "The employer tax identifier is nine characters of text."
+justification = "The official positions 272-280 say N.I.F. DEL EMPLEADOR; it is a tax identifier, not an arithmetic amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 1027
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 1051
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m345-2025-row-1051-mistyped-alphanumeric-text"
+decision_statement = "The employer name or business name is forty characters of text."
+justification = "The official positions 281-320 say APELLIDOS Y NOMBRE O RAZÓN SOCIAL; its child row has no numeric naturaleza."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarados"
+source_row = 1051
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Declarados"

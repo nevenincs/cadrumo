@@ -142,6 +142,55 @@ def test_prose_naming_a_description_and_its_content_is_not_a_table_header(tmp_pa
     assert closing.content == "</T999010>"
 
 
+def test_trailing_uso_column_keeps_exact_content_and_table_end(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "uso.pdf"
+    _write_table(
+        pdf_path,
+        (
+            _HEADING,
+            (*_TABLE_HEADER, (530.0, "Uso")),
+            _row("1", "1", "9", "An", "Inicio del identificador", "obligatorio", "<T999010>"),
+            _row("2", "10", "10", "An", "Identificador de fin de registro.", "", "</T999010>"),
+            ((40.0, "TOTAL"), (90.0, "9 Posiciones")),
+        ),
+    )
+
+    opening, closing = _read(pdf_path)
+    assert _cells((opening, closing)) == [
+        ("Inicio del identificador", "obligatorio", "<T999010>"),
+        ("Identificador de fin de registro.", None, "</T999010>"),
+    ]
+
+
+def test_text_in_uso_column_refuses_geometry_row(tmp_path: Path) -> None:
+    from ..compiler.record_design_pdf_columns import extract_pdf_column_rows
+
+    pdf_path = tmp_path / "uso-with-content.pdf"
+    _write_table(
+        pdf_path,
+        (
+            _HEADING,
+            (*_TABLE_HEADER, (530.0, "Uso")),
+            (*_row("1", "1", "9", "An", "Inicio del identificador", "obligatorio", "<T999010>"), (530.0, "otro")),
+        ),
+    )
+
+    assert not extract_pdf_column_rows(pdf_path.read_bytes(), source_label=pdf_path.name)
+
+
+def test_modelo_145_tags_are_read_from_contenido_beside_empty_uso() -> None:
+    (sheet,) = extract_record_design_pdf(_record_design_pdf("modelo_145", "dr145v20")).accept_partial()
+
+    assert len(sheet.fields) == 59
+    assert sheet.total_positions == 610
+    assert _cells((sheet.fields[0], sheet.fields[-1])) == [
+        ("Inicio del identificador de modelo y página.", "obligatorio", "<T145010>"),
+        ("Identificador de fin de registro.", None, "</T145010>"),
+    ]
+    assert sheet.fields[0].content_in_contenido_column
+    assert sheet.fields[-1].content_in_contenido_column
+
+
 def test_modelo_360_constants_come_from_the_contenido_column() -> None:
     fields = {
         (sheet.name, field.ordinal): field

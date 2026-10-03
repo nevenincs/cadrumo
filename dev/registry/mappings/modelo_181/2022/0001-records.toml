@@ -1,0 +1,1110 @@
+# Reviewed AEAT 2022 record anchors. Parent fields are projected only through source-printed parts.
+schema_version = 1
+fragment_id = "records"
+modelo = "181"
+design_epoch = "2022"
+source_ref = "aeat-dr-181-2022"
+source_sha256 = "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-181-declarante"
+record_type = "declarante"
+required = true
+
+[[records]]
+sheet = "Tipo 2 - Registro Del Declarado"
+record_identity = "Tipo 2 - Registro Del Declarado"
+export_record_id = "modelo-181-declarado"
+record_type = "declarado"
+required = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 19
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-181-t1-modelo"
+kind = "literal"
+literal = "181"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 21
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-181-t1-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 23
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-181-t1-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 26
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-181-t1-razon-social"
+kind = "casilla"
+casilla_id = "declarante-razon-social"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 36
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-181-t1-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 40
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-181-t1-contact-phone"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 50
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+
+[entries.part]
+offset = 59
+length = 9
+aeat_type = "Numérico"
+statement = "59-67TELÉFONO: Campo numérico de 9 posiciones."
+
+[[entries]]
+export_field_id = "modelo-181-t1-contact-name"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 50
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+
+[entries.part]
+offset = 68
+length = 40
+aeat_type = "Alfanumérico"
+statement = "68-107 APELLIDOS Y NOMBRE:"
+
+[[entries]]
+export_field_id = "modelo-181-t1-numero-identificativo"
+kind = "casilla"
+casilla_id = "numero-identificativo-declaracion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 57
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-181-t1-complementaria"
+kind = "casilla"
+casilla_id = "decl.complementaria"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 63
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[entries.part]
+offset = 121
+length = 1
+aeat_type = "Alfabético"
+statement = "121 DECLARACIÓN COMPLEMENTARIA:"
+
+[[entries]]
+export_field_id = "modelo-181-t1-sustitutiva"
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 63
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[entries.part]
+offset = 122
+length = 1
+aeat_type = "Alfabético"
+statement = "122 DECLARACIÓN SUSTITUTIVA:"
+
+[[entries]]
+export_field_id = "modelo-181-t1-numero-identificativo-anterior"
+kind = "casilla"
+casilla_id = "numero-identificativo-anterior"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 91
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-181-t1-numero-total-declarados"
+kind = "casilla"
+casilla_id = "numero-total-declarados"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 100
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-capital-amortizado-integer"
+kind = "casilla"
+casilla_id = "importe-total-capital-amortizado"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 114
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-capital-amortizado-fractional"
+kind = "casilla"
+casilla_id = "importe-total-capital-amortizado"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 116
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-intereses-integer"
+kind = "casilla"
+casilla_id = "importe-total-intereses"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 133
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-intereses-fractional"
+kind = "casilla"
+casilla_id = "importe-total-intereses"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 135
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-gastos-financiacion-integer"
+kind = "casilla"
+casilla_id = "importe-total-gastos-financiacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 146
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-gastos-financiacion-fractional"
+kind = "casilla"
+casilla_id = "importe-total-gastos-financiacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 149
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-saldos-pendientes-integer"
+kind = "casilla"
+casilla_id = "importe-total-saldos-pendientes"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 160
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-importe-total-saldos-pendientes-fractional"
+kind = "casilla"
+casilla_id = "importe-total-saldos-pendientes"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 163
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t1-blancos"
+kind = "filler"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 172
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-181-t2-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 190
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-181-t2-modelo"
+kind = "literal"
+literal = "181"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 192
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-181-t2-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 194
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-181-t2-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 197
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-181-t2-declarado-nif"
+kind = "casilla"
+casilla_id = "declarado-nif"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 200
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-181-t2-representante-legal-nif"
+kind = "casilla"
+casilla_id = "representante-legal-nif"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 229
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-181-t2-declarado-nombre"
+kind = "casilla"
+casilla_id = "declarado-nombre"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 237
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-181-t2-codigo-provincia"
+kind = "casilla"
+casilla_id = "codigo-provincia"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 249
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-181-t2-clave-tipo-identificacion"
+kind = "casilla"
+casilla_id = "clave-tipo-identificacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 288
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-181-t2-iban-codigo-pais"
+kind = "casilla"
+casilla_id = "iban-codigo-pais"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 302
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-iban-digitos-control"
+kind = "casilla"
+casilla_id = "iban-digitos-control"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 303
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-identificacion-operacion"
+kind = "casilla"
+casilla_id = "identificacion-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 307
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-181-t2-fecha-operacion-year"
+kind = "casilla"
+casilla_id = "fecha-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 334
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-181-t2-fecha-operacion-month"
+kind = "casilla"
+casilla_id = "fecha-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 335
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-181-t2-fecha-operacion-day"
+kind = "casilla"
+casilla_id = "fecha-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 336
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-181-t2-duracion-operacion"
+kind = "casilla"
+casilla_id = "duracion-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 356
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-operacion-integer"
+kind = "casilla"
+casilla_id = "importe-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 371
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-operacion-fractional"
+kind = "casilla"
+casilla_id = "importe-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 374
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-amortizacion-capital-integer"
+kind = "casilla"
+casilla_id = "importe-amortizacion-capital"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 412
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-amortizacion-capital-fractional"
+kind = "casilla"
+casilla_id = "importe-amortizacion-capital"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 415
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-intereses-integer"
+kind = "casilla"
+casilla_id = "importe-intereses"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 479
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-intereses-fractional"
+kind = "casilla"
+casilla_id = "importe-intereses"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 482
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-gastos-financiacion-integer"
+kind = "casilla"
+casilla_id = "importe-gastos-financiacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 540
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-gastos-financiacion-fractional"
+kind = "casilla"
+casilla_id = "importe-gastos-financiacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 549
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-porcentaje-participacion-integer"
+kind = "casilla"
+casilla_id = "porcentaje-participacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 605
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-181-t2-porcentaje-participacion-fractional"
+kind = "casilla"
+casilla_id = "porcentaje-participacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 608
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-181-t2-origen-operacion"
+kind = "casilla"
+casilla_id = "origen-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 618
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "24"
+
+[[entries]]
+export_field_id = "modelo-181-t2-tipo-operacion"
+kind = "casilla"
+casilla_id = "tipo-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 740
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "25"
+
+[[entries]]
+export_field_id = "modelo-181-t2-subclave-operacion"
+kind = "casilla"
+casilla_id = "subclave-operacion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 748
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "26"
+
+[[entries]]
+export_field_id = "modelo-181-t2-situacion-inmueble"
+kind = "casilla"
+casilla_id = "situacion-inmueble"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 782
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "27"
+
+[[entries]]
+export_field_id = "modelo-181-t2-referencia-catastral"
+kind = "casilla"
+casilla_id = "referencia-catastral"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 798
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "28"
+
+[[entries]]
+export_field_id = "modelo-181-t2-valor-tasacion-inmueble-integer"
+kind = "casilla"
+casilla_id = "valor-tasacion-inmueble"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 832
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-valor-tasacion-inmueble-fractional"
+kind = "casilla"
+casilla_id = "valor-tasacion-inmueble"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 835
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-saldo-pendiente-integer"
+kind = "casilla"
+casilla_id = "saldo-pendiente"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 858
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-saldo-pendiente-fractional"
+kind = "casilla"
+casilla_id = "saldo-pendiente"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 859
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-tipo-via"
+kind = "casilla"
+casilla_id = "inmueble-tipo-via"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 876
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "32"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-nombre-via"
+kind = "casilla"
+casilla_id = "inmueble-nombre-via"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 880
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "33"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-tipo-numeracion"
+kind = "casilla"
+casilla_id = "inmueble-tipo-numeracion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 886
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "34"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-numero-casa"
+kind = "casilla"
+casilla_id = "inmueble-numero-casa"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 889
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "35"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-calificador-numero"
+kind = "casilla"
+casilla_id = "inmueble-calificador-numero"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 891
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "36"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-bloque"
+kind = "casilla"
+casilla_id = "inmueble-bloque"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 894
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "37"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-portal"
+kind = "casilla"
+casilla_id = "inmueble-portal"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 896
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "38"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-escalera"
+kind = "casilla"
+casilla_id = "inmueble-escalera"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 898
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "39"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-planta"
+kind = "casilla"
+casilla_id = "inmueble-planta"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 900
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "40"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-puerta"
+kind = "casilla"
+casilla_id = "inmueble-puerta"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 902
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "41"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-complemento"
+kind = "casilla"
+casilla_id = "inmueble-complemento"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 904
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "42"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-localidad"
+kind = "casilla"
+casilla_id = "inmueble-localidad"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 915
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "43"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-municipio"
+kind = "casilla"
+casilla_id = "inmueble-municipio"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 918
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "44"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-codigo-municipio"
+kind = "casilla"
+casilla_id = "inmueble-codigo-municipio"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 920
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "45"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-codigo-provincia"
+kind = "casilla"
+casilla_id = "inmueble-codigo-provincia"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 923
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "46"
+
+[[entries]]
+export_field_id = "modelo-181-t2-inmueble-codigo-postal"
+kind = "casilla"
+casilla_id = "inmueble-codigo-postal"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 962
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "47"
+
+[[entries]]
+export_field_id = "modelo-181-t2-clave-intervencion"
+kind = "casilla"
+casilla_id = "clave-intervencion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 966
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "48"
+
+[[entries]]
+export_field_id = "modelo-181-t2-prestamista-nombre"
+kind = "casilla"
+casilla_id = "prestamista-nombre"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 975
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "49"
+
+[[entries]]
+export_field_id = "modelo-181-t2-prestamista-nif"
+kind = "casilla"
+casilla_id = "prestamista-nif"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 990
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "50"
+
+[[entries]]
+export_field_id = "modelo-181-t2-porcentaje-financiacion-vivienda-integer"
+kind = "casilla"
+casilla_id = "porcentaje-financiacion-vivienda-habitual"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1026
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "52"
+
+[[entries]]
+export_field_id = "modelo-181-t2-porcentaje-financiacion-vivienda-fractional"
+kind = "casilla"
+casilla_id = "porcentaje-financiacion-vivienda-habitual"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1028
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "53"
+
+[[entries]]
+export_field_id = "modelo-181-t2-importe-reintegro-intereses"
+kind = "casilla"
+casilla_id = "importe-reintegro-intereses"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1054
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "54"
+
+[[entries]]
+export_field_id = "modelo-181-t2-intereses-indemnizatorios"
+kind = "casilla"
+casilla_id = "intereses-indemnizatorios"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1108
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "55"
+
+[[entries]]
+export_field_id = "modelo-181-t2-otras-cantidades-indemnizatorias"
+kind = "casilla"
+casilla_id = "otras-cantidades-indemnizatorias"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1136
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "56"
+
+[[entries]]
+export_field_id = "modelo-181-t2-cantidades-minorar-principal"
+kind = "casilla"
+casilla_id = "cantidades-minorar-principal"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1175
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "57"

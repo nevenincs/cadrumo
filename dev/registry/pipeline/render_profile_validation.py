@@ -16,6 +16,7 @@ def _field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
     return RenderProfileAnchor(
         sheet=field.sheet,
         source_row=field.source_row,
+        semantic_part_offset=field.semantic_part_offset,
         source_cell=field.source_cell,
         ordinal=field.ordinal,
         ordinal_absent=field.ordinal is None,
@@ -33,7 +34,7 @@ def _duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
     return tuple(sorted(duplicates, key=repr))
 
 
-def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, str, str, str]:
+def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str, str]:
     """Return a deterministic, total sort key -- presentation order, not AEAT order.
 
     Plain string ordering on ``ordinal`` is fine here: every use is a stable,
@@ -43,11 +44,19 @@ def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, str, str, str]:
     return (
         anchor.sheet,
         anchor.source_row,
+        anchor.semantic_part_offset or 0,
         anchor.ordinal or "",
         anchor.source_cell or "",
         anchor.record_identity,
     )
 
 
-def _anchor_key_tuple(anchor: RenderProfileAnchor) -> tuple[str, int, str | None, str | None, str]:
-    return (anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity)
+def _anchor_key_tuple(anchor: RenderProfileAnchor) -> tuple[str, int, str | None, str | None, str, int | None]:
+    return (
+        anchor.sheet,
+        anchor.source_row,
+        anchor.source_cell,
+        anchor.ordinal,
+        anchor.record_identity,
+        anchor.semantic_part_offset,
+    )

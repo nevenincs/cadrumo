@@ -41,6 +41,7 @@ from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
+    RecordDesign369RelativeClosing,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
@@ -138,6 +139,9 @@ class RecordDesignIntermediateField(_StrictModel):
     #: of serialised provenance while false, so fields whose content was never
     #: located in a printed Contenido column serialise exactly as before.
     content_in_contenido_column: bool = Field(default=False, exclude_if=lambda value: not value)
+    #: Derived render-profile views may identify one source-declared semantic part.
+    #: The parser never sets this: the official row remains one unchanged field.
+    semantic_part_offset: int | None = Field(default=None, gt=0, exclude_if=lambda value: value is None)
 
 
 class RecordDesignIntermediateAuxiliaryEnvelopeHeaderField(_StrictModel):
@@ -243,7 +247,7 @@ class RecordDesignIntermediateRelativeSuffixMarker(_StrictModel):
     source_row: int = Field(gt=0)
     source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     ordinal: int = Field(gt=0)
-    offset: Literal["***"]
+    offset: Literal["***"] | int
     length: int = Field(gt=0)
     aeat_type: str = Field(min_length=1)
     normalized_description: str = Field(min_length=1)
@@ -252,7 +256,7 @@ class RecordDesignIntermediateRelativeSuffixMarker(_StrictModel):
 
 
 class RecordDesignIntermediateCompositeRelativeClosing(_StrictModel):
-    """Six distinct Modelo 220 closing rows, retained without concatenation."""
+    """Six distinct closing rows, retaining their printed relative offsets."""
 
     tag_prefix: RecordDesignIntermediateRelativeSuffixMarker
     modelo: RecordDesignIntermediateRelativeSuffixMarker
@@ -301,7 +305,7 @@ class RecordDesignIntermediateVariableEnvelope(_StrictModel):
     total_source_row: int = Field(gt=0)
     total_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     total_label: Literal["total"]
-    total_length: Literal["Variable"]
+    total_length: Literal["Variable"] | None
 
 
 class RecordDesignIntermediate(_StrictModel):
@@ -607,11 +611,11 @@ def _intermediate_auxiliary_envelope_header(
 
 
 def _intermediate_relative_closing(
-    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing,
+    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing | RecordDesign369RelativeClosing,
     *,
     workbook_format: RecordDesignWorkbookFormat,
 ) -> RecordDesignIntermediateRelativeSuffixMarker | RecordDesignIntermediateCompositeRelativeClosing:
-    if isinstance(closing, RecordDesignCompositeRelativeClosing):
+    if isinstance(closing, (RecordDesignCompositeRelativeClosing, RecordDesign369RelativeClosing)):
         parts = tuple(_intermediate_relative_suffix(part, workbook_format=workbook_format) for part in closing.parts)
         return RecordDesignIntermediateCompositeRelativeClosing(
             tag_prefix=parts[0],

@@ -60,7 +60,9 @@ from cadrumo.domain.calculations.registry.ids import (
     ExportFieldId,
     ModeloId,
     RecordId,
+    RevisionId,
     SourceRefId,
+    is_registry_id,
 )
 from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole, RecordDiscriminator
@@ -81,6 +83,7 @@ __all__ = [
     "SemanticMapRecord",
     "VariableEnvelopeSemantic",
     "load_semantic_map",
+    "load_semantic_map_for_revision",
     "semantic_anchor_key",
     "semantic_record_key",
 ]
@@ -198,15 +201,23 @@ class EnvelopePrefixField(_StrictModel):
 
     role: FilingEnvelopePrefixRoleValue
     anchor: SemanticMapAnchor
+    casilla_id: CasillaId | None = None
+
+    @model_validator(mode="after")
+    def _require_language_casilla_only(self) -> EnvelopePrefixField:
+        if (self.casilla_id is not None) != (self.role.value == "language"):
+            raise ValueError("envelope language role requires exactly one casilla id; other roles forbid it")
+        return self
 
 
 class EnvelopeTotalAnchor(_StrictModel):
-    """The parser-owned ``Total: Variable`` marker addressed without a field slot."""
+    """The parser-owned Total row and its stated or absent length token."""
 
     source_row: int = Field(gt=0)
     source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     label: Literal["total"]
-    length: Literal["Variable"]
+    #: Omitted only when AEAT printed a bare Total row with no length token.
+    length: Literal["Variable"] | None = None
 
 
 class VariableEnvelopeSemantic(_StrictModel):
@@ -400,6 +411,12 @@ class SemanticMapRecord(_StrictModel):
     export_record_id: RecordId
     record_type: str = Field(min_length=1)
     required: bool = True
+    requires_positive_casilla_id: CasillaId | None = None
+    """Selected-revision casilla whose positive value enables this record.
+
+    This is an authored runtime gate, not a property inferred from a source
+    sheet's title or from another revision's generated layout.
+    """
     repeat: Literal["binding_rows", "projection_rows"] | None = None
     binding_record: str | None = None
     """The record whose binding rows this record repeats over, when ``repeat`` is
@@ -529,6 +546,38 @@ def load_semantic_map(fragment_directory: Path) -> SemanticMap:
     paths = _semantic_map_fragment_paths(fragment_directory)
     fragments = tuple(_load_fragment(path) for path in paths)
     return _compile_fragments(fragments)
+
+
+def load_semantic_map_for_revision(epoch_directory: Path, revision_id: RevisionId) -> SemanticMap:
+    """Select one complete map from a revision-scoped epoch, or a legacy epoch map.
+
+    Source epochs may be shared by revisions with different casilla namespaces.
+    Such an epoch consists only of revision-named directories; mixing fragments
+    and revision directories would make selection ambiguous and is refused.
+    """
+    if not is_registry_id(revision_id) or "/" in revision_id or "\\" in revision_id:
+        raise RegistryValidationError(f"semantic-map revision id is not a safe registry identity: {revision_id!r}")
+    if not epoch_directory.is_dir() or is_link_like(epoch_directory):
+        raise RegistryValidationError(f"semantic-map epoch path must be a real directory: {epoch_directory}")
+    try:
+        members = tuple(iter_directory(epoch_directory, require_root=True))
+    except OSError as exc:
+        raise RegistryValidationError(f"cannot inspect semantic-map epoch directory: {epoch_directory}") from exc
+    fragments = tuple(path for path in members if path.suffix.casefold() == ".toml")
+    editions = tuple(path for path in members if path.is_dir() and not is_link_like(path))
+    if fragments and editions:
+        raise RegistryValidationError("semantic-map epoch mixes unscoped fragments with revision directories")
+    if fragments:
+        return load_semantic_map(epoch_directory)
+    invalid = tuple(path.name for path in members if path not in editions or not is_registry_id(path.name))
+    if invalid:
+        raise RegistryValidationError(f"semantic-map epoch contains unsupported entries: {invalid!r}")
+    selected = epoch_directory / revision_id
+    if selected not in editions:
+        raise RegistryValidationError(
+            f"semantic-map epoch has no reviewed map for revision {revision_id!r}: {epoch_directory}"
+        )
+    return load_semantic_map(selected)
 
 
 def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:

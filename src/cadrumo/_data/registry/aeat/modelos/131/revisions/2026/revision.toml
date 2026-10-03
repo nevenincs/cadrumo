@@ -37,7 +37,7 @@ reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2026"
 valid_from = 2026-01-01
-period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
+period_selector = { years = [2026], periods = ["1T", "2T"] }
 orden_aplicabilidad = ["orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4"]
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
 source_refs = [
@@ -354,7 +354,7 @@ sequence_removals = {source_refs = [1]}
 family = "filing_schedules"
 selector = {revision = "2025", id = "modelo-131-trimestral"}
 sequence_additions = {source_refs = ["aeat-modelo-131-procedure"]}
-sequence_removals = {source_refs = [0]}
+sequence_removals = {periods = [2, 3], source_refs = [0]}
 
 [[revisions."2026".family_overrides]]
 family = "extraction_profiles"
@@ -371,9 +371,9 @@ sequence_removals = {source_refs = [0]}
 [[revisions."2026".family_overrides]]
 family = "constructs"
 selector = {revision = "2025", id = "modelo-131-objective-estimation-instalment"}
-fields = {deadline_windows = ["modelo-131-2026-1t", "modelo-131-2026-2t", "modelo-131-2026-3t", "modelo-131-2026-4t"]}
+fields = {deadline_windows = ["modelo-131-2026-1t", "modelo-131-2026-2t"]}
 sequence_additions = {application_links = ["modelo-131-declaracion-extractor", "modelo-131-portal-cross-reference", "modelo-131-deadline"], extraction_profiles = ["modelo-131-declaracion-pdf"], legal_refs = ["orden-hac-1425-2025:art-4", "orden-hac-1425-2025:da-1", "orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b", "orden-hac-1425-2025:instruccion-2-3-b-3", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"], live_cross_references = ["modelo-131-static-official"], source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-formulario-presentacion"]}
-sequence_removals = {legal_refs = [2, 3, 4, 5, 6, 7, 8, 9, 10], source_refs = [0, 1, 4]}
+sequence_removals = {legal_refs = [2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14], source_refs = [0, 1, 4]}
 sequence_order = {application_links = [0, 1, 2, 4, 5, 6, 3, 9, 10, 7, 11, 8], extraction_profiles = [1, 0], legal_refs = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2, 3], live_cross_references = [1, 0], source_refs = [3, 4, 0, 5, 1, 2]}
 
 [[revisions."2026".family_overrides]]

@@ -8,9 +8,7 @@ from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from .candidate_staging import (
-    validate_bootstrap_manual_export_layout_supersession,
-)
+from .bootstrap_supersession import validate_bootstrap_manual_export_layout_supersession
 from .export_fragment_provenance import (
     LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     collect_export_fragment_output_digests,
@@ -108,6 +106,10 @@ def _require_supersession_source_receipt(
             revision=str(context.validation.target.revision_id),
             superseded_layout_id=supersession.superseded_layout_id,
             expected_references=supersession.expected_construct_references,
+            source_ref=supersession.source_ref,
+            source_sha256=supersession.source_sha256,
+            manual_source_sha256=supersession.manual_source_sha256,
+            manual_origin_revision=supersession.manual_origin_revision,
         )
     except (OSError, ValueError) as exc:
         raise RegistryValidationError(f"generated export supersession source changed after check: {exc}") from exc

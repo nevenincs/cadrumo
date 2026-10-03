@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import RevisionId, is_registry_id
 
 from .pydantic_error_detail import validation_error_detail
 from .render_profile_model import RenderProfile
@@ -32,6 +33,32 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     paths = _render_profile_fragment_paths(profile_directory)
     fragments = tuple(_load_render_profile_fragment(path) for path in paths)
     return _compile_fragments(fragments)
+
+
+def load_render_profile_for_revision(epoch_directory: Path, revision_id: RevisionId) -> RenderProfile:
+    """Select a complete revision-scoped profile when one source epoch serves distinct revisions."""
+    if not is_registry_id(revision_id) or "/" in revision_id or "\\" in revision_id:
+        raise RegistryValidationError(f"render-profile revision id is not a safe registry identity: {revision_id!r}")
+    _require_render_profile_directory(epoch_directory)
+    try:
+        members = tuple(iter_directory(epoch_directory, require_root=True))
+    except OSError as exc:
+        raise RegistryValidationError(f"cannot inspect render-profile epoch directory: {epoch_directory}") from exc
+    fragments = tuple(path for path in members if path.suffix.casefold() == ".toml")
+    editions = tuple(path for path in members if path.is_dir() and not is_link_like(path))
+    if fragments and editions:
+        raise RegistryValidationError("render-profile epoch mixes unscoped fragments with revision directories")
+    if fragments:
+        return load_render_profile(epoch_directory)
+    invalid = tuple(path.name for path in members if path not in editions or not is_registry_id(path.name))
+    if invalid:
+        raise RegistryValidationError(f"render-profile epoch contains unsupported entries: {invalid!r}")
+    selected = epoch_directory / revision_id
+    if selected not in editions:
+        raise RegistryValidationError(
+            f"render-profile epoch has no reviewed profile for revision {revision_id!r}: {epoch_directory}"
+        )
+    return load_render_profile(selected)
 
 
 def _require_render_profile_directory(profile_directory: Path) -> None:
@@ -76,6 +103,9 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
     _require_unique_fragment_ids(ids)
     design_identity = _shared_fragment_identity(ordered)
     _require_fragment_identity(ordered, design_identity)
+    empty_assertions = tuple(fragment.empty_rule_assertion for fragment in ordered if fragment.empty_rule_assertion)
+    if empty_assertions and len(ordered) != 1:
+        raise RegistryValidationError("an empty render profile must be one complete exact-design fragment")
     width_rules = _compile_width_17_rules(rule for fragment in ordered for rule in fragment.width_17_rules)
     return RenderProfile(
         schema_version=RENDER_PROFILE_SCHEMA_VERSION,
@@ -85,6 +115,10 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
         singleton_rules=tuple(rule for fragment in ordered for rule in fragment.singleton_rules),
         signed_composite_rules=tuple(rule for fragment in ordered for rule in fragment.signed_composite_rules),
         literal_numeric_rules=tuple(rule for fragment in ordered for rule in fragment.literal_numeric_rules),
+        telematic_transport_choice_rules=tuple(
+            rule for fragment in ordered for rule in fragment.telematic_transport_choice_rules
+        ),
+        empty_rule_assertion=empty_assertions[0] if empty_assertions else None,
     )
 
 

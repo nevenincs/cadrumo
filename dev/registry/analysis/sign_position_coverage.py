@@ -32,6 +32,7 @@ from pathlib import Path
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.record_design import extract_record_design
@@ -151,25 +152,48 @@ def unreadable_designs(authority: ValidatedRegistryAuthority) -> tuple[str, ...]
 def _screen(authority: ValidatedRegistryAuthority) -> Iterator[UndeclaredSignPosition]:
     for modelo in sorted(authority.modelos, key=lambda item: str(item.id)):
         for revision in sorted(modelo.revisions.values(), key=lambda item: str(item.id)):
-            if not revision.export_layouts:
-                continue
-            positions = design_sign_positions(authority, revision)
-            if not positions:
-                continue
-            for layout in revision.export_layouts:
-                for record in layout.records:
-                    fields = [
-                        (str(field.id), field.offset, str(field.data_type), field.sign_position)
-                        for field in record.fields
-                    ]
-                    for field_id, offset in undeclared_sign_positions(fields, positions):
-                        yield UndeclaredSignPosition(
-                            modelo=str(modelo.id),
-                            revision=str(revision.id),
-                            record_id=str(record.id),
-                            field_id=field_id,
-                            offset=offset,
-                        )
+            yield from _revision_findings(authority, str(modelo.id), revision)
+
+
+def _revision_findings(
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    revision: ModeloRevision,
+) -> Iterator[UndeclaredSignPosition]:
+    if not revision.export_layouts:
+        return
+    positions = design_sign_positions(authority, revision)
+    if not positions:
+        return
+    for layout in revision.export_layouts:
+        yield from _layout_findings(modelo_id, revision, layout, positions)
+
+
+def _layout_findings(
+    modelo_id: str,
+    revision: ModeloRevision,
+    layout: ExportLayoutDefinition,
+    positions: frozenset[int],
+) -> Iterator[UndeclaredSignPosition]:
+    for record in layout.records:
+        yield from _record_findings(modelo_id, revision, record, positions)
+
+
+def _record_findings(
+    modelo_id: str,
+    revision: ModeloRevision,
+    record: ExportRecordDefinition,
+    positions: frozenset[int],
+) -> Iterator[UndeclaredSignPosition]:
+    fields = [(str(field.id), field.offset, str(field.data_type), field.sign_position) for field in record.fields]
+    for field_id, offset in undeclared_sign_positions(fields, positions):
+        yield UndeclaredSignPosition(
+            modelo=modelo_id,
+            revision=str(revision.id),
+            record_id=str(record.id),
+            field_id=field_id,
+            offset=offset,
+        )
 
 
 def screen_authority(

@@ -455,9 +455,12 @@ def _require_length(field: _ExportField) -> int:
 
 def _render_typed_value(field: _ExportField, value: object) -> str:
     """Render one already-projected value under the field's declared data type."""
-    if field.value_policy is ExportValuePolicy.INTEGER_PART:
+    if field.value_policy in {ExportValuePolicy.INTEGER_PART, ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART}:
         return _render_integer_part(field, value)
-    if field.value_policy is ExportValuePolicy.FRACTIONAL_DIGITS:
+    if field.value_policy in {
+        ExportValuePolicy.FRACTIONAL_DIGITS,
+        ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+    }:
         return _render_fractional_digits(field, value)
     if field.data_type == "money":
         return _render_money(field, value)
@@ -548,6 +551,13 @@ def _render_absent_slot(field: _ExportField) -> str:
         raise RegistryValidationError(
             f"required export field {field.id!r} has no value to render",
         )
+    if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
+        # This source-backed sign slot prints 0 when its amount is absent. A
+        # generic optional text fill would print a space and contradict the
+        # signed-component wire policy before the record context guard runs.
+        rendered = _render_typed_value(field, project_export_value(field.value_policy, 0))
+        validate_export_wire_value(field.value_policy, rendered)
+        return rendered
     if field.data_type in _NUMERIC_DATA_TYPES:
         return _render_numeric_digits(field, "", negative=False)
     return _pad(field, "")

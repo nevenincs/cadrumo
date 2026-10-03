@@ -77,8 +77,8 @@ from ...tests.authored_edition_support import authored_revisions_where
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
-from ..candidate_staging import stage_continuity_metadata
 from ..cli import stage_published_modelo
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     collect_export_fragment_output_digests,

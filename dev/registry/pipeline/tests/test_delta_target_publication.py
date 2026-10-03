@@ -30,11 +30,7 @@ from ...compiler.authority import compiled_bundled_authority
 from ...compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ...compiler.loader import load_modelo_directory
 from .._tree_validation import GeneratedExportTreeValidationContext
-from ..candidate_staging import (
-    ignore_export_authority_directories,
-    stage_continuity_metadata,
-    stage_generated_export_candidate,
-)
+from ..candidate_staging import ignore_export_authority_directories, stage_generated_export_candidate
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
@@ -43,6 +39,7 @@ from ..cli import (
     stage_published_modelo,
     supporting_modelos,
 )
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
 from ..render_check import revision_render_inputs
 

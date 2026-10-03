@@ -73,6 +73,12 @@ class SingletonNumericRule(_StrictModel):
         #: casilla per fact instead.
         "amount_integer_part",
         "amount_fractional_digits",
+        "signed_component_magnitude",
+        "signed_amount_integer_part",
+        "signed_amount_fractional_digits",
+        "date_text_year",
+        "date_text_month",
+        "date_text_day",
     ]
     value_policy: RequiredExportValuePolicyValue
     integer_digits: int = Field(ge=0)
@@ -142,6 +148,12 @@ def _validate_singleton_value_policy(rule: SingletonNumericRule) -> None:
         "mistyped_alphanumeric_text": ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT,
         "amount_integer_part": ExportValuePolicy.INTEGER_PART,
         "amount_fractional_digits": ExportValuePolicy.FRACTIONAL_DIGITS,
+        "signed_component_magnitude": ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE,
+        "signed_amount_integer_part": ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+        "signed_amount_fractional_digits": ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+        "date_text_year": ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
+        "date_text_month": ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
+        "date_text_day": ExportValuePolicy.YYYYMMDD_TEXT_DAY,
     }[rule.semantic_kind]
     if rule.value_policy != required_policy:
         raise ValueError(f"{rule.semantic_kind} requires value_policy {required_policy!r}")
@@ -162,6 +174,14 @@ def _validate_singleton_integer_shapes(rule: SingletonNumericRule) -> None:
         raise ValueError("amount_integer_part requires positive integer digits and 0 decimal digits")
     if rule.semantic_kind == "amount_fractional_digits" and (rule.integer_digits != 0 or rule.decimal_digits <= 0):
         raise ValueError("amount_fractional_digits requires 0 integer digits and positive decimal digits")
+    if rule.semantic_kind == "signed_amount_integer_part" and (
+        rule.integer_digits not in {8, 13} or rule.decimal_digits != 0
+    ):
+        raise ValueError("signed amount integer part requires 8 or 13 integer digits")
+    if rule.semantic_kind == "signed_amount_fractional_digits" and (
+        rule.integer_digits != 0 or rule.decimal_digits != 2
+    ):
+        raise ValueError("signed amount fractional part requires two decimal digits")
 
 
 def _validate_singleton_decimal_shape(rule: SingletonNumericRule) -> None:
@@ -193,6 +213,10 @@ def _validate_singleton_exact_shape(rule: SingletonNumericRule) -> None:
         "year_last_two_digits": (2, 0),
         "month_mm": (2, 0),
         "day_dd": (2, 0),
+        "signed_component_magnitude": (11, 2),
+        "date_text_year": (4, 0),
+        "date_text_month": (2, 0),
+        "date_text_day": (2, 0),
     }
     expected_shape = exact_shapes.get(rule.semantic_kind)
     if expected_shape is not None and (rule.integer_digits, rule.decimal_digits) != expected_shape:
@@ -243,6 +267,28 @@ class SignedMonetaryCompositeRule(_StrictModel):
         return self
 
 
+class TelematicTransportChoiceRule(_StrictModel):
+    """A source-pinned choice of the official telematic transport code."""
+
+    rule_kind: Literal["telematic_transport_choice"]
+    selected_literal: Literal["T"]
+    alternative_literals: tuple[str, ...] = Field(min_length=1)
+    selection_condition: Literal["telematic_transmission"]
+    expected_source_content: str = Field(min_length=1)
+    anchor: RenderProfileAnchor
+    evidence: ReviewedPolicyDecision
+
+    @model_validator(mode="after")
+    def _require_reviewed_choice(self) -> TelematicTransportChoiceRule:
+        if self.evidence.governed_anchor != self.anchor:
+            raise ValueError("transport choice policy must name its exact governed anchor")
+        if len(set(self.alternative_literals)) != len(self.alternative_literals) or "T" in self.alternative_literals:
+            raise ValueError("transport alternatives must be distinct from the selected literal")
+        if any(len(value) != 1 or not value.isascii() or not value.isupper() for value in self.alternative_literals):
+            raise ValueError("transport alternatives must be single uppercase ASCII letters")
+        return self
+
+
 class RenderProfileFragment(_StrictModel):
     """One deterministic, independently reviewable profile fragment."""
 
@@ -253,11 +299,18 @@ class RenderProfileFragment(_StrictModel):
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
     literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
+    telematic_transport_choice_rules: tuple[TelematicTransportChoiceRule, ...] = ()
+    empty_rule_assertion: Literal["canonical_eligibility_empty"] | None = None
 
     @model_validator(mode="after")
     def _require_authored_rules(self) -> RenderProfileFragment:
-        if not (
-            self.width_17_rules or self.singleton_rules or self.signed_composite_rules or self.literal_numeric_rules
-        ):
-            raise ValueError("render profile fragments must contain at least one authored rule")
+        has_rules = bool(
+            self.width_17_rules
+            or self.singleton_rules
+            or self.signed_composite_rules
+            or self.literal_numeric_rules
+            or self.telematic_transport_choice_rules
+        )
+        if has_rules == (self.empty_rule_assertion is not None):
+            raise ValueError("render profile fragment requires rules or an exclusive empty eligibility assertion")
         return self

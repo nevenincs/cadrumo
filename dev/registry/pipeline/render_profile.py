@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from cadrumo.core.hashing import content_hash_hex
@@ -18,7 +19,7 @@ from .render_profile_evidence import (
 from .render_profile_loading import load_render_profile
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileDesignIdentity
-from .render_profile_validation import _anchor_key, _anchor_key_tuple, _field_anchor
+from .render_profile_validation import _anchor_key, _anchor_key_tuple, _duplicates, _field_anchor
 
 
 def load_and_validate_render_profile(
@@ -50,12 +51,47 @@ def validate_render_profile(
         joined.source,
         signed_composite_anchor_keys=composite_keys,
     )
+    if profile.empty_rule_assertion is not None and eligibility.all_fields:
+        raise RegistryValidationError("empty render profile contradicts canonical eligible policy slots")
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
     literal_anchors = {
         _field_anchor(design_view(field)) for field in joined.fields if field.semantic_entry.kind.value == "literal"
     }
     if any(rule.anchor not in literal_anchors for rule in profile.literal_numeric_rules):
         raise RegistryValidationError("literal numeric rules must address literal semantic fields")
+    _validate_telematic_transport_choice_rules(profile, joined)
+
+
+def _validate_telematic_transport_choice_rules(profile: RenderProfile, joined: JoinedRecordDesign) -> None:
+    rules = profile.telematic_transport_choice_rules
+    if _duplicates(rule.anchor for rule in rules):
+        raise RegistryValidationError("telematic transport choices contain duplicate exact anchors")
+    by_anchor = {_field_anchor(design_view(field)): field for field in joined.fields}
+    for rule in rules:
+        joined_field = by_anchor.get(rule.anchor)
+        if joined_field is None:
+            raise RegistryValidationError("telematic transport choice has no exact official source anchor")
+        field = design_view(joined_field)
+        content = field.content
+        if (
+            joined_field.semantic_entry.kind.value != "literal"
+            or joined_field.semantic_entry.literal != rule.selected_literal
+            or field.length != 1
+            or field.aeat_type.casefold().strip() not in {"alfabético", "alfabetico"}
+            or field.normalized_description.casefold().strip(" .") != "tipo de soporte"
+            or content != rule.expected_source_content
+        ):
+            raise RegistryValidationError(
+                "telematic transport choice conflicts with its exact official slot or mapped literal"
+            )
+        folded = content.translate(str.maketrans({'"': "'", "“": "'", "”": "'", "«": "'", "»": "'"}))
+        source_keys = tuple(re.findall(r"'([A-Z])'\s*:", folded))
+        if source_keys != (*rule.alternative_literals, rule.selected_literal):
+            raise RegistryValidationError(
+                "telematic transport choice does not enumerate the exact official alternatives"
+            )
+        if re.search(r"'T'\s*:\s*Transmisi[oó]n telem[aá]tica", folded, re.IGNORECASE) is None:
+            raise RegistryValidationError("telematic transport choice lacks the official telematic condition")
 
 
 def render_profile_digest(
@@ -115,4 +151,11 @@ def render_profile_digest(
             rule.model_dump(mode="json")
             for rule in sorted(profile.literal_numeric_rules, key=lambda item: _anchor_key(item.anchor))
         ]
+    if profile.telematic_transport_choice_rules:
+        digest_payload["telematic_transport_choice_rules"] = [
+            rule.model_dump(mode="json")
+            for rule in sorted(profile.telematic_transport_choice_rules, key=lambda item: _anchor_key(item.anchor))
+        ]
+    if profile.empty_rule_assertion is not None:
+        digest_payload["empty_rule_assertion"] = profile.empty_rule_assertion
     return content_hash_hex(digest_payload)

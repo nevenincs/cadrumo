@@ -27,14 +27,18 @@ from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
+    RecordDesignIntermediateVariableEnvelope,
     RecordKey,
     intermediate_anchor_key,
     intermediate_record_key,
     validate_inspection_source_authority,
 )
+from .record_design_revision_projection import project_record_design_for_revision
 from .semantic_map import (
     SemanticMap,
     SemanticMapEntry,
+    SemanticMapPart,
+    VariableEnvelopeSemantic,
     semantic_anchor_key,
     semantic_record_key,
 )
@@ -103,12 +107,15 @@ def _validate_semantic_map_with_admissions(
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> _ValidatedSemanticMap:
     """Validate once and retain the receipt proof needed by the semantic join."""
+    intermediate = project_record_design_for_revision(intermediate, inspection.revision_id)
     _validate_scope(semantic_map, intermediate, modelo_id=inspection.modelo_id)
     validate_inspection_source_authority(intermediate, inspection)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_variable_envelope_boundary(semantic_map, intermediate)
+    _validate_envelope_casilla_references(semantic_map, casilla_ids=inspection.casilla_ids)
+    _validate_record_gate_casilla_references(semantic_map, casilla_ids=inspection.casilla_ids)
     resolved_map = _resolve_semantic_map_casilla_tokens(
         semantic_map,
         casilla_ids=inspection.casilla_ids,
@@ -124,6 +131,26 @@ def _validate_semantic_map_with_admissions(
     return _ValidatedSemanticMap(
         semantic_map=resolved_map,
     )
+
+
+def _validate_envelope_casilla_references(semantic_map: SemanticMap, *, casilla_ids: frozenset[CasillaId]) -> None:
+    for envelope in semantic_map.variable_envelopes:
+        for field in envelope.prefix_fields:
+            if field.casilla_id is not None and field.casilla_id not in casilla_ids:
+                raise RegistryValidationError(
+                    f"variable envelope {envelope.record_identity!r} role {field.role.value!r} "
+                    f"references unknown target-revision casilla {field.casilla_id!r}"
+                )
+
+
+def _validate_record_gate_casilla_references(semantic_map: SemanticMap, *, casilla_ids: frozenset[CasillaId]) -> None:
+    for record in semantic_map.records:
+        gate = record.requires_positive_casilla_id
+        if gate is not None and gate not in casilla_ids:
+            raise RegistryValidationError(
+                f"semantic record {record.export_record_id!r} positive gate references unknown "
+                f"target-revision casilla {gate!r}"
+            )
 
 
 def resolve_semantic_map_casilla_tokens(
@@ -254,6 +281,28 @@ def _validate_variable_envelope_boundary(
     """Retain envelopes as distinct, source-pinned composition authorities."""
     fixed_keys = {(sheet.sheet, sheet.record_identity) for sheet in intermediate.sheets}
     envelope_keys = tuple((envelope.sheet, envelope.record_identity) for envelope in intermediate.variable_envelopes)
+    if not _validate_parser_envelope_identities(semantic_map, fixed_keys, envelope_keys):
+        return
+    _require_single_semantic_envelope(semantic_map, envelope_keys)
+    semantic = semantic_map.variable_envelopes[0]
+    parser_envelope = intermediate.variable_envelopes[0]
+    _validate_envelope_identity(semantic, parser_envelope)
+    body_record_ids = _envelope_body_record_ids(semantic_map, intermediate)
+    validate_variable_envelope(
+        semantic,
+        parser_envelope,
+        modelo=str(semantic_map.modelo),
+        source=intermediate.source,
+        body_record_ids=body_record_ids,
+    )
+
+
+def _validate_parser_envelope_identities(
+    semantic_map: SemanticMap,
+    fixed_keys: set[tuple[str, str]],
+    envelope_keys: tuple[tuple[str, str], ...],
+) -> bool:
+    """Reject duplicate/colliding parser identities and require a declared envelope."""
     duplicate_envelopes = _duplicate_record_keys(envelope_keys)
     if duplicate_envelopes:
         raise RegistryValidationError(
@@ -271,35 +320,43 @@ def _validate_variable_envelope_boundary(
             raise RegistryValidationError(
                 "semantic map declares a variable-envelope contract but parser output contains no variable envelope",
             )
-        return
+        return False
     if len(envelope_keys) != 1:
         raise RegistryValidationError(
             "variable-envelope composition authority admits exactly one parser envelope per design; "
             f"parser output declares {_format_record_keys(envelope_keys)}",
         )
+    return True
+
+
+def _require_single_semantic_envelope(
+    semantic_map: SemanticMap,
+    envelope_keys: tuple[tuple[str, str], ...],
+) -> None:
     if len(semantic_map.variable_envelopes) != 1:
         raise RegistryValidationError(
             f"parser envelope {envelope_keys[0][1]!r} requires exactly one reviewed variable-envelope "
             f"semantic contract, found {len(semantic_map.variable_envelopes)}",
         )
-    semantic = semantic_map.variable_envelopes[0]
-    parser_envelope = intermediate.variable_envelopes[0]
+
+
+def _validate_envelope_identity(
+    semantic: VariableEnvelopeSemantic,
+    parser_envelope: RecordDesignIntermediateVariableEnvelope,
+) -> None:
     if semantic.record_identity != parser_envelope.record_identity:
         raise RegistryValidationError(
             f"reviewed variable-envelope contract names {semantic.record_identity!r} but the parser owns "
             f"{parser_envelope.record_identity!r}",
         )
+
+
+def _envelope_body_record_ids(
+    semantic_map: SemanticMap,
+    intermediate: RecordDesignIntermediate,
+) -> tuple[str, ...]:
     records_by_anchor = {semantic_record_key(record): record for record in semantic_map.records}
-    body_record_ids = tuple(
-        records_by_anchor[intermediate_record_key(sheet)].export_record_id for sheet in intermediate.sheets
-    )
-    validate_variable_envelope(
-        semantic,
-        parser_envelope,
-        modelo=str(semantic_map.modelo),
-        source=intermediate.source,
-        body_record_ids=body_record_ids,
-    )
+    return tuple(records_by_anchor[intermediate_record_key(sheet)].export_record_id for sheet in intermediate.sheets)
 
 
 def _validate_exact_bijection(
@@ -308,30 +365,41 @@ def _validate_exact_bijection(
 ) -> None:
     intermediate_keys = tuple(intermediate_anchor_key(field) for sheet in intermediate.sheets for field in sheet.fields)
     semantic_keys = tuple(semantic_anchor_key(entry.anchor) for entry in semantic_map.entries)
-    duplicate_intermediate = _duplicate_anchor_keys(intermediate_keys)
-    if duplicate_intermediate:
-        raise RegistryValidationError(
-            "parser intermediate contains duplicate exact anchors; refusing ambiguous semantic-map join: "
-            f"{_format_anchor_keys(duplicate_intermediate)}",
-        )
-    # An anchor may carry several entries only when every one of them names the
-    # part of the cell it fills; those parts are then held to the cell itself.
-    partless_keys = tuple(semantic_anchor_key(entry.anchor) for entry in semantic_map.entries if entry.part is None)
-    parted_keys = {semantic_anchor_key(entry.anchor) for entry in semantic_map.entries if entry.part is not None}
-    duplicate_semantic = _duplicate_anchor_keys(partless_keys) or tuple(sorted(parted_keys.intersection(partless_keys)))
-    if duplicate_semantic:
-        raise RegistryValidationError(
-            "semantic map contains duplicate exact anchors; refusing ambiguous parser join: "
-            f"{_format_anchor_keys(duplicate_semantic)}",
-        )
+    _validate_intermediate_anchor_keys(intermediate_keys)
+    _validate_semantic_anchor_keys(semantic_map.entries)
     validate_declared_parts(
         semantic_map.entries, tuple(field for sheet in intermediate.sheets for field in sheet.fields)
     )
+    _validate_anchor_set_equality(intermediate_keys, semantic_keys)
 
-    intermediate_set = set(intermediate_keys)
-    semantic_set = set(semantic_keys)
-    missing = tuple(sorted(intermediate_set - semantic_set))
-    extra = tuple(sorted(semantic_set - intermediate_set))
+
+def _validate_intermediate_anchor_keys(keys: tuple[AnchorKey, ...]) -> None:
+    duplicate = _duplicate_anchor_keys(keys)
+    if duplicate:
+        raise RegistryValidationError(
+            "parser intermediate contains duplicate exact anchors; refusing ambiguous semantic-map join: "
+            f"{_format_anchor_keys(duplicate)}",
+        )
+
+
+def _validate_semantic_anchor_keys(entries: tuple[SemanticMapEntry, ...]) -> None:
+    # An anchor may carry several entries only when every one of them names the
+    # part of the cell it fills; those parts are then held to the cell itself.
+    partless_keys = tuple(semantic_anchor_key(entry.anchor) for entry in entries if entry.part is None)
+    parted_keys = {semantic_anchor_key(entry.anchor) for entry in entries if entry.part is not None}
+    duplicates = _duplicate_anchor_keys(partless_keys) or tuple(sorted(parted_keys.intersection(partless_keys)))
+    if duplicates:
+        raise RegistryValidationError(
+            "semantic map contains duplicate exact anchors; refusing ambiguous parser join: "
+            f"{_format_anchor_keys(duplicates)}",
+        )
+
+
+def _validate_anchor_set_equality(
+    intermediate_keys: tuple[AnchorKey, ...], semantic_keys: tuple[AnchorKey, ...]
+) -> None:
+    missing = tuple(sorted(set(intermediate_keys) - set(semantic_keys)))
+    extra = tuple(sorted(set(semantic_keys) - set(intermediate_keys)))
     if missing or extra:
         details: list[str] = []
         if missing:
@@ -349,48 +417,133 @@ def validate_declared_parts(
     """Hold every declared part to the cell whose text declares it.
 
     Each part's statement must be the cell's own text, its printed range must be
-    printed by the design, and the parts of one cell must tile it exactly: a
-    byte no part accounts for, or two parts claiming one, is refused.
+    printed by the design. Parts must tile their cell, except where separately
+    printed parser fields tile its remaining suffix. The combined source rows
+    must still account for every byte exactly once.
     """
     fields_by_anchor = {intermediate_anchor_key(field): field for field in fields}
-    parts_by_anchor: dict[AnchorKey, list[SemanticMapEntry]] = {}
-    for entry in entries:
-        if entry.part is not None:
-            parts_by_anchor.setdefault(semantic_anchor_key(entry.anchor), []).append(entry)
-    for key, entries in parts_by_anchor.items():
+    for key, cell_entries in _parts_by_anchor(entries).items():
         field = fields_by_anchor.get(key)
         if field is None:
             continue
         printed = _collapse_whitespace(" ".join(text for text in (field.normalized_description, field.content) if text))
         content = _collapse_whitespace(field.content or "")
-        cursor = field.offset
-        for entry in sorted(entries, key=lambda item: item.part.offset if item.part is not None else 0):
-            part = entry.part
-            if part is None:
-                continue
-            if part.offset != cursor:
-                raise RegistryValidationError(
-                    f"semantic-map part {entry.export_field_id!r} starts at {part.offset}, but its cell "
-                    f"{field.offset}+{field.length} leaves byte {cursor} unaccounted or claimed twice",
-                )
-            if _collapse_whitespace(part.statement) not in content:
-                raise RegistryValidationError(
-                    f"semantic-map part {entry.export_field_id!r} statement is not the text of its cell",
-                )
-            range_pattern = re.escape(part.printed_range)
-            if part.length == 1:
-                range_pattern += f"(?:-{part.offset})?"
-            if re.search(rf"(?<![\d–—-]){range_pattern}(?![\d–—-])", printed) is None:
-                raise RegistryValidationError(
-                    f"semantic-map part {entry.export_field_id!r} range {part.printed_range!r} is not printed "
-                    "by its cell",
-                )
-            cursor = part.offset + part.length
-        if cursor != field.offset + field.length:
+        _validate_cell_parts(key, field, cell_entries, fields_by_anchor, printed=printed, content=content)
+
+
+def _parts_by_anchor(entries: Iterable[SemanticMapEntry]) -> dict[AnchorKey, list[SemanticMapEntry]]:
+    parts_by_anchor: dict[AnchorKey, list[SemanticMapEntry]] = {}
+    for entry in entries:
+        if entry.part is not None:
+            parts_by_anchor.setdefault(semantic_anchor_key(entry.anchor), []).append(entry)
+    return parts_by_anchor
+
+
+def _validate_cell_parts(
+    key: AnchorKey,
+    field: RecordDesignIntermediateField,
+    entries: list[SemanticMapEntry],
+    fields_by_anchor: dict[AnchorKey, RecordDesignIntermediateField],
+    *,
+    printed: str,
+    content: str,
+) -> None:
+    cursor = _validate_part_sequence(field, entries, printed=printed, content=content)
+    end = field.offset + field.length
+    cursor = _validate_separate_fields(key, field, fields_by_anchor, cursor=cursor, end=end)
+    if cursor != end:
+        raise RegistryValidationError(
+            f"semantic-map parts of cell {field.offset}+{field.length} end at byte {cursor}, "
+            "so the cell is not tiled exactly",
+        )
+
+
+def _validate_part_sequence(
+    field: RecordDesignIntermediateField,
+    entries: list[SemanticMapEntry],
+    *,
+    printed: str,
+    content: str,
+) -> int:
+    cursor = field.offset
+    for entry in sorted(entries, key=lambda item: item.part.offset if item.part is not None else 0):
+        part = entry.part
+        if part is None:
+            continue
+        _validate_part_start(entry, part, field, cursor=cursor)
+        _validate_part_statement(entry, part, content=content)
+        _validate_part_range(entry, part, printed=printed)
+        cursor = part.offset + part.length
+    return cursor
+
+
+def _validate_part_start(
+    entry: SemanticMapEntry,
+    part: SemanticMapPart,
+    field: RecordDesignIntermediateField,
+    *,
+    cursor: int,
+) -> None:
+    if part.offset != cursor:
+        raise RegistryValidationError(
+            f"semantic-map part {entry.export_field_id!r} starts at {part.offset}, but its cell "
+            f"{field.offset}+{field.length} leaves byte {cursor} unaccounted or claimed twice",
+        )
+
+
+def _validate_part_statement(entry: SemanticMapEntry, part: SemanticMapPart, *, content: str) -> None:
+    if _collapse_whitespace(part.statement) not in content:
+        raise RegistryValidationError(
+            f"semantic-map part {entry.export_field_id!r} statement is not the text of its cell",
+        )
+
+
+def _validate_part_range(entry: SemanticMapEntry, part: SemanticMapPart, *, printed: str) -> None:
+    range_pattern = re.escape(part.printed_range)
+    if part.length == 1:
+        range_pattern += f"(?:-{part.offset})?"
+    if re.search(rf"(?<![\d–—-]){range_pattern}(?![\d–—-])", printed) is None:
+        raise RegistryValidationError(
+            f"semantic-map part {entry.export_field_id!r} range {part.printed_range!r} is not printed by its cell",
+        )
+
+
+def _validate_separate_fields(
+    key: AnchorKey,
+    field: RecordDesignIntermediateField,
+    fields_by_anchor: dict[AnchorKey, RecordDesignIntermediateField],
+    *,
+    cursor: int,
+    end: int,
+) -> int:
+    for other in _contained_fields(key, field, fields_by_anchor, end=end):
+        if other.offset != cursor:
             raise RegistryValidationError(
-                f"semantic-map parts of cell {field.offset}+{field.length} end at byte {cursor}, "
-                "so the cell is not tiled exactly",
+                f"semantic-map parts of cell {field.offset}+{field.length} and separately parsed "
+                f"field {other.offset}+{other.length} leave byte {cursor} unaccounted or claimed twice",
             )
+        cursor += other.length
+    return cursor
+
+
+def _contained_fields(
+    key: AnchorKey,
+    field: RecordDesignIntermediateField,
+    fields_by_anchor: dict[AnchorKey, RecordDesignIntermediateField],
+    *,
+    end: int,
+) -> list[RecordDesignIntermediateField]:
+    return sorted(
+        (
+            other
+            for other_key, other in fields_by_anchor.items()
+            if other_key != key
+            and other.record_identity == field.record_identity
+            and other.offset >= field.offset
+            and other.offset + other.length <= end
+        ),
+        key=lambda other: other.offset,
+    )
 
 
 def _collapse_whitespace(text: str) -> str:

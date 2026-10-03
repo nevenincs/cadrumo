@@ -37,6 +37,14 @@ _YEAR_CONSTRAINTS = {
         published_statement=">= 2024",
         minimum_year=2024,
     ),
+    "aeat-dr-604-2024": BoundedYearDeclaration(
+        source_ref="aeat-dr-604-2024",
+        source_sha256="98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68",
+        sheet="Pág. 1",
+        source_cell="A14",
+        published_statement=">= 2024",
+        minimum_year=2024,
+    ),
 }
 
 

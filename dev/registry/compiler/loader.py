@@ -304,9 +304,28 @@ def _project_revision_locale_keys(
     """Project construct, casilla, and alias identities from one raw revision.
 
     An inherited casilla has no occurrence key of its own: its text lives
-    under the edition that stated it (``label_origins``) or its lineage key,
+    under the edition that stated it (label_origins) or its lineage key,
     so emitting one would invite a restatement of inherited text.
     """
+    _project_binding_locale_keys(keys, modelo_id, revision_id, revision, source_path)
+    _project_construct_locale_keys(keys, modelo_id, revision_id, revision, source_path)
+    _project_casilla_locale_keys(
+        keys,
+        modelo_id,
+        revision_id,
+        revision,
+        source_path,
+        label_origins=label_origins,
+    )
+
+
+def _project_binding_locale_keys(
+    keys: set[str],
+    modelo_id: str,
+    revision_id: str,
+    revision: Mapping[str, object],
+    source_path: Path,
+) -> None:
     bindings = _raw_array(revision, "bindings", f"{source_path}: revision {revision_id!r}")
     for index, raw_binding in enumerate(bindings):
         subject = f"{source_path}: revision {revision_id!r} binding[{index}]"
@@ -316,6 +335,14 @@ def _project_revision_locale_keys(
         binding_id = _required_identity(binding.get("id"), f"{subject}.id")
         keys.update(binding_locale_key(modelo_id, binding_id, field) for field in ("label", "help", "box_number"))
 
+
+def _project_construct_locale_keys(
+    keys: set[str],
+    modelo_id: str,
+    revision_id: str,
+    revision: Mapping[str, object],
+    source_path: Path,
+) -> None:
     constructs = _raw_array(revision, "constructs", f"{source_path}: revision {revision_id!r}")
     seen_construct_ids: set[str] = set()
     for index, raw_construct in enumerate(constructs):
@@ -330,6 +357,16 @@ def _project_revision_locale_keys(
         keys.add(construct_locale_key(modelo_id, revision_id, construct_id))
         keys.add(construct_lineage_locale_key(modelo_id, construct_id))
 
+
+def _project_casilla_locale_keys(
+    keys: set[str],
+    modelo_id: str,
+    revision_id: str,
+    revision: Mapping[str, object],
+    source_path: Path,
+    *,
+    label_origins: Sequence[str | None] | None = None,
+) -> None:
     casillas = _raw_array(revision, "casillas", f"{source_path}: revision {revision_id!r}")
     seen_casilla_ids: set[str] = set()
     for index, raw_casilla in enumerate(casillas):
@@ -341,27 +378,46 @@ def _project_revision_locale_keys(
         if casilla_id in seen_casilla_ids:
             raise RegistryLoadError(f"{subject}: duplicate casilla id {casilla_id!r}")
         seen_casilla_ids.add(casilla_id)
-
-        inherited = label_origins is not None and label_origins[index] is not None
-        localization_keys = (
-            []
-            if inherited
-            else [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL)]
+        _project_one_casilla_locale_keys(
+            keys,
+            modelo_id,
+            revision_id,
+            casilla,
+            casilla_id,
+            subject,
+            inherited=label_origins is not None and label_origins[index] is not None,
         )
-        if "continuidad_id" in casilla:
-            continuidad_id = _required_identity(casilla["continuidad_id"], f"{subject}.continuidad_id")
-            localization_keys.append(
-                casilla_continuity_locale_key(modelo_id, continuidad_id, ModeloLocalizationFieldKind.LABEL),
-            )
-        for localization_key in localization_keys:
-            keys.add(localization_key)
-            keys.add(f"{localization_key.removesuffix('.label')}.help")
 
-        aliases = _raw_array(casilla, "aliases", subject)
-        for alias_index, raw_alias in enumerate(aliases):
-            if _raw_table(raw_alias) is None:
-                raise RegistryLoadError(f"{subject} alias[{alias_index}] must be a table")
-            keys.add(casilla_alias_locale_key(modelo_id, revision_id, casilla_id, str(alias_index)))
+
+def _project_one_casilla_locale_keys(
+    keys: set[str],
+    modelo_id: str,
+    revision_id: str,
+    casilla: Mapping[str, object],
+    casilla_id: str,
+    subject: str,
+    *,
+    inherited: bool,
+) -> None:
+    localization_keys = (
+        []
+        if inherited
+        else [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL)]
+    )
+    if "continuidad_id" in casilla:
+        continuidad_id = _required_identity(casilla["continuidad_id"], f"{subject}.continuidad_id")
+        localization_keys.append(
+            casilla_continuity_locale_key(modelo_id, continuidad_id, ModeloLocalizationFieldKind.LABEL),
+        )
+    for localization_key in localization_keys:
+        keys.add(localization_key)
+        keys.add(f"{localization_key.removesuffix('.label')}.help")
+
+    aliases = _raw_array(casilla, "aliases", subject)
+    for alias_index, raw_alias in enumerate(aliases):
+        if _raw_table(raw_alias) is None:
+            raise RegistryLoadError(f"{subject} alias[{alias_index}] must be a table")
+        keys.add(casilla_alias_locale_key(modelo_id, revision_id, casilla_id, str(alias_index)))
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
@@ -431,19 +487,27 @@ def _validate_sociedades_annual_manual_coverage(
     for disposition in catalogue.dispositions:
         if disposition.status is not SociedadesAnnualManualCoverageStatus.AVAILABLE:
             continue
-        subject = f"Sociedades annual manual coverage year {disposition.year}"
-        source = sources.get(disposition.source_ref or "")
-        if source is None:
-            raise RegistryLoadError(f"{subject} references unknown source {disposition.source_ref!r}")
-        if source.kind != "manual_pdf":
-            raise RegistryLoadError(f"{subject} source must be kind='manual_pdf', not {source.kind!r}")
-        if source.authority != "aeat":
-            raise RegistryLoadError(f"{subject} source must be published by AEAT, not {source.authority!r}")
-        expected_path = f"corpus/manuals/sociedades/{disposition.year}/source.pdf"
-        if source.corpus_path != expected_path:
-            raise RegistryLoadError(f"{subject} source must use corpus path {expected_path!r}")
-        if source.applies_from != date(disposition.year, 1, 1) or source.applies_to != date(disposition.year, 12, 31):
-            raise RegistryLoadError(f"{subject} source must have the exact annual applicability interval")
+        _validate_available_sociedades_source(disposition.year, disposition.source_ref, sources)
+
+
+def _validate_available_sociedades_source(
+    year: int,
+    source_ref: str | None,
+    sources: Mapping[str, SourceReference],
+) -> None:
+    subject = f"Sociedades annual manual coverage year {year}"
+    source = sources.get(source_ref or "")
+    if source is None:
+        raise RegistryLoadError(f"{subject} references unknown source {source_ref!r}")
+    if source.kind != "manual_pdf":
+        raise RegistryLoadError(f"{subject} source must be kind='manual_pdf', not {source.kind!r}")
+    if source.authority != "aeat":
+        raise RegistryLoadError(f"{subject} source must be published by AEAT, not {source.authority!r}")
+    expected_path = f"corpus/manuals/sociedades/{year}/source.pdf"
+    if source.corpus_path != expected_path:
+        raise RegistryLoadError(f"{subject} source must use corpus path {expected_path!r}")
+    if source.applies_from != date(year, 1, 1) or source.applies_to != date(year, 12, 31):
+        raise RegistryLoadError(f"{subject} source must have the exact annual applicability interval")
 
 
 def load_registry_tree(

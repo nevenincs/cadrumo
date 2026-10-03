@@ -11,7 +11,6 @@ record_identity = "Pág. 1"
 export_record_id = "modelo-131-2025-page-01"
 record_type = "page_1"
 required = true
-binding_record = "page_1"
 
 [[records]]
 sheet = "DPA"
@@ -28,7 +27,7 @@ record_identity = "DID"
 export_record_id = "modelo-131-2025-did"
 record_type = "DID"
 required = false
-binding_record = "DID"
+requires_positive_casilla_id = "15"
 
 [[variable_envelopes]]
 source_ref = "aeat-dr-131-2025"

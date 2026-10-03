@@ -23,14 +23,14 @@ from .. import _export_tree
 from ..joined_record_design import JoinedRecordDesignField
 from ..record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
 from ..render_profile import render_profile_digest
-from ..render_profile_authority import validate_render_profile_authority
+from ..render_profile_authority import _validate_signed_composite_source_agreement, validate_render_profile_authority
 from ..render_profile_eligibility import RenderProfileEligibility, project_render_profile_eligibility
 from ..render_profile_evidence import RenderProfileSourceEvidence, ReviewedPolicyDecision, SourceStatedCompositeEvidence
 from ..render_profile_loading import load_render_profile
 from ..render_profile_model import RenderProfile
 from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
 from ..render_profile_rules import SignedMonetaryCompositeRule, SingletonNumericRule
-from ..semantic_map import SemanticMapEntry
+from ..semantic_map import SemanticMapEntry, load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -116,7 +116,16 @@ def _eligibility(field: RecordDesignIntermediateField) -> RenderProfileEligibili
     return project_render_profile_eligibility(
         (field,),
         signed_composite_anchor_keys=frozenset(
-            ((anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity),)
+            (
+                (
+                    anchor.sheet,
+                    anchor.source_row,
+                    anchor.source_cell,
+                    anchor.ordinal,
+                    anchor.record_identity,
+                    anchor.semantic_part_offset,
+                ),
+            )
         ),
     )
 
@@ -334,6 +343,7 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
             rule.anchor.source_cell,
             rule.anchor.ordinal,
             rule.anchor.record_identity,
+            rule.anchor.semantic_part_offset,
         )
         for rule in profile.signed_composite_rules
     )
@@ -371,3 +381,69 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
     assert tuple(
         (rule.anchor.source_row, rule.integer_digits, rule.decimal_digits) for rule in profile.signed_composite_rules
     ) == ((177, 12, 2),)
+
+
+@pytest.mark.parametrize("epoch, row", (("2014", 116), ("2014", 302), ("2023", 109), ("2023", 292)))
+def test_m180_composites_have_only_exact_source_pinned_readings(epoch: str, row: int) -> None:
+    root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "irpf.toml"))
+    intermediate = load_record_design_intermediate(
+        root,
+        catalogues.sources,
+        source_ref=f"aeat-dr-180-{epoch}",
+        filing_year=int(epoch),
+        design_epoch=epoch,
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / f"render_profiles/modelo_180/{epoch}")
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.source_row == row)
+    field = next(field for sheet in intermediate.sheets for field in sheet.fields if field.source_row == row)
+    identity = profile.design_identity
+    _validate_signed_composite_source_agreement(rule, field, identity)
+
+    for changed_identity, changed_field in (
+        (identity.model_copy(update={"source_sha256": "0" * 64}), field),
+        (identity, field.model_copy(update={"source_row": row + 1})),
+        (identity, field.model_copy(update={"length": 17})),
+        (identity, field.model_copy(update={"content": (field.content or "") + " Extra wire instruction."})),
+    ):
+        with pytest.raises(RegistryValidationError, match="signed monetary composite"):
+            _validate_signed_composite_source_agreement(rule, changed_field, changed_identity)
+
+
+def test_m180_printed_overlap_renders_signed_limits_losslessly() -> None:
+    root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "irpf.toml"))
+    intermediate = load_record_design_intermediate(
+        root,
+        catalogues.sources,
+        source_ref="aeat-dr-180-2023",
+        filing_year=2023,
+        design_epoch="2023",
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / "render_profiles/modelo_180/2023")
+    semantic = load_semantic_map(Path(__file__).parents[2] / "mappings/modelo_180/2023")
+    field = next(field for sheet in intermediate.sheets for field in sheet.fields if field.source_row == 109)
+    entry = next(entry for entry in semantic.entries if entry.anchor.source_row == 109)
+    derived = _export_tree._normalise_cell(  # pyright: ignore[reportPrivateUsage]
+        JoinedRecordDesignField(parser_field=field, semantic_entry=entry),
+        _export_tree.ExportTreeTransportProfile(
+            modelo="180",
+            design_epoch="2023",
+            source_ref="aeat-dr-180-2023",
+            source_sha256=profile.design_identity.source_sha256,
+            layout_id="generated-modelo-180-fichero",
+            format="fixed_width",
+            encoding=ExportEncoding.ISO_8859_1,
+            line_ending="crlf",
+            serializer_convention="rtoml-pretty-v1",
+        ),
+        profile,
+        export_record_id="modelo-180-t1",
+    )
+    for amount in (Decimal("9999999999999.99"), Decimal("-9999999999999.99"), Decimal("-0.01")):
+        wire = render_fixed_width_export_field(derived.field, amount)
+        assert len(wire) == 16
+        assert wire[0] == ("N" if amount < 0 else " ")
+        assert parse_fixed_width_export_field(derived.field, wire) == amount
+    with pytest.raises(RegistryValidationError, match="exceeds length"):
+        render_fixed_width_export_field(derived.field, Decimal("10000000000000.00"))

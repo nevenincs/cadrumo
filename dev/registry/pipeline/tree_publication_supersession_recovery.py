@@ -12,9 +12,7 @@ from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from .candidate_staging import (
-    bootstrap_layout_supersession_fingerprint,
-)
+from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from .tree_publication_artifacts import (
     _require_complete_regular_tree,
     verify_generated_export_package,

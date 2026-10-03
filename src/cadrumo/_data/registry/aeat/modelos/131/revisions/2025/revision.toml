@@ -401,9 +401,9 @@ sequence_removals = {source_refs = [1]}
 [[revisions."2025".family_overrides]]
 family = "constructs"
 selector = {revision = "2024", id = "modelo-131-objective-estimation-instalment"}
-sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"], source_refs = ["aeat-dr-131-2025", "aeat-renta-2025-manual-parte1"]}
-sequence_removals = {legal_refs = [2, 3, 4, 5, 6, 7, 8, 9, 10], source_refs = [3]}
-sequence_order = {legal_refs = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2, 3], source_refs = [0, 4, 1, 2, 5, 3]}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades", "real-decreto-ley-13-2025:art-2"], source_refs = ["aeat-dr-131-2025", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16, 17], source_refs = [3]}
+sequence_order = {legal_refs = [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 2, 3, 4, 14], source_refs = [0, 4, 1, 2, 5, 3]}
 
 [[revisions."2025".family_overrides]]
 family = "parameters"

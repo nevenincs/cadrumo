@@ -392,57 +392,122 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
     for edition in edition_predecessors(definition):
         if edition.predecessor is None:
             continue
-        revision = definition.revisions[edition.revision]
-
-        def judged(
-            casilla: CasillaDefinition,
-            kind: MinimalityVerdict,
-            detail: str,
-            edition: EditionPredecessor = edition,
-        ) -> None:
-            judgements.append(
-                RowJudgement(modelo_id, edition.revision, edition.predecessor, str(casilla.id), kind, detail)
+        judgements.extend(
+            _judge_edition_rows(
+                definition,
+                edition.revision,
+                edition.predecessor,
+                edition.basis,
+                modelo_id,
             )
-
-        stated = stated_casillas(revision)
-        if edition.basis == PredecessorBasis.UNDECIDABLE:
-            for casilla in stated:
-                judged(
-                    casilla,
-                    MinimalityVerdict.UNCHECKED_PREDECESSOR_UNDECIDABLE,
-                    f"no declared predecessor and adjacent edition {edition.predecessor} overlaps in period",
-                )
-            continue
-        predecessor = definition.revisions[edition.predecessor]
-        by_chain: dict[str, list[CasillaDefinition]] = collections.defaultdict(list)
-        for candidate in predecessor.casillas:
-            if candidate.continuidad_id:
-                by_chain[str(candidate.continuidad_id)].append(candidate)
-        for casilla in stated:
-            chain = str(casilla.continuidad_id) if casilla.continuidad_id else None
-            if chain is None:
-                judged(casilla, MinimalityVerdict.UNCHECKED_NO_LINEAGE, "row carries no continuidad_id")
-                continue
-            inherited = by_chain.get(chain, [])
-            if not inherited:
-                judged(casilla, MinimalityVerdict.NEW_IN_EDITION, f"chain {chain} absent from {edition.predecessor}")
-            elif len(inherited) > 1:
-                judged(
-                    casilla,
-                    MinimalityVerdict.UNCHECKED_AMBIGUOUS_LINEAGE,
-                    f"chain {chain} sits on {len(inherited)} rows of {edition.predecessor}",
-                )
-            else:
-                differing = restatement_differences(casilla, revision, inherited[0], predecessor)
-                if differing:
-                    judged(casilla, MinimalityVerdict.STATED_DIFFERENCE, f"differs in {', '.join(differing)}")
-                else:
-                    judged(
-                        casilla,
-                        MinimalityVerdict.RESTATED_UNCHANGED,
-                        f"identical to {inherited[0].id} of {edition.predecessor} on chain {chain}",
-                    )
+        )
     return tuple(judgements)
+
+
+def _row_judgement(
+    modelo_id: str,
+    revision_id: str,
+    predecessor_id: str,
+    casilla: CasillaDefinition,
+    kind: MinimalityVerdict,
+    detail: str,
+) -> RowJudgement:
+    return RowJudgement(modelo_id, revision_id, predecessor_id, str(casilla.id), kind, detail)
+
+
+def _predecessor_rows_by_lineage(predecessor: ModeloRevision) -> dict[str, list[CasillaDefinition]]:
+    by_chain: dict[str, list[CasillaDefinition]] = collections.defaultdict(list)
+    for candidate in predecessor.casillas:
+        if candidate.continuidad_id:
+            by_chain[str(candidate.continuidad_id)].append(candidate)
+    return by_chain
+
+
+def _judge_edition_rows(
+    definition: ModeloDefinition,
+    revision_id: str,
+    predecessor_id: str,
+    basis: PredecessorBasis,
+    modelo_id: str,
+) -> list[RowJudgement]:
+    revision = definition.revisions[revision_id]
+    stated = stated_casillas(revision)
+    if basis == PredecessorBasis.UNDECIDABLE:
+        return [
+            _row_judgement(
+                modelo_id,
+                revision_id,
+                predecessor_id,
+                casilla,
+                MinimalityVerdict.UNCHECKED_PREDECESSOR_UNDECIDABLE,
+                f"no declared predecessor and adjacent edition {predecessor_id} overlaps in period",
+            )
+            for casilla in stated
+        ]
+    predecessor = definition.revisions[predecessor_id]
+    by_chain = _predecessor_rows_by_lineage(predecessor)
+    return [
+        _judge_stated_casilla(casilla, revision, predecessor, predecessor_id, by_chain, modelo_id) for casilla in stated
+    ]
+
+
+def _judge_stated_casilla(
+    casilla: CasillaDefinition,
+    revision: ModeloRevision,
+    predecessor: ModeloRevision,
+    predecessor_id: str,
+    by_chain: Mapping[str, list[CasillaDefinition]],
+    modelo_id: str,
+) -> RowJudgement:
+    revision_id = str(revision.id)
+    chain = str(casilla.continuidad_id) if casilla.continuidad_id else None
+    if chain is None:
+        return _row_judgement(
+            modelo_id,
+            revision_id,
+            predecessor_id,
+            casilla,
+            MinimalityVerdict.UNCHECKED_NO_LINEAGE,
+            "row carries no continuidad_id",
+        )
+    inherited = by_chain.get(chain, [])
+    if not inherited:
+        return _row_judgement(
+            modelo_id,
+            revision_id,
+            predecessor_id,
+            casilla,
+            MinimalityVerdict.NEW_IN_EDITION,
+            f"chain {chain} absent from {predecessor_id}",
+        )
+    if len(inherited) > 1:
+        return _row_judgement(
+            modelo_id,
+            revision_id,
+            predecessor_id,
+            casilla,
+            MinimalityVerdict.UNCHECKED_AMBIGUOUS_LINEAGE,
+            f"chain {chain} sits on {len(inherited)} rows of {predecessor_id}",
+        )
+    inherited_casilla = inherited[0]
+    differing = restatement_differences(casilla, revision, inherited_casilla, predecessor)
+    if differing:
+        return _row_judgement(
+            modelo_id,
+            revision_id,
+            predecessor_id,
+            casilla,
+            MinimalityVerdict.STATED_DIFFERENCE,
+            f"differs in {', '.join(differing)}",
+        )
+    return _row_judgement(
+        modelo_id,
+        revision_id,
+        predecessor_id,
+        casilla,
+        MinimalityVerdict.RESTATED_UNCHANGED,
+        f"identical to {inherited_casilla.id} of {predecessor_id} on chain {chain}",
+    )
 
 
 def definition_findings(definition: ModeloDefinition, *, modelo_id: str) -> tuple[RowJudgement, ...]:

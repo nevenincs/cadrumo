@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from .casilla_lineage_seed_rules import (
     _role_derived,

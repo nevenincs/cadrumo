@@ -342,8 +342,6 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
     assert received.operation_type is IntracomOperationType.ADQUISICION_SERVICIOS
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("2")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("7000.00")
-    assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
-    assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
     rows: dict[tuple[str, str], Modelo349OperadorRow] = {
         (row.codigo_pais, row.clave_operacion): row
         for row in resolution.detail_rows

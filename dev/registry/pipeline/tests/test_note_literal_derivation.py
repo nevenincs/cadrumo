@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
 from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
-from ..export_field_derivation import _literal_derivation
+from ..export_field_literal_derivation import _literal_derivation
 from ..joined_record_design import join_record_design_semantics
 from ..note_literals import NoteLiteralDeclaration, note_literal_for, note_literals_for
 from ..record_design_intermediate import RecordDesignIntermediateRelativeSuffixMarker, load_record_design_intermediate

@@ -134,6 +134,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -598,18 +599,9 @@ def _edition_findings(
     findings: list[RoundTripFinding] = []
     expected_ids = [casilla_id for casilla_id, _ in expected_order]
     live_ids = [str(casilla.id) for casilla in live.casillas]
-    if expected_ids != live_ids and Counter(expected_ids) == Counter(live_ids):
-        position = next(
-            index for index, pair in enumerate(zip(expected_ids, live_ids, strict=True)) if pair[0] != pair[1]
-        )
-        findings.append(
-            RoundTripFinding(
-                RoundTripFindingKind.ROW_ORDER,
-                revision_id,
-                f"casilla rows first diverge from the reference order at position {position}: "
-                f"expected {expected_ids[position]!r}, live {live_ids[position]!r}",
-            )
-        )
+    order_finding = _row_order_finding(revision_id, expected_ids, live_ids)
+    if order_finding is not None:
+        findings.append(order_finding)
     reference_dump = reference.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
     live_dump = live.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
     _remove_projected_lineage_attestations(reference_dump)
@@ -633,6 +625,24 @@ def _edition_findings(
     return findings
 
 
+def _row_order_finding(
+    revision_id: str,
+    expected_ids: list[str],
+    live_ids: list[str],
+) -> RoundTripFinding | None:
+    if expected_ids != live_ids and Counter(expected_ids) == Counter(live_ids):
+        position = next(
+            index for index, pair in enumerate(zip(expected_ids, live_ids, strict=True)) if pair[0] != pair[1]
+        )
+        return RoundTripFinding(
+            RoundTripFindingKind.ROW_ORDER,
+            revision_id,
+            f"casilla rows first diverge from the reference order at position {position}: "
+            f"expected {expected_ids[position]!r}, live {live_ids[position]!r}",
+        )
+    return None
+
+
 def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
     """Remove only a sidecar that is exactly projected onto its target row.
 
@@ -643,28 +653,36 @@ def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
     claims = revision.get("lineage_attestations")
     if not _is_dump_array(rows) or not _is_dump_array(claims):
         return
+    by_lineage = _casilla_rows_by_lineage(rows)
+    revision["lineage_attestations"] = tuple(
+        claim for claim in claims if not _is_projected_lineage_attestation(claim, by_lineage)
+    )
+
+
+def _casilla_rows_by_lineage(rows: Sequence[object]) -> dict[object, dict[str, object]]:
     by_lineage: dict[object, dict[str, object]] = {}
     for row in rows:
         if _is_dump_table(row) and row.get("continuidad_id") is not None:
             by_lineage[row.get("continuidad_id")] = row
-    retained: list[object] = []
-    for claim in claims:
-        if not _is_dump_table(claim) or claim.get("family") != "casillas":
-            retained.append(claim)
-            continue
-        target = by_lineage.get(claim.get("continuidad_id"))
-        projected = target is not None and all(
-            claim.get(claim_field) == target.get(row_field)
-            for claim_field, row_field in (
-                ("origin", "continuidad_origin"),
-                ("evidence", "continuidad_evidence"),
-                ("legal_refs", "legal_refs"),
-                ("source_refs", "source_refs"),
-            )
+    return by_lineage
+
+
+def _is_projected_lineage_attestation(
+    claim: object,
+    by_lineage: dict[object, dict[str, object]],
+) -> bool:
+    if not _is_dump_table(claim) or claim.get("family") != "casillas":
+        return False
+    target = by_lineage.get(claim.get("continuidad_id"))
+    return target is not None and all(
+        claim.get(claim_field) == target.get(row_field)
+        for claim_field, row_field in (
+            ("origin", "continuidad_origin"),
+            ("evidence", "continuidad_evidence"),
+            ("legal_refs", "legal_refs"),
+            ("source_refs", "source_refs"),
         )
-        if not projected:
-            retained.append(claim)
-    revision["lineage_attestations"] = tuple(retained)
+    )
 
 
 def _is_dump_array(value: object) -> TypeIs[Sequence[object]]:
@@ -678,6 +696,16 @@ def _is_dump_table(value: object) -> TypeIs[dict[str, object]]:
 
 
 def _casilla_row_differences(reference_rows: list[dict[str, object]], live_rows: list[dict[str, object]]) -> list[str]:
+    return _casilla_row_population_differences(reference_rows, live_rows) + _changed_casilla_row_differences(
+        reference_rows,
+        live_rows,
+    )
+
+
+def _casilla_row_population_differences(
+    reference_rows: list[dict[str, object]],
+    live_rows: list[dict[str, object]],
+) -> list[str]:
     reference_counts = Counter(str(row["id"]) for row in reference_rows)
     live_counts = Counter(str(row["id"]) for row in live_rows)
     differences: list[str] = []
@@ -687,6 +715,14 @@ def _casilla_row_differences(reference_rows: list[dict[str, object]], live_rows:
         differences.append(f"casilla rows missing {missing!r}")
     if added:
         differences.append(f"casilla rows added {added!r}")
+    return differences
+
+
+def _changed_casilla_row_differences(
+    reference_rows: list[dict[str, object]],
+    live_rows: list[dict[str, object]],
+) -> list[str]:
+    differences: list[str] = []
     live_by_id = {str(row["id"]): row for row in live_rows}
     for row in reference_rows:
         row_id = str(row["id"])
@@ -718,36 +754,61 @@ def localization_differences(
         live_casilla = live_by_id.get(casilla.id)
         if live_casilla is None:
             continue
-        reference_aliases = [alias.localization_key for alias in casilla.aliases]
-        if reference_aliases != [alias.localization_key for alias in live_casilla.aliases]:
-            differences.append(f"casilla {casilla.id!r} alias keys changed")
-        chain = _key_chain_difference(
-            modelo_id=modelo_id,
-            sibling_revision_ids=sibling_revision_ids,
-            casilla_id=casilla.id,
-            reference_keys=casilla.localization_keys,
-            live_keys=live_casilla.localization_keys,
+        differences.extend(
+            _casilla_localization_differences(
+                modelo_id=modelo_id,
+                sibling_revision_ids=sibling_revision_ids,
+                casilla=casilla,
+                live_casilla=live_casilla,
+            )
         )
-        if chain is not None:
-            differences.append(f"casilla {casilla.id!r} {chain}")
-        for language in SUPPORTED_OUTPUT_LANGUAGES:
-            # The label is resolved from the keys rather than through
-            # ``get_label``, which raises where a chain resolves nowhere; that
-            # is a difference to report, not an error to raise. Help has no
-            # such accessor and is read through the row's own.
-            texts = (
-                ("label", resolve_modelo_localization(casilla.localization_keys, locale=language)),
-                ("help", casilla.get_help(language)),
-            )
-            live_texts = (
-                ("label", resolve_modelo_localization(live_casilla.localization_keys, locale=language)),
-                ("help", live_casilla.get_help(language)),
-            )
-            for (field, before), (_field, after) in zip(texts, live_texts, strict=True):
-                if before != after:
-                    differences.append(
-                        f"casilla {casilla.id!r} {field} in {language!r} changed from {before!r} to {after!r}"
-                    )
+    return differences
+
+
+def _casilla_localization_differences(
+    *,
+    modelo_id: str,
+    sibling_revision_ids: frozenset[str],
+    casilla: CasillaDefinition,
+    live_casilla: CasillaDefinition,
+) -> list[str]:
+    differences: list[str] = []
+    reference_aliases = [alias.localization_key for alias in casilla.aliases]
+    if reference_aliases != [alias.localization_key for alias in live_casilla.aliases]:
+        differences.append(f"casilla {casilla.id!r} alias keys changed")
+    chain = _key_chain_difference(
+        modelo_id=modelo_id,
+        sibling_revision_ids=sibling_revision_ids,
+        casilla_id=casilla.id,
+        reference_keys=casilla.localization_keys,
+        live_keys=live_casilla.localization_keys,
+    )
+    if chain is not None:
+        differences.append(f"casilla {casilla.id!r} {chain}")
+    differences.extend(_localized_text_differences(casilla, live_casilla))
+    return differences
+
+
+def _localized_text_differences(casilla: CasillaDefinition, live_casilla: CasillaDefinition) -> list[str]:
+    differences: list[str] = []
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        # The label is resolved from the keys rather than through
+        # ``get_label``, which raises where a chain resolves nowhere; that is
+        # a difference to report, not an error to raise. Help has no such
+        # accessor and is read through the row's own.
+        texts = (
+            ("label", resolve_modelo_localization(casilla.localization_keys, locale=language)),
+            ("help", casilla.get_help(language)),
+        )
+        live_texts = (
+            ("label", resolve_modelo_localization(live_casilla.localization_keys, locale=language)),
+            ("help", live_casilla.get_help(language)),
+        )
+        for (field, before), (_field, after) in zip(texts, live_texts, strict=True):
+            if before != after:
+                differences.append(
+                    f"casilla {casilla.id!r} {field} in {language!r} changed from {before!r} to {after!r}"
+                )
     return differences
 
 

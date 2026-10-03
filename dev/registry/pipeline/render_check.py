@@ -46,30 +46,34 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Literal, cast
 
 import rtoml
 
+from cadrumo.core.period import Period, PeriodError, is_administrative_period_token
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
+from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
+from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from .export_tree_serialization import SERIALIZER_CONVENTION
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from .record_design_intermediate import load_record_design_intermediate
 from .render_profile_evidence import RenderProfileSourceEvidence
-from .render_profile_loading import load_render_profile
+from .render_profile_loading import load_render_profile_for_revision
 from .render_profile_model import RenderProfile
 from .render_profile_source_reader import load_render_profile_source_evidence
 from .semantic_map import (
     SemanticMap,
-    load_semantic_map,
+    load_semantic_map_for_revision,
 )
 from .source_defects import source_defects_for
 
@@ -245,6 +249,7 @@ class GeneratedExportBootstrapTransport:
     line_ending: Literal["crlf", "lf", "none"]
     source_ref: str
     source_sha256: str
+    supersedes_layout_id: str | None = None
 
 
 def _record_design_refs(
@@ -267,23 +272,103 @@ def _select_record_design_source(
     modelo: str,
     revision: str,
     source_ref: str | None,
+    filing_year: int,
+    period: str | None,
 ) -> tuple[SourceRefId, str]:
+    if period is not None and is_administrative_period_token(period):
+        selector = selected.period_selector
+        if not selector.includes_year(filing_year) or not any(
+            selector_period_matches_request(token, period) for token in selector.periods_for_year(filing_year)
+        ):
+            raise ValueError(
+                f"{modelo}/{revision} administrative period {period!r} is not declared for filing_year={filing_year}"
+            )
     design_refs = _record_design_refs(selected, sources)
     if not design_refs:
         raise ValueError(f"{modelo}/{revision} cites no record-design source to render from")
-    selected_source_ref = next((ref for ref in design_refs if str(ref) == source_ref), None)
-    if source_ref is not None and selected_source_ref is None:
+    if source_ref is not None and all(str(ref) != source_ref for ref in design_refs):
         raise ValueError(f"{modelo}/{revision} does not declare record-design source {source_ref!r}")
-    if selected_source_ref is None:
-        if len(design_refs) != 1:
-            raise ValueError(
-                f"{modelo}/{revision} declares multiple record-design sources; select one explicitly",
-            )
-        selected_source_ref = design_refs[0]
+    applicable = tuple(
+        ref
+        for ref in design_refs
+        if (source_ref is None or str(ref) == source_ref)
+        and _source_covers_render_frame(sources[ref], selected=selected, filing_year=filing_year, period=period)
+    )
+    if len(applicable) != 1:
+        raise ValueError(
+            f"{modelo}/{revision} requires exactly one record-design source for "
+            f"filing_year={filing_year}, period={period!r}, source_ref={source_ref!r}; "
+            f"eligible={tuple(map(str, applicable))!r}",
+        )
+    selected_source_ref = applicable[0]
     epoch = sources[selected_source_ref].record_design_epoch
     if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
         raise ValueError(f"source {selected_source_ref} declares no design epoch")
     return selected_source_ref, epoch
+
+
+def _source_covers_render_frame(
+    source: SourceReference, *, selected: ModeloRevision, filing_year: int, period: str | None
+) -> bool:
+    if source.applies_from is None:
+        return False
+    if period is None:
+        interval = (date(filing_year, 1, 1), date(filing_year, 12, 31))
+    elif is_administrative_period_token(period):
+        # An administrative coordinate has no filing-period dates. Its real
+        # span is the selected revision's effective portion of this year.
+        interval = (
+            max(date(filing_year, 1, 1), selected.valid_from),
+            min(date(filing_year, 12, 31), selected.valid_to or date(filing_year, 12, 31)),
+        )
+        if interval[0] > interval[1]:
+            return False
+    else:
+        try:
+            requested = Period.from_year_and_code(filing_year, period)
+        except PeriodError:
+            return False
+        interval = (
+            (requested.start_date, requested.end_date)
+            if requested.has_date_span()
+            else (date(filing_year, 1, 1), date(filing_year, 12, 31))
+        )
+    # SourceReference.applies_across means *overlap*. Rendering one filing
+    # frame requires the selected design to cover the entire requested span.
+    if source.applies_from > interval[0] or (source.applies_to is not None and source.applies_to < interval[1]):
+        return False
+    selector = source.period_selector
+    if selector is None:
+        return True
+    if not selector.includes_year(filing_year):
+        return False
+    if period is None:
+        return True
+    return any(selector_period_matches_request(token, period) for token in selector.periods_for_year(filing_year))
+
+
+def select_revision_record_design_source(
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: str,
+    revision: str,
+    filing_year: int,
+    period: str | None = None,
+    source_ref: str | None = None,
+) -> tuple[SourceRefId, str]:
+    """Select the sole official design applicable to a revision's requested frame."""
+    definition = authority.modelo(modelo)
+    if revision not in definition.revisions:
+        raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
+    return _select_record_design_source(
+        definition.revisions[revision],
+        authority.catalogues.sources,
+        modelo=modelo,
+        revision=revision,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        period=period,
+    )
 
 
 def _render_transport(
@@ -297,9 +382,15 @@ def _render_transport(
 ) -> tuple[str, Literal["crlf", "lf", "none"]]:
     if bootstrap_transport is not None:
         expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
-        if bootstrap_transport.layout_id != expected_layout_id:
+        superseded = bootstrap_transport.supersedes_layout_id
+        if superseded is not None and not any(str(layout.id) == superseded for layout in selected.export_layouts):
+            raise ValueError(f"{modelo}/{revision} bootstrap superseded layout {superseded!r} is not declared")
+        if bootstrap_transport.layout_id != expected_layout_id and (
+            superseded is None or bootstrap_transport.layout_id != superseded
+        ):
             raise ValueError(
-                f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r}, "
+                f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r} "
+                "or its exact declared superseded layout, "
                 f"got {bootstrap_transport.layout_id!r}",
             )
         if bootstrap_transport.source_ref != str(selected_source_ref):
@@ -326,6 +417,8 @@ def revision_render_inputs(
     revision: str,
     source_ref: str | None = None,
     bootstrap_transport: GeneratedExportBootstrapTransport | None = None,
+    filing_year: int | None = None,
+    period: str | None = None,
 ) -> RevisionRenderInputs:
     """Derive one revision's render inputs from the validated authority.
 
@@ -340,12 +433,15 @@ def revision_render_inputs(
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
     selected = definition.revisions[revision]
     sources = authority.catalogues.sources
+    effective_year = selected.valid_from.year if filing_year is None else filing_year
     selected_source_ref, epoch = _select_record_design_source(
         selected,
         sources,
         modelo=modelo,
         revision=revision,
         source_ref=source_ref,
+        filing_year=effective_year,
+        period=period,
     )
     layout_id, line_ending = _render_transport(
         selected,
@@ -362,8 +458,8 @@ def revision_render_inputs(
         if not root.is_dir():
             raise ValueError(f"{modelo}/{revision} has no authored inputs at {root}")
 
-    semantic_map = load_semantic_map(semantic_root)
-    render_profile = load_render_profile(profile_root)
+    semantic_map = load_semantic_map_for_revision(semantic_root, revision)
+    render_profile = load_render_profile_for_revision(profile_root, revision)
     # Each SourceReference satisfies the GeneratedArtifactSource protocol the
     # loader declares; only Mapping invariance blocks passing the catalogue
     # directly, so the boundary is rebuilt rather than cast.
@@ -372,7 +468,7 @@ def revision_render_inputs(
         bundled_path(),
         design_sources,
         source_ref=selected_source_ref,
-        filing_year=selected.valid_from.year,
+        filing_year=effective_year,
         design_epoch=epoch,
     )
     if bootstrap_transport is not None and bootstrap_transport.source_sha256 != intermediate.source.source_sha256:

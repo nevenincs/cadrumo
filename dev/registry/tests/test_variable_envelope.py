@@ -55,11 +55,23 @@ def _anchor(field: RecordDesignIntermediateField) -> SemanticMapAnchor:
     )
 
 
-#: Modelo 303 prints the shared grammar in its thirteen-row spelling: every
-#: role except the composed opening tag, which is the ALTERNATIVE spelling of
-#: the six rows this design prints separately.
-_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = tuple(
-    role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+#: These are the thirteen roles present in Modelo 303's reviewed source order.
+#: Other shared-grammar roles are omitted by this design; Modelo 200's one-row
+#: opening identifier is the alternative spelling of the six opening rows.
+_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = (
+    FilingEnvelopePrefixRole.OPENING_TAG,
+    FilingEnvelopePrefixRole.MODELO,
+    FilingEnvelopePrefixRole.DISCRIMINANT,
+    FilingEnvelopePrefixRole.FILING_YEAR,
+    FilingEnvelopePrefixRole.PERIOD,
+    FilingEnvelopePrefixRole.RECORD_TYPE,
+    FilingEnvelopePrefixRole.AUX_OPENING_TAG,
+    FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+    FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER,
+    FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
+    FilingEnvelopePrefixRole.DEVELOPER_TAX_ID,
+    FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
+    FilingEnvelopePrefixRole.AUX_CLOSING_TAG,
 )
 
 

@@ -39,6 +39,15 @@ class NoteLiteralDeclaration(BaseModel):
             r"puede ser: (?P<literal>[A-Z]) \(ingreso\)\.?",
             statement,
         )
+        if self.source_ref == "aeat-dr-341-2016":
+            if (
+                self.source_sha256 == "7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600"
+                and statement == "1. El tipo de declaración para la presentación por lotes puede ser: D (Devolución)"
+                and self.note_ordinal == 1
+                and self.literal == "D"
+            ):
+                return self
+            raise ValueError("modelo 341 note no longer states its exact source-pinned D constant")
         if match is None:
             raise ValueError("literal note must state one exact constant without alternatives or conditions")
         if int(match.group("ordinal")) != self.note_ordinal or match.group("literal") != self.literal:
@@ -65,6 +74,24 @@ _NOTE_LITERALS: dict[str, tuple[NoteLiteralDeclaration, ...]] = {
                 "Cell A47 defines that note with only I (ingreso), without another token or condition. "
                 "The declaration retains both exact cells and the complete note rather than interpreting "
                 "a note number as a constant. Encoding and full slot-width checks still apply."
+            ),
+        ),
+    ),
+    "aeat-dr-341-2016": (
+        NoteLiteralDeclaration(
+            source_ref="aeat-dr-341-2016",
+            source_sha256="7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600",
+            sheet="M34101",
+            source_cell="A11",
+            published_pointer="Ver nota 1",
+            note_ordinal=1,
+            note_source_cell="A34",
+            note_statement="1. El tipo de declaración para la presentación por lotes puede ser: D (Devolución)",
+            literal="D",
+            evidence=(
+                "The SHA-verified M34101 A11 one-byte declaration type points to note 1; "
+                "A34 states only D (Devolución) for batch presentation. The whole note, "
+                "pointer, source cells and SHA are checked before rendering."
             ),
         ),
     ),

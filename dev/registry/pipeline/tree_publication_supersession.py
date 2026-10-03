@@ -20,9 +20,9 @@ from ._export_tree import RenderedExportTree
 from ._tree_validation import (
     ValidatedGeneratedExportTree,
 )
-from .candidate_staging import (
+from .bootstrap_construct_retarget import retarget_bootstrap_constructs_in_revision
+from .bootstrap_supersession import (
     bootstrap_layout_supersession_fingerprint,
-    retarget_bootstrap_constructs_in_revision,
     retire_bootstrap_manual_export_layout,
     validate_bootstrap_manual_export_layout_supersession,
 )
@@ -190,6 +190,10 @@ def _require_reviewed_supersession(
             revision=revision_id,
             superseded_layout_id=supersession.superseded_layout_id,
             expected_references=supersession.expected_construct_references,
+            source_ref=supersession.source_ref,
+            source_sha256=supersession.source_sha256,
+            manual_source_sha256=supersession.manual_source_sha256,
+            manual_origin_revision=supersession.manual_origin_revision,
         )
     except (OSError, ValueError) as exc:
         _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
@@ -259,18 +263,13 @@ def _build_supersession_candidate_revision(
         raise RegistryValidationError("generated export supersession source changed while copying the revision")
     if (staged_revision_root / "export").exists():
         raise RegistryValidationError("bootstrap supersession target unexpectedly acquired a generated tree")
-    retire_bootstrap_manual_export_layout(
-        staged_revision_root,
-        revision=revision_id,
-        superseded_layout_id=supersession.superseded_layout_id,
-    )
-    retarget_bootstrap_constructs_in_revision(
-        staged_revision_root,
-        revision=revision_id,
-        superseded_layout_id=supersession.superseded_layout_id,
-        generated_layout_id=supersession.generated_layout_id,
-        expected_references=supersession.expected_construct_references,
-    )
+    if (staged_revision_root / "export_layouts").is_dir():
+        retire_bootstrap_manual_export_layout(
+            staged_revision_root,
+            revision=revision_id,
+            superseded_layout_id=supersession.superseded_layout_id,
+        )
+    _retarget_reviewed_constructs(staged_revision_root, revision_id=revision_id, supersession=supersession)
     _install_generated_form_companion(
         context=context,
         staged_revision_root=staged_revision_root,
@@ -286,6 +285,25 @@ def _build_supersession_candidate_revision(
     )
     _require_complete_regular_tree(staged_revision_root, subject="generated supersession candidate revision")
     return bootstrap_layout_supersession_fingerprint(staged_revision_root)
+
+
+def _retarget_reviewed_constructs(
+    staged_revision_root: Path, *, revision_id: str, supersession: GeneratedExportSupersession
+) -> None:
+    """Keep stable references as stored; require a local keyed delta for any changed inherited id."""
+    if supersession.superseded_layout_id == supersession.generated_layout_id:
+        return
+    if supersession.expected_construct_references and not (staged_revision_root / "constructs").is_dir():
+        raise RegistryValidationError(
+            "generated export supersession cannot retarget an inherited construct without a keyed local delta"
+        )
+    retarget_bootstrap_constructs_in_revision(
+        staged_revision_root,
+        revision=revision_id,
+        superseded_layout_id=supersession.superseded_layout_id,
+        generated_layout_id=supersession.generated_layout_id,
+        expected_references=supersession.expected_construct_references,
+    )
 
 
 def _write_supersession_intent_journal(
@@ -336,6 +354,10 @@ def _require_supersession_source_at_cutover(
         revision=revision_id,
         superseded_layout_id=supersession.superseded_layout_id,
         expected_references=supersession.expected_construct_references,
+        source_ref=supersession.source_ref,
+        source_sha256=supersession.source_sha256,
+        manual_source_sha256=supersession.manual_source_sha256,
+        manual_origin_revision=supersession.manual_origin_revision,
     )
     if source_state_sha256 != supersession.source_state_sha256:
         raise RegistryValidationError("generated export supersession source changed immediately before cutover")

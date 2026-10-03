@@ -35,9 +35,12 @@ from __future__ import annotations
 
 import unicodedata
 from collections.abc import Iterable
+from hashlib import sha256
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
 from .record_design_intermediate import (
@@ -60,6 +63,130 @@ __all__ = [
 ]
 
 _RESERVED_DESCRIPTION_MARKER: Final[str] = "reservado"
+
+# These PDF rows have no printed naturaleza, but name a person rather than a
+# numeric wire value. The adjacent telephone rows remain eligible. Each
+# exclusion is confined to the exact parser-read source and printed row.
+_CONTACT_NAME_ROWS: Final[dict[str, tuple[str, str, int, str, str]]] = {
+    "aeat-dr-165-2016-2022": (
+        "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5",
+        "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos",
+        73,
+        "APELLIDOS Y NOMBRE: Se consignará",
+        "b103c5edc7843633fadf6f547782c7b8b35d5db84510db1872b9ce07884c8f2a",
+    ),
+    "aeat-dr-165-2026": (
+        "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263",
+        "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos",
+        69,
+        "APELLIDOS Y NOMBRE: Se consignará",
+        "b103c5edc7843633fadf6f547782c7b8b35d5db84510db1872b9ce07884c8f2a",
+    ),
+    "aeat-dr-280-2022": (
+        "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701",
+        "Tipo 1 - Registro De Declarante",
+        83,
+        "APELLIDOS Y NOMBRE: Se",
+        "fabaac0e30eff1ca0b091804bcd640d65c93557652c0d06019cb048acad778cc",
+    ),
+    "aeat-dr-270-2023": (
+        "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92",
+        "Tipo 1 - Registro De Declarante",
+        89,
+        "APELLIDOS Y NOMBRE: Se",
+        "fabaac0e30eff1ca0b091804bcd640d65c93557652c0d06019cb048acad778cc",
+    ),
+}
+
+_M181_IBAN_COUNTRY_ROW: Final[tuple[str, str, str, int, str, str]] = (
+    "aeat-dr-181-2022",
+    "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b",
+    "Tipo 2 - Registro Del Declarado",
+    302,
+    "CÓDIGO PAIS ISO: campo alfabético.",
+    "9e2984adc3df218a98c1cbb585bc09eb336e0b19af380d51a1c17383c5d31b76",
+)
+
+
+def source_iban_country_text_field(
+    field: RecordDesignIntermediateField, *, source_ref: str, source_sha256: str
+) -> bool:
+    """Recognize the exact source-stated alphabetic IBAN country component."""
+    expected_ref, expected_sha, sheet, row, description, digest = _M181_IBAN_COUNTRY_ROW
+    if source_ref != expected_ref:
+        return False
+    if source_sha256 != expected_sha:
+        raise RegistryValidationError("IBAN country source identity is unreviewed or stale")
+    if field.sheet != sheet or field.source_row != row:
+        return False
+    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
+    if (
+        field.record_identity != sheet
+        or field.source_cell is not None
+        or field.ordinal is not None
+        or (field.offset, field.length) != (79, 2)
+        or field.normalized_description != description
+        or sha256(material.encode()).hexdigest() != digest
+        or not _has_absent_naturaleza(field)
+    ):
+        raise RegistryValidationError("IBAN country source text or geometry differs from reviewed evidence")
+    return True
+
+
+def _source_iban_country_exclusion(
+    fields: tuple[RecordDesignIntermediateField, ...], source: RecordDesignIntermediateSource
+) -> frozenset[tuple[str, int, int]]:
+    expected_ref, _, sheet, row, _, _ = _M181_IBAN_COUNTRY_ROW
+    if str(source.source_ref) != expected_ref:
+        return frozenset[tuple[str, int, int]]()
+    matches = tuple(field for field in fields if field.sheet == sheet and field.source_row == row)
+    if len(matches) != 1:
+        raise RegistryValidationError("IBAN country source row is missing or ambiguous")
+    if not source_iban_country_text_field(matches[0], source_ref=expected_ref, source_sha256=source.source_sha256):
+        raise RegistryValidationError("IBAN country source row differs from reviewed evidence")
+    return frozenset({(sheet, row, 79)})
+
+
+def _source_contact_name_exclusions(
+    fields: tuple[RecordDesignIntermediateField, ...], source: RecordDesignIntermediateSource
+) -> frozenset[tuple[str, int, int]]:
+    pin = _CONTACT_NAME_ROWS.get(str(source.source_ref))
+    if pin is None:
+        return frozenset[tuple[str, int, int]]()
+    expected_sha, sheet, row, _, _ = pin
+    if source.source_sha256 != expected_sha:
+        raise RegistryValidationError("contact-name source identity is unreviewed or stale")
+    matches = tuple(field for field in fields if field.sheet == sheet and field.source_row == row)
+    if len(matches) != 1:
+        raise RegistryValidationError("contact-name source row is missing or ambiguous")
+    field = matches[0]
+    if not source_contact_name_field(field, source_ref=str(source.source_ref), source_sha256=source.source_sha256):
+        raise RegistryValidationError("contact-name source row differs from reviewed evidence")
+    return frozenset({(sheet, row, 68)})
+
+
+def source_contact_name_field(field: RecordDesignIntermediateField, *, source_ref: str, source_sha256: str) -> bool:
+    """Classify only the exact source-printed contact-name row as text."""
+    pin = _CONTACT_NAME_ROWS.get(source_ref)
+    if pin is None:
+        return False
+    expected_sha, sheet, row, description, digest = pin
+    if source_sha256 != expected_sha:
+        raise RegistryValidationError("contact-name source identity is unreviewed or stale")
+    if field.sheet != sheet or field.source_row != row:
+        return False
+    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
+    if (
+        field.record_identity != sheet
+        or field.source_cell is not None
+        or field.ordinal is not None
+        or (field.offset, field.length) != (68, 40)
+        or field.normalized_description != description
+        or sha256(material.encode()).hexdigest() != digest
+        or not _has_absent_naturaleza(field)
+    ):
+        raise RegistryValidationError("contact-name source text or geometry differs from reviewed evidence")
+    return True
 
 
 class _StrictModel(BaseModel):
@@ -234,7 +361,8 @@ def project_render_profile_eligibility(
     *,
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
     year_constraints: tuple[BoundedYearDeclaration, ...] = (),
-    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str]] = frozenset(),
+    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str, int | None]] = frozenset(),
+    excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]] = frozenset(),
 ) -> RenderProfileEligibility:
     """Partition fixed joined fields eligible for reviewed absent-wire authority.
 
@@ -261,11 +389,19 @@ def project_render_profile_eligibility(
         if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
         and _states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
         and not _is_source_reserved_field(field)
+        and (field.sheet, field.source_row, field.offset) not in excluded_absent_naturaleza_rows
     )
     signed_composites = tuple(
         field
         for field in fields
-        if (field.sheet, field.source_row, field.source_cell, field.ordinal, field.record_identity)
+        if (
+            field.sheet,
+            field.source_row,
+            field.source_cell,
+            field.ordinal,
+            field.record_identity,
+            field.semantic_part_offset,
+        )
         in signed_composite_anchor_keys
     )
     return RenderProfileEligibility(
@@ -281,7 +417,7 @@ def resolve_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
     source: RecordDesignIntermediateSource,
     *,
-    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str]] = frozenset(),
+    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str, int | None]] = frozenset(),
 ) -> RenderProfileEligibility:
     """Partition fields of one PARSER-READ design, resolving its declarations here.
 
@@ -302,12 +438,16 @@ def resolve_render_profile_eligibility(
             this eligibility question does not apply to, and a caller must keep
             the two apart.
     """
+    fields = tuple(fixed_fields)
     applicability_notes = note_stated_applicability_for(source.source_ref)
     validate_note_stated_applicability_declarations(applicability_notes, source)
     year_constraints = year_constraints_for(source)
     return project_render_profile_eligibility(
-        fixed_fields,
+        fields,
         applicability_notes=applicability_notes,
         year_constraints=year_constraints,
         signed_composite_anchor_keys=signed_composite_anchor_keys,
+        excluded_absent_naturaleza_rows=(
+            _source_contact_name_exclusions(fields, source) | _source_iban_country_exclusion(fields, source)
+        ),
     )

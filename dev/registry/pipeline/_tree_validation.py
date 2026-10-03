@@ -87,9 +87,9 @@ class GeneratedExportTreeValidationContext:
     #: it supplies no generated layout, snapshot or target-validation verdict.
     scope_authority: ValidatedRegistryAuthority | None = None
     #: Authority grade the caller is entitled to establish.  Existing check and
-    #: validation callers keep the filing-grade default; bootstrap publication
-    #: explicitly asks for calculation grade because a static generated layout
-    #: does not establish filing readiness.
+    #: validation callers keep the filing-grade default; publication supplies
+    #: the selected revision's declared grade because a static generated layout
+    #: does not establish calculation or filing readiness.
     required_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING
 
     def __post_init__(self) -> None:
@@ -120,7 +120,7 @@ def validate_generated_export_tree(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ValidatedGeneratedExportTree:
-    """Prove that one complete, isolated generated tree is filing-selectable.
+    """Prove that one complete, isolated generated tree selects at its required grade.
 
     The input is deliberately a target-only directory-mode registry.  Reusing a
     published registry, a direct revision file, an extra modelo, or a sibling

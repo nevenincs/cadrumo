@@ -125,6 +125,10 @@ class GeneratedExportSupersession:
     generated_layout_id: str
     expected_construct_references: int
     source_state_sha256: str
+    source_ref: str | None = None
+    source_sha256: str | None = None
+    manual_source_sha256: str | None = None
+    manual_origin_revision: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

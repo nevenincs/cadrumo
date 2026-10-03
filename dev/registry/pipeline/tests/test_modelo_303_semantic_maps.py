@@ -49,8 +49,8 @@ from ..export_field_derivation import (
     _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
     _QUOTED_NUMERIC_ENUMERATION_RE,
     _TRAILING_NOTE_REFERENCE_RE,
-    _split_official_note_references,
 )
+from ..export_field_note_references import _split_official_note_references
 from ..export_fragment_provenance_projection import semantic_map_digest
 from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate

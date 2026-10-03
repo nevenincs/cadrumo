@@ -37,6 +37,7 @@ required_text = ["no residentes", "país de residencia"]
 [[revisions."2023".bindings]]
 id = "m210-ledger-irnr-rendimientos-integros"
 provider = { kind = "ledger_irnr_income_aggregation", modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum", source_jurisdictions = ["ES"] }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the ledger IRNR resolver, which writes this value to casilla rendimientos_integros [5] when the filer elects ledger mode; in manual mode [5] stays the filer's input" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]

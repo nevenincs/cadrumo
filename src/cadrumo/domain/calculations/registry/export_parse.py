@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from xml.etree.ElementTree import Element
 
@@ -15,7 +16,7 @@ from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.export_layout_format import ExportLayoutFormat
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
-from .export_value_policy import ParsedExportPolicyValue
+from .export_value_policy import ExportValuePolicy, ParsedExportPolicyValue
 from .fixed_width_parser import parse_fixed_width_export_field
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from .schema_base import RegistryModel
@@ -514,7 +515,8 @@ def _parse_record_fields(
     fields: tuple[ExportFieldDefinition, ...],
 ) -> tuple[ParsedExportFieldValue, ...]:
     parsed: list[ParsedExportFieldValue] = []
-    for field in sorted(fields, key=lambda item: item.offset or 0):
+    ordered_fields = tuple(sorted(fields, key=lambda item: item.offset or 0))
+    for field in ordered_fields:
         if field.offset is None or field.length is None:
             raise RegistryValidationError(f"export field {field.id!r} must declare offset and length")
         start = field.offset - 1
@@ -536,7 +538,54 @@ def _parse_record_fields(
                 source_locator=f"{layout_id}:{record_id}:{field.id}:{field.offset}:{field.length}",
             ),
         )
+    _reconstruct_component_values(ordered_fields, parsed)
     return tuple(parsed)
+
+
+def _reconstruct_component_values(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue]
+) -> None:
+    """Recombine complete source-ordered components without discarding their raw bytes."""
+    for index, field in enumerate(fields):
+        if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN:
+            if (
+                index + 1 < len(fields)
+                and fields[index + 1].value_policy is ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE
+            ):
+                _reconstruct_signed_component_pair(parsed, index)
+            else:
+                _reconstruct_signed_component_triplet(fields, parsed, index)
+        if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
+            _reconstruct_signed_component_triplet(fields, parsed, index)
+        if field.value_policy is ExportValuePolicy.YYYYMMDD_TEXT_YEAR:
+            _reconstruct_text_date_components(fields, parsed, index)
+
+
+def _reconstruct_signed_component_triplet(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue], index: int
+) -> None:
+    group = fields[index : index + 3]
+    if (
+        tuple(part.value_policy for part in group)
+        != (
+            fields[index].value_policy,
+            ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+            ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+        )
+        or len(group) != 3
+    ):
+        raise RegistryValidationError("signed source amount has incomplete sign/integer/fraction components")
+    sign, integer, fraction = parsed[index : index + 3]
+    allowed_signs = (
+        {"0", "N"} if fields[index].value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN else {" ", "N"}
+    )
+    _require_signed_component_bytes(sign, integer, fraction, allowed_signs)
+    magnitude = Decimal(f"{integer.raw}.{fraction.raw}")
+    if _impossible_signed_magnitude(sign.raw, magnitude):
+        raise RegistryValidationError("signed source amount has impossible sign/magnitude combination")
+    amount = -magnitude if sign.raw == "N" else magnitude
+    for part_index in range(index, index + 3):
+        parsed[part_index] = parsed[part_index].model_copy(update={"value": amount})
 
 
 def _parse_field_value(
@@ -588,3 +637,62 @@ __all__ = [
     "parse_export_payload",
     "xml_dictionary_entries",
 ]
+
+
+def _reconstruct_signed_component_pair(parsed: list[ParsedExportFieldValue], index: int) -> None:
+    """Recombine a sign/magnitude pair while preserving both raw source slots."""
+    sign, magnitude = parsed[index : index + 2]
+    if sign.raw not in {" ", "N"} or not isinstance(magnitude.value, Decimal):
+        raise RegistryValidationError("signed component pair has invalid sign or magnitude")
+    if sign.raw == "N" and magnitude.value == 0:
+        raise RegistryValidationError("signed component pair cannot encode negative zero")
+    amount = -magnitude.value if sign.raw == "N" else magnitude.value
+    parsed[index] = sign.model_copy(update={"value": amount})
+    parsed[index + 1] = magnitude.model_copy(update={"value": amount})
+
+
+def _reconstruct_text_date_components(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue], index: int
+) -> None:
+    """Reconstruct absence or a real calendar date from all three adjacent raw slots."""
+    group = fields[index : index + 3]
+    if tuple(part.value_policy for part in group) != (
+        ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
+        ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
+        ExportValuePolicy.YYYYMMDD_TEXT_DAY,
+    ):
+        raise RegistryValidationError("text YYYYMMDD date has incomplete adjacent components")
+    parts = parsed[index : index + 3]
+    raw = "".join(part.raw for part in parts)
+    if raw == "00000000":
+        if any(part.required for part in group):
+            raise RegistryValidationError("required text YYYYMMDD date is absent from all three source slots")
+        for part_index in range(index, index + 3):
+            parsed[part_index] = parsed[part_index].model_copy(update={"value": None})
+        return
+    try:
+        date(int(raw[:4]), int(raw[4:6]), int(raw[6:8]))
+    except ValueError as exc:
+        raise RegistryValidationError("text YYYYMMDD components do not form a real calendar date") from exc
+    for part_index in range(index, index + 3):
+        parsed[part_index] = parsed[part_index].model_copy(update={"value": raw})
+
+
+def _require_signed_component_bytes(
+    sign: ParsedExportFieldValue,
+    integer: ParsedExportFieldValue,
+    fraction: ParsedExportFieldValue,
+    allowed_signs: set[str],
+) -> None:
+    if (
+        sign.raw not in allowed_signs
+        or not integer.raw.isascii()
+        or not integer.raw.isdigit()
+        or not fraction.raw.isascii()
+        or not fraction.raw.isdigit()
+    ):
+        raise RegistryValidationError("signed source amount has malformed component bytes")
+
+
+def _impossible_signed_magnitude(sign: str, magnitude: Decimal) -> bool:
+    return (sign == "N" and magnitude == 0) or (sign == "0" and magnitude != 0)

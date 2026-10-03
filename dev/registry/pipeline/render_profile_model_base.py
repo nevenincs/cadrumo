@@ -49,6 +49,7 @@ class RenderProfileAnchor(_StrictModel):
 
     sheet: str = Field(min_length=1)
     source_row: int = Field(gt=0)
+    semantic_part_offset: int | None = Field(default=None, gt=0, exclude_if=lambda value: value is None)
     #: Defaulted to ``None`` so a PDF anchor is authorable at all, mirroring
     #: :class:`SemanticMapAnchor`, which carries the same field for the same
     #: reason: a workbook design has a stable parser-column cell and a PDF design

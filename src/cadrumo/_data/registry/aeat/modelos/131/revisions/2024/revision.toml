@@ -281,9 +281,9 @@ sequence_removals = {source_refs = [0]}
 family = "constructs"
 selector = {revision = "2019-2023", id = "modelo-131-objective-estimation-instalment"}
 removed_fields = ["deadline_windows"]
-sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-1", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b", "orden-hfp-1359-2023:instruccion-2-3-b-3", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"], source_refs = ["aeat-dr-131-2024", "aeat-renta-2024-manual-parte1"]}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-1", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b", "orden-hfp-1359-2023:instruccion-2-3-b-3", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades", "ley-35-2006:art-68.4", "orden-hfp-1359-2023:da-5", "orden-hfp-1359-2023:da-6", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-7-2024:art-11"], source_refs = ["aeat-dr-131-2024", "aeat-renta-2024-manual-parte1"]}
 sequence_removals = {legal_refs = [0, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25], source_refs = [0, 3, 4, 5, 6, 7]}
-sequence_order = {legal_refs = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2, 3], source_refs = [3, 0, 1, 4, 2]}
+sequence_order = {legal_refs = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2, 3, 13, 14, 15, 16, 17], source_refs = [3, 0, 1, 4, 2]}
 
 [[revisions."2024".family_overrides]]
 family = "application_links"

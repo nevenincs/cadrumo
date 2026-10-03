@@ -1212,12 +1212,13 @@ source_row = 1260
 ordinal = "33"
 ordinal_absent = false
 record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 249
 
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m193-193-2024-row-1260-offset-249-decimal"
 decision_statement = "The exact source subdivisions declare each 13-position foral amount as 11 integer and 2 decimal digits."
-justification = "Reviewed against aeat-dr-193-2024 source row 1260, positions 249-313; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
+justification = "Reviewed against aeat-dr-193-2024 source row 1260, positions 249-261; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Tipo 2 - Registro De Perceptor"
@@ -1225,6 +1226,135 @@ source_row = 1260
 ordinal = "33"
 ordinal_absent = false
 record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 249
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 262
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2024-row-1260-offset-262-decimal"
+decision_statement = "The exact source subdivisions declare each 13-position foral amount as 11 integer and 2 decimal digits."
+justification = "Reviewed against aeat-dr-193-2024 source row 1260, positions 262-274; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 262
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 275
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2024-row-1260-offset-275-decimal"
+decision_statement = "The exact source subdivisions declare each 13-position foral amount as 11 integer and 2 decimal digits."
+justification = "Reviewed against aeat-dr-193-2024 source row 1260, positions 275-287; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 275
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 288
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2024-row-1260-offset-288-decimal"
+decision_statement = "The exact source subdivisions declare each 13-position foral amount as 11 integer and 2 decimal digits."
+justification = "Reviewed against aeat-dr-193-2024 source row 1260, positions 288-300; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 288
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 301
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2024-row-1260-offset-301-decimal"
+decision_statement = "The exact source subdivisions declare each 13-position foral amount as 11 integer and 2 decimal digits."
+justification = "Reviewed against aeat-dr-193-2024 source row 1260, positions 301-313; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+semantic_part_offset = 301
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"

@@ -50,6 +50,7 @@ from .record_design_cache import (
     store_cached_record_design_refusal,
 )
 from .record_design_pdf_orchestration import extract_record_design_pdf_cached
+from .record_design_pdf_repairs import require_m349_operator_blank_run_cache_dependency
 from .record_design_sources import (
     load_corrections,
     load_declared_non_record_sheet_reasons,
@@ -71,6 +72,7 @@ def extract_record_design(path: Path) -> RecordDesignExtraction:
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design source not found: {path}")
+    require_m349_operator_blank_run_cache_dependency(resolved)
     return _extract_record_design_cached(*path_stat_fingerprint(resolved))
 
 
@@ -314,6 +316,7 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
+    require_m349_operator_blank_run_cache_dependency(resolved)
     return extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 

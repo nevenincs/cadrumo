@@ -14,14 +14,6 @@ from .fixed_width_codec import validate_fixed_width_shape
 if TYPE_CHECKING:
     from .schema_exports import ExportFieldDefinition
 
-__all__ = [
-    "export_field_wire_shape",
-    "validate_export_allowed_values",
-    "validate_export_field_decimals",
-    "validate_export_field_kind",
-    "validate_export_value_policy",
-]
-
 
 _VALUE_POLICY_SHAPES: Mapping[ExportValuePolicy, tuple[str, str, str, bool, str | None]] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: ("integer", "left_zero", "right", False, None),
@@ -39,12 +31,25 @@ _VALUE_POLICY_SHAPES: Mapping[ExportValuePolicy, tuple[str, str, str, bool, str 
     ExportValuePolicy.DIGIT_STRING: ("text", "none", "none", False, None),
     ExportValuePolicy.IDENTIFIER_DIGITS: ("text", "none", "none", False, None),
     ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: ("text", "right_space", "left", False, None),
+    ExportValuePolicy.SIGNED_COMPONENT_SIGN: ("text", "none", "none", False, None),
+    ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE: ("money", "left_zero", "right", False, None),
+    ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN: ("text", "none", "none", False, None),
+    ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.YYYYMMDD_TEXT_YEAR: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.YYYYMMDD_TEXT_MONTH: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.YYYYMMDD_TEXT_DAY: ("integer", "left_zero", "right", False, None),
 }
+
 
 _VALUE_POLICY_UNRENDERABLE_KINDS = frozenset(
     {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM},
 )
+
+
 _SIGN_BEARING_DATA_TYPES: Final[frozenset[str]] = frozenset({"money", "decimal", "integer"})
+
+
 _SCALED_AMOUNT_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
     "decimal",
     "left_zero",
@@ -52,6 +57,8 @@ _SCALED_AMOUNT_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
     True,
     None,
 )
+
+
 _SIGNED_MONEY_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
     "money",
     "left_zero",
@@ -59,6 +66,8 @@ _SIGNED_MONEY_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
     False,
     None,
 )
+
+
 _MONEY_IMPLIED_DECIMALS: Final[int] = 2
 
 

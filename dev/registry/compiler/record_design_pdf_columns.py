@@ -77,9 +77,10 @@ class _ColumnLayout:
     description: float
     validation: float | None
     content: float
+    use: float | None = None
 
     def boundaries(self) -> tuple[float, ...]:
-        return tuple(edge for edge in (self.description, self.validation, self.content) if edge is not None)
+        return tuple(edge for edge in (self.description, self.validation, self.content, self.use) if edge is not None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,8 +146,10 @@ def _add_word_to_row(builder: _RowBuilder, word: _Word) -> None:
         builder.description.append(word.text)
     elif column == "validation":
         builder.validation.append(word.text)
-    else:
+    elif column == "content":
         builder.content.append(word.text)
+    else:
+        builder.valid = False
 
 
 def _has_valid_indentation(words: Sequence[_Word], layout: _ColumnLayout, column: str) -> bool:
@@ -156,6 +159,8 @@ def _has_valid_indentation(words: Sequence[_Word], layout: _ColumnLayout, column
 
 
 def _column_of(word: _Word, layout: _ColumnLayout) -> str:
+    if layout.use is not None and word.centre >= layout.use:
+        return "use"
     if word.centre >= layout.content:
         return "content"
     if layout.validation is not None and word.centre >= layout.validation:
@@ -220,10 +225,8 @@ def _header_layout(
 ) -> _ColumnLayout | str:
     """Read a table header's column starts, or say the line is not a supported header.
 
-    A header is supported only when Contenido is its LAST column. Designs that
-    print a further column after it (``Uso``) have no field slot for that
-    column's text, and their Contenido cells visibly overflow into it, so their
-    rows are left to the line parser rather than split on an uncertain border.
+    A trailing Uso column is supported only while its cells are empty. Text in
+    that column has no field slot and refuses the affected row.
     """
     texts = [fold_diacritics(word.text).lower() for word in line]
     columns = _header_columns(line, texts)
@@ -241,7 +244,13 @@ def _header_layout(
         _column_start(line[validation], line[validation - 1].x1, borders) if validation is not None else None
     )
     content_start = _column_start(line[content], line[content - 1].x1, borders)
-    return _ColumnLayout(description=description_start, validation=validation_start, content=content_start)
+    use_start = _column_start(line[content + 1], line[content].x1, borders) if content + 1 < len(line) else None
+    return _ColumnLayout(
+        description=description_start,
+        validation=validation_start,
+        content=content_start,
+        use=use_start,
+    )
 
 
 def _header_columns(
@@ -280,7 +289,7 @@ def _has_supported_column_order(
     content: int,
 ) -> bool:
     return (
-        content == len(line) - 1
+        (content == len(line) - 1 or (content == len(line) - 2 and line[-1].text.lower() == "uso"))
         and content >= description
         and (validation is None or description < validation < content)
     )

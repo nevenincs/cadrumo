@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Mapping
+from hashlib import sha256
 from typing import Final
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -160,7 +161,7 @@ def _validate_signed_composite_authority(
     eligible: Mapping[RenderProfileAnchor, RecordDesignIntermediateField],
 ) -> None:
     for rule in profile.signed_composite_rules:
-        _validate_signed_composite_source_agreement(rule, eligible[rule.anchor])
+        _validate_signed_composite_source_agreement(rule, eligible[rule.anchor], profile.design_identity)
 
 
 def _validate_reviewed_evidence(
@@ -215,8 +216,12 @@ _COMPOSITE_NON_POLICY_WIRE_TERMS: Final[re.Pattern[str]] = re.compile(
 def _validate_signed_composite_source_agreement(
     rule: SignedMonetaryCompositeRule,
     field: RecordDesignIntermediateField,
+    identity: RenderProfileDesignIdentity,
 ) -> None:
     """Verify a reviewed rule against source prose without deriving policy from it."""
+    if identity.modelo == "180" and field.offset in (79, 145):
+        _validate_reviewed_m180_composite(rule, field, identity)
+        return
     normalised_source, definition = _signed_composite_source_definition(field)
     _validate_composite_wire_terms(definition)
     _validate_composite_sign_statement(definition, normalised_source)
@@ -282,14 +287,15 @@ def _validate_composite_geometry(
     decimal_end = int(definition.group("decimal_end"))
     magnitude_digits = int(definition.group("magnitude_digits"))
     expected_end = field.offset + field.length - 1
-    if not _composite_bounds_match(
+    bounds_match = _composite_bounds_match(
         field,
         sign_position=sign_position,
         magnitude_start=magnitude_start,
         magnitude_end=magnitude_end,
         magnitude_digits=magnitude_digits,
         expected_end=expected_end,
-    ) or not _composite_parts_match(
+    )
+    parts_match = _composite_parts_match(
         rule,
         magnitude_start=magnitude_start,
         magnitude_end=magnitude_end,
@@ -298,8 +304,73 @@ def _validate_composite_geometry(
         integer_end=integer_end,
         decimal_start=decimal_start,
         decimal_end=decimal_end,
-    ):
+    )
+    if not bounds_match or not parts_match:
         raise RegistryValidationError("signed monetary composite source ranges do not exactly partition its anchor")
+
+
+_M180_COMPOSITE_EVIDENCE: Final[dict[tuple[str, str, str, int], tuple[str, int, int, int, str]]] = {
+    # The first two complete cells print an impossible 146-159 integer part
+    # overlapping the 159-160 decimal part. Their @145+16 parent and @146-160
+    # magnitude uniquely give a 13+2 partition; no PDF cell is rewritten.
+    (
+        "aeat-dr-180-2014",
+        "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
+        "2014",
+        116,
+    ): ("8c8d3eb199a0e15b451c4bc31d2c946369e9ae60c9bc31c4fe48084c4fba04eb", 145, 16, 13, "12"),
+    (
+        "aeat-dr-180-2023",
+        "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
+        "2023",
+        109,
+    ): ("8c8d3eb199a0e15b451c4bc31d2c946369e9ae60c9bc31c4fe48084c4fba04eb", 145, 16, 13, "12"),
+    # The perceptor cells use different complete prose and consistent @79+14
+    # geometry; their original exact text is required because the generic
+    # algebraic-total grammar does not describe reintegro conditions.
+    (
+        "aeat-dr-180-2014",
+        "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
+        "2014",
+        302,
+    ): ("717b65731382049112cbeb64060de2242167d32b4d5f88989e8181fb85f6f5c7", 79, 14, 11, "10"),
+    (
+        "aeat-dr-180-2023",
+        "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
+        "2023",
+        292,
+    ): ("5a7c26013e17a4da04630ed2fb6bc3ad6c4c7a0dcdffd0c7520a780442debd50", 79, 14, 11, "10"),
+}
+
+
+def _validate_reviewed_m180_composite(
+    rule: SignedMonetaryCompositeRule,
+    field: RecordDesignIntermediateField,
+    identity: RenderProfileDesignIdentity,
+) -> None:
+    """Validate four exact source cells, including the two printed overlaps."""
+    expected = _M180_COMPOSITE_EVIDENCE.get(
+        (identity.source_ref, identity.source_sha256, identity.design_epoch, field.source_row)
+    )
+    accepted = (
+        expected is not None
+        and field.record_identity == rule.anchor.record_identity
+        and field.sheet == rule.anchor.sheet
+        and field.source_row == rule.anchor.source_row
+        and field.source_cell is None
+        and field.ordinal == expected[4]
+        and normalise_aeat_type(field.aeat_type) == "alfanumerico"
+        and field.offset == expected[1]
+        and field.length == expected[2]
+        and rule.integer_digits == expected[3]
+        and rule.decimal_digits == 2
+        and rule.sign_policy == "blank-or-n-leading"
+        and sha256((field.content or "").encode("utf-8")).hexdigest() == expected[0]
+    )
+    if not accepted:
+        raise RegistryValidationError(
+            "signed monetary composite M180 source overlap differs from exact reviewed evidence"
+        )
 
 
 def _composite_bounds_match(

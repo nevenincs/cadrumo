@@ -27,8 +27,9 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError, Regis
 
 from ...compiler.loader import load_modelo_directory
 from .._tree_validation import GeneratedExportTreeValidationContext, _validated_target_snapshot
-from ..candidate_staging import stage_continuity_metadata, stage_generated_export_candidate
+from ..candidate_staging import stage_generated_export_candidate
 from ..cli import supporting_modelos
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

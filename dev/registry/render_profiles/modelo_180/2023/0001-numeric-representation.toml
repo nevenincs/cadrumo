@@ -691,6 +691,7 @@ sheet = 'Tipo 2 - Registro De Perceptor'
 source_row = 400
 record_identity = 'Tipo 2 - Registro De Perceptor'
 ordinal = '16'
+semantic_part_offset = 321
 
 [singleton_rules.evidence]
 authority_kind = 'reviewed_policy'
@@ -703,6 +704,7 @@ sheet = 'Tipo 2 - Registro De Perceptor'
 source_row = 400
 record_identity = 'Tipo 2 - Registro De Perceptor'
 ordinal = '16'
+semantic_part_offset = 321
 
 [[signed_composite_rules]]
 rule_kind = 'signed_monetary_composite'

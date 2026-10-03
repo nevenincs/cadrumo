@@ -26,7 +26,7 @@ from .._tree_validation import (
     ValidatedGeneratedExportTree,
     validate_generated_export_tree,
 )
-from ..candidate_staging import bootstrap_layout_supersession_fingerprint
+from ..bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,

@@ -24,7 +24,6 @@ _INFORMATIONAL_BINDING_IDS = frozenset(
         "modelo-303-criterio-caja-adquisiciones-cuota",
     }
 )
-_DUAL_ROLE_BINDING_IDS = frozenset({"modelo-349-ledger-intracommunity-guard"})
 _MONETARY_TREATMENTS = ["none", "taxpayer_regime", "supplier_regime"]
 
 
@@ -98,7 +97,6 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
     assert bindings, "no ledger_iva_aggregation binding was scanned"
 
     informational = []
-    dual_role = []
     for binding in bindings:
         binding_id = binding["id"]
         assert isinstance(binding_id, str)
@@ -109,10 +107,6 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
         if binding_id in _INFORMATIONAL_BINDING_IDS:
             informational.append(binding_id)
             assert selector["observation_roles"] == ["operation_informational"]
-        elif binding_id in _DUAL_ROLE_BINDING_IDS:
-            dual_role.append(binding_id)
-            assert selector["observation_roles"] == ["settlement", "operation_informational"]
-            assert selector["cash_accounting_treatments"] == _MONETARY_TREATMENTS
         else:
             assert selector["observation_roles"] == ["settlement"]
             assert selector["cash_accounting_treatments"] == _MONETARY_TREATMENTS
@@ -121,4 +115,3 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
     # meaningful property is that the set found is exactly the declared set --
     # every named id is really carried, and no other id claimed the role.
     assert set(informational) == _INFORMATIONAL_BINDING_IDS
-    assert set(dual_role) == _DUAL_ROLE_BINDING_IDS

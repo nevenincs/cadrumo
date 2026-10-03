@@ -28,6 +28,7 @@ from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from . import export_field_validation as _export_field_validation
 from .errors import RegistryValidationError
 from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
+from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .export_value_policy import ExportValuePolicy, ExportValuePolicyValue
 from .fixed_width_codec import (
@@ -157,11 +158,16 @@ class FilingEnvelopePrefixRole(StrEnum):
     RECORD_TYPE = "record_type"
     AUX_OPENING_TAG = "aux_opening_tag"
     PRE_PROGRAM_FILLER = "pre_program_filler"
+    LANGUAGE = "language"
+    BETWEEN_LANGUAGE_PROGRAM_FILLER = "between_language_program_filler"
     PROGRAM_IDENTIFIER = "program_identifier"
     BETWEEN_IDENTITIES_FILLER = "between_identities_filler"
     DEVELOPER_TAX_ID = "developer_tax_id"
     POST_DEVELOPER_FILLER = "post_developer_filler"
     AUX_CLOSING_TAG = "aux_closing_tag"
+    PRE_DECLARANT_FILLER = "pre_declarant_filler"
+    DECLARANT_TAX_ID = "declarant_tax_id"
+    POST_DECLARANT_FILLER = "post_declarant_filler"
 
 
 #: The six roles a :attr:`FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG` fuses.
@@ -246,6 +252,17 @@ class FilingEnvelopePrefixFieldDeclaration(RegistryModel):
 
     role: FilingEnvelopePrefixRoleValue
     length: int = Field(gt=0)
+    casilla_id: CasillaId | None = Field(default=None, exclude_if=lambda value: value is None)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_language_endpoint(self) -> FilingEnvelopePrefixFieldDeclaration:
+        if self.role is FilingEnvelopePrefixRole.LANGUAGE:
+            if self.casilla_id != "decl.idioma" or self.length != 1:
+                raise RegistryValidationError("language envelope role requires exact decl.idioma one-byte casilla")
+        elif self.casilla_id is not None:
+            raise RegistryValidationError("only the language envelope role may carry a casilla endpoint")
+        return self
 
 
 class FilingEnvelopeDefinition(RegistryModel):
@@ -273,7 +290,9 @@ class FilingEnvelopeDefinition(RegistryModel):
     prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=1)
     prefix_extent: int = Field(gt=0)
     body_record_ids: tuple[RecordId, ...] = Field(min_length=1)
-    product_identity_requirement: Literal["aeat-product-software-identity-v1"]
+    # TOML has no null value: the nine-role declarant envelope omits this key.
+    # The validator below still requires the AUX identity for every AUX grammar.
+    product_identity_requirement: Literal["aeat-product-software-identity-v1"] | None = None
     closer_derivation: FilingEnvelopeCloserDerivationValue
     total_derivation: FilingEnvelopeTotalDerivationValue
 
@@ -290,6 +309,7 @@ class FilingEnvelopeDefinition(RegistryModel):
                 f"filing envelope {self.record_identity!r} prefix roles must appear in canonical source order",
             )
         _require_one_opening_tag_spelling(self.record_identity, roles)
+        self._require_prefix_identity(roles)
         declared_extent = sum(field.length for field in self.prefix_fields)
         if declared_extent != self.prefix_extent:
             raise RegistryValidationError(
@@ -301,6 +321,33 @@ class FilingEnvelopeDefinition(RegistryModel):
                 f"filing envelope {self.record_identity!r} body record declarations must be unique and ordered",
             )
         return self
+
+    def _require_prefix_identity(self, roles: tuple[FilingEnvelopePrefixRole, ...]) -> None:
+        """Require the complete declared identity grammar for this envelope family."""
+        declarant_roles = (
+            FilingEnvelopePrefixRole.PRE_DECLARANT_FILLER,
+            FilingEnvelopePrefixRole.DECLARANT_TAX_ID,
+            FilingEnvelopePrefixRole.POST_DECLARANT_FILLER,
+        )
+        if any(role in roles for role in declarant_roles):
+            if (
+                roles
+                != (
+                    FilingEnvelopePrefixRole.OPENING_TAG,
+                    FilingEnvelopePrefixRole.MODELO,
+                    FilingEnvelopePrefixRole.DISCRIMINANT,
+                    FilingEnvelopePrefixRole.FILING_YEAR,
+                    FilingEnvelopePrefixRole.PERIOD,
+                    FilingEnvelopePrefixRole.RECORD_TYPE,
+                    *declarant_roles,
+                )
+                or self.product_identity_requirement is not None
+            ):
+                raise RegistryValidationError(
+                    "declarant envelope requires exactly the source-ordered nine-role prefix and no software identity"
+                )
+        elif self.product_identity_requirement != "aeat-product-software-identity-v1":
+            raise RegistryValidationError("AUX envelope requires product/software identity authority")
 
     @property
     def opening_tag_extent(self) -> int:
@@ -641,6 +688,7 @@ class ExportRecordDefinition(RegistryModel):
     def _repeat_matches_field_family(self) -> ExportRecordDefinition:
         if failure := self.repeat_field_family_failure():
             raise RegistryValidationError(failure)
+        validate_export_record_components(self)
         return self
 
 

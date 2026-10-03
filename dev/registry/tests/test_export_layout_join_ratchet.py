@@ -45,7 +45,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..compiler import validate_export_layout_coverage as coverage
+from ..compiler import export_layout_record_join as coverage_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -107,16 +107,19 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                 # Read the SAME constant channels the coverage checker reads. A
                 # ratchet seeing fewer would pin sheets the checker joins fine
                 # and report debt that does not exist.
-                constants = coverage._design_constant_values(revision)
+                constants = coverage_records._design_constant_values(revision)
                 for layout in getattr(revision, "export_layouts", ()) or ():
-                    for source in coverage._design_sources(layout, source_refs):
-                        sheets = coverage._read_design_sheets(source)
+                    for source in coverage_records._design_sources(layout, source_refs):
+                        sheets = coverage_records._read_design_sheets(source)
                         if isinstance(sheets, str):
                             continue
                         for sheet in sheets:
-                            if not coverage._belongs_to_layout(sheet, layout.records):
+                            if not coverage_records._belongs_to_layout(sheet, layout.records, constants, source=source):
                                 continue
-                            if coverage._join_record(sheet, layout.records, constants) is not None:
+                            if (
+                                coverage_records._join_record(sheet, layout.records, constants, source=source)
+                                is not None
+                            ):
                                 continue
                             if (
                                 layout.filing_envelope is not None
@@ -143,6 +146,15 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                                 # fallback is "actively wrong" for these,
                                 # because neighbouring records' fields sit at
                                 # the same low offsets.
+                                continue
+                            if (
+                                layout.auxiliary_envelope_header is not None
+                                and sheet.name == layout.auxiliary_envelope_header.record_identity
+                            ):
+                                # The source's variable envelope header is
+                                # proved against this exact authored auxiliary
+                                # prefix, including roles and source pin, by
+                                # the coverage validator before fallback.
                                 continue
                             key = (modelo_id, str(revision_id), sheet.name)
                             unjoined.add(key)
@@ -236,8 +248,8 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
                     break
                 seen.add((modelo_id, revision_id))
                 for layout in getattr(revision, "export_layouts", ()) or ():
-                    for source in coverage._design_sources(layout, source_refs):
-                        sheets = coverage._read_design_sheets(source)
+                    for source in coverage_records._design_sources(layout, source_refs):
+                        sheets = coverage_records._read_design_sheets(source)
                         if isinstance(sheets, str):
                             continue
                         for sheet in sheets:

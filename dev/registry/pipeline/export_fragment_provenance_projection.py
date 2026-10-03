@@ -38,6 +38,7 @@ _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
         "required",
         "repeat",
         "binding_record",
+        "requires_positive_casilla_id",
         "row_field_casilla_ids",
         "discriminator",
     },
@@ -88,6 +89,7 @@ _VARIABLE_ENVELOPE_KEYS: Final[frozenset[str]] = frozenset(
 
 
 _ENVELOPE_PREFIX_FIELD_KEYS: Final[frozenset[str]] = frozenset({"role", "anchor"})
+_ENVELOPE_LANGUAGE_PREFIX_FIELD_KEYS: Final[frozenset[str]] = frozenset({"role", "anchor", "casilla_id"})
 
 
 _ENVELOPE_TOTAL_ANCHOR_KEYS: Final[frozenset[str]] = frozenset({"source_row", "source_cell", "label", "length"})
@@ -305,12 +307,21 @@ def _normalise_variable_envelope_contract(payload: Mapping[str, object]) -> dict
     prefix_fields = _as_object_list(payload["prefix_fields"], subject="variable envelope prefix fields")
     normalised_prefix_fields: list[dict[str, object]] = []
     for prefix_field in prefix_fields:
-        _require_exact_keys(prefix_field, _ENVELOPE_PREFIX_FIELD_KEYS, subject="envelope prefix field")
+        actual_keys = frozenset(prefix_field)
+        if actual_keys not in {_ENVELOPE_PREFIX_FIELD_KEYS, _ENVELOPE_LANGUAGE_PREFIX_FIELD_KEYS}:
+            raise RegistryValidationError("envelope prefix field schema drift: unsupported key set")
+        casilla_id = prefix_field.get("casilla_id")
+        if prefix_field["role"] == "language":
+            if actual_keys != _ENVELOPE_LANGUAGE_PREFIX_FIELD_KEYS or casilla_id != "decl.idioma":
+                raise RegistryValidationError("language envelope prefix requires exact decl.idioma casilla")
+        elif casilla_id is not None:
+            raise RegistryValidationError("non-language envelope prefix cannot carry a casilla")
         anchor = _as_object(prefix_field["anchor"], subject="envelope prefix anchor")
         _require_exact_keys(anchor, _SEMANTIC_MAP_ANCHOR_KEYS, subject="envelope prefix anchor")
         normalised_prefix_fields.append(
             {
                 "role": prefix_field["role"],
+                **({"casilla_id": casilla_id} if casilla_id is not None else {}),
                 "anchor": {
                     "sheet": anchor["sheet"],
                     "source_row": anchor["source_row"],
@@ -407,6 +418,11 @@ def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, o
     binding_record = payload["binding_record"]
     if binding_record is not None:
         normalised["binding_record"] = _as_string(binding_record, subject="semantic-map record binding_record")
+    positive_casilla = payload["requires_positive_casilla_id"]
+    if positive_casilla is not None:
+        normalised["requires_positive_casilla_id"] = _as_string(
+            positive_casilla, subject="semantic-map record requires_positive_casilla_id"
+        )
     row_field_casilla_ids = _as_sorted_string_pairs(
         payload["row_field_casilla_ids"],
         subject="semantic-map record row_field_casilla_ids",

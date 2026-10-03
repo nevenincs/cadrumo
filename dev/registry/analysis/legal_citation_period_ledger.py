@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import cast
 
 from cadrumo.core.toml import parse_toml
 from dev.registry.analysis.casilla_legal_citation_period import (
@@ -57,29 +58,59 @@ def load_citation_exceptions(path: Path = LEDGER_PATH) -> Mapping[CasillaCitatio
     document = parse_toml(path.read_text(encoding="utf-8"))
     exceptions: dict[CasillaCitationKey, CitationException] = {}
     for index, entry in enumerate(document.get("exception", ())):
-        blank = [name for name in _REQUIRED if not isinstance(entry.get(name), str) or not entry[name].strip()]
-        if blank:
-            raise ValueError(f"{path.name}: exception #{index} has no {', '.join(blank)}")
-        try:
-            category = CitationExceptionCategory(entry["category"])
-        except ValueError as exc:
-            raise ValueError(f"{path.name}: exception #{index} has unknown category {entry['category']!r}") from exc
-        casillas = entry.get("casillas")
-        if not isinstance(casillas, list) or not casillas:
-            raise ValueError(f"{path.name}: exception #{index} names no casillas")
+        modelo, revision, reference, category, reason = _validated_exception_metadata(entry, path.name, index)
+        casillas = _required_casillas(entry.get("casillas"), path.name, index)
         for casilla in casillas:
-            if not isinstance(casilla, str) or not casilla.strip():
-                raise ValueError(f"{path.name}: exception #{index} names a blank casilla")
-            key = CasillaCitationKey(
-                modelo=entry["modelo"],
-                revision=entry["revision"],
-                casilla=casilla,
-                reference=entry["reference"],
-            )
+            key = _casilla_citation_key(casilla, path.name, index, modelo, revision, reference)
             if key in exceptions:
                 raise ValueError(f"{path.name}: exception #{index} names {key} a second time")
-            exceptions[key] = CitationException(key=key, category=category, reason=entry["reason"])
+            exceptions[key] = CitationException(key=key, category=category, reason=reason)
     return exceptions
+
+
+def _validated_exception_metadata(
+    entry: Mapping[str, object],
+    filename: str,
+    index: int,
+) -> tuple[str, str, str, CitationExceptionCategory, str]:
+    blank = [name for name in _REQUIRED if _exception_field_is_blank(entry, name)]
+    if blank:
+        raise ValueError(f"{filename}: exception #{index} has no {', '.join(blank)}")
+    try:
+        category = CitationExceptionCategory(cast(str, entry["category"]))
+    except ValueError as exc:
+        raise ValueError(f"{filename}: exception #{index} has unknown category {entry['category']!r}") from exc
+    return (
+        cast(str, entry["modelo"]),
+        cast(str, entry["revision"]),
+        cast(str, entry["reference"]),
+        category,
+        cast(str, entry["reason"]),
+    )
+
+
+def _required_casillas(casillas: object, filename: str, index: int) -> list[object]:
+    if not isinstance(casillas, list) or not casillas:
+        raise ValueError(f"{filename}: exception #{index} names no casillas")
+    return cast(list[object], casillas)
+
+
+def _exception_field_is_blank(entry: Mapping[str, object], name: str) -> bool:
+    value = entry.get(name)
+    return not isinstance(value, str) or not value.strip()
+
+
+def _casilla_citation_key(
+    casilla: object,
+    filename: str,
+    index: int,
+    modelo: str,
+    revision: str,
+    reference: str,
+) -> CasillaCitationKey:
+    if not isinstance(casilla, str) or not casilla.strip():
+        raise ValueError(f"{filename}: exception #{index} names a blank casilla")
+    return CasillaCitationKey(modelo=modelo, revision=revision, casilla=casilla, reference=reference)
 
 
 def category_disagreements(

@@ -13,6 +13,7 @@ from .render_profile_rules import (
     LiteralNumericRule,
     SignedMonetaryCompositeRule,
     SingletonNumericRule,
+    TelematicTransportChoiceRule,
     Width17MembershipRule,
 )
 from .render_profile_validation import _duplicates
@@ -28,6 +29,13 @@ class RenderProfile(_StrictModel):
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
     literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
+    telematic_transport_choice_rules: tuple[TelematicTransportChoiceRule, ...] = ()
+    empty_rule_assertion: Literal["canonical_eligibility_empty"] | None = None
+
+    @cached_property
+    def telematic_transport_choice_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, TelematicTransportChoiceRule]:
+        """Return each source-anchored transport choice by its exact field."""
+        return {rule.anchor: rule for rule in self.telematic_transport_choice_rules}
 
     @cached_property
     def literal_numeric_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, LiteralNumericRule]:

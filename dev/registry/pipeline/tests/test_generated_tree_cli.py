@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -12,6 +13,7 @@ from typer.testing import CliRunner
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
@@ -20,11 +22,8 @@ from ...tests.authored_edition_support import source_first_exercise, source_with
 from .. import cli as cli_module
 from .._export_tree import render_complete_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
-from ..candidate_staging import (
-    _bootstrap_target_from_row,
-    retarget_bootstrap_construct_export_layout,
-    stage_continuity_metadata,
-)
+from ..bootstrap_construct_retarget import retarget_bootstrap_construct_export_layout
+from ..bootstrap_targets import _bootstrap_target_from_row
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
@@ -37,6 +36,7 @@ from ..cli import (
     require_republication_eligibility,
     reviewed_bootstrap_target,
 )
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
 from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from ..render_check import (
@@ -539,7 +539,7 @@ def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_autho
     ) -> PreparedGeneratedTreeInvocation:
         assert authority is not None
         prepared_authorities.append(authority)
-        return real_prepare(selected, root, authority=authority)
+        return real_prepare(selected, root, authority=cast(ValidatedRegistryAuthority, authority))
 
     def currentness_with_real_prepare(
         modelo: str,
@@ -559,7 +559,10 @@ def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_autho
 
     monkeypatch.setattr(cli_module, "target_currentness", currentness_with_real_prepare)
 
-    cli_module._validate_final_live_target(SimpleNamespace(invocation=invocation, target_root=target_root))
+    prepared = cast(
+        PreparedGeneratedTreeInvocation, cast(Any, SimpleNamespace(invocation=invocation, target_root=target_root))
+    )
+    cli_module._validate_final_live_target(prepared)
 
     assert prepared_authorities == [authority]
 

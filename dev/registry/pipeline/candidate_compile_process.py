@@ -8,7 +8,7 @@ alone so that it is the only place a subprocess starts on the publication path.
 The child is bound to the parent's lifetime through its standard input: the
 parent opens a pipe it never writes to and closes it only after the child has
 finished. If the parent dies first, the operating system closes the pipe, the
-child reads end-of-file, and the child exits instead of compiling for nobody.
+child sees it broken, and the child exits instead of compiling for nobody.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -35,6 +36,7 @@ PARENT_EXITED_EXIT_CODE: Final = 86
 """Exit status of a candidate compiler whose parent went away before it finished."""
 
 _REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[3]
+_LIFETIME_POLL_SECONDS: Final = 0.5
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,14 +101,49 @@ def run_candidate_compiler(
 
 
 def exit_when_parent_exits() -> None:
-    """End this process once the parent's lifetime pipe on stdin reaches end-of-file."""
+    """End this process once the parent's lifetime pipe on stdin closes."""
     stdin = sys.stdin
     if stdin is None:
+        return
+    if sys.platform == "win32":
+        _watch_windows_lifetime_pipe(stdin.fileno())
         return
 
     def watch() -> None:
         stdin.buffer.read()
         os._exit(PARENT_EXITED_EXIT_CODE)
+
+    threading.Thread(target=watch, name="parent-lifetime", daemon=True).start()
+
+
+def _watch_windows_lifetime_pipe(fd: int) -> None:
+    """Poll the lifetime pipe instead of blocking a read on it.
+
+    Windows serialises synchronous I/O on one file object, so a read left pending
+    on stdin stalls anything else that touches that handle. The C runtime does
+    exactly that when a DLL initialises it under the loader lock -- importing
+    numpy through openpyxl's record-design reader deadlocked the compiler. A
+    non-blocking peek never leaves an operation pending, and it fails once the
+    parent's end of the pipe is closed. A stdin that is not a pipe carries no
+    lifetime contract and is left unwatched.
+    """
+    if sys.platform != "win32":
+        raise RuntimeError("Windows lifetime pipes require Windows")
+
+    import _winapi
+    import msvcrt
+
+    handle = msvcrt.get_osfhandle(fd)
+    if _winapi.GetFileType(handle) != _winapi.FILE_TYPE_PIPE:
+        return
+
+    def watch() -> None:
+        try:
+            while True:
+                _winapi.PeekNamedPipe(handle, 0)
+                time.sleep(_LIFETIME_POLL_SECONDS)
+        except OSError:
+            os._exit(PARENT_EXITED_EXIT_CODE)
 
     threading.Thread(target=watch, name="parent-lifetime", daemon=True).start()
 

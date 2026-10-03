@@ -29,13 +29,13 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_equivalence import (
     _prove_chain,
 )
+from ..edition_delta_migration import main, migrate_modelo
 from ..edition_delta_order_restoration import (
     OrderRestoration,
     _prove_order_restoration,
     _write_order_restorations,
     declared_order_restorations,
 )
-from ..edition_delta_migration import main, migrate_modelo
 from ..edition_delta_planning import _plan
 from ..edition_delta_writer import _write_edition
 from ..edition_family_delta_collapse import collapse_keyed_families

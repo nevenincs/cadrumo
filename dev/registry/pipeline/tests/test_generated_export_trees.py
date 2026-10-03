@@ -42,10 +42,8 @@ from ...compiler.loader import (
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from ..candidate_staging import (
-    stage_continuity_metadata,
-)
 from ..cli import stage_published_modelo
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,

@@ -14,7 +14,7 @@ published_at = 2026-09-28
 applies_from = 2026-07-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_26/DR131_2026.xlsx"
-review_status = "pending_review"
+review_status = "agent_reviewed"
 
 [sources.aeat-dr-131-2026-late.period_selector]
 years = [2026]

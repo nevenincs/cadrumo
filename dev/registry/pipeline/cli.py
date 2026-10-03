@@ -43,14 +43,17 @@ from .authority_publication import (
     authority_publication_destination,
     publish_sqlite_authority_candidate,
 )
-from .candidate_staging import (
-    GeneratedExportBootstrapTarget,
+from .bootstrap_supersession import (
+    bootstrap_layout_supersession_fingerprint,
+    bootstrap_manual_source_revision_root,
+    validate_bootstrap_manual_export_layout_supersession,
+)
+from .bootstrap_targets import GeneratedExportBootstrapTarget, generated_export_bootstrap_target
+from .candidate_staging import stage_generated_export_candidate
+from .edition_candidate_staging import (
     drop_cross_edition_evolutions,
     edition_requires_detachment,
-    generated_export_bootstrap_target,
     stage_continuity_metadata,
-    stage_generated_export_candidate,
-    validate_bootstrap_manual_export_layout_supersession,
     write_complete_edition,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
@@ -61,6 +64,7 @@ from .render_check import (
     RevisionRenderInputs,
     compare_export_tree_roots,
     revision_render_inputs,
+    select_revision_record_design_source,
 )
 from .source_defects import source_defects_for
 from .tree_publication_contracts import (
@@ -256,18 +260,33 @@ def prepare_generated_tree_invocation(
                 revision=invocation.revision,
                 superseded_layout_id=bootstrap_target.supersedes_layout_id,
                 expected_references=bootstrap_target.superseded_construct_references,
+                generated_layout_id=bootstrap_target.layout_id,
+                source_ref=bootstrap_target.source_ref,
+                source_sha256=bootstrap_target.source_sha256,
+                manual_origin_revision=bootstrap_target.manual_origin_revision,
+            )
+            manual_source_root, _ = bootstrap_manual_source_revision_root(
+                source_modelo_root,
+                authority.modelo(invocation.modelo),
+                revision=invocation.revision,
+                expected_origin_revision=bootstrap_target.manual_origin_revision,
             )
             supersession = GeneratedExportSupersession(
                 superseded_layout_id=bootstrap_target.supersedes_layout_id,
                 generated_layout_id=bootstrap_target.layout_id,
                 expected_construct_references=bootstrap_target.superseded_construct_references,
                 source_state_sha256=source_state_sha256,
+                source_ref=bootstrap_target.source_ref,
+                source_sha256=bootstrap_target.source_sha256,
+                manual_source_sha256=bootstrap_layout_supersession_fingerprint(manual_source_root),
+                manual_origin_revision=bootstrap_target.manual_origin_revision,
             )
         bootstrap = GeneratedExportBootstrapTransport(
             layout_id=bootstrap_target.layout_id,
             line_ending=bootstrap_target.line_ending,
             source_ref=bootstrap_target.source_ref,
             source_sha256=bootstrap_target.source_sha256,
+            supersedes_layout_id=bootstrap_target.supersedes_layout_id,
         )
     try:
         inputs = revision_render_inputs(
@@ -276,6 +295,8 @@ def prepare_generated_tree_invocation(
             revision=invocation.revision,
             source_ref=invocation.source_ref,
             bootstrap_transport=bootstrap,
+            filing_year=invocation.filing_year,
+            period=invocation.period,
         )
     except (RegistryError, ValueError) as error:
         raise ValueError(str(error)) from error
@@ -299,6 +320,7 @@ def prepare_generated_tree_invocation(
         ),
         filing_year=invocation.filing_year,
         period=invocation.period,
+        required_grade=authority.modelo(invocation.modelo).revisions[invocation.revision].effective_authority_grade,
         scope_authority=authority,
         supporting_modelos=supporting_modelos(invocation.modelo),
         continuity_metadata_modelo_root=stage_continuity_metadata(
@@ -497,7 +519,7 @@ def check_prepared_invocation(
     if not prepared.target_export_root.exists():
         rendered = _render_candidate(prepared)
         validate_generated_export_tree(
-            context=_bootstrap_validation(prepared.validation),
+            context=prepared.validation,
             joined=prepared.inputs.joined,
             semantic_map=prepared.inputs.semantic_map,
             rendered=rendered,
@@ -523,11 +545,6 @@ def check_prepared_invocation(
     return "matched", checked.rendered, target_state
 
 
-def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> GeneratedExportTreeValidationContext:
-    """Lower only the static-publication proof to its honest authority grade."""
-    return replace(context, required_grade=RegistryAuthorityGrade.CALCULATION)
-
-
 def publish_prepared_invocation(
     prepared: PreparedGeneratedTreeInvocation,
     rendered: RenderedExportTree,
@@ -536,7 +553,7 @@ def publish_prepared_invocation(
     """Publish the exact prepared candidate the read-only check just validated."""
     publish_validated_generated_export_tree(
         context=GeneratedExportTreePublicationContext(
-            validation=_bootstrap_validation(prepared.validation),
+            validation=prepared.validation,
             temporary_root=prepared.candidate_root.parents[2],
             target_root=prepared.target_root,
             target_export_root=prepared.target_export_root,
@@ -590,6 +607,17 @@ def require_republication_eligibility(
     that reaches into the live ledger for "some row with this remedy" passes or
     fails on whichever corrections happen to be outstanding.
     """
+    _require_republication_target_binding(invocation, target_state, comparison)
+    if comparison.disposition_class == "provenance_only":
+        return
+    _require_republication_record_disposition(invocation, comparison, dispositions)
+
+
+def _require_republication_target_binding(
+    invocation: GeneratedTreeInvocation,
+    target_state: GeneratedExportTreeTargetStateReceipt,
+    comparison: RenderComparison,
+) -> None:
     expected = invocation.expected_manifest_sha256
     if expected is None or re.fullmatch(SHA256_PATTERN, expected) is None:
         raise ValueError("republish requires an exact lowercase 64-character target manifest sha256")
@@ -602,8 +630,13 @@ def require_republication_eligibility(
         )
     if comparison.modelo != invocation.modelo or comparison.revision != invocation.revision:
         raise ValueError("republish comparison identity differs from the explicitly selected target")
-    if comparison.disposition_class == "provenance_only":
-        return
+
+
+def _require_republication_record_disposition(
+    invocation: GeneratedTreeInvocation,
+    comparison: RenderComparison,
+    dispositions: tuple[GeneratedTreeRecordDriftDisposition, ...] | None,
+) -> None:
     if comparison.disposition_class != "record_drift":
         raise ValueError(
             "republish admits attestation drift, or record drift a disposition explains; "
@@ -664,7 +697,7 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
     )
     require_republication_eligibility(prepared.invocation, target_state, comparison)
     validate_generated_export_tree(
-        context=_bootstrap_validation(prepared.validation),
+        context=prepared.validation,
         joined=prepared.inputs.joined,
         semantic_map=prepared.inputs.semantic_map,
         rendered=rendered,
@@ -763,23 +796,20 @@ def target_currentness(
     selected = effective_authority.modelo(modelo).revisions.get(revision)
     if selected is None:
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
-    if source_ref is None:
-        design_refs = tuple(
-            ref
-            for ref in selected.source_refs
-            if (source := effective_authority.catalogues.sources.get(ref)) is not None
-            and source.kind == "record_design"
-            and source.record_design_epoch is not None
-        )
-        if len(design_refs) != 1:
-            raise ValueError(f"{modelo}/{revision} requires an explicit record-design source for currentness")
-        source_ref = str(design_refs[0])
     effective_filing_year = selected.valid_from.year if filing_year is None else filing_year
     effective_period = period or str(selected.period_selector.periods_for_year(effective_filing_year)[0])
+    selected_source_ref, _epoch = select_revision_record_design_source(
+        effective_authority,
+        modelo=modelo,
+        revision=revision,
+        filing_year=effective_filing_year,
+        period=effective_period,
+        source_ref=source_ref,
+    )
     invocation = GeneratedTreeInvocation(
         modelo,
         revision,
-        source_ref,
+        str(selected_source_ref),
         effective_filing_year,
         effective_period,
     )
@@ -788,62 +818,86 @@ def target_currentness(
             prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority),
             selected.effective_authority_grade,
         )
-        if not prepared.target_export_root.exists():
-            check_prepared_invocation(prepared)
-            return TargetCurrentnessFact(
-                modelo=modelo,
-                revision=revision,
-                state=TargetCurrentnessState.NEVER_COMMITTED,
-                detail="the target rendered successfully but has no committed export tree",
-            )
-        try:
-            check_prepared_invocation(prepared)
-        except (OSError, RegistryError, ValueError) as error:
-            candidate_export_root = prepared.candidate_root / "modelos" / modelo / "revisions" / revision / "export"
-            comparison: RenderComparison | None = None
-            try:
-                if not candidate_export_root.exists():
-                    _render_candidate(prepared)
-                comparison = compare_export_tree_roots(
-                    modelo=modelo,
-                    revision=revision,
-                    layout_id=prepared.inputs.layout_id,
-                    committed_root=prepared.target_export_root,
-                    rendered_root=candidate_export_root,
-                )
-            except (OSError, RegistryError, ValueError):
-                pass
-            if comparison is not None:
-                state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
-                # A stale manifest's refusal names the digest that failed; the
-                # members that differ from a fresh render say which input moved.
-                detail = str(error)
-                if comparison.provenance_fields:
-                    detail = f"{detail}; manifest members differing from a fresh render: " + ", ".join(
-                        comparison.provenance_fields
-                    )
-                return TargetCurrentnessFact(
-                    modelo=modelo,
-                    revision=revision,
-                    state=state,
-                    differing=comparison.differing,
-                    only_committed=comparison.only_committed,
-                    only_rendered=comparison.only_rendered,
-                    serialization_only=comparison.serialization_only,
-                    provenance_fields=comparison.provenance_fields,
-                    detail=detail,
-                )
-            return TargetCurrentnessFact(
-                modelo=modelo,
-                revision=revision,
-                state=TargetCurrentnessState.DRIFTED,
-                detail=str(error),
-            )
+        return _target_currentness_for_prepared(modelo, revision, prepared)
+
+
+def _target_currentness_for_prepared(
+    modelo: str,
+    revision: str,
+    prepared: PreparedGeneratedTreeInvocation,
+) -> TargetCurrentnessFact:
+    if not prepared.target_export_root.exists():
+        check_prepared_invocation(prepared)
+        return TargetCurrentnessFact(
+            modelo=modelo,
+            revision=revision,
+            state=TargetCurrentnessState.NEVER_COMMITTED,
+            detail="the target rendered successfully but has no committed export tree",
+        )
+    try:
+        check_prepared_invocation(prepared)
+    except (OSError, RegistryError, ValueError) as error:
+        return _classify_target_currentness_failure(prepared, error)
     return TargetCurrentnessFact(
         modelo=modelo,
         revision=revision,
         state=TargetCurrentnessState.CURRENT,
         detail="fresh canonical output matches the committed target",
+    )
+
+
+def _classify_target_currentness_failure(
+    prepared: PreparedGeneratedTreeInvocation,
+    error: OSError | RegistryError | ValueError,
+) -> TargetCurrentnessFact:
+    modelo = prepared.invocation.modelo
+    revision = prepared.invocation.revision
+    candidate_export_root = prepared.candidate_root / "modelos" / modelo / "revisions" / revision / "export"
+    comparison: RenderComparison | None = None
+    try:
+        if not candidate_export_root.exists():
+            _render_candidate(prepared)
+        comparison = compare_export_tree_roots(
+            modelo=modelo,
+            revision=revision,
+            layout_id=prepared.inputs.layout_id,
+            committed_root=prepared.target_export_root,
+            rendered_root=candidate_export_root,
+        )
+    except (OSError, RegistryError, ValueError):
+        pass
+    if comparison is None:
+        return TargetCurrentnessFact(
+            modelo=modelo,
+            revision=revision,
+            state=TargetCurrentnessState.DRIFTED,
+            detail=str(error),
+        )
+    return _target_currentness_comparison_fact(modelo, revision, comparison, error)
+
+
+def _target_currentness_comparison_fact(
+    modelo: str,
+    revision: str,
+    comparison: RenderComparison,
+    error: OSError | RegistryError | ValueError,
+) -> TargetCurrentnessFact:
+    state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
+    # A stale manifest's refusal names the digest that failed; the members that
+    # differ from a fresh render say which input moved.
+    detail = str(error)
+    if comparison.provenance_fields:
+        detail = f"{detail}; manifest members differing from a fresh render: " + ", ".join(comparison.provenance_fields)
+    return TargetCurrentnessFact(
+        modelo=modelo,
+        revision=revision,
+        state=state,
+        differing=comparison.differing,
+        only_committed=comparison.only_committed,
+        only_rendered=comparison.only_rendered,
+        serialization_only=comparison.serialization_only,
+        provenance_fields=comparison.provenance_fields,
+        detail=detail,
     )
 
 

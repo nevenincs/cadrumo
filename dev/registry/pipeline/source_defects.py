@@ -47,6 +47,7 @@ __all__ = [
     "NoteGovernedAmountDeclaration",
     "NoteStatedApplicabilityDeclaration",
     "SourceDefectDeclaration",
+    "SupplementalBlankRunDeclaration",
     "adjudicated_literal_for",
     "note_governed_amount_for",
     "note_governed_amounts_for",
@@ -54,10 +55,63 @@ __all__ = [
     "note_stated_applicability_reading_for",
     "note_states_only_applicability",
     "source_defects_for",
+    "supplemental_blank_run_for",
     "validate_note_governed_amount_declarations",
     "validate_note_stated_applicability_declarations",
     "validate_source_defect_declarations",
 ]
+
+
+class SupplementalBlankRunDeclaration(BaseModel):
+    """One BOE table row corroborating a collapsed AEAT PDF text-layer row."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=False)
+
+    source_ref: str = Field(min_length=1)
+    pdf_filename: str = Field(min_length=1)
+    pdf_byte_count: int = Field(gt=0)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sheet: str = Field(min_length=1)
+    pdf_last_source_row: int = Field(gt=0)
+    pdf_last_offset: int = Field(gt=0)
+    pdf_last_length: int = Field(gt=0)
+    pdf_embedded_position_text: str = Field(min_length=1)
+    pdf_embedded_role_text: str = Field(min_length=1)
+    boe_legal_ref: str = Field(min_length=1)
+    boe_corpus_path: str = Field(min_length=1)
+    boe_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    boe_html_line: int = Field(gt=0)
+    offset: int = Field(gt=0)
+    length: int = Field(gt=0)
+    description: Literal["Blancos"]
+
+
+_SUPPLEMENTAL_BLANK_RUNS_BY_REF: dict[str, SupplementalBlankRunDeclaration] = {
+    "aeat-dr-349-2020-current": SupplementalBlankRunDeclaration(
+        source_ref="aeat-dr-349-2020-current",
+        pdf_filename="01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf",
+        pdf_byte_count=915219,
+        source_sha256="874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335",
+        sheet="Tipo 2 - Registro De Operador Intracomunitario",
+        pdf_last_source_row=433,
+        pdf_last_offset=196,
+        pdf_last_length=40,
+        pdf_embedded_position_text="236 500",
+        pdf_embedded_role_text="BLANCOS",
+        boe_legal_ref="orden-hac-174-2020:art-1",
+        boe_corpus_path="corpus/normatives/html/orden-hac-174-2020.html",
+        boe_sha256="913b06641e2abed6ae4d5c089c2f68fc2474b16a2d606a79cdc138b75264d058",
+        boe_html_line=964,
+        offset=236,
+        length=265,
+        description="Blancos",
+    ),
+}
+
+
+def supplemental_blank_run_for(source_ref: str) -> SupplementalBlankRunDeclaration | None:
+    """Return only the exact dual-source blank-run adjudication, if one exists."""
+    return _SUPPLEMENTAL_BLANK_RUNS_BY_REF.get(source_ref)
 
 
 class SourceDefectDeclaration(BaseModel):

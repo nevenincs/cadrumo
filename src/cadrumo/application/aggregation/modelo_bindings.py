@@ -34,7 +34,6 @@ from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.casilla_value_absence import AbsentCasillaReading
 from ...core.i18n.translatable import Translatable as tr
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
@@ -43,6 +42,7 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_temporal import NonCalculation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -234,10 +234,6 @@ def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
     return "[" + ", ".join(categories) + "]"
 
 
-_M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
-    "rendimientos_integros",
-    surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
-)
 _M131_AGRARIAN_ACTIVITY_SELECTOR = "modelo-131:selector-m036-volumen-ingresos-agrario"
 
 
@@ -254,6 +250,30 @@ def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId
             context={"modelo": context.modelo, "target_count": len(targets)},
         )
     return next(iter(targets))
+
+
+def _irnr_handoff_bound_inputs(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Hand each ledger IRNR handoff binding's resolved value to the casilla its provider targets.
+
+    The casilla is a manual box the filer types outside ledger mode, so no casilla
+    binds it; the binding declares itself an application handoff and this resolver,
+    reached only in ledger mode, writes its value there.
+    """
+    inputs: dict[CasillaId, Decimal] = {}
+    for binding in revision.bindings:
+        if not isinstance(binding.provider, LedgerIrnrIncomeProvider):
+            continue
+        if not isinstance(binding.applicability, NonCalculation):
+            continue
+        value = binding_values.get(binding.id)
+        if value is None:
+            continue
+        target = binding.provider.target_casilla_id
+        inputs[target] = inputs.get(target, Decimal("0")) + value
+    return inputs
 
 
 def _irnr_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
@@ -1238,12 +1258,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            bound_inputs_by_casilla_id={
-                _M210_RENDIMIENTOS_INTEGROS_CASILLA: AbsentCasillaReading.SPARSE_FOLD_TOTAL.read(
-                    aggregation.casilla_aggregation.casilla_values,
-                    _M210_RENDIMIENTOS_INTEGROS_CASILLA,
-                ),
-            },
+            bound_inputs_by_casilla_id=_irnr_handoff_bound_inputs(context.revision, binding_values),
             detail_rows=_irnr_annual_agrupacion_renta_rows(context, aggregation.observations),
             source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
             diagnostics=out_of_window_summary_diagnostics(

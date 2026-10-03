@@ -35,6 +35,7 @@ from .record_design_intermediate import (
     intermediate_anchor_key,
     intermediate_record_key,
 )
+from .record_design_revision_projection import project_record_design_for_revision
 from .semantic_map import (
     SemanticMap,
     SemanticMapEntry,
@@ -216,6 +217,7 @@ def design_view(joined_field: JoinedRecordDesignField) -> RecordDesignIntermedia
             "length": part.length,
             "aeat_type": part.aeat_type,
             "content": part.statement,
+            "semantic_part_offset": part.offset,
         },
     )
 
@@ -250,6 +252,7 @@ def join_record_design_semantics(
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> JoinedRecordDesign:
     """Join static parser/map evidence through a non-filing revision inspection."""
+    intermediate = project_record_design_for_revision(intermediate, inspection.revision_id)
     validated = _validate_semantic_map_with_admissions(
         semantic_map,
         intermediate,
