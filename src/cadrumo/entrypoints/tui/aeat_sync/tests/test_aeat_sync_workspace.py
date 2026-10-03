@@ -1354,3 +1354,83 @@ async def test_every_comparison_surface_shows_both_values_or_neither(screen_type
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"{type(screen).__name__} at {width} columns shows half a comparison: {sorted(keys)}"
     )
+
+
+def test_controller_pairs_the_single_operation_with_its_contract_joined_action() -> None:
+    """A row's catalogue-only actions do not hide the operation its contract joins."""
+    controller = _controller(
+        overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+        action_id="operator.live.filed.pull_all",
+        operation_id="live.filed-history.pull",
+    )
+    pull = ActionReference(action_id="operator.live.filed.pull_all")
+    listing = ActionReference(action_id="operator.modelo.filing_record.list")
+    operation: OperationDefinitionId = "live.filed-history.pull"
+
+    assert controller.admitted_operation((listing, pull), (operation,)) == AeatSyncOperationRequestV1(
+        action=pull, operation=operation
+    )
+    assert controller.admitted_operation((listing,), (operation,)) is None
+    assert controller.admitted_operation((listing, pull), (operation, "user-profile.censo-review")) is None
+
+
+@pytest.mark.asyncio
+async def test_reader_projected_filed_history_door_renders_and_hands_off_before_any_local_filing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The real overview row pairs the pull with the local filing-record listing.
+
+    A first-run profile holds no local filing, yet both the overview and the
+    filed-declarations zone must offer one filed-history door, hand off its
+    exact request, and state no refusal beside it.
+    """
+    from .....application.aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+    contracts = OperationPublicContractSetV1.build(
+        (*_contracts().definitions, *_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions)
+    )
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id=_BUCKET_ID,
+        subject_key=_SUBJECT_KEY,
+        observed_at=_T2,
+        filings=(),
+        operation_contracts=contracts,
+        censo_values={},
+    )
+    filed_row = next(row for row in projection.overview if row.area is AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert {str(action.action_id) for action in filed_row.supported_actions} == {
+        "operator.live.filed.pull_all",
+        "operator.modelo.filing_record.list",
+    }
+    calls: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        calls.append(request)
+        return _started_operation_controller()
+
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_handoff=handoff,
+        operation_contracts=contracts,
+    )
+    pull_label = tr("tui.aeat_sync.action.pull_filed_all")
+    for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
+        monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
+        async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            doors = [button for button in screen.query(Button) if str(button.label) == pull_label]
+            assert len(doors) == 1
+            status = str(screen.query_one("#aeat-sync-status", Static).render())
+            assert tr("tui.aeat_sync.refusal.operation_handoff") not in status
+            doors[0].scroll_visible(animate=False)
+            await pilot.pause()
+            await pilot.click(doors[0])
+            await pilot.pause()
+            assert doors[0].disabled
+
+    expected = AeatSyncOperationRequestV1(
+        action=ActionReference(action_id="operator.live.filed.pull_all"),
+        operation="live.filed-history.pull",
+    )
+    assert calls == [expected, expected]

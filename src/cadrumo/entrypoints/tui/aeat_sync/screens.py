@@ -225,6 +225,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         super().__init__(id=id)
         self.controller = controller
         self._requests: dict[str, AeatSyncOperationRequestV1] = {}
+        self._unoffered_operations: set[str] = set()
         self._active_operation_request: AeatSyncOperationRequestV1 | None = None
         self._active_operation_controller: OperationControllerPort | None = None
         self._operation_button_epoch = 0
@@ -261,6 +262,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self._render_navigation(navigation)
         rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
         self.populate_rows(rows)
+        self._render_operation_refusal()
         self._render_zone_status(rows)
         self._restore_focus(
             navigation,
@@ -329,6 +331,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             button.remove()
         self._operation_button_epoch += 1
         self._requests.clear()
+        self._unoffered_operations.clear()
         self._consumed_request_ids.clear()
         self._consumed_notification_ids.clear()
         self._notification_rows.clear()
@@ -337,6 +340,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self.query_one("#aeat-sync-status", Static).update("")
         self._render_navigation(navigation)
         self.populate_rows(rows)
+        self._render_operation_refusal()
         self._render_zone_status(rows)
         self._restore_focus(navigation, rows)
 
@@ -345,16 +349,24 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         raise NotImplementedError
 
     def add_operation(self, row: _OperationRow) -> None:
-        """Render an explicit mutation button only for a closed admitted pair."""
+        """Render an explicit mutation button only for a closed admitted pair.
+
+        One admitted operation gets one door however many areas declare it.
+        An operation no door offers is recorded, and the refusal is stated
+        once the screen's rows are in; catalogue actions that start no
+        operation are not handoff candidates and refuse nothing.
+        """
         request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
-        if request is None:
-            if row.supported_actions or row.supported_operations:
-                self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.refusal.operation_handoff"))
-            return
-        label_key = _OPERATION_LABEL_LOCALE_KEYS.get((str(request.action.action_id), str(request.operation)))
+        label_key = (
+            None
+            if request is None
+            else _OPERATION_LABEL_LOCALE_KEYS.get((str(request.action.action_id), str(request.operation)))
+        )
         # Without a host door the button could only refuse; say so once instead.
-        if label_key is None or self.controller.operation_handoff is None:
-            self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.refusal.operation_handoff"))
+        if request is None or label_key is None or self.controller.operation_handoff is None:
+            self._unoffered_operations.update(str(operation) for operation in row.supported_operations)
+            return
+        if request in self._requests.values():
             return
         button_id = (
             f"aeat-sync-operation-{len(self._requests)}"
@@ -365,6 +377,12 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self.query_one("#aeat-sync-page", ContentScroll).mount(
             Button(tr(label_key), id=button_id, classes="aeat-sync-operation")
         )
+
+    def _render_operation_refusal(self) -> None:
+        """State the handoff refusal only for an operation no rendered door offers."""
+        offered = {str(request.operation) for request in self._requests.values()}
+        if self._unoffered_operations - offered:
+            self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.refusal.operation_handoff"))
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Hand the exact admitted request to the optional owning host door."""

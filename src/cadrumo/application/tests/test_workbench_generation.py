@@ -1367,3 +1367,54 @@ def test_a_resident_s_holiday_territory_survives_the_registered_result_round_tri
     assert restored == generation
     assert restored.declarations_calendar.projection is not None
     assert restored.declarations_calendar.projection.entries == calendar.entries
+
+
+def test_stored_filed_captures_reach_aeat_sync_through_the_calendar_reader(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """AEAT Sync reads the same stored captures the calendar does, in the same capture.
+
+    The profile holds no local filing: a captured submission must still appear
+    as an AEAT-only declaration rather than leaving the area never captured.
+    """
+    from dataclasses import replace
+
+    from ..overview.evidence import AeatCalendarEvidenceSources, CalendarEvidenceReadOutcome
+    from ..overview.tests.calendar_test_support import filed_declaration_observation
+
+    captured_at = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
+    reads: list[None] = []
+
+    def read_captures() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+        reads.append(None)
+        return CalendarEvidenceReadOutcome(
+            state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=captured_at),
+            value=AeatCalendarEvidenceSources(
+                filed_declaration_observations=(filed_declaration_observation(artefacts=()),)
+            ),
+        )
+
+    profile = _Repository(
+        _profile_record(authority_operation, facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),))
+    )
+    door = replace(
+        _plain_generation_door(authority_operation, profile=profile),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
+        ),
+        calendar_aeat_reader=read_captures,
+    )
+
+    generation = InstalledWorkbenchGenerationProviderV1(door)()
+
+    assert len(reads) == 1
+    projection = generation.aeat_sync.projection
+    assert projection is not None
+    (row,) = projection.filed_declarations
+    assert (str(row.modelo), row.filing_year, row.period.registry_token) == ("303", 2025, "1T")
+    assert row.local_filing_state.value == "not_observed"
+    assert row.aeat_observation_state.value == "submitted"
+    assert row.aeat_observed_at == captured_at
+    assert row.justificante_state.value == "not_observed"
+    filed = next(item for item in projection.overview if item.area.value == "filed_declarations")
+    assert (filed.local_state.value, filed.aeat_state.value) == ("absent", "present")

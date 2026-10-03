@@ -8,12 +8,16 @@ reader spends all three rather than collapsing the first two.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
 
+from ....core.period import Period
+from ....domain.modelos.filing_record import ModeloRecord
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...calculations.ports import FiledDeclaracionObservationProtocol
 from ...live.notification_ports import NotificationsPorts
 from ...live.notifications_read_operation import (
     build_notifications_list_definition,
@@ -23,15 +27,26 @@ from ...live.tests.unopened_live_ports import unopened_browser_session_factory, 
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ...operator_actions.models import ActionReference
+from ...overview.evidence import (
+    AeatCalendarEvidenceSources,
+    CalendarEvidenceProjection,
+    CalendarEvidenceReadOutcome,
+    LocalCalendarEvidenceSources,
+    build_calendar_evidence_projection,
+)
+from ...overview.home import HomeAvailability, HomeZoneState
 from ...user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from ...user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ..workspace import (
+    AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
     AeatSyncDiscrepancyKind,
+    AeatSyncJustificanteState,
+    AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
     AeatSyncSourceState,
     AeatSyncWorkspaceAvailability,
@@ -40,6 +55,7 @@ from ..workspace import (
     AeatSyncWorkspaceOverviewRowV1,
     AeatSyncWorkspaceProjectionError,
     AeatSyncWorkspaceSource,
+    AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneObservationV1,
     project_aeat_sync_workspace,
 )
@@ -361,3 +377,180 @@ def test_an_uncomposed_custody_reader_leaves_notifications_unobserved() -> None:
 
     assert row.local_state is AeatSyncSourceState.NOT_OBSERVED
     assert row.local_observed_at is None
+
+
+_FILED_SUBJECT = "X1234567L"
+_CAPTURED_AT = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
+
+
+def _filed_evidence(
+    observations: tuple[FiledDeclaracionObservationProtocol, ...] = (),
+    *,
+    availability: HomeAvailability = HomeAvailability.AVAILABLE,
+    verified: bool = False,
+) -> CalendarEvidenceProjection:
+    """Join stored captures through the calendar's own evidence provider."""
+    from ...overview.tests.calendar_test_support import FILED_JUSTIFICANTE_STORAGE_REF
+
+    observable = availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+    state = HomeZoneState(
+        availability=availability,
+        observed_at=_CAPTURED_AT if observable else None,
+        reason_code=None
+        if availability is HomeAvailability.AVAILABLE
+        else "workbench.calendar.aeat_reader_unavailable",
+    )
+    return build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome(
+            state=HomeZoneState(availability=HomeAvailability.AVAILABLE),
+            value=LocalCalendarEvidenceSources(),
+        ),
+        aeat=CalendarEvidenceReadOutcome(
+            state=state,
+            value=(
+                AeatCalendarEvidenceSources(
+                    filed_declaration_observations=observations,
+                    verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,) if verified else (),
+                    verified_filed_declaration_artefact_csvs=(
+                        ((FILED_JUSTIFICANTE_STORAGE_REF, "CSVFILED3031T2025"),) if verified else ()
+                    ),
+                )
+                if observable
+                else None
+            ),
+        ),
+        expected_tax_id=_FILED_SUBJECT,
+    )
+
+
+def _filed_projection(filed_evidence: CalendarEvidenceProjection | None, *, filings: tuple[ModeloRecord, ...] = ()):
+    return read_local_aeat_sync_workspace_projection(
+        bucket_id=_BUCKET,
+        subject_key=_FILED_SUBJECT,
+        observed_at=_NOW,
+        filings=filings,
+        operation_contracts=_unrelated_contracts(),
+        filed_evidence=filed_evidence,
+    )
+
+
+def _source(projection, zone: AeatSyncWorkspaceZone, source: AeatSyncWorkspaceSource):
+    state = next(item for item in projection.zones if item.zone is zone)
+    return next(item for item in state.sources if item.source is source)
+
+
+def test_captured_filings_reach_filed_declarations_with_receipt_and_submission_apart() -> None:
+    """Stored captures fill the AEAT side, including declarations with no local filing.
+
+    The 1T capture carries a verified justificante and joins the local filing;
+    the 2T capture has no local filing and no verified receipt. Both must show
+    the submission AEAT registered, and only the first may claim a receipt.
+    """
+    from ...overview.tests.calendar_test_support import (
+        filed_declaration_artefact,
+        filed_declaration_observation,
+        modelo_record,
+    )
+
+    first = filed_declaration_observation(artefacts=(filed_declaration_artefact(),))
+    second = replace(
+        filed_declaration_observation(artefacts=(), expediente_id="22222222222222222222"),
+        _period=Period.from_year_and_code(2025, "2T"),
+    )
+    projection = _filed_projection(_filed_evidence((first, second), verified=True), filings=(modelo_record(),))
+
+    rows = {row.period.registry_token: row for row in projection.filed_declarations}
+    assert set(rows) == {"1T", "2T"}
+    joined, aeat_only = rows["1T"], rows["2T"]
+    assert joined.local_filing_state is AeatSyncLocalFilingState.FILED
+    assert joined.aeat_observation_state is AeatSyncAeatObservationState.SUBMITTED
+    assert joined.aeat_observed_at == _CAPTURED_AT
+    assert joined.justificante_state is AeatSyncJustificanteState.VERIFIED
+    assert aeat_only.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED
+    assert aeat_only.local_filed_at is None
+    assert aeat_only.aeat_observation_state is AeatSyncAeatObservationState.SUBMITTED
+    assert aeat_only.justificante_state is AeatSyncJustificanteState.NOT_OBSERVED
+    assert aeat_only.justificante_observed_at is None
+
+    source = _source(
+        projection, AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS
+    )
+    assert source.availability is AeatSyncWorkspaceAvailability.AVAILABLE
+    assert (source.observed_at, source.item_count) == (_CAPTURED_AT, 2)
+    overview = _overview_row(projection, AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert (overview.local_state, overview.aeat_state) == (AeatSyncSourceState.PRESENT, AeatSyncSourceState.PRESENT)
+    assert overview.aeat_observed_at == _CAPTURED_AT
+    assert overview.discrepancy_kind is AeatSyncDiscrepancyKind.NONE
+
+
+def test_a_first_run_capture_is_aeat_only_and_comparison_stays_unread() -> None:
+    """No local filing yet: the area is AEAT-only, and figures were never compared.
+
+    Captures name submissions, not casilla values, so the comparison zone must
+    not turn its unread AEAT side into an observed zero discrepancies.
+    """
+    from ...overview.tests.calendar_test_support import filed_declaration_observation
+
+    projection = _filed_projection(_filed_evidence((filed_declaration_observation(artefacts=()),)))
+
+    overview = _overview_row(projection, AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert (overview.local_state, overview.aeat_state) == (AeatSyncSourceState.ABSENT, AeatSyncSourceState.PRESENT)
+    assert overview.discrepancy_kind is AeatSyncDiscrepancyKind.AEAT_ONLY
+    comparison_row = _overview_row(projection, AeatSyncOverviewArea.EVIDENCE_COMPARISON)
+    assert comparison_row.aeat_state is AeatSyncSourceState.NOT_OBSERVED
+    comparison = _source(
+        projection, AeatSyncWorkspaceZone.EVIDENCE_COMPARISON, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS
+    )
+    assert comparison.availability is AeatSyncWorkspaceAvailability.UNAVAILABLE
+    assert comparison.refusal == "workbench.aeat_sync.aeat_figures_not_read"
+    zone = next(item for item in projection.zones if item.zone is AeatSyncWorkspaceZone.EVIDENCE_COMPARISON)
+    assert zone.item_count is None
+
+
+def test_another_taxpayers_capture_is_an_observed_zero_not_a_filing() -> None:
+    """Exact-subject scoping comes from the shared join, and the read still happened."""
+    from ...overview.tests.calendar_test_support import filed_declaration_observation
+
+    foreign = replace(filed_declaration_observation(artefacts=()), _authenticated_identity="00000001R")
+    projection = _filed_projection(_filed_evidence((foreign,)))
+
+    assert projection.filed_declarations == ()
+    source = _source(
+        projection, AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS
+    )
+    assert (source.availability, source.item_count) == (AeatSyncWorkspaceAvailability.AVAILABLE, 0)
+    assert _overview_row(projection, AeatSyncOverviewArea.FILED_DECLARATIONS).aeat_state is AeatSyncSourceState.ABSENT
+
+
+@pytest.mark.parametrize(
+    ("filed_evidence", "availability", "refusal"),
+    (
+        (None, AeatSyncWorkspaceAvailability.NEVER_CAPTURED, "workbench.aeat_sync.never_pulled"),
+        (
+            "never_captured",
+            AeatSyncWorkspaceAvailability.NEVER_CAPTURED,
+            "workbench.aeat_sync.never_pulled",
+        ),
+        (
+            "unavailable",
+            AeatSyncWorkspaceAvailability.UNAVAILABLE,
+            "workbench.calendar.aeat_reader_unavailable",
+        ),
+    ),
+)
+def test_an_unreadable_capture_store_stays_distinct_from_one_never_pulled(
+    filed_evidence: str | None,
+    availability: AeatSyncWorkspaceAvailability,
+    refusal: str,
+) -> None:
+    """Never captured, unreadable and observed-empty are three different answers."""
+    evidence = None if filed_evidence is None else _filed_evidence(availability=HomeAvailability(filed_evidence))
+    projection = _filed_projection(evidence)
+
+    source = _source(
+        projection, AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS
+    )
+    assert (source.availability, source.refusal, source.item_count) == (availability, refusal, None)
+    assert projection.filed_declarations == ()
+    overview = _overview_row(projection, AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert overview.aeat_state is AeatSyncSourceState.NOT_OBSERVED

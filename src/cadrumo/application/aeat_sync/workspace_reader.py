@@ -6,11 +6,12 @@ governs this surface is explicit: initial load is local-only, and reaching the
 AEAT is always an operator action with visible progress and result.
 
 So the projection a session opens with reports what is genuinely local — the
-profile record and the local filing records — and states, per source, why the
-rest is empty. An AEAT authority is NEVER CAPTURED because nothing has been
-pulled yet; a local authority with no installed row reader is UNAVAILABLE. A
-zero filing count is neither of those: it is an observed zero, and it stays
-distinguishable from both.
+profile record, the local filing records and stored filed-declaration captures,
+the latter through the same evidence join the overview calendar uses — and
+states, per source, why the rest is empty. An AEAT authority with no stored
+capture is NEVER CAPTURED; a local authority with no installed row reader is
+UNAVAILABLE. A zero filing count is neither of those: it is an observed zero,
+and it stays distinguishable from both.
 
 What the workspace does offer, even before a pull, are the pull actions
 themselves, joined to the operation contracts the session actually composed —
@@ -23,10 +24,13 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Final
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ...domain.modelos.codes import ModeloCode
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
+from ..overview.calendar_models import OverviewAeatSubmissionState
+from ..overview.home import HomeAvailability
 from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from .workspace import (
     AeatSyncAeatObservationState,
@@ -53,9 +57,12 @@ from .workspace import (
 )
 
 if TYPE_CHECKING:
+    from ...core.period import Period
     from ...core.time.utc import UtcInstant
     from ...domain.modelos.filing_record import ModeloRecord
     from ..operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
+    from ..overview.calendar_models import OverviewCalendarFilingEvidence
+    from ..overview.evidence import CalendarEvidenceProjection
 
 _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
     {
@@ -116,6 +123,84 @@ _LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
 }
 """Sources whose refusal is a composition gap rather than a missing authority."""
 
+_AEAT_FIGURES_NOT_READ: Final[str] = "workbench.aeat_sync.aeat_figures_not_read"
+"""Filed-declaration captures were read, but they hold no declaration figures.
+
+Evidence comparison compares figures. A captured register row names a
+submission, not its casilla values, so that zone's AEAT side stays unread:
+reporting it observable would publish zero discrepancies for a comparison
+nobody ran.
+"""
+
+_AEAT_OBSERVATION_STATES: Final[dict[OverviewAeatSubmissionState, AeatSyncAeatObservationState]] = {
+    OverviewAeatSubmissionState.SUBMITTED_OBSERVED: AeatSyncAeatObservationState.SUBMITTED,
+    OverviewAeatSubmissionState.ACCEPTED: AeatSyncAeatObservationState.ACCEPTED,
+    # A verified receipt is carried on the justificante axis; the submission
+    # axis claims no more than the register showed.
+    OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: AeatSyncAeatObservationState.SUBMITTED,
+}
+
+type _NaturalKey = tuple[str, int, str]
+
+
+def _observed_filings(
+    filed_evidence: CalendarEvidenceProjection | None,
+) -> dict[_NaturalKey, OverviewCalendarFilingEvidence]:
+    """Index the uncontested AEAT filings the shared calendar evidence join observed.
+
+    Rows whose register evidence conflicts or raises a concern are not
+    promoted: they cannot establish a submission, and this surface has no
+    state that would show them as anything but observed.
+    """
+    if filed_evidence is None:
+        return {}
+    return {
+        (str(row.modelo), int(row.filing_year), row.period.registry_token): row
+        for row in filed_evidence.evidence
+        if row.modelo is not None
+        and row.filing_year is not None
+        and row.period is not None
+        and row.aeat_filed
+        and row.aeat_submission_state in _AEAT_OBSERVATION_STATES
+    }
+
+
+def _filed_source_observation(
+    filed_evidence: CalendarEvidenceProjection | None,
+    *,
+    observed_count: int,
+) -> AeatSyncWorkspaceSourceObservationV1:
+    """Carry the stored filed-declaration read's own availability and capture time.
+
+    `None` means this session composed no read of the stored captures, which
+    keeps the pre-pull answer. Otherwise the calendar read's availability is
+    preserved: never captured, unavailable and stale stay distinct, and an
+    available read with no observed filing is an observed zero.
+    """
+    state = None if filed_evidence is None else filed_evidence.aeat_state
+    if state is None or state.availability is HomeAvailability.NEVER_CAPTURED:
+        return AeatSyncWorkspaceSourceObservationV1(
+            source=AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+            availability=AeatSyncWorkspaceAvailability.NEVER_CAPTURED,
+            refusal=_NEVER_PULLED,
+        )
+    availability = AeatSyncWorkspaceAvailability(state.availability.value)
+    if availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}:
+        return AeatSyncWorkspaceSourceObservationV1(
+            source=AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+            availability=availability,
+            refusal=state.reason_code,
+        )
+    if state.observed_at is None:
+        raise AeatSyncWorkspaceProjectionError("observed filed-declaration evidence lacks its capture time")
+    return AeatSyncWorkspaceSourceObservationV1(
+        source=AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+        availability=availability,
+        observed_at=state.observed_at,
+        refusal=state.reason_code,
+        item_count=observed_count,
+    )
+
 
 def _local_observation(
     source: AeatSyncWorkspaceSource,
@@ -141,11 +226,21 @@ def _local_observation(
 def _observation(
     source: AeatSyncWorkspaceSource,
     *,
+    zone: AeatSyncWorkspaceZone,
     observed_at: UtcInstant,
     profile_count: int,
     filing_count: int,
     custody_count: int | None,
+    filed_source: AeatSyncWorkspaceSourceObservationV1,
 ) -> AeatSyncWorkspaceSourceObservationV1:
+    if source is AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS:
+        if zone is AeatSyncWorkspaceZone.EVIDENCE_COMPARISON and filed_source.observed_at is not None:
+            return AeatSyncWorkspaceSourceObservationV1(
+                source=source,
+                availability=AeatSyncWorkspaceAvailability.UNAVAILABLE,
+                refusal=_AEAT_FIGURES_NOT_READ,
+            )
+        return filed_source
     if source in _AEAT_SOURCES:
         return AeatSyncWorkspaceSourceObservationV1(
             source=source,
@@ -277,6 +372,31 @@ def _local_area_is_populated(
     return filing_count > 0
 
 
+def _aeat_side(
+    area: AeatSyncOverviewArea,
+    *,
+    filed_source: AeatSyncWorkspaceSourceObservationV1,
+) -> tuple[AeatSyncSourceState, UtcInstant | None]:
+    """State what stored AEAT evidence establishes for one area, and when."""
+    if area is AeatSyncOverviewArea.FILED_DECLARATIONS and filed_source.observed_at is not None:
+        present = bool(filed_source.item_count)
+        return (AeatSyncSourceState.PRESENT if present else AeatSyncSourceState.ABSENT), filed_source.observed_at
+    return AeatSyncSourceState.NOT_OBSERVED, None
+
+
+def _area_discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState) -> AeatSyncDiscrepancyKind:
+    """Name the area-level outcome the two observed sides support."""
+    if AeatSyncSourceState.NOT_OBSERVED in {local, aeat}:
+        return AeatSyncDiscrepancyKind.UNOBSERVED
+    if local is aeat:
+        return AeatSyncDiscrepancyKind.NONE
+    if local is AeatSyncSourceState.ABSENT:
+        return AeatSyncDiscrepancyKind.AEAT_ONLY
+    if aeat is AeatSyncSourceState.ABSENT:
+        return AeatSyncDiscrepancyKind.LOCAL_ONLY
+    return AeatSyncDiscrepancyKind.STATE_MISMATCH
+
+
 def _overview_row(
     area: AeatSyncOverviewArea,
     *,
@@ -284,11 +404,13 @@ def _overview_row(
     filing_count: int,
     custody_count: int | None,
     contracts: OperationPublicContractSetV1,
+    filed_source: AeatSyncWorkspaceSourceObservationV1,
 ) -> AeatSyncWorkspaceOverviewRowV1:
     """State only what the local side genuinely observed for this area.
 
-    The AEAT side is never observed before a pull, so every area's comparison
-    is UNOBSERVED.
+    Stored filed-declaration captures establish the filed area's AEAT side;
+    evidence comparison stays unobserved because captures hold no figures.
+    Every other area's AEAT side is unobserved before a pull.
 
     The local side is a THREE-way answer, not two. An area whose local source
     this session read reports PRESENT when it holds records and ABSENT when it
@@ -308,12 +430,14 @@ def _overview_row(
         )
         local_observed_at = observed_at
     actions, operations = _admitted_capabilities(area, contracts)
+    aeat_state, aeat_observed_at = _aeat_side(area, filed_source=filed_source)
     return AeatSyncWorkspaceOverviewRowV1(
         area=area,
         local_state=local_state,
-        aeat_state=AeatSyncSourceState.NOT_OBSERVED,
+        aeat_state=aeat_state,
+        aeat_observed_at=aeat_observed_at,
         local_observed_at=local_observed_at,
-        discrepancy_kind=AeatSyncDiscrepancyKind.UNOBSERVED,
+        discrepancy_kind=_area_discrepancy(local_state, aeat_state),
         supported_actions=actions,
         supported_operations=operations,
     )
@@ -389,44 +513,69 @@ def _filed_declaration_rows(
     subject_key: str,
     filings: tuple[ModeloRecord, ...],
     contracts: OperationPublicContractSetV1,
+    observed: Mapping[_NaturalKey, OverviewCalendarFilingEvidence],
+    aeat_observed_at: UtcInstant | None,
 ) -> tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...]:
-    """Show what this profile filed locally, with the AEAT side unobserved.
+    """Join what this profile filed locally with what stored AEAT captures observed.
 
-    The local half of this comparison is a fact the session already holds, and
-    withholding it until a pull happens would understate what the operator has
-    done. The AEAT half is NOT OBSERVED until they pull, and the justificante
-    with it -- a receipt cannot be confident about a submission nobody has
-    looked for.
+    The local half is a fact the session already holds, and withholding it
+    until a pull happens would understate what the operator has done. The AEAT
+    half comes from the shared calendar evidence join over stored captures:
+    an observed submission and a verified justificante stay separate axes, and
+    a declaration AEAT shows with no local filing still earns a row. Without a
+    capture both AEAT axes stay NOT OBSERVED.
 
     One row per address. A superseded record and its replacement describe the
     same declaration, so the row carries the LATEST filing for each address
     rather than one row per revision.
     """
     actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
-    latest: dict[tuple[str, int, str], ModeloRecord] = {}
+    latest: dict[_NaturalKey, ModeloRecord] = {}
     for record in filings:
         key = (str(record.modelo), int(record.filing_year), record.period.registry_token)
         current = latest.get(key)
         if current is None or record.filed_at > current.filed_at:
             latest[key] = record
-    return tuple(
-        AeatSyncWorkspaceFactV1(
-            bucket_id=bucket_id,
-            subject_key=subject_key,
-            row=AeatSyncWorkspaceFiledDeclarationRowV1(
-                modelo=record.modelo,
-                filing_year=record.filing_year,
-                period=record.period,
-                local_filing_state=AeatSyncLocalFilingState.FILED,
-                local_filed_at=record.filed_at,
-                aeat_observation_state=AeatSyncAeatObservationState.NOT_OBSERVED,
-                justificante_state=AeatSyncJustificanteState.NOT_OBSERVED,
-                supported_actions=actions,
-                supported_operations=operations,
-            ),
+    rows: list[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]] = []
+    for key in sorted(latest.keys() | observed.keys()):
+        record, evidence = latest.get(key), observed.get(key)
+        aeat_at = None if evidence is None else aeat_observed_at
+        verified = evidence is not None and evidence.justificante_verified
+        rows.append(
+            AeatSyncWorkspaceFactV1(
+                bucket_id=bucket_id,
+                subject_key=subject_key,
+                row=AeatSyncWorkspaceFiledDeclarationRowV1(
+                    modelo=record.modelo if record is not None else ModeloCode(key[0]),
+                    filing_year=key[1],
+                    period=record.period if record is not None else _evidence_period(evidence),
+                    local_filing_state=(
+                        AeatSyncLocalFilingState.NOT_OBSERVED if record is None else AeatSyncLocalFilingState.FILED
+                    ),
+                    local_filed_at=None if record is None else record.filed_at,
+                    aeat_observation_state=(
+                        AeatSyncAeatObservationState.NOT_OBSERVED
+                        if evidence is None
+                        else _AEAT_OBSERVATION_STATES[evidence.aeat_submission_state]
+                    ),
+                    aeat_observed_at=aeat_at,
+                    justificante_state=(
+                        AeatSyncJustificanteState.VERIFIED if verified else AeatSyncJustificanteState.NOT_OBSERVED
+                    ),
+                    justificante_observed_at=aeat_at if verified else None,
+                    supported_actions=actions,
+                    supported_operations=operations,
+                ),
+            )
         )
-        for record in sorted(latest.values(), key=lambda item: (str(item.modelo), item.filing_year))
-    )
+    return tuple(rows)
+
+
+def _evidence_period(evidence: OverviewCalendarFilingEvidence | None) -> Period:
+    """Return the period of an indexed AEAT observation, which always carries one."""
+    if evidence is None or evidence.period is None:
+        raise InternalInvariantError("an AEAT-only filed row requires its observed period")
+    return evidence.period
 
 
 def read_local_aeat_sync_workspace_projection(
@@ -438,8 +587,14 @@ def read_local_aeat_sync_workspace_projection(
     operation_contracts: OperationPublicContractSetV1,
     custody_count: int | None = None,
     censo_values: Mapping[str, str] | None = None,
+    filed_evidence: CalendarEvidenceProjection | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
-    """Project the pre-pull AEAT Sync workspace for one authenticated profile.
+    """Project the local AEAT Sync workspace and its stored filing captures for one profile.
+
+    `filed_evidence` is the calendar evidence join over this profile's stored
+    filed-declaration captures, already scoped to `subject_key`. `None` means
+    this session composed no such read, and the AEAT filing side stays never
+    captured; otherwise its availability and capture time are preserved.
 
     `custody_count` is how many notification documents this profile already
     holds locally. `None` means this session did not read the store -- distinct
@@ -460,6 +615,8 @@ def read_local_aeat_sync_workspace_projection(
     # otherwise fail as a bare ValueError instead of the projection refusal.
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
+    observed_filings = _observed_filings(filed_evidence)
+    filed_source = _filed_source_observation(filed_evidence, observed_count=len(observed_filings))
     return project_aeat_sync_workspace(
         bucket_id=bucket_id,
         subject_key=subject_key,
@@ -469,10 +626,12 @@ def read_local_aeat_sync_workspace_projection(
                 sources=tuple(
                     _observation(
                         source,
+                        zone=zone,
                         observed_at=observed_at,
                         profile_count=1,
                         filing_count=len(filings),
                         custody_count=custody_count,
+                        filed_source=filed_source,
                     )
                     for source in aeat_sync_workspace_sources(zone)
                 ),
@@ -491,6 +650,7 @@ def read_local_aeat_sync_workspace_projection(
                     filing_count=len(filings),
                     custody_count=custody_count,
                     contracts=operation_contracts,
+                    filed_source=filed_source,
                 ),
             )
             for area in AeatSyncOverviewArea
@@ -510,6 +670,8 @@ def read_local_aeat_sync_workspace_projection(
             subject_key=subject_key,
             filings=filings,
             contracts=operation_contracts,
+            observed=observed_filings,
+            aeat_observed_at=filed_source.observed_at,
         ),
     )
 
