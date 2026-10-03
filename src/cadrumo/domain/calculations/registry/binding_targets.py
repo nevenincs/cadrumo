@@ -101,6 +101,14 @@ class BindingConsumerKind(StrEnum):
     EXPORT_BINDING_RECORD = "export_binding_record"
     """An export record materialises its rows from the binding's export selector."""
 
+    RELATION_EVIDENCE = "relation_evidence"
+    """Relation prefill resolves the binding and carries it as reconciliation evidence.
+
+    A ``factual_evidence`` relation evidences a fact without entering the
+    arithmetic, so no casilla, formula or export reads it; the calculation still
+    resolves it for a declared period and records it on the revision.
+    """
+
 
 @dataclass(frozen=True, slots=True)
 class BindingConsumerRef:
@@ -150,7 +158,28 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
         for binding_id in expression_date_binding_refs(formula.expression):
             record(binding_id, BindingConsumerKind.FORMULA_DATE_OPERAND, str(formula.id))
     _record_export_consumers(revision, record)
+    _record_relation_evidence_consumers(revision, record)
     return {binding_id: tuple(refs) for binding_id, refs in consumers.items()}
+
+
+def _record_relation_evidence_consumers(
+    revision: ModeloRevision,
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> None:
+    """Record each factual-evidence relation binding a declared period selects."""
+    # Deferred for the same schema import cycle as ``runtime_graph`` above.
+    from .relation_dependency import RelationDependencyRole
+    from .relations import relation_prefill_bindings_for_period
+
+    owners = {
+        binding_id: str(classification.id)
+        for classification in revision.dependency_classifications
+        for binding_id in classification.binding_refs
+    }
+    for period in revision.period_selector.declared_periods:
+        for binding, provider in relation_prefill_bindings_for_period(revision, period=period):
+            if provider.dependency_role is RelationDependencyRole.FACTUAL_EVIDENCE:
+                record(binding.id, BindingConsumerKind.RELATION_EVIDENCE, owners.get(binding.id, "relation_prefill"))
 
 
 def _record_export_consumers(

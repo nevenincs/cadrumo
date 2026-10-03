@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5c0e7c7cbb7233ac209cb4fbc426d1805e814999c58e12c42a9d746cc68060b'
+body_hash: 'sha256:9989d3f5fa198421a56f4be6cfc844487c677668d48b4ef8adb33e9adbb547c3'
 related:
   - "[[2026-10-02-binding-consumer-closure-plan]]"
 ---
@@ -294,6 +294,10 @@ related:
 - `S07` `verify:` `pytest batch J non-CLI set against verification build 942fd998 (232 passed)` -> `pass`
 - `S07` `verify:` `pytest domain contribuyente (495 passed)` -> `pass`
 - `S07` `verify:` `inspect_authoring_candidate publication_valid` -> `pass`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S08` `A` `dev/registry/compiler/tests/test_relation_evidence_consumer.py`
+- `S08` `verify:` `pytest relation evidence consumer + validate_bindings (15 passed)` -> `pass`
+- `S08` `verify:` `check-bindings 193 findings cleared (10 left: 720 6, 347 4)` -> `pass`
 
 ## Notes
 
@@ -322,3 +326,5 @@ related:
 - `S07` 210 batch I implemented as an application handoff instead of the planned bound casilla: binding casilla `[5]` made the default manual mode stop prompting for it and dropped it from the filer-required set used by verification (silent under-declaration risk). `[5]` stays manual; m210-ledger-irnr-rendimientos-integros declares `non_calculation/application_calculation_handoff` (130 retenciones precedent) and the ledger IRNR resolver writes its ES-only value to `[5]` in ledger mode, replacing the all-jurisdiction fold redirect. TRLIRNR arts. 13.1 and 24; aeat-dr-210-2022 casilla `[5].`
 - `S07` Batch J committed as 49feac35c0. CLI tests in the set fail with `REFUSED_LOCAL_RUNTIME` `runtime_unavailable,` including untouched modelo 130 cases, while the `local_runtime` lane is mid-edit: environmental, not J. `test_registry_contract` reads the published profile schema and passes only after the next publish (two publishes refused: Codex registry lane changed inputs mid-validation).
 - `S07` Scope additions forced by the retirement: count-desync advisory retired (its premise, a binding reading the stored count, no longer exists); anualidades injector routed through `renta_family_profile_from_facts` to keep the by-index birth-date refusal; `descendientes_guarderia_count` and `gastos_guarderia_reales` removed as unused.
+- `S11` Handed to the CADRUMO-ADMIN session on operator instruction (2026-10-03): modelo 347 is supported and binds to ledger invoice data. Resolver half already in HEAD `(invoice_bindings._resolve_m347_declarante_summary_values).` Binding the type 1 casillas is refused by `validate_informative_class_invariant` because 347 declares `calculation_class` = informative; resolution is that session's call. S12 signed-amount design offered with it.
+- `S08` Section 0: `relation_evidence` consumer kind enrolled in the shared `binding_consumers` census (read by the gate, compiler and `registry_status),` selected through `relation_prefill_bindings_for_period` over declared periods so it counts exactly what calculation resolves. The 193 2025 dependency treatment override `(factual_evidence)` was already in the authored source. The S08 compiler refusal itself waits for zero residue (720 S06, 347 with CADRUMO-ADMIN).
