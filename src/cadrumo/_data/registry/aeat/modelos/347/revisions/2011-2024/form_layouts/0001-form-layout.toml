@@ -7,7 +7,7 @@ revision_id = "2011-2024"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "1f9fa99824e5887de883d1d0e46da0be683cb34e002c89c546d237fa75236f7b"
+source_state_digest = "02fc337d9524d0eab498a6fb76a9b38d1abb03a724c471b347079fd5523acb14"
 placements = [
     { casilla_id = "contraparte.arrendamiento-local-negocio", kind = "on_form" },
     { casilla_id = "contraparte.clave-operacion", kind = "on_form" },

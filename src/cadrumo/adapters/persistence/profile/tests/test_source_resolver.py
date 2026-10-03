@@ -1180,7 +1180,9 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
             revision=_modelo_revision("347", "2025-y-siguientes"),
         ),
     )
-    assert resolution.diagnostics == ()
+    # The one advisory left is the record gap every Spanish declarado carries
+    # (its provincia is not held as structured data), never a role advisory.
+    assert [item.source_ref for item in resolution.diagnostics] == ["m347-record:provincia-not-recorded"]
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
 
 
@@ -2488,7 +2490,8 @@ def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the
 
     diagnostics = _public_resolution((unrelated_purchase,), context=context).diagnostics
 
-    assert diagnostics == ()
+    # No role advisory; the one diagnostic is the provincia gap every Spanish declarado carries.
+    assert [item.source_ref for item in diagnostics] == ["m347-record:provincia-not-recorded"]
 
 
 def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_declared(
@@ -2523,9 +2526,16 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
     )
     declared_purchase = undeclared_purchase.model_copy(update={"outside_economic_activity": False})
 
-    undeclared_diagnostics = _public_resolution((undeclared_purchase,), context=context).diagnostics
-    declared_diagnostics = _public_resolution((declared_purchase,), context=context).diagnostics
+    # Both resolutions also carry the provincia gap every Spanish declarado has;
+    # it is asserted exactly so that nothing else can hide beside the role advisory.
+    provincia_gap = "m347-record:provincia-not-recorded"
+    undeclared_all = _public_resolution((undeclared_purchase,), context=context).diagnostics
+    declared_all = _public_resolution((declared_purchase,), context=context).diagnostics
+    undeclared_diagnostics = tuple(item for item in undeclared_all if item.source_ref != provincia_gap)
+    declared_diagnostics = tuple(item for item in declared_all if item.source_ref != provincia_gap)
 
+    assert [item.source_ref for item in undeclared_all].count(provincia_gap) == 1
+    assert [item.source_ref for item in declared_all] == [provincia_gap]
     assert len(undeclared_diagnostics) == 1
     assert undeclared_diagnostics[0].reason == "unclassified_declarant_role_fact"
     assert undeclared_diagnostics[0].source_ref == f"invoice:{undeclared_purchase.invoice_id}"
@@ -2561,6 +2571,14 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
     },
 )
 
+#: The Modelo 347 record-key facts the slim store never carried: the operations
+#: RD 1065/2007 art. 34.1.j and k relate separately, and the annual basis of art.
+#: 33.1. Their canonical reachability is proven through the real resolver by the
+#: declarado record tests over the compiled registry, not by the slim-store contract.
+_M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
+    {"cash_accounting_operation", "reverse_charge_recipient", "annual_computation_basis"},
+)
+
 
 def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contribute() -> None:
     """Anti-tautology guard on the contract itself.
@@ -2581,7 +2599,7 @@ def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contr
         "rectified_period",
         "rectified_base_previous",
     }
-    assert set(InvoiceObservation.model_fields) - non_declarable == _DECLARABLE_FACTS
+    assert set(InvoiceObservation.model_fields) - non_declarable == _DECLARABLE_FACTS | _M347_RECORD_KEY_FACTS
 
 
 def test_m349_declarable_facts_are_reachable_on_the_canonical_path(

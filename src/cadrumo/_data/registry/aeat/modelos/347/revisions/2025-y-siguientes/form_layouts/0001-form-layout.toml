@@ -7,7 +7,7 @@ revision_id = "2025-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "80be28579ec06d6e4072a7b5622e8602d413fb885429adbac0eeb55346943307"
+source_state_digest = "a496779dc03e7035274d59689d27651e0cee8c8be0f0029699bafa1a906fa336"
 placements = [
     { casilla_id = "contraparte.arrendamiento-local-negocio", kind = "on_form" },
     { casilla_id = "contraparte.bienes-vinculados", kind = "on_form" },
