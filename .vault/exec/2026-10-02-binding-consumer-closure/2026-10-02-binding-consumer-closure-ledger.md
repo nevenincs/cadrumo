@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d70e9cba7a7a0a4e3c7afd3f85ad83b51e8a38fdd9248ee79780cc6160dac933'
+body_hash: 'sha256:7bd3027b1ef074c921938b3d453f1ea8d0277e86bef2d2ec1d654297c40cf0fe'
 related:
   - "[[2026-10-02-binding-consumer-closure-plan]]"
 ---
@@ -296,6 +296,38 @@ related:
 - `S06` `A` `src/cadrumo/tests/fx_lookup.py`
 - `S06` `M` `dev/registry/tests/test_creation.py`
 - `S06` `verify:` `pytest currency + fx + invoices + ledger conversion + creation (2010 passed; 50 import-conversion parity passed)` -> `pass`
+- `S06` `M` `dev/registry/tests/test_detail_record_row_builders.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/constructs/0001-declarations.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/application/aggregation/foreign_assets.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_foreign_assets.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_per_modelo_service.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_service.py`
+- `S06` `M` `src/cadrumo/application/calculations/row_set_assembly.py`
+- `S06` `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly.py`
+- `S06` `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly_coercion.py`
+- `S06` `A` `src/cadrumo/application/foreign_assets/valuation.py`
+- `S06` `M` `src/cadrumo/application/modelo/aggregate_public.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_action_ports.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_observations.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_aggregate_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_modelo_spreadsheet_operation.py`
+- `S06` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_assembly.py`
+- `S06` `M` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/detail_record_bindings.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/record_join.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/tests/test_valuation.py`
+- `S06` `A` `src/cadrumo/domain/foreign_assets/valuation.py`
+- `S06` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_bienes_inversion_regularizacion_source_mesh_enrollment.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_foreign_asset_producer_join.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_boundary_and_enrollment.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_modelo_spreadsheet_operation_composition.py`
+- `S06` `verify:` `pytest domain/foreign_assets + aggregation/test_foreign_assets + test_per_modelo_service + row builders + row-set assembly + spreadsheet + 720 e2e (256+5+10+15 passed against published 5ccd414b)` -> `pass`
+- `S06` `verify:` `just check-bindings (10 findings: 720 5, 347 5; 720 down from 6)` -> `pass`
+- `S06` `verify:` `lint-imports (only the pre-existing cadrumo_harness conftest contract broken)` -> `pass`
 
 ## Notes
 
@@ -327,3 +359,4 @@ related:
 - `S11` Handed to the CADRUMO-ADMIN session on operator instruction (2026-10-03): modelo 347 is supported and binds to ledger invoice data. Resolver half already in HEAD `(invoice_bindings._resolve_m347_declarante_summary_values).` Binding the type 1 casillas is refused by `validate_informative_class_invariant` because 347 declares `calculation_class` = informative; resolution is that session's call. S12 signed-amount design offered with it.
 - `S08` Section 0: `relation_evidence` consumer kind enrolled in the shared `binding_consumers` census (read by the gate, compiler and `registry_status),` selected through `relation_prefill_bindings_for_period` over declared periods so it counts exactly what calculation resolves. The 193 2025 dependency treatment override `(factual_evidence)` was already in the authored source. The S08 compiler refusal itself waits for zero residue (720 S06, 347 with CADRUMO-ADMIN).
 - `S06` FX prerequisite for W3 (findings G5, G8, G11 of 2026-10-02-binding-consumer-closure-modelo-720-fx-research) committed as 178005fb2c: typed EurRateLookup with observation date, ECB 404 as unsupported currency, no zero euro amount for a missing rate, observation date on stamps and stored invoices. Also committed on the paused lane's behalf: invoice catalogue split 35c0193485. CLI suites could not run cleanly: other lanes (application/live, application/ledger) were mid-edit and the profile worker imports the worktree.
+- `S06` W2+W3 08d98d173c and W4 1e909a09e8 landed; authority republished from HEAD 08d98d173c (identity 5ccd414b). Implementation details within the 2026-10-02 amendment: (a) the currency column is kept as a worksheet input declared `non_calculation/application_calculation_handoff` instead of being deleted, because the worksheet's columns are the row bindings and the amendment requires worksheet currency input; `asset_ref,` `valuation_event` and `valuation_event_date` are added the same way; (b) a declaration with no lot in a declarable block is an advisory, not a refusal, because the register does not yet record when an asset left the declarant (a refusal would block every later ejercicio); flagged to the user. Also 55c6b85c0a moved `fx_lookup` out of core-only cadrumo.tests (import contract regression from 178005fb2c). W5-W8 remain.
