@@ -10,7 +10,7 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:a3ebf0b2382cd292c39931229f97af06349c4847211b7e6c626f779c50326d57'
+body_hash: 'sha256:4a8651de63baab9b568dc9092fde9d91b81d213e3a594ecc48c61ca359975c03'
 ---
 
 # Application distribution
@@ -24,7 +24,7 @@ The user explicitly requested implementation of product identity, modern CMake c
 ## Steps
 
 - [x] `S01` - Generate canonical product publisher channel and platform identities for all supported targets; `src/cadrumo/core/product_identity.py and dev/packaging/native/identity.py`.
-- [ ] `S02` - Project canonical identity into CMake project and platform packaging configuration; `CMakeLists.txt and native/cmake`.
+- [x] `S02` - Project canonical identity into CMake project and platform packaging configuration; `CMakeLists.txt and native/cmake`.
 - [ ] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.
 

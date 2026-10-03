@@ -75,5 +75,4 @@ fail:
     PyConfig_Clear(&config);
     if (PyStatus_IsExit(status)) return status.exitcode;
     Py_ExitStatusException(status);
-    return 123;
 }

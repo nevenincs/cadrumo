@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import io
+import json
 import os
 import shutil
 import sys
@@ -161,6 +162,8 @@ def resources(destination: Path, version: str, number: int, date: str, tools: Pa
     """Render the canonical icon and embed Windows PE version resources."""
     if not 0 <= number <= 65535:
         raise ValueError("Windows resource build number must be between 0 and 65535")
+    metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
+    publisher = json.dumps(metadata["publisher"], ensure_ascii=True)[:-1] + '\\0"'
     sys.path.insert(0, str(tools))
     renderer = importlib.import_module("resvg_py")
     png = renderer.svg_to_bytes(
@@ -187,7 +190,7 @@ BEGIN
  BEGIN
   BLOCK "040904b0"
   BEGIN
-   VALUE "CompanyName", "CADRUMO\\0"
+   VALUE "CompanyName", {publisher}
    VALUE "ProductName", "CADRUMO\\0"
    VALUE "FileDescription", "CADRUMO controlled Python interpreter\\0"
    VALUE "FileVersion", "{version}.{number}\\0"

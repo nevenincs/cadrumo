@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8371098a2e2a3e215815f49c87c388bd3260035ffe9de1f2784c3979184cf908'
+body_hash: 'sha256:4f843b2671e7ed47d0c893fc760adabd2c1f9153d2eef1ffc0679537b9a62504'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -46,3 +46,14 @@ related:
 - `S01` `A` `dev/packaging/tests/test_distribution_identity.py`
 - `S01` `verify:` `pytest identity suites 17 passed` -> `pass`
 - `S01` `verify:` `ruff and ty focused identity` -> `pass`
+- `S02` `M` `CMakeLists.txt`
+- `S02` `A` `native/cmake/Identity.cmake`
+- `S02` `A` `native/cmake/CompilePolicy.cmake`
+- `S02` `M` `native/cmake/Packaging.cmake`
+- `S02` `M` `native/cmake/platforms/Windows.cmake`
+- `S02` `M` `dev/packaging/native/metadata.py`
+- `S02` `M` `dev/packaging/native/platforms/windows.py`
+- `S02` `M` `native/interpreter/windows/python.c`
+- `S02` `verify:` `cmake configure windows-x64` -> `pass`
+- `S02` `verify:` `Release interpreter and ABI consumer build` -> `pass`
+- `S02` `verify:` `ctest platform 3 tests` -> `pass`
