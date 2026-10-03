@@ -12,6 +12,8 @@ pub enum Error {
     Cancelled,
     LimitExceeded,
     Download,
+    TimedOut,
+    ProbeFailed,
 }
 
 impl fmt::Display for Error {
@@ -27,6 +29,8 @@ impl fmt::Display for Error {
             Self::Cancelled => f.write_str("provisioning cancelled"),
             Self::LimitExceeded => f.write_str("component resource limit exceeded"),
             Self::Download => f.write_str("component download failed"),
+            Self::TimedOut => f.write_str("interpreter probe timed out"),
+            Self::ProbeFailed => f.write_str("interpreter probe failed"),
         }
     }
 }

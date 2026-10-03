@@ -26,6 +26,8 @@ manifest = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
 native_manifest = json.loads((root / manifest["layout"]["files"]["native_manifest"]).read_text(encoding="utf-8"))
 for module in sorted(native_manifest["modules"]):
     try:
+        for prerequisite in manifest["layout"].get("native_smoke_prerequisites", {}).get(module, []):
+            importlib.import_module(prerequisite)
         importlib.import_module(module)
     except Exception as error:
         raise RuntimeError(f"Bundled native import failed: {module}") from error

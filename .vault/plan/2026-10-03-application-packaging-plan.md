@@ -13,8 +13,9 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:cc7e7544a450e8e6315c0cef55d4959441501d75ff478aef5b807e26a7f9a4da'
+body_hash: 'sha256:81b688db49147603ccc546c438765d53a85a3bebdb5ef27b73b1f426fd42323f'
 ---
+
 # `application-packaging` plan
 
 ## Description
@@ -28,10 +29,10 @@ S01 owns native/CONTRACT.md and the package-only declaration. S02 owns the C ABI
 ## Steps
 
 - [x] `S01` - Establish ownership, platform mappings and scoped decision coverage; `native/ and dev/packaging/native/`.
-- [ ] `S02` - Prove Windows toolchains and C ABI linkage with pinned CPython; `native/`.
-- [ ] `S03` - Build isolated host and assemble the locked Python product; `native/ and dev/packaging/native/`.
-- [ ] `S04` - Verify relocated artifact, hostile environments, child processes and filesystem writes; `dev/packaging/native/ and native/`.
-- [ ] `S05` - Control Debug Release builds installation and ZIP packaging through CMake and CPack; `CMakeLists.txt, CMakePresets.json, native/ and dev/packaging/native/`.
+- [x] `S02` - Prove Windows toolchains and C ABI linkage with pinned CPython; `native/`.
+- [x] `S03` - Build isolated host and assemble the locked Python product; `native/ and dev/packaging/native/`.
+- [x] `S04` - Verify relocated artifact, hostile environments, child processes and filesystem writes; `dev/packaging/native/ and native/`.
+- [x] `S05` - Control Debug Release builds installation and ZIP packaging through CMake and CPack; `CMakeLists.txt, CMakePresets.json, native/ and dev/packaging/native/`.
 
 S05 also covers the user-authorized naming and cleanup contract, optional `_d` host, Python ZIP library, Windows identity resources, locked third-party wheels, CADRUMO wheel builds, package-cohesion checks and platform backend separation. Shared packaging must not embed Windows physical filenames. Installation, extracted ZIP and development-host checks remain required before completion.
 

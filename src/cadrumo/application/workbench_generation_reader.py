@@ -86,6 +86,7 @@ from .operations.registry import OperationPublicContractSetV1
 from .overview.applicability_evidence import loaded_invoice_source_ports
 from .overview.evidence import (
     AeatCalendarEvidenceSources,
+    CalendarEvidenceProjection,
     CalendarEvidenceReadOutcome,
     LocalCalendarEvidenceSources,
     build_calendar_evidence_projection,
@@ -359,9 +360,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         # ledger-derived obligation signals the calendar decides on.
         ledger_revision = self._ledger_revision()
         ledger_sources = self._load_ledger_sources()
+        aeat_evidence, aeat_projection = self._read_calendar_aeat_evidence(raw_values)
         calendar_inputs = self._read_calendar_inputs(
             record=record,
             raw_values=raw_values,
+            aeat_evidence=aeat_evidence,
+            aeat_projection=aeat_projection,
             as_of=as_of,
             work_units=work_units,
             filings=filings,
@@ -388,6 +392,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             custody_count=custody_count,
             censo_values=raw_values,
             census_observation=census_observation,
+            filed_evidence=aeat_projection,
         )
         account_session = self.account_session_reader()
         if not self._capture_is_unchanged(
@@ -470,21 +475,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             }
         )
 
-    def _read_calendar_inputs(
-        self,
-        *,
-        record: UserProfileRecord,
-        raw_values: Mapping[str, str],
-        as_of: date,
-        work_units: WorkUnitCatalogue,
-        filings: ModeloRecordCatalogue,
-        observed_at: UtcInstant,
-        operation: PinnedAuthorityOperation,
-        work_units_revision: str,
-        filings_revision: str,
-        ledger_revision: tuple[str, str] | None,
-        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
-    ) -> WorkbenchCalendarInputs:
+    def _read_calendar_aeat_evidence(
+        self, raw_values: Mapping[str, str]
+    ) -> tuple[CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources], CalendarEvidenceProjection]:
+        """Read stored AEAT filing captures once for the calendar and AEAT Sync.
+
+        Both surfaces project the same retained observations through one
+        evidence join, scoped to the profile's declared tax identity.
+        """
         aeat_evidence = (
             unbound_calendar_aeat_evidence()
             if self.calendar_aeat_reader is None or declared_tax_id(raw_values) is None
@@ -498,6 +496,25 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             aeat=aeat_evidence,
             expected_tax_id=declared_tax_id(raw_values),
         )
+        return aeat_evidence, aeat_projection
+
+    def _read_calendar_inputs(
+        self,
+        *,
+        record: UserProfileRecord,
+        raw_values: Mapping[str, str],
+        aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources],
+        aeat_projection: CalendarEvidenceProjection,
+        as_of: date,
+        work_units: WorkUnitCatalogue,
+        filings: ModeloRecordCatalogue,
+        observed_at: UtcInstant,
+        operation: PinnedAuthorityOperation,
+        work_units_revision: str,
+        filings_revision: str,
+        ledger_revision: tuple[str, str] | None,
+        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+    ) -> WorkbenchCalendarInputs:
         return read_workbench_calendar_inputs(
             record=record,
             raw_values=raw_values,
@@ -677,6 +694,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         custody_count: int | None,
         censo_values: Mapping[str, object],
         census_observation: CensalObservation | None = None,
+        filed_evidence: CalendarEvidenceProjection | None = None,
     ) -> tuple[AeatSyncWorkspaceProjectionV1 | None, NamespacedId]:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
 
@@ -708,6 +726,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     custody_count=custody_count,
                     censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
                     census_observation=census_observation,
+                    filed_evidence=filed_evidence,
                 ),
                 _AEAT_SYNC_READER_UNAVAILABLE,
             )

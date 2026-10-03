@@ -50,7 +50,7 @@ try {
     foreach ($name in @('TEMP', 'TMP', 'TMPDIR')) {
         [Environment]::SetEnvironmentVariable($name, [string]$storage.temporary, 'Process')
     }
-    wpr -start "${profile}!CadrumoFiles" -filemode -instancename $instance
+    wpr -start "${profile}!CadrumoFiles" -filemode -recordtempto $traceRoot -instancename $instance
     if ($LASTEXITCODE) { throw 'WPR start failed; an elevated development shell is required' }
     try {
         $probe = @'

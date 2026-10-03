@@ -234,6 +234,67 @@ async def test_previous_protocol_is_refused_before_secret_with_retryable_cleanup
     assert channel.released
 
 
+@pytest.mark.parametrize("side", ["client", "server"])
+def test_authority_generation_drift_is_a_version_mismatch_before_any_secret(side: str) -> None:
+    """An unchanged package version cannot hide a runtime serving another published authority."""
+    channel = CleanupChannel(close_failures=0)
+    identity = RuntimeServerHello(
+        product_version="cohort-test",
+        storage_identity="a" * 64,
+        boot_id=uuid4(),
+        authority_generation="a" * 64,
+    )
+    expected = RuntimeClientHello(
+        product_version=identity.product_version,
+        storage_identity=identity.storage_identity,
+        authority_generation="b" * 64,
+    )
+    payload = canonical_json_bytes((identity if side == "client" else expected).model_dump(mode="json"))
+    secret_frame = b"S" + struct.pack("!I", 6) + b"secret"
+    channel.inbound.extend(b"J" + struct.pack("!I", len(payload)) + payload + secret_frame)
+
+    with pytest.raises(RuntimeRefusalError) as caught:
+        if side == "client":
+            VerifiedRuntimeConnection(channel, expected=expected, deadline=time.monotonic() + 5)
+        else:
+            accept_runtime_handshake(channel, identity=identity, deadline=time.monotonic() + 5)
+    assert caught.value.reason is RuntimeRefusalCode.VERSION_MISMATCH
+    assert bytes(channel.inbound) == secret_frame
+    assert channel.released
+
+
+@pytest.mark.parametrize(
+    ("runtime_generation", "frontend_generation"),
+    [("a" * 64, "a" * 64), (None, None), ("a" * 64, None), (None, "a" * 64)],
+    ids=["published", "unpublished", "frontend-unpublished", "runtime-unpublished"],
+)
+def test_handshake_completes_unless_both_sides_name_different_generations(
+    runtime_generation: str | None, frontend_generation: str | None
+) -> None:
+    channel = CleanupChannel(close_failures=0)
+    identity = RuntimeServerHello(
+        product_version="cohort-test",
+        storage_identity="a" * 64,
+        boot_id=uuid4(),
+        authority_generation=runtime_generation,
+    )
+    expected = RuntimeClientHello(
+        product_version=identity.product_version,
+        storage_identity=identity.storage_identity,
+        authority_generation=frontend_generation,
+    )
+    write_document(channel, expected, deadline=time.monotonic() + 5)
+    channel.inbound.extend(b"".join(channel.writes))
+    channel.writes.clear()
+
+    assert accept_runtime_handshake(channel, identity=identity, deadline=time.monotonic() + 5) == expected
+    channel.inbound.extend(b"".join(channel.writes))
+    channel.writes.clear()
+    connection = VerifiedRuntimeConnection(channel, expected=expected, deadline=time.monotonic() + 5)
+    assert connection.hello == identity
+    connection.close()
+
+
 class FaultChannel(CleanupChannel):
     """Explicit channel I/O failure; release remains independently faultable."""
 

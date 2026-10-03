@@ -1,8 +1,20 @@
 file(GLOB_RECURSE product_inputs CONFIGURE_DEPENDS
   "${PROJECT_SOURCE_DIR}/src/*" "${PROJECT_SOURCE_DIR}/packaging/*"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/*.py")
-list(FILTER product_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/\\.aeat-generated-export-transaction-")
-foreach(name README.md LICENSE NOTICE pyproject.toml uv.lock dev/source_tree.py dev/_paths.py)
+  "${PROJECT_SOURCE_DIR}/dev/packaging/*.py"
+  "${PROJECT_SOURCE_DIR}/dev/registry/*.py"
+  "${PROJECT_SOURCE_DIR}/dev/corpus/*.py"
+  "${PROJECT_SOURCE_DIR}/dev/docs/preprocess/*.py"
+  "${PROJECT_SOURCE_DIR}/dev/.gitattributes"
+  "${PROJECT_SOURCE_DIR}/dev/.gitignore")
+list(FILTER product_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/\\.aeat-generated-export-transaction-|/\\.generated-export-(backup|stage)-")
+list(FILTER product_inputs EXCLUDE REGEX "/dev/packaging/native/|/dev/.*/tests/")
+list(APPEND product_inputs
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/product.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/hashing.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py")
+foreach(name README.md LICENSE NOTICE pyproject.toml uv.lock .gitignore .gitattributes dev/source_tree.py dev/_paths.py
+    dev/__init__.py dev/docs/__init__.py dev/cache_root.py)
   if(EXISTS "${PROJECT_SOURCE_DIR}/${name}")
     list(APPEND product_inputs "${PROJECT_SOURCE_DIR}/${name}")
   endif()
@@ -36,11 +48,13 @@ add_custom_command(OUTPUT "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/ready"
     "${PROJECT_SOURCE_DIR}/native/interpreter/${CADRUMO_BACKEND}/bootstrap.py"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(bundle ALL DEPENDS "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/ready")
+add_dependencies(bundle rust_application)
 if(BUILD_TESTING)
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
     "CADRUMO_LOCAL_STORAGE_ROOT=${PROJECT_BINARY_DIR}/testing/$<CONFIG>/storage"
     "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app"
     "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
+  set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
 endif()
 install(DIRECTORY "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app/" DESTINATION .)
 set(CPACK_GENERATOR ZIP)
@@ -50,10 +64,11 @@ set(CPACK_PACKAGE_VENDOR CADRUMO)
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
 set(CPACK_PACKAGE_DIRECTORY "${PROJECT_BINARY_DIR}/packages")
 set(CADRUMO_ARTIFACT_STEM "CADRUMO-${CADRUMO_VERSION}-b${CADRUMO_BUILD_NUMBER}-${CADRUMO_PLATFORM}")
-file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/artifacts-$<CONFIG>.json" CONTENT
-  "{\"archive\":\"${PROJECT_BINARY_DIR}/packages/$<CONFIG>/${CADRUMO_ARTIFACT_STEM}-$<CONFIG>.zip\",\"configuration\":\"$<CONFIG>\",\"development_binary\":$<BOOL:${CADRUMO_INCLUDE_DEVELOPMENT_BINARY}>}\n")
 configure_file("${PROJECT_SOURCE_DIR}/native/cmake/CPackProject.cmake.in"
   "${PROJECT_BINARY_DIR}/CPackProject.cmake" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/native/cmake/Artifact.cmake.in"
+  "${PROJECT_BINARY_DIR}/Artifact.cmake" @ONLY)
+set(CPACK_POST_BUILD_SCRIPTS "${PROJECT_BINARY_DIR}/Artifact.cmake")
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_BINARY_DIR}/CPackProject.cmake")
 include(CPack)
 foreach(group stage packages dependencies native all)
@@ -64,7 +79,7 @@ foreach(group stage packages dependencies native all)
 endforeach()
 add_custom_target(verify
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
-  DEPENDS bundle platform_static_consumer platform_dll_consumer rust_platform
+  DEPENDS bundle platform_static_consumer platform_dll_consumer rust_platform rust_application
   USES_TERMINAL VERBATIM)
 add_custom_target(zip
   COMMAND "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"

@@ -1,8 +1,8 @@
 # Native distribution contract
 
 Status: CMake build, installation and ZIP packaging are implemented. Verification
-of the revised ZIP library layout is in progress; the historical evidence below
-belongs to the earlier artifact.
+of this reconciled source tree is pending. The Windows acceptance evidence below
+belongs to the prior tested artifacts and does not certify a new build.
 Linux and macOS are mappings to
 prove, not supported native builds. The existing Python product owns application
 behavior. Native code owns bootstrap before Python exists.
@@ -13,6 +13,7 @@ behavior. Native code owns bootstrap before Python exists.
 | --- | --- | --- |
 | C interpreter host and CPython initialization | `native/interpreter/windows/` | `build/windows-x64/bin/<Config>/` |
 | Shared Rust platform implementation and C ABI | `native/platform/` | `build/windows-x64/cargo/` |
+| Rust application library and compatibility probes | `native/application/` | `build/windows-x64/cargo/<rust-target>/<profile>/` |
 | Shared package declarations and physical platform mappings | `native/package-layout.json`, `native/platforms/` | `build/windows-x64/generated/` |
 | Build-time contract projection | `dev/packaging/native/` | C header, Rust constants, JSON contract |
 | Build graph and packaging targets | `CMakeLists.txt`, `CMakePresets.json`, `native/cmake/` | `build/windows-x64/` |
@@ -39,6 +40,25 @@ are resolved from the executable and the canonical Settings storage contract,
 never compiled from the build machine. Runtime state is separate from the
 immutable application package.
 
+Both Rust crates use the CMake Cargo command in `native/cmake/Rust.cmake` and
+the selected platform adapter's compiler/linker environment. `rust_application`
+participates in the default build and `bundle`; Cargo owns its incremental input
+tracking, including embedded probe source. Debug and Release map to Cargo's
+development and release profiles beneath the selected CMake binary directory.
+The application `.rlib` is a build artifact for a Rust consumer, not a Python
+extension or a runtime file to install. It does not enter the package manifest.
+
+`verify` includes `application.rust` and `application.package` through CTest.
+The package test consumes the selected layout's manifest location, checks its
+complete file inventory, probes the delivered interpreter against every declared
+distribution version, and checks the original inventory again. It uses a disposable
+browser cache and calls the existing Python readiness owner. This checks the staged
+package; `verify-package` retains ZIP relocation and artifact acceptance ownership.
+For a separately extracted or installed artifact, configure the absolute
+`CADRUMO_APPLICATION_TEST_PACKAGE_ROOT` and run
+`ctest -C Release -R "^application\." --output-on-failure` in that build directory. This verifies that
+selected artifact and does not establish a successful fresh `bundle` build.
+
 ## Platform mappings
 
 `P` means installed package root; `U` means the effective storage root selected
@@ -60,6 +80,8 @@ No build target or placeholder implementation claims those formats work.
 macOS needs a native toolchain, architecture selection, codesigning and dyld proof.
 Windows relocation passed real package-qualified extensions and transitive-DLL
 artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
+Library-owned resources retain their wheel locations; assembly projects the
+application authority into `data/authority` through its existing setting.
 
 ## Bootstrap and ABI
 
@@ -150,6 +172,7 @@ to include it alongside production in the same package; shipping it is optional.
 | `generated/` | Native contracts, metadata, icon and resource source |
 | `bin/<Config>/`, `lib/<Config>/`, `symbols/<Config>/` | Native executables/DLLs, import libraries and symbols |
 | `cargo/` | Rust build products |
+| `tmp/` | Preset-scoped compiler and MSBuild scratch files; retained during cleanup targets because MSBuild can still be using them |
 | `stage/<Config>/app/` | Complete application tree used by install and CPack |
 | `install/` | Default local install prefix; override with `cmake --install --prefix` |
 | `packages/<Config>/` | ZIP artifacts |
@@ -162,6 +185,10 @@ matching top-level folder. `CADRUMO_BUILD_NUMBER` defaults to the Git commit cou
 `pyproject.toml`. The executable banner, Windows version/icon resources and
 `data/build.json` carry the same identity. The icon derives from the existing
 `docs/_static/cadrumo-favicon.svg`.
+
+The Windows preset scopes `TEMP`, `TMP` and `TMPDIR` to its build tree before
+compiler discovery and builds. The host embeds a long-path-aware Windows manifest
+so deeply nested product resources remain readable after Unicode/path relocation.
 
 | Target | Operation |
 | --- | --- |
@@ -189,6 +216,13 @@ or cleanup concurrently in the same binary directory.
 A subsequent build regenerates removed prerequisites. Run build before
 `cmake --install`; that command copies an already assembled tree.
 
+CPack writes each configuration's artifact locator after creating its archive.
+The locator records archive and manifest SHA256 hashes and the development-host
+presence from that package. Reconfiguring CMake leaves existing locators unchanged.
+ZIP verification rejects a replaced archive before clearing previous acceptance
+output and records the exact hashes tested. These hashes establish integrity,
+not publisher authentication.
+
 ### Runtime library and cohesion
 
 `python.zip` contains compiled standard-library modules and runtime resources.
@@ -199,6 +233,11 @@ wheels enter `cadrumo/site-packages/`; development and optional extras are exclu
 `Lib`, `Libs`, `Scripts`, headers and import libraries stay in build inputs. Native
 extensions and their libraries are relocated under `bin/` with qualified module
 names recorded in `data/native-modules.json`.
+
+The platform contract explicitly removes Pillow's unused `ImageTk.py` and
+`_imagingtk` extension alongside the excluded Tk standard library. The assembler
+requires these exclusions to match and records each removed file, hash and reason
+in the package manifest. Every retained native module is imported by the smoke test.
 
 `cadrumo/python.pth` is generated data: only reviewed package-relative directories
 are allowed, matching the native manifest. `site` does not execute arbitrary `.pth`
@@ -229,7 +268,59 @@ RECORD locations describe original wheel contents; the package manifest owns the
 assembled file inventory and hashes. This foundation does not support pip mutation
 of the installed package.
 
-## Verified Windows foundation, 2026-10-03
+Windows PE import tables identify extensions used as transitive libraries, such as
+`axscript.pyd`. Their directories join DLL search and their basenames must be
+unambiguous. Ordinary package-qualified extensions load by absolute path and may
+share a basename, as SQLAlchemy's two `_util_cy` extensions do. Smoke tests import
+both the CPython SDK extensions and every retained third-party extension identity.
+
+## Current CMake verification, 2026-10-03
+
+The current Debug CMake `verify-package` target passed with both `python.exe` and
+`python_d.exe` in the extracted ZIP. Each passed build identity, role, full package
+cohesion, production imports, child identity and explicit binary-override probes.
+The subsequent hostile-environment suite passed. CTest passed all four tests in
+both Debug and Release, including C static/DLL and Rust ABI consumers.
+
+The production-only Release ZIP also passed the full acceptance suite. Each
+configuration's `verification/<Config>/result.json` records its archive and
+manifest hashes, build identity and tested interpreter names. Both locators
+remain unchanged after a subsequent CMake configuration.
+
+The smoke test imports 119 native identities and checks all 80 installed
+distributions: 77 locked third-party distributions and the three CADRUMO 0.5.1
+wheels. The product wheel build uses existing authority validation. Publication
+locks, transaction descriptors and temporary export staging/backup directories do
+not enter the source snapshot or dependency fingerprints. Compiler code and source
+normalization rules participate in CMake invalidation.
+
+`cmake --install` produced the outside-checkout installation
+`Y:/code/cadrumo-native-proof/CADRUMO final á 漢字`. Its full cohesion and dependency
+smoke checks passed from an unrelated working directory. A separate hostile-input
+copy passed CLI startup, child startup, Python environment conflicts, missing and
+invalid dependencies, native search conflicts, ignored executable `.pth` and
+unchanged installed hashes. Evidence is
+`build/windows-x64/verification/Release/verification.json`.
+
+The current installed interpreter and child passed Windows kernel-file tracing:
+71,288 scoped events, four writes, zero lost events, all observed mutations beneath
+the declared user root. Evidence is
+`Y:/code/cadrumo-native-proof/final-release-trace/summary.json` and
+`application-events.jsonl`. The raw capture was removed. The Windows profile uses
+nonpaged buffers and an executable-name filter, then retains only the tested PIDs;
+see [Microsoft's WPR filtering guidance](https://devblogs.microsoft.com/performance-diagnostics/filtering-events-using-wpr/).
+An earlier capture with lost events was rejected. This proves the exercised
+parent/child probe, not arbitrary Python containment or every application workflow.
+
+Five named cleanup targets passed in a separate configured proof tree, retaining
+configuration and unrelated files. In-source configuration is refused before
+compiler/scratch setup. The two existing storage-projection tests, Ruff and ty pass.
+The final Release installation's manifest matches the verified Release ZIP.
+The authored Windows long-path manifest is included in source snapshots through
+an explicit ignore-rule exception. Archive replacement refusal has a focused
+regression test; reconfiguration preserves both archive locators.
+
+## Historical artifact evidence, prior layout
 
 Evidence below belongs to the compiled Known Folder bootstrap. Its native source
 is preserved in `.artifacts/native/repeatable/product/source/native/`, with its

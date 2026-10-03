@@ -20,6 +20,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeSessionRequest
 from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor
 
 pytestmark = [
     pytest.mark.integration,
@@ -29,21 +30,41 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize("cohort", ["installed", "wrong"])
+def _publish_descriptor(root: Path, logical_generation: str) -> Path:
+    """Select a published generation the way a republish does: by its descriptor alone."""
+    root.mkdir()
+    descriptor = AuthorityDescriptor(
+        database=f"authority-{'1' * 64}.sqlite3",
+        database_size=1,
+        database_sha256="1" * 64,
+        logical_generation=logical_generation,
+    )
+    (root / AUTHORITY_DESCRIPTOR_FILENAME).write_bytes(descriptor.to_bytes())
+    return root
+
+
+@pytest.mark.parametrize("cohort", ["installed", "wrong", "republished"])
 def test_installed_client_accepts_only_the_matching_native_cohort(tmp_path: Path, cohort: str) -> None:
+    """The cohort is the package version and, when both sides name one, the published authority generation."""
     endpoint = WindowsRuntimeEndpoint(storage_root=tmp_path)
     stop = Event()
     host = RuntimeTransportServer(
         endpoint,
-        product_version=version("cadrumo") if cohort == "installed" else "another-installed-cohort",
+        product_version=version("cadrumo") if cohort != "wrong" else "another-installed-cohort",
         stop=stop,
+        # The runtime admitted its generation at boot; the frontend reads the republished one.
+        authority_generation="a" * 64,
     )
-    with override_settings(cadrumo_local_storage_root=tmp_path), ThreadPoolExecutor(max_workers=1) as pool:
+    authority_root = _publish_descriptor(tmp_path / "authority", "b" * 64 if cohort == "republished" else "a" * 64)
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_authority_root=authority_root),
+        ThreadPoolExecutor(max_workers=1) as pool,
+    ):
         running = pool.submit(host.serve)
         try:
             assert host.ready.wait(3)
             profile_id = uuid4()
-            if cohort == "wrong":
+            if cohort != "installed":
                 with pytest.raises(RuntimeRefusalError) as refusal:
                     asyncio.run(
                         open_installed_runtime_client(

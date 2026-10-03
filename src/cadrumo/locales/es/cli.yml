@@ -1907,20 +1907,6 @@ cli:
       period_unrecognised: 'Periodo ''{raw}'' no reconocido. Usa un token AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (meses), e indica el año con --year (p. ej.
         --period 1T --year 2024).'
-    operation_notices:
-      clave_movil_approval_pending: 'Cl@ve Móvil: abre ahora la aplicación Cl@ve y
-        aprueba la solicitud pendiente de la AEAT antes de que caduque, en unos dos
-        minutos.'
-      clave_movil_approval_pending_with_code: 'Cl@ve Móvil: abre ahora la aplicación
-        Cl@ve y aprueba la solicitud pendiente de la AEAT antes de que caduque, en
-        unos dos minutos. Comprueba que el código %{code} coincide en la aplicación.'
-      clave_movil_qr_scan_pending: 'Cl@ve Móvil: abre ahora la aplicación Cl@ve, escanea
-        el código QR que aparece en la ventana del navegador y aprueba la solicitud
-        de la AEAT antes de que caduque, en unos dos minutos.'
-      clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: abre ahora la aplicación
-        Cl@ve, escanea el código QR que aparece en la ventana del navegador y aprueba
-        la solicitud de la AEAT antes de que caduque, en unos dos minutos. Comprueba
-        que el código %{code} coincide en la aplicación.'
   config:
     app_help: Configurar y reparar el perfil local, las credenciales, el almacenamiento
       y el enlace con Google.

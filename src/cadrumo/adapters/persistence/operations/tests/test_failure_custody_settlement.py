@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import traceback
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -310,3 +312,47 @@ def test_failed_financial_operand_cleanup_does_not_publish_executor_failure_rece
         checkpoint = asyncio.run(custody.read(str(requirement.interaction_id)))
         assert checkpoint is not None
         assert checkpoint.state is OperationFinancialOperandCustodyState.DELIVERY_ACKNOWLEDGED
+
+
+@pytest.mark.parametrize("registered_refusal", (True, False), ids=("registered-refusal", "ordinary-failure"))
+def test_executor_failure_log_record_carries_the_raising_frame(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, registered_refusal: bool
+) -> None:
+    """The settlement log keeps the executor frame that raised, next to the receipt's correlation."""
+    executor = _FailureAfterGrantExecutor(registered_refusal=registered_refusal)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        custody = _GatedReleaseCustodyRepository(root=tmp_path / "custody")
+        custody.allow_buffer_release.set()
+        supervisor = _supervisor(
+            executor=executor,
+            journal=OperationJournalRepository(storage_root=storage_root),
+            leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+            operands=operation_secure_reference_repository(objects=profile.repository),
+            custody=custody,
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
+            await supervisor.start(operation_id)
+            return await supervisor.settled(operation_id)
+
+        with caplog.at_level(logging.WARNING, logger="cadrumo.application.operations._supervisor_execution"):
+            terminal = asyncio.run(run())
+
+    receipt = terminal.terminal_receipt
+    assert receipt is not None
+    correlation = receipt.refusal_ref if registered_refusal else receipt.diagnostic_ref
+    assert correlation is not None
+    records = [
+        record
+        for record in caplog.records
+        if record.name == "cadrumo.application.operations._supervisor_execution"
+        and f"operation={_OPERATION_ID}" in record.getMessage()
+        and correlation in record.getMessage()
+    ]
+    assert len(records) == 1
+    exc_info = records[0].exc_info
+    assert exc_info is not None
+    frames = [(frame.f_code.co_filename, frame.f_code.co_name) for frame, _ in traceback.walk_tb(exc_info[2])]
+    assert (__file__, "execute") == frames[-1]

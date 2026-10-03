@@ -1,6 +1,16 @@
 {
   "platform": "windows-x64",
   "backend": "windows",
+  "package_exclusions": [
+    {
+      "pattern": "PIL/_imagingtk*.pyd",
+      "reason": "Optional Pillow Tk adapter; Tk is excluded from the CADRUMO runtime"
+    },
+    {
+      "pattern": "PIL/ImageTk.py",
+      "reason": "Optional Pillow Tk adapter; Tk is excluded from the CADRUMO runtime"
+    }
+  ],
   "paths": {
     "executable": "python.exe"
   },
@@ -21,6 +31,9 @@
       "pythoncom",
       "win32com.shell.shell"
     ]
+  },
+  "native_smoke_prerequisites": {
+    "dde": ["win32ui"]
   },
   "bootstrap": "interpreter/windows/bootstrap.py",
   "smoke_test": "windows_smoke.py",

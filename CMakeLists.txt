@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.30)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR "Use an out-of-source build directory")
+endif()
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/tmp")
 
 # Toolchain versions have one authored owner. Set compiler-selection inputs before project().
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/native/toolchain.json" toolchain)
@@ -29,9 +33,6 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8 OR NOT MSVC)
   message(FATAL_ERROR "Only Windows x64 with MSVC is implemented")
-endif()
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-  message(FATAL_ERROR "Use an out-of-source build directory")
 endif()
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release)$")
   message(FATAL_ERROR "Select CMAKE_BUILD_TYPE=Debug or Release")

@@ -47,6 +47,13 @@ class RuntimeShutdownIncompleteError(RuntimeRefusalError):
         super().__init__(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
 
 
+# The published registry authority's logical generation. An editable install
+# keeps its product version while source and authority move, so a runtime and
+# its frontends also compare this whenever both name one; channels that carry
+# no authority cohort (worker control) leave it unset.
+type RuntimeAuthorityGeneration = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+
 class RuntimeClientHello(BaseModel):
     """Nonsecret expected installation cohort and canonical storage identity."""
 
@@ -56,6 +63,7 @@ class RuntimeClientHello(BaseModel):
     protocol_version: Annotated[int, Field(strict=True, ge=2, le=2)] = 2
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
+    authority_generation: RuntimeAuthorityGeneration | None = None
 
 
 class RuntimeServerHello(BaseModel):
@@ -68,6 +76,7 @@ class RuntimeServerHello(BaseModel):
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     boot_id: UUID
+    authority_generation: RuntimeAuthorityGeneration | None = None
 
 
 class RuntimePeer(BaseModel):

@@ -12,6 +12,7 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from .cmake_build import reset
+from .hashing import digest
 from .layout import backend, load_layout
 from .verify import verify
 
@@ -20,10 +21,14 @@ def check(build: Path, configuration: str) -> None:
     """Extract a fresh artifact and test the shipped interpreter, not the development venv."""
     build = build.resolve(strict=True)
     artifacts = json.loads((build / f"artifacts-{configuration}.json").read_text(encoding="utf-8"))
+    archive_path = Path(artifacts["archive"])
+    archive_hash = digest(archive_path)
+    if archive_hash != artifacts["archive_sha256"]:
+        raise AssertionError("ZIP differs from the packaged artifact locator")
     destination = reset(build, f"verification/{configuration}")
     extracted = destination / "ZIP espacio á 漢字"
     extracted.mkdir(parents=True)
-    with zipfile.ZipFile(artifacts["archive"]) as archive:
+    with zipfile.ZipFile(archive_path) as archive:
         for member in archive.namelist():
             if not (extracted / member).resolve().is_relative_to(extracted):
                 raise ValueError("Archive path escapes extraction root")
@@ -39,6 +44,8 @@ def check(build: Path, configuration: str) -> None:
     environment = dict(os.environ)
     environment.update(CADRUMO_LOCAL_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
     manifest_path = package / contract["files"]["package_manifest"]
+    if digest(manifest_path) != artifacts["manifest_sha256"]:
+        raise AssertionError("ZIP manifest differs from the packaged artifact locator")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     development = package / manifest["layout"]["files"]["development_executable"]
     if development.exists() != bool(artifacts["development_binary"]):
@@ -70,9 +77,19 @@ def check(build: Path, configuration: str) -> None:
                     if str(manifest["build"][key]) not in result.stdout:
                         raise AssertionError(f"Missing interpreter banner metadata: {key}")
     verify(package, destination=Path("acceptance"), product=True, build_root=destination)
+    if digest(archive_path) != archive_hash:
+        raise AssertionError("ZIP changed during verification")
     (destination / "result.json").write_text(
         json.dumps(
-            {"archive": artifacts["archive"], "interpreters": [p.name for p in executables], "passed": True}, indent=2
+            {
+                "archive": str(archive_path),
+                "archive_sha256": archive_hash,
+                "manifest_sha256": digest(manifest_path),
+                "build": manifest["build"],
+                "interpreters": [p.name for p in executables],
+                "passed": True,
+            },
+            indent=2,
         ),
         encoding="utf-8",
     )

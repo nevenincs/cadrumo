@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-all-mcp-integration'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8d0a1daaf0314db2cb51791a84b115de97200a41540afd673ac9ae48f4b1076'
+body_hash: 'sha256:5d66c96f69fbd2f6c49909fa37bbde287a1b662bad1c2c6be76ba8ede7265799'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2309,6 +2309,105 @@ related:
 - `S05` `M` `.codex/handoffs/tui-all-mcp-dispositions-withholding.json`
 - `S05` `verify:` `Darwin focused terminal regressions7cases` -> `pass`
 - `S05` `verify:` `Home helper delayed-transition and safe-error3cases` -> `pass`
+- `S05` `M` `.gitignore`
+- `S05` `M` `.vault/adr/2026-10-03-application-packaging-interpreter-foundation-adr.md`
+- `S05` `M` `.vault/audit/2026-10-03-application-core-packaging-audit.md`
+- `S05` `M` `.vault/audit/2026-10-03-application-packaging-audit.md`
+- `S05` `M` `.vault/exec/2026-10-03-application-core-packaging/2026-10-03-application-core-packaging-ledger.md`
+- `S05` `M` `.vault/exec/2026-10-03-application-packaging/2026-10-03-application-packaging-ledger.md`
+- `S05` `M` `.vault/plan/2026-10-03-application-core-packaging-plan.md`
+- `S05` `M` `.vault/plan/2026-10-03-application-packaging-plan.md`
+- `S05` `A` `CMakeLists.txt`
+- `S05` `A` `CMakePresets.json`
+- `S05` `A` `dev/packaging/native/action_cache.py`
+- `S05` `A` `dev/packaging/native/artifact_verify.py`
+- `S05` `M` `dev/packaging/native/assemble.py`
+- `S05` `D` `dev/packaging/native/build.ps1`
+- `S05` `A` `dev/packaging/native/cleanup.py`
+- `S05` `A` `dev/packaging/native/cmake_build.py`
+- `S05` `D` `dev/packaging/native/filesystem.wprp`
+- `S05` `M` `dev/packaging/native/generate.py`
+- `S05` `A` `dev/packaging/native/hashing.py`
+- `S05` `A` `dev/packaging/native/layout.py`
+- `S05` `A` `dev/packaging/native/metadata.py`
+- `S05` `A` `dev/packaging/native/platforms/__init__.py`
+- `S05` `A` `dev/packaging/native/platforms/pe.py`
+- `S05` `A` `dev/packaging/native/platforms/windows-filesystem.wprp`
+- `S05` `A` `dev/packaging/native/platforms/windows.py`
+- `S05` `A` `dev/packaging/native/platforms/windows_trace.ps1`
+- `S05` `A` `dev/packaging/native/platforms/windows_trace_analysis.py`
+- `S05` `A` `dev/packaging/native/platforms/windows_verify.py`
+- `S05` `M` `dev/packaging/native/product.py`
+- `S05` `M` `dev/packaging/native/provision.py`
+- `S05` `A` `dev/packaging/native/stdlib.py`
+- `S05` `D` `dev/packaging/native/trace.ps1`
+- `S05` `M` `dev/packaging/native/trace_analysis.py`
+- `S05` `M` `dev/packaging/native/verify.py`
+- `S05` `A` `dev/packaging/tests/test_native_artifact_identity.py`
+- `S05` `M` `native/CMakeLists.txt`
+- `S05` `M` `native/CONTRACT.md`
+- `S05` `A` `native/application/CMakeLists.txt`
+- `S05` `M` `native/application/Cargo.lock`
+- `S05` `M` `native/application/Cargo.toml`
+- `S05` `A` `native/application/src/binary.rs`
+- `S05` `M` `native/application/src/component.rs`
+- `S05` `M` `native/application/src/error.rs`
+- `S05` `M` `native/application/src/lib.rs`
+- `S05` `A` `native/application/src/python.rs`
+- `S05` `A` `native/application/src/python_probe.py`
+- `S05` `A` `native/application/tests/binary.rs`
+- `S05` `A` `native/application/tests/live_package.rs`
+- `S05` `A` `native/application/tests/live_python.rs`
+- `S05` `A` `native/cmake/Artifact.cmake.in`
+- `S05` `A` `native/cmake/CPackProject.cmake.in`
+- `S05` `A` `native/cmake/Packaging.cmake`
+- `S05` `A` `native/cmake/Rust.cmake`
+- `S05` `A` `native/cmake/WindowsToolchain.cmake`
+- `S05` `A` `native/cmake/platforms/Windows.cmake`
+- `S05` `M` `native/interpreter/bootstrap.py`
+- `S05` `D` `native/interpreter/host.c`
+- `S05` `D` `native/interpreter/python.c`
+- `S05` `A` `native/interpreter/windows/bootstrap.py`
+- `S05` `A` `native/interpreter/windows/host.c`
+- `S05` `A` `native/interpreter/windows/host.manifest`
+- `S05` `A` `native/interpreter/windows/python.c`
+- `S05` `M` `native/package-layout.json`
+- `S05` `M` `native/platform/Cargo.toml`
+- `S05` `M` `native/platform/src/lib.rs`
+- `S05` `A` `native/platforms/windows-x64.json`
+- `S05` `A` `native/tests/package_smoke.py`
+- `S05` `A` `native/tests/windows_smoke.py`
+- `S05` `M` `native/toolchain.json`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/profile_worker_transport.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
+- `S05` `A` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker_transport.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_filed_data_capture_port_errors.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
+- `S05` `M` `src/cadrumo/application/aeat_sync/tests/test_workspace_reader.py`
+- `S05` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S05` `M` `src/cadrumo/application/operations/_supervisor_lease.py`
+- `S05` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S05` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `S05` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_descriptor_resolution.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/registered_operation_observations.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_operation_error_detail.py`
+- `S05` `A` `src/cadrumo/entrypoints/operation_notice_messages.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_runtime_client.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/aeat_sync/controller.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/aeat_sync/screens.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/operations/logs.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_notices.py`
+- `S05` `verify:` `six-source alternate-index observation: zero later deltas and unchanged original indexes` -> `pass`
+- `S05` `verify:` `reconciled-cut git diff --check` -> `pass`
 
 ## Notes
 
@@ -2317,3 +2416,5 @@ related:
 - `S04` User directed a concrete complete MCP baseline checkpoint before remaining verification. Implementation and original-base dispositions are recorded; this Step remains open. No final combined or installed-runtime success is claimed. Interrupted affected test run:466 passed,61 failed,41 uncompleted; follow-up verification deferred.
 - `S05` User directed a concrete complete MCP baseline checkpoint before remaining verification. Implementation and original-base dispositions are recorded; this Step remains open. No final combined or installed-runtime success is claimed. Interrupted affected test run:466 passed,61 failed,41 uncompleted; follow-up verification deferred.
 - `S05` Continue native Mac work after agent briefing: retain actual terminal/receipt widgets across modal dismissal and wait genuine public Home refresh after Back. Full installed journey remains unproven and final verification deferred. Retire marker-containing saved previews to external preservation evidence; normalize incoming test CRLF only. No live source worktree/index or admission policy changed.
+- `S05` Resumed verification authorization: establish the reconciled baseline first, verify end to end, land on feature/tui only after green, then run end-to-end verification from the destination worktree. Prior broad-check deferral is revoked for final completion. Live TUI advances during capture; reconcile immutable committed cuts in isolation and preserve dirty active-writer files/index. No routine implementation or conflict-resolution approval is required.
+- `S05` Latest immutable TUI cut a8a7fb7d reconciled in isolation; preserved MCP native custody, public typed APIs and independent tests alongside incoming packaging/runtime/filing prompts. Final combined and installed E2E proof remains pending; active live writer files and index remain untouched.

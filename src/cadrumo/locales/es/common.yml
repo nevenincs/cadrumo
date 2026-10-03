@@ -784,6 +784,19 @@ operation:
       succeeded: Completada
       succeeded_partial: Completada en parte
       timed_out: Tiempo agotado
+  notice:
+    clave_movil_approval_pending: 'Cl@ve Móvil: abre ahora la aplicación Cl@ve y aprueba
+      la solicitud pendiente de la AEAT antes de que caduque, en unos dos minutos.'
+    clave_movil_approval_pending_with_code: 'Cl@ve Móvil: abre ahora la aplicación
+      Cl@ve y aprueba la solicitud pendiente de la AEAT antes de que caduque, en unos
+      dos minutos. Comprueba que el código %{code} coincide en la aplicación.'
+    clave_movil_qr_scan_pending: 'Cl@ve Móvil: abre ahora la aplicación Cl@ve, escanea
+      el código QR que aparece en la ventana del navegador y aprueba la solicitud
+      de la AEAT antes de que caduque, en unos dos minutos.'
+    clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: abre ahora la aplicación
+      Cl@ve, escanea el código QR que aparece en la ventana del navegador y aprueba
+      la solicitud de la AEAT antes de que caduque, en unos dos minutos. Comprueba
+      que el código %{code} coincide en la aplicación.'
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada

@@ -30,7 +30,17 @@ def build_product(output: Path, python: Path, dependencies: Path) -> None:
     if uv is None:
         raise FileNotFoundError("uv is required")
     source = output / "source"
-    snapshot(REPO_ROOT, repository_files(REPO_ROOT), source)
+    files = tuple(
+        name
+        for name in repository_files(REPO_ROOT)
+        if not any(
+            part.startswith(
+                (".aeat-generated-export-transaction-", ".generated-export-backup-", ".generated-export-stage-")
+            )
+            for part in Path(name).parts
+        )
+    )
+    snapshot(REPO_ROOT, files, source)
     stage_published_authority(REPO_ROOT, source)
     environment = dict(os.environ)
     environment[AUTHORITY_ROOT_ENV] = str(source / ".authority")

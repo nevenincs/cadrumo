@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:54c4cea69470b2456c471155ff63f5288d34a331b35e9b3fd7668b1a7ec7c20e'
+body_hash: 'sha256:9a2b36d3268352719193f27b90e2f965d702dbdeb2a4684ad5b3a88a85f598be'
 related:
   - "[[2026-10-03-application-packaging-plan]]"
 ---
@@ -90,9 +90,102 @@ Earlier C static/DLL/Rust consumers passed; current full bundle, all native-modu
 imports, optional development executable, install/ZIP acceptance and renewed trace
 remain owned by the executor and are not inferred from historical evidence.
 
+### compiler-input-coverage | high | Wheel invalidation omitted authority compiler dependencies
+
+Focused review traced the wheel hook into dev.registry, dev.corpus,
+dev.docs.preprocess and dev.cache_root. These compiler families, their package
+initializers, and source normalization/ignore rules now participate in the CMake
+product inputs. Active .aeat-generated-export-transaction-* files are excluded
+from both CMake inputs and source snapshots; they are publication coordination
+state, not product source. A Debug snapshot attempt refused an actively locked
+transaction file before this correction. No registry validation was bypassed.
+
+### complete-native-imports | high | Broader smoke tests exposed two relocation defects
+
+The current smoke test imports all 119 retained native identities, including the
+20 SDK extensions. It exposed the unused Pillow Tk adapter after stdlib Tk pruning,
+and axdebug's basename import of axscript.pyd. Explicit Pillow exclusions record
+file hashes and reasons in the package manifest. A PE import-table reader now
+enrolls basename-referenced PYDs alongside DLLs in native search and ambiguity
+checks. Qualified PYDs retain absolute-path loading, allowing SQLAlchemy's distinct
+engine/sql _util_cy extensions. Windows smoke prerequisites initialize win32ui
+before dde. Corrective review found no blocking defects in these fixes.
+
+### current-release-evidence | low | Current Release package and outside-checkout install pass
+
+The current host embeds longPathAware; compiler scratch is preset-scoped beneath
+the build tree. CPython 3.13.11, the three CADRUMO 0.5.1 wheels and 77 locked
+third-party distributions assembled successfully. ctest --preset release passed
+all four tests: packaged Python, C static, C DLL and Rust consumers. The package
+test imports all 119 native identities and checks all 80 distributions. Standard
+cmake --install produced Y:/code/cadrumo-native-proof/CADRUMO CMake á 漢字; its
+full --check-package and packaged smoke test passed from an unrelated cwd.
+Both native storage projection tests, Ruff and ty pass. Debug/ZIP acceptance is
+still running. The renewed trace lost events during heavy filesystem activity and
+is rejected as evidence; its raw capture was removed. The next trace uses a
+Python executable filter and increased buffers. Current overall verdict remains
+PENDING until those required checks pass.
+
+### native-source-manifest | high | Global ignore rules omitted a required CMake source
+
+Resume review found that the authored Windows long-path manifest was hidden by
+the global `*.manifest` ignore rule. A clean checkout or source snapshot would
+omit a required native build input. Resolved with a path-specific exception in
+`.gitignore`. The real `dev.source_tree.repository_files` enumerator now includes
+the manifest and both root CMake declarations; no generated binaries are enrolled.
+
+### configuration-artifact-identity | high | Reconfiguration rewrote an existing Debug ZIP locator
+
+The resumed Debug acceptance refused its existing ZIP because configuring Release
+without the development executable had overwritten Debug's generated locator.
+Resolved by moving locator publication from configure-time `file(GENERATE)` to a
+CPack post-build script. It projects development-host presence from the assembled
+manifest and binds the locator to archive and manifest SHA256 digests. Verification
+rejects a replaced ZIP before deleting prior acceptance output and records the
+tested hashes. The real-file replacement regression and two storage tests pass.
+Final two-configuration acceptance is recorded in the following checkpoint.
+
+### final-cmake-handoff | low | Current Windows interpreter packaging acceptance passes
+
+Final integrated verdict: PASS for S01-S05 of the Windows interpreter foundation.
+The resumed review covered the uncommitted CMake/platform split, isolated host,
+assembly and acceptance helpers against the accepted foundation amendment, reusing
+the prior corrected native-import, cleanup and pinned-build evidence. The two
+resume findings above are resolved. No remaining critical or high findings were
+identified within this scope.
+
+Both final CPack archives passed full relocated acceptance. Debug includes
+`python.exe` and `python_d.exe`; Release includes production only. Their hash-bound
+results are `build/windows-x64/verification/Debug/result.json` and
+`build/windows-x64/verification/Release/result.json`. Reconfiguring CMake preserved
+both locators byte-for-byte. Release archive SHA256 is
+`ce7bcb35a83c3cb25057bb47c7eaa1fc292aad18c2c9400257938dd884e2e3a7`;
+its manifest SHA256 is
+`ce36b6a5d59f8ab0df72c5be26a41fdc4f0a611f2a8e50222b887e6d1ad63b7d`.
+
+The final outside-checkout installation at
+`Y:/code/cadrumo-native-proof/CADRUMO final á 漢字` has that same manifest and
+passes full cohesion and the package smoke test from an unrelated cwd. Current
+Release CTest passes all four tests. The smoke checks cover 119 native identities
+and 80 distributions. Three focused regression/storage tests, Ruff lint/format,
+Windows-target ty and pinned Rust formatting pass. Ambient Cargo could not launch;
+the pinned Rust formatter was invoked directly instead.
+
+The earlier installed tree differs from the final artifact and its trace was not
+reused. A fresh final-install trace passed with 71,288 scoped events, four writes
+and zero lost events; every observed mutation was inside the supplied storage root.
+Evidence is `Y:/code/cadrumo-native-proof/final-release-trace/summary.json` and its
+scoped event file. The raw capture was removed. This proves the exercised parent
+and child probe, not arbitrary-code containment or all product workflows.
+
+The separate `native/application/` work and unrelated checkout changes are excluded.
+Linux/macOS implementation, application-library integration, installers and public
+release promotion remain outside this completed foundation. Product evidence binds
+the assembled snapshot, not later unrelated edits in the shared checkout.
+
 ## Recommendations
 
-Finish the fresh CMake artifact acceptance before closing open plan steps. Historical
+Use the final hash-bound CMake artifact evidence for this handoff. Historical
 artifact evidence remains scoped to its recorded source and layout. Preserve the
 checked PDFium/pywin32 adaptations and rerun dependency smoke tests when their
 inputs change. Linux formats/loaders and macOS compilation, signing and wheel

@@ -71,6 +71,7 @@ def assemble(
         selected = min(candidates, key=lambda parts: (len(parts), parts))
         smoke_modules[name] = [".".join(selected)]
     lib = root / layout["stdlib"]
+    lib.parent.mkdir(parents=True, exist_ok=True)
     packages = root / layout["packages"]
     native = root / layout["native"]
     native.mkdir(parents=True)
@@ -97,6 +98,18 @@ def assemble(
         return set(names) & excluded
 
     shutil.copytree(dependencies, packages, ignore=omit_development)
+    pruned = []
+    for exclusion in contract.get("package_exclusions", []):
+        matches = list(packages.glob(exclusion["pattern"]))
+        if not matches:
+            raise ValueError(f"Package exclusion no longer matches: {exclusion['pattern']}")
+        for member in matches:
+            if not member.resolve().is_relative_to(packages.resolve()) or not member.is_file():
+                raise ValueError(f"Invalid package exclusion: {member}")
+            pruned.append(
+                {"file": member.relative_to(root).as_posix(), "sha256": digest(member), "reason": exclusion["reason"]}
+            )
+            member.unlink()
     executable = root / layout["executable"]
     executable.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(build / executable.name, executable)
@@ -153,6 +166,7 @@ def assemble(
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
         "relocation": relocation,
         "patches": patches,
+        "pruned": pruned,
         "files": {p.relative_to(root).as_posix(): digest(p) for p in sorted(root.rglob("*")) if p.is_file()},
     }
     (root / files["package_manifest"]).write_text(json.dumps(manifest, indent=2), encoding="utf-8")

@@ -159,12 +159,16 @@ class OperationSupervisorLeaseMixin:
                 if executor_task in done or not pending:
                     break
                 await self._require_owned_lease(identity, self._clock())
-            return await executor_task
-        finally:
+        except BaseException:
             if not executor_task.done():
                 executor_task.cancel()
             with suppress(asyncio.CancelledError):
                 await executor_task
+            raise
+        # Join a finished executor exactly once: asyncio drops a task's stored
+        # traceback on retrieval, so a second await would re-raise its failure
+        # without the frame that raised it.
+        return await executor_task
 
     async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None:
         """Release one exact current lease and refuse any ownership loss."""

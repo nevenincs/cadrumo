@@ -17,13 +17,17 @@ from PIL import Image
 from dev._paths import REPO_ROOT
 
 from ..hashing import digest
+from .pe import imports as pe_imports
 
 
 def assemble_native(python: Path, packages: Path, native: Path, root: Path, contract: dict[str, Any]) -> dict[str, Any]:
     """Relocate PE modules and apply the reviewed Windows wheel loader patches."""
-    for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
-        shutil.copy2(source, native / source.name)
     modules: dict[str, str] = {}
+    for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
+        target = native / source.name
+        shutil.copy2(source, target)
+        if source.suffix.lower() == ".pyd":
+            modules[source.stem] = target.relative_to(root).as_posix()
     relocation = {}
     for source in sorted(packages.rglob("*")):
         if source.suffix.lower() not in {".pyd", ".dll", ".exe"}:
@@ -100,9 +104,15 @@ def assemble_native(python: Path, packages: Path, native: Path, root: Path, cont
                 "reason": "Use bundled COM extensions and user-root cache; exclude host Python registry paths",
             }
         )
-    dll_dirs = sorted({p.parent.relative_to(root).as_posix() for p in native.rglob("*.dll")})
+    loader_files = [p for p in native.rglob("*") if p.suffix.lower() in {".dll", ".pyd"}]
+    imported_pyds = {name for p in loader_files for name in pe_imports(p) if name.endswith(".pyd")}
+    searched_files = [p for p in loader_files if p.suffix.lower() == ".dll" or p.name.casefold() in imported_pyds]
+    missing = imported_pyds - {p.name.casefold() for p in searched_files}
+    if missing:
+        raise ValueError(f"Missing transitive extension libraries: {sorted(missing)}")
+    dll_dirs = sorted({p.parent.relative_to(root).as_posix() for p in searched_files})
     dll_names: dict[str, str] = {}
-    for dll in native.rglob("*.dll"):
+    for dll in searched_files:
         identity = dll.name.casefold()
         hashed = digest(dll)
         if identity in dll_names and dll_names[identity] != hashed:

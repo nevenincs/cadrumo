@@ -67,7 +67,7 @@ impl Cancellation {
     pub fn cancel(&self) {
         self.0.store(true, Ordering::Release);
     }
-    fn check(&self) -> Result<(), Error> {
+    pub(crate) fn check(&self) -> Result<(), Error> {
         if self.0.load(Ordering::Acquire) {
             Err(Error::Cancelled)
         } else {

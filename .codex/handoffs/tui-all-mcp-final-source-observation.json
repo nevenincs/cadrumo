@@ -3,9 +3,9 @@
   "scope": "Only six original MCP source worktrees; live TUI explicitly excluded",
   "original_inventory": ".codex/handoffs/tui-all-mcp-20261003.json",
   "previous_observation": ".codex/handoffs/tui-all-mcp-later-capture.json",
-  "evidence_directory": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\final-source-observation-20261003T203033Z",
-  "started_utc": "2026-10-03T20:30:33.314756+00:00",
-  "finished_utc": "2026-10-03T20:32:21.786355+00:00",
+  "evidence_directory": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\final-source-observation-20261003T222048Z",
+  "started_utc": "2026-10-03T22:20:48.927752+00:00",
+  "finished_utc": "2026-10-03T22:23:16.397675+00:00",
   "comparison_policy": "Alternate index starts at actual HEAD, enrolls preserved snapshot paths absent from HEAD (including captured untracked files), then adds current tracked/nonignored untracked content twice with existing transient exclusions. No ordinary working-tree diff is used to infer deletion of captured untracked files.",
   "git_optional_locks": "0",
   "observations": [
@@ -35,8 +35,8 @@
       "snapshot_untracked_enrolled_in_alternate_index_count": 13,
       "preserved_snapshot": "395ba3355dfa4c58823f4a125c99531468db2eaf",
       "preservation_ref": null,
-      "started_utc": "2026-10-03T20:30:33.329787+00:00",
-      "finished_utc": "2026-10-03T20:31:27.220619+00:00",
+      "started_utc": "2026-10-03T22:20:48.973913+00:00",
+      "finished_utc": "2026-10-03T22:22:20.407530+00:00",
       "excluded_transients": [
         "**/.catalogue-write.lock",
         "**/.aeat-generated-export-transaction-*.lock"
@@ -68,8 +68,8 @@
       "snapshot_untracked_enrolled_in_alternate_index_count": 0,
       "preserved_snapshot": "7a8e0e93869494ce84828f54d1bd18319e1d5c80",
       "preservation_ref": null,
-      "started_utc": "2026-10-03T20:30:33.330957+00:00",
-      "finished_utc": "2026-10-03T20:31:29.249492+00:00",
+      "started_utc": "2026-10-03T22:20:48.983116+00:00",
+      "finished_utc": "2026-10-03T22:22:23.124486+00:00",
       "excluded_transients": [
         "**/.catalogue-write.lock",
         "**/.aeat-generated-export-transaction-*.lock"
@@ -101,8 +101,8 @@
       "snapshot_untracked_enrolled_in_alternate_index_count": 22,
       "preserved_snapshot": "90d55a9a7e77fd622dc19eb2cfaae3ff106e1763",
       "preservation_ref": null,
-      "started_utc": "2026-10-03T20:30:33.332509+00:00",
-      "finished_utc": "2026-10-03T20:31:24.062796+00:00",
+      "started_utc": "2026-10-03T22:20:48.984005+00:00",
+      "finished_utc": "2026-10-03T22:22:20.428179+00:00",
       "excluded_transients": [
         "**/.catalogue-write.lock",
         "**/.aeat-generated-export-transaction-*.lock"
@@ -134,8 +134,8 @@
       "snapshot_untracked_enrolled_in_alternate_index_count": 0,
       "preserved_snapshot": "09a1dc913e783eca275e5ef74939511c419731a8",
       "preservation_ref": null,
-      "started_utc": "2026-10-03T20:31:24.067336+00:00",
-      "finished_utc": "2026-10-03T20:32:13.144259+00:00",
+      "started_utc": "2026-10-03T22:22:20.413718+00:00",
+      "finished_utc": "2026-10-03T22:23:12.732911+00:00",
       "excluded_transients": [
         "**/.catalogue-write.lock",
         "**/.aeat-generated-export-transaction-*.lock"
@@ -167,8 +167,8 @@
       "snapshot_untracked_enrolled_in_alternate_index_count": 2,
       "preserved_snapshot": "d8ad4c42fbd9565bf8b231f3f074f05eefdc712b",
       "preservation_ref": null,
-      "started_utc": "2026-10-03T20:31:27.225830+00:00",
-      "finished_utc": "2026-10-03T20:32:15.286404+00:00",
+      "started_utc": "2026-10-03T22:22:20.435006+00:00",
+      "finished_utc": "2026-10-03T22:23:12.747277+00:00",
       "excluded_transients": [
         "**/.catalogue-write.lock",
         "**/.aeat-generated-export-transaction-*.lock"
@@ -200,8 +200,8 @@
       "snapshot_untracked_enrolled_in_alternate_index_count": 954,
       "preserved_snapshot": "67047039edc7e79b4b560dd64960ee843080fda6",
       "preservation_ref": null,
-      "started_utc": "2026-10-03T20:31:29.254525+00:00",
-      "finished_utc": "2026-10-03T20:32:21.780778+00:00",
+      "started_utc": "2026-10-03T22:22:23.248318+00:00",
+      "finished_utc": "2026-10-03T22:23:16.392348+00:00",
       "excluded_transients": [
         "**/.catalogue-write.lock",
         "**/.aeat-generated-export-transaction-*.lock"
