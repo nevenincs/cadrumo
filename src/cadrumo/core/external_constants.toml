@@ -128,7 +128,7 @@ official_access_auth_methods = [
 representation_own_name_selector = "#propio"
 representation_own_name_label_selector = "label[for=\"propio\"]"
 representation_representative_selector = "input[name=\"representacion\"][id=\"representante\"]"
-representation_submit_selector = "form#repForm button[type=\"submit\"]"
+representation_submit_selector = "body:has(form#repForm) button[type=\"submit\"]"
 representation_own_name_action_label = "representation-gate-own-name-continue"
 wallet_discovered_entrypoint_action_label = "wallet-discovered-entrypoint-open"
 wallet_execute_read_action_label = "wallet-execute-read-query"

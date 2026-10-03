@@ -41,7 +41,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, override
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
@@ -82,6 +82,7 @@ from ._session_probe import run_authenticated_landing_probe
 from .authenticator import AEAT_SESSION_IDLE_TTL
 from .browser_lifecycle import CloseIntentBarrier
 from .clave_movil_metadata import ClaveMovilSessionMetadata
+from .clave_movil_state import ClaveMovilPageState
 from .clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
@@ -485,9 +486,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         target_path: str,
     ) -> bool:
         """Click through the Cl@ve selector page when the probe lands on it."""
-        if self._clave_surface().selector_access_path_marker not in landing_url:
+        if self._clave_surface().selector_access_path_marker in urlsplit(landing_url).path:
+            await self._click_clave_movil_button(page)
+        elif not self._is_authenticated_representation_landing(landing_url):
             return False
-        await self._click_clave_movil_button(page)
         await self._wait_for_post_auth_landing(page, target_path, self._navigation_timeout_ms)
         return True
 
@@ -917,7 +919,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         except Exception as exc:
             if page is not None and not self._exception_already_has_diagnostic(exc):
                 try:
-                    await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
+                    diagnostic_id = await self._dump_diagnostic(
+                        page, reason=f"fresh-login-exception:{type(exc).__name__}"
+                    )
+                    if diagnostic_id is not None and isinstance(exc, AuthError):
+                        exc.context = {**(exc.context or {}), "diagnostic_id": diagnostic_id}
                 except Exception as _exc:
                     log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
             await self._salvage_session_before_teardown(
@@ -980,11 +986,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             attempt_context["headless"],
         )
 
-        if use_non_qr:
-            await self._drive_non_qr_fallback(page, dni_nie)
-        else:
-            await self._click_clave_movil_button(page)
-            await self._raise_if_pending_request_error(page)
+        await self._drive_clave_entry(page, dni_nie=dni_nie, target_path=target_path)
+        state = await self._observe_clave_page(page, target_path)
+        if state in {ClaveMovilPageState.AUTHENTICATED, ClaveMovilPageState.REPRESENTATION}:
+            await self._wait_for_post_auth_landing(page, target_path, self._navigation_timeout_ms)
+            return None
         verification_code = await self._extract_verification_code(page)
         await self._assert_push_wait_state(
             page,
@@ -1017,13 +1023,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                     "target_path": target_path,
                     "diagnostic_id": diagnostic_id,
                     "phone_state": "unknown",
-                    "operator_report_required": True,
-                    "operator_report_options": (
-                        "app_prompted_and_accepted",
-                        "app_prompted_not_accepted",
-                        "app_did_not_prompt",
-                        "operator_did_not_check",
-                    ),
+                    "operator_report_required": False,
                     **attempt_context,
                     "verification_code_present": bool(verification_code),
                 },
@@ -1135,15 +1135,17 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 },
             )
             self.active_session = refreshed
+            refreshed_state = await context.storage_state()
             refreshed_metadata = metadata.model_copy(
                 update={
                     "authenticated_at": refreshed.authenticated_at,
                     "idle_deadline": refreshed.idle_deadline,
+                    "storage_state_sha256": session_store.storage_state_sha256(refreshed_state),
                 },
             )
             self._persist_session(
                 storage_state_path,
-                storage_state=persisted.storage_state,
+                storage_state=refreshed_state,
                 metadata=refreshed_metadata,
             )
             log.info(

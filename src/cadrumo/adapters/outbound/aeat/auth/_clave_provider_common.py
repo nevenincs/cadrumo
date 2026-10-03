@@ -61,7 +61,7 @@ def is_authenticated_clave_landing(
         return False
     if any(marker.casefold() in path for marker in clave_path_markers):
         return False
-    if target_path in landing_url:
+    if urlsplit(target_path).path.casefold() == path:
         return True
     return same_aeat_application_path(landing_path=path, target_path=target_path)
 

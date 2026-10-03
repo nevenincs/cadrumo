@@ -207,6 +207,16 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
               <button type="submit">Confirmar</button>
             </form>
             """
+        elif self.path == "/clave-movil-representation-external-submit":
+            html = f"""
+            <form id="repForm" method="get" action="{_PRE303_TARGET_URL}">
+              <input name="forigen" type="hidden" value="pre303">
+              <input id="propio" name="representacion" type="radio" checked>
+              <label for="propio">Actuar en nombre propio</label>
+              <input id="representante" name="representacion" type="radio">
+            </form>
+            <button type="submit" onclick="document.querySelector('#repForm').requestSubmit()">Confirmar</button>
+            """
         elif self.path == "/clave-movil-representation-missing":
             html = "<main><h1>Representación autenticada</h1></main>"
         elif self.path in {"/clave-permanente-form-success", "/clave-permanente-form-invalid"}:
@@ -329,11 +339,17 @@ class LocalHttpBoundary:
                 if _CLAVE_MOVIL.selector_access_path_marker in requested_url
                 else "/clave-movil-pending"
             )
-        if scenario not in {"clave-movil-representation", "clave-movil-representation-missing"}:
+        if scenario not in {
+            "clave-movil-representation",
+            "clave-movil-representation-missing",
+            "clave-movil-representation-external-submit",
+        }:
             return None
         if _CLAVE_MOVIL.selector_access_path_marker in requested_url:
             return "/clave-movil-selector-representation"
         if _CLAVE_MOVIL.dialogo_representacion_path_marker in requested_url:
+            if scenario.endswith("-external-submit"):
+                return "/clave-movil-representation-external-submit"
             return (
                 "/clave-movil-representation-missing"
                 if scenario.endswith("-missing")

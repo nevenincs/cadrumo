@@ -774,15 +774,17 @@ class ClavePermanenteAuthProvider:
                 },
             )
             self.active_session = refreshed
+            refreshed_state = await context.storage_state()
             refreshed_metadata = metadata.model_copy(
                 update={
                     "authenticated_at": refreshed.authenticated_at,
                     "idle_deadline": refreshed.idle_deadline,
+                    "storage_state_sha256": session_store.storage_state_sha256(refreshed_state),
                 },
             )
             self._persist_session(
                 storage_state_path,
-                storage_state=persisted.storage_state,
+                storage_state=refreshed_state,
                 metadata=refreshed_metadata,
             )
             log.info(
