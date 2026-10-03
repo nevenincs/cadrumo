@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:15d10934cf562a4e5ac1e6ed2affe60d227451a08bb7280d1cfb2c3345647cd0'
+body_hash: 'sha256:0c9bde856167f5c67c516bca6647b25e35abe41a692ababc7d1b0b2232346eba'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -242,6 +242,24 @@ related:
 - `S15` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
 - `S15` `A` `src/cadrumo/application/modelo/tests/test_m347_inmueble_advisory.py`
 - `S15` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S13` `M` `dev/registry/tests/test_modelo_347_registry.py`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml`
+- `S13` `M` `src/cadrumo/application/modelo/effective_deadline.py`
+- `S13` `M` `src/cadrumo/application/modelo/tests/test_effective_deadline_parity.py`
+- `S13` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S13` `M` `src/cadrumo/application/overview/calendar_models.py`
+- `S13` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S13` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S13` `M` `src/cadrumo/domain/deadlines/tests/test_festivos.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_deadline_effective_output.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py`
+- `S13` `M` `src/cadrumo/locales/ca/application.yml`
+- `S13` `M` `src/cadrumo/locales/en/application.yml`
+- `S13` `M` `src/cadrumo/locales/es/application.yml`
+- `S13` `M` `src/cadrumo/locales/hu/application.yml`
+- `S13` `verify:` `pytest deadline calendar parity suites` -> `pass`
+- `S13` `verify:` `inspect_authoring_candidate` -> `pass`
 
 ## Notes
 
@@ -262,3 +280,4 @@ related:
 - `S17` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
 - `S15` found two export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
 - `S15` correction: the previous S15 rows were read from another writer's commit 659fe64d35 by mistake; these rows are commit 57c565dbd1. Export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
+- `S13` part A in cd923576a0; part B (expense-without-invoice advisory, received-invoice dating, tipo de soporte) pending; follow-ups: capture the 2014-2024 347 diseño to restore filing grade for amendments, and a structured authority-grade limitation field (schema decision)
