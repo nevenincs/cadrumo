@@ -1,0 +1,51 @@
+---
+tags:
+  - '#adr'
+  - '#application-packaging'
+date: '2026-10-03'
+modified: '2026-10-03'
+body_schema: 'body-v2'
+body_hash: 'sha256:d9a49a79fdcc2a37401bf82fd3d20ae5082ad7fd7a47310b38ed12306f09da9e'
+related:
+  - "[[2026-10-03-application-packaging-research]]"
+  - "[[2026-10-03-application-packaging-adr]]"
+---
+# `application-packaging` adr: `authorized interpreter foundation` | (**status:** `accepted`)
+
+## Problem Statement
+
+The user authorized a compiled C interpreter, generated native contracts and a Windows packaging proof while requiring the broader application packaging ADR to remain proposed. An executable plan needs to distinguish that authorized foundation from unresolved application composition choices.
+
+## Considerations
+
+The existing research and proposed packaging ADR remain the design context. Settings, product identity, secure-storage taxonomy, exact Python builder version and locked Python dependencies already have canonical owners. Current implementation and build evidence are recorded in `native/CONTRACT.md` and `.artifacts/native/verification.json`.
+
+## Considered options
+
+- Ambient Python and duplicated C/Rust settings: rejected by the user's isolation and ownership requirements.
+- Versioned C ABI with dynamic platform linkage: successfully compiled and exercised; adds an early application DLL dependency.
+- Versioned C ABI with static platform linkage: selected after both linkage proofs. The executable's import table contains only Windows system libraries before main; shared policy still has one Rust source owner.
+
+## Constraints
+
+Acceptance is based on the user's explicit 2026-10-03 foundation brief and subsequent instruction to keep work to application layout and Python provisioning. It does not accept the unresolved choices in `2026-10-03-application-packaging-adr`. Tauri remains settled but unimplemented here. Linux has a mapping only; macOS implementation is deferred. No installer, provisioning service, runtime manager or storage migration is authorized. Existing local storage is ignored for this work as the user directed; core development defaults remain unchanged.
+
+The native application consumes the existing Python product and its three exact-version distributions. Existing encryption, authentication, bucket/keystore separation and application authority remain unchanged. Native bootstrap supplies the packaged Settings environment before Python starts; it does not reimplement business configuration.
+
+## Implementation
+
+Authored sources are `native/interpreter/`, `native/platform/`, `native/package-layout.json`, `native/toolchain.json` and `dev/packaging/native/`. Generated bindings, SDK acquisition, builds and assembly stay under `.artifacts/native/`. The generator projects Settings names, identity and storage declarations; package-specific paths have one JSON owner. `native/CONTRACT.md` records the platform matrix.
+
+Use the existing 3.13.11 release pin with the official CPython NuGet SDK, SHA256-pinned in the toolchain input. Compile the C host and bridge with matching headers and import library. This first build consumes upstream CPython binaries; it does not rebuild CPython from source. No CPython patch is required. The full 3.13 initialization API configures isolated import paths, disabled site/user-site and bytecode writes, explicit executable identity, UTF-8 streams and normal invocation parsing. The static host establishes restricted DLL lookup before loading the bundled Python DLL and initialization bridge.
+
+The assembler maps qualified extension names to relocated native files under `bin/python`, rejects conflicting DLL basenames and unreviewed `.pth` files, and projects pywin32's required path entries without executing its `.pth` bootstrap. Two checked package adaptations address PDFium's explicit DLL location and pywin32's registry-derived extension/cache locations. pywin32 public COM aliases resolve to bundled extensions and its generated cache belongs under the declared user cache; before/after hashes are recorded. Authority is relocated once to `data/authority` and selected through the existing Settings field.
+
+The packaged mutable root is Windows Known Folder LocalAppData plus `cadrumo`, with secure storage under `data` and temporary files under `tmp`. Inherited Settings/Python path overrides are cleared. The initial non-secret override allowlist is empty. This is controlled environment configuration, not an arbitrary-code security sandbox. Full process write tracing remains an acceptance obligation; Python audit events alone are insufficient.
+
+## Rationale
+
+The explicit user scope supports a bounded accepted foundation without promoting the whole proposed application ADR. Static platform linkage removes early application DLL search while the private bridge permits use of the public CPython initialization API after loader setup. Existing Python owners supply behavior and declarations; native code supplies installation-relative bootstrap.
+
+## Consequences
+
+A Windows interpreter and assembled base product now execute outside the checkout. DLL/static C consumers, real native imports, child startup, hostile Python environments, Unicode paths, missing dependencies and package immutability have measured evidence. OS-level tracing and any remaining review findings must close before the plan is called complete. Linux loaders, distribution format and native macOS implementation remain unproven obligations.

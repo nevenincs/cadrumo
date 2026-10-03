@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a2fbdeb9a3581ccdcbff4799c0dfc1cfd770b3bddf5dca55d1e6e74d9018424'
+body_hash: 'sha256:efe669cd05095ab55c6cb0cf36701f4fc1cbec362a395414e819d8a3ed4af24e'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
@@ -17,7 +17,6 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 ---
-
 # `application-packaging` adr: `native application composition and data layout` | (**status:** `proposed`)
 
 ## Problem Statement
@@ -46,6 +45,16 @@ Tauri is **settled by the user's instruction on 2026-10-03**, not a provisional 
 ## Implementation
 
 We will assemble one native application around the existing Python release cohort, with the following proposed layout and shared components. There is no separate launchers directory or extra launcher product.
+
+### Authorized interpreter foundation, 2026-10-03
+
+The user explicitly authorized the controlled C interpreter foundation, generated contracts from existing Settings/storage owners, the Windows package mapping and an evidence-led C ABI linkage proof. This scope is executable while this record remains proposed for the unrelated unresolved composition and distribution choices. It does not accept the entire proposal.
+
+Authored native projects live in `native/interpreter/` and `native/platform/`; package-only declarations in `native/package-layout.json`; contract generation and package assembly in `dev/packaging/native/`. Generated inputs, builds and staging live beneath `.artifacts/native/`. `native/CONTRACT.md` records the platform matrix and ownership map. Reuse the existing exact builder pin, `dev/packaging/release-python-version` (3.13.11), and the existing locked base dependency exporter.
+
+The user subsequently narrowed this work to application packaging and Python provisioning: do not change core development storage defaults, inspect or migrate existing local storage, or block the foundation on that state. The proposed old-data rollout policy remains future work. Native bootstrap sets the packaged effective environment; existing Python services retain their semantics. No installed-runtime or UI management is introduced.
+
+Static and DLL C consumers have both compiled and passed ABI version, error ownership and buffer release checks with Rust 1.96.0. Prefer static platform linkage in the bootstrap: the resulting executable imports only Windows system libraries before main. A private Python bridge loads after native loader setup and uses the full CPython 3.13 initialization API. Upstream CPython source is unmodified. This is a custom compiled host consuming a pinned CPython binary build, not a claim that CPython was rebuilt from source here.
 
 ### Installed package
 

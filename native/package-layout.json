@@ -1,0 +1,15 @@
+{
+  "abi": 1,
+  "paths": {
+    "executable": "python.exe",
+    "stdlib": "python/Lib",
+    "packages": "python/Lib/site-packages",
+    "native": "bin/python",
+    "authority": "data/authority",
+    "docs": "docs",
+    "secure": "data",
+    "temporary": "tmp",
+    "cache": "cache"
+  },
+  "overrides": []
+}
