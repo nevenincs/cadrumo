@@ -47,6 +47,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .errors import LiveNifIvaCertificateRequiredError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .live_operation_execution import own_provider_browser
 from .live_operation_registration import build_live_operation_definition
@@ -185,6 +186,8 @@ class VerifyCaptureExecutor:
             or require_active_bucket_id() != bucket_id
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if self._surface is VerifySurface.NIF_IVA:
+            raise LiveNifIvaCertificateRequiredError()
 
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)

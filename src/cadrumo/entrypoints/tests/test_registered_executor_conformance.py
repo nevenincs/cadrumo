@@ -841,7 +841,11 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
         _RegisteredExecutorConformanceCase(
-            "live.verify.nif-iva", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+            "live.verify.nif-iva",
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (),
+            expected_refusal_ref="REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED",
         ),
         _RegisteredExecutorConformanceCase(
             "live.verify.tgvi", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED

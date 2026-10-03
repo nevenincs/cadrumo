@@ -995,6 +995,10 @@ errors:
       katalógusban.
     refused_application_live_input: Az élő AEAT olvasási kérés nem hajtható végre
       a megadott bemenettel.
+    refused_application_live_nif_iva_certificate_required: 'Az AEAT csak elektronikus
+      tanúsítvánnyal történő bejelentkezés esetén válaszol a NIF-IVA-ellenőrzésre,
+      a Cadrumo pedig ehhez az ellenőrzéshez még nem tud tanúsítvánnyal bejelentkezni.
+      Ellenőrizd a NIF-IVA-t az Európai Bizottság VIES szolgáltatásában: https://ec.europa.eu/taxation_customs/vies/'
     refused_auth_certificate_source_not_found: A megadott tanúsítványforrás nincs
       regisztrálva.
     refused_auth_configure_dangling_active_profile: Az aktív-profil mutató nem oldódik
