@@ -282,8 +282,8 @@ source_refs = ['aeat-dr-347-2011']
 id = 'm347-2011.declarado.f014'
 offset = 100
 length = 1
-kind = 'casilla'
-casilla_id = 'contraparte.arrendamiento-local-negocio'
+kind = 'binding'
+binding = 'modelo-347-contraparte-row-arrendamiento-local-negocio'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -556,6 +556,7 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2011']
 
 [revisions.2011-2024.export_layouts.records.row_field_casilla_ids]
+business_premises_lease_mark = 'contraparte.arrendamiento-local-negocio'
 clave = 'contraparte.clave-operacion'
 declarado_tax_id = 'contraparte.nif'
 importe_q1 = 'contraparte.importe-Q1'
@@ -564,4 +565,5 @@ importe_q3 = 'contraparte.importe-Q3'
 importe_q4 = 'contraparte.importe-Q4'
 importe_total = 'contraparte.importe-anual'
 party_legal_name = 'contraparte.nombre'
+provincia_code = 'contraparte.provincia-codigo'
 residence_country_code = 'contraparte.pais-codigo'

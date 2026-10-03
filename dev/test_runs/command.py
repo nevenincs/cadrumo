@@ -19,8 +19,18 @@ from dev._paths import REPO_ROOT, UTF_8
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
 from .import_boundaries_signal import _IMPORT_BOUNDARIES_SIGNAL, _ImportBoundariesProcessor
 from .locales_status_signal import _LOCALES_STATUS_SIGNAL, _LocalesStatusSignalProcessor
-from .paths import allocate_run_directory, allocate_scratch_directory, scratch_environment, test_log_root
+from .paths import (
+    ScratchAllocation,
+    ScratchOwnershipError,
+    allocate_run_directory,
+    allocate_scratch_directory,
+    remove_scratch_directory,
+    scratch_base,
+    scratch_environment,
+    test_log_root,
+)
 from .pytest_summary_signal import _PYTEST_SUMMARY_SIGNAL, _PytestSummaryProcessor
+from .reaper import sweep_scratch_directories
 from .registry_health_signal import _BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL, _RegistryHealthProcessor
 
 _INTERRUPTED_EXIT_STATUS: Final[int] = 130
@@ -159,16 +169,52 @@ def run(
     signal: str | None = None,
     expected_lanes: tuple[str, ...] = (),
 ) -> int:
-    """Stream ``command`` while retaining its full transcript and metadata."""
+    """Stream ``command`` while retaining its full transcript and metadata.
+
+    Dead-owner scratch is swept before this run allocates its own, and this
+    run's scratch is removed on every exit Python can observe: success,
+    failure, an exception or a catchable interrupt. A run killed outright
+    leaves its scratch for the next run's sweep.
+    """
     if not command:
         raise ValueError("a command is required")
+    sweep_scratch_directories(scratch_base())
+    scratch = allocate_scratch_directory()
+    allocation = ScratchAllocation.record(scratch)
+    try:
+        return _run_in_scratch(
+            command,
+            repository=repository,
+            family=family,
+            label=label,
+            signal=signal,
+            expected_lanes=expected_lanes,
+            scratch=scratch,
+        )
+    finally:
+        try:
+            remove_scratch_directory(allocation)
+        except (ScratchOwnershipError, OSError) as error:
+            print(f"run scratch {scratch} not removed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
+
+
+def _run_in_scratch(
+    command: tuple[str, ...],
+    *,
+    repository: Path,
+    family: str,
+    label: str,
+    signal: str | None,
+    expected_lanes: tuple[str, ...],
+    scratch: Path,
+) -> int:
+    """Run ``command`` with ``scratch`` as its temporary directory; the caller owns the scratch."""
     started = datetime.now(tz=UTC)
     run_dir = allocate_run_directory(run_log_root or repository, family=family, label=label, now=started)
     artifacts = run_dir / "artifacts"
     cache = run_dir / "cache"
     artifacts.mkdir(parents=True)
     cache.mkdir()
-    scratch = allocate_scratch_directory()
     log_path = run_dir / "run.log"
     # PowerShell can terminate every native process in a Ctrl+C pipeline before
     # Python receives a catchable KeyboardInterrupt. Seed a fail-closed record

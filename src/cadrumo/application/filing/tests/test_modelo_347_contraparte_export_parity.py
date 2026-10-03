@@ -406,7 +406,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id: str) -> None:
-    """The conditional fields (importe-metalico, transmisiones, ...) stay off the binding path.
+    """The conditional money fields (importe-metalico, transmisiones, ...) stay off the binding path.
 
     Confirms the repointed scope is exactly the money fields this repoint built
     a real per-row source for, and that the conditional fields the diseño
@@ -435,8 +435,14 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
     assert "contraparte.importe-metalico" in conditional_casillas
     assert "contraparte.importe-transmisiones-inmuebles" in conditional_casillas
     assert "contraparte.operacion-seguro" in conditional_casillas
-    assert "contraparte.arrendamiento-local-negocio" in conditional_casillas
-    assert "contraparte.provincia-codigo" in conditional_casillas
+    # ARRENDAMIENTO LOCAL NEGOCIO (pos. 100) marks the business-premises lease each
+    # row relates apart (RD 1065/2007 art. 34.1.d), so it is bound per row as well.
+    assert record.row_field_casilla_ids["business_premises_lease_mark"] == "contraparte.arrendamiento-local-negocio"
+    assert "contraparte.arrendamiento-local-negocio" not in conditional_casillas
+    # CÓDIGO PROVINCIA (pos. 77-78) is no conditional money field: each row carries
+    # its own, "99" for a non-resident, so it is bound per row and never scalar.
+    assert record.row_field_casilla_ids["provincia_code"] == "contraparte.provincia-codigo"
+    assert "contraparte.provincia-codigo" not in conditional_casillas
 
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)

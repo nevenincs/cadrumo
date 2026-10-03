@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from ..command import run
+from ..paths import SCRATCH_BASE_ENV, SCRATCH_PATH_BUDGET
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -34,6 +35,24 @@ def test_command_run_preserves_failure_status(tmp_path: Path) -> None:
     )
 
     assert status == 7
+
+
+def test_command_run_removes_its_scratch_after_a_failing_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    base = tmp_path / "scratch-base"
+    base.mkdir()
+    monkeypatch.setenv(SCRATCH_BASE_ENV, str(base))
+    probe = (
+        "import pathlib, tempfile; pathlib.Path(tempfile.gettempdir(), 'left.txt').write_text('x'); raise SystemExit(3)"
+    )
+
+    status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="scratch-probe")
+
+    assert status == 3
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
+    assert scratch.parent.resolve() == base.resolve()
+    assert not scratch.exists()
+    assert list(base.iterdir()) == []
 
 
 def test_command_run_finalizes_metadata_when_interrupted(

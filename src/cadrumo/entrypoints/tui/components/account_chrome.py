@@ -172,6 +172,10 @@ class AccountChromeScreen(TypedAppAccess, Screen[None]):
     @on(events.Mount)
     def _mount_account_chrome(self) -> None:
         """Add the account bar and, where missing, the key footer."""
+        # A screen dismissed, or an app exiting, before this handler ran is no
+        # longer attached; it needs no chrome and Textual refuses to mount into it.
+        if not self.is_attached:
+            return
         self.mount(AccountBar(id="account-bar"), before=0)
         # Compact, so every account key still fits an eighty-column terminal.
         footers = self.query(Footer)

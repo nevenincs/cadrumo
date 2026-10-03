@@ -199,6 +199,9 @@ def _request_from_entry(profile_id: UUID, entry: LedgerInvoiceEntryV1) -> Invoic
         series=entry.series,
         rectifies_invoice_number=entry.rectifies_invoice_number,
         recargo_amount=_public_decimal(entry.recargo_amount),
+        arrendamiento_local_negocio=entry.arrendamiento_local_negocio,
+        situacion_inmueble=entry.situacion_inmueble,
+        referencia_catastral=entry.referencia_catastral,
         lines=tuple(
             InvoiceAddLine(
                 description=line.description,

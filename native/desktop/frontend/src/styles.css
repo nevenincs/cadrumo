@@ -1,0 +1,36 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #2c3a2c;
+  background: #fafbf5;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.front-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.front-page h1 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 3px;
+}
+.terminal-page {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  background: #172320;
+  overflow: hidden;
+}
+.terminal-surface {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+}

@@ -25,6 +25,7 @@ add->link gap without collapsing the two stores.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -53,7 +54,7 @@ from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, SituacionInmueble
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import IvaCategory
@@ -362,6 +363,33 @@ def _apply_fx_conversion_stamp(
             invoice_payload["fx_rate_observation_date"] = fx_stamp.observation_date.isoformat()
 
 
+@dataclass(frozen=True, slots=True)
+class BusinessPremisesLeaseFacts:
+    """The business-premises lease an issued invoice documents, as the operator states it.
+
+    RD 1065/2007 art. 34.1.d has the lessor relate each lease of a local de
+    negocio with the premises' referencia catastral and location; the
+    :class:`Invoice` aggregate validates the facts together, so they travel to
+    it as one unit.
+    """
+
+    arrendamiento_local_negocio: bool = False
+    situacion_inmueble: SituacionInmueble | None = None
+    referencia_catastral: str | None = None
+
+    def apply(self, invoice_payload: dict[str, object]) -> None:
+        """Write the stated facts onto the invoice payload, leaving an unstated one absent."""
+        if self.arrendamiento_local_negocio:
+            invoice_payload["arrendamiento_local_negocio"] = True
+        if self.situacion_inmueble is not None:
+            invoice_payload["situacion_inmueble"] = self.situacion_inmueble
+        if self.referencia_catastral is not None:
+            invoice_payload["referencia_catastral"] = self.referencia_catastral
+
+
+_NO_BUSINESS_PREMISES_LEASE = BusinessPremisesLeaseFacts()
+
+
 def build_catalogue_invoice(
     *,
     bucket_id: str | None,
@@ -385,6 +413,7 @@ def build_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
+    business_premises_lease: BusinessPremisesLeaseFacts = _NO_BUSINESS_PREMISES_LEASE,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
     operation: PinnedAuthorityOperation | None = None,
@@ -431,6 +460,11 @@ def build_catalogue_invoice(
     is settled outside it, which is why only the recargo enters the totals
     identity. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
+
+    ``business_premises_lease`` states that an issued invoice documents the
+    lease of a local de negocio and, when known, the premises' situación and
+    referencia catastral (RD 1065/2007 art. 34.1.d), which Modelo 347 relates
+    in its own declarado and inmueble records.
     """
     from ...domain.invoices.enums import iva_rate_percentage
 
@@ -458,6 +492,7 @@ def build_catalogue_invoice(
                 series=series,
                 rectifies_invoice_number=rectifies_invoice_number,
                 recargo_amount=recargo_amount,
+                business_premises_lease=business_premises_lease,
                 lines=lines,
                 rate_provider=rate_provider,
                 operation=indexed_operation,
@@ -534,6 +569,7 @@ def build_catalogue_invoice(
             effective_date=devengo_date,
             operation=operation,
         )
+        business_premises_lease.apply(invoice_payload)
         # The euro-conversion stamp. ``currency`` is already the canonical uppercase
         # ISO 4217 token (normalised once above), so the provider is queried with the
         # same token the record stores. WHICH date the rate is taken at, and when a
@@ -597,6 +633,7 @@ def create_catalogue_invoice(
 
 
 __all__ = [
+    "BusinessPremisesLeaseFacts",
     "CatalogueInvoiceCreateResult",
     "build_catalogue_invoice",
     "build_catalogue_invoice_event",

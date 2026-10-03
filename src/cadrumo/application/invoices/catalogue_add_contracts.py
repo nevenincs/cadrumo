@@ -17,7 +17,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import InvoiceLine
+from ...domain.invoices.models import InvoiceLine, SituacionInmueble
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaRateKind
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
@@ -129,6 +129,9 @@ class InvoiceAddRequest(BaseModel):
     series: str | None = None
     rectifies_invoice_number: str | None = None
     recargo_amount: PublicDecimal | None = None
+    arrendamiento_local_negocio: bool = False
+    situacion_inmueble: SituacionInmueble | None = None
+    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=25)
     lines: tuple[InvoiceAddLine, ...] = ()
 
     @model_validator(mode="after")

@@ -8,8 +8,6 @@ computed_casilla_ids = [
     "contraparte.importe-anual",
 ]
 reconcile_when_present_casilla_ids = [
-    "decl.total-inmuebles",
-    "decl.importe-total-arrendamiento-locales",
     "inmueble.arrendatario-nif",
     "inmueble.importe-operacion",
 ]

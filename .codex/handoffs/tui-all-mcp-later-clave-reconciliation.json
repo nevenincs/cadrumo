@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "feature": "tui-all-mcp-integration",
+  "source_commit": "e3337b75fda5cfcde3d9b9020955e5bf14347172",
+  "original_base": "209a0f55798a20940065c28ee366819d5f2bbabc",
+  "production_status": "frozen; source edits complete before focused tests",
+  "dispositions": [
+    {
+      "source": "later-tui-selected-committed-clave",
+      "path": "src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_salvage.py",
+      "status": "incorporated",
+      "original_base": "209a0f55798a20940065c28ee366819d5f2bbabc",
+      "snapshot": "e3337b75fda5cfcde3d9b9020955e5bf14347172",
+      "base_blob": "2ccb4544d164488634993cd406153819f57f9878",
+      "source_blob": "8777a4bb84b561f90583cf394173ddc894488710",
+      "base_sha256": "ae769425f855279ef2087a397394de207ac34add542f09538348d648ef5a8130",
+      "source_sha256": "bf9ef6c6b4f12f3a6a2dd228da96a28b19a8d1a17b1183249ac11798f3cf544e",
+      "current_before_sha256": "ae769425f855279ef2087a397394de207ac34add542f09538348d648ef5a8130",
+      "current_after_sha256": "bf9ef6c6b4f12f3a6a2dd228da96a28b19a8d1a17b1183249ac11798f3cf544e",
+      "utf8_decoding": "explicit; current matches original parent after CRLF normalization; exact committed UTF8 blob imported",
+      "reason": "Do not claim a failed or waiting Clave login produced an authenticated session. Persist salvage candidate unchanged for later reuse probe; log only observed authenticated-landing boolean. Existing typed runtime-object/Mapping owner guard and landing predicate preserved. Focused regression invokes real salvage with cookie-bearing waiting page, proves persistence still occurs and false-authentication claim absent."
+    },
+    {
+      "source": "later-tui-selected-committed-clave",
+      "path": "src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_salvaged_landing_url.py",
+      "status": "incorporated",
+      "original_base": "209a0f55798a20940065c28ee366819d5f2bbabc",
+      "snapshot": "e3337b75fda5cfcde3d9b9020955e5bf14347172",
+      "base_blob": "b4fa95179f32a72b3b36dce1fd6ada5e244a44aa",
+      "source_blob": "335d7403748e636c99cfe45e382db70c08f9ae88",
+      "base_sha256": "a9c4702f4dfc1e148686ccc85e2e49b3433bee106a00795355eec43d09b6d30e",
+      "source_sha256": "0d3a008d6902f3e61b4489066b3628b256401ff0b2dc0dac9aea687dfc2c7926",
+      "current_before_sha256": "a9c4702f4dfc1e148686ccc85e2e49b3433bee106a00795355eec43d09b6d30e",
+      "current_after_sha256": "0d3a008d6902f3e61b4489066b3628b256401ff0b2dc0dac9aea687dfc2c7926",
+      "utf8_decoding": "explicit; current matches original parent after CRLF normalization; exact committed UTF8 blob imported",
+      "reason": "Do not claim a failed or waiting Clave login produced an authenticated session. Persist salvage candidate unchanged for later reuse probe; log only observed authenticated-landing boolean. Existing typed runtime-object/Mapping owner guard and landing predicate preserved. Focused regression invokes real salvage with cookie-bearing waiting page, proves persistence still occurs and false-authentication claim absent."
+    }
+  ],
+  "verification": {
+    "focused_regression": "12passed10.16s; actual salvage persistence/logging regression plus all existing authenticated landing/Cl@ve/error/nonAEAT/empty landing cases",
+    "integration_commit": "pending root mapping",
+    "command": "uv run --no-sync pytest -o addopts='' -n0 src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_salvaged_landing_url.py",
+    "log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T195128.696126Z-pytest-70144-f03d7125/run.log",
+    "ruff": "pass both imported paths",
+    "warning_limit": "36 existing SQLAlchemy Result.tuples deprecation warnings from unchanged secure object reads/writes; no Clave failure"
+  }
+}

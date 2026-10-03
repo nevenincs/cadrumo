@@ -6,6 +6,14 @@ modelo:
           help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
             éves bevallásán bevallott adat.
           label: AZ ÜGYLETEK TELJES ÉVES ÖSSZEGE
+        modelo-347-declarante-importe-total-arrendamiento-locales:
+          help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
+            éves bevallásán bevallott adat.
+          label: ÜZLETHELYISÉG-BÉRLETI ÜGYLETEK TELJES ÖSSZEGE
+        modelo-347-declarante-numero-inmuebles:
+          help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
+            éves bevallásán bevallott adat.
+          label: AZ INGATLANOK TELJES SZÁMA
         modelo-347-declarante-numero-personas-entidades:
           help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
             éves bevallásán bevallott adat.
@@ -79,10 +87,6 @@ modelo:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
             label: KÉSZPÉNZBEN KAPOTT ÖSSZEG
-          importe-total-arrendamiento-locales:
-            help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
-              éves bevallásán bevallott adat.
-            label: ÜZLETHELYISÉG-BÉRLETI ÜGYLETEK TELJES ÖSSZEGE
           importe-transmisiones-inmuebles:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
@@ -137,14 +141,6 @@ modelo:
             label: AZ INGATLAN FEKVÉSE
           tipo-declaracion:
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-          tipo-soporte:
-            help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
-              éves bevallásán bevallott adat.
-            label: ADATHORDOZÓ TÍPUSA
-          total-inmuebles:
-            help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
-              éves bevallásán bevallott adat.
-            label: AZ INGATLANOK TELJES SZÁMA
       construct:
         modelo-347-informative:
           field:

@@ -53,7 +53,12 @@ from .catalogue_add_contracts import (
     InvoiceAddResult,
     project_invoice_add_result,
 )
-from .catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice, create_catalogue_invoice
+from .catalogue_creation import (
+    BusinessPremisesLeaseFacts,
+    CatalogueInvoiceCreateResult,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+)
 from .catalogue_creation_ports import CatalogueCreationPorts, CatalogueCreationPortsFactory
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 from .simplificada_advisory import SimplificadaTaxIdAdvisory, resolve_simplificada_tax_id_advisory
@@ -304,6 +309,11 @@ def _prepare_invoice_add(
         series=payload.series,
         rectifies_invoice_number=payload.rectifies_invoice_number,
         recargo_amount=(None if payload.recargo_amount is None else Decimal(payload.recargo_amount.decimal)),
+        business_premises_lease=BusinessPremisesLeaseFacts(
+            arrendamiento_local_negocio=payload.arrendamiento_local_negocio,
+            situacion_inmueble=payload.situacion_inmueble,
+            referencia_catastral=payload.referencia_catastral,
+        ),
         lines=lines or None,
         rate_provider=ports.rate_provider,
         operation=authority_operation,

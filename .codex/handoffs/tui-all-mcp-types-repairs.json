@@ -1,0 +1,944 @@
+{
+  "step": "S05",
+  "records": [
+    {
+      "path": "src/cadrumo/application/workbench_generation_reader.py",
+      "renames": {
+        "_read_workbench_calendar_inputs": "read_workbench_calendar_inputs",
+        "_build_workbench_generation_inputs": "build_workbench_generation_inputs",
+        "_declared_tax_id": "declared_tax_id",
+        "_CalendarMemo": "CalendarMemo",
+        "_WorkbenchCalendarInputs": "WorkbenchCalendarInputs",
+        "_unbound_calendar_aeat_evidence": "unbound_calendar_aeat_evidence",
+        "_declarations_observation": "declarations_observation"
+      },
+      "occurrences": {
+        "_CalendarMemo": 2,
+        "_declarations_observation": 4,
+        "_declared_tax_id": 4,
+        "_read_workbench_calendar_inputs": 2,
+        "_unbound_calendar_aeat_evidence": 2,
+        "_WorkbenchCalendarInputs": 2,
+        "_build_workbench_generation_inputs": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "5e3bfc39d563a99285b2ef4929297eb72aeefeecc6b46084061c2c010d15cd36"
+    },
+    {
+      "path": "src/cadrumo/application/workbench_generation_home.py",
+      "renames": {
+        "_build_workbench_generation_inputs": "build_workbench_generation_inputs",
+        "_WorkbenchCalendarInputs": "WorkbenchCalendarInputs"
+      },
+      "occurrences": {
+        "_WorkbenchCalendarInputs": 2,
+        "_build_workbench_generation_inputs": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "0b907d300af67bccedc6526b3b1a9a8e1042494de83824582213f762be815a74"
+    },
+    {
+      "path": "src/cadrumo/application/workbench_generation_calendar.py",
+      "renames": {
+        "_read_workbench_calendar_inputs": "read_workbench_calendar_inputs",
+        "_declared_tax_id": "declared_tax_id",
+        "_CalendarMemo": "CalendarMemo",
+        "_WorkbenchCalendarInputs": "WorkbenchCalendarInputs",
+        "_unbound_calendar_aeat_evidence": "unbound_calendar_aeat_evidence",
+        "_declarations_observation": "declarations_observation"
+      },
+      "occurrences": {
+        "_declared_tax_id": 1,
+        "_declarations_observation": 1,
+        "_WorkbenchCalendarInputs": 5,
+        "_CalendarMemo": 3,
+        "_read_workbench_calendar_inputs": 1,
+        "_unbound_calendar_aeat_evidence": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "f3a9d7da0303d8d0105e20edd6122c855291e0869f8318e3d714c20db5841dd7"
+    },
+    {
+      "path": "src/cadrumo/application/diagnostics_usage_contracts.py",
+      "renames": {
+        "_native_timing_values": "native_timing_values",
+        "_TimingSnapshot": "TimingSnapshot",
+        "_public_timing_values": "public_timing_values"
+      },
+      "occurrences": {
+        "_native_timing_values": 3,
+        "_public_timing_values": 3,
+        "_TimingSnapshot": 3
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "39e79d1ec0252eda2ba5c00c4fe53f27e4d56eff3361b0e996634bb31a9a689f"
+    },
+    {
+      "path": "src/cadrumo/application/diagnostics_timing_contracts.py",
+      "renames": {
+        "_native_timing_values": "native_timing_values",
+        "_TimingSnapshot": "TimingSnapshot",
+        "_public_timing_values": "public_timing_values"
+      },
+      "occurrences": {
+        "_TimingSnapshot": 2,
+        "_public_timing_values": 1,
+        "_native_timing_values": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "794afdd148dc3deb4d9ef6ac9ca30eaa932971228d38e856146187fb428b1c2d"
+    },
+    {
+      "path": "src/cadrumo/application/diagnostics_run_report_contracts.py",
+      "renames": {
+        "_native_timing_values": "native_timing_values",
+        "_TimingSnapshot": "TimingSnapshot",
+        "_public_timing_values": "public_timing_values"
+      },
+      "occurrences": {
+        "_native_timing_values": 3,
+        "_public_timing_values": 3,
+        "_TimingSnapshot": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "caf6a97c56705ca71f8b39a54507cc0660e58040179a0e2249b2793dd42d4b7f"
+    },
+    {
+      "path": "src/cadrumo/application/calculations/row_set_assembly.py",
+      "renames": {},
+      "occurrences": {},
+      "dead_helper_removals": [
+        {
+          "symbol": "_coerce_flag",
+          "caller_proof": [
+            "src\\cadrumo\\application\\calculations\\row_set_assembly.py:545:def _coerce_flag(value: Decimal | str | None) -> bool:"
+          ]
+        }
+      ],
+      "before_sha256": "d0b994a3c208e7dbaa9db4a10f6c8564de1e48caa4fe5b66bd5014080ce02924"
+    },
+    {
+      "path": "src/cadrumo/application/operator_surface/command_ports.py",
+      "renames": {},
+      "occurrences": {},
+      "dead_helper_removals": [
+        {
+          "symbol": "_require_execution_policy",
+          "caller_proof": [
+            "src\\cadrumo\\application\\operator_surface\\command_ports.py:230:def _require_execution_policy(condition: bool, message: str) -> None:"
+          ]
+        }
+      ],
+      "before_sha256": "acceb1a73009918d6dc3252ae6996660e8371353f679ca5bdf8281aa0b9858db"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/_component_row_projection.py",
+      "renames": {
+        "_cuota_settlement_catalogue_from_entries": "cuota_settlement_catalogue_from_entries",
+        "_resolve_component_catalogue_entries": "resolve_component_catalogue_entries",
+        "_ordered_component_rows": "ordered_component_rows",
+        "_project_component_catalogue": "project_component_catalogue",
+        "_CATEGORY_PROJECTION_NAMES": "CATEGORY_PROJECTION_NAMES",
+        "_category_projection_from_entries": "category_projection_from_entries",
+        "_component_vocabulary_from_entries": "component_vocabulary_from_entries"
+      },
+      "occurrences": {
+        "_CATEGORY_PROJECTION_NAMES": 2,
+        "_component_vocabulary_from_entries": 2,
+        "_cuota_settlement_catalogue_from_entries": 2,
+        "_ordered_component_rows": 3,
+        "_resolve_component_catalogue_entries": 2,
+        "_category_projection_from_entries": 1,
+        "_project_component_catalogue": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "15716c2857e45119698e1de77a966b0814b510afe433bc4af0970de7de941379"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/_component_fact_projection.py",
+      "renames": {
+        "_cuota_settlement_catalogue_from_entries": "cuota_settlement_catalogue_from_entries",
+        "_resolve_component_catalogue_entries": "resolve_component_catalogue_entries",
+        "_ordered_component_rows": "ordered_component_rows",
+        "_CATEGORY_PROJECTION_NAMES": "CATEGORY_PROJECTION_NAMES",
+        "_component_axis_membership": "component_axis_membership",
+        "_component_vocabulary_from_entries": "component_vocabulary_from_entries"
+      },
+      "occurrences": {
+        "_CATEGORY_PROJECTION_NAMES": 1,
+        "_resolve_component_catalogue_entries": 1,
+        "_cuota_settlement_catalogue_from_entries": 1,
+        "_ordered_component_rows": 2,
+        "_component_vocabulary_from_entries": 1,
+        "_component_axis_membership": 5
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "f3da73d607d7da7a189f8c78a6eae24183d1c51f55605459b054401e941543fd"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/_classification_predicates.py",
+      "renames": {
+        "_compile_classification_predicate": "compile_classification_predicate"
+      },
+      "occurrences": {
+        "_compile_classification_predicate": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "8373073635ab719e8b1f55858439e90966289b8a036a45dd4abae558909b279f"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/_classification_engine.py",
+      "renames": {
+        "_resolve_classification_rules": "resolve_classification_rules",
+        "_fallback_classification": "fallback_classification",
+        "_classification_csv": "classification_csv",
+        "_registry_iva_classification_catalogue": "registry_iva_classification_catalogue",
+        "_first_matching_classification": "first_matching_classification",
+        "_resolve_rate_territories": "resolve_rate_territories",
+        "_compile_classification_predicate": "compile_classification_predicate",
+        "_required_classification_entry": "required_classification_entry",
+        "_resolve_rate_category_mapping": "resolve_rate_category_mapping"
+      },
+      "occurrences": {
+        "_compile_classification_predicate": 2,
+        "_resolve_rate_category_mapping": 1,
+        "_resolve_rate_territories": 1,
+        "_required_classification_entry": 6,
+        "_resolve_classification_rules": 1,
+        "_classification_csv": 2,
+        "_registry_iva_classification_catalogue": 1,
+        "_first_matching_classification": 1,
+        "_fallback_classification": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "e4f5b298fdedd4d2c20d12e0da6e74dade5cc369a60254b2a2a0dfedde0294ea"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/components.py",
+      "renames": {
+        "_cuota_settlement_catalogue_from_entries": "cuota_settlement_catalogue_from_entries",
+        "_resolve_component_catalogue_entries": "resolve_component_catalogue_entries",
+        "_project_component_catalogue": "project_component_catalogue",
+        "_component_axis_membership": "component_axis_membership",
+        "_category_projection_from_entries": "category_projection_from_entries",
+        "_component_vocabulary_from_entries": "component_vocabulary_from_entries"
+      },
+      "occurrences": {
+        "_component_vocabulary_from_entries": 2,
+        "_cuota_settlement_catalogue_from_entries": 2,
+        "_resolve_component_catalogue_entries": 4,
+        "_category_projection_from_entries": 2,
+        "_project_component_catalogue": 2,
+        "_component_axis_membership": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "ba2b1238d9417ac9576e3f27b8f34fba0fc087ba5d504ca2ee8b59867c579e68"
+    },
+    {
+      "path": "src/cadrumo/domain/iva/classification.py",
+      "renames": {
+        "_resolve_classification_rules": "resolve_classification_rules",
+        "_fallback_classification": "fallback_classification",
+        "_classification_csv": "classification_csv",
+        "_registry_iva_classification_catalogue": "registry_iva_classification_catalogue",
+        "_first_matching_classification": "first_matching_classification",
+        "_resolve_rate_territories": "resolve_rate_territories",
+        "_required_classification_entry": "required_classification_entry",
+        "_resolve_rate_category_mapping": "resolve_rate_category_mapping"
+      },
+      "occurrences": {
+        "_fallback_classification": 2,
+        "_first_matching_classification": 2,
+        "_registry_iva_classification_catalogue": 5,
+        "_resolve_classification_rules": 2,
+        "_resolve_rate_category_mapping": 2,
+        "_resolve_rate_territories": 2,
+        "_required_classification_entry": 6,
+        "_classification_csv": 3
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "6946f7fb394c92202161c2a18f91b0579fb6f1b841a472509b307ab3daa3b619"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_parser.py",
+      "renames": {
+        "_zero_fill_is_only_absence": "zero_fill_is_only_absence",
+        "_require_decimals": "require_decimals",
+        "_require_length": "require_length",
+        "_require_minimum_year": "require_minimum_year",
+        "_ExportField": "ExportField",
+        "_render_absent_slot": "render_absent_slot",
+        "_require_allowed_value": "require_allowed_value",
+        "_NUMERIC_DATA_TYPES": "ZERO_PADDED_EXPORT_DATA_TYPES"
+      },
+      "occurrences": {
+        "_NUMERIC_DATA_TYPES": 2,
+        "_ExportField": 13,
+        "_render_absent_slot": 3,
+        "_require_allowed_value": 2,
+        "_require_decimals": 2,
+        "_require_length": 2,
+        "_require_minimum_year": 2,
+        "_zero_fill_is_only_absence": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "8c75cea0daf124588c64c05ce166a9108282815e50cb2da4a4887f07c1ce0c45"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
+      "renames": {
+        "_zero_fill_is_only_absence": "zero_fill_is_only_absence",
+        "_require_decimals": "require_decimals",
+        "_require_length": "require_length",
+        "_require_minimum_year": "require_minimum_year",
+        "_ExportField": "ExportField",
+        "_render_absent_slot": "render_absent_slot",
+        "_require_allowed_value": "require_allowed_value",
+        "_NUMERIC_DATA_TYPES": "ZERO_PADDED_EXPORT_DATA_TYPES"
+      },
+      "occurrences": {
+        "_ExportField": 28,
+        "_render_absent_slot": 3,
+        "_require_allowed_value": 2,
+        "_require_minimum_year": 2,
+        "_require_length": 6,
+        "_require_decimals": 2,
+        "_zero_fill_is_only_absence": 1,
+        "_NUMERIC_DATA_TYPES": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "ab9b9735e9e42a21a0b39f388e6315040085b8b2dac6041d8a2d708dea1a5ae1"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_tokens.py",
+      "renames": {
+        "_require_token": "require_token"
+      },
+      "occurrences": {
+        "_require_token": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "b1681b5e7bef1cd53ce7d27ae9c8ee0c6233f53bdf90675a3170a1246221eda8"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/iva_regime_vocabulary.py",
+      "renames": {
+        "_require_token": "require_token"
+      },
+      "occurrences": {
+        "_require_token": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "e16cc767049201bf4323a71f35c806490d8bbdc25eaf12638d3f494f43afe59c"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/iva_legal_vocabulary.py",
+      "renames": {
+        "_require_token": "require_token"
+      },
+      "occurrences": {
+        "_require_token": 3
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "e19411a792896af6c42f77c5286a73e22b64c4618f509966dfbdb75185a2b6ac"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/runtime_catalogue_validation.py",
+      "renames": {
+        "_require_tax_catalogue_keys": "require_tax_catalogue_keys",
+        "_require_unique_country_alpha3": "require_unique_country_alpha3",
+        "_require_catalogue_record_keys": "require_catalogue_record_keys",
+        "_require_complete_recargo_bands": "require_complete_recargo_bands",
+        "_require_place_of_supply_grounding": "require_place_of_supply_grounding",
+        "_require_postal_territory_keys": "require_postal_territory_keys",
+        "_require_unique_country_names": "require_unique_country_names"
+      },
+      "occurrences": {
+        "_require_place_of_supply_grounding": 1,
+        "_require_catalogue_record_keys": 1,
+        "_require_postal_territory_keys": 1,
+        "_require_tax_catalogue_keys": 1,
+        "_require_unique_country_alpha3": 1,
+        "_require_unique_country_names": 1,
+        "_require_complete_recargo_bands": 1
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "685a19ec44e9d74f72f85809cb8c301ca80bfcd359af570508781970179e8e38"
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/runtime_catalogues.py",
+      "renames": {
+        "_require_tax_catalogue_keys": "require_tax_catalogue_keys",
+        "_require_unique_country_alpha3": "require_unique_country_alpha3",
+        "_require_catalogue_record_keys": "require_catalogue_record_keys",
+        "_require_complete_recargo_bands": "require_complete_recargo_bands",
+        "_require_place_of_supply_grounding": "require_place_of_supply_grounding",
+        "_require_postal_territory_keys": "require_postal_territory_keys",
+        "_require_unique_country_names": "require_unique_country_names"
+      },
+      "occurrences": {
+        "_require_catalogue_record_keys": 2,
+        "_require_complete_recargo_bands": 2,
+        "_require_place_of_supply_grounding": 2,
+        "_require_postal_territory_keys": 2,
+        "_require_tax_catalogue_keys": 2,
+        "_require_unique_country_alpha3": 2,
+        "_require_unique_country_names": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "6908ccecdefb3937221248284ff44e7ba7a6d9f758594a7fcfd2cb9b9ffdd2b7"
+    },
+    {
+      "path": "src/cadrumo/core/atomic_write.py",
+      "renames": {
+        "_publish_in_batch": "publish_in_batch"
+      },
+      "occurrences": {
+        "_publish_in_batch": 2
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "f10826805953a6eaf5b926cff661cccc2695b8f3b689d41189a91103f8744620"
+    },
+    {
+      "path": "src/cadrumo/core/logging.py",
+      "renames": {
+        "_configuring": "configuring"
+      },
+      "occurrences": {
+        "_configuring": 4
+      },
+      "dead_helper_removals": [],
+      "before_sha256": "dc17043b14ff48ccd7d22c17ae835f796aa4335e6e76c5d87a4bd31b1e9188fd"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
+      "relocated_test": "test_browser_installer_passes_configured_storage_and_temp_roots_to_playwright",
+      "replacement": "src/cadrumo/entrypoints/tests/test_browser_installer.py",
+      "rationale": "Real outer installer transport test belongs to entrypoint integration owner; inward probe/install contract tests remain in application with all assertions intact."
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/reconciliation_persist_support.py",
+      "canonical_import_correction": true,
+      "evidence": "Explicit REEXPORT_OR_ALIAS finding in root import gate20261003T175103; callers import canonical defining owner directly."
+    },
+    {
+      "path": "src/cadrumo/application/ledger/read_access.py",
+      "canonical_import_correction": true,
+      "evidence": "Explicit REEXPORT_OR_ALIAS finding in root import gate20261003T175103; callers import canonical defining owner directly."
+    },
+    {
+      "path": "src/cadrumo/application/modelo/profile_export_binding.py",
+      "canonical_import_correction": true,
+      "evidence": "Explicit REEXPORT_OR_ALIAS finding in root import gate20261003T175103; callers import canonical defining owner directly."
+    },
+    {
+      "path": "src/cadrumo/application/modelo/work_form.py",
+      "canonical_import_correction": true,
+      "evidence": "Explicit REEXPORT_OR_ALIAS finding in root import gate20261003T175103; callers import canonical defining owner directly."
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_diagnostics_operation.py",
+      "canonical_import_correction": true,
+      "evidence": "Explicit REEXPORT_OR_ALIAS finding in root import gate20261003T175103; callers import canonical defining owner directly."
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/config/google_consent_admission.py",
+      "canonical_import_correction": true,
+      "evidence": "Explicit REEXPORT_OR_ALIAS finding in root import gate20261003T175103; callers import canonical defining owner directly."
+    },
+    {
+      "path": "src/cadrumo/application/modelo/verification_finding_contracts.py",
+      "removed_source_aliases": {
+        "OSS_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_OSS_AGGREGATION",
+        "IVA_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_IVA_AGGREGATION",
+        "IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE": "BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION"
+      },
+      "rationale": "Evidence checks use the canonical BindingSourceKind enum values directly, with unchanged identity comparison semantics."
+    },
+    {
+      "path": "src/cadrumo/application/modelo/verification_iva_evidence.py",
+      "removed_source_aliases": {
+        "OSS_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_OSS_AGGREGATION",
+        "IVA_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_IVA_AGGREGATION",
+        "IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE": "BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION"
+      },
+      "rationale": "Evidence checks use the canonical BindingSourceKind enum values directly, with unchanged identity comparison semantics."
+    },
+    {
+      "path": "src/cadrumo/application/modelo/verification_oss_evidence.py",
+      "removed_source_aliases": {
+        "OSS_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_OSS_AGGREGATION",
+        "IVA_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_IVA_AGGREGATION",
+        "IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE": "BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION"
+      },
+      "rationale": "Evidence checks use the canonical BindingSourceKind enum values directly, with unchanged identity comparison semantics."
+    },
+    {
+      "path": "src/cadrumo/application/modelo/verification_revision_findings.py",
+      "removed_source_aliases": {
+        "OSS_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_OSS_AGGREGATION",
+        "IVA_AGGREGATION_SOURCE": "BindingSourceKind.LEDGER_IVA_AGGREGATION",
+        "IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE": "BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION"
+      },
+      "rationale": "Evidence checks use the canonical BindingSourceKind enum values directly, with unchanged identity comparison semantics."
+    },
+    {
+      "path": "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py",
+      "rationale": "Existing source-owner scanner follows the public defining function name; retains exactly one codec-owner assertion."
+    }
+  ],
+  "changed_paths": [
+    "src/cadrumo/adapters/persistence/profile/tests/reconciliation_persist_support.py",
+    "src/cadrumo/application/calculations/row_set_assembly.py",
+    "src/cadrumo/application/diagnostics_run_report_contracts.py",
+    "src/cadrumo/application/diagnostics_timing_contracts.py",
+    "src/cadrumo/application/diagnostics_usage_contracts.py",
+    "src/cadrumo/application/ledger/read_access.py",
+    "src/cadrumo/application/modelo/profile_export_binding.py",
+    "src/cadrumo/application/modelo/verification_finding_contracts.py",
+    "src/cadrumo/application/modelo/verification_iva_evidence.py",
+    "src/cadrumo/application/modelo/verification_oss_evidence.py",
+    "src/cadrumo/application/modelo/verification_revision_findings.py",
+    "src/cadrumo/application/modelo/work_form.py",
+    "src/cadrumo/application/operator_surface/command_ports.py",
+    "src/cadrumo/application/tests/test_diagnostics_operation.py",
+    "src/cadrumo/application/tests/test_provisioning_browser.py",
+    "src/cadrumo/application/workbench_generation_calendar.py",
+    "src/cadrumo/application/workbench_generation_home.py",
+    "src/cadrumo/application/workbench_generation_reader.py",
+    "src/cadrumo/core/atomic_write.py",
+    "src/cadrumo/core/logging.py",
+    "src/cadrumo/domain/calculations/registry/fixed_width_codec.py",
+    "src/cadrumo/domain/calculations/registry/fixed_width_parser.py",
+    "src/cadrumo/domain/calculations/registry/iva_legal_vocabulary.py",
+    "src/cadrumo/domain/calculations/registry/iva_regime_vocabulary.py",
+    "src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_tokens.py",
+    "src/cadrumo/domain/calculations/registry/runtime_catalogue_validation.py",
+    "src/cadrumo/domain/calculations/registry/runtime_catalogues.py",
+    "src/cadrumo/domain/iva/_classification_engine.py",
+    "src/cadrumo/domain/iva/_classification_predicates.py",
+    "src/cadrumo/domain/iva/_component_fact_projection.py",
+    "src/cadrumo/domain/iva/_component_row_projection.py",
+    "src/cadrumo/domain/iva/classification.py",
+    "src/cadrumo/domain/iva/components.py",
+    "src/cadrumo/entrypoints/cli/config/google_consent_admission.py",
+    "src/cadrumo/entrypoints/tests/test_browser_installer.py",
+    "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py"
+  ],
+  "verification": [
+    "Ruff check and format36 changed files=pass",
+    "Scoped basedpyright31 changed production owners=0 errors,0 warnings",
+    "Scoped pyrefly31 changed production owners=0 errors (22 warnings excluded by existing gate policy)",
+    "Scoped ty35 files before sole test-scanner string update=pass",
+    "Affected7-module behavioral cohort=271 passed,1 failed (stale private-name source scanner); corrected scanner sole-owner assertion rerun=1 passed13.77s",
+    "Exact src/dev caller proof for2 dead helpers=definition-only before removal",
+    "Private numeric enum alias removed; shared codec parser imports canonical schema_base ZERO_PADDED_EXPORT_DATA_TYPES directly",
+    "Source REEXPORT_OR_ALIAS corrected using explicit defining owners;3 BindingSourceKind alias constants removed, all callers migrated to canonical enum members"
+  ],
+  "dead_helpers_removed": [
+    "_coerce_flag",
+    "_require_execution_policy"
+  ],
+  "no_alias_facades": true,
+  "no_new_ignores_or_relaxed_config": true,
+  "source_ready": true,
+  "before_hash_encoding": "SHA256 of explicitly UTF-8-decoded source normalized to Python universal newlines (before lexical symbol rename). Current hashes below use exact file bytes.",
+  "current_sha256": {
+    "src/cadrumo/adapters/persistence/profile/tests/reconciliation_persist_support.py": "f94ba10bb00cb79a492fe8d1ec6d93b2ba508fba65f77af264c18bca3d67e248",
+    "src/cadrumo/application/calculations/row_set_assembly.py": "003b60ec99036f370204296a0d5f692b7d28edaf4e2d6e1ca1d1bcf2aa58cc6a",
+    "src/cadrumo/application/diagnostics_run_report_contracts.py": "644dcb4ab01833a9f4fee1411b4010d15ff8a7fee7ac8ff6019546aa6456c499",
+    "src/cadrumo/application/diagnostics_timing_contracts.py": "8f55d8d7c99133fe55ac269f329738aa9e5b5517d31ace31b4305940621f9edd",
+    "src/cadrumo/application/diagnostics_usage_contracts.py": "1fb9d51750cd880b63acfd727611a7309d88ac1dc71c19abb2134018865df479",
+    "src/cadrumo/application/ledger/read_access.py": "6d46052232c39007c17da40a22343723b8f45506cf29f0e58cb6d723af659be8",
+    "src/cadrumo/application/modelo/profile_export_binding.py": "3967a3fc3f4ed4c61685d59c0607b2f757ae628cead0786e047259e7be945550",
+    "src/cadrumo/application/modelo/verification_finding_contracts.py": "7da5219382ef79a0805df0bb2e810dac58bcabc9082ccfab62f5dc08e589f47b",
+    "src/cadrumo/application/modelo/verification_iva_evidence.py": "47b8d11f41c1f57b8efc7867cba3e2ffa6ef348856967981ed3865c9509b8c4d",
+    "src/cadrumo/application/modelo/verification_oss_evidence.py": "ce19c00c95c1ed22746cd381056aa9ec1b11c086d66a72435775efcd70291c5a",
+    "src/cadrumo/application/modelo/verification_revision_findings.py": "1f450612668514a96b1ea982b8c064f8aa884eefdd257615e505ec969065ab16",
+    "src/cadrumo/application/modelo/work_form.py": "71c5d24c2e6845391e36bbbd0d1ccbd34f331dcd37891e1c9e67832087f16846",
+    "src/cadrumo/application/operator_surface/command_ports.py": "7718cd40c2d20850c0d3dc0fbe0e7063e8e4c96e3e3eb768085a021b0b8986cb",
+    "src/cadrumo/application/tests/test_diagnostics_operation.py": "c2fbb955661c01f7ea9886edaa49264afb1eee01acaafc28e79bf855ae632055",
+    "src/cadrumo/application/tests/test_provisioning_browser.py": "8536ef44c407295d8035f395bd2c3b19a3f49487212e3bc592e46a1ab8c72a86",
+    "src/cadrumo/application/workbench_generation_calendar.py": "405cc32dc4408a1fafdfd5d34b319b2ed53569525bab77fab3860d21d59ba37a",
+    "src/cadrumo/application/workbench_generation_home.py": "6294eeeec7bfca8322a9827909a1dedeeea34381e60fae4f812635107f24d011",
+    "src/cadrumo/application/workbench_generation_reader.py": "a5e3ff28f07a1f37e6e09d2dde1a16b686475789e4f7bec6ae98bb205c131e52",
+    "src/cadrumo/core/atomic_write.py": "f8a62a90957cf0358798dc753555c81b34d3c6bccb855da3748e6d76fdb0fade",
+    "src/cadrumo/core/logging.py": "3a0fb893e27088b5ffb0699fe1b4dc8ee7cc57e982ee75a400e261cac36ec414",
+    "src/cadrumo/domain/calculations/registry/fixed_width_codec.py": "bbc439f200938df52b3feb84d7eefdd57eac446d6e266e5d4bd5dc4529d21d33",
+    "src/cadrumo/domain/calculations/registry/fixed_width_parser.py": "e1af3ee99cc5b37d0e5b16f922efba07034a6fd8727b80c4337c15d6bba3627e",
+    "src/cadrumo/domain/calculations/registry/iva_legal_vocabulary.py": "2e1f8bbe71cd6aa64426939330294bcc381bd6def20aaef6408cee2959086166",
+    "src/cadrumo/domain/calculations/registry/iva_regime_vocabulary.py": "c7ed989ad31d126258c95f03e1cc2133118cbda47744c7fdbdaff8e884259fce",
+    "src/cadrumo/domain/calculations/registry/iva_schema_vocabulary_tokens.py": "9fe23c0d52e6a002826c656322b943f71f21e164545fee719b3804561d5fe8fe",
+    "src/cadrumo/domain/calculations/registry/runtime_catalogue_validation.py": "db027f9fef27fc9fe982c2bd39642ba1feee42173228edd9a75ab39be941cdca",
+    "src/cadrumo/domain/calculations/registry/runtime_catalogues.py": "3edb297634fa9898b8d238af303fe3febb1d6ec07d4fe17136003aed927877a8",
+    "src/cadrumo/domain/iva/_classification_engine.py": "5b78ee491180aa30b61b696658c60ee2c509f791d0c009c2d88b1bdb33e488ed",
+    "src/cadrumo/domain/iva/_classification_predicates.py": "5837ee4f7f042f61eeb5173932b8146e172e2d1367d525fdc4079d4f3fa3486d",
+    "src/cadrumo/domain/iva/_component_fact_projection.py": "75e18f833f5a73b70de36e51ac5fdacdb5b38ed6ada957862bda4d12267b12d6",
+    "src/cadrumo/domain/iva/_component_row_projection.py": "ef557282d21f6768b4bd717498db9bf9d1967d04c596933cd6238c0d9239c03e",
+    "src/cadrumo/domain/iva/classification.py": "3fd426d8be2fd90188bed584c2bdf37e00bebec658f64c91fcff628ee4aa12cb",
+    "src/cadrumo/domain/iva/components.py": "3e3beab5afec83526b299a2dbd7ce96118f6382dd116d962e68c6d475a454d6b",
+    "src/cadrumo/entrypoints/cli/config/google_consent_admission.py": "82c828769d0168aea43971272717c3feb127f857dbba16af57bfb8b9323076a3",
+    "src/cadrumo/entrypoints/tests/test_browser_installer.py": "c6cc4c337229722755d30915f0b05f1107cfb71dd4fccb74e4bdf8e0a3927453",
+    "src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py": "e9a613ff03da1cb76ee717a562c85b5a84db89e1933857566fe0fc8ffbd4c2c4"
+  },
+  "test_run_logs": [
+    "var/storage/development/.logs/test-runs/2026-10-03/20261003T180646.181315Z-pytest-32276-9de2b04d/run.log",
+    "var/storage/development/.logs/test-runs/2026-10-03/20261003T180852.375056Z-pytest-53844-1ae60415/run.log"
+  ],
+  "parent_owned_checks": [
+    "Configured full all-platform types",
+    "Import authority/loadability gate",
+    "Serial integrated suites"
+  ],
+  "cli_startup_followup": {
+    "records": [
+      {
+        "path": "src/cadrumo/entrypoints/cli/_command_shared_contracts.py",
+        "direct_defining_names": {
+          "_require_token": "require_token",
+          "_validate_not_supported_schema": "validate_not_supported_schema",
+          "_validate_target_schema": "validate_target_schema",
+          "_validate_unavailable_schema": "validate_unavailable_schema",
+          "_validate_deferred_target": "validate_deferred_target",
+          "_validate_lazy_binding": "validate_lazy_binding",
+          "_validate_parameter_constraint": "validate_parameter_constraint",
+          "_validate_parameter_default": "validate_parameter_default",
+          "_validate_translation_key": "validate_translation_key",
+          "_validate_value_contract": "validate_value_contract",
+          "_validate_result_schema": "validate_result_schema"
+        },
+        "before_normalized_utf8_sha256": "925224e2c0a0e4db1438c2832bab0693192ec383a06b4e25b603f014175b79df",
+        "current_replacement_path": "src/cadrumo/entrypoints/cli/command_shared_contracts.py"
+      },
+      {
+        "path": "src/cadrumo/entrypoints/cli/command_spec.py",
+        "direct_defining_names": {
+          "_require_identifier": "require_identifier",
+          "_require_token": "require_token",
+          "_validate_machine_secret_contract": "validate_machine_secret_contract",
+          "_validate_parameter_declarations": "validate_parameter_declarations",
+          "_validate_profile_secret_contract": "validate_profile_secret_contract",
+          "_expanded_capabilities": "expanded_capabilities",
+          "_validate_policy_destructive": "validate_policy_destructive",
+          "_validate_policy_effect_capabilities": "validate_policy_effect_capabilities",
+          "_validate_policy_exclusive_values": "validate_policy_exclusive_values",
+          "_validate_policy_handoff": "validate_policy_handoff",
+          "_validate_policy_live_write": "validate_policy_live_write",
+          "_validate_policy_membership": "validate_policy_membership",
+          "_validate_policy_types": "validate_policy_types",
+          "_validate_policy_write_route": "validate_policy_write_route",
+          "_validate_callback_parameters": "validate_callback_parameters",
+          "_validate_command_identity": "validate_command_identity",
+          "_validate_command_spec": "validate_command_spec",
+          "_validate_leaf_execution": "validate_leaf_execution",
+          "_validate_recovery_handoff_contract": "validate_recovery_handoff_contract",
+          "_validate_terminal_execution": "validate_terminal_execution"
+        },
+        "before_normalized_utf8_sha256": "025e78ead09fcb95b4a18f72311409da3ae4d00b0652a1c30fdf58ab651d5f8c"
+      }
+    ],
+    "verification": [
+      "Ruff check/format readonly3CLI files=pass",
+      "ty entireCLI Windows=pass,6 stalealiases/keyworddiagnostics resolved",
+      "Real installed .venv/Scripts/aeat.exe --help=exit0 with rendered roothelp",
+      "AST import-caller audit src/dev=zero imports of removed private local aliases",
+      "AST3CLIvalidationimports=zero aliases",
+      "Focused commandkernel/deferredtargets23cases=23 passed12.23s after parent canonical binder typo correction"
+    ],
+    "current_sha256": {
+      "src/cadrumo/entrypoints/cli/_command_shared_contracts.py": "3e5af6d1fff04f448d0dfdf313cc30504b60e1cff5f08f06766aceacdf5eb26c",
+      "src/cadrumo/entrypoints/cli/command_spec.py": "16885977d21567f5510e6b9ed251f2c0ce23e03665636b1075e097dc4069f26c"
+    },
+    "blocked_test_run_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T181318.168859Z-pytest-30852-2764e418/run.log",
+    "passed_test_run_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T181554.656476Z-pytest-53020-c5793fc6/run.log",
+    "source_ready": true
+  },
+  "cli_public_module_migration": {
+    "records": [
+      {
+        "original_path": "src/cadrumo/entrypoints/cli/_command_parameter_contracts.py",
+        "replacement_path": "src/cadrumo/entrypoints/cli/command_parameter_contracts.py",
+        "defining_body_before_sha256": "eb02bada243d92539183e102857897ff1b07826707b84f153246555981623ff8",
+        "status": "incorporated",
+        "rationale": "Public defining module owns the same contract bodies; private module path removed rather than retained as an alias facade.",
+        "replacement_sha256": "61b171d440142fe967b108a92cb6f09dcf31f3254bfb5be58655a938e3afd86e"
+      },
+      {
+        "original_path": "src/cadrumo/entrypoints/cli/_command_shared_contracts.py",
+        "replacement_path": "src/cadrumo/entrypoints/cli/command_shared_contracts.py",
+        "defining_body_before_sha256": "3e5af6d1fff04f448d0dfdf313cc30504b60e1cff5f08f06766aceacdf5eb26c",
+        "status": "incorporated",
+        "rationale": "Public defining module owns the same contract bodies; private module path removed rather than retained as an alias facade.",
+        "replacement_sha256": "3e5af6d1fff04f448d0dfdf313cc30504b60e1cff5f08f06766aceacdf5eb26c"
+      }
+    ],
+    "changed_src_paths": [
+      "src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_counterparty_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_evidence_followup_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_invoice_lifecycle_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_participation_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_prorrata_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_ratios_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_rule_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_ledger_rule_ratio_command_spec_support.py",
+      "src/cadrumo/entrypoints/cli/_app_live_borrador_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py",
+      "src/cadrumo/entrypoints/cli/_app_live_expedientes_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_foundation_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_justificante_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_notifications_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_live_verify_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_app_quickfile_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_command_runtime.py",
+      "src/cadrumo/entrypoints/cli/_command_secret_contracts.py",
+      "src/cadrumo/entrypoints/cli/_command_structure_validation.py",
+      "src/cadrumo/entrypoints/cli/_command_target.py",
+      "src/cadrumo/entrypoints/cli/_modelo_audit_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_bindings_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_common_command_parameters.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_discovery_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_groups_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_iva_wallet_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_m036_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_m145_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_review_package_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_verification_report_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_work_amend_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_work_preview_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_projection_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_readiness_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_modelo_spreadsheet_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_overview_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_review_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_root_command_specs.py",
+      "src/cadrumo/entrypoints/cli/_root_support.py",
+      "src/cadrumo/entrypoints/cli/app_ledger_inventory_common_command_parameters.py",
+      "src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py",
+      "src/cadrumo/entrypoints/cli/command_graph.py",
+      "src/cadrumo/entrypoints/cli/command_parameter_contracts.py",
+      "src/cadrumo/entrypoints/cli/command_schema.py",
+      "src/cadrumo/entrypoints/cli/command_shared_contracts.py",
+      "src/cadrumo/entrypoints/cli/command_spec.py",
+      "src/cadrumo/entrypoints/cli/command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_auth_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_check_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_collab_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_command_spec_schema.py",
+      "src/cadrumo/entrypoints/cli/config/_custody_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_google_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_profile_inventory_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_provision_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_repair_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_reset_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/_spec_policies.py",
+      "src/cadrumo/entrypoints/cli/config/_storage_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/profile_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_auth_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_certificate_machine_secret.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_google_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_misc_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_passphrase_command_spec.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_profile_inventory_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_profile_recovery_cli.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_repair_command_specs.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py",
+      "src/cadrumo/entrypoints/cli/config/tests/test_storage_command_specs.py",
+      "src/cadrumo/entrypoints/cli/modelo_work_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py",
+      "src/cadrumo/entrypoints/cli/tests/test_amend_detail_row_argv.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_common_parameter_identities.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_inventory_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_invoice_lifecycle_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_parameter_declaration_primitives.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_prorrata_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_app_live_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_builtin_value_contracts_are_canonical.py",
+      "src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_aeat_capability_probe.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_policy.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_runtime.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_runtime_governed_scope.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_runtime_live_write_refusal.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py",
+      "src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py",
+      "src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py",
+      "src/cadrumo/entrypoints/cli/tests/test_ledger_rule_ratio_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py",
+      "src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_audit_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_flag.py",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_overview_command_specs.py",
+      "src/cadrumo/entrypoints/cli/tests/test_participation_cli_surface.py",
+      "src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py",
+      "src/cadrumo/entrypoints/cli/tests/test_refusal_target_reconciliation.py",
+      "src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py",
+      "src/cadrumo/entrypoints/cli/verb_input_schema.py"
+    ],
+    "verification": [
+      "Ruff import ordering57 fixed, finalcheck127paths=pass",
+      "Ruff format check127paths=pass",
+      "Fullsrc obsolete private-module spellings=none",
+      "CLI scopedty Windows=pass",
+      "Real installedaeat --help=exit0 with roothelp",
+      "Existing23registrationkernel/deferredtargetunit tests=23passed16.00s"
+    ],
+    "current_sha256": {
+      "src/cadrumo/entrypoints/cli/_app_diagnostics_command_specs.py": "73c50699031a555b26b7c0bb60548ac542eaaf5458928ebc7666e5717a55191b",
+      "src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py": "0c0e2dce35eba441121f36169d807e323ebb9ad82bea134d001272056a605fee",
+      "src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py": "8b8c802dc7bd87eb6757f8814a3cf3d0ea08a06d3e0942127f7a689e86fdeffd",
+      "src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py": "72185ca7351aee9e93180138a5feb02f67a7e0defeb59d68b1a688cf6b3f57fb",
+      "src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py": "df6a632a18518f0d307d20504b18962cd6efcea98be1101d124b4abb8cf4a2b3",
+      "src/cadrumo/entrypoints/cli/_app_ledger_counterparty_command_specs.py": "2d14429392c8f49fcdc78fe1bde5b7b547ce7ce8e12caa1e2dbb2db9eb3c2ac8",
+      "src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py": "b8ef14788efa2c78ee3d4e769ea766bc321db7ce9fe399b1263964f70481eaec",
+      "src/cadrumo/entrypoints/cli/_app_ledger_evidence_followup_command_specs.py": "986856c2d096fa581563ded6ba305cb4ef5f5fff10489750997c19bc50d36c26",
+      "src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py": "bb1c4fe889ff9e8775be5cff3278ac191111a49614940822510ad146a78e4202",
+      "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py": "c9fe5f7363af98774ef8617114d87ef001c2d32e86d934bfc2db2c0ea948d79a",
+      "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py": "4df8d8988b6bfe90d087c981c22e804eb61b49cb09c46d35592cb414baa370c3",
+      "src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py": "b2ffe7e4243fca071c84acf1598e50d6a3983a4756a3c2f526913d6e2c0979a3",
+      "src/cadrumo/entrypoints/cli/_app_ledger_invoice_lifecycle_command_specs.py": "093500fa838f8a3e4846a0c2952c5610ae6839f2c61af16159cdd509d2cdda32",
+      "src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py": "8f787597f3d40885707f298abb30a298259eee7f8265e23395a5f21b8cb91bed",
+      "src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py": "9fb07a68635aa11ef1eabb7df391e37ca0070318a7124d71eed84577c00eeca9",
+      "src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py": "095c9d6806361d0e282a79161529b4fd4b4c53dcaa635500a0db4c5baa0f6d2f",
+      "src/cadrumo/entrypoints/cli/_app_ledger_participation_command_specs.py": "708723389f4266fc3be16deaa0073ded0f32d06863ef5341c504a577e1e8f5ca",
+      "src/cadrumo/entrypoints/cli/_app_ledger_prorrata_command_specs.py": "20afa33ac6beeeeec706ee68ae52626c1001164c138ceaf2c6d30c3209f519f6",
+      "src/cadrumo/entrypoints/cli/_app_ledger_ratios_command_specs.py": "d232f2bb3186c0910f46bfbe9a43af4a6d83b3e5429cce3101a637698c76dd12",
+      "src/cadrumo/entrypoints/cli/_app_ledger_rule_command_specs.py": "03dd6691a040ec425826e650f0b02865212885105dce0e613312b12030c65613",
+      "src/cadrumo/entrypoints/cli/_app_ledger_rule_ratio_command_spec_support.py": "b56ec654c860667498410c291a98e347513899945b396a2492633b025f5bee6c",
+      "src/cadrumo/entrypoints/cli/_app_live_borrador_command_specs.py": "fbdd173bde8e571e2147424202fe7d05f35560e84e1e5a6f8e93ab640652e222",
+      "src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py": "935c57cdced0e73967b38be4b72675433081a70369076e66583f98e1facffc21",
+      "src/cadrumo/entrypoints/cli/_app_live_expedientes_command_specs.py": "676f9ddbd67f064c5e6714d3c1757e17ed68a40efb1c4fc12fbcf115653966c3",
+      "src/cadrumo/entrypoints/cli/_app_live_foundation_command_specs.py": "89400265e02f44b0b76951c6da7296315f39025a72c7c04ab98be9d7cb7c9358",
+      "src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py": "64e0858fa00fcacb94163516ddb8492283528c01bff838ee13140051946d950c",
+      "src/cadrumo/entrypoints/cli/_app_live_justificante_command_specs.py": "1cbbf57b26dab9e49151fb42dfd7334101700e9f6cedb8f85ab04109c0d43906",
+      "src/cadrumo/entrypoints/cli/_app_live_notifications_command_specs.py": "08d8fac18bba4fe75961963db6bae868361c249beade3ec6d72c5ae3076b67f4",
+      "src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py": "dd382d18c75af466804c8fb59fec4ef2a7c683f62052b9acce4ce16530893a18",
+      "src/cadrumo/entrypoints/cli/_app_live_verify_command_specs.py": "6b0b090496f6e7279b018cc27d444ae4b0bef40212b9a0f75d0be6be43c7f794",
+      "src/cadrumo/entrypoints/cli/_app_quickfile_command_specs.py": "d10f9428cc7bd44f98ef0e572efba1559381215e9fbda85425c3a3e612f079c7",
+      "src/cadrumo/entrypoints/cli/_command_runtime.py": "3763f56ff55901a980c301469adbea492be366c8eaf185f847d17ee089f8b5e4",
+      "src/cadrumo/entrypoints/cli/_command_secret_contracts.py": "82baaf9989eb8c193172701dd1eaa2a1e02a0a3fec310ff5327784e2bd625225",
+      "src/cadrumo/entrypoints/cli/_command_structure_validation.py": "4420c5bc38c98c654b97836563221219cdd47f61cad47dab73330a38eb78b38d",
+      "src/cadrumo/entrypoints/cli/_command_target.py": "257db7074188e16e0b7942e38e20ea1b11d78ae95efdf2dbf3d0a27cf72d7209",
+      "src/cadrumo/entrypoints/cli/_modelo_audit_command_specs.py": "912c3e35e3e448c4c68968bf42615ea25db016cc60555f39724a31e0145ada09",
+      "src/cadrumo/entrypoints/cli/_modelo_core_command_specs.py": "249bc170928044e4177195dc3b5b16450196219edb256b2e6610d0d12aeb4b65",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_bindings_command_specs.py": "33132795dc2dc87b063182dc11c36b609ec9f57ac4cb9ada06402bb2dc75b324",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py": "54fef9f337c1622113ec8942af00d08a50dfad57d8b13fa20c0af147563b3d1f",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_common_command_parameters.py": "df928c5b5ad0ca0021828bc33b2c51cf9aa03b627481d7c517e47267e87f5f11",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_discovery_command_specs.py": "a594ab6b6a860f2da214bb87d005b7878715e63eade81d35a5f18e877d76d55d",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py": "07f674866d7cf1b4780946b4d45c6d5619daf45c5584d87b2682f3c07d2954b3",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_groups_command_specs.py": "6328c8cf6a19fcdc2e6159adbe3eda16b9b186b481ea6131b74cac8c977a3637",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_iva_wallet_command_specs.py": "edd84a7d1fc7aff82dcdb92a03df95767b66e5b7fa50732fa9374bb1ad7958fd",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_m036_command_specs.py": "c50c9192189e34412084ab3cfb6e40723e21670252745bfae5b221d696455632",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_m145_command_specs.py": "295c0b1a71be1d5e454897201c5df0a49e9c37cfa4198c8c71aa4ddf0207a4a0",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py": "bf171314127f77e3b97293d40841e77d0fee8f98c82bcaefecaf826d65370132",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_review_package_command_specs.py": "c2fc0399a6f5fe9d304d1d89727c787d68a40622af730ec0dd87fef20226187e",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_verification_report_command_specs.py": "297a328a11c0ea471b78b558853c17a95e6dd7afc44a264e63eb5ed725a57723",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_work_amend_command_specs.py": "d6db517521fc646a09f2a897d23b489ae3f1d2d6e93013fbf212243c761b9153",
+      "src/cadrumo/entrypoints/cli/_modelo_nonwork_work_preview_command_specs.py": "8d2fd47682a47c719a6fd052bc054212a582838b766bcff291cec62e110ef668",
+      "src/cadrumo/entrypoints/cli/_modelo_projection_command_specs.py": "3897757abd4f18aab22669cb5778940a765608341ee44bf12ff9e791f30c97b4",
+      "src/cadrumo/entrypoints/cli/_modelo_readiness_command_specs.py": "4ed2787a80683780ab1525388af38d2ff14dbc590c201e692f28896c88228944",
+      "src/cadrumo/entrypoints/cli/_modelo_spreadsheet_command_specs.py": "f611c8fd08534b195a547032e8f433ab7059aa0f8831ab0fd190acc4a9850492",
+      "src/cadrumo/entrypoints/cli/_overview_command_specs.py": "db95dd46298ca8e6bf6470f24b50b045836291949bf5370844f230c17721d71d",
+      "src/cadrumo/entrypoints/cli/_review_command_specs.py": "3bba66487df4ffa62463db4ced2497c2d0ad1a015674429aa4c5209f4c552a28",
+      "src/cadrumo/entrypoints/cli/_root_command_specs.py": "c395fb229bc9b14fad55bdc2c58883abc0b4da7d34b5a58a6b1f90905a23de9a",
+      "src/cadrumo/entrypoints/cli/_root_support.py": "2cff73590ce7d3effdacdab132f36a08fb160b5fb7a23d6b08a152c02e614203",
+      "src/cadrumo/entrypoints/cli/app_ledger_inventory_common_command_parameters.py": "cb9b3ed88e57ca7b58dd47c581c1876916126d6e2bcca0e6da0a824b6e31daa9",
+      "src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py": "378bfe34b0bb135831a260aca406e598f0c07bab23dd7497473cfa3feebe03a9",
+      "src/cadrumo/entrypoints/cli/command_graph.py": "3d63748553821c155beaa5ad4b0c21f8d64694ef63bb5d16bf75bf2fc9a91acc",
+      "src/cadrumo/entrypoints/cli/command_parameter_contracts.py": "61b171d440142fe967b108a92cb6f09dcf31f3254bfb5be58655a938e3afd86e",
+      "src/cadrumo/entrypoints/cli/command_schema.py": "9f2e61fb564334b278f4253b96c6db4d918ca47f01175b18e1bc0afdfa648fef",
+      "src/cadrumo/entrypoints/cli/command_shared_contracts.py": "3e5af6d1fff04f448d0dfdf313cc30504b60e1cff5f08f06766aceacdf5eb26c",
+      "src/cadrumo/entrypoints/cli/command_spec.py": "a716637b2b06b8a2e290f2baf7fa427f3ba86e2e120008f5b686d63bf46ea650",
+      "src/cadrumo/entrypoints/cli/command_specs.py": "db6e47ad9385ba76d561b6c79f74b8d5fc7eb9d106d533a86042e04e5e4820e2",
+      "src/cadrumo/entrypoints/cli/config/_auth_command_specs.py": "3b773c60c07028e417b1ebec7386bd39cff2137c3dffaf8ac6af2f7daf887f5b",
+      "src/cadrumo/entrypoints/cli/config/_check_command_specs.py": "9f614c3caddfebf010e08d9a3ca85917c65a925e523b2444185b01d9be1d16eb",
+      "src/cadrumo/entrypoints/cli/config/_collab_command_specs.py": "caa6680f517fa6de77262836fc60cd072e0ff0c4c30091c851d1f4b034e6cf3c",
+      "src/cadrumo/entrypoints/cli/config/_command_spec_schema.py": "e449eb6dc3b7a34b71457f53b006b0478f66d33f537743842cbdcb6ed6aff847",
+      "src/cadrumo/entrypoints/cli/config/_custody_command_specs.py": "94c2b345fbd53a9cb54f1412cad8ceadd8a3fba4a7a65eb17624b299beff6d71",
+      "src/cadrumo/entrypoints/cli/config/_google_command_specs.py": "e3928d12a6092d356eb265293b78e213fc3ea999065bb5e344e01f8a1b9cd9ca",
+      "src/cadrumo/entrypoints/cli/config/_profile_inventory_specs.py": "f92505364ba4a5f60b29d617c46e02b4988f44bac64653034a7fb318873263b7",
+      "src/cadrumo/entrypoints/cli/config/_provision_command_specs.py": "6514a14ddc28fbb8a7c3f2f59b0e3b8cf1173db9783233c8d5fde53aaa4203ff",
+      "src/cadrumo/entrypoints/cli/config/_repair_command_specs.py": "7c0e242f7124f36e25b6a45d1c9738d8b9eda8685f2b9a85fc0ddfa82c35c1e7",
+      "src/cadrumo/entrypoints/cli/config/_reset_command_specs.py": "36bd56f22e6f4037db231f63c789c731aa59e87c493185fd36d5ed27dada904d",
+      "src/cadrumo/entrypoints/cli/config/_spec_policies.py": "357b2e520995c8610f9ee50202365d6b7f945fd8ceb30cfcbffe62be0db1ae0a",
+      "src/cadrumo/entrypoints/cli/config/_storage_command_specs.py": "3d3227aac6ae6f24e895ef51d500abc0c45cb88445075efcf3e2197a65c871bf",
+      "src/cadrumo/entrypoints/cli/config/profile_command_specs.py": "64bca51874f9448a985a0e33b887a99873d8fa8e489ba56cf8064f472b23126b",
+      "src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py": "0eb778f489a6308af47d00206334b7674f1d9eb559f10f148ca373e26f48003a",
+      "src/cadrumo/entrypoints/cli/config/tests/test_auth_command_specs.py": "0297cc6ba4cd98e1b93519cd2a5b250cbcb4fcc11ae92b6122cb6c618b1a65fb",
+      "src/cadrumo/entrypoints/cli/config/tests/test_certificate_machine_secret.py": "b78b8887dbee3bdc1516d769b4bfaf407f74bbfd360821a28381f73da501b350",
+      "src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py": "223d51c5a8fea55c9a8cdfa7d738726d7ffb5eeae06c2c9f47f7b7cca6215929",
+      "src/cadrumo/entrypoints/cli/config/tests/test_google_command_specs.py": "fc47e6a25e6902000808e083810d76b852074c94b3c9dc99217f8e1aca012699",
+      "src/cadrumo/entrypoints/cli/config/tests/test_misc_command_specs.py": "ae931291f53d48272bd88c7f2e6929bb21d7ca15cb922773c47c3ca5d2b5e1ee",
+      "src/cadrumo/entrypoints/cli/config/tests/test_passphrase_command_spec.py": "9c424e7d946cb746d7ca477170c57bae6532334b40fee241718acb79814e048e",
+      "src/cadrumo/entrypoints/cli/config/tests/test_profile_inventory_specs.py": "d19d75a6617d3519f14900fea80a9fb1cff49bf5ea265dcf8f75f2ea5d87e668",
+      "src/cadrumo/entrypoints/cli/config/tests/test_profile_recovery_cli.py": "c32f8b7a194030adaf394b87e656872c6c2dd74cfbffc1ec5823c889adbc4ece",
+      "src/cadrumo/entrypoints/cli/config/tests/test_repair_command_specs.py": "cc0610e654665cbd6ac09588f5beb69ba26e367ed02b509a461d6ad3b2b19e22",
+      "src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py": "8b61d66247ca62629e8eaea49c0d7307f06a7adfcd77f4349752d053abe70420",
+      "src/cadrumo/entrypoints/cli/config/tests/test_storage_command_specs.py": "a14b11fca433210934f76d5f1c6ddc97e83e68b0547fa3253b383787ee025c66",
+      "src/cadrumo/entrypoints/cli/modelo_work_command_specs.py": "6771cd14d7aa6f633b010299105989043ee0c71fb8d0fe375f5711d2d9bb64e6",
+      "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py": "091a35078805b08f82a6109c4b14b5841e9c81ebdcc328e7cb1483a747335285",
+      "src/cadrumo/entrypoints/cli/tests/test_amend_detail_row_argv.py": "4da875152399fb035a783b0f28b99dbc52835f7b55a05c21327b3c198588986f",
+      "src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_command_specs.py": "99ee414107416792a39eb1e105d26e67052759657a7c847c203cbd414f77731b",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_common_parameter_identities.py": "a20b76a7f23b29a68bdd415af4d3deab4aad63a8916e5a4d34bb74837181b466",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_inventory_command_specs.py": "a623c6c2b818cec935e691bdaa147e12b124f0fff6207d62345f97ff6b53e09a",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_invoice_lifecycle_command_specs.py": "73a09b0edf422096347562a319a7767f366fbc01f2200704de3a61a7bd74a9f6",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py": "25a48ec157c848124ff377841bea4c5211096d74529735c1df7a2494b1464b86",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_parameter_declaration_primitives.py": "d465a1fa35bb458b58baa2fd476015a160b13d278119e4abd035798eb4ea22e9",
+      "src/cadrumo/entrypoints/cli/tests/test_app_ledger_prorrata_command_specs.py": "8e60fc9c7ada21ff449445d97ac089ed6194809a205c73bcd47c465f91bfe1e8",
+      "src/cadrumo/entrypoints/cli/tests/test_app_live_command_specs.py": "e88c7166a5c6d025666d22ff85c3c42ab343544b645017a438269b76d66da7cc",
+      "src/cadrumo/entrypoints/cli/tests/test_builtin_value_contracts_are_canonical.py": "3ae9f7e1455d55a969badac9fadb2d6472762c2c6b92a2f6f15033d401ecefdd",
+      "src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py": "4d943d2abb4a1343032a860500af0b39bce4f3136d74ed5f527c444b85875b4e",
+      "src/cadrumo/entrypoints/cli/tests/test_command_aeat_capability_probe.py": "b3fee017d49f60c3a46bf418cce9952b753add40f532fca066d58be6a7ebd92d",
+      "src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py": "4ddeb3d49a96eb92007f16d1ee7ed5abe48b478a28aa44b200f91d1c6869dc26",
+      "src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py": "8a81ec45d3d0a8d6ca7a849c24ebe44362c9cbc76926ef4c1a364196dfdba22b",
+      "src/cadrumo/entrypoints/cli/tests/test_command_policy.py": "a1b31a9eaeed39962eb74fbd1f452251655014a76fdc73f3d91b9e4d07ebb01b",
+      "src/cadrumo/entrypoints/cli/tests/test_command_runtime.py": "892a5b295af53cd9fed1574d46075c86241feae482768cdba47e313096e23c09",
+      "src/cadrumo/entrypoints/cli/tests/test_command_runtime_governed_scope.py": "b177c1cdb510cd87fb040c20785eeefebc2419263b94790b6337f8424c477c8c",
+      "src/cadrumo/entrypoints/cli/tests/test_command_runtime_live_write_refusal.py": "0b1d3dfd1a11c8f167463c0bd8dafd98e3b647eebb1e0ffbd00b4b5842910e63",
+      "src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py": "1b2891038053545c4bb9ad1afb1042efaebe86002dec6cc0614c3e2bbca5ff47",
+      "src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py": "3272f689f6346f26d2e3bd9885cee012e3444d27d3a91ad2cff724dcc4f94649",
+      "src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py": "8dc82f1af6e7e4850b67a0bd5465fba684c6a06cc4f5a26cf6f40915e14ae731",
+      "src/cadrumo/entrypoints/cli/tests/test_ledger_rule_ratio_command_specs.py": "4ec884743f8564a5c5de5af1c5af89245a302df4767cac1d08698b1cc955fe11",
+      "src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py": "62d1e3f062e1014da122c6a71b3b49fe7d6c7d11a27e1ef3f041ce5fcebcc107",
+      "src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py": "487fb7977926f17cb835ac62c33c1c8cda15b9e045f627ecbdc08fb44190810b",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_audit_command_specs.py": "bce953338e453db1b04c459cfd081035b1ec6d5c9f3c5a47fae5ccf12d888cc4",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py": "fd8d882bc8491cf820df0af8c27a16a321b3083f7ff707a951ce05b9faa16786",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_flag.py": "640af1e9f2eade9b8f6b8d37598d97f6dbe0d983e60b9a1bc3bc06c2d33b88f3",
+      "src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py": "67810dcec145c9859a205469b1509482f83ef0af305c45b34948b2e62a7a1724",
+      "src/cadrumo/entrypoints/cli/tests/test_overview_command_specs.py": "75baba01d2750cb7d15ce0aa25c64d72b2c5778b1ed0cf8316ce4bfe5fe1a758",
+      "src/cadrumo/entrypoints/cli/tests/test_participation_cli_surface.py": "e527252f209b57f9518960657e69529e5dc09fc5c037001e0efed87e839a8e51",
+      "src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py": "1d7b909a5599d0a866e12b4ae38c7ef364489e9ec77ea92d22b3817b8ae8805c",
+      "src/cadrumo/entrypoints/cli/tests/test_refusal_target_reconciliation.py": "2a06d0c5e1376ec3eedb177ebe99dd8e62e2059586cd2e07cacacbdbea3bfee1",
+      "src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py": "0a0b35e62aed4f79f685af45bab5fd9f5e395ce2f8ca4d83c7d3403e59c3750d",
+      "src/cadrumo/entrypoints/cli/verb_input_schema.py": "ac90204a10b486d68a36c725a8bf68840c0475fa54a951a8c88549780a347240"
+    },
+    "passed_test_run_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T182157.444816Z-pytest-3852-49bdaabf/run.log",
+    "source_ready": true
+  }
+}

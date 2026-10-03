@@ -827,3 +827,13 @@ async def test_the_return_to_home_rereads_off_the_event_loop_and_shows_that_it_i
 
     assert refreshes == [1]
     assert app.workbench_search_service is refreshed_search
+
+
+def test_a_screen_detached_before_its_mount_handler_gets_no_chrome() -> None:
+    """Exiting or dismissing mid-transition must not crash on the chrome mount."""
+    screen = AccountChromeScreen()
+
+    assert not screen.is_attached
+    screen._mount_account_chrome()
+
+    assert not screen.query("#account-bar")

@@ -62,7 +62,7 @@ from ...domain.calculations.registry.travel_agency_mediation import (
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
-from ...domain.invoices.models import Invoice
+from ...domain.invoices.models import SITUACIONES_CON_REFERENCIA_CATASTRAL, Invoice
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
@@ -264,6 +264,13 @@ def _invoice_resolution_from_observations(
         resolver_id=resolver_id,
     )
     diagnostics += _m347_exclusion_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
+    diagnostics += _m347_received_invoice_dating_advisories(
+        observed_items,
+        catalogue_invoices,
+        context=context,
+        resolver_id=resolver_id,
+        m347_filer=m347_filer,
+    )
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
@@ -909,7 +916,8 @@ def _m347_declaration_advisories(
     The operations follow the registry's reading; the advisory says which ones
     rest on it. The record fields the declared operations need but the invoice
     records cannot fill are disclosed by :func:`_m347_record_field_advisories`
-    over the same declarable set.
+    over the same declarable set, and the inmueble record fields the leases
+    leave open by :func:`_m347_inmueble_record_advisories`.
     """
     if context.modelo != Modelo("347").value:
         return ()
@@ -960,6 +968,7 @@ def _m347_declaration_advisories(
             resolver_id=resolver_id,
         ),
     )
+    diagnostics.extend(_m347_inmueble_record_advisories(m347_items, context=context, resolver_id=resolver_id))
     return tuple(diagnostics)
 
 
@@ -1066,6 +1075,95 @@ def _m347_record_field_advisories(
     return tuple(diagnostics)
 
 
+_M347_INMUEBLE_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-34.1.d",)
+
+
+def _m347_inmueble_record_advisories(
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name the inmueble record fields the recorded business-premises leases leave open.
+
+    RD 1065/2007 art. 34.1.d has the landlord consign, for each lease, "las
+    referencias catastrales y los datos necesarios para la localización de los
+    inmuebles arrendados", and the inmueble record is related whatever its
+    amount, so every lease invoice reaches one. One advisory per gap:
+
+    - a lease that records no SITUACIÓN DEL INMUEBLE (pos. 115), which the
+      record needs to say where the premises is;
+    - a lease whose situación is 1 or 2 but records no REFERENCIA CATASTRAL
+      (pos. 116): code 3 is the one for "cualquiera de las situaciones
+      anteriores pero sin referencia catastral";
+    - the DIRECCIÓN DEL INMUEBLE (pos. 141-333), whose INE-coded street, number
+      and municipality fields no invoice records, so it is left without content
+      on every inmueble record.
+    """
+    leases = [invoice for invoice, observation in m347_items if observation.arrendamiento_local_negocio]
+    if not leases:
+        return ()
+    without_situacion = sorted(invoice.invoice_number for invoice in leases if invoice.situacion_inmueble is None)
+    without_referencia = sorted(
+        invoice.invoice_number
+        for invoice in leases
+        if invoice.situacion_inmueble in SITUACIONES_CON_REFERENCIA_CATASTRAL and invoice.referencia_catastral is None
+    )
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    if without_situacion:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-inmueble:situacion-not-recorded",
+                message=(
+                    f"Modelo 347 relates the business-premises leases on invoices {', '.join(without_situacion)} "
+                    f"in inmueble records for ejercicio {context.filing_year}, but they record no situación del "
+                    "inmueble, which RD 1065/2007 art. 34.1.d needs to locate each leased premises."
+                ),
+                remedy="Record the situación del inmueble (1 to 4) on each listed invoice, then recalculate.",
+                asserted_legal_refs=_M347_INMUEBLE_LEGAL_REFS,
+            ),
+        )
+    if without_referencia:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-inmueble:referencia-catastral-not-recorded",
+                message=(
+                    f"Modelo 347 relates the business-premises leases on invoices {', '.join(without_referencia)} "
+                    f"for ejercicio {context.filing_year} with a situación that carries a referencia catastral, "
+                    "but they record none, and RD 1065/2007 art. 34.1.d has the landlord consign it."
+                ),
+                remedy=(
+                    "Record the referencia catastral of each listed premises, or situación 3 if it has none, "
+                    "then recalculate."
+                ),
+                asserted_legal_refs=_M347_INMUEBLE_LEGAL_REFS,
+            ),
+        )
+    diagnostics.append(
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+            resolver_id=resolver_id,
+            source_ref="m347-inmueble:direccion-not-recorded",
+            message=(
+                f"Modelo 347 relates business-premises leases in inmueble records for ejercicio "
+                f"{context.filing_year} ({', '.join(sorted(invoice.invoice_number for invoice in leases))}). Each "
+                "record's dirección del inmueble needs the INE-coded street, number and municipality, which the "
+                "invoices do not record, so it is left without content."
+            ),
+            remedy="Complete the dirección of each inmueble record on the AEAT form before filing.",
+            asserted_legal_refs=_M347_INMUEBLE_LEGAL_REFS,
+        ),
+    )
+    return tuple(diagnostics)
+
+
 def _m347_unsettled_exclusion_invoice_numbers(declared: Sequence[Invoice], *, effective_date: date) -> list[str]:
     return sorted(
         invoice.invoice_number
@@ -1075,10 +1173,17 @@ def _m347_unsettled_exclusion_invoice_numbers(declared: Sequence[Invoice], *, ef
 
 
 def _m347_withheld_issued_invoice_numbers(declared: Sequence[Invoice]) -> list[str]:
+    """The issued invoices with a withholding whose place on the declaration no text settles.
+
+    A business-premises lease is not among them: art. 34.1.d has the landlord
+    relate it, withheld or not, and the invoice records that it is one.
+    """
     return sorted(
         invoice.invoice_number
         for invoice in declared
-        if invoice.kind is InvoiceKind.ISSUED and _carries_withholding(invoice)
+        if invoice.kind is InvoiceKind.ISSUED
+        and _carries_withholding(invoice)
+        and not invoice.arrendamiento_local_negocio
     )
 
 
@@ -1099,8 +1204,8 @@ def _m347_exclusion_reading_advisories(
     practised a withholding, which the customer reports but whose exclusion
     from the withheld party's own declaration no text in the corpus states.
     A landlord of business premises is the exception the text does settle:
-    art. 34.1.d has it relate the lease, withheld or not. The invoice records
-    no lease fact, so the advisory names that case instead of deciding it.
+    art. 34.1.d has it relate the lease, withheld or not, so an invoice that
+    records the lease is declared without an advisory.
     """
     if context.modelo != Modelo("347").value:
         return ()
@@ -1138,20 +1243,103 @@ def _m347_exclusion_reading_advisories(
                 message=(
                     f"Modelo 347 declares the issued invoices {', '.join(withheld)}, on which the customer "
                     "practised a withholding, for ejercicio "
-                    f"{context.filing_year}. A lease of business premises among them must stay: RD 1065/2007 "
-                    "art. 34.1.d has the landlord relate it. For the rest, art. 33.2.i excludes what the "
-                    "customer reports in its withholding summary (RIRPF art. 108.2), but no text settles "
-                    "whether that reaches your side. The invoices record no lease fact, so Cadrumo cannot "
-                    "tell the two apart."
+                    f"{context.filing_year}. RD 1065/2007 art. 33.2.i excludes what the customer reports in "
+                    "its withholding summary (RIRPF art. 108.2), but no text settles whether that reaches "
+                    "your side. None of them records a business-premises lease, which art. 34.1.d would "
+                    "have you relate all the same."
                 ),
                 remedy=(
-                    "Keep the business-premises leases declared; for the other withheld invoices, check "
-                    "current AEAT guidance before filing. The declarado records shown include them all."
+                    "Mark any of these invoices that documents the lease of a local de negocio as such; for "
+                    "the rest, check current AEAT guidance before filing. The declarado records shown include "
+                    "them all."
                 ),
                 asserted_legal_refs=_M347_WITHHELD_ISSUED_LEGAL_REFS,
             ),
         )
     return tuple(diagnostics)
+
+
+#: RD 1065/2007 art. 35.1 dates a Modelo 347 operation by the registry entry of its invoice, and RIVA
+#: art. 69.3 sets when a received invoice is entered.
+_M347_RECEIVED_DATING_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-35", "rd-1624-1992:art-69")
+#: The last monthly period of an ejercicio, the shortest IVA liquidation period.
+_LAST_MONTH_CODE = "12"
+
+
+def _m347_received_invoice_dating_advisories(
+    observed_items: Sequence[_ObservedInvoice],
+    catalogue_invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+    m347_filer: _M347Filer,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name the received invoices whose ejercicio the issue date may not decide.
+
+    RD 1065/2007 art. 35.1: "las operaciones se entenderán producidas en el
+    período en el que, de acuerdo con lo previsto en el artículo 69 del
+    Reglamento del Impuesto sobre el Valor Añadido, se debe realizar la
+    anotación registral de la factura o documento contable que sirva de
+    justificante de las mismas". RIVA art. 69.3 enters a received invoice "por
+    el orden en que se reciban, y dentro del período de liquidación en que
+    proceda efectuar su deducción", so its ejercicio follows its reception and
+    deduction, which the invoice does not record: it carries only the issue
+    date the resolver dates it by. Which ejercicio such an invoice belongs to
+    therefore cannot be decided here.
+
+    The case is disclosed where it can change the ejercicio: a received
+    invoice issued in the last month of the year, the shortest liquidation
+    period, may be received and entered only in the next year. That covers the
+    invoices of this ejercicio's last month, declared here, and those of the
+    previous ejercicio's last month that this declaration would otherwise
+    relate, which it leaves out.
+    """
+    if context.modelo != Modelo("347").value:
+        return ()
+    last_month = Period.from_year_and_code(context.filing_year, _LAST_MONTH_CODE)
+    previous_last_month = Period.from_year_and_code(context.filing_year - 1, _LAST_MONTH_CODE)
+    declared = sorted(
+        invoice.invoice_number
+        for invoice, observation in observed_items
+        if observation.operation_clave is not None
+        and invoice.kind is InvoiceKind.RECEIVED
+        and last_month.contains(invoice.issued_at)
+    )
+    left_out = sorted(
+        invoice.invoice_number
+        for invoice in catalogue_invoices
+        if invoice.kind is InvoiceKind.RECEIVED
+        and (invoice.bucket_id is None or invoice.bucket_id == context.bucket_id)
+        and previous_last_month.contains(invoice.issued_at)
+        and _invoice_observation(invoice, context=context, m347_filer=m347_filer) is not None
+    )
+    if not declared and not left_out:
+        return ()
+    parts: list[str] = []
+    if declared:
+        parts.append(f"declares the received invoices {', '.join(declared)} issued in December")
+    if left_out:
+        parts.append(
+            f"leaves out the received invoices {', '.join(left_out)} issued in December {context.filing_year - 1}"
+        )
+    return (
+        CalculationSourceDiagnostic(
+            reason="unsettled_legal_reading",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            resolver_id=resolver_id,
+            source_ref="m347-dating:received-invoice-registry-entry",
+            message=(
+                f"Modelo 347 for ejercicio {context.filing_year} {' and '.join(parts)}, dating each by its issue "
+                "date. RD 1065/2007 art. 35.1 dates an operation by the entry of its invoice in the libro registro, "
+                "made when it is received (RIVA art. 69.3), and the invoices do not record when they were received."
+            ),
+            remedy=(
+                "Check when each listed invoice was received and entered in your libro registro de facturas "
+                "recibidas; one entered in another year belongs to that year's Modelo 347."
+            ),
+            asserted_legal_refs=_M347_RECEIVED_DATING_LEGAL_REFS,
+        ),
+    )
 
 
 def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
@@ -1470,6 +1658,9 @@ def _m347_invoice_observation(
         cash_accounting_operation=cash_accounting_operation,
         reverse_charge_recipient=_m347_reverse_charge_recipient(invoice),
         annual_computation_basis=m347_filer.annual_computation_basis or cash_accounting_operation,
+        arrendamiento_local_negocio=invoice.arrendamiento_local_negocio,
+        situacion_inmueble=invoice.situacion_inmueble,
+        referencia_catastral=invoice.referencia_catastral,
     )
 
 

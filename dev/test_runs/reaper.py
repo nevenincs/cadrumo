@@ -99,10 +99,13 @@ def assess_scratch_directories(base: Path, *, now: float | None = None) -> tuple
     """Classify run scratch directories under ``base`` by their owner's liveness.
 
     Scratch sits beside the temp base rather than inside its run directory, so it
-    carries no completion record: its owner's PID and silence decide alone, under
-    the same ceiling and grace a run directory without ``run.json`` gets. Only
-    names shaped ``<prefix>_<pid>_<token>`` are considered; the temp base is
-    shared with every other program on the machine.
+    carries no completion record: its owner's PID and silence decide alone. A
+    live owner always spares its scratch, whatever the directory's mtime says --
+    the scratch's own mtime moves only when a direct child changes, so a run
+    writing deep inside it looks silent. A dead owner's scratch goes once it has
+    been silent past :data:`INTERRUPTED_GRACE_SECONDS`. Only names shaped
+    ``<prefix>_<pid>_<token>`` are considered; the temp base is shared with
+    every other program on the machine.
     """
     reference = time.time() if now is None else now
     try:
@@ -113,26 +116,58 @@ def assess_scratch_directories(base: Path, *, now: float | None = None) -> tuple
     for entry in entries:
         if not SCRATCH_NAME.fullmatch(entry.name) or is_link_like(entry) or not entry.is_dir():
             continue
-        verdict = _owned_verdict(entry, reference)
+        verdict = _owned_verdict(entry, reference, spare_live_owner=True)
         if verdict is not None:
             verdicts.append(verdict)
     return tuple(verdicts)
 
 
-def _owned_verdict(directory: Path, reference: float) -> RunVerdict | None:
+def sweep_scratch_directories(base: Path, *, now: float | None = None) -> int:
+    """Remove dead-owner scratch directly inside ``base`` and return how many went.
+
+    Each reclaimable directory is re-verified immediately before removal: it must
+    still carry a scratch name, must not be a link or junction, and must resolve
+    to exactly ``base``'s resolved path joined with its own name. Anything else is
+    left alone. Removal failures are swallowed; the next sweep retries.
+    """
+    try:
+        resolved_base = base.resolve(strict=True)
+    except OSError:
+        return 0
+    removed = 0
+    for verdict in assess_scratch_directories(base, now=now):
+        directory = verdict.directory
+        if not verdict.reclaimable or not SCRATCH_NAME.fullmatch(directory.name) or is_link_like(directory):
+            continue
+        try:
+            if directory.resolve(strict=True) != resolved_base / directory.name:
+                continue
+        except OSError:
+            continue
+        shutil.rmtree(directory, ignore_errors=True)
+        if not directory.exists():
+            removed += 1
+    return removed
+
+
+def _owned_verdict(directory: Path, reference: float, *, spare_live_owner: bool = False) -> RunVerdict | None:
     """Judge an unfinished directory by its owner's liveness, then its silence."""
     try:
         age = reference - directory.stat().st_mtime
     except OSError:
         return None
-    if age > PID_TRUST_CEILING_SECONDS:
+    if age > PID_TRUST_CEILING_SECONDS and not (spare_live_owner and _owner_is_live(directory)):
         return RunVerdict(directory, True, "silent past the ceiling; no run of this suite is still writing")
-    pid = _owner_pid(directory)
-    owner_live = pid is None or process_is_live(pid)
-    reclaimable = not owner_live and age > INTERRUPTED_GRACE_SECONDS
+    reclaimable = not _owner_is_live(directory) and age > INTERRUPTED_GRACE_SECONDS
     return RunVerdict(
         directory, reclaimable, "interrupted owner is gone" if reclaimable else "owner may still be writing"
     )
+
+
+def _owner_is_live(directory: Path) -> bool:
+    """Return whether the PID a directory's name carries is running, ``True`` when unreadable."""
+    pid = _owner_pid(directory)
+    return pid is None or process_is_live(pid)
 
 
 def reclaim_run_directories(verdicts: tuple[RunVerdict, ...]) -> int:

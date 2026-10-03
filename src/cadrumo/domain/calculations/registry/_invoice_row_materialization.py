@@ -20,7 +20,7 @@ from .nif_iva_catalogue import resolve_nif_iva_catalogue
 if TYPE_CHECKING:
     from .invoice_bindings import InvoiceObservation
 
-InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
+InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave", "arrendamiento_inmueble"]
 """How invoice rows are grouped before an M349 or M347 binding resolves them.
 
 Public rather than underscore-private because `invoice_bindings` needs it too. It was
@@ -61,6 +61,8 @@ def build_invoice_rows(
         return _build_operator_clave_period_rows(observations)
     if grouping == "contraparte_clave":
         return _build_contraparte_clave_rows(observations, m347_threshold_filter=m347_threshold_filter)
+    if grouping == "arrendamiento_inmueble":
+        return _build_arrendamiento_inmueble_rows(observations)
     raise RegistryValidationError(f"unsupported invoice row grouping {grouping!r}")
 
 
@@ -194,6 +196,7 @@ class _ContraparteClaveAccumulator(BaseModel):
     cash_accounting_operation: bool
     reverse_charge_recipient: bool
     annual_computation_basis: bool
+    arrendamiento_local_negocio: bool
     importe_total: Decimal
     importe_q1: Decimal
     importe_q2: Decimal
@@ -266,6 +269,7 @@ def _build_contraparte_clave_rows(
                 cash_accounting_operation=observation.cash_accounting_operation,
                 reverse_charge_recipient=observation.reverse_charge_recipient,
                 annual_computation_basis=observation.annual_computation_basis,
+                arrendamiento_local_negocio=observation.arrendamiento_local_negocio,
                 importe_total=Decimal("0"),
                 importe_q1=Decimal("0"),
                 importe_q2=Decimal("0"),
@@ -286,20 +290,25 @@ def _build_contraparte_clave_rows(
             **_m347_declarado_identification(bucket.party_tax_id, bucket.country_code),
             "cash_accounting_mark": _M347_ROW_MARK if bucket.cash_accounting_operation else "",
             "reverse_charge_mark": _M347_ROW_MARK if bucket.reverse_charge_recipient else "",
+            "business_premises_lease_mark": _M347_ROW_MARK if bucket.arrendamiento_local_negocio else "",
         },
     )
 
 
-_ContraparteRowKey = tuple[str, str, str, bool, bool, bool]
+_ContraparteRowKey = tuple[str, str, str, bool, bool, bool, bool]
 """One declarado record: counterparty, clave and the operations the design relates apart.
 
-RD 1065/2007 art. 34.1 has the criterio de caja operations (letter j) and those
-where the declarant is the sujeto pasivo destinatario (letter k) "se harán
-constar separadamente de otras operaciones que, en su caso, se realicen entre las
-mismas partes", and the 2025 record design marks each with an "X" (pos. 281, 282)
-"debiendo consignarlas separadamente del resto". Each is therefore part of the
-record key, so one counterparty's operations split into one record per
-combination rather than one flag stamped on a mixed total. The annual-basis
+RD 1065/2007 art. 34.1 has the business-premises leases (letter d), the criterio
+de caja operations (letter j) and those where the declarant is the sujeto pasivo
+destinatario (letter k) "se harán constar separadamente de otras operaciones que,
+en su caso, se realicen entre las mismas partes", and the record designs mark each
+with an "X" (pos. 100 "ARRENDAMIENTO LOCAL NEGOCIO" in both designs, pos. 281 and
+282 in the 2025 one) "debiendo consignarlas separadamente del resto". Each is
+therefore part of the record key, so one counterparty's operations split into one
+record per combination rather than one flag stamped on a mixed total. A lease is
+split for the record only: art. 34.1.d keeps "su consideración unitaria a efectos
+de lo dispuesto en el artículo 33.1", so the floor still judges the
+counterparty's operations together. The annual-basis
 flag follows from the filer and the criterio de caja flag, so it never splits a
 record on its own; it is keyed so a record cannot mix quarterly and annual
 operations.
@@ -317,6 +326,7 @@ def _contraparte_row_key(observation: InvoiceObservation, clave: str) -> _Contra
         observation.cash_accounting_operation,
         observation.reverse_charge_recipient,
         observation.annual_computation_basis,
+        observation.arrendamiento_local_negocio,
     )
 
 
@@ -371,6 +381,89 @@ def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict
         "community_vat_number": _community_vat_number(party_tax_id, country_code),
         "provincia_code": _M347_NON_RESIDENT_PROVINCIA,
     }
+
+
+class _ArrendamientoInmuebleAccumulator(BaseModel):
+    """Mutable accumulator for one leased premises and its tenant (modelo 347 inmueble record)."""
+
+    model_config = _ACCUMULATOR_CONFIG
+
+    country_code: str
+    party_tax_id: TaxIdIdentityToken
+    party_legal_name: str | None
+    situacion_inmueble: str
+    referencia_catastral: str
+    importe_total: Decimal
+
+
+_ArrendamientoInmuebleKey = tuple[str, str, str, str]
+"""One inmueble record: the tenant (country, NIF) and the leased premises (situación, referencia)."""
+
+
+def _build_arrendamiento_inmueble_rows(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group the business-premises lease observations into modelo 347 inmueble rows.
+
+    RD 1065/2007 art. 34.1.d has the lessor consign each tenant's name and NIF
+    "así como las referencias catastrales y los datos necesarios para la
+    localización de los inmuebles arrendados", and both record designs give one
+    inmueble record per leased premises carrying "el importe total, del
+    arrendamiento del local de negocios correspondiente al año natural al que se
+    refiere la declaración, cualquiera que sea la cuantía a la que ascienda el
+    mismo". So one row per (tenant, premises), summing the same gross amount the
+    declarado record relates (art. 34.2.a), with no declaration floor: the
+    amount is related whatever it is. A tenant leasing two premises files two
+    rows, and two tenants of one premises file one each.
+
+    The tenant's NIF follows the declarado slot's rule ("Sólo se cumplimentará
+    con los NIF asignados en España"). A situación or referencia catastral the
+    lease does not record is left without content and disclosed by the source
+    resolver; so is the DIRECCIÓN DEL INMUEBLE, whose INE-coded street and
+    municipality fields no invoice records.
+    """
+    grouped: dict[_ArrendamientoInmuebleKey, _ArrendamientoInmuebleAccumulator] = {}
+    for observation in observations:
+        if not observation.arrendamiento_local_negocio:
+            continue
+        if observation.invoice_total_amount is None:
+            raise RegistryValidationError(
+                f"invoice observation {observation.invoice_id!r} declares a business-premises lease "
+                "but no invoice_total_amount",
+            )
+        situacion = observation.situacion_inmueble or ""
+        referencia = observation.referencia_catastral or ""
+        key = (observation.country_code, observation.party_tax_id, situacion, referencia)
+        bucket = grouped.setdefault(
+            key,
+            _ArrendamientoInmuebleAccumulator(
+                country_code=observation.country_code,
+                party_tax_id=observation.party_tax_id,
+                party_legal_name=observation.party_legal_name,
+                situacion_inmueble=situacion,
+                referencia_catastral=referencia,
+                importe_total=Decimal("0"),
+            ),
+        )
+        bucket.importe_total += observation.invoice_total_amount
+        if bucket.party_legal_name is None and observation.party_legal_name is not None:
+            bucket.party_legal_name = observation.party_legal_name
+    rows: list[Mapping[str, Decimal | str]] = []
+    for key in sorted(grouped):
+        bucket = grouped[key]
+        row: dict[str, Decimal | str] = {
+            "declarado_tax_id": _m347_declarado_identification(bucket.party_tax_id, bucket.country_code)[
+                "declarado_tax_id"
+            ],
+            "importe_total": bucket.importe_total,
+            "situacion_inmueble": bucket.situacion_inmueble,
+            "referencia_catastral": bucket.referencia_catastral,
+            "premises_address": "",
+        }
+        if bucket.party_legal_name is not None:
+            row["party_legal_name"] = bucket.party_legal_name
+        rows.append(row)
+    return tuple(rows)
 
 
 #: CÓDIGO PROVINCIA for a declarado observed outside Spain (both 347 designs, pos.

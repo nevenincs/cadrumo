@@ -30,6 +30,8 @@ See Also:
         Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
     :func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`:
         Emits the Modelo 303 annual prorrata-general regularización proposed-casilla-44 advisory.
+    :func:`~application.modelo._m347_uninvoiced_expense_advisory.collect_m347_uninvoiced_expense_diagnostics`:
+        Emits the Modelo 347 advisory for business expenses the ledger holds without an invoice.
 """
 
 from __future__ import annotations
@@ -47,6 +49,7 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
+from ._m347_uninvoiced_expense_advisory import collect_m347_uninvoiced_expense_diagnostics
 from ._minimo_descendientes_advisory import (
     collect_guarderia_madre_meses_undeclared_diagnostics,
     collect_guarderia_spend_shape_diagnostics,
@@ -91,8 +94,9 @@ def collect_bucket_aggregation_advisory_diagnostics(
     130 prior-payment minoracion capture, settlement-not-computed structure, the
     Modelo 100 mínimo-por-descendientes undeclared-facts advisory, the Modelo
     303 capital-goods IVA regularización (LIVA arts. 107-110) proposed-casilla-43
-    advisory, and the Modelo 303 annual prorrata-general regularización (LIVA
-    arts. 104-105) proposed-casilla-44 advisory. These diagnostics are
+    advisory, the Modelo 303 annual prorrata-general regularización (LIVA
+    arts. 104-105) proposed-casilla-44 advisory, and the Modelo 347 advisory for
+    uninvoiced business expenses (RD 1065/2007 art. 35.1). These diagnostics are
     informational and non-blocking; the
     calculation result already exists, and the caller merely appends these rows
     to the source mesh's existing
@@ -131,7 +135,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
             capability used by the Modelo 303 regularización advisory and by
             the annual IVA settlement advisory's reciprocity proof.
         transaction_repository: Required bucket-bound transaction catalogue
-            capability used by the annual IVA settlement advisory.
+            capability used by the annual IVA settlement advisory and the
+            Modelo 347 uninvoiced-expense advisory.
         operation: The caller's pinned authority for an in-progress calculation.
             Standalone diagnostic callers may omit it to lease one locally.
         profile: The bucket's profile when the calculation already loaded it;
@@ -272,5 +277,11 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 transaction_repository=transaction_repository,
                 bienes_inversion_repository=bienes_inversion_repository,
                 operation=authority,
+            )
+            + collect_m347_uninvoiced_expense_diagnostics(
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                transaction_repository=transaction_repository,
             )
         )

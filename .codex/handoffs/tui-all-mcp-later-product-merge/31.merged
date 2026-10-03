@@ -1,0 +1,194 @@
+"""Canonical fixed-width wire parser for registry export fields."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+from .errors import RegistryValidationError
+from .export_value_policy import (
+    ParsedExportPolicyValue,
+    normalize_parsed_export_policy_value,
+    policy_defines_absent_slot,
+    validate_export_wire_value,
+)
+from .fixed_width_codec import (
+<<<<<<< C:\Users\hello\AppData\Local\Temp\tmp8510h4x1\current
+    ExportField,
+=======
+>>>>>>> C:\Users\hello\AppData\Local\Temp\tmp8510h4x1\source
+    ExportPadding,
+    ExportSignPosition,
+    render_absent_slot,
+    render_fixed_width_export_field,
+    require_allowed_value,
+    require_decimals,
+    require_length,
+    require_minimum_year,
+    zero_fill_is_only_absence,
+)
+from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES
+
+
+def parse_fixed_width_export_field(
+    field: ExportField,
+    raw: str,
+) -> ParsedExportPolicyValue:
+    """Parse and validate one complete exact-width field from wire text."""
+    length = require_length(field)
+    _require_raw_width(field, raw, length)
+    kind = str(getattr(field.kind, "value", field.kind))
+    if _is_inactive_binding_slot(field, raw, length, kind):
+        # A positioned binding-row renderer emits only active bindings for a
+        # logical row.  An explicitly optional inactive binding is therefore
+        # represented by its untouched space fill rather than by the normal
+        # standalone absent-value encoding.  Read-back must recognise that
+        # canonical representation before attempting a numeric parse.
+        # Required bindings intentionally remain subject to normal validation.
+        return None
+    if _is_policy_absent_slot(field, raw, kind):
+        # The renderer writes an optional absent slot as its declared fill --
+        # spaces for text, zeros for numbers, as AEAT's designs require --
+        # without policy validation, and parsing reads that same fill back as
+        # absence. A zero fill is a value only where zero is one the field may
+        # carry; otherwise it can mean nothing but the absent slot.
+        return None
+    if kind not in {"filler", "literal"} and _fill_reads_as_absent_text(field, raw):
+        return None
+    validate_export_wire_value(field.value_policy, raw)
+    return _parse_present_wire_value(field, raw, kind, length)
+
+
+def _require_raw_width(field: ExportField, raw: str, length: int) -> None:
+    if len(raw) != length:
+        raise RegistryValidationError(f"export field {field.id!r} expected {length} wire characters, got {len(raw)}")
+
+
+def _is_inactive_binding_slot(field: ExportField, raw: str, length: int, kind: str) -> bool:
+    return kind == "binding" and not field.required and raw == " " * length
+
+
+def _is_policy_absent_slot(field: ExportField, raw: str, kind: str) -> bool:
+    return (
+        kind not in {"filler", "literal"}
+        and not field.required
+        and field.value_policy is not None
+        and not policy_defines_absent_slot(field.value_policy)
+        and raw == render_absent_slot(field)
+        and (not raw.strip() or zero_fill_is_only_absence(field))
+    )
+
+
+def _parse_present_wire_value(
+    field: ExportField,
+    raw: str,
+    kind: str,
+    length: int,
+) -> ParsedExportPolicyValue:
+    if kind == "filler":
+        if raw != " " * length:
+            raise RegistryValidationError(f"filler export field {field.id!r} contains non-space data")
+        return None
+    if kind == "literal":
+        expected = render_fixed_width_export_field(field, field.literal)
+        if raw != expected:
+            raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
+        return field.literal
+    parsed: ParsedExportPolicyValue = _parse_typed_value(field, raw)
+    require_allowed_value(field, parsed)
+    parsed = normalize_parsed_export_policy_value(field.value_policy, raw, parsed)
+    require_minimum_year(field, parsed)
+    if field.value_policy is None and render_fixed_width_export_field(field, parsed) != raw:
+        raise RegistryValidationError(f"export field {field.id!r} contains noncanonical fixed-width data")
+    return parsed
+
+
+def _parse_typed_value(field: ExportField, raw: str) -> ParsedExportPolicyValue:
+    """Parse one padded wire value under the field's declared data type."""
+    if field.data_type == "money":
+        return _parse_scaled_numeric(field, raw, scale=2)
+    if field.data_type == "decimal":
+        return _parse_scaled_numeric(field, raw, scale=require_decimals(field))
+    if field.data_type == "integer":
+        return _parse_integer(field, raw)
+    if field.data_type == "boolean":
+        return _parse_boolean(field, raw)
+    text = _unpad(field, raw)
+    return text if text else None
+
+
+def _parse_boolean(field: ExportField, raw: str) -> bool | None:
+    text = _unpad(field, raw)
+    if text == "":
+        return None
+    if text == "X":
+        return True
+    raise RegistryValidationError("boolean export field must contain canonical X or blank wire data")
+
+
+def _fill_reads_as_absent_text(field: ExportField, raw: str) -> bool:
+    """Whether an optional non-numeric slot holds exactly its declared absent fill.
+
+    Zero is a numeric state only: a text or date field has no zero, so the fill
+    its declaration writes for an absent value -- spaces, or the zeros some
+    designs ask for in an alphanumeric identifier slot -- can only mean that no
+    value was given. Reading a zero fill back as the text ``"0"`` would invent a
+    value the record never carried. A required field has no absent fill, so its
+    wire always carries a value and is parsed as one.
+    """
+    if field.required or field.value_policy is not None:
+        return False
+    if field.data_type in ZERO_PADDED_EXPORT_DATA_TYPES or field.data_type == "boolean":
+        return False
+    return raw == render_absent_slot(field)
+
+
+def _parse_integer(field: ExportField, raw: str) -> Decimal:
+    negative, digits = _split_numeric_wire(field, raw)
+    value = Decimal(int(digits))
+    return -value if negative else value
+
+
+def _parse_scaled_numeric(field: ExportField, raw: str, *, scale: int) -> Decimal:
+    negative, digits = _split_numeric_wire(field, raw)
+    value = Decimal(int(digits)).scaleb(-scale)
+    return -value if negative else value
+
+
+def _split_numeric_wire(field: ExportField, raw: str) -> tuple[bool, str]:
+    if field.sign_position is ExportSignPosition.BLANK_OR_N:
+        if raw[:1] not in {"N", " "}:
+            raise RegistryValidationError(f"export field {field.id!r} sign position must hold 'N' or a space")
+        negative, digits = raw[:1] == "N", raw[1:]
+    elif field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
+        # The constant 'N' carries no direction: the value is the magnitude.
+        # An all-zero slot is the design's empty case; the canonical re-render
+        # in the caller refuses an 'N' in front of a zero magnitude.
+        negative, digits = False, raw[1:] if raw[:1] == "N" else raw
+    elif field.signed:
+        # The mirror of the render rule above: a negative slot is 'N' followed by
+        # its digits, and a non-negative slot is digits all the way. Refusing a
+        # digit in the leading position would refuse a correctly formed AEAT
+        # record, because that is exactly what AEAT specifies a non-negative
+        # amount looks like.
+        negative = raw[:1] == "N"
+        digits = raw[1:] if negative else raw
+    else:
+        negative = False
+        digits = _unpad(field, raw)
+    if not digits or not digits.isascii() or not digits.isdigit():
+        raise RegistryValidationError(f"numeric export field {field.id!r} must contain only ASCII digits")
+    return negative, digits
+
+
+def _unpad(field: ExportField, raw: str) -> str:
+    if field.padding is ExportPadding.NONE:
+        return raw.rstrip(" ")
+    if field.padding is ExportPadding.LEFT_ZERO:
+        value = raw.lstrip("0")
+        return value or "0"
+    if field.padding is ExportPadding.LEFT_SPACE:
+        return raw.lstrip(" ")
+    return raw.rstrip(" ")
+
+
+__all__ = ["parse_fixed_width_export_field"]

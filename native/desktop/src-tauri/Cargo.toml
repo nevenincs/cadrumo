@@ -1,0 +1,21 @@
+[package]
+name = "cadrumo-desktop-preview"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "cadrumo"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "deny"

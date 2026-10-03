@@ -1,0 +1,186 @@
+{
+  "mappings": [
+    "dev/registry/mappings/modelo_347/2011/0001-records.toml",
+    "dev/registry/mappings/modelo_347/2025/0001-records.toml"
+  ],
+  "provisional_generated_seeds": [
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0003-record-m347-inmueble.toml",
+      "stage2_blob": "3b7c66a7e7b2e053eb0e226a902cdbd892c03a16"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json",
+      "stage2_blob": "3354ddf97834e588996ba8de98a68202b85921ab"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml",
+      "stage2_blob": "94c3215b047b9b92b2a6a366ac4668218d71579e"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml",
+      "stage2_blob": "aabe7913922fc845ad7f2a028e2fcd52fc7d9780"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml",
+      "stage2_blob": "984fc804237cc33773dfe226669d8727be473411"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "stage2_blob": "9578dbb0d4788b9cd548db1cd891aaf35599b7dc"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
+      "stage2_blob": "a94305460e2e3f00bf8ede73d72fef0bcd3624fd"
+    }
+  ],
+  "status": "M347 mappings and artifacts resolved using fresh canonical generation; final currentness verification pending",
+  "canonical_candidate_evidence": [
+    {
+      "revision": "2011-2024",
+      "source_ref": "aeat-dr-347-2011",
+      "filing_year": 2024,
+      "period": "0A",
+      "candidate_root": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\m347-canonical-generation\\2011-2024\\candidate\\registry\\aeat",
+      "comparison_outcome": "refused",
+      "comparison_reason": "export provenance manifest does not match current generation authorities: {'semantic_map_sha256': ('e09a3cb359e8f117a36ff2c5199b1500095bd8de5271333d51573d3ce5c46f51', 'd2c06f6cbc1fab2282bbe6917b3597d8df7fbb7a9e0b2fd69d70c42d3d7167d8'), 'render_profile_sha256': ('75a683579193d51c0a655dac0a3b52fb0c7742f61124b2cfdbd100288e5c8f21', 'f6f55a61f7e66ef36540715c074dcca20c98d71e59795e3563abd406111bb68d')}",
+      "fresh_candidate_validation_completed": true
+    },
+    {
+      "revision": "2025-y-siguientes",
+      "source_ref": "aeat-dr-347-2025",
+      "filing_year": 2025,
+      "period": "0A",
+      "candidate_root": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\m347-canonical-generation\\2025-y-siguientes\\candidate\\registry\\aeat",
+      "comparison_outcome": "refused",
+      "comparison_reason": "export provenance manifest does not match current generation authorities: {'semantic_map_sha256': ('87d166c345a88d4012ddaa6dde9fb5cc828c35070b2611bb56f2b036c34805e6', '85a43734f97143bbd68d3e8d68ccd8756de7f5bec654d91c5180c61d621f9793'), 'render_profile_sha256': ('c7c77b004c4386526016d9a48b7c179c7b6831509d3c61030ec43c6f1753487a', '6b897e44b59b6ac81a46411a96950f60b29dbdc8849f332b44a6f702903d9e4d')}",
+      "fresh_candidate_validation_completed": true
+    }
+  ],
+  "generated_files": [
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0000-export-layout.toml",
+      "sha256": "5f79de9e670e3b2e01825fa9fedf219a0ac5e4754e439e8acf22f27af8206e90"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0001-record-m347-declarante.toml",
+      "sha256": "dbec00d99c5f6879991c639aab2b294c46cef580132eb6e1912385191242b312"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml",
+      "sha256": "7af598ac2291455e78d265d500c0e33505231b94715a6d68c5f4b491cbd48c80"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0003-record-m347-inmueble.toml",
+      "sha256": "80b54e52944ddd04dfff8f557eae0310f1b61d688e6d24bfd362106c1c208a9e"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json",
+      "sha256": "b8f17768bc41422e399d1f1309049bed94f4831d0297861218c1675222de02d1"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0000-export-layout.toml",
+      "sha256": "e747318655850c5e907b9579189d89a80832f0701e0e4a9fdd47c39758a32a57"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0001-record-m347-declarante.toml",
+      "sha256": "c4acef1b7ae9cdf98b6c6d26722b0e40277ace61ced7cb9d33766f5665b5a38e"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml",
+      "sha256": "b89a48095da4d2edc243d555118edb7f2f5e572405f4ec129e7a3ca62caa272d"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml",
+      "sha256": "7cc5f1238940b112ba38e6b019434bc0adc23f449dcc8a59d60efaba2902c3a7"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json",
+      "sha256": "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml",
+      "sha256": "91b8e514b64a86ab9a0674d4228edede7151ec45d2e67bf3ec97ac4b46f4c8bb"
+    },
+    {
+      "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml",
+      "sha256": "8e71508cd3cefdad1e8f66cb1ef1e59e2ef104aab07560f9ee930f6f2518fbc1"
+    }
+  ],
+  "generated_semantics": [
+    {
+      "revision": "2011-2024",
+      "inmueble_required": false,
+      "inmueble_repeat": "binding_rows",
+      "inmueble_row_fields": {
+        "declarado_tax_id": "inmueble.arrendatario-nif",
+        "importe_total": "inmueble.importe-operacion",
+        "party_legal_name": "inmueble.arrendatario-nombre",
+        "premises_address": "inmueble.direccion",
+        "referencia_catastral": "inmueble.referencia-catastral",
+        "situacion_inmueble": "inmueble.situacion"
+      },
+      "declarado_row_fields": {
+        "business_premises_lease_mark": "contraparte.arrendamiento-local-negocio",
+        "clave": "contraparte.clave-operacion",
+        "declarado_tax_id": "contraparte.nif",
+        "importe_q1": "contraparte.importe-Q1",
+        "importe_q2": "contraparte.importe-Q2",
+        "importe_q3": "contraparte.importe-Q3",
+        "importe_q4": "contraparte.importe-Q4",
+        "importe_total": "contraparte.importe-anual",
+        "party_legal_name": "contraparte.nombre",
+        "provincia_code": "contraparte.provincia-codigo",
+        "residence_country_code": "contraparte.pais-codigo"
+      },
+      "record_widths": {
+        "inmueble": 500,
+        "declarado": 500
+      }
+    },
+    {
+      "revision": "2025-y-siguientes",
+      "inmueble_required": false,
+      "inmueble_repeat": "binding_rows",
+      "inmueble_row_fields": {
+        "declarado_tax_id": "inmueble.arrendatario-nif",
+        "importe_total": "inmueble.importe-operacion",
+        "party_legal_name": "inmueble.arrendatario-nombre",
+        "premises_address": "inmueble.direccion",
+        "referencia_catastral": "inmueble.referencia-catastral",
+        "situacion_inmueble": "inmueble.situacion"
+      },
+      "declarado_row_fields": {
+        "business_premises_lease_mark": "contraparte.arrendamiento-local-negocio",
+        "cash_accounting_mark": "contraparte.criterio-caja",
+        "clave": "contraparte.clave-operacion",
+        "community_vat_number": "contraparte.nif-operador-comunitario",
+        "declarado_tax_id": "contraparte.nif",
+        "importe_q1": "contraparte.importe-Q1",
+        "importe_q2": "contraparte.importe-Q2",
+        "importe_q3": "contraparte.importe-Q3",
+        "importe_q4": "contraparte.importe-Q4",
+        "importe_total": "contraparte.importe-anual",
+        "party_legal_name": "contraparte.nombre",
+        "provincia_code": "contraparte.provincia-codigo",
+        "residence_country_code": "contraparte.pais-codigo",
+        "reverse_charge_mark": "contraparte.inversion-sujeto-pasivo"
+      },
+      "record_widths": {
+        "inmueble": 500,
+        "declarado": 500
+      }
+    }
+  ],
+  "live_form_companion_synchronization": {
+    "changed": [
+      "Y:/code/cadrumo-worktrees/tui-all-mcp/src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml"
+    ],
+    "undeclared": []
+  },
+  "verification": [
+    "merged registry source compilation passed before fresh target rendering",
+    "both fresh generated candidates passed canonical candidate validation; provisional live-target comparison refused only changed semantic-map/render-profile provenance",
+    "live form companions regenerated by owning form-layout generator",
+    "no tests, live filing, authority publication or Git index mutations performed"
+  ]
+}

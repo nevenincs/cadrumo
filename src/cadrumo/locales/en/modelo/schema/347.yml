@@ -6,6 +6,14 @@ modelo:
           help: Field declared on modelo 347, the annual return of transactions with
             third parties.
           label: TOTAL ANNUAL AMOUNT OF THE TRANSACTIONS
+        modelo-347-declarante-importe-total-arrendamiento-locales:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL AMOUNT OF BUSINESS PREMISES LEASE TRANSACTIONS
+        modelo-347-declarante-numero-inmuebles:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL NUMBER OF PROPERTIES
         modelo-347-declarante-numero-personas-entidades:
           help: Field declared on modelo 347, the annual return of transactions with
             third parties.
@@ -79,10 +87,6 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: AMOUNT RECEIVED IN CASH
-          importe-total-arrendamiento-locales:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL AMOUNT OF BUSINESS PREMISES LEASE TRANSACTIONS
           importe-transmisiones-inmuebles:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
@@ -141,14 +145,6 @@ modelo:
             label: LOCATION OF THE PROPERTY
           tipo-declaracion:
             label: Return type (original / substitute / supplementary)
-          tipo-soporte:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: MEDIUM TYPE
-          total-inmuebles:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL NUMBER OF PROPERTIES
       construct:
         modelo-347-informative:
           field:

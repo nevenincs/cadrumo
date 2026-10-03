@@ -32,6 +32,58 @@ OPTIONAL_IVA_CATEGORY_OPTION: Final[OptionSpec] = OptionSpec(
     hidden=False,
 )
 
+BUSINESS_PREMISES_LEASE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="arrendamiento_local_negocio",
+        declarations=("--arrendamiento-local-negocio",),
+        value=ValueContract(DeferredTarget("builtins", "bool")),
+        default=ParameterDefault.value(False),
+        help_key=TranslationKey("cli.app.ledger.invoice.arrendamiento_local_negocio_help"),
+        metavar=None,
+        is_flag=True,
+        flag_value=True,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="situacion_inmueble",
+        declarations=("--situacion-inmueble",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.situacion_inmueble_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="referencia_catastral",
+        declarations=("--referencia-catastral",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.referencia_catastral_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+)
+"""The lessor's business-premises lease facts an issued invoice can state (RD 1065/2007 art. 34.1.d)."""
+
 INVOICE_LIFECYCLE_METADATA_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="operation_type",
@@ -209,6 +261,7 @@ INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS: Final[tuple[OptionSpec, ...]] = (
 )
 
 __all__ = [
+    "BUSINESS_PREMISES_LEASE_OPTIONS",
     "INVOICE_INTAKE_WIZARD_CORE_OPTIONS",
     "INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS",
     "INVOICE_LIFECYCLE_METADATA_OPTIONS",

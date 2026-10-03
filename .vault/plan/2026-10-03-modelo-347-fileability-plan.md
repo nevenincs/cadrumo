@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:addf6037d6d2a4dde0751fd13be6ab9f4bd9c675eb2b8dce0364569143d72ccf'
+body_hash: 'sha256:d1f74ecca21029c280fdd8341b9e314a54faf268be40c305a5d040be4d45c6ed'
 ---
 
 # `modelo-347-fileability` plan
@@ -46,7 +46,7 @@ Produce the type 2 rows on the live path through the existing row builder and re
 - [x] `P02.S06` - Extend the contraparte row builder key with typed per-row facts for metalico, criterio de caja, inversion del sujeto pasivo, seguro, arrendamiento and transmisiones, and render casilla fields per row; `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py, src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/filing/`.
 - [x] `P02.S07` - Make the inmueble record repeat from the referencia catastral family and project non-resident and EU-operator rows as the diseno requires; `dev/registry/mappings/modelo_347/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
 - [x] `P02.S15` - Emit no 347 inmueble record when no business-premises lease data exists and advise landlords with leases, through the renderer's existing record-suppression rule; `src/cadrumo/application/filing/, dev/registry/mappings/modelo_347/`.
-- [ ] `P02.S16` - Add a landlord-lease data family on issued rental invoices (tenant, referencia catastral, situacion) and feed the repeating 347 inmueble record and type 1 positions 161 and 170 from it; `src/cadrumo/application/invoices/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, dev/registry/mappings/modelo_347/`.
+- [x] `P02.S16` - Add a landlord-lease data family on issued rental invoices (tenant, referencia catastral, situacion) and feed the repeating 347 inmueble record and type 1 positions 161 and 170 from it; `src/cadrumo/application/invoices/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, dev/registry/mappings/modelo_347/`.
 
 ### Phase `P03` - Operation scoping and exclusions
 
@@ -69,8 +69,9 @@ Decide who must file from typed profile facts and the ledger per filing year, th
 
 Surface the remaining ambiguities as advisories and prove fileability end to end on synthetic ledgers, with no new duplication.
 
-- [ ] `P05.S13` - Surface advisories for ledger expenses without an invoice, received-invoice dating, the 2014-2024 edition grounding gap and tipo de soporte, and apply the weekend deadline shift without a holiday calendar; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml, src/cadrumo/domain/deadlines/festivos.py`.
+- [x] `P05.S13` - Surface advisories for ledger expenses without an invoice, received-invoice dating, the 2014-2024 edition grounding gap and tipo de soporte, and apply the weekend deadline shift without a holiday calendar; `src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml, src/cadrumo/domain/deadlines/festivos.py`.
 - [ ] `P05.S14` - Prove 347 fileability end to end from synthetic ledgers to byte-checked ficheros for 2025, confirm no new duplication with audit-dead-weight, publish the authority and refresh affected goldens; `src/cadrumo/application/invoices/tests/, docs/_sequences/`.
+- [ ] `P05.S19` - Fix the fileability defects the acceptance test exposed: draft annual-basis rows with absent quarters, a real resident provincia per declarado, the type 1 declarant name, contact person, declaration number and complementaria fields per the 2025 diseño, and land the acceptance test; `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py, src/cadrumo/application/filing/, dev/registry/mappings/modelo_347/, src/cadrumo/entrypoints/tests/profile_persistence/`.
 
 ## Parallelization
 

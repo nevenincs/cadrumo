@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "feature": "tui-all-mcp-integration",
+  "step": "S04",
+  "source": "mcp-tui-collision",
+  "path": "dev/acceptance/retenciones/installed_tui_withholding.py",
+  "status": "unresolved",
+  "original_source": {
+    "snapshot": "67047039edc7e79b4b560dd64960ee843080fda6",
+    "blob": "8611b5c7f4f52a8a7a68b0ec4ae9272618dcd4b3",
+    "utf8_decoding": "explicit",
+    "lines": 2660,
+    "removal_commit": "3bb3b647876a4671a57efe136dbeb175f677c35f",
+    "removal_step": "mcp-purpose-authentication/S08",
+    "removal_intent": "Route private CLI and TUI operations through the shared runtime; this commit simultaneously deletes old installed_tui_withholding and the entire direct-composition withholding screen package."
+  },
+  "governing_current_behavior": {
+    "runtime_owner": "src/cadrumo/entrypoints/tui/runtime_workbench.py::_destinations",
+    "withholding_admission": "UNAVAILABLE",
+    "reason": "workbench.withholding.runtime_unavailable",
+    "public_palette_owner": "src/cadrumo/entrypoints/tui/search.py::_command_entries excludes every unavailable route and its actions",
+    "current_lifecycle_owner": "src/cadrumo/entrypoints/tui/modelo/workbench/progress.py offers current export before local filing recording",
+    "no_management": "Runtime administration/provisioning remains absent under accepted2026-10-03-runtime-without-service-manager ADR."
+  },
+  "components": [
+    {
+      "historical_intent": "Professional/rent invoice and withholding capture through old TUI screens, missing-detail capture refusal, replacement/correction capture window",
+      "original_functions": [
+        "_create_received_invoice",
+        "_open_withholding",
+        "_set_capture",
+        "_assert_professional_required_detail_refusal",
+        "_inspect_scope",
+        "run_capture_child",
+        "run_mutation_child",
+        "_assert_tui_replacement"
+      ],
+      "status": "superseded",
+      "precise_evidence": "3bb3b647876a deletes withholding/{door,installed,screen} and acceptance runner together during S08 runtime migration. Current runtime owner explicitly refuses this route as unavailable and search owner omits it. Restoring capture UI is new product work prohibited by this assigned scope.",
+      "replacement": "Public CLI-owned invoice/allocation capture seeds retained business facts; actual admitted installed TUI palette is observed populated with Declarations and observed to withhold Withholding both in discover and query mode. Current dev/acceptance/retenciones/public_correction_history.py preserves public correction evidence separately."
+    },
+    {
+      "historical_intent": "Quarterly professional111 and rent115 calculation, verification, export and local filing records supplying annual190/180",
+      "original_functions": [
+        "run_tui_only_child",
+        "_run_work_operation",
+        "_validate_tui_only_exports"
+      ],
+      "status": "incorporated",
+      "precise_evidence": "New seed owner uses _create_withholding_profile, _capture_annual_source_allocations and _attest_annual_no_activity_periods only through InstalledCli fresh public processes, then creates work with public work create without calculation/file/export. New TUI owner uses ordinary installed launcher runtime admission, rendered grouped work-unit row selection, actual operation modal terminal controls, assumed-value confirmation, verify, export, then current local-record offered control.",
+      "replacement": "New installed_tui_withholding continuation:111 activityQ2,115 four source quarters; supported empty111 quarters retain explicit no-retenciones attestations and never invent local zero filings. Both annual190/180 work units are then calculated from those recorded source states. Actual BOE bytes checked against existing independently authored scenario casillas/header/type2 row oracles under one published authority operation.",
+      "verification": "Implementation present; stateful runtime acceptance pending root check."
+    },
+    {
+      "historical_intent": "Fresh installed-TUI reopen preserves declaration state and selected exported artifacts",
+      "original_functions": [
+        "run_tui_only_reopen_child",
+        "run_reopen_child"
+      ],
+      "status": "incorporated",
+      "precise_evidence": "Parent launches separate lifecycle and reopen child processes, both require product origin site-packages and ordinary runtime login. Reopen reads the public recorded-state sentence for every original natural work coordinate and independently validates exact unchanged artifact identities; parent compares lifecycle/reopen manifests and artifact hashes.",
+      "replacement": "run_installed_tui_child_process phases lifecycle/reopen with stdin-only credential, pinned-authority generation check, typed receipt guards and installed-package identity.",
+      "verification": "Implementation present; stateful runtime acceptance pending root check."
+    },
+    {
+      "historical_intent": "Entire input-to-export journey is TUI-only",
+      "original_functions": [
+        "run_installed_tui_only_journey"
+      ],
+      "status": "superseded",
+      "precise_evidence": "Current installed runtime intentionally has no withholding capture destination; claiming TUI-only would contradict its admission contract. New receipt explicitly names public_cli_seeded_runtime_tui_continuation and unavailable capture.",
+      "replacement": "Professional/rent capture acceptance remains owned by current installed CLI campaigns; the new runtime TUI acceptance continuation proves the admitted downstream lifecycle and fresh reopen only."
+    }
+  ],
+  "modified_files_sha256": {
+    "dev/acceptance/retenciones/installed_tui_withholding.py": "a1c66c92d360d9309d0db4632b2a69da8aae2a850344ecd37a552bad1d27bd5d",
+    "dev/acceptance/retenciones/installed_tui_seed.py": "d2bf580d9cd14dd815a622329694b327ce7fabc4caa09216915431c35b6f81ad",
+    "dev/acceptance/retenciones/installed_tui_controls.py": "5dcca7a58aca28095447ca5ed3cc3191011dc781ceb1075d0715daacc2ec45e0",
+    "dev/acceptance/retenciones/tests/test_installed_tui_withholding.py": "2fdf32f213c68b1ccd4479c45752c388ab3ece92909bc2489a82c198f5a912d6",
+    "dev/acceptance/installed_cli.py": "77d6a9e3aa68d8ee680b78ff44634e1c5d94d5c0365b20baf465010d843ff2f7",
+    "dev/acceptance/tests/test_installed_cli.py": "8e8143335337b74f161cb8e94b7513498c90b8d7cb604f641a8212c09473f6c9",
+    "dev/acceptance/income_tax/installed_tui_child.py": "7132fdb998705403404b1e6db7b5051f1b1164171872a46ed93006f30f36dc7b",
+    "dev/acceptance/income_tax/tests/test_installed_tui_child.py": "28007f47398971b269262569aa0c68a6ac15eb7df1f38bc58ee10f97ac138982",
+    "dev/acceptance/retenciones/installed_tui_runtime.py": "d1b4e79315bee6bf77f31bf201343a42d1a0167602e3fdde00aaec20f8293126",
+    "dev/acceptance/retenciones/tests/test_installed_tui_runtime.py": "a7220da95a53ae0159ff34581fa3980a87f8f312989a2848343ecbd6044bc1dc"
+  },
+  "verification": {
+    "unit_contract_tests": "37passed6.51s",
+    "unit_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T194826.556920Z-pytest-54472-2b07b290/run.log",
+    "meaning": "Refuse nominal child success for checkout product, live-submission claim, mismatched manifest, empty-palette absence, missing/wrong work, missing artifact, omitted export, obsoletefile-before-export order, unobserved reopen; preserve existing caller receipt on refusal.",
+    "ruff": "pass",
+    "stateful_owner": "root",
+    "stateful_result": "fresh installed CLI seeding succeeds after native namespace correction; lifecycle driver fails while genuine WorkbenchResultScreen is visible; acceptance terminal observation repair pending, not a demonstrated product defect",
+    "safe_diagnostic_repair": "17 focused tests passed; Ruff/format/driver type check passed; committed68258c3539",
+    "native_receipt": "/tmp/cdwMhXfF3/outputs/lifecycle-receipt.json",
+    "native_stage": "lifecycle._observe_operation_terminal",
+    "native_log": ".logs/tui-all-mcp-native-withholding-diagnostic-lf.txt",
+    "baseline_implementation_commit": "68258c3539",
+    "deferral": "User directed concrete baseline first; combined verification follows baseline."
+  },
+  "stateful_invocation": {
+    "command": "uv run --no-sync python -m dev.acceptance.retenciones.installed_tui_withholding --cli <installed-aeat> --python <installed-wheel-python> --authority-root <published-authority-directory> --storage-root <fresh-empty-store> --output-dir <fresh-empty-outputs> --receipt <fresh-parent-receipt.json> --year 2025",
+    "prerequisites": [
+      "Installed current product wheel in a separate interpreter; child requires site-packages origin outside workspace source tree.",
+      "Descriptor-selected published authority supports111/115/180/190 for2025 and selected scenario export layouts.",
+      "Native runtime and secure profile storage supported on execution host.",
+      "Fresh caller-owned storage/output directories and fresh receipt path; no existing evidence overwritten."
+    ],
+    "timeout_seconds_per_child": 1800,
+    "live_submission": false,
+    "aeat_acceptance_claimed": false
+  },
+  "limitations": [
+    "This reconciliation does not recreate retired withholding capture screens or direct in-process composition.",
+    "Full original TUI-only coverage is superseded by explicit current route unavailability.",
+    "Stateful execution remains required; unit receipts/lint do not prove installed-runtime acceptance."
+  ],
+  "implementation_status": "complete; root owning stateful verification pending",
+  "native_seed_diagnosis": {
+    "sanitized_evidence": "gw-laptop:/tmp/cddgdup3t3sq/public-diagnostic.json and public-complete-setup-diagnostic.json",
+    "before_public_profile_create": {
+      "runtime_namespace_exists": false
+    },
+    "after_public_profile_create": {
+      "returncode": 0,
+      "status": "warning",
+      "runtime_namespace_exists": true,
+      "runtime_namespace_mode": "0755",
+      "owner_matches": true
+    },
+    "socket_encoded_length": 65,
+    "first_failure": {
+      "stage": "profile_complete_setup",
+      "public_error_code": "REFUSED_LOCAL_RUNTIME",
+      "typed_runtime_reason": "runtime_endpoint_untrusted"
+    },
+    "production_producer": "core/storage_materialization.py ensure_storage_tree creates derived RUNTIME_SOCKETS with default mkdir mode, restricts only storage root; _profile_authentication_gate._materialize_storage_for executes this before profile create",
+    "owner_fix": "baseline worker/root assigned newly derived runtime directory0700; do not chmod preexisting insecure namespaces or weaken endpoint admission"
+  },
+  "runtime_fixture": {
+    "owner": "dev/acceptance/retenciones/installed_tui_runtime.py",
+    "launch": "installed cadrumo-runtime foreground console entrypoint; explicit immutable storage identity and installed cohort",
+    "scope": "same configured general/local storage root and explicit private socket directory used by every CLI/TUI child",
+    "readiness": "native peer-verified cohort/root handshake before public CLI seeding",
+    "session_policy": "explicit boot-bounded development runtime login policy",
+    "native_desktop_login_claimed": false,
+    "native_lock_state_claimed": false,
+    "native_containment_and_keychain_claim": "independent root-owned native proofs; not inferred from this continuation",
+    "shutdown": "Owning asyncio.Runner/create_subprocess_exec retained through lifecycle; normal terminate and joined15s; retained direct-child kill and joined5s on timeout. No reusable process-group PID ownership claim. Endpoint closes even if join fails. Receipt records joined/joined_after_kill only after successful cleanup; failed cleanup prevents proven receipt.",
+    "secrets": "synthetic profile credential stdin-only; receipts contain defining-enum refusal and stable error code/command evidence, never message/context values/stdout/stderr",
+    "suppressions": "No new lint suppression; replaced initial subprocess.Popen launch with repository owning asyncio pattern."
+  }
+}

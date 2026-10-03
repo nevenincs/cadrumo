@@ -1,0 +1,16 @@
+{
+  "source_cut": "60c063bba1fc3d53f7d0c2522405a81966a6a0a8",
+  "original_commit": "9df7a490e99d518687412bfeb0bb9f72666b0ced",
+  "paths": [
+    {
+      "path": "dev/test_runs/command.py",
+      "after_sha256": "e8048f3b9bcd1e62a01c3e59498bde65a82887789782e1105ac829fc306db526"
+    },
+    {
+      "path": "dev/test_runs/tests/test_command.py",
+      "after_sha256": "95c7c315b95013f8d09bb60277e3f1b569fd19bda085eb9804194c523fc30a9b"
+    }
+  ],
+  "resolution": "Union canonical storage-environment and UTF_8/test_log_root defining imports retained; incoming ScratchAllocation/ScratchOwnershipError/removal/base imports and scratch cleanup behavior/tests retained. No staging/index/vault mutations.",
+  "verification": "UTF8 decode, anchored conflict-marker absence and AST parse; user-directed remaining combined verification deferred until baseline/merged checkpoint."
+}

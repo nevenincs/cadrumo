@@ -84,6 +84,10 @@ _InvoiceRowField = Literal[
     "provincia_code",
     "cash_accounting_mark",
     "reverse_charge_mark",
+    "business_premises_lease_mark",
+    "situacion_inmueble",
+    "referencia_catastral",
+    "premises_address",
 ]
 
 # Canonical invoice-shaped binding source kinds, imported from
@@ -161,6 +165,18 @@ class InvoiceObservation(BaseModel):
     entities, and the destinatarios of criterio de caja operations for those
     operations "suministrarán ... sobre una base de cómputo anual".
     """
+
+    arrendamiento_local_negocio: bool = False
+    """The operation is the lease of a local de negocio the declarant lets (RD 1065/2007 art. 34.1.d).
+
+    Modelo 347 relates it "separadamente de otras operaciones" with the same
+    tenant, so it is part of the declarado record key, and each leased premises
+    also files its own inmueble record.
+    """
+    situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
+    """The leased premises' SITUACIÓN DEL INMUEBLE code, when the lease records it."""
+    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=25)
+    """The leased premises' referencia catastral, when the lease records it."""
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
@@ -373,7 +389,17 @@ _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
 #: declared quantity, not a third reading of the invoice's magnitude, so a revision
 #: declaring either magnitude measure still needs it drawn separately.
 
-_M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
+_M347_SUMMARY_RECORD_GROUPINGS: Mapping[str, InvoiceGrouping] = {
+    "m347_declarante_summary": "contraparte_clave",
+    "m347_inmueble_summary": "arrendamiento_inmueble",
+}
+"""The Modelo 347 type 1 totals, each read off the type 2 records it summarises.
+
+Positions 136-160 summarise the declarado records and positions 161-185 the
+inmueble records ("Número de registros de tipo 2" and the sum of their "IMPORTE
+DE LA OPERACION", aeat-dr-347-2025 type 1), so each summary record names the row
+grouping that builds the records it counts and sums.
+"""
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"},
@@ -447,7 +473,7 @@ def _validate_invoice_fact_and_op(
         )
     op = binding_aggregation_op(binding)
     _validate_scalar_invoice_fact_op(binding, selector, op)
-    if selector.record == _M347_DECLARANTE_SUMMARY_RECORD and selector.fact not in {
+    if selector.record in _M347_SUMMARY_RECORD_GROUPINGS and selector.fact not in {
         "operator_count",
         "invoice_total_sum",
     }:
@@ -801,15 +827,19 @@ def _resolve_m347_declarante_summary_values(
     *,
     effective_date: date | None = None,
 ) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
-    """Resolve the Modelo 347 type 1 totals from the declarado records they summarise.
+    """Resolve the Modelo 347 type 1 totals from the type 2 records they summarise.
 
     Both 347 record designs (aeat-dr-347-2011 and aeat-dr-347-2025, type 1) define the
-    totals over the emitted type 2 declarado records: positions 136-144 count those
+    totals over the emitted type 2 records: positions 136-144 count the declarado
     records ("si un mismo declarado figura en varios registros, se computará tantas
     veces como figure relacionado"), and positions 145-160 sum their annual amounts,
-    a negative record counting with minus. The records are therefore built here
-    exactly as the ``contraparte_clave`` row family builds them, threshold included,
-    and the totals are read off those records rather than recomputed per party.
+    a negative record counting with minus; positions 161-169 count the inmueble
+    records ("Si un mismo inmueble figura en varios registros, se computará tantas
+    veces como figure relacionado") and positions 170-185 sum their "IMPORTE DE LA
+    OPERACION", again with minus for a negative one. The records are therefore built
+    here exactly as the row family named by the summary record builds them,
+    threshold included where that family applies one, and the totals are read off
+    those records rather than recomputed per party.
     """
     summary_bindings: list[BindingDefinition] = []
     invoice_family_bindings: list[BindingDefinition] = []
@@ -818,7 +848,7 @@ def _resolve_m347_declarante_summary_values(
             invoice_family_bindings.append(binding)
             continue
         selector = _validated_invoice_selector(binding)
-        if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
+        if selector.record in _M347_SUMMARY_RECORD_GROUPINGS:
             summary_bindings.append(binding)
             continue
         invoice_family_bindings.append(binding)
@@ -830,8 +860,10 @@ def _resolve_m347_declarante_summary_values(
     resolved: dict[BindingId, Decimal] = {}
     for binding in summary_bindings:
         selector = _validated_invoice_selector(binding)
+        if selector.record is None:
+            raise RegistryValidationError(f"binding {binding.id!r} M347 summary names no record")
         records = build_invoice_rows(
-            "contraparte_clave",
+            _M347_SUMMARY_RECORD_GROUPINGS[selector.record],
             tuple(_filter_invoice_observations(_observations_for_binding_source(available, binding), selector)),
             m347_threshold_filter=lambda candidates: _m347_row_family_threshold_filter(
                 candidates,
