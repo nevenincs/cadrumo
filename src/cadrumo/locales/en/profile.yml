@@ -87,8 +87,10 @@ profile:
         136)
       premio_loteria_gravamen_especial_trimestres: Quarters in which such a lottery
         or betting prize was cashed (Modelo 136), as YYYY-nT tokens separated by |
-      third_party_transactions_above_347_threshold: Third-party transactions exceed
-        Modelo 347 threshold
+      third_party_transactions_above_347_threshold: In the calendar year the Modelo
+        347 covers, did your operations with any one person or entity exceed EUR 3,005.06
+        (EUR 300.51 for amounts you collect on behalf of third parties), counting
+        sales and purchases separately?
     preferences:
       output_language: CLI output language for this profile
     renta_family:
@@ -486,7 +488,8 @@ profile:
         premio_loteria_gravamen_especial_trimestres:
           label: Prize quarters (Modelo 136)
         third_party_transactions_above_347_threshold:
-          label: Modelo 347 threshold exceeded
+          label: 'Modelo 347 threshold exceeded: EUR 3,005.06 per person or entity
+            in the calendar year (EUR 300.51 for collections on behalf of third parties)'
       preferences:
         output_language:
           label: Output language

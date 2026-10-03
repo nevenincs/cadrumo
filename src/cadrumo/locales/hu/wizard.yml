@@ -520,7 +520,9 @@ wizard:
       taxpayer-sex:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
-        help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
+        help: Nyilatkozz arról, hogy a Modelo 347 által lefedett naptári évben az
+          ugyanazzal a személlyel vagy szervezettel folytatott ügyleteid meghaladták
+          a 3 005,06 EUR-t (harmadik felek nevében történő beszedésnél a 300,51 EUR-t).
     format:
       amount-eur: Összeg euróban, tizedesponttal, pl. 50000.00.
       date-iso: Dátum ÉÉÉÉ-HH-NN formátumban, pl. 2024-03-01.
@@ -540,7 +542,7 @@ wizard:
       után ellenőrizd az előrehaladást a következővel: .'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: Be van jelentkezve az IVA pénzforgalmi különleges rendszerébe?
+        prompt: Bejelentkeztél az IVA pénzforgalmi különleges rendszerébe?
       iva-group-dominant-entity-enrolled:
         prompt: IVA-csoport domináns szervezeteként bejelentkezett
       iva-group-member-enrolled:
@@ -560,7 +562,7 @@ wizard:
       iva-sii-enrolled:
         prompt: SII-be bejelentkezett (azonnali információszolgáltatás)
       iva-voluntary-sii-enrolled:
-        prompt: Önkéntesen bejelentkezett az SII-be?
+        prompt: Önkéntesen csatlakoztál az SII-hez?
       m303-regime-composition:
         choices:
           general:
@@ -663,7 +665,10 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:
-        prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
+        prompt: A Modelo 347 által lefedett naptári évben meghaladták-e az ugyanazzal
+          a személlyel vagy szervezettel folytatott ügyleteid a 3 005,06 EUR-t (a
+          harmadik felek nevében beszedett összegeknél a 300,51 EUR-t), az értékesítéseket
+          és a beszerzéseket külön számítva?
       title: Nyomtatvány kötelezettségek
     preferencias:
       title: Beállítások és képességek
@@ -899,11 +904,11 @@ wizard:
               31.3. cikk).
             label: Harmadik felek nevében történő díjbeszedés
         help: 'A 347-es adatlap C, D vagy E kulcsát aktiváló intézményi szerepek:
-          harmadik felek nevében történő díjbeszedés (31.3. cikk), lakásszövetkezet
-          jellegű társasház (49/1960. törvény), szociális jellegű szervezet (LIVA
-          20.tres cikk), az általános adatszolgáltatási kötelezettség alá tartozó
-          szervezet (LGT 94. cikk), vagy közigazgatási szervbe integrált entitás.
-          Hagyd üresen, ha egyik sem alkalmazandó.'
+          harmadik felek nevében történő díjbeszedés (31.3. cikk), társasházi közösség
+          (49/1960. törvény), szociális jellegű szervezet (LIVA 20.tres cikk), az
+          általános adatszolgáltatási kötelezettség alá tartozó szervezet (LGT 94.
+          cikk), vagy közigazgatási szervbe integrált entitás. Hagyd üresen, ha egyik
+          sem alkalmazandó.'
         prompt: A bejelentő szervezet betölt-e valamelyik alábbi intézményi szerepet
           a 347-es adatlap (harmadik felekkel folytatott ügyletek) szempontjából?
       entity-type:

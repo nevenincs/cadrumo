@@ -34,6 +34,7 @@ __all__ = [
     "PayerFactValue",
     "payer_fact_declaration",
     "payer_fact_profile_keys",
+    "profile_path_value",
     "resolve_payer_fact",
     "resolve_payer_fact_catalogue",
 ]
@@ -308,7 +309,7 @@ def resolve_payer_fact(
     raise RegistryValidationError(f"payer applicability fact {raw!r} is not declared by the selected registry")
 
 
-def _profile_path_value(profile: TaxpayerProfile, profile_key: str) -> object:
+def profile_path_value(profile: TaxpayerProfile, profile_key: str) -> object:
     """Read a dotted profile path; an absent optional section reads as unanswered."""
     current: object = profile
     for segment in profile_key.split("."):
@@ -320,7 +321,7 @@ def _profile_path_value(profile: TaxpayerProfile, profile_key: str) -> object:
 
 def _validated_projection_values(profile: TaxpayerProfile, fact: PayerFactProjection) -> tuple[object, ...]:
     """Read every projected profile value, then validate them in authored order."""
-    values = tuple(_profile_path_value(profile, key) for key in fact.profile_keys)
+    values = tuple(profile_path_value(profile, key) for key in fact.profile_keys)
     for key, value in zip(fact.profile_keys, values, strict=True):
         if not (isinstance(value, bool) or (value is None and fact.three_state)):
             raise RegistryValidationError(

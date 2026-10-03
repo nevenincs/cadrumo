@@ -61,7 +61,7 @@ profile:
       special_regime: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
       special_regime_start_date: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
     iva:
-      cash_accounting_regime_enrolled: Be van jelentkezve az IVA pénzforgalmi különleges
+      cash_accounting_regime_enrolled: Bejelentkeztél az IVA pénzforgalmi különleges
         rendszerébe?
       does_intracomunitario: Végez intraközösségi ügyleteket
       group_dominant_entity_enrolled: IVA-csoport domináns szervezeteként bejelentkezett
@@ -76,7 +76,7 @@ profile:
       regime: Melyik IVA-rendszer alkalmazandó?
       roi_enrolled: ROI-ba bejelentkezett
       sii_enrolled: SII-be bejelentkezett (azonnali információszolgáltatás)
-      voluntary_sii_enrolled: Önkéntesen bejelentkezett az SII-be?
+      voluntary_sii_enrolled: Önkéntesen csatlakoztál az SII-hez?
     obligations:
       bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a Modelo 720 küszöbértékét
       monedas_virtuales_extranjero_above_threshold: Külföldi virtuális valuták meghaladják
@@ -86,8 +86,10 @@ profile:
       premio_loteria_gravamen_especial_trimestres: Negyedévek, amelyekben az ilyen
         lottó- vagy fogadási nyereményt felvették (Modelo 136), |-jellel elválasztott
         ÉÉÉÉ-nT tokenekként
-      third_party_transactions_above_347_threshold: Harmadik féllel folytatott ügyletek
-        meghaladják a Modelo 347 küszöbértékét
+      third_party_transactions_above_347_threshold: A Modelo 347 által lefedett naptári
+        évben meghaladták-e az ugyanazzal a személlyel vagy szervezettel folytatott
+        ügyleteid a 3 005,06 EUR-t (a harmadik felek nevében beszedett összegeknél
+        a 300,51 EUR-t), az értékesítéseket és a beszerzéseket külön számítva?
     preferences:
       output_language: CLI kimeneti nyelv ehhez a profilhoz
     renta_family:
@@ -433,7 +435,7 @@ profile:
           label: SII-regisztráció
         voluntary_sii_enrolled:
           help:
-            what: Önként csatlakozott-e az SII-hez, az áfa-nyilvántartások azonnali
+            what: Önként csatlakoztál-e az SII-hez, az áfa-nyilvántartásaid azonnali
               elektronikus továbbításához az AEAT felé.
             where: Az önkéntes csatlakozást a Modelo 036-on kell kérelmezni, és az
               adózói adataid között látható. Ha soha nem kérted, a válasz Nem.
@@ -486,7 +488,9 @@ profile:
         premio_loteria_gravamen_especial_trimestres:
           label: Nyeremény negyedévei (Modelo 136)
         third_party_transactions_above_347_threshold:
-          label: Modelo 347 küszöbérték túllépve
+          label: 'Modelo 347 küszöbérték túllépve: személyenként vagy szervezetenként
+            3 005,06 EUR a naptári évben (harmadik felek nevében történő beszedésnél
+            300,51 EUR)'
       preferences:
         output_language:
           label: Kimeneti nyelv

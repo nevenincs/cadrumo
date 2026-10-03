@@ -15,7 +15,9 @@ The deadline-engine ``explain`` text is still surfaced as the
 *scheduling* rationale (when the modelo's filing windows are
 registered for the year), but it no longer drives the applicability
 flag. The service also enumerates the profile keys the answer depends
-on so the operator can audit them. Local-only: never contacts AEAT.
+on so the operator can audit them: a fixed set of taxpayer-model axes, plus
+every profile path the modelo's own applicability rule reads, exclusions
+included. Local-only: never contacts AEAT.
 
 See Also:
     :class:`RevisionSelectionMetadata`
@@ -27,7 +29,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
 
 from pydantic import BaseModel, Field
 
@@ -37,8 +39,11 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
+    ModeloApplicabilityRule,
     derive_modelo_applicability,
+    iter_modelo_applicability_rules,
 )
+from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys, profile_path_value
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
@@ -127,8 +132,9 @@ class OverviewExplain(BaseModel):
             without changing the applicability verdict.
         profile_facts: Subset of the operator's
             :class:`~domain.deadlines.models.TaxpayerProfile` fields the answer
-            depends on. Keys are stable field names; values are
-            JSON-serialisable scalars.
+            depends on, including every path the modelo's applicability rule
+            and its exclusions read. Keys are stable field names or dotted
+            profile paths; values are JSON-serialisable scalars.
         generated_at: UTC timestamp of when the aggregator ran.
     """
 
@@ -165,14 +171,83 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
 )
 
 
-def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
-    """Return the applicability-relevant profile fields as a plain dict.
+def _base_applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, None]:
+    keys: dict[str, None] = {"entity_type": None}
+    if rule.applicable_fiscal_residencies:
+        keys["fiscal_residency"] = None
+    if rule.applicable_iva_regimes:
+        keys["iva_regime"] = None
+    if rule.required_income_categories:
+        keys["irpf_income_categories"] = None
+    if rule.required_estimation_regimes:
+        keys["irpf_estimation_regime"] = None
+    return keys
 
-    The applicability verdict is derived from the three-axis taxpayer
-    model — entity type, IRPF income categories, estimation regime —
-    plus the flat deadline facts. Surfacing them here lets the operator
-    see which facts the answer depends on.
+
+def _exclusion_profile_fact_keys(rule: ModeloApplicabilityRule) -> dict[str, None]:
+    keys: dict[str, None] = {}
+    for exclusion in rule.exclusions:
+        if exclusion.entity_types:
+            keys["entity_type"] = None
+        if exclusion.iva_regimes:
+            keys["iva_regime"] = None
+        if exclusion.lacking_income_categories:
+            keys["irpf_income_categories"] = None
+        if exclusion.declaration_roles is not None:
+            keys["declaration_roles"] = None
+        if exclusion.payer_fact is not None:
+            keys.update(dict.fromkeys(payer_fact_profile_keys(exclusion.payer_fact)))
+    return keys
+
+
+def applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> tuple[str, ...]:
+    """Return the taxpayer-profile paths ``rule`` reads, in first-read order.
+
+    Mirrors the gates :meth:`ModeloApplicabilityRule.evaluate` checks: the
+    positive gates, each exclusion's conditions, and the payer facts named by
+    the rule and its exclusions, expanded to the profile keys the registry
+    declares for them. A derived payer fact therefore contributes every flag it
+    reads, so an exclusion such as an SII one lists each enrolment that can
+    establish it.
+
+    Args:
+        rule: The applicability rule whose inputs are listed.
+
+    Returns:
+        Dotted :class:`~domain.deadlines.models.TaxpayerProfile` paths,
+        without duplicates.
     """
+    keys = _base_applicability_profile_fact_keys(rule)
+    keys.update(_exclusion_profile_fact_keys(rule))
+    if rule.required_payer_fact is not None:
+        keys.update(dict.fromkeys(payer_fact_profile_keys(rule.required_payer_fact)))
+    return tuple(keys)
+
+
+class _HasValueAttribute(Protocol):
+    @property
+    def value(self) -> object: ...
+
+
+def _profile_fact_value(value: object) -> _ProfileFactValue:
+    """Render one profile value as the explain payload's scalar."""
+    if value is None:
+        return ""
+    if isinstance(value, frozenset):
+        items = cast(frozenset[object], value)
+        rendered_items: list[str] = []
+        for item in items:
+            item_value: object = getattr(item, "value", item)
+            rendered_items.append(str(item_value))
+        return ",".join(sorted(rendered_items))
+    if hasattr(value, "value"):
+        value = cast(_HasValueAttribute, value).value
+    if isinstance(value, str | bool | int):
+        return value
+    return str(value)
+
+
+def _deadline_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
     facts: dict[str, _ProfileFactValue] = {}
     for field_name in _DEADLINE_RELEVANT_FIELDS:
         if not hasattr(profile, field_name):
@@ -185,6 +260,11 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
         # surface it as an explicit empty string so the operator sees
         # the gap rather than a missing key.
         facts[field_name] = "" if value is None else value
+    return facts
+
+
+def _taxpayer_axis_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
+    facts: dict[str, _ProfileFactValue] = {}
     # The IRPF income-category set is the gate for natural persons;
     # surface it as a stable comma-joined token.
     facts["irpf_income_categories"] = ",".join(sorted(category.value for category in profile.irpf_income_categories))
@@ -192,18 +272,62 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     # undeclared set is an explicit empty string like the axes above.
     quarters = profile.premio_loteria_gravamen_especial_trimestres
     facts["premio_loteria_gravamen_especial_trimestres"] = "" if quarters is None else format_quarter_set(quarters)
+    return facts
+
+
+def _iva_enrollment_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
     # The nested IVA + enrolment sub-models also gate applicability.
     # An undeclared IVA sub-model surfaces each fact as an explicit empty
     # string, like the undeclared axes above, rather than dropping the keys.
     iva = getattr(profile, "iva", None)
-    for iva_field in (
-        "roi_enrolled",
-        "oss_enrolled",
-        "group_member_enrolled",
-        "group_dominant_entity_enrolled",
-        "intracommunity_operations_exceed_50000_eur",
-    ):
-        facts[f"iva.{iva_field}"] = "" if iva is None else getattr(iva, iva_field)
+    return {
+        f"iva.{iva_field}": "" if iva is None else getattr(iva, iva_field)
+        for iva_field in (
+            "roi_enrolled",
+            "oss_enrolled",
+            "group_member_enrolled",
+            "group_dominant_entity_enrolled",
+            "intracommunity_operations_exceed_50000_eur",
+        )
+    }
+
+
+def _rule_profile_facts(
+    profile: TaxpayerProfile,
+    rule: ModeloApplicabilityRule,
+    existing_facts: dict[str, _ProfileFactValue],
+) -> dict[str, _ProfileFactValue]:
+    facts: dict[str, _ProfileFactValue] = {}
+    for profile_key in applicability_profile_fact_keys(rule):
+        if profile_key in existing_facts:
+            continue
+        value = profile_path_value(profile, profile_key)
+        # A coded payer fact can name a whole profile section; its
+        # flags are flattened individually above, not rendered whole.
+        if isinstance(value, BaseModel):
+            continue
+        facts[profile_key] = _profile_fact_value(value)
+    return facts
+
+
+def _extract_profile_facts(
+    profile: TaxpayerProfile,
+    rule: ModeloApplicabilityRule | None,
+) -> dict[str, _ProfileFactValue]:
+    """Return the applicability-relevant profile fields as a plain dict.
+
+    The applicability verdict is derived from the three-axis taxpayer
+    model — entity type, IRPF income categories, estimation regime —
+    plus the flat deadline facts. Surfacing them here lets the operator
+    see which facts the answer depends on. When the modelo's ``rule`` is
+    known, every path it reads is added after the fixed set, so a fact
+    that only an exclusion consults is listed too.
+    """
+    facts = _deadline_profile_facts(profile)
+    facts.update(_taxpayer_axis_profile_facts(profile))
+    facts.update(_iva_enrollment_profile_facts(profile))
+    if rule is not None:
+        facts.update(_rule_profile_facts(profile, rule, facts))
     return facts
 
 
@@ -315,6 +439,10 @@ def build_overview_explain(
         )
 
     applicability = derive_modelo_applicability(profile, modelo_id, operation=operation)
+    rule = next(
+        (rule for rule in iter_modelo_applicability_rules(operation=operation) if rule.modelo == modelo_id),
+        None,
+    )
     # The scheduling rationale is independent of the applicability
     # verdict: it explains the filing window, not whether the taxpayer
     # owes the modelo. It is only meaningful when the registry carries
@@ -341,7 +469,7 @@ def build_overview_explain(
         legal_refs=applicability.legal_refs,
         scheduling_rationale=scheduling_rationale,
         out_of_plazo_warning=out_of_plazo_warning,
-        profile_facts=_extract_profile_facts(profile),
+        profile_facts=_extract_profile_facts(profile, rule),
         generated_at=now(),
     )
 
@@ -451,5 +579,6 @@ def _deadline_window_matches(
 __all__ = [
     "DeadlineExplanationEngine",
     "OverviewExplain",
+    "applicability_profile_fact_keys",
     "build_overview_explain",
 ]

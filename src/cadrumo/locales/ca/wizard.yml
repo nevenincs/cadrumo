@@ -502,7 +502,9 @@ wizard:
       taxpayer-sex:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
-        help: Operacions amb tercers superen el llindar del Model 347
+        help: Declara que, a l'any natural que cobreix el Model 347, les teves operacions
+          amb una mateixa persona o entitat van superar 3.005,06 € (300,51 € en cobraments
+          per compte de tercers).
     format:
       amount-eur: Import en euros amb punt decimal, p. ex. 50000.00.
       date-iso: Data en format AAAA-MM-DD, p. ex. 2024-03-01.
@@ -527,7 +529,7 @@ wizard:
       Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: Està inscrit al règim especial del criteri de caixa?
+        prompt: Estàs inscrit al règim especial del criteri de caixa?
       iva-group-dominant-entity-enrolled:
         prompt: Alta com a entitat dominant d'un grup d'IVA
       iva-group-member-enrolled:
@@ -548,7 +550,7 @@ wizard:
       iva-sii-enrolled:
         prompt: Inscrit al SII (Subministrament Immediat d'Informació)
       iva-voluntary-sii-enrolled:
-        prompt: Està inscrit voluntàriament al SII?
+        prompt: Estàs inscrit voluntàriament al SII?
       m303-regime-composition:
         choices:
           general:
@@ -652,7 +654,10 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
       third-party-transactions-above-347-threshold:
-        prompt: Operacions amb tercers superen el llindar del Model 347
+        prompt: A l'any natural que cobreix el Model 347, les teves operacions amb
+          una mateixa persona o entitat van superar 3.005,06 € (300,51 € en els cobraments
+          que facis per compte de tercers), comptant per separat les vendes i les
+          compres?
       title: Obligacions
     preferencias:
       title: Preferències i capacitats

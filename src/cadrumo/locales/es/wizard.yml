@@ -506,7 +506,9 @@ wizard:
       taxpayer-sex:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
-        help: Operaciones con terceros superan el umbral del Modelo 347
+        help: Declara que, en el año natural que cubre el Modelo 347, tus operaciones
+          con una misma persona o entidad superaron 3.005,06 € (300,51 € en cobros
+          por cuenta de terceros).
     format:
       amount-eur: Importe en euros con punto decimal, p. ej. 50000.00.
       date-iso: Fecha en formato AAAA-MM-DD, p. ej. 2024-03-01.
@@ -531,7 +533,7 @@ wizard:
       Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: ¿Está inscrito en el régimen especial del criterio de caja?
+        prompt: ¿Estás inscrito en el régimen especial del criterio de caja?
       iva-group-dominant-entity-enrolled:
         prompt: Alta como entidad dominante de un grupo de IVA
       iva-group-member-enrolled:
@@ -552,7 +554,7 @@ wizard:
       iva-sii-enrolled:
         prompt: Inscrito en el SII (Suministro Inmediato de Información)
       iva-voluntary-sii-enrolled:
-        prompt: ¿Está inscrito voluntariamente en el SII?
+        prompt: ¿Estás inscrito voluntariamente en el SII?
       m303-regime-composition:
         choices:
           general:
@@ -657,7 +659,9 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: Al menos 70% de los ingresos profesionales con retención previa
       third-party-transactions-above-347-threshold:
-        prompt: Operaciones con terceros superan el umbral del Modelo 347
+        prompt: En el año natural que cubre el Modelo 347, ¿tus operaciones con una
+          misma persona o entidad superaron 3.005,06 € (300,51 € en los cobros que
+          hagas por cuenta de terceros), contando por separado las ventas y las compras?
       title: Obligaciones
     preferencias:
       title: Preferencias y capacidades
@@ -893,7 +897,7 @@ wizard:
           347: cobro de honorarios por cuenta de terceros (art. 31.3), comunidad de
           propietarios (Ley 49/1960), entidad de carácter social (art. 20.tres LIVA),
           entidad sometida al deber de informar (art. 94 LGT) o administración pública
-          integrada. Déjelo en blanco si no corresponde.'
+          integrada. Déjalo en blanco si no corresponde.'
         prompt: ¿La entidad declarante desempeña alguno de estos papeles frente a
           la declaración de operaciones con terceros (Modelo 347)?
       entity-type:
