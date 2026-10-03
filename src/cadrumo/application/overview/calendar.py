@@ -918,7 +918,7 @@ def shift_reason_statement(shift_reason: str) -> str:
     return " + ".join(_shift_reason_part_statement(part) for part in shift_reason.split(" + "))
 
 
-def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, territory: _CalendarCCAA | None) -> str:
+def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, territory: str | None) -> str:
     """Return the localized statement of which holidays an effective close date accounts for.
 
     Both frontends render this one statement, so neither can describe a
