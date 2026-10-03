@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.irpf_income_categories import require_
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from cadrumo.domain.contribuyente.entity_type import require_entity_type
-from cadrumo.domain.deadlines.models import TaxpayerProfile
+from cadrumo.domain.deadlines.models import ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -46,6 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _TODAY = date(2025, 6, 30)
 _PAYER_FACT_ID = "modelo-payer-applicability-facts"
 _M136_FACT = "premio_loteria_gravamen_especial_sin_retencion"
+_SII_FACT = "iva_books_kept_through_sii"
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,10 +54,12 @@ class _Case:
     modelo: str
     field: str
     yes_extras: tuple[tuple[str, frozenset[str]], ...] = ()
+    declares_iva_block: bool = False
+    """Whether a yes also needs a declared IVA block, as Modelo 347's SII exclusion reads it."""
 
 
 _THREE_STATE_CASES = (
-    _Case("347", "third_party_transactions_above_347_threshold"),
+    _Case("347", "third_party_transactions_above_347_threshold", declares_iva_block=True),
     _Case("720", "bienes_extranjero_above_threshold"),
     _Case("721", "monedas_virtuales_extranjero_above_threshold"),
     _Case(
@@ -74,6 +77,20 @@ def _natural_person(**facts: object) -> TaxpayerProfile:
             "entity_type": require_entity_type("natural_person"),
             "irpf_income_categories": frozenset({require_irpf_income_category("actividad_economica")}),
             "iva_regime": require_iva_regime("GENERAL"),
+            **facts,
+        },
+    )
+
+
+def _iva_block(**facts: bool) -> ModeloIVAProfile:
+    return ModeloIVAProfile.model_validate(
+        {
+            "tax_territory": "common_regime",
+            "regime_composition": "general",
+            "redeme_enrolled": False,
+            "cash_accounting_regime_enrolled": False,
+            "voluntary_sii_enrolled": False,
+            "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
             **facts,
         },
     )
@@ -104,7 +121,8 @@ def test_declared_no_is_not_applicable_with_the_rule_reason(case: _Case) -> None
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _THREE_STATE_CASES, ids=lambda case: case.modelo)
 def test_declared_yes_is_applicable(case: _Case) -> None:
-    profile = _natural_person(**{case.field: True, **dict(case.yes_extras)})
+    iva_block = {"iva": _iva_block()} if case.declares_iva_block else {}
+    profile = _natural_person(**{case.field: True, **dict(case.yes_extras), **iva_block})
 
     assert derive_modelo_applicability(profile, case.modelo, today=_TODAY).verdict is ApplicabilityVerdict.APPLICABLE
 
@@ -217,6 +235,30 @@ class _OverriddenPayerFacts:
             "must be a boolean profile field",
             id="yes-no-key-not-boolean",
         ),
+        pytest.param(
+            f"payer_fact.{_SII_FACT}.any_of_profile_keys",
+            "iva.sii_enrolled|iva.not_a_profile_field",
+            "does not declare",
+            id="derived-unknown-key",
+        ),
+        pytest.param(
+            f"payer_fact.{_SII_FACT}.any_of_profile_keys",
+            "iva.sii_enrolled|tax_id.value",
+            "not a profile section",
+            id="derived-key-crosses-a-scalar",
+        ),
+        pytest.param(
+            f"payer_fact.{_SII_FACT}.any_of_profile_keys",
+            "iva.sii_enrolled|iva.refund_account",
+            "must be a boolean profile field",
+            id="derived-key-not-boolean",
+        ),
+        pytest.param(
+            f"payer_fact.{_SII_FACT}.any_of_profile_keys",
+            "iva.sii_enrolled",
+            "fewer than two",
+            id="derived-from-one-key",
+        ),
     ),
 )
 def test_a_payer_fact_naming_an_unusable_profile_field_fails_validation(key: str, value: str, message: str) -> None:
@@ -240,3 +282,28 @@ def test_the_unmodified_catalogue_resolves_through_the_same_override_seam() -> N
         _M136_FACT,
         "pays_capital_income_with_retencion",
     }
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_the_sii_fact_is_a_three_state_derived_fact_over_the_iva_block() -> None:
+    fact = resolve_payer_fact(_SII_FACT, effective_date=_TODAY)
+
+    assert isinstance(fact, PayerFactProjection)
+    assert fact.three_state is True
+    assert {"iva.sii_enrolled", "iva.voluntary_sii_enrolled", "iva.redeme_enrolled"} <= set(fact.profile_keys)
+    assert {"rd-1065-2007:art-32", "rd-1624-1992:art-62"} <= set(fact.legal_refs)
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_the_sii_fact_reads_any_yes_unanswered_without_the_block_and_no_only_when_all_say_no() -> None:
+    fact = resolve_payer_fact(_SII_FACT, effective_date=_TODAY)
+
+    without_block = _natural_person()
+    all_no = _natural_person(iva=_iva_block())
+    voluntary = _natural_person(iva=_iva_block(voluntary_sii_enrolled=True))
+    large_company_without_block = _natural_person(enrollment=ModeloEnrollment(large_company=True))
+
+    assert payer_fact_declaration(without_block, fact) is PayerFactDeclaration.UNDECLARED
+    assert payer_fact_declaration(all_no, fact) is PayerFactDeclaration.DECLARED_NO
+    assert payer_fact_declaration(voluntary, fact) is PayerFactDeclaration.DECLARED_YES
+    assert payer_fact_declaration(large_company_without_block, fact) is PayerFactDeclaration.DECLARED_YES

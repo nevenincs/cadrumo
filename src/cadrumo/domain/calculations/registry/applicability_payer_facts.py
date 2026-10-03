@@ -9,6 +9,8 @@ from enum import StrEnum
 from types import MappingProxyType, NoneType
 from typing import TYPE_CHECKING, Final, get_args
 
+from pydantic import BaseModel
+
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -74,14 +76,19 @@ class PayerFactPeriodCompanion:
 class PayerFactProjection:
     """One dated, registry-owned payer-applicability declaration.
 
-    ``three_state`` is true when the profile field can hold an undeclared
-    answer, so a stored ``False`` is a declared no. A plain boolean field keeps
-    the two-state reading: ``False`` cannot be told apart from an unanswered
-    question and stays undeclared.
+    ``profile_keys`` names the profile fields the fact reads, as dotted paths
+    from the taxpayer profile. A single key is the fact itself; several keys
+    form a derived fact that holds when any of them is declared yes.
+
+    ``three_state`` is true when a field can hold an undeclared answer, either
+    because it is optional or because it sits in an optional profile section,
+    so a stored ``False`` everywhere is a declared no. A plain boolean field
+    keeps the two-state reading: ``False`` cannot be told apart from an
+    unanswered question and stays undeclared.
     """
 
     token: str
-    profile_key: str
+    profile_keys: tuple[str, ...]
     label: str
     legal_refs: tuple[str, ...]
     three_state: bool = False
@@ -142,27 +149,76 @@ def _pipe(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     return values
 
 
-def _profile_field_args(profile_key: str, *, token: str) -> frozenset[object]:
-    field = TaxpayerProfile.model_fields.get(profile_key)
-    if field is None:
+def _profile_path_args(profile_key: str, *, token: str) -> tuple[frozenset[object], bool]:
+    """Return a dotted profile path's leaf annotation and whether it crosses an optional section."""
+    model: type[BaseModel] = TaxpayerProfile
+    in_optional_section = False
+    segments = profile_key.split(".")
+    for index, segment in enumerate(segments):
+        field = model.model_fields.get(segment)
+        if field is None:
+            raise RegistryValidationError(
+                f"payer applicability fact {token!r} names profile key {profile_key!r}, which the taxpayer profile "
+                "does not declare",
+            )
+        annotation: object = field.annotation
+        args = frozenset(get_args(annotation) or (annotation,))
+        if index == len(segments) - 1:
+            return args, in_optional_section
+        model, optional_section = _profile_section_model(args, profile_key=profile_key, segment=segment, token=token)
+        in_optional_section = in_optional_section or optional_section
+    raise RegistryValidationError(f"payer applicability fact {token!r} names an empty profile key")
+
+
+def _profile_section_model(
+    args: frozenset[object],
+    *,
+    profile_key: str,
+    segment: str,
+    token: str,
+) -> tuple[type[BaseModel], bool]:
+    """Resolve one non-leaf path segment as a declared profile section."""
+    section_models = [arg for arg in args if isinstance(arg, type) and issubclass(arg, BaseModel)]
+    if len(section_models) != 1 or not args <= {section_models[0], NoneType}:
         raise RegistryValidationError(
-            f"payer applicability fact {token!r} names profile key {profile_key!r}, which the taxpayer profile "
-            "does not declare",
+            f"payer applicability fact {token!r} profile key {profile_key!r} crosses {segment!r}, which is not "
+            "a profile section",
         )
-    annotation: object = field.annotation
-    return frozenset(get_args(annotation) or (annotation,))
+    return section_models[0], NoneType in args
+
+
+def _profile_field_args(profile_key: str, *, token: str) -> frozenset[object]:
+    return _profile_path_args(profile_key, token=token)[0]
 
 
 def _declaration_profile_key(profile_key: str, *, token: str) -> bool:
     """Validate a yes/no profile key and return whether it is three-state."""
-    args = _profile_field_args(profile_key, token=token)
+    args, in_optional_section = _profile_path_args(profile_key, token=token)
     if args == frozenset({bool}):
-        return False
+        return in_optional_section
     if args == frozenset({bool, NoneType}):
         return True
     raise RegistryValidationError(
         f"payer applicability fact {token!r} profile key {profile_key!r} must be a boolean profile field",
     )
+
+
+def _declaration_profile_keys(entries: Mapping[str, str], prefix: str, *, token: str) -> tuple[str, ...]:
+    """Return the single key, or the keys of a derived any-of fact."""
+    single = f"{prefix}profile_key"
+    any_of = f"{prefix}any_of_profile_keys"
+    if (single in entries) == (any_of in entries):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} must declare exactly one of profile_key or any_of_profile_keys",
+        )
+    if single in entries:
+        return (required_mapping_entry(entries, single, subject=_ENTRY_SUBJECT),)
+    keys = _pipe(entries, any_of)
+    if len(keys) < 2:
+        raise RegistryValidationError(f"payer applicability fact {token!r} derives from fewer than two profile keys")
+    if f"{prefix}period_set_key" in entries:
+        raise RegistryValidationError(f"payer applicability fact {token!r} derives from several keys and a period set")
+    return keys
 
 
 def _period_companion(
@@ -194,14 +250,16 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"payer applicability fact {raw_token!r} declares a mismatched value")
         legal_refs = _pipe(entries, f"{prefix}legal_refs")
-        profile_key = required_mapping_entry(entries, f"{prefix}profile_key", subject=_ENTRY_SUBJECT)
+        profile_keys = _declaration_profile_keys(entries, prefix, token=raw_token)
+        # Every key is validated; a short-circuiting any() would leave later keys unchecked.
+        key_three_states = [_declaration_profile_key(key, token=raw_token) for key in profile_keys]
         definitions.append(
             PayerFactProjection(
                 token=raw_token,
-                profile_key=profile_key,
+                profile_keys=profile_keys,
                 label=required_mapping_entry(entries, f"{prefix}label", subject=_ENTRY_SUBJECT),
                 legal_refs=legal_refs,
-                three_state=_declaration_profile_key(profile_key, token=raw_token),
+                three_state=any(key_three_states),
                 period_companion=_period_companion(entries, prefix, token=raw_token),
             ),
         )
@@ -250,16 +308,29 @@ def resolve_payer_fact(
     raise RegistryValidationError(f"payer applicability fact {raw!r} is not declared by the selected registry")
 
 
-def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection) -> PayerFactDeclaration:
-    value = getattr(profile, fact.profile_key, None)
-    if value is None and fact.three_state:
-        return PayerFactDeclaration.UNDECLARED
-    if not isinstance(value, bool):
-        raise RegistryValidationError(
-            f"payer applicability profile key {fact.profile_key!r} must resolve to a boolean",
-        )
-    if not value:
-        return PayerFactDeclaration.DECLARED_NO if fact.three_state else PayerFactDeclaration.UNDECLARED
+def _profile_path_value(profile: TaxpayerProfile, profile_key: str) -> object:
+    """Read a dotted profile path; an absent optional section reads as unanswered."""
+    current: object = profile
+    for segment in profile_key.split("."):
+        if current is None:
+            return None
+        current = getattr(current, segment, None)
+    return current
+
+
+def _validated_projection_values(profile: TaxpayerProfile, fact: PayerFactProjection) -> tuple[object, ...]:
+    """Read every projected profile value, then validate them in authored order."""
+    values = tuple(_profile_path_value(profile, key) for key in fact.profile_keys)
+    for key, value in zip(fact.profile_keys, values, strict=True):
+        if not (isinstance(value, bool) or (value is None and fact.three_state)):
+            raise RegistryValidationError(
+                f"payer applicability profile key {key!r} must resolve to a boolean",
+            )
+    return values
+
+
+def _projection_yes_declaration(profile: TaxpayerProfile, fact: PayerFactProjection) -> PayerFactDeclaration:
+    """Resolve a declared yes and its optional period companion."""
     if fact.period_companion is None:
         return PayerFactDeclaration.DECLARED_YES
     periods = getattr(profile, fact.period_companion.profile_key, None)
@@ -268,6 +339,15 @@ def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection)
             f"payer applicability period set {fact.period_companion.profile_key!r} must resolve to a token set",
         )
     return PayerFactDeclaration.DECLARED_YES if periods else PayerFactDeclaration.PERIODS_UNDECLARED
+
+
+def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection) -> PayerFactDeclaration:
+    values = _validated_projection_values(profile, fact)
+    if not any(value is True for value in values):
+        if any(value is None for value in values):
+            return PayerFactDeclaration.UNDECLARED
+        return PayerFactDeclaration.DECLARED_NO if fact.three_state else PayerFactDeclaration.UNDECLARED
+    return _projection_yes_declaration(profile, fact)
 
 
 def payer_fact_declaration(profile: TaxpayerProfile, fact: PayerFactValue) -> PayerFactDeclaration:
@@ -292,6 +372,6 @@ def payer_fact_profile_keys(fact: PayerFactValue) -> tuple[str, ...]:
     """Return profile fields needed to answer an applicability fact."""
     if isinstance(fact, PayerFactProjection):
         if fact.period_companion is not None:
-            return (fact.profile_key, fact.period_companion.profile_key)
-        return (fact.profile_key,)
+            return (*fact.profile_keys, fact.period_companion.profile_key)
+        return fact.profile_keys
     return _PAYER_FACT_PROFILE_KEYS.get(fact, ())

@@ -39,6 +39,7 @@ from .relation_dependency import (
 from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 
 __all__ = [
+    "ApplicabilityExclusionDefinition",
     "ApplicabilityRuleDefinition",
     "ApplicationLinkDefinition",
     "ConstructDefinition",
@@ -195,6 +196,62 @@ class DependencyClassificationDefinition(RegistryModel):
         return self
 
 
+class ApplicabilityExclusionDefinition(RegistryModel):
+    """One registry-authored exclusion from a modelo-applicability rule.
+
+    An exclusion is a conjunction of typed conditions on declared profile
+    facts; it takes effect only when every declared condition holds. Each
+    condition reads one axis: ``entity_types`` and ``iva_regimes`` match a
+    declared token, ``lacking_income_categories`` holds when the profile
+    declares none of the listed IRPF categories, ``declaration_role_selection``
+    names a selection of the third-party declaration-role catalogue whose roles
+    the filer holds, and ``payer_fact`` reads a payer-applicability fact whose
+    declared answer must equal ``payer_fact_declared``.
+
+    ``outcome`` is the verdict a holding exclusion yields: ``not_applicable``
+    for a legal exclusion, or ``incomplete`` when the declared facts cannot
+    settle the obligation on their own. Either way the verdict carries this
+    entry's own ``reason`` and ``legal_refs``.
+    """
+
+    id: Annotated[str, Field(min_length=1)]
+    outcome: Literal["not_applicable", "incomplete"] = "not_applicable"
+    entity_types: tuple[str, ...] = ()
+    iva_regimes: tuple[str, ...] = ()
+    lacking_income_categories: tuple[str, ...] = ()
+    declaration_role_selection: str | None = None
+    payer_fact: str | None = None
+    payer_fact_declared: bool = True
+    reason: Annotated[str, Field(min_length=1)]
+    legal_refs: LegalRefs
+
+    @field_validator("entity_types", "iva_regimes", "lacking_income_categories")
+    @classmethod
+    @pydantic_validation_boundary
+    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("applicability exclusion tuple entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_conditions(self) -> ApplicabilityExclusionDefinition:
+        conditions = (
+            self.entity_types,
+            self.iva_regimes,
+            self.lacking_income_categories,
+            self.declaration_role_selection,
+            self.payer_fact,
+        )
+        if not any(conditions):
+            raise RegistryValidationError(f"applicability exclusion {self.id!r} must declare at least one condition")
+        if self.payer_fact is None and not self.payer_fact_declared:
+            raise RegistryValidationError(
+                f"applicability exclusion {self.id!r} sets payer_fact_declared without naming a payer_fact",
+            )
+        return self
+
+
 class ApplicabilityRuleDefinition(RegistryModel):
     """A registry-authored modelo-applicability rule fragment.
 
@@ -213,7 +270,20 @@ class ApplicabilityRuleDefinition(RegistryModel):
     applicable_reason: Annotated[str, Field(min_length=1)]
     not_applicable_reason: Annotated[str, Field(min_length=1)]
     cuota_bearing: bool = False
+    exclusions: tuple[ApplicabilityExclusionDefinition, ...] = ()
     legal_refs: LegalRefs
+
+    @field_validator("exclusions")
+    @classmethod
+    @pydantic_validation_boundary
+    def _exclusion_ids_unique(
+        cls,
+        value: tuple[ApplicabilityExclusionDefinition, ...],
+    ) -> tuple[ApplicabilityExclusionDefinition, ...]:
+        ids = [exclusion.id for exclusion in value]
+        if len(set(ids)) != len(ids):
+            raise RegistryValidationError("applicability rule exclusion ids must be unique")
+        return value
 
     @field_validator(
         "applicable_entity_types",

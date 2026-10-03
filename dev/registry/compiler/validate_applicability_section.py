@@ -2,8 +2,8 @@
 
 Validates the ``applicability`` schema family declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`: its legal refs
-resolve to grounded legal authority, at most one rule is declared per
-revision, and the rule hydrates into the runtime
+and those of its exclusions resolve to grounded legal authority, at most one
+rule is declared per revision, and the rule hydrates into the runtime
 :class:`~cadrumo.domain.calculations.registry.applicability.ModeloApplicabilityRule`
 without error.
 
@@ -65,6 +65,10 @@ def validate_applicability_section(
     for rule in rules:
         owner = f"applicability rule {rule.id}"
         failures.extend(missing_refs(prefix, owner, rule.legal_refs, legal_refs, "legal"))
+        for exclusion in rule.exclusions:
+            failures.extend(
+                missing_refs(prefix, f"{owner} exclusion {exclusion.id}", exclusion.legal_refs, legal_refs, "legal"),
+            )
         try:
             hydrate_applicability_rule(Modelo(modelo), rule)
         except RegistryValidationError as exc:
