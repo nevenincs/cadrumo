@@ -81,3 +81,19 @@ IN FLIGHT / NEXT:
 5. Gates: regenerate import_load_targets.json, application_entrypoint_modules.json (owners), docs/_sequences (just docs-generate-sequences), env reference, docs api; prune stale import_boundary_ratchet entries; vaultspec-core vault check all --fix; just check-code/types/import-boundaries/locales; test-tui/cli/unit; rerun 2 native workbench tests on quiet machine.
 6. Staging: git add all merge paths; git rm deletions listed above; leave non-merge edits unstaged (dev/audit, import_checker, dev/registry edition_*, tui-bb binding work); export index (git checkout-index -a --prefix=<scratch>/) and import-smoke; then ASK OPERATOR before commit.
 Operator follow-ups: worker admission cold-compose margin (a/b/c); TUI withholding + local-reader removed by MCP; form_layout census gap; caller_context interface change.
+
+# RESUMED 21:5x
+- Index was fully staged at 21:46 by an unknown writer (not tui-bb; likely Codex lane). Content marker-free. Will rebuild staging from stage/include.txt (2594) / stage/exclude.txt (266) via stage/classify.py (rerun after WP-D + regeneration).
+- LANE1 final pass done (scanner JoinedStr, catalogues 20:05). protocol_contract ProjectionPage fixed.
+- tui-bb: all writes stopped in tui; held binding edits not needed pre-commit; post-commit it fixes dev/registry/pipeline/_tree_publication.py:580 NameError (non-merge) and republishes authority.
+- WP-D resumed.
+
+# 23:5x STATUS — commit blocked on operator decision
+- WP-D DONE (F1 refusal detail via encrypted OperationErrorDetailV1 + operation.error_detail v1; F2 settlement up to 1 h, LOCKED_CLI_OPERATION_STILL_RUNNING exit 7). Locale key already existed. New files: core/errors/record_fault.py, application/operations/error_detail.py + 3 tests.
+- ledger_doors.py removed from disk.
+- Snapshot tooling ready: stage/snapshot.sh (temp index, export, isolated import check).
+- FINDING: Codex lanes (complexity 981 paths, duplication 290, registry-health 42 per their .vault ledgers) are interleaved with merge files byte-for-byte; precise merge-only separation not feasible. Snapshot with Codex src but excluded dev/registry fails 60 imports (facts/schema.py split -> payloads.py/variants.py).
+- Live Codex breakage: retenciones_bindings.py ResolvedMappingFact under TYPE_CHECKING used in isinstance (NameError at M111 executor).
+- Churn still active (~25 py files / 5 min at 23:20). Quiet watcher running (b49x8yew4).
+- DECISION NEEDED: (A) commit whole tree minus tui-bb binding/scope/audit work after Codex pause + fix its breakage + verify; (B) hold merge until Codex done; (C) whole tree incl. tui-bb.
+- WP-D residual follow-ups: profile_mutations.py fixed wait (F2-class) on `config profile edit`; stale M111 "all-blank" test wording; auth test_auth_operation_definitions 2 failures (pre-existing per WP-D).
