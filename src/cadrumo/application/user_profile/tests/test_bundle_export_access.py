@@ -20,8 +20,8 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.access_policy import operation_scope_refusal
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
+from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.application.user_profile.operations import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     USER_PROFILE_OPERATION_DEFINITIONS,

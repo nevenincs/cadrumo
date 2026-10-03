@@ -10,29 +10,23 @@ through ``ledger classify --file`` and asserts every row is applied.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+import sys
+from pathlib import Path
 
 import pytest
-from click.testing import Result
 
 from ....adapters.inbound.financial.providers.csv import CsvProvider
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from ....domain.transactions.models import derive_transaction_id
 from ....tests.inventory import FIXTURES_DIR
 from ._ledger_corpus_support import _match
-from .cli_runner import invoke_cached_cli
+from .ledger_ux_support import _invoke_exact_profile
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _ACCOUNT = "bbva-business-eur.csv"
 _FIXTURE = _CORPUS / "classify" / "bbva-business-eur.classify.csv"
-
-
-def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
 
 
 def _rules() -> list[dict[str, object]]:
@@ -66,20 +60,37 @@ def test_classify_fixture_matches_oracle_derivation() -> None:
     assert _FIXTURE.read_text(encoding="utf-8") == _expected_csv_text()
 
 
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id="00000000-0000-4000-8000-000000000000",
-    autouse=False,
-    dispose_engine_around=True,
-    settings_overrides={"cadrumo_output_language": "en"},
-)
-
-
-def test_classify_fixture_applies_through_bulk_classify(_isolated_backend: None) -> None:
-    imported = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / _ACCOUNT), "--provider", "csv"])
-    assert imported.exit_code == 0, imported.output
-    result = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(_FIXTURE)])
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
-    expected_rows = len(_FIXTURE.read_text(encoding="utf-8").strip().splitlines()) - 1
-    assert payload["applied"] == expected_rows, payload
-    assert payload["failures"] == []
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+@pytest.mark.usefixtures("authority_operation")
+def test_classify_fixture_applies_through_bulk_classify(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="native-ledger-classify-fixture",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.name": "Native",
+                "identity.surnames": "Classify fixture",
+                "activities.description": "design",
+                "censo.activity_start_date": "2025-01-01",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+        imported = _invoke_exact_profile(
+            profile, ["app", "ledger", "import", "--file", str(_CORPUS / _ACCOUNT), "--provider", "csv"]
+        )
+        assert imported.exit_code == 0, imported.output
+        result = _invoke_exact_profile(
+            profile, ["--format", "json", "app", "ledger", "classify", "--file", str(_FIXTURE)]
+        )
+        assert result.exit_code == 0, result.output
+        payload = json.loads(result.output)["result"]
+        expected_rows = len(_FIXTURE.read_text(encoding="utf-8").strip().splitlines()) - 1
+        assert payload["applied"] == expected_rows, payload
+        assert payload["failures"] == []

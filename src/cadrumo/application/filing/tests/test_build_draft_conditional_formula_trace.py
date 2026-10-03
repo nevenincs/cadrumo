@@ -33,7 +33,9 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.filing.protocols import ModeloInputs
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.submission.models import ModeloDraftStatus

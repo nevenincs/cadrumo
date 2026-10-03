@@ -148,7 +148,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 actor="operator",
                 workflow_profile=workflow_profile(taxpayer_nif),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                 settings=Settings(
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -276,7 +276,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     actor="operator",
                     workflow_profile=workflow_profile(taxpayer_nif),
                     certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                    ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                     settings=Settings(
                         cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                         cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -418,7 +418,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 actor="operator",
                 workflow_profile=filing_profile,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                 settings=Settings(
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -443,7 +443,11 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert filing.settlement.credit_snapshot.remaining_amount == history.available_end_amount
         assert filing.settlement.refund_election_intent is False
         assert filing.settlement.refund_state is IvaSettlementRefundState.NOT_REQUESTED
-        balance = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
+        balance = query_iva_wallet_balance(
+            as_of_year=2026,
+            repository=IvaCompensationHistoryRepository(),
+            operation=operation,
+        )
         assert balance.total_balance == generated_carry
         assert balance.lot_count == 1
 

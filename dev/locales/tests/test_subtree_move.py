@@ -22,7 +22,9 @@ import yaml
 
 from .._subtree_move import LocaleMoveConflict
 from ..errors import LocaleError
-from ..manager import LocaleManager, LocaleNode, _flatten_leaf_values
+from ..locale_nodes import LocaleNode
+from ..locale_tree import _flatten_leaf_values
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

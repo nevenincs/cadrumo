@@ -12,42 +12,27 @@ from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, field_
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES, OperationCapabilities
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
@@ -114,8 +99,8 @@ class VerifyObservationSummaryPublicV1(BaseModel):
 
     @field_validator("checked_at")
     @classmethod
+    @pydantic_validation_boundary
     def _checked_at_is_utc(cls, value: datetime) -> datetime:
-        """Keep the timestamp contract of the encrypted observation at the public boundary."""
         return validate_utc_aware(value)
 
     @model_validator(mode="after")
@@ -203,8 +188,8 @@ class VerifyLatestPublicResultV1(BaseModel):
 
     @field_validator("checked_at")
     @classmethod
+    @pydantic_validation_boundary
     def _checked_at_is_utc(cls, value: datetime | None) -> datetime | None:
-        """Keep the timestamp contract of the encrypted observation at the public boundary."""
         return validate_utc_aware(value) if value is not None else None
 
     @model_validator(mode="after")
@@ -230,17 +215,6 @@ def _exact_bucket(profile_id: UUID, subject_ref: str) -> str:
     if require_active_bucket_id() != bucket_id or subject_ref != profile_operation_subject(bucket_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return bucket_id
-
-
-def _check_identity[Payload: BaseModel](
-    request: OperationRequest[Payload], context: OperationExecutorContext, definition_id: str
-) -> None:
-    if (
-        request.definition_id != definition_id
-        or context.identity.definition_id != definition_id
-        or context.identity.subject_ref != request.subject_ref
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def _require_bucket(observation: VerifyObservation, bucket_id: str) -> None:
@@ -274,7 +248,9 @@ class VerifyListExecutor:
 
     async def execute(self, request: OperationRequest[VerifyListRequest], context: OperationExecutorContext) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, VERIFY_LIST_DEFINITION_ID)
+        if request.definition_id != VERIFY_LIST_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_LIST_PHASES[0])
 
         def read() -> VerifyListOperationReport:
@@ -314,7 +290,9 @@ class VerifyViewExecutor:
 
     async def execute(self, request: OperationRequest[VerifyViewRequest], context: OperationExecutorContext) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, VERIFY_VIEW_DEFINITION_ID)
+        if request.definition_id != VERIFY_VIEW_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_VIEW_PHASES[0])
 
         def read() -> VerifyViewOperationReport:
@@ -348,7 +326,9 @@ class VerifyLatestExecutor:
 
     async def execute(self, request: OperationRequest[VerifyLatestRequest], context: OperationExecutorContext) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, VERIFY_LATEST_DEFINITION_ID)
+        if request.definition_id != VERIFY_LATEST_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_LATEST_PHASES[0])
 
         def read() -> VerifyLatestOperationReport:
@@ -379,19 +359,7 @@ class VerifyLatestExecutor:
 
 
 def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
+    return RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 
 
 def build_verify_list_definition(persistence_factory: VerifyObservationPersistenceFactory) -> OperationDefinition:
@@ -409,9 +377,7 @@ def build_verify_list_definition(persistence_factory: VerifyObservationPersisten
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -430,9 +396,7 @@ def build_verify_view_definition(persistence_factory: VerifyObservationPersisten
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -451,31 +415,25 @@ def build_verify_latest_definition(persistence_factory: VerifyObservationPersist
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
-def _validate_receipt(receipt: OperationTerminalReceipt, *, definition_id: str, bucket_id: str) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(bucket_id)
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-    ):
-        raise ValueError("verify read result contradicts its terminal receipt")
+_RECEIPT_CONTRADICTION = "verify read result contradicts its terminal receipt"
 
 
 def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     if type(result) is not VerifyListOperationReport:
         raise ValueError("invalid verify list report")
     report = VerifyListOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=VERIFY_LIST_DEFINITION_ID, bucket_id=str(report.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=VERIFY_LIST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(report.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     projection = VerifyListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
     if len(report.rows) > _MAX_VERIFY_LIST_ROWS:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -488,7 +446,14 @@ def _project_view(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("invalid verify view report")
     report = VerifyViewOperationReport.model_validate(result, strict=True)
     observation = report.observation
-    _validate_receipt(receipt, definition_id=VERIFY_VIEW_DEFINITION_ID, bucket_id=str(observation.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=VERIFY_VIEW_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(observation.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     projection = VerifyObservationPublicV1(**_summary(observation).model_dump(), bucket_id=observation.bucket_id)
     _require_bounded_result(projection)
     return projection
@@ -522,7 +487,14 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     if type(result) is not VerifyLatestOperationReport:
         raise ValueError("invalid verify latest report")
     report = VerifyLatestOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=VERIFY_LATEST_DEFINITION_ID, bucket_id=str(report.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=VERIFY_LATEST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(report.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     projection = _project_latest_report(report)
     _require_bounded_result(projection)
     return projection
@@ -570,14 +542,9 @@ def resolve_verify_latest_access(
 
 def build_verify_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the verify list request to its whole-profile TAX_VALUES projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=VerifyListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=VerifyListPublicResultV1
-        ),
+        public_result_type=VerifyListPublicResultV1,
         result_projector=_project_list,
         access_resolver=resolve_verify_list_access,
     )
@@ -585,14 +552,9 @@ def build_verify_list_registration(definition: OperationDefinition) -> Operation
 
 def build_verify_view_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind verify detail to its whole-profile TAX_VALUES projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=VerifyViewRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=VerifyObservationPublicV1
-        ),
+        public_result_type=VerifyObservationPublicV1,
         result_projector=_project_view,
         access_resolver=resolve_verify_view_access,
     )
@@ -600,14 +562,9 @@ def build_verify_view_registration(definition: OperationDefinition) -> Operation
 
 def build_verify_latest_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the verify latest request to its whole-profile TAX_VALUES projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=VerifyLatestRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=VerifyLatestPublicResultV1
-        ),
+        public_result_type=VerifyLatestPublicResultV1,
         result_projector=_project_latest,
         access_resolver=resolve_verify_latest_access,
     )

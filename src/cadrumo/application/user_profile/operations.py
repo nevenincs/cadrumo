@@ -39,10 +39,9 @@ from ..operations.capabilities import (
 )
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -83,8 +82,8 @@ from .view_operation import (
     ProfileViewOperationRequest,
     ProfileViewOperationResult,
     project_profile_view_result,
-    read_profile_view_page,
 )
+from .view_reader import read_profile_view_page
 
 PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
 PROFILE_PATCH_OPERATION_DEFINITION_ID = "user-profile.patch"
@@ -942,6 +941,7 @@ class ProfileBundleExportOperationExecutor:
                                 transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
                                 passphrase=SecretStr(passphrase),
                             ),
+                            authority_operation=context.authority_operation,
                             profile_decode_context=context.authority_operation.profile_decode_context(),
                             authorized_profile_id=str(payload.profile_id),
                         ),

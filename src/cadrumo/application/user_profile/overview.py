@@ -38,6 +38,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
@@ -211,34 +212,39 @@ def profile_field_choices(
             ProfileFieldChoice(value="true", label=tr("flows.confirm.yes")),
             ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
         )
-    if field.type is ProfileFieldType.ENUM:
-        if path == PROFILE_OUTPUT_LANGUAGE_PATH:
-            return tuple(
-                ProfileFieldChoice(
-                    value=token,
-                    label=tr(f"wizard.setup.profile.output-language.choices.{token}.label"),
-                )
-                for token in field.enum_values
-            )
-        if path == "auth.provider":
-            return tuple(
-                ProfileFieldChoice(value=token, label=tr(f"auth.catalogue.{token}_label"))
-                for token in field.enum_values
-            )
-        if path == "auth.clave_movil_route":
-            route_keys = {
-                ClaveMovilRoute.QR.value: "flows.manager.action.auth_clave_movil_route_qr",
-                ClaveMovilRoute.APP_REQUEST.value: "flows.manager.action.auth_clave_movil_route_app_request",
-            }
-            return tuple(ProfileFieldChoice(value=token, label=tr(route_keys[token])) for token in field.enum_values)
-        if path is not None and "." in path:
-            section_key, field_key = path.split(".", 1)
-            return tuple(
-                ProfileFieldChoice(value=token, label=profile_choice_label(section_key, field_key, token))
-                for token in field.enum_values
-            )
-        return tuple(ProfileFieldChoice(value=token, label=token) for token in field.enum_values)
-    return ()
+    if field.type is not ProfileFieldType.ENUM:
+        return ()
+    return _enum_field_choices(field.enum_values, path=path)
+
+
+def _enum_choice_rows(
+    enum_values: tuple[str, ...], *, label_for: Callable[[str], str]
+) -> tuple[ProfileFieldChoice, ...]:
+    return tuple(ProfileFieldChoice(value=token, label=label_for(token)) for token in enum_values)
+
+
+def _enum_field_choices(enum_values: tuple[str, ...], *, path: str | None) -> tuple[ProfileFieldChoice, ...]:
+    """Translate an enum through the one canonical vocabulary selected by its path."""
+    if path == PROFILE_OUTPUT_LANGUAGE_PATH:
+        return _enum_choice_rows(
+            enum_values,
+            label_for=lambda token: tr(f"wizard.setup.profile.output-language.choices.{token}.label"),
+        )
+    if path == "auth.provider":
+        return _enum_choice_rows(enum_values, label_for=lambda token: tr(f"auth.catalogue.{token}_label"))
+    if path == "auth.clave_movil_route":
+        route_keys = {
+            ClaveMovilRoute.QR.value: "flows.manager.action.auth_clave_movil_route_qr",
+            ClaveMovilRoute.APP_REQUEST.value: "flows.manager.action.auth_clave_movil_route_app_request",
+        }
+        return _enum_choice_rows(enum_values, label_for=lambda token: tr(route_keys[token]))
+    if path is not None and "." in path:
+        section_key, field_key = path.split(".", 1)
+        return _enum_choice_rows(
+            enum_values,
+            label_for=lambda token: profile_choice_label(section_key, field_key, token),
+        )
+    return _enum_choice_rows(enum_values, label_for=lambda token: token)
 
 
 class ProfileFieldView(BaseModel):

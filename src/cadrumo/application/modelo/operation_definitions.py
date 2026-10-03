@@ -606,7 +606,7 @@ def _replayed_head_inputs(
     from .caller_context import caller_context_calculation_inputs, caller_context_of
 
     head = (
-        ports.calculation_repository.load().get(work_unit.current_calculation_revision_id)
+        ports.calculation_repository.load(operation=operation).get(work_unit.current_calculation_revision_id)
         if work_unit.current_calculation_revision_id is not None
         else None
     )
@@ -802,6 +802,7 @@ def build_modelo_work_calculate_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -931,6 +932,7 @@ def build_modelo_work_discard_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -1213,6 +1215,7 @@ def build_modelo_work_verify_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -1362,7 +1365,9 @@ class ModeloWorkFileExecutor:
         payload = request.payload
         from ...core.bucket_pointer import require_active_bucket_id
 
-        filing_ports = self._filing_action_ports_factory(bucket_id=require_active_bucket_id())
+        filing_ports = self._filing_action_ports_factory(
+            bucket_id=require_active_bucket_id(), operation=context.authority_operation
+        )
 
         def prepare() -> tuple[TaxpayerProfile, ModeloLifecycleAdvisories]:
             profile = self._profile_resolver(context.authority_operation)
@@ -1457,6 +1462,7 @@ def build_modelo_work_file_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -1675,6 +1681,7 @@ class ModeloExportExecutor:
                 export_ports = self._export_ports_factory(
                     bucket_id=active_bucket_id,
                     m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+                    operation=context.authority_operation,
                 )
                 if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
                     return ModeloExportSettledResult(
@@ -1810,6 +1817,7 @@ def build_modelo_export_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -2041,6 +2049,7 @@ def build_modelo_work_amend_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -2846,6 +2855,7 @@ def build_modelo_edit_apply_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 
@@ -2908,6 +2918,7 @@ def build_modelo_work_rename_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        public_error_detail=True,
     )
 
 

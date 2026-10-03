@@ -54,6 +54,7 @@ from enum import StrEnum
 from typing import Final
 
 from .casilla_id import CasillaId, validated_casilla_id
+from .casilla_value_absence import AbsentCasillaReading
 from .errors.hierarchy import CoreValidationError
 from .modelo import Modelo
 from .period import Period, StandardPeriodCode
@@ -346,7 +347,13 @@ def canonical_result_amount(modelo: str, casilla_values: Mapping[CasillaId, Deci
     if spec is None:
         return None
     _reject_non_result_casilla_values(modelo, spec, casilla_values)
-    return sum((casilla_values.get(casilla_id, Decimal("0")) for casilla_id in spec.result_casilla_ids), Decimal("0"))
+    return sum(
+        (
+            AbsentCasillaReading.RESULT_CASILLA_ALTERNATIVE.read(casilla_values, casilla_id)
+            for casilla_id in spec.result_casilla_ids
+        ),
+        Decimal("0"),
+    )
 
 
 def _reject_non_result_casilla_values(

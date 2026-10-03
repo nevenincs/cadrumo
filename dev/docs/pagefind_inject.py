@@ -70,6 +70,22 @@ _RELEVANCE_RELPATH = Path("dev") / "docs" / "terminology" / "relevance" / "relev
 _SORT_SCALE = 1_000_000
 
 
+def _append_cli_projection(out: _Materialised) -> None:
+    """Append cli projection."""
+    try:
+        from .terminology.cli_projection import project_cli_search_records
+
+        commands, options, _ = project_cli_search_records()
+    except Exception as exc:  # the live CLI walk is fragile under peer churn
+        out.cli_skipped_reason = f"{type(exc).__name__}: {exc}"
+        logger.warning("CLI projection skipped: %s", out.cli_skipped_reason)
+    else:
+        out.cli_commands = len(commands)
+        out.cli_options = len(options)
+        out.records.extend(to_search_record(rec) for rec in commands)
+        out.records.extend(to_search_record(rec) for rec in options)
+
+
 class SearchInjectionError(RuntimeError):
     """Raised when committed search inputs cannot prove a full corpus."""
 
@@ -270,18 +286,7 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     out.legal_provisions = len(legal_records)
     out.records.extend(to_search_record(rec) for rec in legal_records)
 
-    try:
-        from .terminology.cli_projection import project_cli_search_records
-
-        commands, options, _ = project_cli_search_records()
-    except Exception as exc:  # the live CLI walk is fragile under peer churn
-        out.cli_skipped_reason = f"{type(exc).__name__}: {exc}"
-        logger.warning("CLI projection skipped: %s", out.cli_skipped_reason)
-    else:
-        out.cli_commands = len(commands)
-        out.cli_options = len(options)
-        out.records.extend(to_search_record(rec) for rec in commands)
-        out.records.extend(to_search_record(rec) for rec in options)
+    _append_cli_projection(out)
     return out
 
 

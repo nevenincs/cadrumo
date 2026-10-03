@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 
 class Modelo200AdministradorRow(BaseModel):
@@ -276,7 +276,7 @@ class Modelo200ProfileFacts(BaseModel):
     header field to blancos.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     projection_rows: Modelo200ProjectionRows = Modelo200ProjectionRows()
     apartado_6_deduc_evitar_doble_imposicion_participacio: str | None = None

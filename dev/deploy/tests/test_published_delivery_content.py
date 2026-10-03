@@ -31,11 +31,8 @@ from dev.docs.pagefind_index import build_search_index
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_static_site import (
-    _assert_served_index_matches_build,
-    _verify_published_search_index,
-    localized_languages,
-)
+from ..docs_delivery_probe import _assert_served_index_matches_build, _verify_published_search_index
+from ..docs_site_languages import localized_languages
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

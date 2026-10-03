@@ -18,12 +18,9 @@ from pathlib import Path
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
-from ..legal_reference import (
-    LegalProvisionRecord,
-    LegalReferenceError,
-    load_legal_provisions,
-    render_legal_reference,
-)
+from ..legal_catalogue import load_legal_provisions
+from ..legal_reference import render_legal_reference
+from ..legal_reference_models import LegalProvisionRecord, LegalReferenceError
 from .search_record import LegalSearchRecord
 
 __all__ = ["LegalSearchRecord", "legal_target_record_id", "project_legal_search_records"]

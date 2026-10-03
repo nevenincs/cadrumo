@@ -30,6 +30,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
+from contextlib import ExitStack
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -103,6 +104,7 @@ from .._modelo_behavior_support import resolve_work_unit_for_cli as _resolve_wor
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .native_profile_cli_support import reauthenticate_native_profile
 from .runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
@@ -293,14 +295,16 @@ def _profile_amend_catalogue_state(
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),
         )
-    return (
-        work_unit_catalogue_repository(bucket_id=bucket_id).load(),
-        modelo_record_catalogue_repository(bucket_id=bucket_id).load(),
-        calculation_revision_catalogue_repository(bucket_id=bucket_id).load(),
-    )
+        return (
+            work_unit_catalogue_repository(bucket_id=bucket_id).load(),
+            modelo_record_catalogue_repository(bucket_id=bucket_id).load(),
+            calculation_revision_catalogue_repository(bucket_id=bucket_id, operation=operation).load(),
+        )
 
 
-def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025) -> None:
+def _seed_justificante(
+    *, bucket_id: str, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025
+) -> None:
     """Persist the stored receipt metadata a justificante-bound evidence import requires."""
     body = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(body).hexdigest()
@@ -319,15 +323,15 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
         source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
     )
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    with open_test_profile_session(bucket_id):
-        JustificanteRepository(bucket_id=bucket_id).save(receipt)
+    JustificanteRepository(bucket_id=bucket_id).save(receipt)
 
 
 def _import_external_baseline(work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD", period: str = "1T") -> str:
     """Import an AEAT-attested M130 baseline filing and return its filing_record_id."""
-    _seed_justificante(csv=csv, period=period)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with open_test_profile_session(bucket_id):
+        _seed_justificante(bucket_id=bucket_id, csv=csv, period=period)
     result = _invoke(
         [
             "--format", "json",
@@ -347,6 +351,7 @@ def _import_external_m303_baseline(
     *,
     csv: str = "JUST20253031TAMENDWIZARD",
     period: str = "1T",
+    native_profile: NativeCliProfileFixture | None = None,
 ) -> str:
     """Import an AEAT-attested M303 baseline filing and return its filing_record_id.
 
@@ -357,14 +362,19 @@ def _import_external_m303_baseline(
     the period's observation and with it the result disposition an amendment
     of that period carries forward.
     """
-    _seed_justificante(csv=csv, period=period, modelo="303")
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     casilla_values, source_headers = modelo_303_filed_disposition(
         {validated_casilla_id("07", surface="amend wizard m303 baseline"): _M303_BASELINE_BASE_GENERAL},
         source_locator=csv,
     )
-    with open_test_profile_session(bucket_id), bundled_indexed_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation, ExitStack() as sessions:
+        if native_profile is None:
+            sessions.enter_context(open_test_profile_session(bucket_id))
+        else:
+            assert reauthenticate_native_profile(native_profile, authority_operation=operation) == bucket_id
+            sessions.callback(close_active_bucket_session)
+        _seed_justificante(bucket_id=bucket_id, csv=csv, period=period, modelo="303")
         ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
         work_unit = get_work_unit(work_unit_id, ports=ports.work_lifecycle_ports)
         record = import_external_filing_evidence(
@@ -410,11 +420,11 @@ def _scripted_amend(
     with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=build_filing_action_ports(bucket_id=bucket_id),
-        )
         with bundled_indexed_authority().operation() as operation:
+            baseline = get_filing_record(
+                unit.current_filing_record_id,
+                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+            )
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -524,11 +534,11 @@ def _permitted_kind_choice_values(
     with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=build_filing_action_ports(bucket_id=bucket_id),
-        )
         with bundled_indexed_authority().operation() as operation:
+            baseline = get_filing_record(
+                unit.current_filing_record_id,
+                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+            )
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -675,8 +685,14 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
     _native_operator_profile: NativeCliProfileFixture,
 ) -> None:
     """The public command cannot infer the motive from kind, casilla, result, or reason."""
-    work_unit_id = _create_m303_work_unit()
-    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        revision=_m303_revision_id(filing_year=2025, period="1T"),
+        native_profile=_native_operator_profile,
+    )
+    baseline_filing_id = _import_external_m303_baseline(work_unit_id, native_profile=_native_operator_profile)
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     before = _profile_amend_catalogue_state(native_profile=_native_operator_profile, bucket_id=bucket_id)
@@ -704,10 +720,14 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     error = json.loads(result.output)["error"]
-    assert error["code"] == "REFUSED_CLI_BOUNDARY", result.output
-    assert error["context"]["reason"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE", result.output
-    assert error["context"]["terminal_condition"] == "refused", result.output
-    assert error["context"]["effect"] == "unknown", result.output
+    assert error["code"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE", result.output
+    context = error["context"]
+    assert context["modelo"] == "303", result.output
+    assert context["amendment_kind"] == "rectificativa", result.output
+    assert context["motive_applicable"] == "true", result.output
+    assert context["motive_present"] == "false", result.output
+    assert context["terminal_condition"] == "refused", result.output
+    assert context["effect"] == "unknown", result.output
     assert _profile_amend_catalogue_state(native_profile=_native_operator_profile, bucket_id=bucket_id) == before
 
 
@@ -906,11 +926,11 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=build_filing_action_ports(bucket_id=bucket_id),
-        )
         with bundled_indexed_authority().operation() as operation:
+            baseline = get_filing_record(
+                unit.current_filing_record_id,
+                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+            )
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),

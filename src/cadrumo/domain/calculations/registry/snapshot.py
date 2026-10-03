@@ -17,7 +17,7 @@ from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from .casilla_structural_succession import endpoint_source_context_failures
+from .casilla_structural_succession import CasillaStructuralSuccession, endpoint_source_context_failures
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -29,7 +29,7 @@ from .revision_context import records_by_id
 from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
-from .schema_surfaces import CasillaDefinition
+from .schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
 from .temporal import (
     ModeloRevisionDirectory,
     RevisionSelectionMetadata,
@@ -181,6 +181,67 @@ def validate_materialized_export_record_families(revision: ModeloRevision) -> No
         )
 
 
+def _validate_snapshot_authority_selection(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    *,
+    grade: RegistryAuthorityGrade,
+) -> None:
+    _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
+    if grade is RegistryAuthorityGrade.FILING:
+        _check_snapshot_revision_review_status(modelo, revision)
+    legal_applicability_failures = validate_orden_aplicabilidad(
+        f"snapshot modelo {modelo.id} revision {revision.id}",
+        modelo.id,
+        revision,
+        catalogues.legal,
+    )
+    if legal_applicability_failures:
+        raise RegistryValidationError(
+            "registry snapshot legal applicability validation failed:\n"
+            + "\n".join(f" - {failure}" for failure in legal_applicability_failures),
+        )
+    identity_failures = revision_reference_identity_failures(
+        f"snapshot modelo {modelo.id} revision {revision.id}",
+        revision,
+    )
+    if identity_failures:
+        raise RegistryValidationError(
+            "registry snapshot revision identity is ambiguous:\n"
+            + "\n".join(f" - {failure}" for failure in identity_failures),
+        )
+
+
+def _require_filing_snapshot_capability(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    grade: RegistryAuthorityGrade,
+) -> None:
+    if grade is RegistryAuthorityGrade.FILING:
+        check_snapshot_filing_capability(modelo, revision)
+
+
+def _require_snapshot_filing_review_tier(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    legal_ids: set[str],
+    *,
+    grade: RegistryAuthorityGrade,
+    on: date | None,
+    filing_year: int,
+) -> None:
+    if grade is RegistryAuthorityGrade.FILING:
+        check_snapshot_filing_review_tier(
+            modelo,
+            revision,
+            catalogues,
+            legal_ids,
+            filing_date=on or date(filing_year, 12, 31),
+        )
+
+
 def build_validated_snapshot(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
@@ -227,29 +288,7 @@ def build_validated_snapshot(
         modelo,
         support=catalogues.supported_filing_years,
     )
-    _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
-    if grade is RegistryAuthorityGrade.FILING:
-        _check_snapshot_revision_review_status(modelo, revision)
-    legal_applicability_failures = validate_orden_aplicabilidad(
-        f"snapshot modelo {modelo.id} revision {revision.id}",
-        modelo.id,
-        revision,
-        catalogues.legal,
-    )
-    if legal_applicability_failures:
-        raise RegistryValidationError(
-            "registry snapshot legal applicability validation failed:\n"
-            + "\n".join(f" - {failure}" for failure in legal_applicability_failures),
-        )
-    identity_failures = revision_reference_identity_failures(
-        f"snapshot modelo {modelo.id} revision {revision.id}",
-        revision,
-    )
-    if identity_failures:
-        raise RegistryValidationError(
-            "registry snapshot revision identity is ambiguous:\n"
-            + "\n".join(f" - {failure}" for failure in identity_failures),
-        )
+    _validate_snapshot_authority_selection(modelo, revision, catalogues, grade=grade)
     # select_revision matches period selectors case-insensitively but returns
     # the caller's token verbatim. Storing that raw token made the snapshot
     # disagree with itself -- filing_period normalises through Period while
@@ -263,17 +302,17 @@ def build_validated_snapshot(
     period = registry_period_for_request(revision.period_selector.declared_periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     validate_materialized_export_record_families(revision)
-    if grade is RegistryAuthorityGrade.FILING:
-        check_snapshot_filing_capability(modelo, revision)
+    _require_filing_snapshot_capability(modelo, revision, grade)
     legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
-    if grade is RegistryAuthorityGrade.FILING:
-        check_snapshot_filing_review_tier(
-            modelo,
-            revision,
-            catalogues,
-            legal_ids,
-            filing_date=on or date(filing_year, 12, 31),
-        )
+    _require_snapshot_filing_review_tier(
+        modelo,
+        revision,
+        catalogues,
+        legal_ids,
+        grade=grade,
+        on=on,
+        filing_year=filing_year,
+    )
     check_revision_scoped_legal_windows(modelo, revision, catalogues)
     check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
     snapshot = RegistrySnapshot(
@@ -863,55 +902,140 @@ def _historical_continuity_source_window_failures(
     }
     failures: list[str] = []
     for evolution in revision.casilla_continuidad_evolutions:
-        prefix = f"casilla continuidad evolution {evolution.id!r}"
-        endpoints = tuple(
-            endpoint_id
-            for endpoint_id in (evolution.from_revision, evolution.to_revision)
-            if endpoint_id in endpoints_by_id
+        failures.extend(
+            _continuity_evolution_source_failures(
+                evolution,
+                endpoints_by_id=endpoints_by_id,
+                revision_directory=revision_directory,
+                sources=catalogues.sources,
+            ),
         )
-        if len(endpoints) != 2:
-            failures.append(f"{prefix} names an endpoint revision the modelo does not declare")
-            continue
-        for source_id in evolution.source_refs:
-            if source_id not in catalogues.sources:
-                failures.append(f"{prefix} source {source_id!r} is not registered")
-                continue
-            endpoint_failures = tuple(
-                endpoint_source_context_failures(
-                    prefix,
-                    endpoint=endpoints_by_id[endpoint_id],
-                    enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
-                    source_ids=(source_id,),
-                    sources=catalogues.sources,
-                )
-                for endpoint_id in endpoints
-            )
-            if all(endpoint_failures):
-                failures.append(
-                    f"{prefix} source {source_id!r} does not match either declared endpoint "
-                    f"{evolution.from_revision!r}->{evolution.to_revision!r}"
-                )
     for relation in revision.casilla_structural_successions:
-        prefix = f"casilla structural succession {relation.id!r}"
-        for endpoint_id, source_ids in (
-            (relation.from_revision, relation.from_source_refs),
-            (relation.to_revision, relation.to_source_refs),
-        ):
-            if endpoint_id not in endpoints_by_id:
-                failures.append(f"{prefix} names unknown endpoint revision {endpoint_id!r}")
-                continue
-            for source_id in source_ids:
-                if source_id not in catalogues.sources:
-                    failures.append(f"{prefix} endpoint {endpoint_id!r} source {source_id!r} is not registered")
-            failures.extend(
-                endpoint_source_context_failures(
-                    prefix,
-                    endpoint=endpoints_by_id[endpoint_id],
-                    enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
-                    source_ids=source_ids,
-                    sources=catalogues.sources,
-                ),
+        failures.extend(
+            _structural_succession_source_failures(
+                relation,
+                endpoints_by_id=endpoints_by_id,
+                revision_directory=revision_directory,
+                sources=catalogues.sources,
+            ),
+        )
+    return failures
+
+
+def _continuity_evolution_source_failures(
+    evolution: CasillaContinuidadEvolutionDefinition,
+    *,
+    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
+    revision_directory: ModeloRevisionDirectory,
+    sources: Mapping[str, SourceReference],
+) -> list[str]:
+    prefix = f"casilla continuidad evolution {evolution.id!r}"
+    endpoints = tuple(
+        endpoint_id
+        for endpoint_id in (evolution.from_revision, evolution.to_revision)
+        if endpoint_id in endpoints_by_id
+    )
+    if len(endpoints) != 2:
+        return [f"{prefix} names an endpoint revision the modelo does not declare"]
+    return [
+        failure
+        for source_id in evolution.source_refs
+        if (
+            failure := _continuity_evolution_source_failure(
+                evolution,
+                source_id,
+                prefix=prefix,
+                endpoint_ids=endpoints,
+                endpoints_by_id=endpoints_by_id,
+                revision_directory=revision_directory,
+                sources=sources,
             )
+        )
+        is not None
+    ]
+
+
+def _continuity_evolution_source_failure(
+    evolution: CasillaContinuidadEvolutionDefinition,
+    source_id: str,
+    *,
+    prefix: str,
+    endpoint_ids: tuple[RevisionId, ...],
+    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
+    revision_directory: ModeloRevisionDirectory,
+    sources: Mapping[str, SourceReference],
+) -> str | None:
+    if source_id not in sources:
+        return f"{prefix} source {source_id!r} is not registered"
+    endpoint_failures = tuple(
+        endpoint_source_context_failures(
+            prefix,
+            endpoint=endpoints_by_id[endpoint_id],
+            enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
+            source_ids=(source_id,),
+            sources=sources,
+        )
+        for endpoint_id in endpoint_ids
+    )
+    if all(endpoint_failures):
+        return (
+            f"{prefix} source {source_id!r} does not match either declared endpoint "
+            f"{evolution.from_revision!r}->{evolution.to_revision!r}"
+        )
+    return None
+
+
+def _structural_succession_source_failures(
+    relation: CasillaStructuralSuccession,
+    *,
+    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
+    revision_directory: ModeloRevisionDirectory,
+    sources: Mapping[str, SourceReference],
+) -> list[str]:
+    prefix = f"casilla structural succession {relation.id!r}"
+    failures: list[str] = []
+    for endpoint_id, source_ids in (
+        (relation.from_revision, relation.from_source_refs),
+        (relation.to_revision, relation.to_source_refs),
+    ):
+        failures.extend(
+            _structural_endpoint_source_failures(
+                prefix,
+                endpoint_id=endpoint_id,
+                source_ids=source_ids,
+                endpoints_by_id=endpoints_by_id,
+                revision_directory=revision_directory,
+                sources=sources,
+            ),
+        )
+    return failures
+
+
+def _structural_endpoint_source_failures(
+    prefix: str,
+    *,
+    endpoint_id: RevisionId,
+    source_ids: tuple[str, ...],
+    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
+    revision_directory: ModeloRevisionDirectory,
+    sources: Mapping[str, SourceReference],
+) -> list[str]:
+    if endpoint_id not in endpoints_by_id:
+        return [f"{prefix} names unknown endpoint revision {endpoint_id!r}"]
+    failures = [
+        f"{prefix} endpoint {endpoint_id!r} source {source_id!r} is not registered"
+        for source_id in source_ids
+        if source_id not in sources
+    ]
+    failures.extend(
+        endpoint_source_context_failures(
+            prefix,
+            endpoint=endpoints_by_id[endpoint_id],
+            enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
+            source_ids=source_ids,
+            sources=sources,
+        ),
+    )
     return failures
 
 

@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
     NativeClientCredentialStore,
 )
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.application.auth.read_operation import AUTH_READ_OPERATION_DEFINITION_ID, AUTH_READ_RESULT_SCHEMA_ID
+from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID, AUTH_READ_RESULT_SCHEMA_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,

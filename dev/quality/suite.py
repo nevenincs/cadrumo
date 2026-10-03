@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from dev._paths import UTF_8
+from dev.first_party_source import DEPENDENCY_DECLARATION_ROOTS
 
 _UTF_8: Final[str] = UTF_8
 
@@ -45,13 +46,11 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         "check-dependency-declarations",
         (
             "deptry",
-            "src/cadrumo",
             # The harness package ships its own console script and is where the
             # MCP and anyio dependencies are actually imported. Leaving it out
             # reported both as declared-but-unused: a scan-scope artefact, not
             # a real unused dependency.
-            "src/cadrumo_harness",
-            "dev/registry",
+            *DEPENDENCY_DECLARATION_ROOTS,
             "--known-first-party",
             "cadrumo",
             "--known-first-party",
@@ -140,11 +139,7 @@ def main() -> int:
         return 0
 
     _emit(f"check-code: {len(failed)} of {len(results)} gates failed\n")
-    for result in failed:
-        _emit(f"FAIL  {result.name}")
-        if result.output:
-            _emit(result.output)
-        _emit("")
+    _emit_failed_gates(failed)
     if passed:
         _emit("passed: " + ", ".join(r.name for r in passed))
     return failed[0].returncode
@@ -163,6 +158,15 @@ def _emit(line: str) -> None:
         sys.stdout.flush()
         return
     print(line)
+
+
+def _emit_failed_gates(failed: list[GateResult]) -> None:
+    """Emit failed gates."""
+    for result in failed:
+        _emit(f"FAIL  {result.name}")
+        if result.output:
+            _emit(result.output)
+        _emit("")
 
 
 if __name__ == "__main__":

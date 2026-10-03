@@ -42,13 +42,14 @@ from __future__ import annotations
 
 import collections
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compiled_bundled_authority
 from .corpus import bundled_modelo_ids
-from .screens import screen_findings
+from .screens import CorpusScreenEntry, ScreenEntry, screen_findings
 
 __all__ = [
     "ConditionExposure",
@@ -126,54 +127,90 @@ def condition_exposure(
     """
     from .screens import CORPUS_SCREENS, SCREENS
 
-    runner: dict[str, int] = {entry.name: len(tuple(entry.run(authority, modelo_ids))) for entry in SCREENS}
-    runner.update({entry.name: len(tuple(entry.run())) for entry in CORPUS_SCREENS})
-    declared: dict[str, str] = {entry.name: entry.entry_returns for entry in SCREENS}
-    declared.update({entry.name: entry.entry_returns for entry in CORPUS_SCREENS})
+    runner, declared = _runner_screen_metadata(authority, modelo_ids, SCREENS, CORPUS_SCREENS)
     filing = filing_grade_revisions(authority, modelo_ids)
     totals: collections.Counter[tuple[str, str]] = collections.Counter()
     filing_totals: collections.Counter[tuple[str, str]] = collections.Counter()
     unmeasured: collections.Counter[tuple[str, str]] = collections.Counter()
     units: dict[tuple[str, str], set[tuple[str, str]]] = collections.defaultdict(set)
     filing_units: dict[tuple[str, str], set[tuple[str, str]]] = collections.defaultdict(set)
-
     for name, findings in screen_findings(authority, modelo_ids):
-        for finding in findings:
-            kind = getattr(finding, "kind", name)
-            if not isinstance(kind, str):
-                kind = name
-            key = (name, kind)
-            totals[key] += 1
-            modelo = getattr(finding, "modelo", None)
-            revision = getattr(finding, "revision", None)
-            if modelo is None or revision is None:
-                unmeasured[key] += 1
-                continue
-            unit = (str(modelo), str(revision))
-            units[key].add(unit)
-            if unit in filing:
-                filing_totals[key] += 1
-                filing_units[key].add(unit)
+        _count_exposure_findings(name, findings, filing, totals, filing_totals, unmeasured, units, filing_units)
+    return _exposure_rows(totals, filing_totals, unmeasured, units, filing_units, runner, declared)
 
-    return tuple(
-        sorted(
-            (
-                ConditionExposure(
-                    screen=screen,
-                    kind=kind,
-                    findings=count,
-                    filing_findings=filing_totals[(screen, kind)],
-                    revisions=len(units[(screen, kind)]),
-                    filing_revisions=len(filing_units[(screen, kind)]),
-                    unmeasured=unmeasured[(screen, kind)],
-                    runner_findings=runner.get(screen, 0),
-                    entry_returns=declared.get(screen, "findings"),
-                )
-                for (screen, kind), count in totals.items()
-            ),
-            key=lambda item: (-item.filing_findings, item.screen, item.kind),
+
+def _runner_screen_metadata(
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+    screens: tuple[ScreenEntry, ...],
+    corpus_screens: tuple[CorpusScreenEntry, ...],
+) -> tuple[dict[str, int], dict[str, str]]:
+    """Read runner counts and declared return shapes beside condition findings."""
+    runner: dict[str, int] = {}
+    declared: dict[str, str] = {}
+    for entry in screens:
+        runner[entry.name] = len(tuple(entry.run(authority, modelo_ids)))
+        declared[entry.name] = entry.entry_returns
+    for entry in corpus_screens:
+        runner[entry.name] = len(tuple(entry.run()))
+        declared[entry.name] = entry.entry_returns
+    return runner, declared
+
+
+def _count_exposure_findings(
+    name: str,
+    findings: Iterable[object],
+    filing: frozenset[tuple[str, str]],
+    totals: collections.Counter[tuple[str, str]],
+    filing_totals: collections.Counter[tuple[str, str]],
+    unmeasured: collections.Counter[tuple[str, str]],
+    units: dict[tuple[str, str], set[tuple[str, str]]],
+    filing_units: dict[tuple[str, str], set[tuple[str, str]]],
+) -> None:
+    """Accumulate one screen's findings, preserving unmeasured rows separately."""
+    for finding in findings:
+        kind = getattr(finding, "kind", name)
+        if not isinstance(kind, str):
+            kind = name
+        key = (name, kind)
+        totals[key] += 1
+        modelo = getattr(finding, "modelo", None)
+        revision = getattr(finding, "revision", None)
+        if modelo is None or revision is None:
+            unmeasured[key] += 1
+            continue
+        unit = (str(modelo), str(revision))
+        units[key].add(unit)
+        if unit in filing:
+            filing_totals[key] += 1
+            filing_units[key].add(unit)
+
+
+def _exposure_rows(
+    totals: collections.Counter[tuple[str, str]],
+    filing_totals: collections.Counter[tuple[str, str]],
+    unmeasured: collections.Counter[tuple[str, str]],
+    units: dict[tuple[str, str], set[tuple[str, str]]],
+    filing_units: dict[tuple[str, str], set[tuple[str, str]]],
+    runner: dict[str, int],
+    declared: dict[str, str],
+) -> tuple[ConditionExposure, ...]:
+    """Construct and order the condition-level report rows."""
+    rows = (
+        ConditionExposure(
+            screen=screen,
+            kind=kind,
+            findings=count,
+            filing_findings=filing_totals[(screen, kind)],
+            revisions=len(units[(screen, kind)]),
+            filing_revisions=len(filing_units[(screen, kind)]),
+            unmeasured=unmeasured[(screen, kind)],
+            runner_findings=runner.get(screen, 0),
+            entry_returns=declared.get(screen, "findings"),
         )
+        for (screen, kind), count in totals.items()
     )
+    return tuple(sorted(rows, key=lambda item: (-item.filing_findings, item.screen, item.kind)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,24 +252,50 @@ def revision_pressure(
     """
     from .screens import CORPUS_SCREENS, SCREENS
 
-    census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
-    # A screen built on another re-describes its findings, so counting both
-    # reports a revision as carrying two conditions where it has one. Measured:
-    # the grounding screen returns the same 41 cells the pointer screen does.
-    derived = {entry.name for entry in SCREENS if entry.derives_from is not None}
+    census, derived = _pressure_exclusions(SCREENS, CORPUS_SCREENS)
     filing = filing_grade_revisions(authority, modelo_ids)
     carried: dict[tuple[str, str], set[str]] = collections.defaultdict(set)
     for name, findings in screen_findings(authority, modelo_ids):
-        if name in census or name in derived:
+        _count_pressure_findings(name, findings, census, derived, filing, carried)
+    return _pressure_rows(carried)
+
+
+def _pressure_exclusions(
+    screens: tuple[ScreenEntry, ...],
+    corpus_screens: tuple[CorpusScreenEntry, ...],
+) -> tuple[set[str], set[str]]:
+    """Identify census populations and derived views that cannot be ranked as independent defects."""
+    census = {entry.name for entry in (*screens, *corpus_screens) if entry.entry_returns == "census"}
+    # A screen built on another re-describes its findings, so counting both
+    # reports a revision as carrying two conditions where it has one. Measured:
+    # the grounding screen returns the same 41 cells the pointer screen does.
+    derived = {entry.name for entry in screens if entry.derives_from is not None}
+    return census, derived
+
+
+def _count_pressure_findings(
+    name: str,
+    findings: Iterable[object],
+    census: set[str],
+    derived: set[str],
+    filing: frozenset[tuple[str, str]],
+    carried: dict[tuple[str, str], set[str]],
+) -> None:
+    """Add independent filing-grade condition names for one screen."""
+    if name in census or name in derived:
+        return
+    for finding in findings:
+        modelo = getattr(finding, "modelo", None)
+        revision = getattr(finding, "revision", None)
+        if modelo is None or revision is None:
             continue
-        for finding in findings:
-            modelo = getattr(finding, "modelo", None)
-            revision = getattr(finding, "revision", None)
-            if modelo is None or revision is None:
-                continue
-            unit = (str(modelo), str(revision))
-            if unit in filing:
-                carried[unit].add(f"{name}.{getattr(finding, 'kind', name)}")
+        unit = (str(modelo), str(revision))
+        if unit in filing:
+            carried[unit].add(f"{name}.{getattr(finding, 'kind', name)}")
+
+
+def _pressure_rows(carried: dict[tuple[str, str], set[str]]) -> tuple[RevisionPressure, ...]:
+    """Construct and order one report row for each revision with measured pressure."""
     return tuple(
         sorted(
             (
@@ -249,6 +312,15 @@ def main() -> int:
     authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     exposures = condition_exposure(authority, modelo_ids)
+    pressures = revision_pressure(authority, modelo_ids)
+    _print_exposure_rows(exposures)
+    _print_pressure_rows(pressures)
+    _print_summary(authority, modelo_ids, exposures)
+    return 0
+
+
+def _print_exposure_rows(exposures: tuple[ConditionExposure, ...]) -> None:
+    """Print one exposure row per condition."""
     for item in exposures:
         sys.stdout.write(
             f"filing_exposure screen={item.screen} kind={item.kind} findings={item.findings} "
@@ -257,24 +329,58 @@ def main() -> int:
             f"runner_findings={item.runner_findings} entry_returns={item.entry_returns} "
             f"wholly_below_filing={str(item.wholly_below_filing).lower()}\n"
         )
+
+
+def _print_pressure_rows(pressures: tuple[RevisionPressure, ...]) -> None:
+    """Print one pressure row per filing-grade revision."""
     # Exposure summed over screens that return findings. A census's rows are
     # examined transitions, and adding them to a defect count is the error this
     # declaration exists to stop.
-    for pressure in revision_pressure(authority, modelo_ids):
+    for pressure in pressures:
         sys.stdout.write(
             f"revision_pressure modelo={pressure.modelo} revision={pressure.revision} "
             f"conditions={pressure.count} kinds={','.join(pressure.conditions)}\n"
         )
-    exposed = [item for item in exposures if item.filing_findings and item.entry_returns == "findings"]
+
+
+def _print_summary(
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+    exposures: tuple[ConditionExposure, ...],
+) -> None:
+    """Print the exposure denominator and filing-grade revision count."""
+    conditions = _summary_conditions(exposures)
     sys.stdout.write(
-        f"summary conditions={len(exposures)} with_filing_exposure={len(exposed)} "
-        f"filing_findings={sum(item.filing_findings for item in exposed)} "
-        f"census_rows_examined={sum(item.findings for item in exposures if item.entry_returns == 'census')} "
-        f"wholly_below_filing={sum(1 for item in exposures if item.wholly_below_filing)} "
-        f"unmeasurable={sum(1 for item in exposures if item.findings == item.unmeasured)} "
+        f"summary conditions={len(exposures)} with_filing_exposure={len(conditions.exposed)} "
+        f"filing_findings={conditions.filing_findings} "
+        f"census_rows_examined={conditions.census_rows_examined} "
+        f"wholly_below_filing={conditions.wholly_below_filing} "
+        f"unmeasurable={conditions.unmeasurable} "
         f"filing_grade_revisions={len(filing_grade_revisions(authority, modelo_ids))}\n"
     )
-    return 0
+
+
+@dataclass(frozen=True, slots=True)
+class _SummaryConditions:
+    """Derived counters for the report's final reading-order line."""
+
+    exposed: tuple[ConditionExposure, ...]
+    filing_findings: int
+    census_rows_examined: int
+    wholly_below_filing: int
+    unmeasurable: int
+
+
+def _summary_conditions(exposures: tuple[ConditionExposure, ...]) -> _SummaryConditions:
+    """Aggregate the disjoint exposure populations for the CLI summary."""
+    exposed = tuple(item for item in exposures if item.filing_findings and item.entry_returns == "findings")
+    return _SummaryConditions(
+        exposed=exposed,
+        filing_findings=sum(item.filing_findings for item in exposed),
+        census_rows_examined=sum(item.findings for item in exposures if item.entry_returns == "census"),
+        wholly_below_filing=sum(item.wholly_below_filing for item in exposures),
+        unmeasurable=sum(item.findings == item.unmeasured for item in exposures),
+    )
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -66,8 +67,8 @@ class ParticipationIndexRebuildPorts:
 class ParticipationIndexRebuildPortsFactory(Protocol):
     """Construct the complete participation-index rebuild bundle for a bucket."""
 
-    def __call__(self, *, bucket_id: str) -> ParticipationIndexRebuildPorts:
-        """Return all authorities required for ``bucket_id``."""
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> ParticipationIndexRebuildPorts:
+        """Return all authorities for one bucket and its held authority operation."""
         ...
 
 

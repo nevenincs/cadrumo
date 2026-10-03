@@ -82,6 +82,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from .descriptor_write import write_all
 from .errors.hierarchy import InternalInvariantError
 from .fsync import fsync_parent_dir
 from .logging import get_logger
@@ -126,26 +127,6 @@ def _hardened_staging_flags() -> int:
     # flag is absent on POSIX, where getattr resolves to 0 (a no-op).
     flags |= int(getattr(os, "O_BINARY", 0))
     return flags
-
-
-def _write_all(fd: int, data: bytes) -> None:
-    """Write ``data`` completely to an already-opened descriptor.
-
-    Args:
-        fd: Writable operating-system file descriptor.
-        data: Byte payload to write in full.
-
-    Raises:
-        OSError: If the descriptor reports no forward progress or another
-            operating-system write error occurs.
-    """
-    view = memoryview(data)
-    offset = 0
-    while offset < len(view):
-        written = os.write(fd, view[offset:])
-        if written <= 0:
-            raise OSError("atomic byte write made no progress")
-        offset += written
 
 
 def atomic_write_bytes(path: Path, data: bytes) -> None:
@@ -372,7 +353,7 @@ def atomic_write_hardened_bytes(
         fd = os.open(tmp_path, flags, mode)
         created = True
         try:
-            _write_all(fd, data)
+            write_all(fd, data)
             if batch is None:
                 os.fsync(fd)
         finally:

@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+from .....application.ledger.attachment_review import get_attachment_review_item
+from .....core.google_drive_reference import build_google_drive_file_reference
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
@@ -48,28 +50,36 @@ _DRIVE_LINK = f"https://drive.google.com/file/d/{_FILE_ID}/view"
 _CAPTURED_AT = datetime(2026, 5, 28, 12, 45, 0, tzinfo=UTC)
 
 
-def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
+def _store_resolved_link(
+    store: AttachmentStore,
+    *,
+    payload: bytes,
+    file_id: str = _FILE_ID,
+    stored_reference: str | None = None,
+):
     """Resolve a Drive link through the Google client and store the fetched bytes."""
+    drive_link = f"https://drive.google.com/file/d/{file_id}/view"
+    provenance_reference = stored_reference if stored_reference is not None else drive_link
     with drive_media_endpoint(payload=payload) as endpoint:
         data = resolve_document_link(
             source=AttachmentSource.GOOGLE_DRIVE,
-            reference=_DRIVE_LINK,
+            reference=drive_link,
             credentials=unused_google_credentials(),
             service=endpoint.service,
         )
-        assert endpoint.requested_paths == [f"/drive/v3/files/{_FILE_ID}?alt=media"]
+        assert endpoint.requested_paths == [f"/drive/v3/files/{file_id}?alt=media"]
     return add_attachment(
         store,
         content=AttachmentBytesContent(data=data),
         request=AttachmentIngestionRequest(
             kind=AttachmentKind.DRIVE_DOCUMENT,
             source=AttachmentSource.GOOGLE_DRIVE,
-            source_reference=_DRIVE_LINK,
+            source_reference=provenance_reference,
             mime_type="application/pdf",
             captured_at=_CAPTURED_AT,
             bucket_id=_BUCKET_ID,
             link_transaction_ids=("tx-doclink-1",),
-            metadata={"source": "GOOGLE_DRIVE", "source_reference": _DRIVE_LINK},
+            metadata={"source": "GOOGLE_DRIVE", "source_reference": provenance_reference},
         ),
     )
 
@@ -94,6 +104,27 @@ def test_fetch_and_encrypt_roundtrip_stores_fetched_bytes(tmp_path: Path) -> Non
         assert loaded.mime_type == "application/pdf"
         assert loaded.source_reference == _DRIVE_LINK
         store.verify_blob(attachment.attachment_id)
+
+
+@pytest.mark.parametrize("file_id", ("A" * 10, "B" * 24))
+def test_short_url_id_survives_real_fetch_storage_and_review_provenance(tmp_path: Path, file_id: str) -> None:
+    """URL-context IDs persist canonically and remain review-safe across the real store."""
+    payload = b"%PDF-1.4\n%short-url-id-review\n" + file_id.encode("ascii")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        store = AttachmentStore()
+        attachment = _store_resolved_link(
+            store,
+            payload=payload,
+            file_id=file_id,
+            stored_reference=build_google_drive_file_reference(file_id),
+        )
+
+        loaded = store.load_manifest(attachment.attachment_id)
+        item = get_attachment_review_item(store, attachment.attachment_id)
+
+        assert loaded.source_reference == build_google_drive_file_reference(file_id)
+        assert item.provider_locator == file_id
+        assert not item.provider_locator.startswith("https://")
 
 
 def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:

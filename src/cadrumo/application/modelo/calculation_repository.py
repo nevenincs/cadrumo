@@ -8,14 +8,17 @@ from contextvars import ContextVar
 from typing import Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 
 class CalculationRevisionCatalogueRepositoryFactory(Protocol):
     """Construct the calculation-revision repository port for one bucket."""
 
-    def __call__(self, *, bucket_id: str) -> CalculationRevisionCatalogueRepositoryProtocol:
-        """Return the repository bound to ``bucket_id``."""
+    def __call__(
+        self, *, bucket_id: str, operation: PinnedAuthorityOperation | None
+    ) -> CalculationRevisionCatalogueRepositoryProtocol:
+        """Return the repository bound to ``bucket_id`` and its held authority context."""
         ...
 
 
@@ -39,13 +42,14 @@ def bind_calculation_revision_catalogue_repository_factory(
 def calculation_revision_catalogue_repository(
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation | None,
 ) -> CalculationRevisionCatalogueRepositoryProtocol:
-    """Resolve the explicitly composed calculation repository for ``bucket_id``."""
+    """Resolve the explicitly composed repository for one bucket and held operation."""
     try:
         factory = _BOUND_CALCULATION_REVISION_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
         raise InternalInvariantError("calculation-revision catalogue persistence has not been composed") from error
-    return factory(bucket_id=bucket_id)
+    return factory(bucket_id=bucket_id, operation=operation)
 
 
 __all__ = [

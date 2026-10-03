@@ -7,23 +7,21 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from .command_spec import translation_key as _key
+from ._command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _READ = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
 _WRITE = ExecutionPolicySpec(

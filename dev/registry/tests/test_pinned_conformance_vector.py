@@ -18,10 +18,10 @@ from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compile_validated_authority
-from ..filing_export_proof import (
+from ..filing_export_conformance_enrollment import derive_filing_export_conformance_enrollment
+from ..filing_export_conformance_vectors import (
     build_pinned_conformance_evidence,
     canonical_filing_export_conformance_vectors,
-    derive_filing_export_conformance_enrollment,
     load_pinned_conformance_document,
     load_pinned_conformance_inputs,
 )

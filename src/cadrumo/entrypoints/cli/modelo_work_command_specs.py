@@ -11,20 +11,16 @@ from cadrumo.application.operator_surface.command_ports import (
 )
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .command_spec import (
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    ArgumentSpec,
     Capability,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     LiteralValue,
-    OptionSpec,
     ParameterDefault,
     PerformanceClass,
     ResultSchemaSpec,
@@ -33,7 +29,8 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import translation_key as _key
+from ._command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(

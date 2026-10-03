@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 
 from ...application.modelo.filing_record_view_operation import (
@@ -12,7 +14,6 @@ from ...application.modelo.filing_record_view_operation import (
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ._filing_chain_payloads import (
@@ -21,8 +22,10 @@ from ._filing_chain_payloads import (
     ObservationOverridePayload,
 )
 from ._modelo_payloads import ModeloRecordPayload
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def _layer_payload(layer: ModeloFilingObservationLayerProjection | None) -> ObservationLayerPayload | None:
@@ -84,21 +87,9 @@ def read_modelo_filing_record_view(
     )
     projection = completed.projection
     if not isinstance(projection, ModeloFilingRecordViewProjection):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     try:
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or completed.effect is not OperationEffect.NONE
-            or projection.profile_id != client.profile_id
-            or projection.filing_record_id != request.filing_record_id
-        ):
+        if _filing_view_receipt_invalid(completed, projection, client.profile_id, request):
             raise ValueError("filing view receipt or profile does not match its request")
         snapshot = projection.record
         record = ModeloRecordPayload.model_validate(
@@ -117,14 +108,24 @@ def read_modelo_filing_record_view(
             raise ValueError("filing view record or observation layers exceed the submitted scope")
         payload = _observation_layers_payload(layers)
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return record, payload
 
 
 __all__ = ["read_modelo_filing_record_view"]
+
+
+def _filing_view_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloFilingRecordViewProjection],
+    projection: ModeloFilingRecordViewProjection,
+    profile_id: UUID,
+    request: ModeloFilingRecordViewRequest,
+) -> bool:
+    """Require the settled read receipt for the exact requested profile and filing record."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.NONE
+        or (projection.profile_id != profile_id)
+        or (projection.filing_record_id != request.filing_record_id)
+    )

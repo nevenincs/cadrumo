@@ -19,7 +19,7 @@ from typing import TypeGuard
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
+from ...domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
 from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 from ...domain.user_profile.errors import UserProfileValidationError

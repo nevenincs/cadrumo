@@ -50,6 +50,7 @@ from .source_defects import (
     note_states_only_applicability,
     validate_note_stated_applicability_declarations,
 )
+from .year_constraints import BoundedYearDeclaration, year_constraints_for
 
 __all__ = [
     "RenderProfileEligibility",
@@ -167,6 +168,7 @@ def _states_no_wire_fact(
     field: RecordDesignIntermediateField,
     *,
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+    year_constraints: tuple[BoundedYearDeclaration, ...] = (),
 ) -> bool:
     """Whether the design left this field's wire fact unstated at its anchor.
 
@@ -212,6 +214,14 @@ def _states_no_wire_fact(
         return True
     if _is_filing_instruction_only(field.content):
         return True
+    # A pinned lower bound governs admissible years, leaving their wire
+    # representation to an explicit reviewed four-digit-year rule.
+    if any(
+        (field.sheet, field.source_cell, field.content)
+        == (constraint.sheet, constraint.source_cell, constraint.published_statement)
+        for constraint in year_constraints
+    ):
+        return True
     return note_states_only_applicability(
         applicability_notes,
         sheet=field.sheet,
@@ -223,6 +233,7 @@ def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
     *,
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+    year_constraints: tuple[BoundedYearDeclaration, ...] = (),
     signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str]] = frozenset(),
 ) -> RenderProfileEligibility:
     """Partition fixed joined fields eligible for reviewed absent-wire authority.
@@ -248,7 +259,7 @@ def project_render_profile_eligibility(
         field
         for field in fields
         if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
-        and _states_no_wire_fact(field, applicability_notes=applicability_notes)
+        and _states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
         and not _is_source_reserved_field(field)
     )
     signed_composites = tuple(
@@ -293,8 +304,10 @@ def resolve_render_profile_eligibility(
     """
     applicability_notes = note_stated_applicability_for(source.source_ref)
     validate_note_stated_applicability_declarations(applicability_notes, source)
+    year_constraints = year_constraints_for(source)
     return project_render_profile_eligibility(
         fixed_fields,
         applicability_notes=applicability_notes,
+        year_constraints=year_constraints,
         signed_composite_anchor_keys=signed_composite_anchor_keys,
     )

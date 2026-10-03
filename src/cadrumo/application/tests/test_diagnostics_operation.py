@@ -25,7 +25,6 @@ from ...core.telemetry.emit import TelemetrySink
 from ...core.telemetry.schema import TelemetryEventPayload
 from ...core.telemetry.tier import TelemetryTier
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from .. import diagnostics_operation as module
 from ..diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
     DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
@@ -55,6 +54,7 @@ from ..diagnostics_run_health import (
     list_recent_runs,
 )
 from ..diagnostics_run_health_ports import DiagnosticAuthProbeResult, DiagnosticRunRecord
+from ..operations import profile_guard
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ..operations.owner import OperationExecutorContext
@@ -81,7 +81,7 @@ from ..user_profile.access_contracts import (
     SessionState,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.access_policy import evaluate_operation_access
+from ..user_profile.operation_access_policy import evaluate_operation_access
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -247,7 +247,7 @@ def test_both_real_registrations_compile_closed_nested_schemas() -> None:
 async def test_read_preserves_complete_canonical_report_and_filters(
     kind: DiagnosticsReadKind, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     runs, probe = _Runs(), _Probe()
 
     def factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> DiagnosticsReadPorts:
@@ -331,7 +331,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
 
 @pytest.mark.asyncio
 async def test_wrong_worker_profile_refuses_before_composition(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_OTHER))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_OTHER))
     request = OperationRequest[DiagnosticsReadRequest](
         definition_id=DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
@@ -344,7 +344,7 @@ async def test_wrong_worker_profile_refuses_before_composition(monkeypatch: pyte
 
 @pytest.mark.asyncio
 async def test_factory_cannot_substitute_another_profile_before_private_read(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     runs, probe = _Runs(), _Probe()
 
     def wrong(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> DiagnosticsReadPorts:
@@ -640,7 +640,7 @@ class _FlushHarness:
 async def test_flush_dry_and_current_consent_noop_have_none_effect(
     dry_run: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     harness = _FlushHarness()
     harness.current_settings = Settings(cadrumo_telemetry_endpoint="https://telemetry.invalid/collect")
     assert await harness.execute(dry_run=dry_run, acknowledged=True) == "f" * 64
@@ -664,7 +664,7 @@ async def test_flush_dry_and_current_consent_noop_have_none_effect(
 async def test_explicit_overrides_cross_worker_and_sink_attempt_is_unknown_outside_commit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     harness = _FlushHarness(settings=Settings())
     assert (
         await harness.execute(
@@ -695,7 +695,7 @@ async def test_explicit_overrides_cross_worker_and_sink_attempt_is_unknown_outsi
 async def test_authority_revocation_at_dispatch_refuses_without_sink_or_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     harness = _FlushHarness()
     harness.invocation.commit.refuse = True
     with pytest.raises(ProfileAccessRefusedError) as refused:
@@ -710,7 +710,7 @@ async def test_authority_revocation_at_dispatch_refuses_without_sink_or_result(
 async def test_pre_dispatch_failure_and_uncertain_sink_failure_keep_truthful_effects(
     failure: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     harness = _FlushHarness()
     harness.factory_error = failure == "factory"
     harness.sink_error = failure == "sink"
@@ -726,7 +726,7 @@ async def test_pre_dispatch_failure_and_uncertain_sink_failure_keep_truthful_eff
 
 @pytest.mark.asyncio
 async def test_cancellation_joins_owned_dispatch_before_unknown_settlement(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     harness = _FlushHarness()
     release = Event()
     harness.send_release = release

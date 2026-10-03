@@ -28,7 +28,13 @@ from ...operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
 )
-from ..error_codes import ErrorEnvelope, build_error_envelope, render_error_json, render_error_text
+from ..error_codes import (
+    ErrorEnvelope,
+    build_error_envelope,
+    public_error_context,
+    render_error_json,
+    render_error_text,
+)
 from ..hierarchy import ActiveProfilePointerError, CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -205,13 +211,24 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
             "cookie": "session-cookie",
             "cert_password": "hunter2",
             "profile_tax_id": "X1234567L",
+            "AUTHORIZATION": "OPAQUE-AUTHORIZATION-CANARY",
+            "certificateData": "OPAQUE-CERTIFICATE-CANARY",
+            "nie": "OPAQUE-NIE-CANARY",
+            "NIF": "OPAQUE-NIF-CANARY",
+            "taxId": "OPAQUE-TAX-ID-CANARY",
+            "NIFValue": "OPAQUE-NIF-VALUE-CANARY",
+            "NIEValue": "OPAQUE-NIE-VALUE-CANARY",
+            "profileNIFValue": "OPAQUE-PROFILE-NIF-CANARY",
             "callback": callback,
             "session_detail": f"bearer {jwt}",
+            "diagnostic": "lock ownership remains visible",
         },
     )
 
     rendered_json = render_error_json(error)
     rendered_text = render_error_text(error)
+    public_context = public_error_context(error)
+    payload = json.loads(rendered_json)
 
     assert "<redacted>" in rendered_json
     assert "<redacted>" in rendered_text
@@ -223,7 +240,40 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     assert "hunter2" not in rendered_text
     assert "X1234567L" not in rendered_json
     assert "X1234567L" not in rendered_text
-    assert "sha256:2a000539" in rendered_json
+    for canary in (
+        "OPAQUE-AUTHORIZATION-CANARY",
+        "OPAQUE-CERTIFICATE-CANARY",
+        "OPAQUE-NIE-CANARY",
+        "OPAQUE-NIF-CANARY",
+        "OPAQUE-TAX-ID-CANARY",
+        "OPAQUE-NIF-VALUE-CANARY",
+        "OPAQUE-NIE-VALUE-CANARY",
+        "OPAQUE-PROFILE-NIF-CANARY",
+    ):
+        assert canary not in rendered_json
+        assert canary not in rendered_text
+    assert public_context is not None
+    assert public_context["AUTHORIZATION"] == "<redacted>"
+    assert public_context["certificateData"] == "<redacted>"
+    assert public_context["nie"] == "<redacted>"
+    assert public_context["NIF"] == "<redacted>"
+    assert public_context["taxId"] == "<redacted>"
+    assert public_context["NIFValue"] == "<redacted>"
+    assert public_context["NIEValue"] == "<redacted>"
+    assert public_context["profileNIFValue"] == "<redacted>"
+    assert public_context["profile_tax_id"] == "<redacted>"
+    assert public_context["diagnostic"] == "lock ownership remains visible"
+    envelope_context = payload["error"]["context"]
+    assert envelope_context["AUTHORIZATION"] == "<redacted>"
+    assert envelope_context["certificateData"] == "<redacted>"
+    assert envelope_context["nie"] == "<redacted>"
+    assert envelope_context["NIF"] == "<redacted>"
+    assert envelope_context["taxId"] == "<redacted>"
+    assert envelope_context["NIFValue"] == "<redacted>"
+    assert envelope_context["NIEValue"] == "<redacted>"
+    assert envelope_context["profileNIFValue"] == "<redacted>"
+    assert envelope_context["profile_tax_id"] == "<redacted>"
+    assert envelope_context["diagnostic"] == "lock ownership remains visible"
     assert callback not in rendered_json
     # Exact comparison, not a substring: the host must survive whole and alone,
     # so a look-alike such as ``https://example.test.attacker.invalid`` fails.

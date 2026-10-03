@@ -74,18 +74,16 @@ from ....domain.user_profile.values import UserProfileFact
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from ...live_state_composition import compose_notifications_ports
 from .._command_runtime import build_command_app
-from ..command_spec import (
+from .._command_shared_contracts import (
     BindingState,
-    CommandSpec,
-    CommandSpecGraph,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
 )
+from ..command_graph import CommandSpecGraph
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ..command_specs import COMMAND_GRAPH
 from ._command_drive_support import (
     PROBE_PROFILE_ID,

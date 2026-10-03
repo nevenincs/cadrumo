@@ -2,32 +2,22 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from functools import partial
 from typing import Annotated, Protocol, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings, override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.utc import validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -35,24 +25,16 @@ from ...domain.calculations.registry.ids import LegalRefId
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_scalar import PublicDecimal
+from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -347,13 +329,9 @@ class ReviewQueueReadExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(REVIEW_QUEUE_OPERATION_DEFINITION_ID)
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(self._capture, payload, context.authority_operation)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="review-queue-read")
+        return await capture_read_result(
+            context, partial(self._capture, payload, context.authority_operation), task_name="review-queue-read"
+        )
 
 
 class ReviewViewReadExecutor:
@@ -399,13 +377,9 @@ class ReviewViewReadExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(REVIEW_VIEW_OPERATION_DEFINITION_ID)
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(self._capture, payload, context.authority_operation)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="review-item-read")
+        return await capture_read_result(
+            context, partial(self._capture, payload, context.authority_operation), task_name="review-item-read"
+        )
 
 
 def _build_definition(
@@ -427,27 +401,9 @@ def _build_definition(
         ),
         phase_codes=(definition_id,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {
-                OperationFrontendProjection.CLI,
-                OperationFrontendProjection.TUI,
-                OperationFrontendProjection.MCP,
-            }
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -494,18 +450,9 @@ def _registration(
     result_type: type[BaseModel],
     projector: Callable[[BaseModel, OperationTerminalReceipt], BaseModel],
 ) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=result_type,
-        ),
+        public_result_type=result_type,
         result_projector=projector,
         access_resolver=lambda request, context: _resolve_access(
             request,

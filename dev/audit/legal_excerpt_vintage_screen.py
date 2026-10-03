@@ -348,6 +348,123 @@ _FAMILIES: Final = {
 }
 
 
+def _render_oracle_strata(findings: list[Finding]) -> None:
+    """Render oracle strata."""
+    for kind in (OracleKind.CONSOLIDATED_NORM, OracleKind.ARTICLE_REDACTION):
+        subset = [finding for finding in findings if finding.oracle_kind is kind]
+        if not subset:
+            continue
+        print(f"\n=== measured against a {kind.value} oracle ({len(subset)}) ===")
+        print(summarise(subset, len(subset)))
+        # Stratified, because the two strata are not the same measurement. An
+        # identity-confirmed excerpt carries the article's own structural
+        # heading and is a faithful per-article copy; an unconfirmed one is a
+        # curated catalogue snippet, abridged by design, whose divergence from
+        # full current text says nothing about staleness. Pooling them makes a
+        # catch rate that is mostly a statement about excerpt shape.
+        confirmed = [finding for finding in subset if finding.identity_confirmed]
+        print(f"\n  -- identity confirmed only ({len(confirmed)}) --")
+        print("\n".join(f"  {line}" for line in summarise(confirmed, len(confirmed)).splitlines()))
+
+
+def _render_verdict_worklists(findings: list[Finding]) -> None:
+    """Render verdict worklists."""
+    for verdict in (
+        Verdict.UNRESOLVED,
+        Verdict.MISRESOLVED,
+        Verdict.ORACLE_INDETERMINATE,
+        Verdict.EXCERPT_CARRIES_MORE,
+        Verdict.DIVERGES_GATE_GREEN,
+        Verdict.DIVERGES_GATE_FIRES,
+    ):
+        selected = [finding for finding in findings if finding.verdict is verdict]
+        if not selected:
+            continue
+        print(f"\n--- {verdict.value} ({len(selected)}) ---")
+        for finding in selected:
+            print(f"  {finding.render()}")
+
+
+def _render_unconfirmed_identity(findings: list[Finding]) -> None:
+    """Render unconfirmed identity."""
+    unconfirmed = [finding for finding in findings if finding.clauses_total and not finding.identity_confirmed]
+    if unconfirmed:
+        print(f"\n--- identity unconfirmed ({len(unconfirmed)}) ---")
+        print("  The excerpt carries a curated title rather than a structural heading, so its")
+        print("  provision identity could not be cross-checked. The verdict stands on the")
+        print("  derived key alone and is weaker than the others.")
+        for finding in unconfirmed:
+            print(f"  {finding.entry_id}")
+
+
+def _render_unbound_citation(findings: list[Finding]) -> None:
+    """Render unbound citation."""
+    unbound = [finding for finding in findings if finding.clauses_total and not finding.citation_confirmed]
+    if unbound:
+        print(f"\n--- citation token unbound ({len(unbound)}) ---")
+        print("  The entry's own citation token derives no heading matching the unit the")
+        print("  comparison was made against. Reported, never promoted to misresolved: a")
+        print("  written ordinal against a digit is a spelling variant, not a wrong article.")
+        for finding in unbound:
+            derived = sorted({structural_key(key) for key in candidate_keys(finding.entry_id.partition(":")[2])} - {""})
+            print(f"  {finding.entry_id}: token derives {derived}, resolved {finding.resolved_anchor or '(none)'}")
+
+
+def _render_anchor_disagreements(findings: list[Finding]) -> None:
+    """Render anchor disagreements."""
+    disagreeing = [finding for finding in findings if finding.anchor_disagrees]
+    if disagreeing:
+        substantive = [finding for finding in disagreeing if finding.anchor_names_another_block]
+        print(f"\n--- catalogue anchor disagrees with BOE's block id ({len(disagreeing)}) ---")
+        print(f"  {len(substantive)} name a DIFFERENT block; the rest are the same provision spelled")
+        print("  two ways. Reported, never acted on: repointing an anchor is adjudication.")
+        for finding in disagreeing:
+            marker = "DIFFERENT BLOCK" if finding.anchor_names_another_block else "naming form"
+            print(
+                f"  {finding.entry_id}: cites #{finding.catalogue_anchor}, BOE serves #{finding.boe_block} ({marker})"
+            )
+
+
+def _excerpt_verdict(
+    absent: list[str], extra: list[str], stem: str, body: dict[str, object], current_normalised: str
+) -> Verdict:
+    """Excerpt verdict."""
+    if not absent and not extra:
+        verdict = Verdict.MATCHES
+    elif _is_vintaged(stem):
+        # Consulted before either direction is read: a declared vintage
+        # legitimately holds text current law dropped, which is the whole
+        # shape ``excerpt_carries_more`` names. Ordering it second would
+        # reclassify the deliberate case as the defect.
+        verdict = Verdict.VINTAGED
+    elif not absent:
+        verdict = Verdict.EXCERPT_CARRIES_MORE
+    else:
+        declared = body.get("required_text")
+        required = tuple(str(phrase) for phrase in declared) if isinstance(declared, list) else ()
+        fires = any(normalise_corpus_text(phrase) not in current_normalised for phrase in required)
+        verdict = Verdict.DIVERGES_GATE_FIRES if fires else Verdict.DIVERGES_GATE_GREEN
+    return verdict
+
+
+def _read_excerpt_and_oracle(
+    entry_id: str, oracle: Path, excerpt: Path, norm: str, stem: str
+) -> tuple[tuple[dict[str, str], ...], dict[str, str]] | Finding:
+    """Read excerpt and oracle."""
+    if not oracle.exists():
+        return Finding(entry_id, Verdict.NO_ORACLE, f"no extracted sidecar for {norm}")
+    oracle_units = readable_units(oracle)
+    if len(oracle_units) < _MIN_ORACLE_UNITS:
+        return Finding(entry_id, Verdict.NO_ORACLE, f"{norm} is a single-unit file, not a whole-norm consolidation")
+    if not excerpt.exists():
+        return Finding(entry_id, Verdict.NO_ORACLE, f"no extracted sidecar for the excerpt {stem}")
+    excerpt_units = readable_units(excerpt)
+    if len(excerpt_units) != 1:
+        return Finding(entry_id, Verdict.NO_ORACLE, f"excerpt {stem} holds {len(excerpt_units)} units, not one")
+    excerpt_unit = excerpt_units[0]
+    return (oracle_units, excerpt_unit)
+
+
 class Verdict(StrEnum):
     """Exhaustive classification of one excerpt-backed catalogue entry.
 
@@ -552,7 +669,7 @@ def candidate_keys(citation_token: str) -> tuple[str, ...]:
 
     if head in {"art", "arts", "articulo", "articulos"}:
         return _article_keys(rest)
-    if head == "apartado" and rest and rest[0].isdigit():
+    if _is_numbered_section(head, rest):
         keys = [word.capitalize() for word in ordinal_spellings(int(rest[0]), feminine=False)]
         keys.append(rest[0])
         return tuple(dict.fromkeys(keys))
@@ -849,17 +966,10 @@ def _screen_entry(
     norm, filename_token = root_pair
     oracle = corpus / f"{norm}.html.extracted.json"
     excerpt = corpus / f"{stem}.html.extracted.json"
-    if not oracle.exists():
-        return Finding(entry_id, Verdict.NO_ORACLE, f"no extracted sidecar for {norm}")
-    oracle_units = readable_units(oracle)
-    if len(oracle_units) < _MIN_ORACLE_UNITS:
-        return Finding(entry_id, Verdict.NO_ORACLE, f"{norm} is a single-unit file, not a whole-norm consolidation")
-    if not excerpt.exists():
-        return Finding(entry_id, Verdict.NO_ORACLE, f"no extracted sidecar for the excerpt {stem}")
-    excerpt_units = readable_units(excerpt)
-    if len(excerpt_units) != 1:
-        return Finding(entry_id, Verdict.NO_ORACLE, f"excerpt {stem} holds {len(excerpt_units)} units, not one")
-    excerpt_unit = excerpt_units[0]
+    units = _read_excerpt_and_oracle(entry_id, oracle, excerpt, norm, stem)
+    if isinstance(units, Finding):
+        return units
+    oracle_units, excerpt_unit = units
 
     token = entry_id.partition(":")[2] or filename_token
     keys = [key for key in (excerpt_unit["title"].strip(),) if key]
@@ -1045,21 +1155,7 @@ def _classify(
     ]
     opening_matches = bool(current_clauses) and current_clauses[0] in excerpt_normalised
 
-    if not absent and not extra:
-        verdict = Verdict.MATCHES
-    elif _is_vintaged(stem):
-        # Consulted before either direction is read: a declared vintage
-        # legitimately holds text current law dropped, which is the whole
-        # shape ``excerpt_carries_more`` names. Ordering it second would
-        # reclassify the deliberate case as the defect.
-        verdict = Verdict.VINTAGED
-    elif not absent:
-        verdict = Verdict.EXCERPT_CARRIES_MORE
-    else:
-        declared = body.get("required_text")
-        required = tuple(str(phrase) for phrase in declared) if isinstance(declared, list) else ()
-        fires = any(normalise_corpus_text(phrase) not in current_normalised for phrase in required)
-        verdict = Verdict.DIVERGES_GATE_FIRES if fires else Verdict.DIVERGES_GATE_GREEN
+    verdict = _excerpt_verdict(absent, extra, stem, body, current_normalised)
 
     return Finding(
         entry_id=entry_id,
@@ -1134,65 +1230,18 @@ def main() -> int:
     print(summarise(findings, result.population))
     print(f"\nexcluded, cites its norm's whole consolidated file: {result.cites_consolidated_norm}")
 
-    for kind in (OracleKind.CONSOLIDATED_NORM, OracleKind.ARTICLE_REDACTION):
-        subset = [finding for finding in findings if finding.oracle_kind is kind]
-        if not subset:
-            continue
-        print(f"\n=== measured against a {kind.value} oracle ({len(subset)}) ===")
-        print(summarise(subset, len(subset)))
-        # Stratified, because the two strata are not the same measurement. An
-        # identity-confirmed excerpt carries the article's own structural
-        # heading and is a faithful per-article copy; an unconfirmed one is a
-        # curated catalogue snippet, abridged by design, whose divergence from
-        # full current text says nothing about staleness. Pooling them makes a
-        # catch rate that is mostly a statement about excerpt shape.
-        confirmed = [finding for finding in subset if finding.identity_confirmed]
-        print(f"\n  -- identity confirmed only ({len(confirmed)}) --")
-        print("\n".join(f"  {line}" for line in summarise(confirmed, len(confirmed)).splitlines()))
+    _render_oracle_strata(findings)
 
-    for verdict in (
-        Verdict.UNRESOLVED,
-        Verdict.MISRESOLVED,
-        Verdict.ORACLE_INDETERMINATE,
-        Verdict.EXCERPT_CARRIES_MORE,
-        Verdict.DIVERGES_GATE_GREEN,
-        Verdict.DIVERGES_GATE_FIRES,
-    ):
-        selected = [finding for finding in findings if finding.verdict is verdict]
-        if not selected:
-            continue
-        print(f"\n--- {verdict.value} ({len(selected)}) ---")
-        for finding in selected:
-            print(f"  {finding.render()}")
-    unconfirmed = [finding for finding in findings if finding.clauses_total and not finding.identity_confirmed]
-    if unconfirmed:
-        print(f"\n--- identity unconfirmed ({len(unconfirmed)}) ---")
-        print("  The excerpt carries a curated title rather than a structural heading, so its")
-        print("  provision identity could not be cross-checked. The verdict stands on the")
-        print("  derived key alone and is weaker than the others.")
-        for finding in unconfirmed:
-            print(f"  {finding.entry_id}")
-    unbound = [finding for finding in findings if finding.clauses_total and not finding.citation_confirmed]
-    if unbound:
-        print(f"\n--- citation token unbound ({len(unbound)}) ---")
-        print("  The entry's own citation token derives no heading matching the unit the")
-        print("  comparison was made against. Reported, never promoted to misresolved: a")
-        print("  written ordinal against a digit is a spelling variant, not a wrong article.")
-        for finding in unbound:
-            derived = sorted({structural_key(key) for key in candidate_keys(finding.entry_id.partition(":")[2])} - {""})
-            print(f"  {finding.entry_id}: token derives {derived}, resolved {finding.resolved_anchor or '(none)'}")
-    disagreeing = [finding for finding in findings if finding.anchor_disagrees]
-    if disagreeing:
-        substantive = [finding for finding in disagreeing if finding.anchor_names_another_block]
-        print(f"\n--- catalogue anchor disagrees with BOE's block id ({len(disagreeing)}) ---")
-        print(f"  {len(substantive)} name a DIFFERENT block; the rest are the same provision spelled")
-        print("  two ways. Reported, never acted on: repointing an anchor is adjudication.")
-        for finding in disagreeing:
-            marker = "DIFFERENT BLOCK" if finding.anchor_names_another_block else "naming form"
-            print(
-                f"  {finding.entry_id}: cites #{finding.catalogue_anchor}, BOE serves #{finding.boe_block} ({marker})"
-            )
+    _render_verdict_worklists(findings)
+    _render_unconfirmed_identity(findings)
+    _render_unbound_citation(findings)
+    _render_anchor_disagreements(findings)
     return 0
+
+
+def _is_numbered_section(head: str, rest: list[str]) -> bool:
+    """Recognize the existing numbered apartado citation without broadening its keys."""
+    return head == "apartado" and bool(rest) and rest[0].isdigit()
 
 
 if __name__ == "__main__":

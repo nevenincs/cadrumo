@@ -1,0 +1,237 @@
+---
+tags:
+  - '#exec'
+  - '#registry-health-repair'
+date: '2026-10-02'
+modified: '2026-10-03'
+body_schema: 'body-v2'
+body_hash: 'sha256:6248adfeb59c4571208e14eaefedf05c1cc7c0bf747fabafaa99ca1c20c49361'
+related:
+  - "[[2026-10-02-registry-health-repair-plan]]"
+---
+
+# `registry-health-repair` ledger
+
+## Changes
+
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/145.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/360.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/369.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/360.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/369.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S04` `A` `.logs/audit-runs/2026-10-02/registry-health-repair/label-review.json`
+- `S04` `verify:` `canonical dev.locales set-batch correction manifests` -> `pass`
+- `S04` `verify:` `row-level verification of 300 initial cells` -> `pass`
+- `S04` `by:` `Codex`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/verification_predicates/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/verification_predicates/0001-declarations.toml`
+- `S01` `verify:` `canonical 303 migration equivalence and minimality` -> `pass`
+- `S01` `verify:` `canonical installed source second conversion idempotence` -> `pass`
+- `S01` `verify:` `canonical discovery all live modelo minimality assessment` -> `pass`
+- `S01` `by:` `Codex`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S02` `M` `dev/registry/pipeline/export_fragment_provenance.py`
+- `S02` `M` `dev/registry/compiler/tests/test_export_literal_fact.py`
+- `S02` `M` `dev/registry/tests/test_provenance_manifest.py`
+- `S02` `A` `dev/registry/compiler/tests/fixtures/fact_literal_envelope.toml`
+- `S02` `verify:` `literal-fact JSON round-trip and malformed-fact refusal tests` -> `pass`
+- `S02` `verify:` `declared provenance drift and undeclared-null absence tests` -> `pass`
+- `S02` `verify:` `Ruff format and ty owned literal-fact surfaces` -> `pass`
+- `S02` `by:` `Codex`
+- `S03` `M` `dev/registry/pipeline/render_profile.py`
+- `S03` `M` `dev/registry/pipeline/_export_tree.py`
+- `S03` `M` `dev/registry/render_profiles/modelo_360/2010/0001-numeric-representation.toml`
+- `S03` `A` `dev/registry/pipeline/tests/test_signed_singleton_render_profile.py`
+- `S03` `verify:` `canonical 360 signed-slot codec round-trips and malformed policy refusal` -> `pass`
+- `S03` `verify:` `canonical 360 2022 AD-HOC candidate check` -> `pass`
+- `S03` `verify:` `numeric render-profile focused suite` -> `pass`
+- `S03` `by:` `Codex`
+- `S05` `M` `dev/registry/registry_collapse_verification.py`
+- `S05` `M` `dev/registry/tests/test_registry_collapse_verification.py`
+- `S05` `verify:` `collapse verification focused suite 33 tests` -> `pass`
+- `S05` `verify:` `real indexed form present absent and changed comparison proof` -> `pass`
+- `S05` `verify:` `Ruff format and ty owned verifier surfaces` -> `pass`
+- `S05` `by:` `Codex`
+- `S11` `A` `dev/registry/pipeline/note_literals.py`
+- `S11` `M` `dev/registry/pipeline/_export_tree.py`
+- `S11` `M` `dev/registry/pipeline/export_fragment_provenance.py`
+- `S11` `A` `dev/registry/pipeline/tests/test_note_literal_derivation.py`
+- `S11` `verify:` `pytest -q dev/registry/pipeline/tests/test_note_literal_derivation.py` -> `pass`
+- `S11` `verify:` `Ruff format lint and ty note literal and generator surfaces` -> `pass`
+- `S11` `by:` `Codex`
+- `S12` `M` `dev/registry/compiler/record_design_workbook.py`
+- `S12` `M` `dev/registry/tests/test_record_design.py`
+- `S12` `verify:` `uv run --no-sync pytest dev/registry/tests/test_record_design.py -q -k 'lowercase_variable or malformed_composition'` -> `pass`
+- `S12` `verify:` `Scoped Ruff formatting, lint and ty checks` -> `pass`
+- `S12` `by:` `Codex`
+- `S06` `M` `dev/registry/pipeline/candidate_staging.py`
+- `S06` `M` `dev/registry/pipeline/cli.py`
+- `S06` `M` `dev/registry/pipeline/_tree_publication.py`
+- `S06` `M` `dev/registry/pipeline/tests/test_generated_tree_publication.py`
+- `S06` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S06` `verify:` `Six complete source-pinned revision transaction cases` -> `pass`
+- `S06` `verify:` `Legacy sidecar and final-validator no-recovery/construct tests` -> `pass`
+- `S06` `verify:` `Path-ID and journal detectors` -> `pass`
+- `S06` `verify:` `Ordinary orphan-recovery compatibility` -> `pass`
+- `S06` `verify:` `Final rollback/recovery rerun` -> `pass`
+- `S06` `verify:` `Scoped Ruff check, format check, ty check and diff hygiene` -> `pass`
+- `S06` `by:` `Codex`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S13` `M` `dev/registry/pipeline/_export_tree.py`
+- `S13` `M` `dev/registry/pipeline/export_fragment_provenance.py`
+- `S13` `M` `dev/registry/pipeline/render_profile_eligibility.py`
+- `S13` `A` `dev/registry/pipeline/year_constraints.py`
+- `S13` `A` `dev/registry/pipeline/tests/test_source_bounded_year.py`
+- `S13` `A` `dev/registry/mappings/modelo_216/2024/0001-records.toml`
+- `S13` `A` `dev/registry/mappings/modelo_216/2024/0002-page-01.toml`
+- `S13` `A` `dev/registry/render_profiles/modelo_216/2024/0001-numeric-representation.toml`
+- `S13` `verify:` `pytest source_bounded_year and note_literal_derivation` -> `pass`
+- `S13` `verify:` `scoped ty year and note tests` -> `pass`
+- `S13` `by:` `Codex`
+- `S08` `M` `dev/registry/pipeline/semantic_map.py`
+- `S08` `M` `dev/registry/pipeline/semantic_map_validation.py`
+- `S08` `M` `dev/registry/tests/test_semantic_map_parts.py`
+- `S08` `verify:` `pytest semantic_map_parts` -> `pass`
+- `S08` `verify:` `scoped Ruff and ty parts` -> `pass`
+- `S08` `by:` `Codex`
+- `S14` `M` `dev/registry/pipeline/_tree_validation.py`
+- `S14` `M` `dev/registry/pipeline/cli.py`
+- `S14` `A` `dev/registry/pipeline/tests/test_generated_tree_scope_context.py`
+- `S14` `verify:` `uv run --no-sync python -m pytest dev/registry/pipeline/tests/test_generated_tree_scope_context.py` -> `pass`
+- `S14` `verify:` `Scoped Ruff and format check for S14 files` -> `pass`
+- `S14` `verify:` `Scoped ty check for S14 files` -> `pass`
+- `S14` `by:` `Codex`
+- `S09` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-131-2026-late-source.toml`
+- `S09` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/manifest.json`
+- `S09` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/09-131-ejercicio-2026-actualizado-28-09-26.xlsx`
+- `S09` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/09-131-ejercicio-2026-actualizado-28-09-26.xlsx.extracted.json`
+- `S09` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/09-131-ejercicio-2026-actualizado-28-09-26.xlsx.extracted.md`
+- `S09` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`
+- `S09` `verify:` `Exact captured Modelo 131 release bytes and canonical SourceReference loading` -> `pass`
+- `S09` `verify:` `Canonical source-file verification and artifact-manifest identity checks` -> `pass`
+- `S09` `verify:` `uv run --no-sync python -m dev.corpus.sync_aeat_record_design_corpus --regenerate-aggregate` -> `pass`
+- `S09` `verify:` `Canonical source-specific corpus sidecar generation and byte currentness` -> `pass`
+- `S09` `verify:` `Scoped data-files formatting check` -> `pass`
+- `S09` `by:` `Codex`
+- `S08` `A` `dev/registry/mappings/modelo_131/2019/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2019/0002-fields.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2024/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2024/0002-fields.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2025/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2025/0002-fields.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2026/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_131/2026/0002-fields.toml`
+- `S08` `A` `dev/registry/mappings/modelo_156/2003/0001-records.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_156/2003/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/mappings/modelo_189/2021/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_189/2023/0001-records.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_189/2021/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_189/2023/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/mappings/modelo_190/2020/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_190/2023/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_190/2024/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_190/2025/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2019/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2019/0002-declarante.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2019/0003-perceptor.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2019/0004-gastos.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2023/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2023/0002-declarante.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2023/0003-perceptor.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2023/0004-gastos.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2024-early/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2024-early/0002-declarante.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2024-early/0003-perceptor.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2024-early/0004-gastos.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2025/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2025/0002-declarante.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2025/0003-perceptor.toml`
+- `S08` `A` `dev/registry/mappings/modelo_193/2025/0004-gastos.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_193/2019/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_193/2023/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_193/2024-early/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_193/2025/0001-numeric-representation.toml`
+- `S08` `verify:` `canonical source-only join 131 epochs 2019 2024 2025 2026` -> `pass`
+- `S08` `verify:` `canonical source-only render 189 epochs 2021 and 2023` -> `pass`
+- `S08` `verify:` `canonical 193 four-epoch join and profile validation` -> `pass`
+- `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/_generation.provenance.json`
+- `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/0000-export-layout.toml`
+- `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/0001-record-modelo-216-page-01.toml`
+- `S13` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/form_layouts/0001-complete-edition.toml`
+- `S13` `D` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export_layouts/0001-declarations.toml`
+- `S13` `verify:` `pipeline check 216 2024-y-siguientes aeat-dr-216-2024 2026 1T` -> `pass`
+- `S13` `verify:` `pipeline publish-target 216 2024-y-siguientes aeat-dr-216-2024 2026 1T` -> `pass`
+- `S13` `D` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S07` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S07` `verify:` `fresh target-current 115 2019-y-siguientes 2022 1T` -> `pass`
+- `S07` `verify:` `fresh target-current 117 2019-y-siguientes 2022 1T` -> `pass`
+- `S07` `verify:` `fresh target-current 216 2024-y-siguientes 2026 1T` -> `pass`
+- `S07` `verify:` `scoped bootstrap data formatting and diff whitespace` -> `pass`
+- `S07` `by:` `Codex`
+- `S09` `A` `dev/registry/mappings/modelo_126/2020/0001-records.toml`
+- `S09` `A` `dev/registry/mappings/modelo_126/2020/0002-page-01.toml`
+- `S09` `A` `dev/registry/render_profiles/modelo_126/2020/0001-numeric-representation.toml`
+- `S09` `A` `dev/registry/mappings/modelo_128/2020/0001-records.toml`
+- `S09` `A` `dev/registry/mappings/modelo_128/2020/0002-page-01.toml`
+- `S09` `A` `dev/registry/render_profiles/modelo_128/2020/0001-numeric-representation.toml`
+- `S09` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S09` `verify:` `fresh canonical source joins and exact policy validation 126 and 128 filing 2022` -> `pass`
+- `S09` `verify:` `complete source-only render 126 29 fields and 128 24 fields with 13-role envelopes` -> `pass`
+- `S09` `verify:` `six-file data quality and scoped whitespace` -> `pass`
+- `S09` `verify:` `126 and 128 exact layout construct reference counts and transport confirmation` -> `pass`
+- `S08` `A` `dev/registry/mappings/modelo_490/2021/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_490/2022/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_490/2023/0001-records.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_490/2021/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_490/2022/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_490/2023/0001-numeric-representation.toml`
+- `S08` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S08` `verify:` `canonical 490 exact source join and source-evidence policy validation all four revisions` -> `pass`
+- `S08` `verify:` `complete source-only 490 generated-tree render all four revisions` -> `pass`
+- `S08` `verify:` `canonical 490 manual layout identity transport and construct-reference count` -> `pass`
+- `S08` `verify:` `490 six-file and bootstrap data formatting with scoped diff whitespace` -> `pass`
+- `S08` `A` `dev/registry/mappings/modelo_309/2004/0001-records.toml`
+- `S08` `A` `dev/registry/mappings/modelo_322/2026/0001-records.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_322/2026/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/mappings/modelo_341/2005/0001-records.toml`
+- `S08` `A` `dev/registry/render_profiles/modelo_341/2005/0001-numeric-representation.toml`
+- `S08` `A` `dev/registry/mappings/modelo_345/2025/0001-records.toml`
+- `S08` `verify:` `Six-file data-files check` -> `pass`
+- `S08` `verify:` `Scoped diff whitespace` -> `pass`
+- `S08` `verify:` `Root canonical join 309 322 341 345` -> `pass`
+- `S08` `verify:` `Root source-evidence and exhaustive profile validation 322 341` -> `pass`
+- `S05` `M` `dev/registry/registry_collapse_authority_queries.py`
+- `S05` `verify:` `Focused existing missing changed and present form detector plus real 131 source index parity` -> `pass`
+- `S05` `verify:` `Scoped comparator Ruff formatting ty and whitespace` -> `pass`
+- `S05` `A` `.logs/audit-runs/2026-10-02/registry-health-repair/indexed-comparison-recheck-20261003.json`
+- `S05` `verify:` `retained immutable full indexed comparison: 159 revisions, 3477 temporal coordinates, 3477 capability coordinates, 723 facts, stable tool inputs` -> `pass`
+
+## Notes
+
+- `S04` 8 corrected; 292 retained with reasons. Remaining dictionary signals are reported without waivers.
+- `S01` Unchanged 2023 and 2024 filing fixtures refuse missing Lorca eligibility; those contexts are not claimed ready.
+- `S03` Named publication belongs to S07; source grade and pending-operator review claims are preserved.
+- `S05` Stable full-inventory acceptance belongs to S10.
+- `S11` Explicit operator authorization: Approve the note-constant fix. Actual full 39-field122 render passes; this does not promote its applicability grade.
+- `S12` 31 tests passed: run 20261002T203559.399686Z-pytest-65496-34803abb. Normalizes only explicit marker spelling; source bytes and capabilities are unchanged. The exact stale Modelo 216 parser cache entry was rebuilt via the production parser after direct and cached results disagreed.
+- `S06` Operator approved the publisher contract. Integrated review caught and resolved reentrant recovery during final validation and unvalidated pre-compile path identities. Transaction tests cover zero-ref success/form cutover, explicit ambiguity refusal, changed-source refusal, raced-edit preservation, rollback and committed cleanup. Path/journal detector suite: 12 tests. Ordinary compatibility suite: 6 tests. Final rollback receipt: 20261002T203611.968310Z-pytest-69568-995831dd. Whole-project type gate exited 1 with 478 diagnostics elsewhere; publisher production paths pass direct ty. Live Modelo 360 and 115 publications exit 0, with 360 fresh currentness=current. Interleaved external source/index changes are preserved; no broad index commit was made.
+- `S13` 35 selected tests passed in 13.27s, run 20261002T213659.547062Z-pytest-37528-09eec2a4. This includes all 32 source-grounded Modelo 216 body fields plus 13 envelope roles, reviewed four-digit wire rule, runtime 2023 refusal in both directions and boundary acceptance. The codec parser was split by another session while preserving the minimum-year enforcement; no external refactor was reverted. Named publication is pending full registry validity after the retained binding owner's Modelo 347 repairs. No commit made in the shared dirty worktree.
+- `S08` Partial S08 checkpoint: existing one-byte source spelling fixed and all 9 part tests passed, run 20261002T214401.370124Z-pytest-63312-06732bfd. Source-only tests use the real canonical loader/parser/inspection without claiming full registry validity. S08 remains open for the remaining input/publication corpus and source contradictions. No commit made.
+- `S14` All 4 tests pass in fresh run 20261002T214543.331444Z-pytest-86936-438aea01, including actual Modelo 123 bootstrap check. Canonically validated source scope supplies corpus context only; candidate replaces its target revision and remains sole source of output facts. Changed metadata, supporting facts and semantic-role typo remain refusals. Live named publication waits for externally owned source repairs and compiler refactor. No commit.
+- `S09` Partial S09. September 28 release SHA b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f, 183581 bytes. Source aeat-dr-131-2026-late enrolled for 2026 3T/4T; all 8 prior artifacts preserved, model manifest now 9 artifacts. Current AEAT instructions and BOE-A-2026-18828 article 1 corroborate La Palma scope. No selected revision, calculation semantics or authority grade changed; late-edition implementation remains outstanding. No commit.
+- `S08` S08 remains open: no publication of this batch. 131 has eight mapping files and exact joins; generation refuses year content Constante and empty-profile authoring remains unsupported. 156 and 193 full generation refuse unreviewed transport T choices. 190 maps are coordinate-complete, but its negative-capable Type 2 sign/magnitude contract remains uncorrected and no profiles were invented.
+- `S13` The real named export and form companion are installed by transactional publication. Final indexed authority publication remains assigned to the existing binding owner; fresh target-current is running.
+- `S13` The publication rows were reconciled to actual Git paths: retired `export_layouts/0001-declarations.toml` and `form_layouts/0001-form-layout.toml,` added generated `form_layouts/0001-complete-edition.toml.`
+- `S07` Retired only the 115, 117 and 216 bootstrap rows after named publication and fresh currentness. 123 publication refused successor inheritance and restored the previous revision; both 123 bootstrap rows remain. 122 remains pending honest static grade scope. S07 remains open.
+- `S09` Historical sources preserved, calculation grades unchanged. Exact 2020 sources are applicable to the explicit 2022 source-only reads. Enrolled bootstrap declarations each pin zero manual-layout construct references and line ending none; full publication awaits approved actual-frame source selection.
+- `S08` S08 remains open. Three source epochs serve four revisions, with 173 anchors for 2021 and 2022-1t and 415 each for 2022-2t-4t and 2023-y-siguientes, five rules per source. All four source grades remain applicability; named publication awaits honest static-grade contract scope. Historical 2021 source rendering does not claim a supported filing year or lower the 2022 support floor. No source/binding/authority edits.
+- `S08` S08 remains open. Authored 309,322,341,345 maps have accepted exact joins; profiles only322/341. No complete publication acceptance: 309 unstated eslora/MTOW wire,322 choice field0/1/2/3,341 literal-width contradiction,345 unknown component wire facts. 349 and714 remain unwritten because their current source/representation contracts cannot yield a complete safe map.
+- `S08` Exact live receipt .logs/audit-runs/2026-10-02/registry-health-repair/309-322-341-345-input-checkpoint.json; no render/named publication acceptance.
+- `S05` Approved form-parity follow-up preserves declared and effective export views independently. Run 20261002T234815.005137Z-pytest-52480-2a3ab4cf:2passed116.84s. One existing synthetic artifact fixture serializer warning concerns string `evidence_tier/kind.` Real131 regression uses canonical compiled fixture and temporary SQLite, no live publication dependency. Root full indexed comparator is still running; no complete stable wholeinventory claim.
+- `S05` This index-only rerun resolves the approved form-composition comparator defect. It does not rerun storage conversion or rewrite the earlier unstable-input verification result; export coverage remains partial.

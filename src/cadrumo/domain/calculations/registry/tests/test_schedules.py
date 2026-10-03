@@ -15,7 +15,7 @@ calculation tautologies.
 
 from __future__ import annotations
 
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -143,6 +143,13 @@ def test_resolve_profile_fact_mixes_dict_then_object_traversal() -> None:
 def test_resolve_profile_fact_missing_dict_key_raises() -> None:
     with pytest.raises(RegistryValidationError, match="profile facts missing 'age'"):
         _resolve_profile_fact({"residence_ccaa": "madrid"}, "age")
+
+
+def test_resolve_profile_fact_keeps_missing_fact_refusal_for_mapping_proxy() -> None:
+    facts = MappingProxyType({"age": 35})
+
+    with pytest.raises(RegistryValidationError, match="profile facts missing 'age'"):
+        _resolve_profile_fact(facts, "age")
 
 
 def test_resolve_profile_fact_missing_object_attribute_raises() -> None:

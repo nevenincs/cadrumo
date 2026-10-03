@@ -100,12 +100,32 @@ class PlanApprovalKind(StrEnum):
     SILENCE = "silence"
 
 
-def _require_cents(value: Decimal, *, allow_zero: bool) -> Decimal:
+def require_euro_cents(value: Decimal, *, allow_zero: bool, label: str = "amount") -> Decimal:
+    """Return a finite, non-negative (or positive) Decimal that is exact to euro cents."""
     if not value.is_finite() or value < Decimal("0") or (not allow_zero and value == Decimal("0")):
-        raise ValueError("amount must be a finite non-negative Decimal")
+        sign = "non-negative" if allow_zero else "positive"
+        raise ValueError(f"{label} must be a finite {sign} Decimal")
     if value != round_to_cents(value):
-        raise ValueError("amount must be rounded to euro cents")
+        raise ValueError(f"{label} must be rounded to euro cents")
     return value
+
+
+def require_free_depreciation_facts(
+    method: AmortizationMethod,
+    facts: tuple[object | None, ...],
+    *,
+    subject: str,
+) -> None:
+    """Refuse a record whose free-depreciation election facts disagree with its method.
+
+    Only the low-value method carries the election and annual-cap provenance, and
+    it carries every one of those facts; any other method carries none of them.
+    """
+    if method is AmortizationMethod.LOW_VALUE_FREE:
+        if any(value is None for value in facts):
+            raise ValueError(f"free-depreciation {subject} requires election and annual-cap provenance")
+    elif any(value is not None for value in facts):
+        raise ValueError(f"only a low-value {subject} carries free-depreciation election facts")
 
 
 class PlanAnnualAmount(BaseModel):
@@ -119,7 +139,7 @@ class PlanAnnualAmount(BaseModel):
     @field_validator("amount")
     @classmethod
     def _require_positive_cents(cls, value: Decimal) -> Decimal:
-        return _require_cents(value, allow_zero=False)
+        return require_euro_cents(value, allow_zero=False)
 
 
 class ApprovedAmortizationPlan(BaseModel):
@@ -175,7 +195,7 @@ class SmallEnterpriseEvidence(BaseModel):
     @field_validator("prior_period_net_turnover")
     @classmethod
     def _require_cents_turnover(cls, value: Decimal) -> Decimal:
-        return _require_cents(value, allow_zero=True)
+        return require_euro_cents(value, allow_zero=True)
 
 
 class LowValueElection(BaseModel):
@@ -190,7 +210,7 @@ class LowValueElection(BaseModel):
     @field_validator("unit_acquisition_value")
     @classmethod
     def _require_positive_cents(cls, value: Decimal) -> Decimal:
-        return _require_cents(value, allow_zero=False)
+        return require_euro_cents(value, allow_zero=False)
 
 
 class ChargingInfrastructureEvidence(BaseModel):

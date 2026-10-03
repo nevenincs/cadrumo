@@ -53,7 +53,7 @@ def _calculation_owner_observation(*, ports: CalculationActionPorts) -> tuple[st
     validated against the work-unit catalogue that owns it, so a write to
     either between two reads makes the revision a stitch across two states.
     """
-    _calculations, calculation_revision = ports.calculation_repository.load_revisioned()
+    _calculations, calculation_revision = ports.calculation_repository.load_revisioned(operation=ports.operation)
     _work_units, work_unit_revision = ports.work_unit_repository.load_revisioned()
     return (calculation_revision, work_unit_revision)
 

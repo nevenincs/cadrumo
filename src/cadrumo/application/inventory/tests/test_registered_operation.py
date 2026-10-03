@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
@@ -23,10 +24,12 @@ from ....domain.contribuyente.inventory.records import (
     ValuationMethod,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
-from ...operations.models import OperationIdentity, OperationTerminalReceipt
+from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
+from ...user_profile.access_contracts import AccessDenialCode
+from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import InventoryServiceInputError
 from ..ports import InventoryServicePorts
 from ..registered_operation import (
@@ -56,6 +59,7 @@ from .registered_operation_conformance_support import build_inventory_conformanc
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+_OTHER_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000bb")
 
 
 def _ledger_with_private_evidence() -> InventoryLedger:
@@ -253,6 +257,10 @@ def test_inventory_registry_binds_all_five_closed_secure_request_and_result_sche
 class _Events:
     def __init__(self) -> None:
         self.effects: list[OperationEffect] = []
+        self.phases: list[str] = []
+
+    async def phase(self, phase: str) -> None:
+        self.phases.append(phase)
 
     async def effect(self, effect: OperationEffect) -> None:
         self.effects.append(effect)
@@ -293,6 +301,82 @@ class _Context:
         self.events = _Events()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation)
+
+
+@pytest.mark.parametrize(
+    ("mismatch", "request_definition_id"),
+    [
+        ("request_subject", INVENTORY_CREATE_OPERATION_DEFINITION_ID),
+        ("context_definition", INVENTORY_CREATE_OPERATION_DEFINITION_ID),
+        ("context_subject", INVENTORY_CREATE_OPERATION_DEFINITION_ID),
+        ("active_profile", INVENTORY_CREATE_OPERATION_DEFINITION_ID),
+        ("expected_definition", "ledger.inventory.other"),
+    ],
+)
+def test_profile_mismatch_refuses_before_phase_or_service_factory(
+    mismatch: str,
+    request_definition_id: str,
+) -> None:
+    request_subject = (
+        profile_operation_subject(str(_OTHER_PROFILE))
+        if mismatch == "request_subject"
+        else profile_operation_subject(str(_PROFILE))
+    )
+    request = OperationRequest[BaseModel](
+        definition_id=request_definition_id,
+        subject_ref=request_subject,
+        payload=InventoryCreateRequest(
+            profile_id=_PROFILE,
+            actividad_id="act-1",
+            year=2026,
+            valuation_method="fifo",
+        ),
+    )
+    context = _Context()
+    if mismatch == "context_definition":
+        context.identity = OperationIdentity(
+            operation_id="c" * 64,
+            definition_id="ledger.inventory.other",
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+        )
+    elif mismatch == "expected_definition":
+        context.identity = OperationIdentity(
+            operation_id="c" * 64,
+            definition_id=request_definition_id,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+        )
+    elif mismatch == "context_subject":
+        context.identity = OperationIdentity(
+            operation_id="c" * 64,
+            definition_id=INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_OTHER_PROFILE)),
+        )
+
+    factory_bucket_ids: list[str] = []
+
+    def unused_factory(*, bucket_id: str) -> InventoryServicePorts:
+        factory_bucket_ids.append(bucket_id)
+        raise AssertionError("profile mismatch must be refused before service construction")
+
+    executor = InventoryOperationExecutor(
+        unused_factory,
+        definition_id=INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    )
+    active_profile = (
+        None
+        if mismatch == "expected_definition"
+        else str(_OTHER_PROFILE)
+        if mismatch == "active_profile"
+        else str(_PROFILE)
+    )
+
+    with override_settings(cadrumo_active_profile=active_profile), pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert context.events.phases == []
+    assert context.events.effects == []
+    assert factory_bucket_ids == []
 
 
 def test_unclassified_validation_error_keeps_mutation_effect_unknown() -> None:

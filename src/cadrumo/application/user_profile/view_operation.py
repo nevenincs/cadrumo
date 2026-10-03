@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal, Self, TypedDict, cast
+from typing import Annotated, Literal, Self, cast
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, ValidationError, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.config import override_settings
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.errors.severity import BaseSeverity
 from ...core.external_constants import OutputLanguage
@@ -22,22 +21,10 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import ProfileSetupState
-from ..modelo.profile_readiness_gate import (
-    modelo_work_profile_baseline_missing_paths,
-    modelo_work_profile_baseline_validation_issues,
-)
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from ..wizard.catalogue import build_setup_flow
-from ..wizard.persistence import project_answers
-from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
-from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
-from .commands import ProfileValidationIssue
-from .overview import ProfileFieldView, build_profile_overview
-from .profile_record_repository import ProfileRecordRepository
-from .projections import record_to_path_values
-from .validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
+from ..workflow.profile_health import ProfileHealthStatus
+from .overview import ProfileFieldView
 
 PROFILE_VIEW_OPERATION_DEFINITION_ID = "user-profile.view"
 PROFILE_VIEW_PHASES = ("user-profile.view.read", "user-profile.view.project")
@@ -46,17 +33,6 @@ PROFILE_VIEW_MAX_ITEMS = 32
 # Keep generous space beneath that frame's 64 KiB ceiling for both envelopes.
 PROFILE_VIEW_MAX_RESULT_BYTES = 20_000
 _STATUS_FACT_PATHS = frozenset({"identity.tax_id", "activities.description", "iva.regime", "tax_residence.ccaa"})
-
-
-class _ProfileViewCommon(TypedDict):
-    profile_id: UUID
-    page_kind: ProfileViewPageKind
-    record_revision: int
-    content_digest: ContentDigest
-    setup_state: ProfileSetupState
-    schema_version: int
-    valid: bool
-    cursor: int
 
 
 class ProfileViewPageKind(StrEnum):
@@ -342,6 +318,46 @@ class ProfileViewRefusalCode(StrEnum):
     PROJECTION_UNAVAILABLE = "projection_unavailable"
 
 
+def _validate_refused_page(result: ProfileViewOperationResult) -> None:
+    if result.refusal_code is None or result.items or result.next_cursor is not None:
+        raise ValueError("refused profile view cannot carry page items or completion")
+
+
+def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
+    allowed = {
+        ProfileViewPageKind.FACTS: {"fact"},
+        ProfileViewPageKind.ISSUES: {"issue"},
+        ProfileViewPageKind.READINESS_ISSUES: {"issue"},
+        ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},
+        ProfileViewPageKind.STATUS: {"status"},
+    }[result.page_kind]
+    if any(item.kind not in allowed for item in result.items):
+        raise ValueError("profile view page contains another stream's item")
+
+
+def _validate_status_page(result: ProfileViewOperationResult) -> None:
+    if result.total_items != 1 or result.cursor != 0 or len(result.items) != 1 or result.next_cursor is not None:
+        raise ValueError("profile status must be one complete item")
+    if any(
+        not isinstance(item, ProfileViewStatusItem) or item.health.active_profile != str(result.profile_id)
+        for item in result.items
+    ):
+        raise ValueError("profile status health must match the result profile")
+
+
+def _validate_successful_page(result: ProfileViewOperationResult) -> None:
+    if result.refusal_code is not None or result.cursor + len(result.items) > result.total_items:
+        raise ValueError("invalid profile view page")
+    if result.cursor < result.total_items and not result.items:
+        raise ValueError("profile view cannot claim progress without an item")
+    expected_next = result.cursor + len(result.items)
+    if result.next_cursor != (expected_next if expected_next < result.total_items else None):
+        raise ValueError("profile view continuation does not match page items")
+    _validate_page_item_kinds(result)
+    if result.page_kind is ProfileViewPageKind.STATUS:
+        _validate_status_page(result)
+
+
 class ProfileViewOperationResult(BaseModel):
     """An encrypted page or an explicit refusal; neither claims a profile effect."""
 
@@ -365,34 +381,9 @@ class ProfileViewOperationResult(BaseModel):
     @pydantic_validation_boundary
     def _validate_page(self) -> Self:
         if self.outcome == "refused":
-            if self.refusal_code is None or self.items or self.next_cursor is not None:
-                raise ValueError("refused profile view cannot carry page items or completion")
+            _validate_refused_page(self)
         else:
-            if self.refusal_code is not None or self.cursor + len(self.items) > self.total_items:
-                raise ValueError("invalid profile view page")
-            if self.cursor < self.total_items and not self.items:
-                raise ValueError("profile view cannot claim progress without an item")
-            expected_next = self.cursor + len(self.items)
-            if self.next_cursor != (expected_next if expected_next < self.total_items else None):
-                raise ValueError("profile view continuation does not match page items")
-            allowed = {
-                ProfileViewPageKind.FACTS: {"fact"},
-                ProfileViewPageKind.ISSUES: {"issue"},
-                ProfileViewPageKind.READINESS_ISSUES: {"issue"},
-                ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},
-                ProfileViewPageKind.STATUS: {"status"},
-            }[self.page_kind]
-            if any(item.kind not in allowed for item in self.items):
-                raise ValueError("profile view page contains another stream's item")
-            if self.page_kind is ProfileViewPageKind.STATUS and (
-                self.total_items != 1 or self.cursor != 0 or len(self.items) != 1 or self.next_cursor is not None
-            ):
-                raise ValueError("profile status must be one complete item")
-            if self.page_kind is ProfileViewPageKind.STATUS and any(
-                not isinstance(item, ProfileViewStatusItem) or item.health.active_profile != str(self.profile_id)
-                for item in self.items
-            ):
-                raise ValueError("profile status health must match the result profile")
+            _validate_successful_page(self)
         return self
 
 
@@ -413,217 +404,3 @@ def project_profile_view_result(result: BaseModel, receipt: object, /) -> BaseMo
     ):
         raise ValueError("profile view result does not match its settled subject")
     return ProfileViewOperationProjection.model_validate(result.model_dump(mode="python"))
-
-
-def read_profile_view_page(
-    request: ProfileViewOperationRequest, *, authority_operation: PinnedAuthorityOperation
-) -> ProfileViewOperationResult:
-    """Build one bounded page from the exact current encrypted record."""
-    profile_decode_context = authority_operation.profile_decode_context()
-    record = ProfileRecordRepository.for_current_session(
-        str(request.profile_id), profile_decode_context=profile_decode_context
-    ).load(str(request.profile_id))
-    with override_settings(cadrumo_output_language=request.output_language.value):
-        report = ProfileValidationService(schema=profile_decode_context.schema).validate_record(record)
-        require_complete = record.setup_state is ProfileSetupState.COMPLETE
-        valid = not any(
-            issue.severity.value == "error" and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
-            for issue in report.issues
-        )
-        common: _ProfileViewCommon = {
-            "profile_id": request.profile_id,
-            "page_kind": request.page_kind,
-            "record_revision": record.record_revision,
-            "content_digest": record.content_digest,
-            "setup_state": record.setup_state,
-            "schema_version": report.schema_version,
-            "valid": valid,
-            "cursor": request.cursor,
-        }
-        if request.expected_revision is not None and (
-            request.expected_revision != record.record_revision
-            or request.expected_content_digest != record.content_digest
-        ):
-            return ProfileViewOperationResult(
-                **common,
-                outcome="refused",
-                refusal_code=ProfileViewRefusalCode.STALE_REVISION,
-                total_items=0,
-            )
-        if request.page_kind is ProfileViewPageKind.FACTS:
-            source: tuple[ProfileViewItem, ...] = tuple(
-                ProfileViewFactItem(path=path, value=str(value))
-                for path, value in sorted(record_to_path_values(record).items())
-            )
-        elif request.page_kind in {ProfileViewPageKind.ISSUES, ProfileViewPageKind.READINESS_ISSUES}:
-            issues = report.issues
-            if request.page_kind is ProfileViewPageKind.READINESS_ISSUES:
-                seen: set[tuple[str, str | None]] = set()
-                distinct: list[ProfileValidationIssue] = []
-                for issue in (*report.issues, *modelo_work_profile_baseline_validation_issues(record)):
-                    key = (issue.code, issue.path)
-                    if key not in seen:
-                        seen.add(key)
-                        distinct.append(issue)
-                issues = tuple(distinct)
-            source = tuple(
-                ProfileViewIssueItem(
-                    severity=issue.severity,
-                    code=issue.code,
-                    path=issue.path,
-                    message=issue.message,
-                )
-                for issue in issues
-            )
-        elif request.page_kind is ProfileViewPageKind.STATUS:
-            committed = read_profile_bucket_by_id(str(request.profile_id))
-            if committed is None or committed.bucket_id != str(request.profile_id):
-                return ProfileViewOperationResult(
-                    **common,
-                    outcome="refused",
-                    refusal_code=ProfileViewRefusalCode.PROJECTION_UNAVAILABLE,
-                    total_items=0,
-                )
-            values = record_to_path_values(record)
-            health = assess_profile_record_health(
-                record,
-                source="env_override",
-                label=committed.label,
-                operation=authority_operation,
-            )
-            if health.active_profile != str(request.profile_id):
-                return ProfileViewOperationResult(
-                    **common,
-                    outcome="refused",
-                    refusal_code=ProfileViewRefusalCode.PROJECTION_UNAVAILABLE,
-                    total_items=0,
-                )
-            if health.status is ProfileHealthStatus.READY:
-                status = ProfileHealthStatus.READY
-            elif health.status is ProfileHealthStatus.INCOMPLETE:
-                status = ProfileHealthStatus.INCOMPLETE
-            else:
-                return ProfileViewOperationResult(
-                    **common,
-                    outcome="refused",
-                    refusal_code=ProfileViewRefusalCode.PROJECTION_UNAVAILABLE,
-                    total_items=0,
-                )
-            try:
-                public_verdict = (
-                    None
-                    if health.precondition_verdict is None
-                    else ProfileViewPreconditionVerdict.from_verdict(health.precondition_verdict)
-                )
-            except (ValueError, ValidationError):
-                return ProfileViewOperationResult(
-                    **common,
-                    outcome="refused",
-                    refusal_code=ProfileViewRefusalCode.PROJECTION_UNAVAILABLE,
-                    total_items=0,
-                )
-            baseline_ready = not modelo_work_profile_baseline_missing_paths(record)
-            projection_valid = False
-            if health.status is ProfileHealthStatus.READY and baseline_ready:
-                try:
-                    project_answers(build_setup_flow(authority_operation), values)
-                except ValidationError:
-                    pass
-                else:
-                    projection_valid = True
-            source = (
-                ProfileViewStatusItem(
-                    display_name=committed.label,
-                    health=ProfileViewHealth(
-                        active_profile=str(request.profile_id),
-                        status=status,
-                        missing_required=health.missing_required,
-                        precondition_verdict=public_verdict,
-                    ),
-                    baseline_ready=baseline_ready,
-                    projection_valid=projection_valid,
-                    facts=tuple(
-                        ProfileViewFactItem(path=path, value=str(values[path]))
-                        for path in sorted(_STATUS_FACT_PATHS)
-                        if path in values
-                    ),
-                ),
-            )
-        else:
-            overview = build_profile_overview(record, schema=profile_decode_context.schema)
-            if any(notice.action is not None for notice in overview.notices):
-                return ProfileViewOperationResult(
-                    **common,
-                    outcome="refused",
-                    refusal_code=ProfileViewRefusalCode.PROJECTION_UNAVAILABLE,
-                    total_items=0,
-                )
-            source = (
-                tuple(
-                    item
-                    for section in overview.sections
-                    for item in (
-                        ProfileViewSectionItem(
-                            key=section.key,
-                            title=section.title,
-                            summary=section.summary,
-                            repeatable=section.repeatable,
-                        ),
-                        *(ProfileViewFieldItem(section_key=section.key, field=field) for field in section.fields),
-                    )
-                )
-                + tuple(ProfileViewMissingItem(path=path) for path in overview.missing_required)
-                + tuple(
-                    ProfileViewNoticeItem(
-                        severity=notice.severity,
-                        code=notice.code,
-                        message=notice.message,
-                        context=(
-                            None
-                            if notice.context is None
-                            else tuple(
-                                ProfileViewNoticeContextEntry(key=key, value=value)
-                                for key, value in sorted(notice.context.items())
-                            )
-                        ),
-                    )
-                    for notice in overview.notices
-                )
-            )
-        if request.cursor > len(source):
-            # An out-of-range cursor cannot masquerade as a completed page.
-            return ProfileViewOperationResult(
-                **common,
-                outcome="refused",
-                refusal_code=ProfileViewRefusalCode.STALE_REVISION,
-                total_items=len(source),
-            )
-        selected: list[ProfileViewItem] = []
-        for item in source[request.cursor : request.cursor + request.limit]:
-            candidate = (*selected, item)
-            next_cursor = request.cursor + len(candidate)
-            page = ProfileViewOperationResult(
-                **common,
-                outcome="page",
-                total_items=len(source),
-                items=candidate,
-                next_cursor=next_cursor if next_cursor < len(source) else None,
-            )
-            if len(page.model_dump_json().encode("utf-8")) > PROFILE_VIEW_MAX_RESULT_BYTES:
-                if not selected:
-                    return ProfileViewOperationResult(
-                        **common,
-                        outcome="refused",
-                        refusal_code=ProfileViewRefusalCode.ITEM_TOO_LARGE,
-                        total_items=len(source),
-                    )
-                break
-            selected.append(item)
-        next_cursor = request.cursor + len(selected)
-        return ProfileViewOperationResult(
-            **common,
-            outcome="page",
-            total_items=len(source),
-            items=tuple(selected),
-            next_cursor=next_cursor if next_cursor < len(source) else None,
-        )

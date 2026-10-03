@@ -20,7 +20,8 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from dev._paths import REPO_ROOT
 
-from ..casilla_reference import CasillaReferenceResult, render_casilla_reference
+from ..casilla_reference import render_casilla_reference
+from ..casilla_reference_models import CasillaReferenceResult
 from ..terminology.casilla_anchor import casilla_page_anchor, casilla_reference_target
 from ..terminology.casilla_projection import CasillaProjectionStats, project_casilla_search_records
 from ..terminology.coverage_report import CasillaCoverageKind, compute_casilla_coverage_census
@@ -34,10 +35,6 @@ _REPO_ROOT = REPO_ROOT
 _M130_CASILLA_15_SOURCE = (
     "src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml"
 )
-#: Inclusive source lines of the casilla-15 declaration inside the consolidated
-#: declarations file. The resolver reads the file itself to decide which
-#: declaration a hit overlaps, so the span only has to fall inside that one.
-_M130_CASILLA_15_LINES = (150, 157)
 
 
 from .registry_authority_fixture import authority
@@ -124,11 +121,16 @@ def test_m130_casilla_15_rag_section_resolves_to_one_canonical_target(
 ) -> None:
     """The real registry section locator resolves the named casilla only."""
     resolver = TargetResolver(authority)
+    source_lines = (_REPO_ROOT / _M130_CASILLA_15_SOURCE).read_text(encoding="utf-8").splitlines()
+    declaration = f'id = "{m130_casilla_15.casilla_id}"'
+    declaration_lines = [index for index, line in enumerate(source_lines, start=1) if line.strip() == declaration]
+    assert len(declaration_lines) == 1, "the live source must declare exactly one casilla-15 section"
+    (declaration_line,) = declaration_lines
     result = resolver.resolve(
         ChunkHit(
             path=_M130_CASILLA_15_SOURCE,
-            line_start=_M130_CASILLA_15_LINES[0],
-            line_end=_M130_CASILLA_15_LINES[1],
+            line_start=declaration_line,
+            line_end=declaration_line,
             score=0.97,
         )
     )

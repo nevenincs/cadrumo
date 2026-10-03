@@ -5,16 +5,17 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
+from uuid import UUID
 
 import typer
 
-from ...application.ledger.add_operation import (
+from ...application.ledger.ledger_add_contracts import (
     LEDGER_ADD_OPERATION_DEFINITION_ID,
     LEDGER_ADD_VALIDATION_REFUSAL_CODE,
     LedgerAddOperationResult,
     LedgerAddRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
+from ...application.ledger.transaction_projection import LedgerTransactionProjection
 from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -23,8 +24,76 @@ from ...core.prorrata_exclusions import Art104TresExclusion
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from .common import bad
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
+
+
+def handle_add_validation_refusal(
+    completed: RegisteredOperationCompletion[LedgerAddOperationResult], profile_id: UUID
+) -> None:
+    """Handle add validation refusal."""
+    projection = completed.projection
+    if projection.outcome == "validation_error":
+        invalid_refusal = (
+            invalid_add_refusal_receipt(completed, profile_id)
+            or invalid_add_refusal_shape(projection)
+            or invalid_add_refusal_advisories(projection)
+        )
+        if invalid_refusal:
+            raise invalid_completion_error(completed)
+        if projection.validation_code == "source_jurisdiction_required_irnr":
+            raise bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
+        if projection.validation_code == "source_jurisdiction_required_beckham":
+            raise bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
+        detail = "; ".join(projection.validation_messages)
+        raise bad(tr("cli.ledger.errors.command_input_invalid", details=detail))
+
+
+def require_add_success_correlation(
+    completed: RegisteredOperationCompletion[LedgerAddOperationResult],
+    profile_id: UUID,
+    transaction: LedgerTransactionProjection,
+    booked_date: str,
+    value_date: str | None,
+    currency: str,
+    amount: str,
+    direction: TransactionDirection,
+    description: str,
+    counterparty: str | None,
+    business_classification: BusinessClassification,
+    input_classification: str | None,
+    prorrata_sector: str | None,
+    business_pct: str | None,
+) -> None:
+    """Require add success correlation."""
+    projection = completed.projection
+    expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
+    try:
+        expected_booked_date = date.fromisoformat(booked_date.strip()).isoformat()
+        expected_date = date.fromisoformat((value_date or booked_date).strip()).isoformat()
+        expected_currency = normalise_iso_4217_currency(currency)
+        expected_amount = Decimal(amount.strip())
+    except (ValueError, ArithmeticError):
+        expected_booked_date = ""
+        expected_date = ""
+        expected_currency = ""
+        expected_amount = Decimal("NaN")
+    invalid = (
+        invalid_add_success_receipt(completed, profile_id, expected_effect)
+        or invalid_added_transaction_amount(
+            transaction, expected_booked_date, expected_date, expected_amount, expected_currency
+        )
+        or invalid_added_transaction_identity(
+            transaction, direction, description, counterparty, business_classification
+        )
+        or invalid_add_success_advisories(projection, input_classification, prorrata_sector)
+        or invalid_added_business_fraction(business_pct, business_classification, transaction)
+        or (len(projection.bucket_event_ids) > 1)
+    )
+    if invalid:
+        raise invalid_completion_error(completed)
 
 
 def run_ledger_add(
@@ -110,88 +179,27 @@ def run_ledger_add(
         allow_refusal_detail=True,
     )
     projection = completed.projection
-    if projection.outcome == "validation_error":
-        invalid_refusal = (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.refusal_code != LEDGER_ADD_VALIDATION_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-            or projection.profile_id != client.profile_id
-            or projection.transaction is not None
-            or projection.bucket_event_ids
-            or projection.validation_code is None
-            or not projection.validation_messages
-            or projection.advisory_input_classification is not None
-            or projection.advisory_input_classification_inert
-            or projection.advisory_sector_id is not None
-            or projection.advisory_sector_unmatched
-        )
-        if invalid_refusal:
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=completed.terminal_condition,
-                effect=completed.effect,
-                refusal_code=completed.refusal_code,
-            )
-        if projection.validation_code == "source_jurisdiction_required_irnr":
-            raise bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
-        if projection.validation_code == "source_jurisdiction_required_beckham":
-            raise bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
-        detail = "; ".join(projection.validation_messages)
-        raise bad(tr("cli.ledger.errors.command_input_invalid", details=detail))
+    handle_add_validation_refusal(completed, client.profile_id)
 
     transaction = projection.transaction
     if transaction is None or projection.review_status is None:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
-    expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
-    try:
-        expected_booked_date = date.fromisoformat(booked_date.strip()).isoformat()
-        expected_date = date.fromisoformat((value_date or booked_date).strip()).isoformat()
-        expected_currency = normalise_iso_4217_currency(currency)
-        expected_amount = Decimal(amount.strip())
-    except (ValueError, ArithmeticError):
-        expected_booked_date = ""
-        expected_date = ""
-        expected_currency = ""
-        expected_amount = Decimal("NaN")
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or projection.profile_id != client.profile_id
-        or transaction.booked_date != expected_booked_date
-        or transaction.date != expected_date
-        or _decimal_projection(transaction.amount) != expected_amount
-        or transaction.currency != expected_currency
-        or transaction.direction != direction.value
-        or transaction.description != description.strip()
-        or transaction.counterparty != (counterparty or "").strip()
-        or transaction.business_classification != business_classification.value
-        or projection.advisory_input_classification != input_classification
-        or projection.advisory_sector_id != prorrata_sector
-        or (projection.advisory_input_classification_inert and input_classification is None)
-        or (projection.advisory_sector_unmatched and prorrata_sector is None)
-        or (
-            business_pct is not None
-            and business_classification is BusinessClassification.MIXED
-            and _decimal_projection(transaction.business_pct) != Decimal(business_pct.strip())
-        )
-        or len(projection.bucket_event_ids) > 1
+        raise invalid_completion_error(completed)
+    require_add_success_correlation(
+        completed,
+        client.profile_id,
+        transaction,
+        booked_date,
+        value_date,
+        currency,
+        amount,
+        direction,
+        description,
+        counterparty,
+        business_classification,
+        input_classification,
+        prorrata_sector,
+        business_pct,
     )
-    if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
     return projection
 
 
@@ -211,3 +219,106 @@ def _decimal_projection(value: str | None) -> Decimal | None:
 
 
 __all__ = ["run_ledger_add"]
+
+
+def invalid_add_refusal_receipt(
+    completed: RegisteredOperationCompletion[LedgerAddOperationResult], profile_id: UUID
+) -> bool:
+    """Invalid add refusal receipt."""
+    projection = completed.projection
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.refusal_code != LEDGER_ADD_VALIDATION_REFUSAL_CODE
+        or completed.effect is not OperationEffect.NONE
+        or (projection.profile_id != profile_id)
+    )
+
+
+def invalid_add_refusal_shape(projection: LedgerAddOperationResult) -> bool:
+    """Invalid add refusal shape."""
+    return bool(
+        projection.transaction is not None
+        or projection.bucket_event_ids
+        or projection.validation_code is None
+        or (not projection.validation_messages)
+    )
+
+
+def invalid_add_refusal_advisories(projection: LedgerAddOperationResult) -> bool:
+    """Invalid add refusal advisories."""
+    return (
+        projection.advisory_input_classification is not None
+        or projection.advisory_input_classification_inert
+        or projection.advisory_sector_id is not None
+        or projection.advisory_sector_unmatched
+    )
+
+
+def invalid_add_success_receipt(
+    completed: RegisteredOperationCompletion[LedgerAddOperationResult],
+    profile_id: UUID,
+    expected_effect: OperationEffect,
+) -> bool:
+    """Invalid add success receipt."""
+    projection = completed.projection
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or (projection.profile_id != profile_id)
+    )
+
+
+def invalid_added_transaction_amount(
+    transaction: LedgerTransactionProjection,
+    expected_booked_date: str,
+    expected_date: str,
+    expected_amount: Decimal,
+    expected_currency: str,
+) -> bool:
+    """Invalid added transaction amount."""
+    return (
+        transaction.booked_date != expected_booked_date
+        or transaction.date != expected_date
+        or _decimal_projection(transaction.amount) != expected_amount
+        or (transaction.currency != expected_currency)
+    )
+
+
+def invalid_added_transaction_identity(
+    transaction: LedgerTransactionProjection,
+    direction: TransactionDirection,
+    description: str,
+    counterparty: str | None,
+    business_classification: BusinessClassification,
+) -> bool:
+    """Invalid added transaction identity."""
+    return (
+        transaction.direction != direction.value
+        or transaction.description != description.strip()
+        or transaction.counterparty != (counterparty or "").strip()
+        or (transaction.business_classification != business_classification.value)
+    )
+
+
+def invalid_add_success_advisories(
+    projection: LedgerAddOperationResult, input_classification: str | None, prorrata_sector: str | None
+) -> bool:
+    """Invalid add success advisories."""
+    return (
+        projection.advisory_input_classification != input_classification
+        or projection.advisory_sector_id != prorrata_sector
+        or (projection.advisory_input_classification_inert and input_classification is None)
+        or (projection.advisory_sector_unmatched and prorrata_sector is None)
+    )
+
+
+def invalid_added_business_fraction(
+    business_pct: str | None, business_classification: BusinessClassification, transaction: LedgerTransactionProjection
+) -> bool:
+    """Invalid added business fraction."""
+    return (
+        business_pct is not None
+        and business_classification is BusinessClassification.MIXED
+        and (_decimal_projection(transaction.business_pct) != Decimal(business_pct.strip()))
+    )

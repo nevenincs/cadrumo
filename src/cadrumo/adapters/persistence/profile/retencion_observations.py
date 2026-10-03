@@ -28,7 +28,7 @@ from ....core.period import Period
 from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
-from ..storage.errors import StorageError
+from ..storage.errors import STORAGE_OPERATION_FAILURES
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
@@ -40,7 +40,7 @@ def _translate_storage_failure[ResultT](operation: str, action: Callable[[], Res
         return action()
     except RetencionObservationPersistenceError:
         raise
-    except (StorageError, OSError, TypeError, KeyError) as exc:
+    except (*STORAGE_OPERATION_FAILURES, TypeError, KeyError) as exc:
         raise RetencionObservationPersistenceError(operation) from exc
 
 

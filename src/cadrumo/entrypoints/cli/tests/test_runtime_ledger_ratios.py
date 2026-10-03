@@ -15,7 +15,7 @@ from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import runtime_ledger_ratios as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

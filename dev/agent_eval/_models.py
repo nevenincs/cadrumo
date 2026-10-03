@@ -256,15 +256,22 @@ class GoldenResult(BaseModel):
     def passed(self) -> bool:
         """True when every assertion dimension held and no failures were recorded."""
         return (
+            self._workflow_dimensions_passed
+            and not any(check.blocks for check in self.narration_faithfulness_checks)
+            and not any(not check.matches for check in self.expected_confirmation_tiers)
+            and not self.failures
+        )
+
+    @property
+    def _workflow_dimensions_passed(self) -> bool:
+        """Require the ordered workflow, skill, and evidence dimensions first."""
+        return (
             self.trajectory_resolves
             and self.lifecycle_ordered
             and self.skill_consistent
             and self.provenance_present
             and self.response_provenance_present
             and self.verification_grounded
-            and not any(check.blocks for check in self.narration_faithfulness_checks)
-            and not any(not check.matches for check in self.expected_confirmation_tiers)
-            and not self.failures
         )
 
 

@@ -28,9 +28,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.schema import require_eu_member_state
 
@@ -127,7 +127,7 @@ def test_a_missing_authority_scope_is_refused_rather_than_read_as_outside_the_un
     """
     transaction = _transaction(counterparty_country="DE")
 
-    with pytest.raises(RegistryValidationError, match="requires an explicit authority operation or scope"):
+    with pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"):
         contextvars.Context().run(lambda: transaction.counterparty_eu_member_state)
 
 

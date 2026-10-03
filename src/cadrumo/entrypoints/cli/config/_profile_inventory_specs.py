@@ -4,18 +4,17 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ..command_spec import (
-    CommandSpec,
+from .._command_parameter_contracts import OptionSpec
+from .._command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from ..command_spec import CommandSpec, InvocationSpec
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))

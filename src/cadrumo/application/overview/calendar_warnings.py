@@ -28,6 +28,9 @@ from typing import TYPE_CHECKING
 from ...core.modelo import Modelo as _Modelo
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability import (
+    ModeloApplicabilityRule,
+)
+from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
 from ...domain.calculations.registry.applicability import (
@@ -35,7 +38,7 @@ from ...domain.calculations.registry.applicability import (
 )
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
-from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
+from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token
 from ...domain.deadlines.models import IVARegime as _IVARegime
 from ..operator_actions.models import DeclaredNextAction
 from .calendar_models import (
@@ -218,7 +221,68 @@ def _derive_gating_fields(
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelos: Iterable[str] | None = None,
 ) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
-    windows_by_modelo: Iterable[tuple[str, Iterable[DeadlineWindowDefinition]]]
+    key_to_modelos: dict[str, set[str]] = {}
+    key_to_meta: dict[str, tuple[str, str]] = {}
+    for rule in _iter_modelo_applicability_rules(operation=operation):
+        _record_applicability_gating_fields(
+            rule=rule,
+            operation=operation,
+            key_to_modelos=key_to_modelos,
+            key_to_meta=key_to_meta,
+        )
+    _record_deadline_gating_fields(
+        operation=operation,
+        revision_inventory=revision_inventory,
+        modelos=modelos,
+        key_to_modelos=key_to_modelos,
+        key_to_meta=key_to_meta,
+    )
+    return _freeze_gating_fields(key_to_modelos=key_to_modelos, key_to_meta=key_to_meta)
+
+
+def _record_applicability_gating_fields(
+    *,
+    rule: ModeloApplicabilityRule,
+    operation: PinnedAuthorityOperation,
+    key_to_modelos: dict[str, set[str]],
+    key_to_meta: dict[str, tuple[str, str]],
+) -> None:
+    if rule.required_payer_fact is not None:
+        for profile_key in payer_fact_profile_keys(rule.required_payer_fact):
+            _record_gating_field(
+                profile_key=profile_key,
+                modelo=rule.modelo,
+                key_to_modelos=key_to_modelos,
+                key_to_meta=key_to_meta,
+            )
+    if len(rule.required_estimation_regimes) == 1:
+        regime = next(iter(rule.required_estimation_regimes))
+        estimation_profile_key = _estimation_regime_profile_key(operation).get(regime)
+        if estimation_profile_key is not None:
+            profile_key, _locale_key = estimation_profile_key
+            _record_gating_field(
+                profile_key=profile_key,
+                modelo=rule.modelo,
+                key_to_modelos=key_to_modelos,
+                key_to_meta=key_to_meta,
+            )
+    if rule.applicable_iva_regimes:
+        _record_gating_field(
+            profile_key="iva.regime",
+            modelo=rule.modelo,
+            key_to_modelos=key_to_modelos,
+            key_to_meta=key_to_meta,
+        )
+
+
+def _record_deadline_gating_fields(
+    *,
+    operation: PinnedAuthorityOperation,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None,
+    modelos: Iterable[str] | None,
+    key_to_modelos: dict[str, set[str]],
+    key_to_meta: dict[str, tuple[str, str]],
+) -> None:
     if revision_inventory is None:
         windows_by_modelo = _operation_deadline_windows(
             operation,
@@ -226,38 +290,6 @@ def _derive_gating_fields(
         )
     else:
         windows_by_modelo = ((modelo, revision.deadline_windows) for modelo, revision in revision_inventory)
-    key_to_modelos: dict[str, set[str]] = {}
-    key_to_meta: dict[str, tuple[str, str]] = {}
-
-    for rule in _iter_modelo_applicability_rules(operation=operation):
-        if rule.required_payer_fact is not None:
-            for profile_key in payer_fact_profile_keys(rule.required_payer_fact):
-                _record_gating_field(
-                    profile_key=profile_key,
-                    modelo=rule.modelo,
-                    key_to_modelos=key_to_modelos,
-                    key_to_meta=key_to_meta,
-                )
-
-        if len(rule.required_estimation_regimes) == 1:
-            (regime,) = rule.required_estimation_regimes
-            estimation_profile_keys = _estimation_regime_profile_key(operation)
-            if regime in estimation_profile_keys:
-                profile_key, _locale_key = estimation_profile_keys[regime]
-                _record_gating_field(
-                    profile_key=profile_key,
-                    modelo=rule.modelo,
-                    key_to_modelos=key_to_modelos,
-                    key_to_meta=key_to_meta,
-                )
-        if rule.applicable_iva_regimes:
-            _record_gating_field(
-                profile_key="iva.regime",
-                modelo=rule.modelo,
-                key_to_modelos=key_to_modelos,
-                key_to_meta=key_to_meta,
-            )
-
     deadline_keys = _collect_deadline_window_profile_keys(windows_by_modelo)
     for modelo, profile_keys in deadline_keys.items():
         for profile_key in profile_keys:
@@ -268,6 +300,12 @@ def _derive_gating_fields(
                 key_to_meta=key_to_meta,
             )
 
+
+def _freeze_gating_fields(
+    *,
+    key_to_modelos: dict[str, set[str]],
+    key_to_meta: dict[str, tuple[str, str]],
+) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
     return MappingProxyType(
         {
             profile_key: (

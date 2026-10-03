@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.prorrata_register.registered_operations import ProrrataEntryProjection
+from ....application.prorrata_register.projection_contracts import ProrrataEntryProjection
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.prorrata_register import (

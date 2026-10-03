@@ -59,6 +59,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.cli.errors.CliOperationStillRunningError",
+        ErrorCode(
+            code="LOCKED_CLI_OPERATION_STILL_RUNNING",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_cli_operation_still_running",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.cli.errors.CliStoredDataValidationBoundaryError",
         ErrorCode(
             code="INTEGRITY_STORED_DATA_VALIDATION_BOUNDARY",

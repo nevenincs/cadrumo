@@ -8,7 +8,7 @@ LIS art. 102.1 counts.
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from uuid import UUID
 
 import typer
@@ -23,6 +23,7 @@ from ....application.user_profile.operations import (
     ProfilePlantillaMediaSet,
 )
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.external_constants import OutputLanguage
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
@@ -37,14 +38,8 @@ from .runtime_profile_view import resolve_runtime_profile_output_language
 
 
 def _average_workforce(raw: str) -> Decimal:
-    try:
-        value = Decimal(raw.strip())
-    except InvalidOperation as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.plantilla_media.average_workforce_not_a_number",
-            context={"average_workforce": raw},
-        ) from exc
-    if not value.is_finite():
+    value = try_parse_canonical_decimal(raw)
+    if value is None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.plantilla_media.average_workforce_not_a_number",
             context={"average_workforce": raw},

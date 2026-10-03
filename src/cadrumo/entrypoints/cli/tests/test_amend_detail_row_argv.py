@@ -29,9 +29,10 @@ import typer
 import yaml
 
 from ....domain.modelos.row_models import Modelo347ContraparteRow
+from .._command_parameter_contracts import OptionSpec
 from .._modelo import _resolve_amendment_detail_rows
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
-from ..command_spec import CommandSpec, OptionSpec
+from ..command_spec import CommandSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

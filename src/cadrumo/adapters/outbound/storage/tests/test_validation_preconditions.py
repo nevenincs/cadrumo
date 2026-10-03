@@ -69,7 +69,7 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "factory:get_storage_provider:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
+    "factory:resolve_required_drive_root_folder_id:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
         "storage.factory.google_drive_root_folder_id.present",
         {"backend": "google_drive", "field": "google_drive_root_folder_id", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,

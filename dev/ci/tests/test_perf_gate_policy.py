@@ -56,7 +56,9 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..lane_reachability import Lane, declared_lanes, expression_selects, marker_sets_in
+from ..lane_contracts import Lane
+from ..lane_marker_inventory import expression_selects, marker_sets_in
+from ..lane_reachability import declared_lanes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

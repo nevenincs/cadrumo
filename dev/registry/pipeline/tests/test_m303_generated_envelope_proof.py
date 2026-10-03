@@ -47,10 +47,10 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -83,8 +83,8 @@ from ..export_fragment_provenance import (
     ExportFragmentTarget,
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,
-    normalised_loader_semantics,
 )
+from ..export_fragment_provenance_projection import normalised_loader_semantics
 from ..generated_tree_inventory import generated_export_trees
 from ..render_check import parsed_tree_file
 from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos

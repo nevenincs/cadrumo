@@ -19,20 +19,6 @@ flows:
     select_unknown: 'Tria un dels valors acceptats: %{choices}.'
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
-  login:
-    cancel_button: Cancel·la
-    intro: Tria el perfil que vols obrir i escriu la contrasenya que el protegeix.
-      No es desbloqueja res fins que la contrasenya s'accepti.
-    password_hint: La contrasenya que vas triar en crear aquest perfil. No es pot
-      restablir.
-    password_label: Contrasenya
-    profile_label: Perfil
-    refusal:
-      password_required: Escriu la contrasenya d'aquest perfil.
-      unlock_failed: No s'ha pogut obrir el perfil.
-    section: Perfil i contrasenya
-    title: Inicia la sessió al teu perfil
-    unlock_button: Inicia la sessió
   manager:
     action:
       auth_clave_movil_route_app_request: Sol·licitud a l'aplicació

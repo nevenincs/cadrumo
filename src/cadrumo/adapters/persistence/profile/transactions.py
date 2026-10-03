@@ -56,23 +56,23 @@ import json
 import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from sqlalchemy import delete, func, select, update
 
 from ....core.config import load_settings
-from ....core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import now
-from ....core.time.utc import validate_utc_aware
+from ....core.time.utc import UtcInstant
 from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     InvestmentAssetAcquisitionLink,
@@ -84,7 +84,7 @@ from ....domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ....domain.iva.flow import derive_flow_for_classification
-from ....domain.iva.lookup import rate_kinds_for_declared_rate
+from ....domain.iva.lookup import unique_rate_kind_for_declared_rate
 from ....domain.iva.schema import IvaCategory, IvaRateKind, spanish_eu_member_state
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import TransactionDirection
@@ -176,14 +176,8 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
 class _PersistedTransactionTimestampWitness(BaseModel):
     """Required lifecycle timestamps for one stored transaction row."""
 
-    created_at: datetime = Field()
-    modified_at: datetime = Field()
-
-    @field_validator("created_at", "modified_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_utc_aware(cls, value: datetime) -> datetime:
-        return validate_utc_aware(value)
+    created_at: UtcInstant = Field()
+    modified_at: UtcInstant = Field()
 
     @classmethod
     def validate_payload(cls, payload: object) -> None:
@@ -320,17 +314,17 @@ def _migrated_iva_rate_kind(
     with bundled_indexed_authority().operation() as operation:
         if is_iva_deduction_kind(fact.kind, "kind.reagp"):
             return resolve_iva_rate_kind_catalogue(effective_date=operation_date, authority=operation).exempt_token
-        rate_kinds = rate_kinds_for_declared_rate(
+        rate_kind = unique_rate_kind_for_declared_rate(
             spanish_eu_member_state(effective_date=operation_date, authority=operation),
             fact.iva_rate,
             operation_date,
             operation=operation,
         )
-    if len(rate_kinds) != 1:
+    if rate_kind is None:
         raise LedgerStorageError(
             f"transaction {transaction.transaction_id}: persisted IVA rate does not resolve to exactly one legal tier"
         )
-    return rate_kinds[0]
+    return rate_kind
 
 
 _INTEGRITY_REFUSALS = (

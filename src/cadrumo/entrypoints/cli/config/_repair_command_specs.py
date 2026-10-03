@@ -6,14 +6,12 @@ from typing import Final
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ..command_spec import (
+from .._command_parameter_contracts import OptionSpec
+from .._command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
-    CommandSpec,
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -21,6 +19,7 @@ from ..command_spec import (
     TranslationKey,
     ValueContract,
 )
+from ..command_spec import CommandSpec, InvocationSpec
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,

@@ -253,6 +253,65 @@ def test_row_casilla_serialized_hydration_refuses_duplicate_coordinates(field: s
         )
 
 
+def _row_binding_list_row(row_index: int, value: str) -> dict[str, object]:
+    return {"binding_id": "inventory-operation-a", "row_index": row_index, "value": value, "value_kind": "decimal"}
+
+
+def _row_source_identity_list_row(row_index: int, identity: str) -> dict[str, object]:
+    row_identity = _row_identity(identity)
+    return {
+        "binding_id": "inventory-operation-a",
+        "row_index": row_index,
+        "source_kind": row_identity.source_kind,
+        "source_row_identity": row_identity.source_row_identity,
+        "fingerprint": row_identity.fingerprint,
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "first", "second"),
+    [
+        ("row_binding_values", _row_binding_list_row(1, "1.00"), _row_binding_list_row(1, "2.00")),
+        (
+            "row_source_identities",
+            _row_source_identity_list_row(1, "opaque-activity-alpha"),
+            _row_source_identity_list_row(1, "opaque-activity-beta"),
+        ),
+    ],
+)
+def test_row_binding_serialized_hydration_refuses_duplicate_coordinates(
+    field: str,
+    first: dict[str, object],
+    second: dict[str, object],
+) -> None:
+    # Two rows that disagree at one coordinate: keeping either would silently drop the other.
+    with pytest.raises(ValidationError, match="duplicate_row_binding_coordinate"):
+        CalculationSourceResolution.model_validate({"resolver_id": "inventory", field: [first, second]})
+
+
+def test_row_binding_serialized_hydration_keeps_distinct_coordinates_in_coordinate_order() -> None:
+    resolution = CalculationSourceResolution.model_validate(
+        {
+            "resolver_id": "inventory",
+            "row_binding_values": [_row_binding_list_row(2, "2.00"), _row_binding_list_row(1, "1.00")],
+            "row_source_identities": [
+                _row_source_identity_list_row(2, "opaque-activity-beta"),
+                _row_source_identity_list_row(1, "opaque-activity-alpha"),
+            ],
+        },
+    )
+
+    assert dict(resolution.row_binding_values) == {
+        ("inventory-operation-a", 1): Decimal("1.00"),
+        ("inventory-operation-a", 2): Decimal("2.00"),
+    }
+    assert tuple(resolution.row_binding_values) == (("inventory-operation-a", 1), ("inventory-operation-a", 2))
+    assert [identity.source_row_identity for identity in resolution.row_source_identities.values()] == [
+        "opaque-activity-alpha",
+        "opaque-activity-beta",
+    ]
+
+
 def test_row_source_identity_is_sorted_and_excluded_from_generic_serialization() -> None:
     second = ("inventory-operation-z", 2)
     first = ("inventory-operation-a", 1)

@@ -232,12 +232,8 @@ def active_036_ownership_from_registry(
                 support=authority.catalogues.supported_filing_years,
             )
 
-    if tax_domain != "censo" or cadence != "ad_hoc":
-        raise RegistryValidationError("active censo modelo 036 must be an ad_hoc censo registry definition")
-    try:
-        revision = max(revisions, key=lambda item: (item.valid_from, str(item.id)))
-    except ValueError as exc:
-        raise RegistryValidationError("active censo modelo 036 has no registry revisions") from exc
+    _require_active_036_metadata(tax_domain, cadence)
+    revision = _latest_active_036_revision(revisions)
     foundation_year = _foundation_year_from_latest_revision(revision)
     event_kinds = tuple(revision.period_selector.declared_periods)
     if event_kinds != CENSO_MODELO_EVENT_KINDS:
@@ -267,10 +263,7 @@ def active_036_ownership_from_registry(
             period=event_kind,
             on=revision.valid_from,
         )
-        if selected.id != revision.id:
-            raise RegistryValidationError(
-                "active censo modelo 036 foundation revision must resolve from its declared first governed year",
-            )
+        _require_active_036_foundation_revision(selected, revision)
     return CensoModeloOwnership(
         modelo=_ACTIVE_CENSO_MODELO,
         role=CensoModeloRole.ACTIVE_FOUNDATION,
@@ -278,6 +271,25 @@ def active_036_ownership_from_registry(
         event_kinds=event_kinds,
         active_work_unit_allowed=True,
     )
+
+
+def _require_active_036_metadata(tax_domain: str, cadence: str) -> None:
+    if tax_domain != "censo" or cadence != "ad_hoc":
+        raise RegistryValidationError("active censo modelo 036 must be an ad_hoc censo registry definition")
+
+
+def _latest_active_036_revision(revisions: tuple[ModeloRevision, ...]) -> ModeloRevision:
+    try:
+        return max(revisions, key=lambda item: (item.valid_from, str(item.id)))
+    except ValueError as exc:
+        raise RegistryValidationError("active censo modelo 036 has no registry revisions") from exc
+
+
+def _require_active_036_foundation_revision(selected: ModeloRevision, foundation: ModeloRevision) -> None:
+    if selected.id != foundation.id:
+        raise RegistryValidationError(
+            "active censo modelo 036 foundation revision must resolve from its declared first governed year",
+        )
 
 
 def _foundation_year_from_latest_revision(revision: ModeloRevision) -> int:

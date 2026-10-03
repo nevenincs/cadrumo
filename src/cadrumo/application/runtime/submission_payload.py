@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import base64
-import binascii
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from ...core.base64_codec import b64_decode_canonical
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -39,13 +38,10 @@ class SubmissionPayloadChunk(BaseModel):
     def decode(self) -> bytes:
         """Reject noncanonical base64, empty data and oversized chunks."""
         try:
-            data = base64.b64decode(self.encoded, validate=True)
-        except (ValueError, binascii.Error):
+            data = b64_decode_canonical(self.encoded)
+        except ValueError:
             raise ValueError("invalid submission payload chunk") from None
-        if (
-            not 0 < len(data) <= SUBMISSION_PAYLOAD_CHUNK_BYTES
-            or base64.b64encode(data).decode("ascii") != self.encoded
-        ):
+        if not 0 < len(data) <= SUBMISSION_PAYLOAD_CHUNK_BYTES:
             raise ValueError("invalid submission payload chunk")
         return data
 

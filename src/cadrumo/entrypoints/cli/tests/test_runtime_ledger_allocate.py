@@ -20,7 +20,7 @@ from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import runtime_ledger_allocate as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -35,11 +35,13 @@ def _projection(
     profile_id: UUID = _PROFILE,
     transaction_id: str = _TRANSACTION_ID,
     business_pct: str = "0.5",
+    business_classification: str = "MIXED",
     bucket_event_ids: tuple[str, ...] = ("e" * 64,),
 ) -> LedgerAllocateOperationResult:
     transaction = LedgerTransactionProjection.model_construct(
         transaction_id=transaction_id,
         business_pct=business_pct,
+        business_classification=business_classification,
         category_id=None,
         usage_ratio_id=None,
         prorrata_reference=None,
@@ -125,7 +127,9 @@ def test_bridge_accepts_none_effect_for_a_confirmed_noop(monkeypatch: pytest.Mon
     assert len(submitted) == 1
 
 
-@pytest.mark.parametrize("invalid_case", ["profile", "transaction", "share", "effect", "terminal", "noop-effect"])
+@pytest.mark.parametrize(
+    "invalid_case", ["profile", "transaction", "share", "classification", "effect", "terminal", "noop-effect"]
+)
 def test_bridge_rejects_unmatched_profile_result_or_effect(
     monkeypatch: pytest.MonkeyPatch,
     invalid_case: str,
@@ -139,6 +143,8 @@ def test_bridge_rejects_unmatched_profile_result_or_effect(
         projection = _projection(transaction_id="b" * 64)
     elif invalid_case == "share":
         projection = _projection(business_pct="0.25")
+    elif invalid_case == "classification":
+        projection = _projection(business_classification="BUSINESS")
     elif invalid_case == "effect":
         effect = OperationEffect.NONE
     elif invalid_case == "terminal":

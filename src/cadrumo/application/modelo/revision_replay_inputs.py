@@ -35,7 +35,7 @@ from ...domain.calculations.registry.applicability import (
     derive_modelo_applicability,
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
@@ -179,7 +179,7 @@ def _bound_binding_replay_inputs(
     """
     if snapshot is None:
         return {}
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    bindings_by_id = revision_bindings_by_id(snapshot.revision)
     recovered: dict[BindingId, str] = {}
     existing_binding_ids = frozenset(revision.binding_overrides)
     for casilla in snapshot.revision.casillas:
@@ -215,7 +215,7 @@ def _bound_casillas_with_replay_binding(
     snapshot: RegistrySnapshot,
     binding_ids: frozenset[BindingId],
 ) -> frozenset[str]:
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    bindings_by_id = revision_bindings_by_id(snapshot.revision)
     migrated: set[str] = set()
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind != InputKind.BOUND:

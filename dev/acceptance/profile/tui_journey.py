@@ -10,7 +10,6 @@ facts, or decrypted profile payloads are retained.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import secrets
 from collections.abc import Sequence
@@ -18,6 +17,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, cast
 
+from cadrumo.core.hashing import sha256_file
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildProcessEvidence,
     run_installed_tui_child_process,
@@ -231,9 +231,9 @@ def run_profile_installed_acceptance(
         source_identity=source_identity,
         package_identity=package_identity,
         cli_executable=str(cli),
-        cli_executable_sha256=_sha256_file(cli),
+        cli_executable_sha256=sha256_file(cli),
         tui_python=str(python),
-        tui_python_sha256=_sha256_file(python),
+        tui_python_sha256=sha256_file(python),
         run_root=str(run_root.resolve()),
         journeys=tuple(journeys),
         no_op_observed=no_op_observed,
@@ -656,6 +656,11 @@ def _run_tui_child(
     return _parse_tui_child_evidence(outer=outer, receipt_path=receipt_path, operation=operation)
 
 
+def _child_row_key_is_valid(value: object) -> bool:
+    """Accept the public absent-row state or one stable numeric row identifier."""
+    return value is None or (isinstance(value, str) and value.isdecimal())
+
+
 def _parse_tui_child_evidence(
     *,
     outer: InstalledTuiChildProcessEvidence,
@@ -682,11 +687,11 @@ def _parse_tui_child_evidence(
     observed_row = payload.get("row_key")
     if not isinstance(product_origin, str) or not isinstance(product_hash, str):
         raise ProfileInstalledAcceptanceError(stage=f"tui_{operation}", diagnostic_code="TUI_CHILD_PRODUCT_EVIDENCE")
-    if observed_row is not None and (not isinstance(observed_row, str) or not observed_row.isdecimal()):
+    if not _child_row_key_is_valid(observed_row):
         raise ProfileInstalledAcceptanceError(stage=f"tui_{operation}", diagnostic_code="TUI_CHILD_ROW_EVIDENCE")
     return ProfileTuiOperationEvidence(
         operation=operation,
-        row_key=observed_row,
+        row_key=cast("str | None", observed_row),
         row_visible=_required_bool(payload, key="row_visible", stage=operation),
         clear_visible_absent=_required_bool(payload, key="clear_visible_absent", stage=operation),
         selector_fact_visible=_required_bool(payload, key="selector_fact_visible", stage=operation),
@@ -741,10 +746,6 @@ def _required_bool(payload: dict[str, object], *, key: str, stage: str) -> bool:
 def _require_identity(value: str, *, label: str) -> None:
     if not value.strip():
         raise ProfileInstalledAcceptanceError(stage="preflight", diagnostic_code=f"{label.upper()}_MISSING")
-
-
-def _sha256_file(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def write_profile_installed_receipt(

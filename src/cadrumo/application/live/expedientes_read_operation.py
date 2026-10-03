@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, NonNegativeInt, StringConstraints, model_validator
+from pydantic import BaseModel, NonNegativeInt, StringConstraints, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -15,35 +15,25 @@ from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES, OperationCapabilities
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -56,7 +46,6 @@ EXPEDIENTES_LATEST_DEFINITION_ID = "live.expedientes.latest"
 _LIST_PHASES = ("expedientes-list.read", "expedientes-list.result")
 _SHOW_PHASES = ("expedientes-show.read", "expedientes-show.result")
 _LATEST_PHASES = ("expedientes-latest.read", "expedientes-latest.result")
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 _SnapshotIdPrefix = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
 ]
@@ -84,7 +73,7 @@ class ExpedientesLatestRequest(CredentialFreeOperationRequest):
 class ExpedientesSnapshotSummaryPublicV1(BaseModel):
     """Allowlisted snapshot facts already present in the CLI result."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     snapshot_id: SnapshotId
     captured_at: datetime
     source_url: str
@@ -94,7 +83,7 @@ class ExpedientesSnapshotSummaryPublicV1(BaseModel):
 class ExpedientesListOperationReport(BaseModel):
     """Private encrypted list operand scoped to one bucket."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     rows: tuple[ExpedientesSnapshotSummaryPublicV1, ...]
 
@@ -102,14 +91,14 @@ class ExpedientesListOperationReport(BaseModel):
 class ExpedientesShowOperationReport(BaseModel):
     """Keep the full persisted snapshot in encrypted operation custody."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     snapshot: PersistedExpedientesSnapshot
 
 
 class ExpedientesLatestOperationReport(BaseModel):
     """Private latest summary, including an explicit empty state."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     snapshot: ExpedientesSnapshotSummaryPublicV1 | None
 
@@ -117,7 +106,7 @@ class ExpedientesLatestOperationReport(BaseModel):
 class ExpedientesListPublicResultV1(BaseModel):
     """Closed snapshot inventory for an authorized whole-profile read."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     count: NonNegativeInt
     rows: tuple[ExpedientesSnapshotSummaryPublicV1, ...]
@@ -132,7 +121,7 @@ class ExpedientesListPublicResultV1(BaseModel):
 class ExpedienteDeclarationPublicV1(BaseModel):
     """Explicit declaration projection without the internal Period codec."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     modelo: str
     ejercicio: int
     period: str
@@ -153,7 +142,7 @@ class ExpedienteDeclarationPublicV1(BaseModel):
 class ExpedientesShowPublicResultV1(BaseModel):
     """Existing CLI view fields with every declaration field allowlisted."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     snapshot_id: SnapshotId
     captured_at: datetime
@@ -171,7 +160,7 @@ class ExpedientesShowPublicResultV1(BaseModel):
 class ExpedientesLatestPublicResultV1(BaseModel):
     """Newest snapshot summary or a coherent empty result."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     snapshot_id: SnapshotId | None
     captured_at: datetime | None
@@ -193,17 +182,6 @@ def _exact_bucket(profile_id: UUID, subject_ref: str) -> str:
     if require_active_bucket_id() != bucket_id or subject_ref != profile_operation_subject(bucket_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return bucket_id
-
-
-def _check_identity[Payload: BaseModel](
-    request: OperationRequest[Payload], context: OperationExecutorContext, definition_id: str
-) -> None:
-    if (
-        request.definition_id != definition_id
-        or context.identity.definition_id != definition_id
-        or context.identity.subject_ref != request.subject_ref
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def _summary(snapshot: PersistedExpedientesSnapshot) -> ExpedientesSnapshotSummaryPublicV1:
@@ -230,7 +208,9 @@ class ExpedientesListExecutor:
         self, request: OperationRequest[ExpedientesListRequest], context: OperationExecutorContext
     ) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, EXPEDIENTES_LIST_DEFINITION_ID)
+        if request.definition_id != EXPEDIENTES_LIST_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_LIST_PHASES[0])
 
         def read() -> ExpedientesListOperationReport:
@@ -259,7 +239,9 @@ class ExpedientesShowExecutor:
         self, request: OperationRequest[ExpedientesShowRequest], context: OperationExecutorContext
     ) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, EXPEDIENTES_SHOW_DEFINITION_ID)
+        if request.definition_id != EXPEDIENTES_SHOW_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_SHOW_PHASES[0])
 
         def read() -> ExpedientesShowOperationReport:
@@ -287,7 +269,9 @@ class ExpedientesLatestExecutor:
         self, request: OperationRequest[ExpedientesLatestRequest], context: OperationExecutorContext
     ) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, EXPEDIENTES_LATEST_DEFINITION_ID)
+        if request.definition_id != EXPEDIENTES_LATEST_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_LATEST_PHASES[0])
 
         def read() -> ExpedientesLatestOperationReport:
@@ -307,19 +291,7 @@ class ExpedientesLatestExecutor:
 
 
 def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-        sensitive_input=OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
+    return RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 
 
 def build_expedientes_list_definition(ports_factory: ExpedientesPortsFactory) -> OperationDefinition:
@@ -337,9 +309,7 @@ def build_expedientes_list_definition(ports_factory: ExpedientesPortsFactory) ->
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -358,9 +328,7 @@ def build_expedientes_show_definition(ports_factory: ExpedientesPortsFactory) ->
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -379,31 +347,25 @@ def build_expedientes_latest_definition(ports_factory: ExpedientesPortsFactory) 
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
-def _validate_receipt(receipt: OperationTerminalReceipt, *, definition_id: str, bucket_id: str) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(bucket_id)
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-    ):
-        raise ValueError("expedientes read result contradicts its terminal receipt")
+_RECEIPT_CONTRADICTION = "expedientes read result contradicts its terminal receipt"
 
 
 def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     if type(result) is not ExpedientesListOperationReport:
         raise ValueError("invalid expedientes list report")
     report = ExpedientesListOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=EXPEDIENTES_LIST_DEFINITION_ID, bucket_id=str(report.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=EXPEDIENTES_LIST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(report.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     return ExpedientesListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
 
 
@@ -412,7 +374,14 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("invalid expedientes show report")
     report = ExpedientesShowOperationReport.model_validate(result, strict=True)
     snapshot = report.snapshot
-    _validate_receipt(receipt, definition_id=EXPEDIENTES_SHOW_DEFINITION_ID, bucket_id=str(snapshot.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=EXPEDIENTES_SHOW_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(snapshot.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     return ExpedientesShowPublicResultV1(
         bucket_id=snapshot.bucket_id,
         snapshot_id=snapshot.snapshot_id,
@@ -446,7 +415,14 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     if type(result) is not ExpedientesLatestOperationReport:
         raise ValueError("invalid expedientes latest report")
     report = ExpedientesLatestOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=EXPEDIENTES_LATEST_DEFINITION_ID, bucket_id=str(report.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=EXPEDIENTES_LATEST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(report.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     snapshot = report.snapshot
     return ExpedientesLatestPublicResultV1(
         bucket_id=report.bucket_id,
@@ -494,14 +470,9 @@ def resolve_expedientes_latest_access(
 
 def build_expedientes_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind list request, disclosure, and closed result projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=ExpedientesListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=ExpedientesListPublicResultV1
-        ),
+        public_result_type=ExpedientesListPublicResultV1,
         result_projector=_project_list,
         access_resolver=resolve_expedientes_list_access,
     )
@@ -509,14 +480,9 @@ def build_expedientes_list_registration(definition: OperationDefinition) -> Oper
 
 def build_expedientes_show_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind detail request, disclosure, and closed row projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=ExpedientesShowRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=ExpedientesShowPublicResultV1
-        ),
+        public_result_type=ExpedientesShowPublicResultV1,
         result_projector=_project_show,
         access_resolver=resolve_expedientes_show_access,
     )
@@ -524,14 +490,9 @@ def build_expedientes_show_registration(definition: OperationDefinition) -> Oper
 
 def build_expedientes_latest_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind latest request, disclosure, and coherent optional result."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=ExpedientesLatestRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=ExpedientesLatestPublicResultV1
-        ),
+        public_result_type=ExpedientesLatestPublicResultV1,
         result_projector=_project_latest,
         access_resolver=resolve_expedientes_latest_access,
     )

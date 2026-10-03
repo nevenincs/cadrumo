@@ -12,11 +12,11 @@ from ...application.modelo.history_operation import (
     ModeloWorkHistoryProjection,
     ModeloWorkHistoryRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
-from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...core.operations import OperationEffect
 from ...domain.modelos.work_unit import WorkUnit
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_modelo_work_history(ctx: typer.Context, *, unit: WorkUnit) -> WorkUnitHistory:
@@ -39,10 +39,5 @@ def read_modelo_work_history(ctx: typer.Context, *, unit: WorkUnit) -> WorkUnitH
         or projection.history.work_unit_id != unit.work_unit_id
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return projection.history.to_history()

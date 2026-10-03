@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime import deadline_budget
 from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 
 from .. import runtime_credentials
@@ -50,7 +51,7 @@ async def test_protected_reference_uses_profile_admission_budget_and_preserves_e
     monkeypatch.setattr(runtime_credentials, "effective_storage_root", lambda: tmp_path)
     monkeypatch.setattr(runtime_credentials, "open_installed_runtime_client", open_client)
     monkeypatch.setattr(runtime_credentials, "_authenticate_reference", authenticate)
-    monkeypatch.setattr(runtime_credentials, "time", SimpleNamespace(monotonic=lambda: 100.0))
+    monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: 100.0))
     if explicit_timeout is None:
         admitted = await runtime_credentials.open_installed_credential_client(
             profile_id=profile_id,

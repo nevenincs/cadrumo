@@ -5,18 +5,22 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
-    MappingFactQuery,
-    ResolvedMappingFact,
     required_mapping_entry,
     unique_mapping_tokens,
 )
-from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+)
+from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .proportionality import ProportionalityKind, StatutoryCapPeriod
@@ -72,39 +76,12 @@ class ProportionalityCatalogue:
         raise RegistryValidationError(f"statutory-cap period {raw!r} is not declared by fact {_FACT_ID!r}")
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    """Narrow a mapping payload to a unique string-to-string mapping."""
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("proportionality vocabulary entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate proportionality vocabulary key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _bool(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    raise RegistryValidationError(f"proportionality vocabulary {key!r} must be true or false")
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-            selectors=(_SCOPE_SELECTOR,),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("proportionality vocabulary must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(
+    fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY, selectors=(_SCOPE_SELECTOR,)
+)
 
 
 def resolve_proportionality_catalogue(
@@ -117,8 +94,16 @@ def resolve_proportionality_catalogue(
     selected = authority or governed_facts_in_scope()
     if selected is None:
         raise RegistryValidationError("proportionality catalogue requires an explicit authority operation or scope")
-    entries = _resolve_entries(effective_date=coordinate, authority=selected)
+    entries = _ENTRIES_FACT.resolve_entries(selected, effective_date=coordinate)
+    kinds = _proportionality_kinds(entries)
+    periods = _statutory_cap_periods(entries)
+    catalogue = ProportionalityCatalogue(kinds=kinds, periods=periods)
+    if not catalogue.kinds or not catalogue.periods:
+        raise RegistryValidationError("proportionality vocabulary must declare kinds and cap periods")
+    return catalogue
 
+
+def _proportionality_kinds(entries: Mapping[str, str]) -> tuple[ProportionalityKind, ...]:
     kinds: list[ProportionalityKind] = []
     for raw_token in unique_mapping_tokens(entries, _KIND_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_KIND_PREFIX}{raw_token}."
@@ -127,9 +112,17 @@ def resolve_proportionality_catalogue(
             raise RegistryValidationError(
                 f"proportionality kind {raw_token!r} declares mismatched value {declared_value!r}",
             )
-        roles = {role: _bool(entries, f"{prefix}{role}") for role in _KIND_ROLES}
+        roles = {
+            role: required_mapping_boolean(
+                entries, f"{prefix}{role}", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+            )
+            for role in _KIND_ROLES
+        }
         kinds.append(ProportionalityKind.from_registry(raw_token, **roles))
+    return tuple(kinds)
 
+
+def _statutory_cap_periods(entries: Mapping[str, str]) -> tuple[StatutoryCapPeriod, ...]:
     periods: list[StatutoryCapPeriod] = []
     for raw_token in unique_mapping_tokens(entries, _PERIOD_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PERIOD_PREFIX}{raw_token}."
@@ -141,14 +134,12 @@ def resolve_proportionality_catalogue(
         periods.append(
             StatutoryCapPeriod.from_registry(
                 raw_token,
-                is_per_person=_bool(entries, f"{prefix}is_per_person"),
+                is_per_person=required_mapping_boolean(
+                    entries, f"{prefix}is_per_person", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+                ),
             ),
         )
-
-    catalogue = ProportionalityCatalogue(kinds=tuple(kinds), periods=tuple(periods))
-    if not catalogue.kinds or not catalogue.periods:
-        raise RegistryValidationError("proportionality vocabulary must declare kinds and cap periods")
-    return catalogue
+    return tuple(periods)
 
 
 def require_proportionality_kind(

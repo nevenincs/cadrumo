@@ -55,8 +55,10 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from ...components.cell_text import ellipsize
 from .casilla_list import CasillaListEntry, value_text
-from .issues import IssueLevel, issue_lines, levels_marked
+from .issue_projection import issue_lines
+from .issue_scale import IssueLevel, levels_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
 from .wording import date_text, day_text, modelo_number, modelo_title, period_words
@@ -86,7 +88,6 @@ _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = Mapping
 
 _CHOICE_PENDING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending"
 _CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending_short"
-_ELLIPSIS: Final[str] = "…"
 _NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not_calculated"
 _FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
 _STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
@@ -165,6 +166,25 @@ class ResultView:
     def marks(self) -> tuple[WorkbenchMark, ...]:
         """The marks the result part draws."""
         return (STALE_MARK,) if self.stale is not None else ()
+
+
+@dataclass(frozen=True, slots=True)
+class _ResultPresentation:
+    text: str
+    short_text: str
+    settled: tuple[str, str] | None = None
+    brief_text: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _SelectedResult:
+    settling: str
+    fields: Mapping[str, ModeloFormField]
+    field: ModeloFormField | None
+    box: str | None
+    value: Decimal | None
+    direction: ModeloFormResultDirection
+    election_may_change: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,12 +326,84 @@ def _other_boxes_help(
     return tr("tui.modelo.workbench.header.result.other_boxes", boxes=named)
 
 
+def _result_stale_notice(form: ModeloWorkForm, *, staged: int, recorded: bool) -> str | None:
+    if staged and not recorded:
+        return f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
+    if form.calculation_out_of_date and not recorded:
+        return f"{STALE_MARK.glyph} {tr(_RECALCULATE_LOCALE_KEY, key=_CALCULATE_KEY)}"
+    return None
+
+
+def _choice_result_presentation(
+    value: Decimal,
+    box: str | None,
+    language: OutputLanguage,
+    help_lines: list[str],
+) -> _ResultPresentation:
+    settled = (tr(_CHOICE_PENDING_LOCALE_KEY), _money(abs(value), language))
+    full, short = _boxed(list(settled), box)
+    help_lines.append(settled[0])
+    brief = _WORD_GAP.join((tr(_CHOICE_PENDING_SHORT_LOCALE_KEY), settled[1]))
+    return _ResultPresentation(full, short, settled, brief)
+
+
+def _directional_result_presentation(
+    direction: ModeloFormResultDirection,
+    value: Decimal,
+    box: str | None,
+    language: OutputLanguage,
+    help_lines: list[str],
+) -> _ResultPresentation:
+    if direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
+        if box:
+            help_lines.append(
+                tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language))
+            )
+        return _ResultPresentation(full, short)
+    if direction is ModeloFormResultDirection.NEGATIVE:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
+        return _ResultPresentation(full, short)
+    if direction is ModeloFormResultDirection.UNKNOWN:
+        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
+        full, short = _boxed(list(settled), box)
+        help_lines.append(tr("tui.modelo.workbench.header.result.direction_unknown_help"))
+        return _ResultPresentation(full, short, settled)
+    if direction is ModeloFormResultDirection.NIL:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
+        return _ResultPresentation(full, short)
+    settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(abs(value), language))
+    full, short = _boxed(list(settled), box)
+    return _ResultPresentation(full, short, settled)
+
+
 def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> ResultView | None:
     """The result as the header states it, or ``None`` when the form names no result box at all.
 
     Without a declared settlement box the first result box in form order
     stands, under the plain word "Result".
     """
+    selected = _selected_result(form)
+    if selected is None:
+        return None
+    stale = _result_stale_notice(form, staged=staged, recorded=recorded)
+    unavailable = _unavailable_result_view(form, selected, stale=stale)
+    if unavailable is not None:
+        return unavailable
+    help_lines = [tr("tui.modelo.workbench.header.own_calculation")]
+    presentation = _selected_result_presentation(form, selected, language, help_lines)
+    return ResultView(
+        text=presentation.text,
+        short_text=presentation.short_text,
+        stale=stale,
+        failed=False,
+        help=tuple(help_lines),
+        settled=presentation.settled,
+        brief_text=presentation.brief_text,
+    )
+
+
+def _selected_result(form: ModeloWorkForm) -> _SelectedResult | None:
     fields = _result_fields(form)
     result = form.result
     if result is not None:
@@ -321,62 +413,57 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     else:
         return None
     field = fields.get(settling)
-    box = (result.box if result is not None else None) or (field.box if field is not None else None)
-    value = result.value if result is not None else _field_amount(field)
-    direction = result.direction if result is not None else ModeloFormResultDirection.UNKNOWN
-    stale: str | None = None
-    if staged and not recorded:
-        stale = f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
-    elif form.calculation_out_of_date and not recorded:
-        # The records changed after the calculation, so the figure is no longer current.
-        stale = f"{STALE_MARK.glyph} {tr(_RECALCULATE_LOCALE_KEY, key=_CALCULATE_KEY)}"
-    help_lines: list[str] = [tr("tui.modelo.workbench.header.own_calculation")]
-    origin = field.origin if field is not None else None
-    failed = origin is ModeloFormOrigin.CALCULATION_FAILED
-    if failed:
+    return _SelectedResult(
+        settling=settling,
+        fields=fields,
+        field=field,
+        box=(result.box if result is not None else None) or (field.box if field is not None else None),
+        value=result.value if result is not None else _field_amount(field),
+        direction=result.direction if result is not None else ModeloFormResultDirection.UNKNOWN,
+        election_may_change=result is not None and result.election_may_change,
+    )
+
+
+def _unavailable_result_view(
+    form: ModeloWorkForm, selected: _SelectedResult, *, stale: str | None
+) -> ResultView | None:
+    origin = selected.field.origin if selected.field is not None else None
+    if origin is ModeloFormOrigin.CALCULATION_FAILED:
         text = tr(_FAILED_LOCALE_KEY, key=_ISSUES_KEY)
-        return ResultView(text=text, short_text=text, stale=stale, failed=True, help=tuple(help_lines))
-    if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or value is None:
+        help_lines = (tr("tui.modelo.workbench.header.own_calculation"),)
+        return ResultView(text=text, short_text=text, stale=stale, failed=True, help=help_lines)
+    if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or selected.value is None:
         text = tr(_NOT_CALCULATED_LOCALE_KEY, key=_CALCULATE_KEY)
         return ResultView(text=text, short_text=text, stale=stale, failed=False, help=())
-    settled: tuple[str, str] | None = None
-    brief: str | None = None
-    if result is not None and result.election_may_change:
-        settled = (tr(_CHOICE_PENDING_LOCALE_KEY), _money(abs(value), language))
-        full, short = _boxed(list(settled), box)
-        brief = _WORD_GAP.join((tr(_CHOICE_PENDING_SHORT_LOCALE_KEY), settled[1]))
-        help_lines.append(settled[0])
-    elif direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
-        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
-        if box:
-            help_lines.append(
-                tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language))
-            )
-    elif direction is ModeloFormResultDirection.NEGATIVE:
-        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
-    elif direction is ModeloFormResultDirection.UNKNOWN:
-        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
-        full, short = _boxed(list(settled), box)
-        help_lines.append(tr("tui.modelo.workbench.header.result.direction_unknown_help"))
-    elif direction is ModeloFormResultDirection.NIL:
-        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
+    return None
+
+
+def _selected_result_presentation(
+    form: ModeloWorkForm,
+    selected: _SelectedResult,
+    language: OutputLanguage,
+    help_lines: list[str],
+) -> _ResultPresentation:
+    value = selected.value
+    if value is None:
+        raise ValueError("an available result must have a value")
+    if selected.election_may_change:
+        presentation = _choice_result_presentation(value, selected.box, language, help_lines)
     else:
-        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(abs(value), language))
-        full, short = _boxed(list(settled), box)
-    if value < 0 and settled is not None and direction is not ModeloFormResultDirection.UNKNOWN and box:
-        help_lines.append(tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language)))
-    other = _other_boxes_help(form, settling, fields, language)
+        presentation = _directional_result_presentation(selected.direction, value, selected.box, language, help_lines)
+    if (
+        value < 0
+        and presentation.settled is not None
+        and selected.direction is not ModeloFormResultDirection.UNKNOWN
+        and selected.box
+    ):
+        help_lines.append(
+            tr("tui.modelo.workbench.header.result.sign_help", box=selected.box, value=_money(value, language))
+        )
+    other = _other_boxes_help(form, selected.settling, selected.fields, language)
     if other is not None:
         help_lines.append(other)
-    return ResultView(
-        text=full,
-        short_text=short,
-        stale=stale,
-        failed=False,
-        help=tuple(help_lines),
-        settled=settled,
-        brief_text=brief,
-    )
+    return presentation
 
 
 def _field_amount(field: ModeloFormField | None) -> Decimal | None:
@@ -407,14 +494,18 @@ def blocking_count(form: ModeloWorkForm) -> int:
     named = {issue.box for issue in blocking if issue.box is not None} | {
         note.box for note in notes if note.box is not None
     }
-    failed = sum(
+    failed = _unreported_failed_result_count(form, named)
+    return len(blocking) + len(notes) + failed
+
+
+def _unreported_failed_result_count(form: ModeloWorkForm, named: set[str]) -> int:
+    return sum(
         1
         for field in _result_fields(form).values()
         if field.origin is ModeloFormOrigin.CALCULATION_FAILED
         and field.box not in named
         and is_result_field(form, field)
     )
-    return len(blocking) + len(notes) + failed
 
 
 def confirm_count(form: ModeloWorkForm) -> int:
@@ -489,17 +580,6 @@ class ResultLine:
         return _PART_GAP.join(part for part in (self.result, self.marks_text()) if part)
 
 
-def _cut(text: str, width: int) -> str:
-    if cell_len(text) <= width:
-        return text
-    kept = ""
-    for character in text:
-        if cell_len(kept + character + _ELLIPSIS) > width:
-            break
-        kept += character
-    return kept.rstrip() + _ELLIPSIS
-
-
 def fit_result_line(
     view: ResultView, chips: tuple[AttentionChip, ...], width: int, *, file: str | None = None
 ) -> ResultLine:
@@ -524,7 +604,7 @@ def fit_result_line(
         return line
     result = next(
         (text for text in (view.text, view.short_text, view.briefest) if cell_len(text) <= width),
-        _cut(view.briefest, width),
+        ellipsize(view.briefest, width),
     )
     below = ResultLine(result, view.stale, chips, stacked=True, file=file)
     kept = list(chips)
@@ -586,14 +666,14 @@ class StatusLine:
                 line = self._line(result, tuple(kept))
             if cell_len(line.text()) <= width:
                 return line
-        return self._line(_cut(results[-1], width), ())
+        return self._line(ellipsize(results[-1], width), ())
 
     def content(self, width: int) -> Content:
         """The line as drawn within ``width`` cells: each chip in its level's colour."""
         line = self.fitted(width)
         lead = _PART_GAP.join(part for part in (line.result, line.stale, line.file) if part)
         if not line.chips:
-            return Content(_cut(lead, width))
+            return Content(ellipsize(lead, width))
         return Content(_PART_GAP).join([Content(lead), line.chips_content()] if lead else [line.chips_content()])
 
 

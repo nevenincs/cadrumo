@@ -7,10 +7,12 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from dev.audit.unreachable_code import UnreachableCodeOutcome, run_unreachable_code_scan
+from dev.audit.unreachable_code import run_unreachable_code_scan
+from dev.audit.unreachable_models import UnreachableCodeOutcome
+from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PACKAGE_ROOT = REPO_ROOT / "src" / "cadrumo"
+_PACKAGE_ROOT = REPO_ROOT / PRODUCT_PACKAGE
 
 
 @dataclass(frozen=True, order=True, slots=True)
@@ -80,7 +82,7 @@ def find_unconsumed(
     trees: dict[Path, ast.Module] = {}
     unread: list[str] = []
     for path in sorted(root.rglob("*.py")):
-        if "__pycache__" in path.parts or "tests" in path.parts or path.name.startswith("test_"):
+        if not is_production_source(path, root=root):
             continue
         try:
             trees[path] = ast.parse(path.read_text(encoding="utf-8"))

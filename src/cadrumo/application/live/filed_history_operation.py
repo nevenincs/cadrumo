@@ -49,10 +49,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -263,7 +262,16 @@ def bind_shared_filed_history_pull(shared_pull: SharedFiledHistoryPull) -> Filed
 
 type FiledHistoryProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
 type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepositoryProtocol]
-type FiledHistoryCompositionFactory = Callable[[Path], FiledHistoryComposition]
+
+
+class FiledHistoryCompositionFactory(Protocol):
+    """Compose one live-state bundle under the operation's held authority pin."""
+
+    def __call__(self, output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
+        """Return all filed-history persistence and live-state ports for this operation."""
+        ...
+
+
 type FiledHistoryProviderPreflight = Callable[[UUID, PinnedAuthorityOperation], None]
 
 
@@ -535,7 +543,7 @@ class FiledHistoryOperationExecutor:
         # whether none or some of those writes committed.
         if not request.payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
-        composition = self._composition_factory(request.payload.output_root)
+        composition = self._composition_factory(request.payload.output_root, operation=context.authority_operation)
         browser_resources = self._browser_resources_factory()
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)

@@ -26,12 +26,17 @@ from __future__ import annotations
 
 import re
 
-IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
+IBAN_SHAPE_RE = re.compile(r"\A[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}\Z")
 """ISO 13616 IBAN shape shared by registry and refund-account validators.
 
 The pattern checks uppercase canonical text only: country code, two check
 digits, and an alphanumeric BBAN for a total length of 15-34 characters. It is
 only the structural gate; callers must also run :func:`iban_mod_97`.
+
+The anchors are absolute and the digits ASCII, so ``.match`` and
+``.fullmatch`` agree: ``$`` would admit a trailing newline, and a Unicode digit
+class would admit other scripts' digits, which the mod-97 arithmetic then reads
+as numbers.
 """
 
 

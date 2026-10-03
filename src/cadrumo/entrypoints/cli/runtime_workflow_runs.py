@@ -7,7 +7,6 @@ from uuid import UUID
 
 import typer
 
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.workflow.run_projection import WorkflowRunSnapshot
 from ...application.workflow.run_read_operation import (
     WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,
@@ -19,12 +18,10 @@ from ...application.workflow.run_read_operation import (
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,13 +62,7 @@ def read_workflow_run(ctx: typer.Context, *, run_id: str) -> WorkflowRunReadComp
         or completed.refusal_code is not None
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return WorkflowRunReadCompletion(completion=completed, run=projection.run)
 
 
@@ -95,11 +86,5 @@ def read_workflow_runs(ctx: typer.Context) -> WorkflowRunsReadCompletion:
         or completed.refusal_code is not None
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return WorkflowRunsReadCompletion(completion=completed, runs=projection.runs)

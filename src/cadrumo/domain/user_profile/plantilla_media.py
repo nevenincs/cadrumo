@@ -134,6 +134,14 @@ def plantilla_media_refusals(values: Mapping[str, object]) -> tuple[PlantillaMed
     more than two decimal places, an unknown state, an instance missing a
     subfield, and a year declared by more than one instance.
     """
+    refusals, instances = _collect_plantilla_media_instance_values(values)
+    _append_plantilla_media_instance_refusals(instances, refusals)
+    return tuple(refusals)
+
+
+def _collect_plantilla_media_instance_values(
+    values: Mapping[str, object],
+) -> tuple[list[PlantillaMediaRefusal], dict[int, dict[str, object]]]:
     refusals: list[PlantillaMediaRefusal] = []
     instances: dict[int, dict[str, object]] = {}
     for path, raw in sorted(values.items()):
@@ -154,7 +162,14 @@ def plantilla_media_refusals(values: Mapping[str, object]) -> tuple[PlantillaMed
         instances.setdefault(index, {})[subfield] = value
         if (refusal := _value_refusal(path, subfield, value)) is not None:
             refusals.append(refusal)
-    first_index_by_year: dict[object, int] = {}
+    return refusals, instances
+
+
+def _append_plantilla_media_instance_refusals(
+    instances: Mapping[int, Mapping[str, object]],
+    refusals: list[PlantillaMediaRefusal],
+) -> None:
+    first_index_by_year: dict[str, int] = {}
     for index, fields in sorted(instances.items()):
         missing = [subfield for subfield in _SUBFIELDS if subfield not in fields]
         if missing:
@@ -181,7 +196,6 @@ def plantilla_media_refusals(values: Mapping[str, object]) -> tuple[PlantillaMed
             )
         else:
             first_index_by_year[year_key] = index
-    return tuple(refusals)
 
 
 def plantilla_media_years(values: Mapping[str, object]) -> tuple[PlantillaMediaYear, ...]:

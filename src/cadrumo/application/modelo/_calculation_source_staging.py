@@ -35,6 +35,7 @@ from types import MappingProxyType
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -565,7 +566,7 @@ def expected_but_missing_binding_ids(
     non_silent_sources = frozenset(
         {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL, BindingSourceKind.MANUAL_INPUT},
     )
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND or casilla.binding is None:

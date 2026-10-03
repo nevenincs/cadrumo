@@ -25,9 +25,9 @@ from ...operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.operation_definition import OperationDefinition
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import (
-    OperationDefinition,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,

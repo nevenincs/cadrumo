@@ -136,7 +136,7 @@ from ..aeat_sync.screens import (
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.controller import DeclarationsWorkspaceController
-from ..declarations.models import DeclarationsDestinationIdV1
+from ..declarations.models import DeclarationsDestinationIdV1, DeclarationsWorkspaceWiringV1
 from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..home import HomeScreen
@@ -594,10 +594,12 @@ def _declaration_controller(scenario: WorkbenchFixtureScenario) -> DeclarationsW
     return DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         projection,
-        work_action=action("operator.modelo.work.list"),
-        revisions_action=action("operator.modelo.work.revisions"),
-        filing_action=action("operator.modelo.filing_record.list"),
-        calendar_projection=_calendar_projection(scenario),
+        DeclarationsWorkspaceWiringV1(
+            work_action=action("operator.modelo.work.list"),
+            revisions_action=action("operator.modelo.work.revisions"),
+            filing_action=action("operator.modelo.filing_record.list"),
+            calendar_projection=_calendar_projection(scenario),
+        ),
     )
 
 

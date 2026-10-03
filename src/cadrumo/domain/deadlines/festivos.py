@@ -38,7 +38,7 @@ validated registry authority.
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 from enum import StrEnum
 from threading import RLock
@@ -49,6 +49,7 @@ from pydantic_core import CoreSchema, core_schema
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.registry_token import RegistryToken
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
 from ..calculations.registry.schema_base import DateAxis
@@ -60,13 +61,15 @@ HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID = "deadlines.holiday-calendar-publica
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.calendar_ccaa_catalogue import CalendarCcaaCatalogue
+    from ..calculations.registry.facts.variants import GovernedFactVariant
 
 # ---------------------------------------------------------------------------
 # CCAA enumeration (ISO 3166-2:ES codes).
 # ---------------------------------------------------------------------------
 
 
-class CalendarCCAA(str):
+class CalendarCCAA(RegistryToken):
     """Registry-projected ISO 3166-2:ES deadline-calendar territory token.
 
     Fact 0143 owns the nineteen territory codes used by the deadline calendar,
@@ -78,18 +81,8 @@ class CalendarCCAA(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: object, *, _registry_validated: bool = False) -> Self:
-        """Construct a token only from a registry projection."""
-        if _registry_validated:
-            if not isinstance(value, str) or not value:
-                raise ValueError("calendar CCAA code must be a non-empty string")
-            return str.__new__(cls, value)
-        raise TypeError("CalendarCCAA tokens must be projected from the registry")
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
+    _projection_source = "registry"
+    _empty_value_message = "calendar CCAA code must be a non-empty string"
 
     @classmethod
     def _require_registry_token(cls, value: object) -> Self:
@@ -110,11 +103,6 @@ class CalendarCCAA(str):
             json_schema_input_schema=core_schema.str_schema(),
             serialization=core_schema.to_string_ser_schema(),
         )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical ISO code."""
-        return str(self)
 
     @property
     def name(self) -> str:
@@ -304,6 +292,34 @@ def holiday_calendar_from_authority(
     through exact event queries, retaining the authority's provenance.
     """
     coordinate = date(year, 7, 1)
+    publication = _resolve_holiday_publication(year, coordinate, operation=operation)
+    boe_ref_value, boe_url_value, verified_value = _publication_fields(publication, year=year)
+    territory = _calendar_territory_resolver(operation=operation)
+    verified_territories = _verified_calendar_territories(
+        verified_value,
+        coordinate=coordinate,
+        year=year,
+        territory=territory,
+    )
+    boe_ref = _required_publication_string(boe_ref_value, year=year, label="reference")
+    boe_url = _required_publication_string(boe_url_value, year=year, label="URL")
+    national, ccaa = _calendar_holidays_from_authority(year, operation=operation, territory=territory)
+    return HolidayCalendar(
+        year=year,
+        boe_ref=boe_ref,
+        boe_url=boe_url,
+        national=national,
+        ccaa=ccaa,
+        verified_territories=verified_territories,
+    )
+
+
+def _resolve_holiday_publication(
+    year: int,
+    coordinate: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ResolvedEventFact:
     selected = operation
     try:
         publication = selected.resolve_governed_fact(
@@ -321,18 +337,31 @@ def holiday_calendar_from_authority(
     # one: only an authored publication makes absent holiday events business days.
     if publication.projection_direction is not TemporalProjectionDirection.AUTHORED:
         raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
+    return publication
+
+
+def _publication_fields(
+    publication: ResolvedEventFact,
+    *,
+    year: int,
+) -> tuple[object, object, str]:
     publication_outputs = {output.name: output.value for output in publication.payload.outputs}
     boe_ref = publication_outputs.get("boe_ref")
     boe_url = publication_outputs.get("boe_url")
     verified_value = publication_outputs.get("verified_territories", "")
     if not isinstance(verified_value, str):
         raise DeadlineValidationError(f"holiday calendar publication for {year} has malformed verified territories")
-    from ..calculations.registry.calendar_ccaa_catalogue import (
-        CalendarCcaaCatalogue,
-        resolve_calendar_ccaa_catalogue,
-    )
+    return boe_ref, boe_url, verified_value
+
+
+def _calendar_territory_resolver(
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Callable[[str, date], CalendarCCAA]:
+    from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 
     catalogues: dict[date, CalendarCcaaCatalogue] = {}
+    selected = operation
 
     def territory(value: str, effective_date: date) -> CalendarCCAA:
         catalogue = catalogues.get(effective_date)
@@ -341,59 +370,84 @@ def holiday_calendar_from_authority(
             catalogues[effective_date] = catalogue
         return catalogue.require(value)
 
+    return territory
+
+
+def _verified_calendar_territories(
+    verified_value: str,
+    *,
+    coordinate: date,
+    year: int,
+    territory: Callable[[str, date], CalendarCCAA],
+) -> tuple[CalendarCCAA, ...]:
     verified_territories = tuple(
         territory(token.strip(), coordinate) for token in verified_value.split(",") if token.strip()
     )
     if len(set(verified_territories)) != len(verified_territories):
         raise DeadlineValidationError(f"holiday calendar publication for {year} repeats a verified territory")
-    if not isinstance(boe_ref, str) or not boe_ref:
-        raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE reference")
-    if not isinstance(boe_url, str) or not boe_url:
-        raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE URL")
+    return verified_territories
 
+
+def _required_publication_string(value: object, *, year: int, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE {label}")
+    return value
+
+
+def _calendar_holidays_from_authority(
+    year: int,
+    *,
+    operation: PinnedAuthorityOperation,
+    territory: Callable[[str, date], CalendarCCAA],
+) -> tuple[tuple[Holiday, ...], tuple[Holiday, ...]]:
     fact = operation.governed_fact(HOLIDAY_EVENT_FACT_ID)
     national: list[Holiday] = []
     ccaa: list[Holiday] = []
     for variant in fact.variants:
-        if variant.valid_from is None:
-            raise DeadlineValidationError(f"holiday event variant {variant.variant_id!r} has no validity start")
-        if variant.valid_from.year != year:
+        holiday = _holiday_from_authority_variant(variant, year=year, operation=operation, territory=territory)
+        if holiday is None:
             continue
-        resolved = selected.resolve_governed_fact(
-            EventFactQuery(
-                fact_id=HOLIDAY_EVENT_FACT_ID,
-                date_axis=DateAxis.SUBMISSION_DATE,
-                effective_date=variant.valid_from,
-                selectors=variant.selectors,
-            )
-        )
-        if not isinstance(resolved, ResolvedEventFact):
-            raise DeadlineValidationError("holiday event must resolve to an event fact")
-        outputs = {output.name: output.value for output in resolved.payload.outputs}
-        name = outputs.get("name")
-        selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
-        jurisdiction_value = selectors.get("jurisdiction")
-        if not isinstance(name, str) or not isinstance(jurisdiction_value, str):
-            raise DeadlineValidationError(f"holiday event for {year} is incomplete")
-        jurisdiction = HolidayJurisdiction(jurisdiction_value)
-        ccaa_value = selectors.get("ccaa_code")
-        holiday = Holiday(
-            holiday_date=resolved.payload.event_date,
-            jurisdiction=jurisdiction,
-            ccaa_code=territory(ccaa_value, variant.valid_from) if isinstance(ccaa_value, str) else None,
-            name=name,
-        )
-        if jurisdiction is HolidayJurisdiction.NATIONAL:
+        if holiday.jurisdiction is HolidayJurisdiction.NATIONAL:
             national.append(holiday)
         else:
             ccaa.append(holiday)
-    return HolidayCalendar(
-        year=year,
-        boe_ref=boe_ref,
-        boe_url=boe_url,
-        national=tuple(national),
-        ccaa=tuple(ccaa),
-        verified_territories=verified_territories,
+    return tuple(national), tuple(ccaa)
+
+
+def _holiday_from_authority_variant(
+    variant: GovernedFactVariant,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+    territory: Callable[[str, date], CalendarCCAA],
+) -> Holiday | None:
+    if variant.valid_from is None:
+        raise DeadlineValidationError(f"holiday event variant {variant.variant_id!r} has no validity start")
+    if variant.valid_from.year != year:
+        return None
+    resolved = operation.resolve_governed_fact(
+        EventFactQuery(
+            fact_id=HOLIDAY_EVENT_FACT_ID,
+            date_axis=DateAxis.SUBMISSION_DATE,
+            effective_date=variant.valid_from,
+            selectors=variant.selectors,
+        )
+    )
+    if not isinstance(resolved, ResolvedEventFact):
+        raise DeadlineValidationError("holiday event must resolve to an event fact")
+    outputs = {output.name: output.value for output in resolved.payload.outputs}
+    name = outputs.get("name")
+    selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
+    jurisdiction_value = selectors.get("jurisdiction")
+    if not isinstance(name, str) or not isinstance(jurisdiction_value, str):
+        raise DeadlineValidationError(f"holiday event for {year} is incomplete")
+    jurisdiction = HolidayJurisdiction(jurisdiction_value)
+    ccaa_value = selectors.get("ccaa_code")
+    return Holiday(
+        holiday_date=resolved.payload.event_date,
+        jurisdiction=jurisdiction,
+        ccaa_code=territory(ccaa_value, variant.valid_from) if isinstance(ccaa_value, str) else None,
+        name=name,
     )
 
 
@@ -403,6 +457,15 @@ def holiday_calendar_from_authority(
 
 
 _WEEKEND = {5, 6}  # Saturday, Sunday — Python's date.weekday()
+
+
+def _require_calendar_year(candidate: date, *, calendar: HolidayCalendar) -> None:
+    # A calendar says nothing about another year's holidays: answering from it
+    # would report 1 January of the following year as a business day.
+    if candidate.year != calendar.year:
+        raise DeadlineValidationError(
+            f"the {calendar.year} holiday calendar cannot classify {candidate.isoformat()}",
+        )
 
 
 def _holidays_on(
@@ -415,6 +478,7 @@ def _holidays_on(
 
     National holidays are always included regardless of CCAA.
     """
+    _require_calendar_year(candidate, calendar=calendar)
     matches: list[Holiday] = []
     for holiday in calendar.national:
         if holiday.holiday_date == candidate:
@@ -439,8 +503,10 @@ def is_business_day(
     supplied) not a CCAA holiday for that ccaa-year pair. When
     ``ccaa_code`` is ``None`` the predicate degrades to national-only:
     callers with no tax-residence information get weekend + national
-    detection but miss CCAA shifts.
+    detection but miss CCAA shifts. A date outside ``calendar.year`` is
+    refused rather than classified.
     """
+    _require_calendar_year(candidate, calendar=calendar)
     if candidate.weekday() in _WEEKEND:
         return False
     return not _holidays_on(candidate, calendar=calendar, ccaa_code=ccaa_code)
@@ -458,11 +524,25 @@ def next_business_day(
     safe against pathological inputs; in practice the AEAT calendar
     never strings more than four non-business days together (e.g.
     Semana Santa weekend + Jueves Santo + Viernes Santo + Lunes de
-    Pascua = 4 days).
+    Pascua = 4 days). A walk that leaves ``calendar.year`` is refused;
+    :func:`shift_deadline` walks across years with each year's calendar.
     """
+    return _first_business_day(
+        start,
+        ccaa_code=ccaa_code,
+        business_day=lambda candidate: is_business_day(candidate, calendar=calendar, ccaa_code=ccaa_code),
+    )
+
+
+def _first_business_day(
+    start: date,
+    *,
+    ccaa_code: CalendarCCAA | None,
+    business_day: Callable[[date], bool],
+) -> date:
     candidate = start
     for _ in range(14):
-        if is_business_day(candidate, calendar=calendar, ccaa_code=ccaa_code):
+        if business_day(candidate):
             return candidate
         candidate = candidate + timedelta(days=1)
     raise DeadlineValidationError(
@@ -507,12 +587,72 @@ def _reason_for(
     return reason, jurisdictions, holiday_names
 
 
+def _calendar_source(
+    calendars: tuple[HolidayCalendar, ...],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Callable[[int], HolidayCalendar]:
+    """Return a per-year calendar lookup: supplied calendars first, then the authority."""
+    supplied: dict[int, HolidayCalendar] = {}
+    for calendar in calendars:
+        if calendar.year in supplied:
+            raise DeadlineValidationError(f"more than one holiday calendar was supplied for {calendar.year}")
+        supplied[calendar.year] = calendar
+
+    def calendar_for(year: int) -> HolidayCalendar:
+        calendar = supplied.get(year)
+        return calendar if calendar is not None else load_holiday_calendar(year, operation=operation)
+
+    return calendar_for
+
+
+def _territory_coverage(
+    ccaa_code: CalendarCCAA | None,
+    *,
+    calendar: HolidayCalendar,
+) -> tuple[DeadlineHolidayCoverage, CalendarCCAA | None]:
+    """Return the coverage one year's calendar gives and the territory it may apply."""
+    # A later deadline is the harmful error, so a territory's regional
+    # holidays only move a date once its list for the year is verified.
+    if ccaa_code is None:
+        return DeadlineHolidayCoverage.NATIONAL_ONLY, None
+    if ccaa_code in calendar.verified_territories:
+        return DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, ccaa_code
+    return DeadlineHolidayCoverage.TERRITORY_UNVERIFIED, None
+
+
+def _walk_to_business_day(
+    start: date,
+    *,
+    ccaa_code: CalendarCCAA | None,
+    coverage: DeadlineHolidayCoverage,
+    calendar_for: Callable[[int], HolidayCalendar],
+) -> tuple[date, DeadlineHolidayCoverage]:
+    """Walk forward from ``start`` judging each day against its own year's calendar.
+
+    The returned coverage is degraded when a year the walk enters does not
+    verify the territory.
+    """
+    walked_coverage = coverage
+
+    def business_day(candidate: date) -> bool:
+        nonlocal walked_coverage
+        calendar = calendar_for(candidate.year)
+        year_coverage, applied_territory = _territory_coverage(ccaa_code, calendar=calendar)
+        if year_coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
+            walked_coverage = year_coverage
+        return is_business_day(candidate, calendar=calendar, ccaa_code=applied_territory)
+
+    adjusted = _first_business_day(start, ccaa_code=ccaa_code, business_day=business_day)
+    return adjusted, walked_coverage
+
+
 def shift_deadline(
     original_close_date: date,
     *,
     modelo: str,
     ccaa_code: CalendarCCAA | None,
-    calendar: HolidayCalendar | None = None,
+    calendars: tuple[HolidayCalendar, ...] = (),
     operation: PinnedAuthorityOperation,
 ) -> DeadlineShift:
     """Apply the AEAT deadline-shift rule and return a :class:`DeadlineShift` result.
@@ -528,11 +668,14 @@ def shift_deadline(
     the shift and return an unshifted :class:`DeadlineShift` with reason
     ``modelo_exception``.
 
-    When ``calendar`` is omitted, the caller's pinned ``operation`` resolves a
-    BOE-published calendar through the governed publication and holiday event
-    facts. A missing publication fact fails closed; it is never treated as a
-    holiday-free calendar. Callers that already hold a calendar may pass it
-    directly while retaining the operation that owns the workflow.
+    Each day is judged against its own year's calendar, so a walk past 31
+    December sees the following year's holidays. A year absent from
+    ``calendars`` is resolved through the caller's pinned ``operation`` from
+    the governed publication and holiday event facts. A missing publication
+    fact for any year the walk enters fails closed with
+    :class:`DeadlineValidationError`; it is never treated as a holiday-free
+    calendar. Coverage reports the weakest territory verification among the
+    years consulted.
     """
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
@@ -549,27 +692,14 @@ def shift_deadline(
             coverage=DeadlineHolidayCoverage.NOT_SHIFTED,
         )
 
-    if calendar is not None:
-        target_calendar = calendar
-    else:
-        target_calendar = load_holiday_calendar(original_close_date.year, operation=operation)
-
-    # A later deadline is the harmful error, so a territory's regional
-    # holidays only move a date once its list for the year is verified.
-    if ccaa_code is None:
-        coverage = DeadlineHolidayCoverage.NATIONAL_ONLY
-        applied_territory = None
-    elif ccaa_code in target_calendar.verified_territories:
-        coverage = DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
-        applied_territory = ccaa_code
-    else:
-        coverage = DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
-        applied_territory = None
+    calendar_for = _calendar_source(calendars, operation=operation)
+    close_calendar = calendar_for(original_close_date.year)
+    coverage, applied_territory = _territory_coverage(ccaa_code, calendar=close_calendar)
 
     # Determine whether the original date is a business day.
     holidays_on_close = _holidays_on(
         original_close_date,
-        calendar=target_calendar,
+        calendar=close_calendar,
         ccaa_code=applied_territory,
     )
     is_weekend = original_close_date.weekday() in _WEEKEND
@@ -592,11 +722,11 @@ def shift_deadline(
         holidays=holidays_on_close,
     )
 
-    # Walk forward to the next business day.
-    adjusted = next_business_day(
+    adjusted, coverage = _walk_to_business_day(
         original_close_date + timedelta(days=1),
-        calendar=target_calendar,
-        ccaa_code=applied_territory,
+        ccaa_code=ccaa_code,
+        coverage=coverage,
+        calendar_for=calendar_for,
     )
 
     return DeadlineShift(

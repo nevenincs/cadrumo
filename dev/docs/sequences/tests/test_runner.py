@@ -279,7 +279,9 @@ def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_pa
 
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
-    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == "docs-sequence-sandbox"
+    from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+
+    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == CLI_PROFILE_ID_PLACEHOLDER
     assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
     assert not (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).exists()
 

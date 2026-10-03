@@ -11,6 +11,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...errors import RegistryValidationError
 from ...schema import SupportedFilingYearsCatalogue
 from ...schema_base import DateAxis, SourceCitation
+from ..payloads import GovernedFactFamily, ScalarFactPayload
 from ..resolution import (
     GovernedFactQuery,
     ResolvedGovernedFact,
@@ -19,14 +20,8 @@ from ..resolution import (
     resolve_governed_fact,
     unique_mapping_tokens,
 )
-from ..schema import (
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
-    GovernedFactCatalogue,
-    GovernedFactFamily,
-    ScalarFactPayload,
-)
+from ..schema import GovernedFact, GovernedFactCatalogue
+from ..variants import FactOwnership, FactSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

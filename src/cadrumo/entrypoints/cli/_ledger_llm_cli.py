@@ -9,14 +9,14 @@ from pydantic import ValidationError
 
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.classify_operation import LedgerClassifyOperationResult, LedgerOperatorIvaResult
-from ...application.ledger.llm_review_operation import (
+from ...application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
-    LedgerLlmOperationResult,
     LedgerLlmReviewProjection,
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
 )
+from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.operations.registry import OperationSchemaIdentityV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
@@ -31,17 +31,19 @@ from ._ledger_support import (
     parse_decimal_option,
 )
 from .common import bad, emit_envelope
-from .runtime_ledger_classify import run_ledger_operator_iva
-from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
+from .registered_operation_contracts import (
+    RegisteredOperationCompletion,
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,
-    run_registered_operation,
-    submitted_operation_error,
 )
+from .registered_operation_errors import invalid_completion_error, submitted_operation_error
+from .runtime_ledger_classify import run_ledger_operator_iva
+from .runtime_profile_binding import bound_profile_client
+from .runtime_registered_operation import run_registered_operation
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import Callable
+    from uuid import UUID
 
 __all__ = [
     "dispatch_autosplit",
@@ -88,15 +90,7 @@ def _run_review(
     reviewed_projections: list[LedgerLlmReviewProjection] = []
 
     def matches(projection: LedgerLlmReviewProjection) -> bool:
-        suggestion = projection.suggestion
-        expected_kind = "split" if mode == "auto_split" else mode
-        return not (
-            projection.profile_id != client.profile_id
-            or not suggestion.transaction_id.startswith(request.transaction_id)
-            or suggestion.kind != expected_kind
-            or (mode == "auto_split" and not suggestion.children)
-            or (mode != "auto_split" and (suggestion.classification is None or suggestion.confidence is None))
-        )
+        return _matches_llm_review(projection, client.profile_id, request, mode)
 
     def decide(projection: LedgerLlmReviewProjection) -> Literal["apply", "reject"] | None:
         if request.preview or not matches(projection):
@@ -133,66 +127,9 @@ def _run_review(
             terminal_condition=None,
             effect=completed.effect,
         )
-    result = completed.projection
     if request.preview:
-        preview = result.preview
-        if (
-            reviewed is not None
-            or result.outcome != "preview"
-            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code is not None
-            or result.profile_id != client.profile_id
-            or preview is None
-            or not matches(preview)
-            or result.transaction_id != preview.suggestion.transaction_id
-            or result.reviewed_proposal_digest != preview.reviewed_proposal_digest
-            or result.provenance != preview.suggestion.provenance
-        ):
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=completed.terminal_condition,
-                effect=completed.effect,
-                refusal_code=completed.refusal_code,
-            )
-        return preview
-    expected_outcome = (
-        "rejected"
-        if reject
-        else "split"
-        if mode == "auto_split" and reviewed is not None and len(reviewed.suggestion.children) > 1
-        else "classified"
-    )
-    expected_effect = (
-        OperationEffect.NONE
-        if result.outcome == "classified"
-        and result.classification is not None
-        and not result.classification.bucket_event_ids
-        else OperationEffect.UPDATED
-    )
-    if (
-        reviewed is None
-        or not (apply or reject)
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or result.profile_id != client.profile_id
-        or result.reviewed_proposal_digest != reviewed.reviewed_proposal_digest
-        or result.transaction_id != reviewed.suggestion.transaction_id
-        or result.provenance != reviewed.suggestion.provenance
-        or result.outcome != expected_outcome
-        or (result.classification is not None and result.classification.profile_id != client.profile_id)
-        or (result.outcome == "split" and len(result.child_transaction_ids) != len(reviewed.suggestion.children))
-    ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
-    return result
+        return _llm_review_preview(completed, reviewed, client.profile_id, matches)
+    return _llm_review_settled(completed, reviewed, client.profile_id, mode, apply, reject)
 
 
 def emit_llm_rejection(ctx: typer.Context, result: LedgerLlmOperationResult) -> None:
@@ -823,3 +760,134 @@ def ledger_operator_iva_derive(
             tr("cli.ledger.classify.derive_non_derivable", category=derivation.iva_category, note=derivation.note)
         )
     _emit_operator_iva_result(ctx, derivation=derivation)
+
+
+def _matches_llm_review(
+    projection: LedgerLlmReviewProjection,
+    profile_id: UUID,
+    request: LedgerLlmReviewRequest,
+    mode: Literal["classification", "saturated", "auto_split"],
+) -> bool:
+    """Correlate review identity, suggestion kind, and required suggestion data."""
+    suggestion = projection.suggestion
+    expected_kind = "split" if mode == "auto_split" else mode
+    return not (
+        projection.profile_id != profile_id
+        or not suggestion.transaction_id.startswith(request.transaction_id)
+        or suggestion.kind != expected_kind
+        or (mode == "auto_split" and not suggestion.children)
+        or (mode != "auto_split" and (suggestion.classification is None or suggestion.confidence is None))
+    )
+
+
+def _llm_review_preview(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    reviewed: LedgerLlmReviewProjection | None,
+    profile_id: UUID,
+    matches: Callable[[LedgerLlmReviewProjection], bool],
+) -> LedgerLlmReviewProjection:
+    """Admit a nonpersisted preview only when proposal and receipt agree."""
+    result = completed.projection
+    preview = result.preview
+    if (
+        _invalid_llm_preview_receipt(completed, reviewed, profile_id)
+        or preview is None
+        or not matches(preview)
+        or result.transaction_id != preview.suggestion.transaction_id
+        or (result.reviewed_proposal_digest != preview.reviewed_proposal_digest)
+        or (result.provenance != preview.suggestion.provenance)
+    ):
+        raise invalid_completion_error(completed)
+    return preview
+
+
+def _invalid_llm_preview_receipt(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    reviewed: LedgerLlmReviewProjection | None,
+    profile_id: UUID,
+) -> bool:
+    """Require an unreviewed, unchanged, successful preview receipt."""
+    result = completed.projection
+    return (
+        reviewed is not None
+        or result.outcome != "preview"
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or (completed.effect is not OperationEffect.NONE)
+        or (completed.refusal_code is not None)
+        or (result.profile_id != profile_id)
+    )
+
+
+def _expected_llm_review_outcome(
+    mode: Literal["classification", "saturated", "auto_split"], reject: bool, reviewed: LedgerLlmReviewProjection | None
+) -> str:
+    """Derive the settled outcome from the explicit decision and reviewed child count."""
+    return (
+        "rejected"
+        if reject
+        else "split"
+        if mode == "auto_split" and reviewed is not None and (len(reviewed.suggestion.children) > 1)
+        else "classified"
+    )
+
+
+def _expected_llm_review_effect(result: LedgerLlmOperationResult) -> OperationEffect:
+    """Keep an already classified result without event writes unchanged."""
+    return (
+        OperationEffect.NONE
+        if result.outcome == "classified"
+        and result.classification is not None
+        and (not result.classification.bucket_event_ids)
+        else OperationEffect.UPDATED
+    )
+
+
+def _invalid_llm_settled_receipt(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    apply: bool,
+    reject: bool,
+    expected_effect: OperationEffect,
+    profile_id: UUID,
+) -> bool:
+    """Correlate an explicit review decision with its terminal receipt."""
+    result = completed.projection
+    return (
+        not (apply or reject)
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or (completed.effect is not expected_effect)
+        or (result.profile_id != profile_id)
+    )
+
+
+def _invalid_llm_review_proposal(result: LedgerLlmOperationResult, reviewed: LedgerLlmReviewProjection) -> bool:
+    """Require the exact reviewed digest, transaction, and provenance."""
+    return (
+        result.reviewed_proposal_digest != reviewed.reviewed_proposal_digest
+        or result.transaction_id != reviewed.suggestion.transaction_id
+        or result.provenance != reviewed.suggestion.provenance
+    )
+
+
+def _llm_review_settled(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    reviewed: LedgerLlmReviewProjection | None,
+    profile_id: UUID,
+    mode: Literal["classification", "saturated", "auto_split"],
+    apply: bool,
+    reject: bool,
+) -> LedgerLlmOperationResult:
+    """Admit only the settled result of the exact reviewed proposal."""
+    result = completed.projection
+    expected_outcome = _expected_llm_review_outcome(mode, reject, reviewed)
+    expected_effect = _expected_llm_review_effect(result)
+    if (
+        reviewed is None
+        or _invalid_llm_settled_receipt(completed, apply, reject, expected_effect, profile_id)
+        or _invalid_llm_review_proposal(result, reviewed)
+        or result.outcome != expected_outcome
+        or (result.classification is not None and result.classification.profile_id != profile_id)
+        or (result.outcome == "split" and len(result.child_transaction_ids) != len(reviewed.suggestion.children))
+    ):
+        raise invalid_completion_error(completed)
+    return result

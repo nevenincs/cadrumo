@@ -21,24 +21,30 @@ from ..schema_base import (
     RevisionReviewStatusField,
     SourceCitation,
 )
-from ..schema_references import PeriodSelector, TemporalProjectionDirection, TemporalSupportEnvelope
-from .schema import (
+from ..schema_references import (
+    DateSupportEnvelope,
+    PeriodSelector,
+    RegistryValidityWindow,
+    TemporalProjectionDirection,
+    TemporalSupportEnvelope,
+)
+from .payloads import (
     BracketFactPayload,
     EntitySetFactPayload,
     EventFactPayload,
-    FactId,
-    FactOwnership,
-    FactOwnershipField,
-    FactProviderId,
-    FactSelector,
-    GovernedFact,
-    GovernedFactCatalogue,
     GovernedFactFamily,
     MappingFactPayload,
     MultiOutputFactPayload,
     OverrideFactPayload,
     ScalarFactPayload,
 )
+from .schema import (
+    FactId,
+    FactProviderId,
+    GovernedFact,
+    GovernedFactCatalogue,
+)
+from .variants import FactOwnership, FactOwnershipField, FactSelector, GovernedFactVariant
 
 __all__ = [
     "BracketFactQuery",
@@ -168,30 +174,55 @@ class _ResolvedFact(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_resolution_context(self) -> _ResolvedFact:
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise ValueError("resolved governed fact valid_to must be on or after valid_from")
-        inside_window = self.effective_date >= self.valid_from and (
-            self.valid_to is None or self.effective_date <= self.valid_to
-        )
-        if self.projection_direction is TemporalProjectionDirection.AUTHORED:
-            if not inside_window or self.projected_from_date is not None:
-                raise ValueError("authored governed fact resolution must fall within its validity window")
-        elif self.projection_direction is TemporalProjectionDirection.BACKWARD:
-            if self.projected_from_date is None or self.projected_from_date <= self.effective_date:
-                raise ValueError("backward fact projection must originate after the query coordinate")
-        elif self.projected_from_date is None or self.projected_from_date >= self.effective_date:
-            raise ValueError("forward fact projection must originate before the query coordinate")
-        if len(set(self.source_revision_ids)) != len(self.source_revision_ids):
-            raise ValueError("resolved governed fact source revision ids must be unique")
-        names = [selector.name for selector in self.matched_selectors]
-        if len(set(names)) != len(names):
-            raise ValueError("resolved governed fact selector names must be unique")
-        cited = {citation.source_ref for citation in self.source_citations}
-        if not cited.issubset(set(self.source_refs)):
-            raise ValueError("resolved governed fact citations must name a declared source_ref")
-        if not self.legal_refs and not self.source_refs:
-            raise ValueError("resolved governed fact must retain legal or source evidence")
+        _validate_resolved_window_order(self)
+        _validate_resolved_projection_direction(self)
+        _validate_resolved_provenance_context(self)
         return self
+
+
+def _validate_resolved_window_order(fact: _ResolvedFact) -> None:
+    if fact.valid_to is not None and fact.valid_to < fact.valid_from:
+        raise ValueError("resolved governed fact valid_to must be on or after valid_from")
+
+
+def _validate_resolved_projection_direction(fact: _ResolvedFact) -> None:
+    inside_window = fact.effective_date >= fact.valid_from and (
+        fact.valid_to is None or fact.effective_date <= fact.valid_to
+    )
+    if fact.projection_direction is TemporalProjectionDirection.AUTHORED:
+        _validate_authored_projection(fact, inside_window)
+    elif fact.projection_direction is TemporalProjectionDirection.BACKWARD:
+        _validate_backward_projection(fact)
+    else:
+        _validate_forward_projection(fact)
+
+
+def _validate_authored_projection(fact: _ResolvedFact, inside_window: bool) -> None:
+    if not inside_window or fact.projected_from_date is not None:
+        raise ValueError("authored governed fact resolution must fall within its validity window")
+
+
+def _validate_backward_projection(fact: _ResolvedFact) -> None:
+    if fact.projected_from_date is None or fact.projected_from_date <= fact.effective_date:
+        raise ValueError("backward fact projection must originate after the query coordinate")
+
+
+def _validate_forward_projection(fact: _ResolvedFact) -> None:
+    if fact.projected_from_date is None or fact.projected_from_date >= fact.effective_date:
+        raise ValueError("forward fact projection must originate before the query coordinate")
+
+
+def _validate_resolved_provenance_context(fact: _ResolvedFact) -> None:
+    if len(set(fact.source_revision_ids)) != len(fact.source_revision_ids):
+        raise ValueError("resolved governed fact source revision ids must be unique")
+    names = [selector.name for selector in fact.matched_selectors]
+    if len(set(names)) != len(names):
+        raise ValueError("resolved governed fact selector names must be unique")
+    cited = {citation.source_ref for citation in fact.source_citations}
+    if not cited.issubset(set(fact.source_refs)):
+        raise ValueError("resolved governed fact citations must name a declared source_ref")
+    if not fact.legal_refs and not fact.source_refs:
+        raise ValueError("resolved governed fact must retain legal or source evidence")
 
 
 class ResolvedScalarFact(_ResolvedFact):
@@ -331,6 +362,37 @@ def resolve_validated_governed_fact(
     in a gap between explicit windows resolves to nothing rather than to the
     nearest variant.
     """
+    query_selectors = _validate_fact_query(fact, query, support)
+    date_support = support.date_envelope()
+    windows = fact.materialized_windows(date_support)
+    track = _matching_fact_track(fact, query, query_selectors, windows)
+    candidates = _containing_fact_candidates(track, query.effective_date)
+    if not candidates:
+        raise GovernedFactNotApplicableError(
+            fact_id=query.fact_id,
+            effective_date=query.effective_date,
+            date_axis=query.date_axis.value,
+        )
+    winner, winner_window = _select_fact_winner(query, fact, candidates)
+    source_revision_ids = _winner_source_revision_ids(winner)
+    projection_direction, projected_from_date = _resolved_projection_context(date_support, query.effective_date)
+    return _materialize_resolved_fact(
+        fact,
+        query,
+        winner,
+        winner_window,
+        authority_digest,
+        source_revision_ids,
+        projection_direction,
+        projected_from_date,
+    )
+
+
+def _validate_fact_query(
+    fact: GovernedFact,
+    query: GovernedFactQuery,
+    support: TemporalSupportEnvelope,
+) -> frozenset[tuple[str, type[object], object]]:
     if fact.fact_id != query.fact_id:
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} query was paired with {fact.fact_id!r}",
@@ -345,24 +407,36 @@ def resolve_validated_governed_fact(
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} query year {coordinate_year} falls outside the supported filing years"
         )
-    date_support = support.date_envelope()
-    windows = fact.materialized_windows(date_support)
-    track = tuple(
+    return query_selectors
+
+
+def _matching_fact_track(
+    fact: GovernedFact,
+    query: _FactQuery,
+    query_selectors: frozenset[tuple[str, type[object], object]],
+    windows: Mapping[RegistryRevisionNodeId, RegistryValidityWindow],
+) -> tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...]:
+    return tuple(
         (variant, windows[variant.variant_id])
         for variant in fact.variants
         if variant.date_axis is query.date_axis
         and _selector_identity(variant.selectors) == query_selectors
         and _period_matches(variant.period_selector, query)
     )
-    candidates = tuple((variant, window) for variant, window in track if window.contains_date(query.effective_date))
-    projection_direction = TemporalProjectionDirection.AUTHORED
-    projected_from_date: date | None = None
-    if not candidates:
-        raise GovernedFactNotApplicableError(
-            fact_id=query.fact_id,
-            effective_date=query.effective_date,
-            date_axis=query.date_axis.value,
-        )
+
+
+def _containing_fact_candidates(
+    track: tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...],
+    effective_date: date,
+) -> tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...]:
+    return tuple((variant, window) for variant, window in track if window.contains_date(effective_date))
+
+
+def _select_fact_winner(
+    query: _FactQuery,
+    fact: GovernedFact,
+    candidates: tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...],
+) -> tuple[GovernedFactVariant, RegistryValidityWindow]:
     candidate_variants = tuple(variant for variant, _window in candidates)
     superseded = {
         variant_id
@@ -375,14 +449,33 @@ def resolve_validated_governed_fact(
             f"governed fact {query.fact_id!r} query is ambiguous across variants "
             f"{sorted(candidate.variant_id for candidate, _window in candidates)!r}",
         )
-    winner, winner_window = winners[0]
-    source_revision_ids: tuple[RegistryRevisionNodeId, ...] = (
-        tuple(winner.source_revision_ids) if winner.ownership is FactOwnership.GENERATED else (winner.variant_id,)
-    )
-    projected_coordinate = date_support.projection_coordinate(query.effective_date)
-    if projected_coordinate is not None and projected_coordinate != query.effective_date:
-        projection_direction = TemporalProjectionDirection.FORWARD
-        projected_from_date = projected_coordinate
+    return winners[0]
+
+
+def _winner_source_revision_ids(winner: GovernedFactVariant) -> tuple[RegistryRevisionNodeId, ...]:
+    return tuple(winner.source_revision_ids) if winner.ownership is FactOwnership.GENERATED else (winner.variant_id,)
+
+
+def _resolved_projection_context(
+    support: DateSupportEnvelope,
+    effective_date: date,
+) -> tuple[TemporalProjectionDirection, date | None]:
+    projected_coordinate = support.projection_coordinate(effective_date)
+    if projected_coordinate is not None and projected_coordinate != effective_date:
+        return TemporalProjectionDirection.FORWARD, projected_coordinate
+    return TemporalProjectionDirection.AUTHORED, None
+
+
+def _materialize_resolved_fact(
+    fact: GovernedFact,
+    query: _FactQuery,
+    winner: GovernedFactVariant,
+    winner_window: RegistryValidityWindow,
+    authority_digest: str,
+    source_revision_ids: tuple[RegistryRevisionNodeId, ...],
+    projection_direction: TemporalProjectionDirection,
+    projected_from_date: date | None,
+) -> ResolvedGovernedFact:
     return _RESOLVED_FACT_ADAPTER.validate_python(
         {
             "family": fact.family,

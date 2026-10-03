@@ -14,7 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from ..bindings import _structural_binding_mentions, _summary, _unconsumed_binding_report, audit
+from ..binding_signal.report import summary as build_summary
+from ..binding_signal.semantics import structural_binding_mentions, unconsumed_binding_report
+from ..bindings import audit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,7 +39,7 @@ def _report(
     mentions: Sequence[str] = (),
     applicability: Mapping[str, object] | None = None,
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
-    return _unconsumed_binding_report(
+    return unconsumed_binding_report(
         _binding(applicability=applicability),
         typed_consumers=typed,
         structural_mentions=[{"family": family} for family in mentions],
@@ -107,7 +109,7 @@ def test_authoring_delta_families_are_not_read_as_mentions() -> None:
         "constructs": [{"id": "k", "bindings": ["b"]}],
     }
 
-    mentions = [(family, binding_id) for family, _row, _path, binding_id in _structural_binding_mentions(families)]
+    mentions = [(family, binding_id) for family, _row, _path, binding_id in structural_binding_mentions(families)]
 
     assert mentions == [("constructs", "b")]
 
@@ -161,7 +163,7 @@ def test_summary_names_each_blocking_finding(tmp_path: Path) -> None:
     _row, finding = _report()
     assert finding is not None
 
-    summary = _summary(_payload([finding]), tmp_path / "binding-signal.json")
+    summary = build_summary(_payload([finding]), tmp_path / "binding-signal.json")
 
     assert summary["blocking_findings_total"] == 1
     assert summary["blocking_findings"] == [
@@ -182,7 +184,7 @@ def test_summary_of_an_incomplete_census_says_the_counts_are_partial(tmp_path: P
         limitations=({"code": "REGISTRY_LOADER_FAILED"}, {"code": "CONSUMER_CENSUS_UNAVAILABLE"}),
     )
 
-    summary = _summary(payload, tmp_path / "binding-signal.json")
+    summary = build_summary(payload, tmp_path / "binding-signal.json")
 
     assert summary["headline"] == (
         "binding census incomplete (CONSUMER_CENSUS_UNAVAILABLE, REGISTRY_LOADER_FAILED); counts below are partial"
@@ -190,7 +192,7 @@ def test_summary_of_an_incomplete_census_says_the_counts_are_partial(tmp_path: P
 
 
 def test_summary_without_blocking_findings_says_so(tmp_path: Path) -> None:
-    summary = _summary(_payload([]), tmp_path / "binding-signal.json")
+    summary = build_summary(_payload([]), tmp_path / "binding-signal.json")
 
     assert summary["blocking_findings_total"] == 0
     assert summary["blocking_findings"] == []

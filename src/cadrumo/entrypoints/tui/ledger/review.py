@@ -11,6 +11,7 @@ from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError
+from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable
 from .controller import (
@@ -18,7 +19,6 @@ from .controller import (
     LedgerRouteRequested,
     LedgerWorkspaceController,
     LedgerWorkspaceScreen,
-    ledger_copy,
     review_status_label,
 )
 from .workspace_presentation import door_refusal_text, ledger_workspace_page, restore_transaction_focus
@@ -46,11 +46,11 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.review.title"), classes="cadrumo-banner")
+        yield Static(tr("tui.ledger.review.title"), classes="cadrumo-banner")
         with ledger_workspace_page() as navigation:
             yield navigation
             yield Static(
-                ledger_copy("tui.ledger.review.filter_all"),
+                tr("tui.ledger.review.filter_all"),
                 markup=False,
             )
             # The entry names itself with its date and description, and it is
@@ -62,10 +62,10 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
             yield review_table
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             if self.controller.can_exclude():
-                yield Static(ledger_copy("tui.ledger.review.exclude_hint"), classes="ledger-empty", markup=False)
+                yield Static(tr("tui.ledger.review.exclude_hint"), classes="ledger-empty", markup=False)
                 yield Static("", id="ledger-exclusion-question", markup=False)
-                yield Button(ledger_copy("tui.ledger.review.exclude_confirm"), id="ledger-exclusion-confirm")
-                yield Button(ledger_copy("tui.ledger.review.exclude_cancel"), id="ledger-exclusion-cancel")
+                yield Button(tr("tui.ledger.review.exclude_confirm"), id="ledger-exclusion-confirm")
+                yield Button(tr("tui.ledger.review.exclude_cancel"), id="ledger-exclusion-cancel")
                 yield Static("", id="ledger-flow-status", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
@@ -73,18 +73,18 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         """Populate the filter disclosure and canonical review rows."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.entry"), key="entry")
-        table.add_column(ledger_copy("tui.ledger.column.review_status"), key="review_status")
-        table.add_column(ledger_copy("tui.ledger.column.next"), key="next")
+        table.add_column(tr("tui.ledger.column.entry"), key="entry")
+        table.add_column(tr("tui.ledger.column.review_status"), key="review_status")
+        table.add_column(tr("tui.ledger.column.next"), key="next")
         for row in self.controller.review_rows():
             table.add_row(
                 self.controller.entry_label(row.transaction_id),
                 review_status_label(row.review_status),
-                ledger_copy("tui.ledger.review.open"),
+                tr("tui.ledger.review.open"),
                 key=row.transaction_id,
             )
         if not table.row_count:
-            self.query_one("#ledger-empty", Static).update(ledger_copy("tui.ledger.review.empty"))
+            self.query_one("#ledger-empty", Static).update(tr("tui.ledger.review.empty"))
         self._show_exclusion_controls(open_=False)
         navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
         restore_transaction_focus(
@@ -117,13 +117,13 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         """Ask to exclude the highlighted entry, naming it, before anything is written."""
         notice = self.query_one("#ledger-refusal", Static)
         if not self.controller.can_exclude():
-            notice.update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            notice.update(tr("tui.ledger.refusal.submission_unavailable"))
             return
         if self.excluding or self.refreshing:
             return
         table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
         if not table.row_count:
-            notice.update(ledger_copy("tui.ledger.review.empty"))
+            notice.update(tr("tui.ledger.review.empty"))
             return
         key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
         if key is None:
@@ -131,7 +131,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.pending_exclusion = key
         notice.update("")
         self.query_one("#ledger-exclusion-question", Static).update(
-            ledger_copy("tui.ledger.review.exclude_question", entry=self.controller.entry_label(key))
+            tr("tui.ledger.review.exclude_question", entry=self.controller.entry_label(key))
         )
         self._show_exclusion_controls(open_=True)
         self.query_one("#ledger-exclusion-confirm", Button).focus()
@@ -140,7 +140,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
     def action_back(self) -> None:
         """Withdraw an open exclusion question before leaving the area."""
         if self.excluding:
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
+            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
             return
         if self.pending_exclusion is not None:
             self._withdraw()
@@ -161,7 +161,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         elif event.button.id == "ledger-exclusion-confirm" and self.pending_exclusion is not None:
             self.excluding = True
             event.button.disabled = True
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.review.excluding"))
+            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.review.excluding"))
             self.run_worker(self._exclude(self.pending_exclusion), exclusive=True)
 
     async def _exclude(self, transaction_id: TransactionId) -> None:
@@ -172,13 +172,13 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         except (CadrumoError, ValidationError) as error:
             self.excluding = False
             self.query_one("#ledger-exclusion-confirm", Button).disabled = False
-            status.update(ledger_copy("tui.ledger.review.exclude_failed"))
+            status.update(tr("tui.ledger.review.exclude_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             return
         self.excluding = False
         self.pending_exclusion = None
         self._show_exclusion_controls(open_=False)
-        status.update(ledger_copy("tui.ledger.review.excluded", entry=label))
+        status.update(tr("tui.ledger.review.excluded", entry=label))
         self.refresh_then(self._reopen)
 
     def _reopen(self) -> None:

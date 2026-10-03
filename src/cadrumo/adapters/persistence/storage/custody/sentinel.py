@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from typing import Final
 
+from .....core.descriptor_write import write_all
 from ..crypto.aead import encrypt_record
 from ..crypto.aes_gcm import GCM_TAG_SIZE
 from .errors import ProfileCustodyRecordError
@@ -77,9 +78,7 @@ def _write_exclusive_fsynced(path: Path, payload: bytes) -> None:
     except OSError as exc:
         raise ProfileCustodyRecordError("profile custody sentinel staging path is unavailable") from exc
     try:
-        written = os.write(descriptor, payload)
-        if written != len(payload):
-            raise OSError("profile custody sentinel short write")
+        write_all(descriptor, payload)
         os.fsync(descriptor)
     except OSError as exc:
         raise ProfileCustodyRecordError("profile custody sentinel could not be durably staged") from exc

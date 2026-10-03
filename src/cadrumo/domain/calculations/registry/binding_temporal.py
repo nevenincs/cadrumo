@@ -329,22 +329,37 @@ def _unbounded_temporal_anchors(
 ) -> tuple[tuple[int, str], ...]:
     """Return the anchor set a member produces before the year bound applies."""
     if isinstance(temporal, PriorQuarterExpandingSpan):
-        try:
-            return same_ejercicio_prior_quarter_anchors(target_period)
-        except RegistryValidationError as exc:
-            raise RegistryValidationError(
-                "prior_quarter_expanding_span cannot interpret the target period; "
-                "only quarterly codes 1T..4T or pago-fraccionado codes 1P..3P are supported",
-                context={"target_period": target_period},
-            ) from exc
+        return _prior_quarter_expanding_anchors(target_period)
     if isinstance(temporal, TargetPeriodOffset):
-        try:
-            return (apply_period_offset(temporal.periods, target_period=target_period),)
-        except RegistryValidationError as exc:
-            raise RegistryValidationError(
-                "target_period_offset cannot interpret the target period",
-                context={"target_period": target_period, "periods": temporal.periods},
-            ) from exc
+        return _target_period_offset_anchor(temporal.periods, target_period)
+    return _declared_period_anchors(temporal, target_period)
+
+
+def _prior_quarter_expanding_anchors(target_period: str) -> tuple[tuple[int, str], ...]:
+    try:
+        return same_ejercicio_prior_quarter_anchors(target_period)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            "prior_quarter_expanding_span cannot interpret the target period; "
+            "only quarterly codes 1T..4T or pago-fraccionado codes 1P..3P are supported",
+            context={"target_period": target_period},
+        ) from exc
+
+
+def _target_period_offset_anchor(periods: int, target_period: str) -> tuple[tuple[int, str], ...]:
+    try:
+        return (apply_period_offset(periods, target_period=target_period),)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            "target_period_offset cannot interpret the target period",
+            context={"target_period": target_period, "periods": periods},
+        ) from exc
+
+
+def _declared_period_anchors(
+    temporal: BindingTemporalSelector,
+    target_period: str,
+) -> tuple[tuple[int, str], ...]:
     if isinstance(temporal, SameTargetContext):
         return ((0, target_period),)
     if isinstance(temporal, FilingYearOffsetByTargetPeriod):
@@ -356,7 +371,9 @@ def _unbounded_temporal_anchors(
         return tuple((temporal.years, period) for period in temporal.source_periods)
     if isinstance(temporal, SameFilingYearPeriods):
         return tuple((0, period) for period in temporal.source_periods)
-    return ((0, temporal.source_period),)
+    if isinstance(temporal, FiledCurrentPeriod):
+        return ((0, temporal.source_period),)
+    raise TypeError(f"unsupported binding temporal selector {temporal!r}")
 
 
 class BindingApplicabilityKind(StrEnum):

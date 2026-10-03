@@ -8,50 +8,32 @@ from dataclasses import dataclass
 from datetime import timedelta
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
+from pydantic import BaseModel, SecretStr
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import (
-    EFFECTS_WITHOUT_PARTIAL_COMMIT,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_declared_frontend_and_action,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .certificate_secret_backend import CertificateSecretBackendFactory
@@ -59,39 +41,28 @@ from .certificate_source_operations import (
     remove_operator_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
+from .models import CertificateSourceName
 from .operator_results import CertificateSourceNotFoundError, CertificateSourceSecretMutationResult
 from .operator_scope_ports import OperatorScopePorts
 
 CERTIFICATE_CREDENTIAL_SET_OPERATION_DEFINITION_ID = "auth.certificate.secret.set"
 CERTIFICATE_CREDENTIAL_REMOVE_OPERATION_DEFINITION_ID = "auth.certificate.secret.remove"
 CERTIFICATE_CREDENTIAL_KIND = "auth.certificate.passphrase"
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 _FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_ACTIONS = frozenset(
-    {AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT}
-)
 
 
 class CertificateSecretMutationRequest(BaseModel):
     """Credential-free exact profile and named source; bytes use the one-shot broker."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     profile_id: UUID
-    name: str = Field(min_length=1, max_length=128)
-
-    @field_validator("name")
-    @classmethod
-    def _normalize_name(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("certificate source name must not be blank")
-        return normalized
+    name: CertificateSourceName
 
 
 class CertificateSecretMutationProjection(BaseModel):
     """Only the named source and nonsecret effect facts leave worker custody."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     profile_id: UUID
     result: CertificateSourceSecretMutationResult
 
@@ -137,61 +108,81 @@ class CertificateSecretMutationExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase("auth.certificate-secret.preflight")
 
-        async def publish(secret_value: SecretStr | None) -> str:
-            async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
-                await context.events.phase("auth.certificate-secret.execute")
-                try:
-                    if self._removing:
-                        result = await asyncio.to_thread(
-                            self._remove_secret,
-                            name=payload.name,
-                            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
-                            operation=context.authority_operation,
-                            operator_scope_ports=self._ports.operator_scope_ports,
-                        )
-                    else:
-                        if secret_value is None:
-                            raise ValueError("certificate passphrase set requires one-shot proof")
-                        result = await asyncio.to_thread(
-                            self._set_secret,
-                            name=payload.name,
-                            secret=secret_value,
-                            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
-                            operation=context.authority_operation,
-                            operator_scope_ports=self._ports.operator_scope_ports,
-                        )
-                except CertificateSourceNotFoundError:
-                    await context.events.effect(OperationEffect.NONE)
-                    raise
-                if type(result) is not CertificateSourceSecretMutationResult:
-                    raise ValueError("certificate secret mutation returned an invalid result")
-                validated = CertificateSourceSecretMutationResult.model_validate_json(
-                    result.model_dump_json(), strict=True
-                )
-                if (
-                    validated.name != payload.name.strip()
-                    or validated.has_secret is self._removing
-                    or (not self._removing and validated.removed)
-                    or (self._removing and validated.rotated)
-                ):
-                    raise ValueError("certificate secret mutation returned a mismatched result")
-                changed = not self._removing or validated.removed
-                await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
-                await context.events.phase("auth.certificate-secret.settlement")
-                return await context.operands.put(validated, written_at=now())
-
         if self._removing:
-            return await await_cancellation_complete(publish(None), task_name="certificate-secret-remove-publication")
+            return await await_cancellation_complete(
+                self._publish(payload, context, None), task_name="certificate-secret-remove-publication"
+            )
         await context.events.phase("auth.certificate-secret.consume")
         async with context.ephemeral_secret.consume() as secret:
             passphrase = bytes(secret).decode("utf-8")
             try:
                 return await await_cancellation_complete(
-                    publish(SecretStr(passphrase)), task_name="certificate-secret-set-publication"
+                    self._publish(payload, context, SecretStr(passphrase)),
+                    task_name="certificate-secret-set-publication",
                 )
             finally:
                 passphrase = ""
+
+    async def _publish(
+        self,
+        payload: CertificateSecretMutationRequest,
+        context: OperationExecutorContext,
+        secret_value: SecretStr | None,
+    ) -> str:
+        async with context.cancellation.irreversible_section():
+            await context.events.effect(OperationEffect.UNKNOWN)
+            await context.events.phase("auth.certificate-secret.execute")
+            try:
+                result = await self._invoke_service(payload, context, secret_value)
+            except CertificateSourceNotFoundError:
+                await context.events.effect(OperationEffect.NONE)
+                raise
+            validated = _validate_certificate_secret_mutation(result, payload, removing=self._removing)
+            changed = not self._removing or validated.removed
+            await context.events.effect(OperationEffect.UPDATED if changed else OperationEffect.NONE)
+            await context.events.phase("auth.certificate-secret.settlement")
+            return await context.operands.put(validated, written_at=now())
+
+    async def _invoke_service(
+        self,
+        payload: CertificateSecretMutationRequest,
+        context: OperationExecutorContext,
+        secret_value: SecretStr | None,
+    ) -> CertificateSourceSecretMutationResult:
+        if self._removing:
+            return await asyncio.to_thread(
+                self._remove_secret,
+                name=payload.name,
+                certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
+                operation=context.authority_operation,
+                operator_scope_ports=self._ports.operator_scope_ports,
+            )
+        if secret_value is None:
+            raise ValueError("certificate passphrase set requires one-shot proof")
+        return await asyncio.to_thread(
+            self._set_secret,
+            name=payload.name,
+            secret=secret_value,
+            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
+            operation=context.authority_operation,
+            operator_scope_ports=self._ports.operator_scope_ports,
+        )
+
+
+def _validate_certificate_secret_mutation(
+    result: object, payload: CertificateSecretMutationRequest, *, removing: bool
+) -> CertificateSourceSecretMutationResult:
+    if type(result) is not CertificateSourceSecretMutationResult:
+        raise ValueError("certificate secret mutation returned an invalid result")
+    validated = CertificateSourceSecretMutationResult.model_validate_json(result.model_dump_json(), strict=True)
+    if (
+        validated.name != payload.name.strip()
+        or validated.has_secret is removing
+        or (not removing and validated.removed)
+        or (removing and validated.rotated)
+    ):
+        raise ValueError("certificate secret mutation returned a mismatched result")
+    return validated
 
 
 def _definition(*, removing: bool, ports: CertificateSecretOperationPorts) -> OperationDefinition:
@@ -216,19 +207,7 @@ def _definition(*, removing: bool, ports: CertificateSecretOperationPorts) -> Op
             "auth.certificate-secret.settlement",
         ),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_FRONTENDS,
         ephemeral_secret=(
@@ -266,54 +245,24 @@ def resolve_certificate_secret_access(
         str(context.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if context.frontend not in _FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in _ACTIONS:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    disclosure = None
-    if context.action is AccessAction.OBSERVE:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != request.definition_id + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=_ACTIONS,
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-            requires_human=True,
-        ),
+    access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
+    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
+    return bind_operation_access_profile(
+        context, access_profile, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
     )
 
 
 def project_certificate_secret_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only the nonsecret source status from a successful exact-profile receipt."""
+    _require_certificate_secret_receipt(result, receipt)
+    profile_id = _certificate_secret_profile_id(receipt)
+    validated = CertificateSourceSecretMutationResult.model_validate_json(result.model_dump_json(), strict=True)
+    removing = receipt.identity.definition_id == CERTIFICATE_CREDENTIAL_REMOVE_OPERATION_DEFINITION_ID
+    _require_certificate_secret_effect(validated, receipt, removing=removing)
+    return CertificateSecretMutationProjection(profile_id=profile_id, result=validated)
+
+
+def _require_certificate_secret_receipt(result: BaseModel, receipt: OperationTerminalReceipt) -> None:
     if (
         type(result) is not CertificateSourceSecretMutationResult
         or receipt.identity.definition_id
@@ -325,14 +274,24 @@ def project_certificate_secret_result(result: BaseModel, receipt: OperationTermi
         or receipt.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
     ):
         raise ValueError("invalid certificate secret result")
+
+
+def _certificate_secret_profile_id(receipt: OperationTerminalReceipt) -> UUID:
     try:
         profile_id = UUID(receipt.identity.subject_ref.removeprefix("profile:"))
     except ValueError:
         raise ValueError("invalid certificate secret subject") from None
     if receipt.identity.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("invalid certificate secret subject")
-    validated = CertificateSourceSecretMutationResult.model_validate_json(result.model_dump_json(), strict=True)
-    removing = receipt.identity.definition_id == CERTIFICATE_CREDENTIAL_REMOVE_OPERATION_DEFINITION_ID
+    return profile_id
+
+
+def _require_certificate_secret_effect(
+    validated: CertificateSourceSecretMutationResult,
+    receipt: OperationTerminalReceipt,
+    *,
+    removing: bool,
+) -> None:
     if (
         not validated.name.strip()
         or validated.has_secret is removing
@@ -346,7 +305,6 @@ def project_certificate_secret_result(result: BaseModel, receipt: OperationTermi
         )
     ):
         raise ValueError("invalid certificate secret effect")
-    return CertificateSecretMutationProjection(profile_id=profile_id, result=validated)
 
 
 def build_certificate_secret_operation_registrations(
@@ -354,18 +312,9 @@ def build_certificate_secret_operation_registrations(
 ) -> tuple[OperationPublicDefinitionRegistrationV1, OperationPublicDefinitionRegistrationV1]:
     """Bind current request/result schemas and the shared human access policy."""
     registrations = tuple(
-        OperationPublicDefinitionRegistrationV1.compose(
+        OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".request",
-                schema_version=1,
-                model_type=CertificateSecretMutationRequest,
-            ),
-            result_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".result",
-                schema_version=1,
-                model_type=CertificateSecretMutationProjection,
-            ),
+            public_result_type=CertificateSecretMutationProjection,
             result_projector=project_certificate_secret_result,
             access_resolver=resolve_certificate_secret_access,
         )

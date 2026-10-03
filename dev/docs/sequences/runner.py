@@ -63,7 +63,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID
 
 import keyring
@@ -1009,29 +1009,15 @@ def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool,
     for match in _PATH_SEGMENT_RE.finditer(path):
         key, index, quoted_key = match.group(1), match.group(2), match.group(3)
         if quoted_key is not None:
-            if isinstance(current, Mapping):
-                step_q: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
-                if quoted_key not in step_q:
-                    return False, None
-                current = step_q[quoted_key]
-                continue
-            return False, None
+            found, current = _resolve_object_key(current, quoted_key)
+            if not found:
+                return False, None
+            continue
         if key is not None:
-            if isinstance(current, Mapping):
-                # Re-key defensively: JSON object keys are always strings, and
-                # the str-keyed view gives the checker a concrete key type.
-                step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
-                if key not in step:
-                    return False, None
-                current = step[key]
-                continue
-            if isinstance(current, list) and key.isdigit():
-                position = int(key)
-                if position >= len(current):
-                    return False, None
-                current = current[position]
-                continue
-            return False, None
+            found, current = _resolve_dotted_segment(current, key)
+            if not found:
+                return False, None
+            continue
         if not isinstance(current, list) or int(index) >= len(current):
             return False, None
         current = current[int(index)]
@@ -1454,102 +1440,187 @@ def _execute_page_in_root(
         fixtures_root=fixtures_root,
     ) as sandbox:
         for sequence in sequences:
-            if not sequence.executed_frames:
-                continue  # all-@static: nothing runs, so no transcript
-            captures: dict[str, CapturedScalar] = {}
-            seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
-            seed_frames = (
-                tuple(frame for frame in sequence.executed_frames if frame.source == seed_source)
-                if seed_source is not None
-                else ()
-            )
-            body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
-            reused_seed_executions: tuple[FrameExecution, ...] = ()
-            seed_signature = _seed_execution_signature(seed_frames)
-
-            if sequence.seed is not None and not seed_frames:
-                detail = (
-                    f"page {label!r} sequence {sequence.sequence_id!r} requests seed "
-                    f"{sequence.seed!r}, but no inlined seed frames are available; reparse the "
-                    "sequence from its contract before running page coherence"
-                )
-                warnings.warn(detail, UserWarning, stacklevel=2)
-                raise SequenceExecutionError(sequence.sequence_id, detail)
-
-            if sequence.seed is not None and sequence.seed not in page_seeds and seed_signature in page_seed_signatures:
-                prior_identity, prior = page_seed_signatures[seed_signature]
-                warnings.warn(
-                    f"page {label!r} sequence {sequence.sequence_id!r} seed {sequence.seed!r} "
-                    f"is execution-equivalent to already-run seed {prior_identity!r}; reused its "
-                    "once-per-page state and immutable captures instead of replaying side effects",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                page_seeds[sequence.seed] = _PageSeedState(
-                    frames=seed_frames,
-                    executions=prior.executions,
-                    captures=prior.captures,
-                )
-                captures.update({item.name: item.value for item in prior.captures})
-                reused_seed_executions = prior.executions
-            elif sequence.seed is not None and sequence.seed in page_seeds:
-                prior = page_seeds[sequence.seed]
-                if prior.frames != seed_frames:
-                    detail = (
-                        f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
-                        f"{sequence.seed!r} with a divergent definition; give the changed recipe "
-                        "a new seed identity or make every use structurally equivalent"
-                    )
-                    warnings.warn(detail, UserWarning, stacklevel=2)
-                    raise SequenceExecutionError(sequence.sequence_id, detail)
-                available = {item.name: item.value for item in prior.captures}
-                required = {binding.name for frame in seed_frames for binding in frame.captures}
-                missing = sorted(required - available.keys())
-                if missing:
-                    detail = (
-                        f"page {label!r} sequence {sequence.sequence_id!r} cannot reuse seed "
-                        f"{sequence.seed!r}; page seed state lacks captures {missing}. Re-run from "
-                        "a clean page root and ensure every declared seed capture resolves"
-                    )
-                    warnings.warn(detail, UserWarning, stacklevel=2)
-                    raise SequenceExecutionError(sequence.sequence_id, detail)
-                warnings.warn(
-                    f"page {label!r} sequence {sequence.sequence_id!r} would replay seed "
-                    f"{sequence.seed!r}; reused its once-per-page state and immutable captures instead",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                captures.update(available)
-                reused_seed_executions = prior.executions
-            elif sequence.seed is not None:
-                seed_executions = tuple(
-                    _execute_frame(sequence, frame, captures, frame_index=frame_index)
-                    for frame_index, frame in enumerate(seed_frames)
-                )
-                seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
-                state = _PageSeedState(
-                    frames=seed_frames,
-                    executions=seed_executions,
-                    captures=seed_captures,
-                )
-                page_seeds[sequence.seed] = state
-                page_seed_signatures[seed_signature] = (sequence.seed, state)
-                reused_seed_executions = seed_executions
-
-            body_start = len(seed_frames)
-            body_executions = tuple(
-                _execute_frame(sequence, frame, captures, frame_index=body_start + frame_index)
-                for frame_index, frame in enumerate(body_frames)
-            )
-            frames = reused_seed_executions + body_executions
-            transcripts.append(
-                SequenceTranscript(
-                    sequence_id=sequence.sequence_id,
-                    profile_id=sandbox.profile_id,
-                    frozen_instant=sandbox.frozen_instant,
-                    storage_root=str(sandbox.storage_root),
-                    workdir=str(sandbox.workdir),
-                    frames=frames,
-                ),
-            )
+            transcript = _execute_page_sequence(sequence, label, sandbox, page_seeds, page_seed_signatures)
+            if transcript is not None:
+                transcripts.append(transcript)
     return tuple(transcripts)
+
+
+def _execute_page_sequence(
+    sequence: ParsedSequence,
+    label: str,
+    sandbox: SequenceSandbox,
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> SequenceTranscript | None:
+    if not sequence.executed_frames:
+        return None  # all-@static: nothing runs, so no transcript
+    captures: dict[str, CapturedScalar] = {}
+    seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
+    seed_frames = (
+        tuple(frame for frame in sequence.executed_frames if frame.source == seed_source)
+        if seed_source is not None
+        else ()
+    )
+    body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
+    reused_seed_executions: tuple[FrameExecution, ...] = ()
+    seed_signature = _seed_execution_signature(seed_frames)
+
+    _require_page_seed_frames(sequence, label, seed_frames)
+
+    reused_seed_executions = _page_seed_executions(
+        sequence, label, seed_frames, seed_signature, captures, page_seeds, page_seed_signatures
+    )
+
+    body_start = len(seed_frames)
+    body_executions = tuple(
+        _execute_frame(sequence, frame, captures, frame_index=body_start + frame_index)
+        for frame_index, frame in enumerate(body_frames)
+    )
+    frames = reused_seed_executions + body_executions
+    return SequenceTranscript(
+        sequence_id=sequence.sequence_id,
+        profile_id=sandbox.profile_id,
+        frozen_instant=sandbox.frozen_instant,
+        storage_root=str(sandbox.storage_root),
+        workdir=str(sandbox.workdir),
+        frames=frames,
+    )
+
+
+def _page_seed_executions(
+    sequence: ParsedSequence,
+    label: str,
+    seed_frames: tuple[SequenceFrame, ...],
+    seed_signature: tuple[str, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> tuple[FrameExecution, ...]:
+    if sequence.seed is not None and sequence.seed not in page_seeds and seed_signature in page_seed_signatures:
+        return _reuse_equivalent_page_seed(
+            sequence, label, seed_frames, seed_signature, captures, page_seeds, page_seed_signatures
+        )
+    if sequence.seed is not None and sequence.seed in page_seeds:
+        return _reuse_named_page_seed(sequence, label, seed_frames, captures, page_seeds)
+    if sequence.seed is not None:
+        return _execute_new_page_seed(sequence, seed_frames, seed_signature, captures, page_seeds, page_seed_signatures)
+    return ()
+
+
+def _reuse_equivalent_page_seed(
+    sequence: ParsedSequence,
+    label: str,
+    seed_frames: tuple[SequenceFrame, ...],
+    seed_signature: tuple[str, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> tuple[FrameExecution, ...]:
+    prior_identity, prior = page_seed_signatures[seed_signature]
+    warnings.warn(
+        f"page {label!r} sequence {sequence.sequence_id!r} seed {sequence.seed!r} "
+        f"is execution-equivalent to already-run seed {prior_identity!r}; reused its "
+        "once-per-page state and immutable captures instead of replaying side effects",
+        UserWarning,
+        stacklevel=5,
+    )
+    page_seeds[cast(str, sequence.seed)] = _PageSeedState(
+        frames=seed_frames,
+        executions=prior.executions,
+        captures=prior.captures,
+    )
+    captures.update({item.name: item.value for item in prior.captures})
+    return prior.executions
+
+
+def _reuse_named_page_seed(
+    sequence: ParsedSequence,
+    label: str,
+    seed_frames: tuple[SequenceFrame, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+) -> tuple[FrameExecution, ...]:
+    prior = page_seeds[cast(str, sequence.seed)]
+    if prior.frames != seed_frames:
+        detail = (
+            f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
+            f"{sequence.seed!r} with a divergent definition; give the changed recipe "
+            "a new seed identity or make every use structurally equivalent"
+        )
+        warnings.warn(detail, UserWarning, stacklevel=5)
+        raise SequenceExecutionError(sequence.sequence_id, detail)
+    available = {item.name: item.value for item in prior.captures}
+    required = {binding.name for frame in seed_frames for binding in frame.captures}
+    missing = sorted(required - available.keys())
+    if missing:
+        detail = (
+            f"page {label!r} sequence {sequence.sequence_id!r} cannot reuse seed "
+            f"{sequence.seed!r}; page seed state lacks captures {missing}. Re-run from "
+            "a clean page root and ensure every declared seed capture resolves"
+        )
+        warnings.warn(detail, UserWarning, stacklevel=5)
+        raise SequenceExecutionError(sequence.sequence_id, detail)
+    warnings.warn(
+        f"page {label!r} sequence {sequence.sequence_id!r} would replay seed "
+        f"{sequence.seed!r}; reused its once-per-page state and immutable captures instead",
+        UserWarning,
+        stacklevel=5,
+    )
+    captures.update(available)
+    return prior.executions
+
+
+def _execute_new_page_seed(
+    sequence: ParsedSequence,
+    seed_frames: tuple[SequenceFrame, ...],
+    seed_signature: tuple[str, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> tuple[FrameExecution, ...]:
+    seed_executions = tuple(
+        _execute_frame(sequence, frame, captures, frame_index=frame_index)
+        for frame_index, frame in enumerate(seed_frames)
+    )
+    seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
+    state = _PageSeedState(
+        frames=seed_frames,
+        executions=seed_executions,
+        captures=seed_captures,
+    )
+    page_seeds[cast(str, sequence.seed)] = state
+    page_seed_signatures[seed_signature] = (cast(str, sequence.seed), state)
+    return seed_executions
+
+
+def _require_page_seed_frames(sequence: ParsedSequence, label: str, seed_frames: tuple[SequenceFrame, ...]) -> None:
+    if sequence.seed is not None and not seed_frames:
+        detail = (
+            f"page {label!r} sequence {sequence.sequence_id!r} requests seed "
+            f"{sequence.seed!r}, but no inlined seed frames are available; reparse the "
+            "sequence from its contract before running page coherence"
+        )
+        warnings.warn(detail, UserWarning, stacklevel=4)
+        raise SequenceExecutionError(sequence.sequence_id, detail)
+
+
+def _resolve_object_key(current: object, key: str) -> tuple[bool, object]:
+    if not isinstance(current, Mapping):
+        return False, None
+    # JSON keys are strings; preserve the defensive str-keyed view.
+    step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
+    if key not in step:
+        return False, None
+    return True, step[key]
+
+
+def _resolve_dotted_segment(current: object, key: str) -> tuple[bool, object]:
+    if isinstance(current, Mapping):
+        return _resolve_object_key(current, key)
+    if isinstance(current, list) and key.isdigit():
+        position = int(key)
+        if position >= len(current):
+            return False, None
+        return True, current[position]
+    return False, None

@@ -10,7 +10,6 @@ from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
 
-from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_calendar import (
     DECLARATIONS_CALENDAR_CONTRACT_VERSION,
     DeclarationsCalendarEntryRefV1,
@@ -25,8 +24,6 @@ from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneStateV1,
 )
-from ....application.operator_actions.catalogue import lookup_action
-from ....application.operator_actions.models import ActionReference
 from ....application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
@@ -37,10 +34,11 @@ from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.period import Period
-from ....core.text_fold import fold_diacritics
+from ....core.text_fold import fold_for_matching
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from ..action_target import require_action_target
 from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
@@ -52,10 +50,7 @@ from .models import (
     DeclarationsCalendarScopeV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
-    FilingHandoffV1,
-    ModeloWorkCreateHandoffV1,
-    ModeloWorkspaceScreenFactoryV1,
-    RevisionHandoffV1,
+    DeclarationsWorkspaceWiringV1,
 )
 
 _ZONE_BY_DESTINATION: Final = {
@@ -65,7 +60,7 @@ _ZONE_BY_DESTINATION: Final = {
     "declarations.calendar": None,
     "declarations.modelo_workspace": DeclarationsWorkspaceZone.DECLARATIONS,
 }
-_DESTINATION_KEYS: Final = {
+_DESTINATION_LOCALE_KEYS: Final = {
     "declarations.overview": "tui.declarations.destination.overview",
     "declarations.revisions": "tui.declarations.destination.revisions",
     "declarations.filing_history": "tui.declarations.destination.filing_history",
@@ -75,18 +70,18 @@ _DESTINATION_KEYS: Final = {
 _REVISION_STATE_KEYS: Final = {
     state: f"tui.declarations.revision_state.{state.value}" for state in CalculationRevisionState
 }
-_FILING_STATE_KEYS: Final = {
+_FILING_STATE_LOCALE_KEYS: Final = {
     ModeloRecordStatus.VIGENTE: "tui.declarations.filing_state.vigente",
     ModeloRecordStatus.SUPERSEDIDO: "tui.declarations.filing_state.supersedido",
 }
-_EVIDENCE_KEYS: Final = {
+_EVIDENCE_LOCALE_KEYS: Final = {
     ExternalEvidenceKind.AEAT_CSV_REGISTER: "tui.declarations.evidence.aeat_csv_register",
     ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "tui.declarations.evidence.aeat_justificante_pdf",
     ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "tui.declarations.evidence.aeat_live_capture",
 }
 
 
-_WORK_CREATE_REFUSAL_KEYS: Final = {
+_WORK_CREATE_REFUSAL_LOCALE_KEYS: Final = {
     # The application's wording names the CLI command; here the same fix is a key away.
     "application.modelo.errors.profile_readiness_setup_incomplete": (
         "tui.declarations.calendar.recovery.setup_incomplete"
@@ -94,15 +89,10 @@ _WORK_CREATE_REFUSAL_KEYS: Final = {
 }
 
 
-def declarations_copy(key: str, **values: object) -> str:
-    """Resolve authored display copy through the canonical catalogue."""
-    return tr(key, **values)
-
-
 def work_create_refusal_message(refusal: CadrumoError) -> str:
     """Render a work-creation refusal as its own reason, worded for the TUI where the fix differs."""
-    tui_key = _WORK_CREATE_REFUSAL_KEYS.get(refusal.translated_message or "")
-    return declarations_copy(tui_key) if tui_key is not None else resolve_error_message(refusal)
+    tui_key = _WORK_CREATE_REFUSAL_LOCALE_KEYS.get(refusal.translated_message or "")
+    return tr(tui_key) if tui_key is not None else resolve_error_message(refusal)
 
 
 def natural_address(modelo: object, year: object, period: object) -> str:
@@ -120,26 +110,22 @@ def timestamp_label(value: datetime) -> str:
 
 def calendar_date_label(value: date | None) -> str:
     """Render one non-ambiguous legal date."""
-    return declarations_copy("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
+    return tr("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
 
 
 def revision_state_label(value: CalculationRevisionState) -> str:
     """Render a calculation-revision state."""
-    return declarations_copy(_REVISION_STATE_KEYS[value])
+    return tr(_REVISION_STATE_KEYS[value])
 
 
 def filing_state_label(value: ModeloRecordStatus) -> str:
     """Render local filing-record currency."""
-    return declarations_copy(_FILING_STATE_KEYS[value])
+    return tr(_FILING_STATE_LOCALE_KEYS[value])
 
 
 def evidence_label(value: ExternalEvidenceKind | None) -> str:
     """Render separately observed AEAT evidence metadata."""
-    return (
-        declarations_copy("tui.declarations.evidence.none")
-        if value is None
-        else declarations_copy(_EVIDENCE_KEYS[value])
-    )
+    return tr("tui.declarations.evidence.none") if value is None else tr(_EVIDENCE_LOCALE_KEYS[value])
 
 
 class DeclarationsWorkspaceController:
@@ -149,21 +135,7 @@ class DeclarationsWorkspaceController:
         self,
         context: TuiScreenContextV1,
         projection: DeclarationsWorkspaceProjectionV1,
-        *,
-        work_action: ActionReference,
-        revisions_action: ActionReference,
-        filing_action: ActionReference,
-        modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
-        revision_handoff: RevisionHandoffV1 | None = None,
-        filing_handoff: FilingHandoffV1 | None = None,
-        calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
-        calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
-        calendar_entry_can_open: Callable[[DeclarationsCalendarEntryRefV1], bool] | None = None,
-        calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
-        work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
-        creation_targets: tuple[DeclarationTarget, ...] = (),
-        refresh_data: Callable[[], tuple[DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None]]
-        | None = None,
+        wiring: DeclarationsWorkspaceWiringV1,
     ) -> None:
         """Validate the context, projection version, and declared read actions."""
         if context.destination != "workbench.declarations":
@@ -171,30 +143,30 @@ class DeclarationsWorkspaceController:
         if projection.contract_version != DECLARATIONS_WORKSPACE_CONTRACT_VERSION:
             raise ValueError("unsupported Declarations workspace projection contract")
         require_canonical_declarations_actions(
-            work_action=work_action,
-            revisions_action=revisions_action,
-            filing_action=filing_action,
+            work_action=wiring.work_action,
+            revisions_action=wiring.revisions_action,
+            filing_action=wiring.filing_action,
         )
         self.context = context
         self.projection = projection
-        self.work_action = work_action
-        self.revisions_action = revisions_action
-        self.filing_action = filing_action
-        self.modelo_workspace_factory = modelo_workspace_factory
-        self.revision_handoff = revision_handoff
-        self.filing_handoff = filing_handoff
+        self.work_action = wiring.work_action
+        self.revisions_action = wiring.revisions_action
+        self.filing_action = wiring.filing_action
+        self.modelo_workspace_factory = wiring.modelo_workspace_factory
+        self.revision_handoff = wiring.revision_handoff
+        self.filing_handoff = wiring.filing_handoff
         if (
-            calendar_projection is not None
-            and calendar_projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION
+            wiring.calendar_projection is not None
+            and wiring.calendar_projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION
         ):
             raise ValueError("unsupported Declarations calendar projection contract")
-        self.calendar_projection = calendar_projection
-        self.calendar_entry_handoff = calendar_entry_handoff
-        self.calendar_entry_can_open = calendar_entry_can_open
-        self.calendar_recovery_handoff = calendar_recovery_handoff
-        self.work_create_handoff = work_create_handoff
-        self.creation_targets = creation_targets
-        self.refresh_data = refresh_data
+        self.calendar_projection = wiring.calendar_projection
+        self.calendar_entry_handoff = wiring.calendar_entry_handoff
+        self.calendar_entry_can_open = wiring.calendar_entry_can_open
+        self.calendar_recovery_handoff = wiring.calendar_recovery_handoff
+        self.work_create_handoff = wiring.work_create_handoff
+        self.creation_targets = wiring.creation_targets
+        self.refresh_data = wiring.refresh_data
 
     def refresh_from_capture(self) -> bool:
         """Replace safe facts only when the refreshed data still names this profile bucket."""
@@ -282,14 +254,14 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
     def populate_navigation(self) -> None:
         """Populate every closed internal destination exactly once."""
         table = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
-        table.add_column(declarations_copy("tui.declarations.column.destination"), key="destination")
-        table.add_column(declarations_copy("tui.declarations.column.availability"), key="availability")
-        for raw_destination in _DESTINATION_KEYS:
+        table.add_column(tr("tui.declarations.column.destination"), key="destination")
+        table.add_column(tr("tui.declarations.column.availability"), key="availability")
+        for raw_destination in _DESTINATION_LOCALE_KEYS:
             destination = cast("DeclarationsDestinationIdV1", raw_destination)
             availability = self.controller.destination_availability(destination)
             table.add_row(
-                declarations_copy(_DESTINATION_KEYS[destination]),
-                declarations_copy(f"tui.declarations.availability.{availability.value}"),
+                tr(_DESTINATION_LOCALE_KEYS[destination]),
+                tr(f"tui.declarations.availability.{availability.value}"),
                 key=destination,
             )
 
@@ -324,16 +296,16 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         if reason is not None:
             key = f"tui.declarations.refusal.reason.{reason}"
             if lookup_translation(key, locale=output_language()) is not None:
-                return declarations_copy(key)
-        return declarations_copy("tui.declarations.refusal.source")
+                return tr(key)
+        return tr("tui.declarations.refusal.source")
 
     def show_empty(self) -> None:
         """Say that a table has nothing in it, on the muted line, not the warning one."""
-        self.query_one("#declarations-empty", Static).update(declarations_copy("tui.declarations.empty"))
+        self.query_one("#declarations-empty", Static).update(tr("tui.declarations.empty"))
 
     def refuse_handoff(self) -> None:
         """Show an explicit refusal when the host omitted a target."""
-        self.query_one("#declarations-refusal", Static).update(declarations_copy("tui.declarations.refusal.handoff"))
+        self.query_one("#declarations-refusal", Static).update(tr("tui.declarations.refusal.handoff"))
 
     def action_back(self) -> None:
         """Return an area to the Declarations overview; leave the workspace only from the overview."""
@@ -415,7 +387,7 @@ class DeclarationsCalendarController:
         rows = [
             row for row in self.projection.entries if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
         ]
-        terms = tuple(part for part in _fold(query).split() if part)
+        terms = tuple(part for part in fold_for_matching(query).split() if part)
         if terms:
             rows = [row for row in rows if all(term in _calendar_search_text(row) for term in terms)]
         return tuple(sorted(rows, key=lambda row: (row.adjusted_closes_on, *row.semantic_key())))
@@ -440,16 +412,17 @@ def _calendar_identity(row: DeclarationsCalendarEntryRefV1) -> str:
     return f"{modelo}|{year}|{period}"
 
 
+_RECOVERY_ACTION_REFUSAL: Final[str] = "calendar recovery action is not the canonical create action"
+
+
 def _validate_calendar_recovery_actions(projection: DeclarationsCalendarProjectionV1) -> None:
     for row in projection.entries:
         action = row.recovery_action
         if action is None:
             continue
-        if (
-            action.action.action_id != "operator.modelo.work.create"
-            or lookup_action(action.action.action_id).target_command_key != "modelo.work.create"
-        ):
-            raise ValueError("calendar recovery action is not the canonical create action")
+        if action.action.action_id != "operator.modelo.work.create":
+            raise ValueError(_RECOVERY_ACTION_REFUSAL)
+        require_action_target(action.action, "modelo.work.create", _RECOVERY_ACTION_REFUSAL)
         bindings = {item.argument_name: item.value for item in action.argument_bindings}
         if bindings != {
             "modelo": str(row.modelo),
@@ -474,10 +447,6 @@ def calendar_address_focus_key(modelo: object, year: object, period: str) -> str
     return f"declarations.calendar.m{modelo}.y{year}.p{period.casefold()}"
 
 
-def _fold(value: str) -> str:
-    return fold_diacritics(value.casefold())
-
-
 def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
     values = (
         natural_address(row.modelo, row.filing_year, row.period),
@@ -496,7 +465,7 @@ def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
         str(row.days_overdue) if row.days_overdue is not None else "",
         row.shift_reason,
     )
-    return _fold(" ".join(values))
+    return fold_for_matching(" ".join(values))
 
 
 def _scope_matches(
@@ -520,24 +489,24 @@ def _scope_matches(
 
 def calendar_legal_label(value: ObligationStatus) -> str:
     """Render legal deadline status."""
-    return declarations_copy(f"tui.declarations.calendar.legal.{value.value.lower()}")
+    return tr(f"tui.declarations.calendar.legal.{value.value.lower()}")
 
 
 def calendar_user_label(value: OverviewPeriodState) -> str:
     """Render the safe derived user-facing schedule state."""
-    return declarations_copy(f"tui.declarations.calendar.user.{value.value}")
+    return tr(f"tui.declarations.calendar.user.{value.value}")
 
 
 def calendar_local_label(value: OverviewLocalFilingState | None) -> str:
     """Render local filing state without implying AEAT acceptance."""
     key = "unknown" if value is None else value.value
-    return declarations_copy(f"tui.declarations.calendar.local.{key}")
+    return tr(f"tui.declarations.calendar.local.{key}")
 
 
 def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
     """Render observed AEAT evidence state without inference."""
     key = "unknown" if value is None else value.value
-    return declarations_copy(f"tui.declarations.calendar.aeat.{key}")
+    return tr(f"tui.declarations.calendar.aeat.{key}")
 
 
 __all__ = [
@@ -552,7 +521,6 @@ __all__ = [
     "calendar_legal_label",
     "calendar_local_label",
     "calendar_user_label",
-    "declarations_copy",
     "evidence_label",
     "filing_state_label",
     "natural_address",

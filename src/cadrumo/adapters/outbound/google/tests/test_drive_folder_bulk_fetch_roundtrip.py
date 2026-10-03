@@ -47,8 +47,8 @@ _BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
 
 _FOLDER_ID = "1FoldEr12345678901234567890AB"
 # Drive file ids must be >=10 chars to match the /d/<id>/ URL pattern the
-# resolver's parse_drive_file_id recognises (see
-# _document_link_resolver._DRIVE_ID_PATTERNS); short synthetic ids like
+# core's parse_google_drive_file_id recognises (see
+# cadrumo.core.google_drive_reference); short synthetic ids like
 # "file-1" would not parse and the resolver would (correctly) refuse them
 # as validation errors rather than reach the fake Drive media endpoint.
 _FILE_ID_1 = "1FileOne1234567890ABCDEFGH"

@@ -44,22 +44,21 @@ from .._app_live_notifications_command_specs import (
 )
 from .._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from .._app_live_verify_command_specs import _VERIFY_EXPECTED_OPTION, LIVE_VERIFY_COMMAND_SPECS
+from .._command_parameter_contracts import OptionSpec
 from .._command_runtime import build_command_subtree
-from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import (
+from .._command_shared_contracts import (
     BindingState,
-    CommandSpecGraph,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
+from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..command_graph import CommandSpecGraph
+from ..command_spec import ExecutionPolicySpec, InvocationSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

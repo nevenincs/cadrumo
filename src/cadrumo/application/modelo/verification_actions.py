@@ -2213,9 +2213,11 @@ def _detail_row_template_casilla_is_satisfied(
         return False
     if any(getattr(row, "row_type", None) == "rectificacion" for row in target.detail_rows):
         return True
-    return target.casilla_values.get(M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
-        "0"
-    ) and target.casilla_values.get(M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
+    # Only stated zero totals prove the return carries no rectificacion; an
+    # unstated total leaves the casilla demanded rather than reading as zero.
+    numero = target.casilla_values.get(M349_NUMERO_RECTIFICACIONES_CASILLA)
+    importe = target.casilla_values.get(M349_IMPORTE_RECTIFICACIONES_CASILLA)
+    return numero == Decimal("0") and importe == Decimal("0")
 
 
 def _missing_required_casilla_finding(

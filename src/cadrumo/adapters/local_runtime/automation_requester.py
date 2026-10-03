@@ -14,6 +14,7 @@ from typing import Protocol
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -111,10 +112,7 @@ class AutomationRequesterJourney:
         deadline = self._deadline
         if deadline is None:
             raise ValueError("requester proposal has not been submitted")
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        return remaining
+        return remaining_budget(deadline)
 
     def _wire_timeout(self) -> float:
         return min(self._remaining(), 10.0)

@@ -7,8 +7,9 @@ from dataclasses import dataclass
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.language_resolver import resolve_profile_output_language_hint
 from ....application.user_profile.validation import COMPLETENESS_ISSUE_CODES
 from ....application.user_profile.view_operation import (
@@ -34,95 +35,10 @@ from ..config_payloads import (
 _VIEW_TIMEOUT_SECONDS = 60.0
 
 
-@dataclass(frozen=True, slots=True)
-class CliRuntimeProfileView:
-    """Complete existing CLI output parts, ready for the one envelope owner."""
-
-    result: ConfigProfileViewResult
-    lines: tuple[str, ...]
-    notices: tuple[Notice, ...]
-    blocking: bool
-
-
-@dataclass(frozen=True, slots=True)
-class CliRuntimeProfileValidation:
-    """Report-only CLI output from the same authenticated view revision."""
-
-    result: ConfigProfileValidateResult
-    lines: tuple[str, ...]
-    blocking: bool
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
-
-
-def _output_language(facts: tuple[ProfileViewFactItem, ...], *, requested: OutputLanguage | None) -> OutputLanguage:
-    """Honor explicit CLI settings, then the exact profile fact, then default."""
-    profile_value = next((fact.value for fact in facts if fact.path == PROFILE_OUTPUT_LANGUAGE_PATH), None)
-    return _selected_language(profile_value, requested=requested)
-
-
-def _selected_language(profile_value: str | None, *, requested: OutputLanguage | None) -> OutputLanguage:
-    """Apply one precedence order to a protected fact or its nonsecret hint."""
-    settings = load_settings()
-    if requested is not None:
-        return requested
-    if "cadrumo_output_language" in settings.model_fields_set and settings.cadrumo_output_language is not None:
-        return settings.cadrumo_output_language
-    normalized = normalise_supported_language(profile_value)
-    if normalized is not None:
-        return OutputLanguage(normalized)
-    return settings.cadrumo_output_language or OutputLanguage.ES
-
-
-def resolve_runtime_profile_output_language(
-    client: RuntimeFrontendClient, *, requested: OutputLanguage | None
-) -> OutputLanguage:
-    """Resolve one selected profile's language without reading its private facts."""
-    return _selected_language(resolve_profile_output_language_hint(str(client.profile_id)), requested=requested)
-
-
-def _typed_items[ItemT](items: tuple[object, ...], expected: type[ItemT]) -> tuple[ItemT, ...]:
-    if not all(isinstance(item, expected) for item in items):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    return tuple(item for item in items if isinstance(item, expected))
-
-
-def project_profile_view(
-    ctx: typer.Context,
-    client: RuntimeFrontendClient,
-    *,
-    display_name: str,
-    requested_output_language: OutputLanguage | None,
-) -> CliRuntimeProfileView:
-    """Assemble facts, validation and notices only from one settled revision."""
-    deadline = time.monotonic() + _VIEW_TIMEOUT_SECONDS
-    facts_collection = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=_remaining(deadline))
-    facts = _typed_items(facts_collection.items(ProfileViewPageKind.FACTS), ProfileViewFactItem)
-    language = _output_language(facts, requested=requested_output_language)
-    activate_subcommand_output_language(ctx, language)
-    details = client.read_profile_view(
-        (ProfileViewPageKind.ISSUES, ProfileViewPageKind.OVERVIEW),
-        output_language=language,
-        expected_revision=facts_collection.record_revision,
-        expected_content_digest=facts_collection.content_digest,
-        timeout=_remaining(deadline),
-    )
-    if (
-        details.profile_id != facts_collection.profile_id
-        or details.setup_state != facts_collection.setup_state
-        or details.schema_version != facts_collection.schema_version
-        or details.valid != facts_collection.valid
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    issues = _typed_items(details.items(ProfileViewPageKind.ISSUES), ProfileViewIssueItem)
-    notices = tuple(
-        item for item in details.items(ProfileViewPageKind.OVERVIEW) if isinstance(item, ProfileViewNoticeItem)
-    )
+def _profile_view_values(
+    details: ProfileViewCollection, issues: tuple[ProfileViewIssueItem, ...], facts: tuple[ProfileViewFactItem, ...]
+) -> tuple[int, tuple[tuple[str, str], ...]]:
+    """Profile view values."""
     blocking_count = sum(
         issue.severity.value == "error"
         and (details.setup_state is ProfileSetupState.COMPLETE or issue.code not in COMPLETENESS_ISSUE_CODES)
@@ -133,6 +49,19 @@ def project_profile_view(
     ordered_values = tuple(sorted((fact.path, fact.value) for fact in facts))
     if len({path for path, _ in ordered_values}) != len(ordered_values):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return blocking_count, ordered_values
+
+
+def _profile_view_presentation(
+    client: RuntimeFrontendClient,
+    display_name: str,
+    details: ProfileViewCollection,
+    issues: tuple[ProfileViewIssueItem, ...],
+    notices: tuple[ProfileViewNoticeItem, ...],
+    blocking_count: int,
+    ordered_values: tuple[tuple[str, str], ...],
+) -> CliRuntimeProfileView:
+    """Profile view presentation."""
     result = ConfigProfileViewResult(
         profile_id=str(client.profile_id),
         display_name=display_name,
@@ -181,6 +110,92 @@ def project_profile_view(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class CliRuntimeProfileView:
+    """Complete existing CLI output parts, ready for the one envelope owner."""
+
+    result: ConfigProfileViewResult
+    lines: tuple[str, ...]
+    notices: tuple[Notice, ...]
+    blocking: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CliRuntimeProfileValidation:
+    """Report-only CLI output from the same authenticated view revision."""
+
+    result: ConfigProfileValidateResult
+    lines: tuple[str, ...]
+    blocking: bool
+
+
+def _output_language(facts: tuple[ProfileViewFactItem, ...], *, requested: OutputLanguage | None) -> OutputLanguage:
+    """Honor explicit CLI settings, then the exact profile fact, then default."""
+    profile_value = next((fact.value for fact in facts if fact.path == PROFILE_OUTPUT_LANGUAGE_PATH), None)
+    return _selected_language(profile_value, requested=requested)
+
+
+def _selected_language(profile_value: str | None, *, requested: OutputLanguage | None) -> OutputLanguage:
+    """Apply one precedence order to a protected fact or its nonsecret hint."""
+    settings = load_settings()
+    if requested is not None:
+        return requested
+    if "cadrumo_output_language" in settings.model_fields_set and settings.cadrumo_output_language is not None:
+        return settings.cadrumo_output_language
+    normalized = normalise_supported_language(profile_value)
+    if normalized is not None:
+        return OutputLanguage(normalized)
+    return settings.cadrumo_output_language or OutputLanguage.ES
+
+
+def resolve_runtime_profile_output_language(
+    client: RuntimeFrontendClient, *, requested: OutputLanguage | None
+) -> OutputLanguage:
+    """Resolve one selected profile's language without reading its private facts."""
+    return _selected_language(resolve_profile_output_language_hint(str(client.profile_id)), requested=requested)
+
+
+def _typed_items[ItemT](items: tuple[object, ...], expected: type[ItemT]) -> tuple[ItemT, ...]:
+    if not all(isinstance(item, expected) for item in items):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return tuple(item for item in items if isinstance(item, expected))
+
+
+def project_profile_view(
+    ctx: typer.Context,
+    client: RuntimeFrontendClient,
+    *,
+    display_name: str,
+    requested_output_language: OutputLanguage | None,
+) -> CliRuntimeProfileView:
+    """Assemble facts, validation and notices only from one settled revision."""
+    deadline = time.monotonic() + _VIEW_TIMEOUT_SECONDS
+    facts_collection = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=remaining_budget(deadline))
+    facts = _typed_items(facts_collection.items(ProfileViewPageKind.FACTS), ProfileViewFactItem)
+    language = _output_language(facts, requested=requested_output_language)
+    activate_subcommand_output_language(ctx, language)
+    details = client.read_profile_view(
+        (ProfileViewPageKind.ISSUES, ProfileViewPageKind.OVERVIEW),
+        output_language=language,
+        expected_revision=facts_collection.record_revision,
+        expected_content_digest=facts_collection.content_digest,
+        timeout=remaining_budget(deadline),
+    )
+    if (
+        details.profile_id != facts_collection.profile_id
+        or details.setup_state != facts_collection.setup_state
+        or details.schema_version != facts_collection.schema_version
+        or details.valid != facts_collection.valid
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    issues = _typed_items(details.items(ProfileViewPageKind.ISSUES), ProfileViewIssueItem)
+    notices = tuple(
+        item for item in details.items(ProfileViewPageKind.OVERVIEW) if isinstance(item, ProfileViewNoticeItem)
+    )
+    blocking_count, ordered_values = _profile_view_values(details, issues, facts)
+    return _profile_view_presentation(client, display_name, details, issues, notices, blocking_count, ordered_values)
+
+
 def project_profile_validate(
     ctx: typer.Context,
     client: RuntimeFrontendClient,
@@ -193,7 +208,7 @@ def project_profile_validate(
     activate_subcommand_output_language(ctx, language)
     deadline = time.monotonic() + _VIEW_TIMEOUT_SECONDS
     collection = client.read_profile_view(
-        (ProfileViewPageKind.READINESS_ISSUES,), output_language=language, timeout=_remaining(deadline)
+        (ProfileViewPageKind.READINESS_ISSUES,), output_language=language, timeout=remaining_budget(deadline)
     )
     issues = _typed_items(collection.items(ProfileViewPageKind.READINESS_ISSUES), ProfileViewIssueItem)
     blocking = any(issue.severity.value == "error" for issue in issues)

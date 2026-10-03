@@ -27,6 +27,7 @@ from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.binding_targets import (
     bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
 )
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel as _BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_tokens as _casilla_noncanonical_reference_tokens,
@@ -181,7 +182,7 @@ def _draft_input_channels(
 ) -> _DraftInputChannels:
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
-    bindings = {binding.id: binding for binding in snapshot.revision.bindings}
+    bindings = revision_bindings_by_id(snapshot.revision)
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
     date_binding_ids = _date_binding_ids(snapshot)

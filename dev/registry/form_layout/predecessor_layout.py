@@ -171,25 +171,41 @@ def _block_casilla_ids(block: FormBlockDefinition) -> list[str]:
     return []
 
 
+def _continued_field_block(
+    state: _Continuation,
+    block: FormFieldBlock,
+    page: PrintedPage | None,
+) -> FormBlockDefinition | None:
+    if block.casilla_id is None:
+        return None
+    if block.design_constant is not None:
+        state.refuse([block.casilla_id])
+        return None
+    successor = state.confirmed(block.casilla_id, page)
+    return None if successor is None else block.model_copy(update={"casilla_id": successor})
+
+
+def _continued_grid_block(
+    state: _Continuation,
+    block: FormGridBlock,
+    page: PrintedPage | None,
+) -> FormBlockDefinition | None:
+    rows: list[FormGridRow] = []
+    for row in block.rows:
+        cells = tuple(_continued_cell(state, cell, page) for cell in row.cells)
+        if any(cell.kind is not FormCellKind.BLANK for cell in cells):
+            rows.append(row.model_copy(update={"cells": cells}))
+    return block.model_copy(update={"rows": tuple(rows)}) if rows else None
+
+
 def _continued_block(
     state: _Continuation, block: FormBlockDefinition, page: PrintedPage | None
 ) -> FormBlockDefinition | None:
     """Return the block holding only the casillas the revision's form confirms, or ``None``."""
     if isinstance(block, FormFieldBlock):
-        if block.casilla_id is None:
-            return None
-        if block.design_constant is not None:
-            state.refuse([block.casilla_id])
-            return None
-        successor = state.confirmed(block.casilla_id, page)
-        return None if successor is None else block.model_copy(update={"casilla_id": successor})
+        return _continued_field_block(state, block, page)
     if isinstance(block, FormGridBlock):
-        rows: list[FormGridRow] = []
-        for row in block.rows:
-            cells = tuple(_continued_cell(state, cell, page) for cell in row.cells)
-            if any(cell.kind is not FormCellKind.BLANK for cell in cells):
-                rows.append(row.model_copy(update={"cells": cells}))
-        return block.model_copy(update={"rows": tuple(rows)}) if rows else None
+        return _continued_grid_block(state, block, page)
     state.refuse(_block_casilla_ids(block))
     return None
 
@@ -218,10 +234,9 @@ def _continued_section(
     return section.model_copy(update={"blocks": blocks}) if blocks else None
 
 
-def _continued_aliases(
-    state: _Continuation, pages: tuple[FormPageDefinition, ...]
-) -> dict[str, tuple[FormAliasPosition, ...]]:
-    """Keep each alias whose page and section continue and whose page the form shows printing the box again."""
+def _continued_alias_scope(
+    pages: tuple[FormPageDefinition, ...],
+) -> tuple[set[tuple[str, str]], set[str]]:
     sections = {(page.id, section.id) for page in pages for section in page.sections}
     shown = {
         casilla_id
@@ -230,20 +245,47 @@ def _continued_aliases(
         for block in section.blocks
         for casilla_id in _block_casilla_ids(block)
     }
+    return sections, shown
+
+
+def _continued_aliases_for_placement(
+    state: _Continuation,
+    casilla_id: str,
+    placement: FormPlacementDefinition,
+    *,
+    sections: set[tuple[str, str]],
+    shown: set[str],
+) -> tuple[str, tuple[FormAliasPosition, ...]] | None:
+    continuing = state.continuing(casilla_id)
+    if continuing is None or continuing[0] not in shown or not placement.aliases:
+        return None
+    successor, box = continuing
+    kept = tuple(
+        alias
+        for alias in placement.aliases
+        if (alias.page_id, alias.section_id) in sections
+        and (printed := state.page(alias.official_ref)) is not None
+        and printed.prints_box(box)
+    )
+    return (successor, kept) if kept else None
+
+
+def _continued_aliases(
+    state: _Continuation, pages: tuple[FormPageDefinition, ...]
+) -> dict[str, tuple[FormAliasPosition, ...]]:
+    """Keep each alias whose page and section continue and whose page the form shows printing the box again."""
+    sections, shown = _continued_alias_scope(pages)
     aliases: dict[str, tuple[FormAliasPosition, ...]] = {}
     for casilla_id, placement in state.placements.items():
-        continuing = state.continuing(casilla_id)
-        if continuing is None or continuing[0] not in shown or not placement.aliases:
-            continue
-        successor, box = continuing
-        kept = tuple(
-            alias
-            for alias in placement.aliases
-            if (alias.page_id, alias.section_id) in sections
-            and (printed := state.page(alias.official_ref)) is not None
-            and printed.prints_box(box)
+        continued = _continued_aliases_for_placement(
+            state,
+            casilla_id,
+            placement,
+            sections=sections,
+            shown=shown,
         )
-        if kept:
+        if continued is not None:
+            successor, kept = continued
             aliases[successor] = kept
     return aliases
 

@@ -49,7 +49,12 @@ from pydantic import ConfigDict, RootModel
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
-from .redaction.rules import ALWAYS_REDACT_KEY_TERMS, redact_for_log
+from .redaction.rules import (
+    ALWAYS_REDACT_KEY_TERMS,
+    is_sensitive_redaction_key,
+    normalise_redaction_key,
+    redact_for_log,
+)
 from .type_guards import (
     is_object_list,
     is_object_list_or_tuple,
@@ -148,7 +153,7 @@ def _is_cli_metadata_invocation() -> bool:
     return is_metadata_invocation(sys.argv[1:])
 
 
-_SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
+_SENSITIVE_KEY_SET = frozenset(normalise_redaction_key(pattern) for pattern in SCRUB_FIELD_PATTERNS)
 _SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
@@ -241,16 +246,9 @@ def _redact_payloads(value: str) -> str:
     return _OPAQUE_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
 
 
-def _normalise_log_key(key: str) -> str:
-    """Return a canonical, separator-stable representation of ``key``."""
-    camel_split = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
-    collapsed = re.sub(r"[^A-Za-z0-9]+", "_", camel_split)
-    return collapsed.strip("_").lower()
-
-
 def _looks_sensitive_key(key: str | None) -> bool:
     """Return whether ``key`` should have its value redacted."""
-    return key is not None and _normalise_log_key(key) in _SENSITIVE_KEY_SET
+    return is_sensitive_redaction_key(key, additional_exact_terms=_SENSITIVE_KEY_SET)
 
 
 def _redacted_value(key: str | None, value: str) -> str:
@@ -941,33 +939,53 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
         root_logger = logging.getLogger()
         walked = root_logger.handlers
         position = walked.index(self) if self in walked else 0
-        if record.levelno >= logging.WARNING and not (
-            _configured or _configuration_deferred or type(self)._configuring
-        ):
-            type(self)._configuring = True
-            try:
-                configure_logging()
-            finally:
-                type(self)._configuring = False
-        if self in root_logger.handlers:
-            if record.levelno >= logging.WARNING:
-                _handle_as_last_resort(record)
-            else:
-                _pending_records.append(record)
+        _configure_for_first_record(self, record)
+        if _defer_record_if_placeholder(self, root_logger, record):
             return
-        # ``Logger.callHandlers`` is still walking the handler list it read
-        # before configuration ran. Where removing a handler mutates that list
-        # in place, the walk resumes over the configured handlers after this
-        # handler's former position, so only the ones up to it are ours. Where
-        # removal replaces the list instead (CPython 3.13.15 and 3.14.7 onward,
-        # gh-79366), the walk continues over the old list and reaches none of
-        # them, so all of them are ours; forwarding only the prefix there drops
-        # the very record that triggered configuration from the log file.
-        configured = root_logger.handlers
-        ours = configured if configured is not walked else configured[: position + 1]
-        for handler in ours:
-            if record.levelno >= handler.level:
-                handler.handle(record)
+        _forward_first_record(self, root_logger, walked, position, record)
+
+
+def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
+    if record.levelno < logging.WARNING or _configured or _configuration_deferred or type(handler)._configuring:
+        return
+    type(handler)._configuring = True
+    try:
+        configure_logging()
+    finally:
+        type(handler)._configuring = False
+
+
+def _defer_record_if_placeholder(
+    handler: _ConfigureOnFirstRecordHandler,
+    root_logger: logging.Logger,
+    record: logging.LogRecord,
+) -> bool:
+    if handler not in root_logger.handlers:
+        return False
+    if record.levelno >= logging.WARNING:
+        _handle_as_last_resort(record)
+    else:
+        _pending_records.append(record)
+    return True
+
+
+def _forward_first_record(
+    handler: _ConfigureOnFirstRecordHandler,
+    root_logger: logging.Logger,
+    walked: list[logging.Handler],
+    position: int,
+    record: logging.LogRecord,
+) -> None:
+    # ``Logger.callHandlers`` is still walking the handler list it read before
+    # configuration ran. If removal mutated that list in place, only the
+    # configured handlers before this placeholder are ours. If removal replaced
+    # it (CPython 3.13.15 and 3.14.7 onward, gh-79366), all configured handlers
+    # are ours and the triggering record must be forwarded to each one.
+    configured = root_logger.handlers
+    ours = configured if configured is not walked else configured[: position + 1]
+    for active_handler in ours:
+        if record.levelno >= active_handler.level:
+            active_handler.handle(record)
 
 
 def _handle_as_last_resort(record: logging.LogRecord) -> None:

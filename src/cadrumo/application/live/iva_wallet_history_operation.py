@@ -22,6 +22,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -34,11 +35,10 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -208,7 +208,7 @@ class IvaWalletHistoryProjection(BaseModel):
 class IvaWalletHistoryExecutor:
     """Read local encrypted history in the authenticated profile worker."""
 
-    def __init__(self, ports_factory: Callable[[], IvaRemoteStatePort]) -> None:
+    def __init__(self, ports_factory: Callable[[PinnedAuthorityOperation], IvaRemoteStatePort]) -> None:
         """Retain the entrypoint-composed local persistence port factory."""
         self._ports_factory = ports_factory
 
@@ -228,7 +228,9 @@ class IvaWalletHistoryExecutor:
 
         async def capture() -> str:
             report = await asyncio.to_thread(
-                list_iva_compensation_history, ports=self._ports_factory(), as_of_year=payload.as_of_year
+                list_iva_compensation_history,
+                ports=self._ports_factory(context.authority_operation),
+                as_of_year=payload.as_of_year,
             )
             result = IvaWalletHistoryProjection.from_report(payload.profile_id, report)
             reference = await context.operands.put(result, written_at=now())
@@ -238,7 +240,9 @@ class IvaWalletHistoryExecutor:
         return await await_cancellation_complete(capture(), task_name="iva-wallet-history")
 
 
-def build_iva_wallet_history_definition(ports_factory: Callable[[], IvaRemoteStatePort]) -> OperationDefinition:
+def build_iva_wallet_history_definition(
+    ports_factory: Callable[[PinnedAuthorityOperation], IvaRemoteStatePort],
+) -> OperationDefinition:
     """Declare a recorded local read with no provider or commit authority."""
     return OperationDefinition(
         definition_id=IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID,

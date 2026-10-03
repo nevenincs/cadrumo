@@ -1,17 +1,4 @@
-"""Deterministic provenance contracts for generated export-fragment trees.
-
-This development-only module records how a later generator derived one export
-tree.  It deliberately does not locate, load, infer from, or fall back to a
-shipped export layout.  The caller supplies the loader-materialised target
-layout after the future publication step has validated the generated tree.
-
-The manifest is a published artifact, so its filename, its typed shape and the
-load/verify pair that reads it back are addressed from outside this package:
-the filing-export proof re-verifies a published manifest, and the tree-state and
-capability screens locate one by name. Writing and reading it are one contract --
-a reader that derived the shape independently would attest to a different thing --
-so both halves live in this public defining module.
-"""
+"""Attest generated export fragments and preserve their exact publication and read contract."""
 
 from __future__ import annotations
 
@@ -19,7 +6,7 @@ import json
 import os
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Final, Literal, cast
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
@@ -37,19 +24,26 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from .export_fragment_provenance_projection import (
+    _LOADER_SEMANTIC_SCHEMA_VERSION,
+    _omit_undeclared_field_keys,
+)
+from .export_fragment_provenance_projection import (
+    loader_semantic_digest as _loader_semantic_digest,
+)
+from .export_fragment_provenance_projection import (
+    semantic_map_digest as _semantic_map_digest,
+)
 from .joined_record_design import JoinedRecordDesign
 from .pydantic_error_detail import validation_error_detail
 from .record_design_intermediate import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateField,
 )
-from .render_profile import (
-    RENDER_PROFILE_SCHEMA_VERSION,
-    RenderProfile,
-    RenderProfileSourceEvidence,
-    render_profile_digest,
-    validate_render_profile,
-)
+from .render_profile import render_profile_digest, validate_render_profile
+from .render_profile_evidence import RenderProfileSourceEvidence
+from .render_profile_loading import RENDER_PROFILE_SCHEMA_VERSION
+from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap, SemanticMapEntry
 from .variable_envelope import FilingEnvelopeProvenance
 
@@ -65,54 +59,17 @@ def _publish_once_bytes(path: Path, payload: bytes, *, mode: int = 0o600) -> Non
         fsync_parent_dir(path)
 
 
-__all__ = [
-    "EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION",
-    "EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION",
-    "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
-    "LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME",
-    "SHA256_PATTERN",
-    "ExportFieldDerivation",
-    "ExportFieldDerivationCode",
-    "ExportFieldVerdict",
-    "ExportFragmentOutputDigest",
-    "ExportFragmentProvenanceManifest",
-    "ExportFragmentTarget",
-    "attach_field_verdicts",
-    "build_export_fragment_provenance_manifest",
-    "collect_export_fragment_output_digests",
-    "design_stated_divergence",
-    "emit_export_fragment_provenance_manifest",
-    "export_fragment_provenance_manifest_json_bytes",
-    "export_fragment_provenance_path",
-    "load_export_fragment_provenance_manifest",
-    "loader_semantic_digest",
-    "loader_semantic_drift",
-    "normalised_loader_semantics",
-    "semantic_map_digest",
-    "verify_export_fragment_provenance_manifest",
-]
-
-
 EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 5
 """Current wire schema for the internal non-loader provenance manifest."""
+
 
 EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 6
 """Current generator contract recorded by every provenance manifest."""
 
+
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 7
-"""Shape of the projection ``normalised_loader_semantics`` attests.
-
-Every committed manifest's ``loader_semantic_sha256`` is a digest of this
-projection, so adding, removing or renaming a projected key re-attests every
-generated tree even though no tree byte moved. Bump it with any such change,
-in the same change that republishes the trees.
-
-Version 7 is the projection without ``aux_version``: the layout member was
-retired, and version 6 had attested it as ``null`` for every layout.
-"""
 
 #: The shape of a lowercase hex digest, stated where digests are validated.
 #: The publication module carried an identical copy: two modules deciding
@@ -120,142 +77,23 @@ retired, and version 6 had attested it as ``null`` for every layout.
 #: them accepting a value the other refuses.
 SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
+
 #: The pre-rename filename, kept so both the reader that skips it and the
 #: publisher that removes it name the same string. It was declared twice
 #: under two different names, which is the one shape a reader cannot grep:
 #: searching for either name finds half the uses.
 LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 
-_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset(
-    {"modelo", "design_epoch", "source_ref", "source_sha256", "records", "entries", "variable_envelopes"},
-)
-_SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "sheet",
-        "record_identity",
-        "export_record_id",
-        "record_type",
-        "required",
-        "repeat",
-        "binding_record",
-        "row_field_casilla_ids",
-        "discriminator",
-    },
-)
-_SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "anchor",
-        "export_field_id",
-        "kind",
-        "casilla_id",
-        "binding",
-        "literal",
-        "producer_key",
-        "projection_ref",
-        "draft_attribute",
-        "computed_key",
-        "legal_refs",
-        "source_refs",
-        "part",
-    },
-)
-#: ``ordinal_absent`` joined this set when the parser gained the ability to
-#: read a row AEAT printed with NO ordinal -- a gap-filled position whose
-#: naturaleza cell was empty. It is part of the anchor identity, so it is
-#: normalised into the digest rather than dropped: two anchors differing only
-#: in whether the design printed an ordinal are different anchors.
-_SEMANTIC_MAP_ANCHOR_KEYS: Final[frozenset[str]] = frozenset(
-    {"sheet", "source_row", "source_cell", "ordinal", "ordinal_absent", "record_identity"},
-)
-_VARIABLE_ENVELOPE_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "source_ref",
-        "source_sha256",
-        "record_identity",
-        "prefix_fields",
-        "body_anchor",
-        "body_record_ids",
-        "closer_anchor",
-        "total_anchor",
-    },
-)
-_ENVELOPE_PREFIX_FIELD_KEYS: Final[frozenset[str]] = frozenset({"role", "anchor"})
-_ENVELOPE_TOTAL_ANCHOR_KEYS: Final[frozenset[str]] = frozenset({"source_row", "source_cell", "label", "length"})
-_LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "id",
-        "format",
-        "dictionary_source_ref",
-        "source_refs",
-        "legal_refs",
-        "records",
-        "filing_envelope",
-        "auxiliary_envelope_header",
-        "dictionary_path_overrides",
-        "aux_idioma",
-    },
-)
-_RECORD_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "id",
-        "record_type",
-        "order",
-        "encoding",
-        "line_ending",
-        "required",
-        "repeat",
-        "binding_record",
-        "row_field_casilla_ids",
-        "discriminator",
-        "requires_positive_casilla_id",
-        "fields",
-    },
-)
-_FIELD_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "id",
-        "offset",
-        "length",
-        "kind",
-        "casilla_id",
-        "binding",
-        "literal",
-        "producer_key",
-        "projection_ref",
-        "draft_attribute",
-        "computed_key",
-        "data_type",
-        "required",
-        "padding",
-        "justification",
-        "date_format",
-        "decimals",
-        "signed",
-        "sign_position",
-        "required_for",
-        "design_type",
-        "value_policy",
-        "allowed_values",
-        "legal_refs",
-        "source_refs",
-    },
-)
-#: Field keys added after trees were already attested. Each is serialised and
-#: projected only when a field declares it, so a field without the key attests
-#: exactly the bytes it did before the key existed, and no stored manifest or
-#: loader digest has to be rewritten to admit it. An explicit ``null`` in a
-#: stored manifest is therefore non-canonical and refuses on load.
-_FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = ("sign_position", "required_for", "design_type")
-_DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "requires"})
-_DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
 
 type ExportFieldDerivationCode = Literal[
     "filler-v1",
     "literal-exact-v1",
+    "literal-note-exact-v1",
     "numeric-date-aaaammdd-v1",
     "numeric-date-ddmmaaaa-v1",
     "numeric-decimal-v1",
     "numeric-ejercicio-aaaa-v1",
+    "numeric-source-bounded-year-v1",
     "numeric-enumeration-v1",
     "numeric-integer-v1",
     "numeric-note-governed-amount-v1",
@@ -290,23 +128,30 @@ class ExportFragmentOutputDigest(_StrictModel):
     @field_validator("relative_path")
     @classmethod
     def _refuse_unsafe_relative_path(cls, value: str) -> str:
-        if "\\" in value or "\x00" in value or ":" in value:
-            raise ValueError("output digest path must be a portable POSIX-relative path")
-        if PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute() or PureWindowsPath(value).drive:
-            raise ValueError("output digest path must not be absolute or drive-qualified")
-        raw_parts = value.split("/")
-        if any(part in {"", ".", ".."} for part in raw_parts):
-            raise ValueError("output digest path must not contain empty, current, or parent segments")
-        if not value.endswith(".toml"):
-            raise ValueError("output digest path must refer to a generated TOML file")
-        return PurePosixPath(value).as_posix()
+        return _normalise_output_digest_path(value)
+
+
+def _normalise_output_digest_path(value: str) -> str:
+    if "\\" in value or "\x00" in value or ":" in value:
+        raise ValueError("output digest path must be a portable POSIX-relative path")
+    if PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute() or PureWindowsPath(value).drive:
+        raise ValueError("output digest path must not be absolute or drive-qualified")
+    raw_parts = value.split("/")
+    if any(part in {"", ".", ".."} for part in raw_parts):
+        raise ValueError("output digest path must not contain empty, current, or parent segments")
+    if not value.endswith(".toml"):
+        raise ValueError("output digest path must refer to a generated TOML file")
+    return PurePosixPath(value).as_posix()
 
 
 #: The design's own numeric type vocabulary, from its type note: "Num: numerico
 #: sin signo", "N: numerico con signo". A token outside it states nothing about
 #: sign, and no verdict is invented from that silence.
 _DESIGN_SIGNED_TYPE: Final[str] = "N"
+
+
 _DESIGN_UNSIGNED_TYPE: Final[str] = "Num"
+
 
 #: The sign axis means something only where the slot carries a number. Some
 #: designs type a constant slot numerically (the modelo-number slot is typed
@@ -372,61 +217,95 @@ class ExportFieldDerivation(_StrictModel):
 
     @model_validator(mode="after")
     def _require_exact_authority_and_emitted_field(self) -> ExportFieldDerivation:
-        parser_anchor = self.parser_field
-        semantic_anchor = self.semantic_entry.anchor
-        if (
-            parser_anchor.sheet,
-            parser_anchor.source_row,
-            parser_anchor.source_cell,
-            parser_anchor.ordinal,
-            parser_anchor.record_identity,
-        ) != (
-            semantic_anchor.sheet,
-            semantic_anchor.source_row,
-            semantic_anchor.source_cell,
-            semantic_anchor.ordinal,
-            semantic_anchor.record_identity,
-        ):
-            raise ValueError("field derivation requires the same complete parser and semantic-map anchor")
-        if self.normalization_schema_version != EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION:
-            raise ValueError(
-                "normalization schema drift: derivation records "
-                f"{self.normalization_schema_version}, expected {EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION}",
-            )
-        if self.field.id != self.semantic_entry.export_field_id:
-            raise ValueError("field derivation emitted id does not match semantic-map entry")
-        # A field filling a declared part of its cell takes the part's
-        # coordinates; the part itself was held to the cell's text at join.
-        part = self.semantic_entry.part
-        expected = (
-            (part.offset, part.length) if part is not None else (self.parser_field.offset, self.parser_field.length)
-        )
-        if (self.field.offset, self.field.length) != expected:
-            raise ValueError("field derivation emitted coordinates do not match parser field")
-        for attribute in (
-            "kind",
-            "casilla_id",
-            "binding",
-            "literal",
-            "producer_key",
-            "projection_ref",
-            "draft_attribute",
-            "computed_key",
-            "legal_refs",
-            "source_refs",
-        ):
-            if getattr(self.field, attribute) != getattr(self.semantic_entry, attribute):
-                raise ValueError(f"field derivation emitted {attribute} does not match semantic-map entry")
-        if self.verdict is not None:
-            diverges = design_stated_divergence(self.parser_field, self.field) is not None
-            if diverges != (self.verdict.outcome == "adjudicated"):
-                # Recomputed rather than trusted, so a stored manifest cannot
-                # claim agreement for a field that contradicts its own row.
-                raise ValueError(
-                    f"field derivation {self.field.id!r} records verdict {self.verdict.outcome!r}, but the field "
-                    f"{'diverges from' if diverges else 'agrees with'} its official row",
-                )
+        _require_same_derivation_anchor(self.parser_field, self.semantic_entry)
+        _require_current_derivation_schema(self.normalization_schema_version)
+        _require_derivation_field_identity(self.field, self.semantic_entry)
+        _require_derivation_field_coordinates(self.parser_field, self.semantic_entry, self.field)
+        _require_derivation_field_semantics(self.field, self.semantic_entry)
+        _require_recorded_field_verdict(self.parser_field, self.field, self.verdict)
         return self
+
+
+def _require_same_derivation_anchor(
+    parser_field: RecordDesignIntermediateField,
+    semantic_entry: SemanticMapEntry,
+) -> None:
+    parser_anchor = parser_field
+    semantic_anchor = semantic_entry.anchor
+    if (
+        parser_anchor.sheet,
+        parser_anchor.source_row,
+        parser_anchor.source_cell,
+        parser_anchor.ordinal,
+        parser_anchor.record_identity,
+    ) != (
+        semantic_anchor.sheet,
+        semantic_anchor.source_row,
+        semantic_anchor.source_cell,
+        semantic_anchor.ordinal,
+        semantic_anchor.record_identity,
+    ):
+        raise ValueError("field derivation requires the same complete parser and semantic-map anchor")
+
+
+def _require_current_derivation_schema(version: int) -> None:
+    if version != EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION:
+        raise ValueError(
+            "normalization schema drift: derivation records "
+            f"{version}, expected {EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION}",
+        )
+
+
+def _require_derivation_field_identity(field: ExportFieldDefinition, semantic_entry: SemanticMapEntry) -> None:
+    if field.id != semantic_entry.export_field_id:
+        raise ValueError("field derivation emitted id does not match semantic-map entry")
+
+
+def _require_derivation_field_coordinates(
+    parser_field: RecordDesignIntermediateField,
+    semantic_entry: SemanticMapEntry,
+    field: ExportFieldDefinition,
+) -> None:
+    # A field filling a declared part of its cell takes the part's coordinates;
+    # the part itself was held to the cell's text at join.
+    part = semantic_entry.part
+    expected = (part.offset, part.length) if part is not None else (parser_field.offset, parser_field.length)
+    if (field.offset, field.length) != expected:
+        raise ValueError("field derivation emitted coordinates do not match parser field")
+
+
+def _require_derivation_field_semantics(field: ExportFieldDefinition, semantic_entry: SemanticMapEntry) -> None:
+    for attribute in (
+        "kind",
+        "casilla_id",
+        "binding",
+        "literal",
+        "producer_key",
+        "projection_ref",
+        "draft_attribute",
+        "computed_key",
+        "legal_refs",
+        "source_refs",
+    ):
+        if getattr(field, attribute) != getattr(semantic_entry, attribute):
+            raise ValueError(f"field derivation emitted {attribute} does not match semantic-map entry")
+
+
+def _require_recorded_field_verdict(
+    parser_field: RecordDesignIntermediateField,
+    field: ExportFieldDefinition,
+    verdict: ExportFieldVerdict | None,
+) -> None:
+    if verdict is None:
+        return
+    diverges = design_stated_divergence(parser_field, field) is not None
+    if diverges != (verdict.outcome == "adjudicated"):
+        # Recomputed rather than trusted, so a stored manifest cannot claim
+        # agreement for a field that contradicts its own row.
+        raise ValueError(
+            f"field derivation {field.id!r} records verdict {verdict.outcome!r}, but the field "
+            f"{'diverges from' if diverges else 'agrees with'} its official row",
+        )
 
 
 def attach_field_verdicts(
@@ -479,125 +358,54 @@ class ExportFragmentProvenanceManifest(_StrictModel):
 
     @model_validator(mode="after")
     def _refuse_unknown_schema_or_unordered_outputs(self) -> ExportFragmentProvenanceManifest:
-        if self.manifest_schema_version != EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION:
-            raise ValueError(
-                "unsupported export-fragment provenance manifest schema "
-                f"{self.manifest_schema_version}; expected {EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION}",
-            )
-        if self.parser_schema_version != RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION:
-            raise ValueError(
-                "parser schema drift: manifest records "
-                f"{self.parser_schema_version}, expected {RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION}",
-            )
-        if self.generator_schema_version != EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION:
-            raise ValueError(
-                "generator schema drift: manifest records "
-                f"{self.generator_schema_version}, expected {EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION}",
-            )
-        if self.render_profile_schema_version != RENDER_PROFILE_SCHEMA_VERSION:
-            raise ValueError(
-                "render-profile schema drift: manifest records "
-                f"{self.render_profile_schema_version}, expected {RENDER_PROFILE_SCHEMA_VERSION}",
-            )
-        paths = tuple(item.relative_path for item in self.output_files)
-        if paths != tuple(sorted(paths)):
-            raise ValueError("provenance output files must be sorted by relative path")
-        if len(set(paths)) != len(paths):
-            raise ValueError("provenance output files must not contain duplicate relative paths")
-        field_keys = tuple((item.export_record_id, str(item.field.id)) for item in self.field_derivations)
-        if field_keys != tuple(sorted(field_keys)):
-            raise ValueError("provenance field derivations must be sorted by record and field id")
-        if len(set(field_keys)) != len(field_keys):
-            raise ValueError("provenance field derivations must not contain duplicate emitted fields")
+        _require_supported_manifest_versions(self)
+        _require_sorted_unique_output_files(self.output_files)
+        _require_sorted_unique_field_derivations(self.field_derivations)
         return self
+
+
+def _require_supported_manifest_versions(manifest: ExportFragmentProvenanceManifest) -> None:
+    if manifest.manifest_schema_version != EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION:
+        raise ValueError(
+            "unsupported export-fragment provenance manifest schema "
+            f"{manifest.manifest_schema_version}; expected {EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION}",
+        )
+    if manifest.parser_schema_version != RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION:
+        raise ValueError(
+            "parser schema drift: manifest records "
+            f"{manifest.parser_schema_version}, expected {RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION}",
+        )
+    if manifest.generator_schema_version != EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION:
+        raise ValueError(
+            "generator schema drift: manifest records "
+            f"{manifest.generator_schema_version}, expected {EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION}",
+        )
+    if manifest.render_profile_schema_version != RENDER_PROFILE_SCHEMA_VERSION:
+        raise ValueError(
+            "render-profile schema drift: manifest records "
+            f"{manifest.render_profile_schema_version}, expected {RENDER_PROFILE_SCHEMA_VERSION}",
+        )
+
+
+def _require_sorted_unique_output_files(output_files: tuple[ExportFragmentOutputDigest, ...]) -> None:
+    paths = tuple(item.relative_path for item in output_files)
+    if paths != tuple(sorted(paths)):
+        raise ValueError("provenance output files must be sorted by relative path")
+    if len(set(paths)) != len(paths):
+        raise ValueError("provenance output files must not contain duplicate relative paths")
+
+
+def _require_sorted_unique_field_derivations(field_derivations: tuple[ExportFieldDerivation, ...]) -> None:
+    field_keys = tuple((item.export_record_id, str(item.field.id)) for item in field_derivations)
+    if field_keys != tuple(sorted(field_keys)):
+        raise ValueError("provenance field derivations must be sorted by record and field id")
+    if len(set(field_keys)) != len(field_keys):
+        raise ValueError("provenance field derivations must not contain duplicate emitted fields")
 
 
 def export_fragment_provenance_path(export_directory: Path) -> Path:
     """Return the internal JSON attestation the TOML-only loader never consumes."""
     return export_directory / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-
-
-def semantic_map_digest(semantic_map: SemanticMap) -> str:
-    """Return a stable digest of reviewed semantic-map meaning, independent of entry order."""
-    payload = semantic_map.model_dump(mode="json")
-    _require_exact_keys(payload, _SEMANTIC_MAP_KEYS, subject="semantic-map")
-    entries = _as_object_list(payload["entries"], subject="semantic-map entries")
-    normalised_entries = [_normalise_semantic_map_entry(entry) for entry in entries]
-    normalised_entries.sort(key=_semantic_entry_sort_key)
-    records = _as_object_list(payload["records"], subject="semantic-map records")
-    normalised_records = [_normalise_semantic_map_record(record) for record in records]
-    normalised_records.sort(key=_semantic_record_sort_key)
-    variable_envelopes = _as_object_list(payload["variable_envelopes"], subject="semantic-map variable envelopes")
-    normalised_variable_envelopes = [_normalise_variable_envelope_contract(envelope) for envelope in variable_envelopes]
-    normalised_variable_envelopes.sort(
-        key=lambda envelope: _as_string(envelope["record_identity"], subject="envelope id"),
-    )
-    return content_hash_hex(
-        {
-            "modelo": payload["modelo"],
-            "design_epoch": payload["design_epoch"],
-            "source_ref": payload["source_ref"],
-            "source_sha256": payload["source_sha256"],
-            "records": normalised_records,
-            "entries": normalised_entries,
-            "variable_envelopes": normalised_variable_envelopes,
-        },
-    )
-
-
-def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[str, object]:
-    """Project loader material into the stable semantics that provenance attests.
-
-    The caller must provide the real loader's validated layout from the freshly
-    generated target tree. This function receives no paths and has no legacy
-    lookup or fallback surface. Exact-key checks are deliberate: an added loader
-    schema field refuses until this projection and its version are reviewed.
-    """
-    payload = loaded_layout.model_dump(mode="json")
-    _require_exact_keys(payload, _LAYOUT_KEYS, subject="loader export layout")
-    records = [_normalise_loader_record(item) for item in _as_object_list(payload["records"], subject="loader records")]
-    records.sort(key=_loader_record_sort_key)
-    overrides = [
-        _normalise_dictionary_override(item)
-        for item in _as_object_list(payload["dictionary_path_overrides"], subject="loader dictionary overrides")
-    ]
-    overrides.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary override field_id"))
-    projected: dict[str, object] = {
-        "loader_semantic_schema_version": _LOADER_SEMANTIC_SCHEMA_VERSION,
-        "id": payload["id"],
-        "format": payload["format"],
-        "dictionary_source_ref": payload["dictionary_source_ref"],
-        "source_refs": _sorted_strings(payload["source_refs"], subject="loader layout source_refs"),
-        "legal_refs": _sorted_strings(payload["legal_refs"], subject="loader layout legal_refs"),
-        "records": records,
-        "filing_envelope": payload["filing_envelope"],
-        "dictionary_path_overrides": overrides,
-        "aux_idioma": payload["aux_idioma"],
-    }
-    # Projected only when declared, so a layout without the member attests
-    # byte-identical semantics to the projection that preceded it.
-    if payload["auxiliary_envelope_header"] is not None:
-        projected["auxiliary_envelope_header"] = payload["auxiliary_envelope_header"]
-    return projected
-
-
-def loader_semantic_digest(loaded_layout: ExportLayoutDefinition) -> str:
-    """Return the canonical digest of a real loader-materialised export layout."""
-    return content_hash_hex(normalised_loader_semantics(loaded_layout))
-
-
-def loader_semantic_drift(recorded: Mapping[str, object], current: Mapping[str, object]) -> tuple[str, ...]:
-    """Name every projected loader-semantic path whose value differs between two projections.
-
-    A digest can only say that two projections differ. This names where, so a
-    refusal points at the key that moved rather than at the whole layout.
-    Records and fields are addressed by their ids and dictionary overrides by
-    their field id, never by list position, so a reported path is one a reviewer
-    can find in the tree. Each entry ends in ``added``, ``removed`` or ``changed``.
-    """
-    drift: list[str] = []
-    _collect_semantic_drift("", recorded, current, drift)
-    return tuple(sorted(drift))
 
 
 def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFragmentOutputDigest, ...]:
@@ -614,31 +422,42 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
     resolved_root = export_root.resolve()
     entries: list[ExportFragmentOutputDigest] = []
     for candidate in sorted(iter_directory(export_root, recursive=True), key=lambda path: path.as_posix()):
-        if is_link_like(candidate):
-            raise RegistryValidationError(f"export provenance refuses linked output path: {candidate}")
-        if not candidate.is_file():
-            continue
-        relative_path = PurePosixPath(*candidate.relative_to(export_root).parts).as_posix()
-        if candidate == export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME:
-            continue
-        if candidate.name == LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME:
-            raise RegistryValidationError(
-                f"export provenance refuses stale sibling-era manifest under generated export root: {relative_path}",
-            )
-        if candidate.suffix != ".toml":
-            raise RegistryValidationError(
-                f"export provenance refuses non-TOML output under generated export root: {relative_path}",
-            )
-        resolved_candidate = candidate.resolve()
-        try:
-            resolved_candidate.relative_to(resolved_root)
-        except ValueError as exc:
-            raise RegistryValidationError(f"export provenance path escapes export root: {candidate}") from exc
-        digest, _byte_count = hash_file(candidate)
-        entries.append(ExportFragmentOutputDigest(relative_path=relative_path, sha256=digest))
+        digest = _digest_generated_export_file(candidate, export_root=export_root, resolved_root=resolved_root)
+        if digest is not None:
+            entries.append(digest)
     if not entries:
         raise RegistryValidationError(f"export provenance found no generated output files under {export_root}")
     return tuple(sorted(entries, key=lambda item: item.relative_path))
+
+
+def _digest_generated_export_file(
+    candidate: Path,
+    *,
+    export_root: Path,
+    resolved_root: Path,
+) -> ExportFragmentOutputDigest | None:
+    if is_link_like(candidate):
+        raise RegistryValidationError(f"export provenance refuses linked output path: {candidate}")
+    if not candidate.is_file():
+        return None
+    relative_path = PurePosixPath(*candidate.relative_to(export_root).parts).as_posix()
+    if candidate == export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME:
+        return None
+    if candidate.name == LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME:
+        raise RegistryValidationError(
+            f"export provenance refuses stale sibling-era manifest under generated export root: {relative_path}",
+        )
+    if candidate.suffix != ".toml":
+        raise RegistryValidationError(
+            f"export provenance refuses non-TOML output under generated export root: {relative_path}",
+        )
+    resolved_candidate = candidate.resolve()
+    try:
+        resolved_candidate.relative_to(resolved_root)
+    except ValueError as exc:
+        raise RegistryValidationError(f"export provenance path escapes export root: {candidate}") from exc
+    digest, _byte_count = hash_file(candidate)
+    return ExportFragmentOutputDigest(relative_path=relative_path, sha256=digest)
 
 
 def build_export_fragment_provenance_manifest(
@@ -666,13 +485,13 @@ def build_export_fragment_provenance_manifest(
         source_sha256=joined.source.source_sha256,
         parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
-        semantic_map_sha256=semantic_map_digest(semantic_map),
+        semantic_map_sha256=_semantic_map_digest(semantic_map),
         render_profile_schema_version=RENDER_PROFILE_SCHEMA_VERSION,
         render_profile_sha256=render_profile_digest(render_profile, render_profile_source_evidence),
         modelo=target.modelo,
         revision_id=target.revision_id,
         design_epoch=target.design_epoch,
-        loader_semantic_sha256=loader_semantic_digest(loaded_layout),
+        loader_semantic_sha256=_loader_semantic_digest(loaded_layout),
         output_files=collect_export_fragment_output_digests(export_root),
         field_derivations=tuple(
             sorted(field_derivations, key=lambda item: (item.export_record_id, str(item.field.id)))
@@ -751,7 +570,7 @@ def verify_export_fragment_provenance_manifest(
     actual_outputs = collect_export_fragment_output_digests(export_root)
     if manifest.output_files != actual_outputs:
         raise RegistryValidationError("export provenance output-file digests do not match generated tree")
-    actual_loader_digest = loader_semantic_digest(loaded_layout)
+    actual_loader_digest = _loader_semantic_digest(loaded_layout)
     if manifest.loader_semantic_sha256 != actual_loader_digest:
         # The output files were proven equal to their attested digests just
         # above, so the tree's bytes did not move: what moved is the projection
@@ -783,13 +602,6 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
         if derivation["verdict"] is None:
             del derivation["verdict"]
     return canonical_json_bytes(payload)
-
-
-def _omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
-    for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
-        if field[key] is None:
-            del field[key]
-    return field
 
 
 def load_export_fragment_provenance_manifest(raw: bytes) -> ExportFragmentProvenanceManifest:
@@ -825,6 +637,17 @@ def _validate_generation_scope(
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> None:
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
+    _require_generation_coordinate_scope(joined=joined, semantic_map=semantic_map, target=target)
+    _require_joined_fields_match_semantic_map(joined, semantic_map)
+    _require_joined_records_match_semantic_map(joined, semantic_map)
+
+
+def _require_generation_coordinate_scope(
+    *,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    target: ExportFragmentTarget,
+) -> None:
     if joined.modelo != target.modelo:
         raise RegistryValidationError(
             f"joined modelo {joined.modelo!r} does not match generation target {target.modelo!r}",
@@ -855,6 +678,9 @@ def _validate_generation_scope(
             f"typed filing-envelope target revision {target.revision_id!r} does not match the selected "
             f"snapshot revision {joined.revision_id!r}",
         )
+
+
+def _require_joined_fields_match_semantic_map(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:
     if tuple(
         sorted(
             (field.semantic_entry for field in joined.fields),
@@ -881,6 +707,9 @@ def _validate_generation_scope(
         )
     ):
         raise RegistryValidationError("joined fields do not attest the supplied complete semantic map")
+
+
+def _require_joined_records_match_semantic_map(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:
     if tuple(
         sorted(
             (record.semantic_record for record in joined.records),
@@ -970,7 +799,7 @@ def _require_manifest_matches_current_authorities(
         "source_sha256": joined.source.source_sha256,
         "parser_schema_version": RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         "generator_schema_version": EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
-        "semantic_map_sha256": semantic_map_digest(semantic_map),
+        "semantic_map_sha256": _semantic_map_digest(semantic_map),
         "render_profile_schema_version": RENDER_PROFILE_SCHEMA_VERSION,
         "render_profile_sha256": render_profile_digest(render_profile, render_profile_source_evidence),
         "modelo": target.modelo,
@@ -1002,10 +831,27 @@ def _require_field_derivations_match_layout(
         (str(record.id), str(field.id)): field for record in loaded_layout.records for field in record.fields
     }
     derivation_fields = {(item.export_record_id, str(item.field.id)): item.field for item in field_derivations}
+    _require_unique_derivation_fields(loaded_layout, field_derivations, layout_fields, derivation_fields)
+    _require_exact_derivation_coverage(layout_fields, derivation_fields)
+    _require_derivation_fields_match_layout(layout_fields, derivation_fields)
+
+
+def _require_unique_derivation_fields(
+    loaded_layout: ExportLayoutDefinition,
+    field_derivations: tuple[ExportFieldDerivation, ...],
+    layout_fields: Mapping[tuple[str, str], ExportFieldDefinition],
+    derivation_fields: Mapping[tuple[str, str], ExportFieldDefinition],
+) -> None:
     if len(layout_fields) != len(tuple(field for record in loaded_layout.records for field in record.fields)):
         raise RegistryValidationError("loader export layout contains duplicate record and field identities")
     if len(derivation_fields) != len(field_derivations):
         raise RegistryValidationError("export provenance contains duplicate field derivations")
+
+
+def _require_exact_derivation_coverage(
+    layout_fields: Mapping[tuple[str, str], ExportFieldDefinition],
+    derivation_fields: Mapping[tuple[str, str], ExportFieldDefinition],
+) -> None:
     if frozenset(derivation_fields) != frozenset(layout_fields):
         missing = sorted(
             f"{record_id}/{field_id}" for record_id, field_id in layout_fields.keys() - derivation_fields.keys()
@@ -1017,6 +863,12 @@ def _require_field_derivations_match_layout(
             f"export provenance derivations do not cover exactly the generated layout: "
             f"missing={missing!r}, unexpected={unexpected!r}",
         )
+
+
+def _require_derivation_fields_match_layout(
+    layout_fields: Mapping[tuple[str, str], ExportFieldDefinition],
+    derivation_fields: Mapping[tuple[str, str], ExportFieldDefinition],
+) -> None:
     for identity, expected_field in layout_fields.items():
         if derivation_fields[identity] != expected_field:
             raise RegistryValidationError(
@@ -1060,411 +912,6 @@ def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
         raise RegistryValidationError(f"export provenance manifest already exists: {path}") from exc
     except OSError as exc:
         raise RegistryValidationError(f"cannot write export provenance manifest {path}: {exc}") from exc
-
-
-def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, object]:
-    _require_exact_keys(payload, _SEMANTIC_MAP_ENTRY_KEYS, subject="semantic-map entry")
-    anchor = _as_object(payload["anchor"], subject="semantic-map anchor")
-    _require_exact_keys(anchor, _SEMANTIC_MAP_ANCHOR_KEYS, subject="semantic-map anchor")
-    return {
-        "anchor": {
-            "sheet": anchor["sheet"],
-            "source_row": anchor["source_row"],
-            "source_cell": anchor["source_cell"],
-            "ordinal": anchor["ordinal"],
-            "ordinal_absent": anchor["ordinal_absent"],
-            "record_identity": anchor["record_identity"],
-        },
-        "export_field_id": payload["export_field_id"],
-        "kind": payload["kind"],
-        "casilla_id": payload["casilla_id"],
-        "binding": payload["binding"],
-        "literal": payload["literal"],
-        "producer_key": payload["producer_key"],
-        "projection_ref": payload["projection_ref"],
-        "draft_attribute": payload["draft_attribute"],
-        "computed_key": payload["computed_key"],
-        "legal_refs": _sorted_strings(payload["legal_refs"], subject="semantic-map legal_refs"),
-        "source_refs": _sorted_strings(payload["source_refs"], subject="semantic-map source_refs"),
-        # Digested only when declared, so a map without parts keeps its digest.
-        **({"part": payload["part"]} if payload["part"] is not None else {}),
-    }
-
-
-def _normalise_variable_envelope_contract(payload: Mapping[str, object]) -> dict[str, object]:
-    """Normalise the typed envelope contract without re-deriving its meaning."""
-    _require_exact_keys(payload, _VARIABLE_ENVELOPE_KEYS, subject="variable envelope")
-    prefix_fields = _as_object_list(payload["prefix_fields"], subject="variable envelope prefix fields")
-    normalised_prefix_fields: list[dict[str, object]] = []
-    for prefix_field in prefix_fields:
-        _require_exact_keys(prefix_field, _ENVELOPE_PREFIX_FIELD_KEYS, subject="envelope prefix field")
-        anchor = _as_object(prefix_field["anchor"], subject="envelope prefix anchor")
-        _require_exact_keys(anchor, _SEMANTIC_MAP_ANCHOR_KEYS, subject="envelope prefix anchor")
-        normalised_prefix_fields.append(
-            {
-                "role": prefix_field["role"],
-                "anchor": {
-                    "sheet": anchor["sheet"],
-                    "source_row": anchor["source_row"],
-                    "source_cell": anchor["source_cell"],
-                    "ordinal": anchor["ordinal"],
-                    "ordinal_absent": anchor["ordinal_absent"],
-                    "record_identity": anchor["record_identity"],
-                },
-            },
-        )
-    body_anchor = _as_object(payload["body_anchor"], subject="envelope body anchor")
-    closer_anchor = _as_object(payload["closer_anchor"], subject="envelope closer anchor")
-    for subject, anchor in (("body", body_anchor), ("closer", closer_anchor)):
-        _require_exact_keys(anchor, _SEMANTIC_MAP_ANCHOR_KEYS, subject=f"envelope {subject} anchor")
-    total_anchor = _as_object(payload["total_anchor"], subject="envelope total anchor")
-    _require_exact_keys(total_anchor, _ENVELOPE_TOTAL_ANCHOR_KEYS, subject="envelope total anchor")
-    body_record_ids = _strings_in_order(payload["body_record_ids"], subject="envelope body record ids")
-    return {
-        "source_ref": payload["source_ref"],
-        "source_sha256": payload["source_sha256"],
-        "record_identity": payload["record_identity"],
-        "prefix_fields": normalised_prefix_fields,
-        "body_anchor": {
-            "sheet": body_anchor["sheet"],
-            "source_row": body_anchor["source_row"],
-            "source_cell": body_anchor["source_cell"],
-            "ordinal": body_anchor["ordinal"],
-            "ordinal_absent": body_anchor["ordinal_absent"],
-            "record_identity": body_anchor["record_identity"],
-        },
-        "body_record_ids": body_record_ids,
-        "closer_anchor": {
-            "sheet": closer_anchor["sheet"],
-            "source_row": closer_anchor["source_row"],
-            "source_cell": closer_anchor["source_cell"],
-            "ordinal": closer_anchor["ordinal"],
-            "ordinal_absent": closer_anchor["ordinal_absent"],
-            "record_identity": closer_anchor["record_identity"],
-        },
-        "total_anchor": {
-            "source_row": total_anchor["source_row"],
-            "source_cell": total_anchor["source_cell"],
-            "label": total_anchor["label"],
-            "length": total_anchor["length"],
-        },
-    }
-
-
-def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, str, str, str, str]:
-    anchor = _as_object(payload["anchor"], subject="normalised semantic-map anchor")
-    source_cell = anchor["source_cell"]
-    ordinal = anchor["ordinal"]
-    return (
-        _as_string(anchor["sheet"], subject="semantic-map anchor sheet"),
-        _as_int(anchor["source_row"], subject="semantic-map anchor source_row"),
-        "" if source_cell is None else _as_string(source_cell, subject="semantic-map anchor source_cell"),
-        "" if ordinal is None else _as_string(ordinal, subject="semantic-map anchor ordinal"),
-        _as_string(anchor["record_identity"], subject="semantic-map anchor record_identity"),
-        _as_string(payload["export_field_id"], subject="semantic-map export_field_id"),
-    )
-
-
-def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
-    _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
-    discriminator = payload["discriminator"]
-    normalised_discriminator: dict[str, object] | None = None
-    if discriminator is not None:
-        discriminator_payload = _as_object(discriminator, subject="semantic-map record discriminator")
-        _require_exact_keys(discriminator_payload, _DISCRIMINATOR_KEYS, subject="semantic-map record discriminator")
-        normalised_discriminator = {
-            "offset": discriminator_payload["offset"],
-            "length": discriminator_payload["length"],
-            "requires": discriminator_payload["requires"],
-        }
-    normalised: dict[str, object] = {
-        "sheet": _as_string(payload["sheet"], subject="semantic-map record sheet"),
-        "record_identity": _as_string(
-            payload["record_identity"],
-            subject="semantic-map record record_identity",
-        ),
-        "export_record_id": _as_string(
-            payload["export_record_id"],
-            subject="semantic-map record export_record_id",
-        ),
-        "record_type": _as_string(payload["record_type"], subject="semantic-map record record_type"),
-        "required": _as_bool(payload["required"], subject="semantic-map record required"),
-        "repeat": _as_optional_string(payload["repeat"], subject="semantic-map record repeat"),
-    }
-    # Adding an optional semantic-map field must not invalidate every existing
-    # generated tree whose authored meaning did not use it. A present rule is
-    # attested; absence retains the previous canonical representation.
-    if normalised_discriminator is not None:
-        normalised["discriminator"] = normalised_discriminator
-    binding_record = payload["binding_record"]
-    if binding_record is not None:
-        normalised["binding_record"] = _as_string(binding_record, subject="semantic-map record binding_record")
-    row_field_casilla_ids = _as_sorted_string_pairs(
-        payload["row_field_casilla_ids"],
-        subject="semantic-map record row_field_casilla_ids",
-    )
-    if row_field_casilla_ids:
-        normalised["row_field_casilla_ids"] = row_field_casilla_ids
-    return normalised
-
-
-def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str, str]:
-    return (
-        _as_string(payload["sheet"], subject="semantic-map record sheet"),
-        _as_string(payload["record_identity"], subject="semantic-map record record_identity"),
-        _as_string(payload["export_record_id"], subject="semantic-map record export_record_id"),
-        _as_string(payload["record_type"], subject="semantic-map record record_type"),
-        _as_optional_string(payload["repeat"], subject="semantic-map record repeat") or "",
-    )
-
-
-def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]:
-    _require_exact_keys(payload, _RECORD_KEYS, subject="loader export record")
-    fields = [
-        _normalise_loader_field(item) for item in _as_object_list(payload["fields"], subject="loader record fields")
-    ]
-    fields.sort(key=_loader_field_sort_key)
-    row_fields = _as_object(payload["row_field_casilla_ids"], subject="loader row-field casilla ids")
-    discriminator = payload["discriminator"]
-    normalised_discriminator: dict[str, object] | None = None
-    if discriminator is not None:
-        discriminator_payload = _as_object(discriminator, subject="loader record discriminator")
-        _require_exact_keys(discriminator_payload, _DISCRIMINATOR_KEYS, subject="loader record discriminator")
-        normalised_discriminator = {
-            "offset": discriminator_payload["offset"],
-            "length": discriminator_payload["length"],
-            "requires": discriminator_payload["requires"],
-        }
-    return {
-        "id": payload["id"],
-        "record_type": payload["record_type"],
-        "order": payload["order"],
-        "encoding": payload["encoding"],
-        "line_ending": payload["line_ending"],
-        "required": payload["required"],
-        "repeat": payload["repeat"],
-        "binding_record": payload["binding_record"],
-        "row_field_casilla_ids": {key: row_fields[key] for key in sorted(row_fields)},
-        "discriminator": normalised_discriminator,
-        "requires_positive_casilla_id": payload["requires_positive_casilla_id"],
-        "fields": fields,
-    }
-
-
-def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
-    _require_exact_keys(payload, _FIELD_KEYS, subject="loader export field")
-    normalised: dict[str, object] = {
-        "id": payload["id"],
-        "offset": payload["offset"],
-        "length": payload["length"],
-        "kind": payload["kind"],
-        "casilla_id": payload["casilla_id"],
-        "binding": payload["binding"],
-        "literal": payload["literal"],
-        "producer_key": payload["producer_key"],
-        "projection_ref": payload["projection_ref"],
-        "draft_attribute": payload["draft_attribute"],
-        "computed_key": payload["computed_key"],
-        "data_type": payload["data_type"],
-        "required": payload["required"],
-        "padding": payload["padding"],
-        "justification": payload["justification"],
-        "date_format": payload["date_format"],
-        "decimals": payload["decimals"],
-        "signed": payload["signed"],
-        "value_policy": payload["value_policy"],
-        "allowed_values": payload["allowed_values"],
-        "legal_refs": _sorted_strings(payload["legal_refs"], subject="loader field legal_refs"),
-        "source_refs": _sorted_strings(payload["source_refs"], subject="loader field source_refs"),
-    }
-    for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
-        normalised[key] = payload[key]
-    return _omit_undeclared_field_keys(normalised)
-
-
-#: Projected arrays whose members carry a stable identity, keyed by the member
-#: field holding it. Drift inside them is reported against that identity.
-_IDENTIFIED_PROJECTION_ARRAYS: Final[Mapping[str, str]] = {
-    "records": "id",
-    "fields": "id",
-    "dictionary_path_overrides": "field_id",
-}
-
-
-def _collect_semantic_drift(path: str, recorded: object, current: object, drift: list[str]) -> None:
-    if recorded == current:
-        return
-    recorded_mapping = _mapping_or_none(recorded)
-    current_mapping = _mapping_or_none(current)
-    if recorded_mapping is not None and current_mapping is not None:
-        for key in sorted(recorded_mapping.keys() | current_mapping.keys()):
-            child = f"{path}.{key}" if path else key
-            if key not in current_mapping:
-                drift.append(f"{child} removed")
-            elif key not in recorded_mapping:
-                drift.append(f"{child} added")
-            else:
-                _collect_semantic_drift(child, recorded_mapping[key], current_mapping[key], drift)
-        return
-    identity_key = _IDENTIFIED_PROJECTION_ARRAYS.get(path.rsplit(".", 1)[-1])
-    recorded_members = _members_by_identity(recorded, identity_key)
-    current_members = _members_by_identity(current, identity_key)
-    if recorded_members is None or current_members is None:
-        drift.append(f"{path} changed")
-        return
-    reported_before = len(drift)
-    for identity in sorted(recorded_members.keys() | current_members.keys()):
-        child = f"{path}[{identity}]"
-        if identity not in current_members:
-            drift.append(f"{child} removed")
-        elif identity not in recorded_members:
-            drift.append(f"{child} added")
-        else:
-            _collect_semantic_drift(child, recorded_members[identity], current_members[identity], drift)
-    if len(drift) == reported_before:
-        # Same members, same values: only their sequence differs, which is
-        # still a difference the projection attests.
-        drift.append(f"{path} reordered")
-
-
-def _mapping_or_none(value: object) -> Mapping[str, object] | None:
-    return cast(Mapping[str, object], value) if isinstance(value, Mapping) else None
-
-
-def _members_by_identity(value: object, identity_key: str | None) -> dict[str, object] | None:
-    """Index an identified projected array, or ``None`` when it cannot be addressed by identity."""
-    if identity_key is None or not isinstance(value, list):
-        return None
-    members: dict[str, object] = {}
-    items: list[object] = list(cast(list[object], value))
-    for item in items:
-        member = _mapping_or_none(item)
-        if member is None:
-            return None
-        identity = member.get(identity_key)
-        if not isinstance(identity, str) or identity in members:
-            return None
-        members[identity] = item
-    return members
-
-
-def _loader_record_sort_key(payload: Mapping[str, object]) -> tuple[int, str]:
-    return (
-        _as_int(payload["order"], subject="loader record order"),
-        _as_string(payload["id"], subject="loader record id"),
-    )
-
-
-def _loader_field_sort_key(payload: Mapping[str, object]) -> tuple[int, str]:
-    offset = payload["offset"]
-    return (
-        -1 if offset is None else _as_int(offset, subject="loader field offset"),
-        _as_string(payload["id"], subject="loader field id"),
-    )
-
-
-def _normalise_dictionary_override(payload: Mapping[str, object]) -> dict[str, object]:
-    _require_exact_keys(payload, _DICTIONARY_OVERRIDE_KEYS, subject="loader dictionary override")
-    return {
-        "field_id": payload["field_id"],
-        "path": payload["path"],
-        "reason": payload["reason"],
-    }
-
-
-def _require_exact_keys(payload: Mapping[str, object], expected: frozenset[str], *, subject: str) -> None:
-    actual = frozenset(payload)
-    if actual == expected:
-        return
-    missing = sorted(expected - actual)
-    unknown = sorted(actual - expected)
-    raise RegistryValidationError(
-        f"{subject} schema drift: missing={missing!r}, unknown={unknown!r}; review and version the normaliser",
-    )
-
-
-def _as_object(value: object, *, subject: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise RegistryValidationError(f"{subject} schema drift: expected object")
-    raw_mapping = cast(Mapping[object, object], value)
-    result: dict[str, object] = {}
-    for raw_key, raw_value in raw_mapping.items():
-        if not isinstance(raw_key, str):
-            raise RegistryValidationError(f"{subject} schema drift: expected string object keys")
-        result[raw_key] = raw_value
-    return result
-
-
-def _as_sorted_string_pairs(value: object, *, subject: str) -> list[list[str]]:
-    """Project a carried mapping (dumped as two-element pairs) in a stable order."""
-    if not isinstance(value, list):
-        raise RegistryValidationError(f"{subject} schema drift: expected pair array")
-    pairs: list[list[str]] = []
-    items: list[object] = list(value)
-    for item in items:
-        if not isinstance(item, list):
-            raise RegistryValidationError(f"{subject} schema drift: expected two-element pairs")
-        members: list[object] = list(item)
-        if len(members) != 2:
-            raise RegistryValidationError(f"{subject} schema drift: expected two-element pairs")
-        pairs.append([_as_string(members[0], subject=subject), _as_string(members[1], subject=subject)])
-    return sorted(pairs)
-
-
-def _as_object_list(value: object, *, subject: str) -> list[Mapping[str, object]]:
-    if not isinstance(value, list):
-        raise RegistryValidationError(f"{subject} schema drift: expected array")
-    items: list[object] = list(value)
-    return [_as_object(item, subject=subject) for item in items]
-
-
-def _sorted_strings(value: object, *, subject: str) -> list[str]:
-    if not isinstance(value, list):
-        raise RegistryValidationError(f"{subject} schema drift: expected string array")
-    items: list[object] = list(value)
-    strings: list[str] = []
-    for item in items:
-        if not isinstance(item, str):
-            raise RegistryValidationError(f"{subject} schema drift: expected string array")
-        strings.append(item)
-    return sorted(strings)
-
-
-def _strings_in_order(value: object, *, subject: str) -> list[str]:
-    """Validate a string array while retaining semantic sequence order."""
-    if not isinstance(value, list):
-        raise RegistryValidationError(f"{subject} schema drift: expected string array")
-    items: list[object] = list(value)
-    strings: list[str] = []
-    for item in items:
-        if not isinstance(item, str):
-            raise RegistryValidationError(f"{subject} schema drift: expected string array")
-        strings.append(item)
-    return strings
-
-
-def _as_string(value: object, *, subject: str) -> str:
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"{subject} schema drift: expected string")
-    return value
-
-
-def _as_optional_string(value: object, *, subject: str) -> str | None:
-    if value is None:
-        return None
-    return _as_string(value, subject=subject)
-
-
-def _as_bool(value: object, *, subject: str) -> bool:
-    if type(value) is not bool:
-        raise RegistryValidationError(f"{subject} schema drift: expected boolean")
-    return value
-
-
-def _as_int(value: object, *, subject: str) -> int:
-    if not isinstance(value, int):
-        raise RegistryValidationError(f"{subject} schema drift: expected integer")
-    return value
 
 
 class _DuplicateJsonKeyError(ValueError):

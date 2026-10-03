@@ -339,7 +339,7 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
         mutations.append(kwargs)
         return SimpleNamespace(bucket_event_ids=("e" * 64,))
 
-    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation, "_operation_result", project)
     monkeypatch.setattr(operation, "update_manual_transaction_fields", update)
     factory = cast(LedgerActionPortsFactory, lambda **_kwargs: ports)

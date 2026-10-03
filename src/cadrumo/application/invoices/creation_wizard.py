@@ -66,7 +66,7 @@ from ...domain.iva.classification import (
     resolve_iva_classification_inputs,
 )
 from ...domain.iva.errors import IvaRateNotFoundError
-from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.lookup import unique_rate_kind_for_declared_rate
 from ...domain.iva.schema import IvaCategory, spanish_eu_member_state
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .catalogue_creation_ports import CatalogueCreationPorts
@@ -399,16 +399,16 @@ def _derived_domestic_category(
             return _derived_domestic_category(
                 country_code=country_code, iva_rate=iva_rate, on_date=on_date, operation=pinned
             )
-    tiers = rate_kinds_for_declared_rate(
-        spanish_eu_member_state(effective_date=on_date),
+    rate_kind = unique_rate_kind_for_declared_rate(
+        spanish_eu_member_state(effective_date=on_date, authority=operation),
         iva_rate / Decimal("100"),
         on_date,
         operation=operation,
     )
-    if len(tiers) != 1:
+    if rate_kind is None:
         return None
     mapping = resolve_iva_classification_inputs(effective_date=on_date, operation=operation).rate_categories
-    return domestic_categories_by_rate_kind(mapping).get(tiers[0])
+    return domestic_categories_by_rate_kind(mapping).get(rate_kind)
 
 
 def _validate_wizard_fields(

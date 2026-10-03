@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -36,15 +35,14 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -266,15 +264,9 @@ class InvoiceCatalogueReadExecutor:
             if isinstance(payload, InvoiceListRequest)
             else INVOICE_VIEW_OPERATION_DEFINITION_ID
         )
-        if (
-            request.definition_id != expected
-            or request.definition_id != self._definition_id
-            or request.subject_ref != profile_operation_subject(str(payload.profile_id))
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != str(payload.profile_id)
-        ):
+        if request.definition_id != expected or request.definition_id != self._definition_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(self._definition_id)
 
         async def capture() -> str | OperationRefusalEvidence:
@@ -325,9 +317,7 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({INVOICE_VIEW_REFUSAL_CODE}) if private_request else frozenset(),
     )
 
@@ -365,29 +355,19 @@ def resolve_invoice_read_access(
 
 def build_invoice_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Expose independently typed inventory output behind the shared access policy."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=InvoiceListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=InvoiceListProjection
-        ),
-        access_resolver=resolve_invoice_read_access,
+        public_result_type=InvoiceListProjection,
         result_projector=project_invoice_list_result,
+        access_resolver=resolve_invoice_read_access,
     )
 
 
 def build_invoice_view_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Expose a guarded selected record or explicitly registered refusal detail."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=InvoiceViewRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=InvoiceViewProjection
-        ),
-        access_resolver=resolve_invoice_read_access,
+        public_result_type=InvoiceViewProjection,
         result_projector=project_invoice_view_result,
+        access_resolver=resolve_invoice_read_access,
     )

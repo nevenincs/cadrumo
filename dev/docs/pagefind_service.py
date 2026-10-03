@@ -39,10 +39,7 @@ class ResponsivePagefindService(PagefindService):
                 continue
             message_id = response.get("message_id")
             original = response["payload"].get("original_message")
-            # A request the indexer could not parse comes back without its id but
-            # with the original message, which carries it.
-            if message_id is None and original is not None and (sent := json.loads(original)) is not None:
-                message_id = sent.get("message_id")
+            message_id = _pagefind_message_id(message_id, original)
             if message_id is None:
                 continue
             future = self._responses.get(message_id)
@@ -54,3 +51,13 @@ class ResponsivePagefindService(PagefindService):
                 future.set_exception(Exception(payload["message"], payload.get("original_message")))
             else:
                 future.set_result(cast(InternalResponsePayload, payload))
+
+
+def _pagefind_message_id(message_id: int | None, original: str | None) -> int | None:
+    """Recover the ID carried by an unparsed original request."""
+    # A request the indexer could not parse comes back without its id but
+    # with the original message, which carries it.
+    if message_id is None and original is not None and (sent := json.loads(original)) is not None:
+        # JSON-boundary cast: retain Pagefind's existing ID decoding contract.
+        message_id = cast(int | None, sent.get("message_id"))
+    return message_id

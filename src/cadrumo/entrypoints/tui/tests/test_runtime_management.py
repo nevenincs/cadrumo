@@ -12,6 +12,7 @@ from threading import Event, get_ident
 from uuid import uuid4
 
 import pytest
+from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
@@ -35,7 +36,8 @@ from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
 
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
-from ..runtime_management import RuntimeManagementCleanup, RuntimeManagementScreen, RuntimeStopConfirmationScreen
+from ..runtime_management import RuntimeManagementScreen, RuntimeStopConfirmationScreen
+from ..runtime_management_cleanup import RuntimeManagementCleanup
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -44,6 +46,12 @@ async def _until[T](pilot: Pilot[T], condition: Callable[[], bool]) -> None:
     async with asyncio.timeout(5):
         while not condition():
             await pilot.pause(0.02)
+
+
+def _stop_confirmation_composed[T](app: App[T]) -> bool:
+    """The modal becomes current before its buttons mount, so wait for both."""
+    screen = app.screen
+    return isinstance(screen, RuntimeStopConfirmationScreen) and bool(screen.query("#runtime-stop-confirm"))
 
 
 def _available() -> RuntimeManagementSnapshot:
@@ -92,7 +100,7 @@ async def test_stop_acceptance_or_unknown_dispatch_stays_fenced_after_refresh(
             ),
         )
         screen.query_one("#runtime-management-stop", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        await _until(pilot, lambda: _stop_confirmation_composed(app))
         app.screen.query_one("#runtime-stop-confirm", Button).press()
         await _until(pilot, lambda: not screen._busy and fixture.consent.released)
         message = str(screen.query_one("#runtime-management-status", Static).content)
@@ -160,7 +168,7 @@ async def test_cancelled_stop_preview_can_be_discarded_without_confirmation(
             ),
         )
         screen.query_one("#runtime-management-stop", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        await _until(pilot, lambda: _stop_confirmation_composed(app))
         app.screen.query_one("#runtime-stop-cancel", Button).press()
         await _until(pilot, lambda: not screen._busy and fixture.consent.released)
         assert not screen.query_one("#runtime-management-stop", Button).disabled
@@ -191,7 +199,7 @@ async def test_stop_ack_cleanup_failure_is_visible_and_retained_after_screen_clo
             ),
         )
         screen.query_one("#runtime-management-stop", Button).press()
-        await _until(pilot, lambda: isinstance(app.screen, RuntimeStopConfirmationScreen))
+        await _until(pilot, lambda: _stop_confirmation_composed(app))
         app.screen.query_one("#runtime-stop-confirm", Button).press()
         await _until(pilot, lambda: not screen._busy and fixture.channel.close_calls == 1)
         message = str(screen.query_one("#runtime-management-status", Static).content)

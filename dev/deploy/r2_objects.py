@@ -27,6 +27,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 from urllib.parse import quote
+from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
@@ -64,6 +65,14 @@ _CONTENT_TYPES: Final[Mapping[str, str]] = {
     ".pdf": "application/pdf",
     ".map": "application/json",
 }
+
+
+def _signed_request_target(path: str, query: Mapping[str, str]) -> str:
+    """Signed request target."""
+    target = path
+    if query:
+        target += "?" + "&".join(f"{quote(k, safe='-_.~')}={quote(v, safe='-_.~')}" for k, v in sorted(query.items()))
+    return target
 
 
 @dataclass(frozen=True)
@@ -163,9 +172,7 @@ def _request(
     connection: HTTPSConnection | None = None,
 ) -> tuple[int, bytes]:
     """Send one signed request, retrying transport failures, and return status and body."""
-    target = path
-    if query:
-        target += "?" + "&".join(f"{quote(k, safe='-_.~')}={quote(v, safe='-_.~')}" for k, v in sorted(query.items()))
+    target = _signed_request_target(path, query)
     last_error: Exception | None = None
     for _ in range(_ATTEMPTS):
         headers = signed_headers(
@@ -322,12 +329,7 @@ def object_inventory(bucket: R2Bucket, prefix: str) -> dict[str, tuple[int, str]
             raise ValueError(f"Cannot inventory release: HTTP {status}")
         document = ElementTree.fromstring(body)
         for item in document.findall(f"{_S3_NAMESPACE}Contents"):
-            key = item.findtext(f"{_S3_NAMESPACE}Key") or ""
-            size = int(item.findtext(f"{_S3_NAMESPACE}Size") or "-1")
-            etag = (item.findtext(f"{_S3_NAMESPACE}ETag") or "").strip('"')
-            if not key or key in found:
-                raise ValueError("Invalid or duplicate inventory key")
-            found[key] = (size, etag)
+            _record_inventory_item(item, found)
         if document.findtext(f"{_S3_NAMESPACE}IsTruncated") != "true":
             return found
         token = document.findtext(f"{_S3_NAMESPACE}NextContinuationToken") or ""
@@ -383,3 +385,13 @@ def deployment_lock(bucket: R2Bucket) -> Iterator[None]:
         status, _ = _request(bucket, method="DELETE", path=_object_path(bucket, key))
         if status != 204:
             raise ValueError(f"Could not release deployment lock: HTTP {status}")
+
+
+def _record_inventory_item(item: Element, found: dict[str, tuple[int, str]]) -> None:
+    """Record inventory item."""
+    key = item.findtext(f"{_S3_NAMESPACE}Key") or ""
+    size = int(item.findtext(f"{_S3_NAMESPACE}Size") or "-1")
+    etag = (item.findtext(f"{_S3_NAMESPACE}ETag") or "").strip('"')
+    if not key or key in found:
+        raise ValueError("Invalid or duplicate inventory key")
+    found[key] = (size, etag)

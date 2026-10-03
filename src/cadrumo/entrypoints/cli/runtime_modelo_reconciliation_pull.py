@@ -14,10 +14,11 @@ from ...application.modelo.reconciliation_pull_operation import (
 from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_errors import invalid_completion_error
 from .runtime_justificante_capture import capture_justificante_for_cli
 from .runtime_modelo_metadata import read_modelo_work_unit
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def pull_modelo_reconciliation(
@@ -81,12 +82,7 @@ def pull_modelo_reconciliation(
         or projection.source_kind is not ModeloReconciliationEvidenceKind.JUSTIFICANTE
         or projection.source_path != expected_source
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return projection.to_report()
 
 

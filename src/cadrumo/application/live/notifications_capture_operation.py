@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import datetime
@@ -25,6 +25,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
@@ -40,10 +41,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -121,7 +121,12 @@ class NotificationsCaptureComposition(Protocol):
         ...
 
 
-NotificationsCaptureCompositionFactory = Callable[[], NotificationsCaptureComposition]
+class NotificationsCaptureCompositionFactory(Protocol):
+    """Compose notifications custody under its held authority operation."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> NotificationsCaptureComposition:
+        """Return the exact worker-local notification composition."""
+        ...
 
 
 def _require_exact_profile(profile_id: UUID, subject_ref: str) -> str:
@@ -195,7 +200,7 @@ class NotificationsCaptureExecutor:
 
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
+        composition = self._composition_factory(operation=context.authority_operation)
         browser_resources = self._browser_resources_factory()
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_PHASES[1])

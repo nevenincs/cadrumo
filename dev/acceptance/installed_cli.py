@@ -9,13 +9,19 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from cadrumo.domain.calculations.registry.authority_store import (
+    AUTHORITY_DESCRIPTOR_FILENAME,
+    AuthorityDescriptor,
+    AuthorityStoreError,
+)
+from dev.product_environment import clean_product_env
 
 
 class InstalledCliError(RuntimeError):
@@ -40,10 +46,7 @@ class CommandEvidence:
 
 def build_installed_cli_environment(*, storage_root: Path, authority_root: Path) -> dict[str, str]:
     """Build the allowlisted product environment for one isolated child process."""
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-    environment.pop("PYTHONPATH", None)
-    environment.pop("PYTHONHOME", None)
-    environment.pop("VIRTUAL_ENV", None)
+    environment = clean_product_env()
     environment.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
@@ -244,11 +247,24 @@ def profile_create_args(year: int) -> tuple[str, ...]:
 
 def authority_generation(authority_root: Path) -> str:
     """Read the selected authority generation from its public descriptor."""
-    descriptor = json.loads((authority_root / "authority.current.json").read_text(encoding="utf-8"))
-    generation = descriptor.get("logical_generation")
-    if not isinstance(generation, str):
-        raise InstalledCliError("authority descriptor has no logical generation")
-    return generation
+    try:
+        return AuthorityDescriptor.read(authority_root / AUTHORITY_DESCRIPTOR_FILENAME).logical_generation
+    except AuthorityStoreError as exc:
+        raise InstalledCliError(f"authority descriptor is unavailable: {exc}") from exc
+
+
+def _embedded_cli_documents(text: str, decoder: json.JSONDecoder) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for offset, character in enumerate(text):
+        if character != "{":
+            continue
+        try:
+            candidate, _end = decoder.raw_decode(text, offset)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(candidate, dict) and "schema_version" in candidate and "status" in candidate:
+            candidates.append(candidate)
+    return candidates
 
 
 def decode_cli_document(stdout: str, stderr: str) -> dict[str, Any]:
@@ -261,16 +277,7 @@ def decode_cli_document(stdout: str, stderr: str) -> dict[str, Any]:
         try:
             document = json.loads(text)
         except json.JSONDecodeError:
-            candidates: list[dict[str, Any]] = []
-            for offset, character in enumerate(text):
-                if character != "{":
-                    continue
-                try:
-                    candidate, _end = decoder.raw_decode(text, offset)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(candidate, dict) and "schema_version" in candidate and "status" in candidate:
-                    candidates.append(candidate)
+            candidates = _embedded_cli_documents(text, decoder)
             if candidates:
                 return candidates[-1]
         else:

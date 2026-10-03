@@ -48,8 +48,8 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewRefusalCode,
     ProfileViewStatusItem,
     project_profile_view_result,
-    read_profile_view_page,
 )
+from cadrumo.application.user_profile.view_reader import read_profile_view_page
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -202,7 +202,7 @@ def test_indivisible_oversized_fact_refuses_without_truncating(tmp_path: Path, m
         profile_id = _register_profile()
         oversized_value = "x" * (PROFILE_VIEW_MAX_RESULT_BYTES + 1)
         monkeypatch.setattr(
-            "cadrumo.application.user_profile.view_operation.record_to_path_values",
+            "cadrumo.application.user_profile.view_reader.record_to_path_values",
             lambda _record: {"preferences.output_language": oversized_value},
         )
         with bundled_indexed_authority().operation() as authority:

@@ -283,7 +283,7 @@ def file_modelo_revision(
         )
     run_repo = ports.workflow_run_repository
 
-    revisions = cr_repo.load()
+    revisions = cr_repo.load(operation=operation)
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(

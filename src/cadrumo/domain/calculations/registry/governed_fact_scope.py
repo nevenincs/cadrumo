@@ -119,6 +119,20 @@ def governed_facts_in_scope() -> GovernedFactSource | None:
     return _VALIDATING_GOVERNED_FACTS.get()
 
 
+def require_governed_fact_authority(authority: GovernedFactSource | None, *, subject: str) -> GovernedFactSource:
+    """Return ``authority``, else the facts of the validation in progress.
+
+    Raises:
+        InternalInvariantError: When no authority is supplied and no
+            validation scope is active; a catalogue never falls back to the
+            published bundle.
+    """
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
+        raise InternalInvariantError(f"{subject} requires an explicit generation-pinned governed-fact scope")
+    return selected
+
+
 def cache_governed_projection[**P, R](
     *,
     maxsize: int = 64,
@@ -174,5 +188,6 @@ __all__ = [
     "cache_governed_projection",
     "governed_facts_in_scope",
     "outside_governed_fact_validation",
+    "require_governed_fact_authority",
     "validating_governed_facts",
 ]

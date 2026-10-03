@@ -97,7 +97,11 @@ class TestTheExcludedTerritoriesAreRecognised:
 class TestTheMainlandIsNeverInvented:
     """An answer only where the code was actually readable."""
 
-    @pytest.mark.parametrize("printed", [None, "", "   ", "2800", "280011", "abcde", "28 001", "ES28001"])
+    # 00/53/99 have five digits but no province, and non-ASCII digits are not a printed code.
+    @pytest.mark.parametrize(
+        "printed",
+        [None, "", "   ", "2800", "280011", "abcde", "28 001", "ES28001", "00001", "53001", "99999", "٢٨٠٠١"],
+    )
     def test_absent_or_malformed_evidence_resolves_to_nothing(self, printed: str | None) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert territorial_scope_for_spanish_postal_code(printed, operation=_authority_operation_for_test) is None

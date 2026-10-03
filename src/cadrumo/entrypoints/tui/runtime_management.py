@@ -15,7 +15,6 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from ...adapters.local_runtime.framing import RuntimeTransportCleanup
 from ...application.runtime.management import RuntimeManagerKind, RuntimeManagerProcessState
 from ...application.runtime.management_status import (
     RuntimeListenerState,
@@ -23,10 +22,9 @@ from ...application.runtime.management_status import (
     RuntimeManagerAvailability,
 )
 from ...core.async_cleanup import (
-    AsyncCloseable,
     AsyncResourceCleanupError,
     await_cancellation_complete,
-    close_async_resources,
+    merged_cleanup_owner,
 )
 from ...core.i18n.render import tr
 from ..runtime_management import (
@@ -36,6 +34,7 @@ from ..runtime_management import (
     preview_installed_runtime_stop,
     start_installed_runtime_management,
 )
+from .runtime_management_cleanup import RuntimeManagementCleanup
 
 type RuntimeManagementReader = Callable[[], Awaitable[RuntimeManagementSnapshot]]
 type RuntimeManagementAction = Callable[[], Awaitable[object]]
@@ -93,169 +92,15 @@ def _read_off_loop(
     return asyncio.run(invoke())
 
 
-class RuntimeManagementCleanup:
-    """Retain stop outcome and actual failed native owners across management screens."""
-
-    def __init__(self) -> None:
-        """Start one explicit management cleanup scope without native I/O."""
-        self._consent: RuntimeStopConsent | None = None
-        self._failure: BaseException | None = None
-        self._resources: dict[int, AsyncCloseable] = {}
-        self._retired: dict[int, AsyncCloseable] = {}
-
-    @property
-    def consent(self) -> RuntimeStopConsent | None:
-        """Return the last exact consent, including its single-use dispatch fence."""
-        return self._consent
-
-    @property
-    def failure(self) -> BaseException | None:
-        """Return the original body failure or the current pending cleanup failure."""
-        return self._failure
-
-    @property
-    def pending(self) -> bool:
-        """Report actual release owners still retained by the enclosing scope."""
-        return any(
-            not isinstance(resource, RuntimeTransportCleanup) or not resource.released
-            for resource in self._resources.values()
-        )
-
-    def retain_consent(self, consent: RuntimeStopConsent) -> None:
-        """Keep the native outcome before its screen or worker can disappear."""
-        self._consent = consent
-
-    def retain(self, error: BaseException) -> None:
-        """Adopt canonical owners directly, without adding an aggregate retry owner."""
-        seen: set[int] = set()
-        retained: AsyncResourceCleanupError | None = None
-        for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error")):
-            if not isinstance(candidate, AsyncResourceCleanupError) or id(candidate) in seen:
-                continue
-            seen.add(id(candidate))
-            retained = candidate if retained is None else retained.merged_with(candidate)
-            for resource in candidate.resources:
-                if self._retired.get(id(resource)) is resource:
-                    continue
-                if not isinstance(resource, RuntimeTransportCleanup) or not resource.released:
-                    self._resources[id(resource)] = resource
-        if retained is None:
-            return
-        if retained is not error:
-            error.__dict__["async_cleanup_error"] = retained
-            if isinstance(error.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
-                error.__dict__["cleanup_error"] = retained
-        if self._failure is None or isinstance(error, asyncio.CancelledError):
-            if self._failure is not None and self._failure is not error:
-                error.__dict__["body_error"] = self._failure
-            self._failure = error
-        elif self._failure is not error:
-            prior = self._failure.__dict__.get("async_cleanup_error")
-            self._failure.__dict__["async_cleanup_error"] = (
-                prior.merged_with(retained) if isinstance(prior, AsyncResourceCleanupError) else retained
-            )
-
-    @staticmethod
-    def _replace_cleanup(error: BaseException, current: AsyncResourceCleanupError | None) -> None:
-        """Keep active retry authority limited to this attempt's failed owners."""
-        for name in ("async_cleanup_error", "cleanup_error"):
-            previous = error.__dict__.get(name)
-            if current is None:
-                if isinstance(previous, AsyncResourceCleanupError):
-                    error.__dict__.pop(name)
-            elif (
-                name == "async_cleanup_error"
-                or isinstance(error, asyncio.CancelledError)
-                or isinstance(previous, AsyncResourceCleanupError)
-            ):
-                error.__dict__[name] = current
-
-    @staticmethod
-    def _cleanup_errors(*errors: BaseException | None) -> tuple[AsyncResourceCleanupError, ...]:
-        """Collect the active canonical owners before an attempt changes attachments."""
-        return tuple(
-            candidate
-            for error in errors
-            if error is not None
-            for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error"))
-            if isinstance(candidate, AsyncResourceCleanupError)
-        )
-
-    async def release(self, *, primary_error: BaseException | None = None) -> None:
-        """Release the actual retained resources under the enclosing scope's primary."""
-        if primary_error is not None:
-            self.retain(primary_error)
-        prior_cleanup = self._cleanup_errors(primary_error, self._failure)
-        resources = tuple(self._resources.values())
-        failed: set[int] = set()
-        try:
-            # Keep this attempt's result separate from historical attachments.
-            # The canonical helper still owns repeated caller cancellation and
-            # attempts every actual resource; no aggregate owner is introduced.
-            await close_async_resources(*resources, task_name="tui-runtime-management-release", primary_error=None)
-        except BaseException as error:
-            current = error if isinstance(error, AsyncResourceCleanupError) else error.__dict__.get("cleanup_error")
-            if isinstance(current, AsyncResourceCleanupError):
-                failed = {id(resource) for resource in current.resources}
-            elif not isinstance(error, asyncio.CancelledError):
-                # An unexpected helper failure cannot certify any release.
-                failed = {id(resource) for resource in resources}
-            if primary_error is not None:
-                if isinstance(current, AsyncResourceCleanupError) or isinstance(error, asyncio.CancelledError):
-                    self._replace_cleanup(
-                        primary_error, current if isinstance(current, AsyncResourceCleanupError) else None
-                    )
-                    self.retain(primary_error)
-                if isinstance(primary_error, asyncio.CancelledError):
-                    raise primary_error from error
-                if isinstance(error, asyncio.CancelledError):
-                    error.__dict__["body_error"] = primary_error
-                    self.retain(error)
-                    raise
-                if isinstance(error, AsyncResourceCleanupError):
-                    return
-            if primary_error is None and isinstance(error, AsyncResourceCleanupError):
-                previous_failure = self._failure
-                if previous_failure is not None and not isinstance(previous_failure, AsyncResourceCleanupError):
-                    self._replace_cleanup(previous_failure, error)
-                    self.retain(previous_failure)
-                    raise previous_failure from error
-                self._failure = error
-                self.retain(error)
-                if previous_failure is not None and previous_failure is not error:
-                    raise error from previous_failure
-            else:
-                self.retain(error)
-            raise
-        else:
-            if primary_error is not None:
-                self._replace_cleanup(primary_error, None)
-            if isinstance(self._failure, AsyncResourceCleanupError):
-                self._failure = None
-            elif self._failure is not None:
-                self._replace_cleanup(self._failure, None)
-            if isinstance(primary_error, asyncio.CancelledError):
-                raise primary_error
-        finally:
-            released = tuple(resource for resource in resources if id(resource) not in failed)
-            for retained in prior_cleanup + self._cleanup_errors(primary_error, self._failure):
-                retained.discard_released_resources(*released)
-            for resource in resources:
-                if id(resource) not in failed:
-                    self._resources.pop(id(resource), None)
-                    self._retired[id(resource)] = resource
-            for identity, resource in tuple(self._resources.items()):
-                if isinstance(resource, RuntimeTransportCleanup) and resource.released:
-                    self._resources.pop(identity)
-                    self._retired[identity] = resource
-
-
 class RuntimeStopConfirmationScreen(ModalScreen[bool]):
     """Require an explicit acknowledgement of the global runtime scope."""
 
+    AUTO_FOCUS = "#runtime-stop-cancel"
     DEFAULT_CSS = """
     RuntimeStopConfirmationScreen { align: center middle; }
-    #runtime-stop-confirm-body { width: 65; height: auto; border: round $warning; padding: 1 2; background: $surface; }
+    #runtime-stop-confirm-body {
+        width: 100%; height: auto; border: round $warning; padding: 1 2; background: $surface;
+    }
     """
 
     @override
@@ -281,7 +126,7 @@ class RuntimeManagementScreen(ModalScreen[None]):
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
     DEFAULT_CSS = """
     RuntimeManagementScreen { align: center middle; }
-    #runtime-management-body { width: 72; height: auto; border: round $accent; padding: 1 2; background: $surface; }
+    #runtime-management-body { width: 100%; height: auto; border: round $accent; padding: 1 2; background: $surface; }
     #runtime-management-status { height: 2; }
     """
 
@@ -425,13 +270,7 @@ class RuntimeManagementScreen(ModalScreen[None]):
 
     def _remember_stop_error(self, error: BaseException) -> None:
         self._stop_error = error
-        retained: AsyncResourceCleanupError | None = None
-        seen: set[int] = set()
-        for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error")):
-            if isinstance(candidate, AsyncResourceCleanupError) and id(candidate) not in seen:
-                seen.add(id(candidate))
-                retained = candidate if retained is None else retained.merged_with(candidate)
-        self._stop_cleanup = retained
+        self._stop_cleanup = merged_cleanup_owner(error)
         self._cleanup.retain(error)
 
     def _stop_status(self) -> str:
@@ -464,33 +303,50 @@ class RuntimeManagementScreen(ModalScreen[None]):
             button.disabled = True
         consent: RuntimeStopConsent | None = None
         primary: BaseException | None = None
+        propagate_primary = True
         try:
             consent = await preview_installed_runtime_stop()
             self._stop_consent = consent
             self._cleanup.retain_consent(consent)
-            if not self._active():
-                return
-            acknowledged = await cast("App[object]", self.app).push_screen_wait(RuntimeStopConfirmationScreen())
-            if not acknowledged or not self._active():
-                return
-            await consent.confirm()
+            propagate_primary = await self._confirm_stop_consent(consent)
         except BaseException as error:
             primary = error
         finally:
-            if consent is not None:
-                try:
-                    await consent.release(primary_error=primary)
-                except BaseException as error:
-                    primary = error
+            primary = await self._release_stop_consent(consent, primary)
             if primary is not None:
                 self._remember_stop_error(primary)
-            self._busy = False
-            if self._active():
-                self.query_one("#runtime-management-status", Static).update(self._stop_status())
-                for button in buttons:
-                    button.disabled = button.id == "runtime-management-stop" and self._stop_fenced()
-        if primary is not None and not isinstance(primary, Exception):
+            self._settle_stop_ui(buttons)
+        if propagate_primary and primary is not None and not isinstance(primary, Exception):
             raise primary
+
+    async def _confirm_stop_consent(self, consent: RuntimeStopConsent) -> bool:
+        if not self._active():
+            return False
+        acknowledged = await cast("App[object]", self.app).push_screen_wait(RuntimeStopConfirmationScreen())
+        if not acknowledged or not self._active():
+            return False
+        await consent.confirm()
+        return True
+
+    @staticmethod
+    async def _release_stop_consent(
+        consent: RuntimeStopConsent | None, primary: BaseException | None
+    ) -> BaseException | None:
+        if consent is None:
+            return primary
+        try:
+            await consent.release(primary_error=primary)
+        except BaseException as error:
+            return error
+        return primary
+
+    def _settle_stop_ui(self, buttons: tuple[Button, ...]) -> None:
+        self._busy = False
+        if not self._active():
+            return
+        self.query_one("#runtime-management-status", Static).update(self._stop_status())
+        for button in buttons:
+            button.disabled = button.id == "runtime-management-stop" and self._stop_fenced()
 
     @on(Button.Pressed, "#runtime-management-refresh")
     def _refresh_pressed(self) -> None:
@@ -526,4 +382,4 @@ class RuntimeManagementScreen(ModalScreen[None]):
             self.dismiss(None)
 
 
-__all__ = ["RuntimeManagementAction", "RuntimeManagementCleanup", "RuntimeManagementReader", "RuntimeManagementScreen"]
+__all__ = ["RuntimeManagementAction", "RuntimeManagementReader", "RuntimeManagementScreen"]

@@ -122,6 +122,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -811,6 +812,7 @@ def _export_findings(
         for revision_id in sorted(set(export_scenarios) - with_surface)
     )
     compared: list[str] = []
+    authorities = _TreeAuthorities()
     for revision_id in sorted(set(export_scenarios) & with_surface):
         finding = _export_bytes_finding(
             live_registry_root=live_registry_root,
@@ -818,6 +820,7 @@ def _export_findings(
             modelo_id=str(live.id),
             revision_id=revision_id,
             scenario=export_scenarios[revision_id],
+            authorities=authorities,
         )
         if finding is None:
             compared.append(revision_id)
@@ -838,6 +841,35 @@ class _PayloadSink:
         self.payload = payload.payload
 
 
+class _TreeAuthorities:
+    """Each compared tree's validated authority, compiled at most once per report.
+
+    The trees are read-only for the report's duration, so every scenario of a
+    modelo renders through the same two authorities. Compiling them once per
+    scenario repeated the receipt walk over the whole tree each time. A refusal
+    is kept too and raised again for every scenario, so each one still reports
+    its own export refusal with the same detail.
+    """
+
+    __slots__ = ("outcomes",)
+
+    def __init__(self) -> None:
+        self.outcomes: dict[Path, ValidatedRegistryAuthority | CadrumoError | ValueError] = {}
+
+    def require(self, root: Path) -> ValidatedRegistryAuthority:
+        """Return the tree's authority, or raise the refusal its compilation ended in."""
+        outcome = self.outcomes.get(root)
+        if outcome is None:
+            try:
+                outcome = compile_validated_authority(root, bundled_path())
+            except (CadrumoError, ValueError) as exc:
+                outcome = exc
+            self.outcomes[root] = outcome
+        if isinstance(outcome, CadrumoError | ValueError):
+            raise outcome
+        return outcome
+
+
 def _export_bytes_finding(
     *,
     live_registry_root: Path,
@@ -845,13 +877,20 @@ def _export_bytes_finding(
     modelo_id: str,
     revision_id: str,
     scenario: EditionExportScenario,
+    authorities: _TreeAuthorities,
 ) -> RoundTripFinding | None:
-    """Render one draft through both trees' canonical export path and compare the bytes."""
+    """Render one draft through both trees' canonical export path and compare the bytes.
+
+    The draft and the producer snapshot are built once, on the live side, and
+    rendered through both trees, so only the export surface differs between
+    the two payloads.
+    """
     rendered: dict[str, bytes] = {}
     draft = None
+    producer_snapshot: FilingProducerSnapshot | None = None
     for side, root in (("live", live_registry_root), ("pre-migration", reference_registry_root)):
         try:
-            authority = compile_validated_authority(root, bundled_path())
+            authority = authorities.require(root)
             with validating_governed_facts(authority):
                 provider = schema_provider_from_authority(
                     authority,
@@ -873,11 +912,13 @@ def _export_bytes_finding(
                             revision_id,
                             f"the scenario period selects edition {draft.snapshot_ref.revision_id!r}",
                         )
+                if producer_snapshot is None:
+                    producer_snapshot = scenario.producer_snapshot()
                 sink = _PayloadSink()
                 export_draft(
                     draft,
                     payload_consumer=sink,
-                    producer_snapshot=scenario.producer_snapshot(),
+                    producer_snapshot=producer_snapshot,
                     prior_domiciliation_election=scenario.prior_domiciliation_election,
                     product_software_identity=(
                         None

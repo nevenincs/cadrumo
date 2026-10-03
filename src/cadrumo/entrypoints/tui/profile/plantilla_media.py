@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import ClassVar, Final, override
 
 from textual.app import ComposeResult
@@ -24,6 +24,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, OptionList, Static
 
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.i18n.render import tr
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from ..components.theme import tokenised
@@ -95,15 +96,6 @@ def _parse_year(raw: str) -> int | None:
     if not text or not text.isascii() or not text.isdigit():
         return None
     return int(text)
-
-
-def _parse_average_workforce(raw: str) -> Decimal | None:
-    """Return the typed workforce as a finite ``Decimal``, or ``None``."""
-    try:
-        value = Decimal(raw.strip())
-    except InvalidOperation:
-        return None
-    return value if value.is_finite() else None
 
 
 class PlantillaMediaScreen(ModalScreen[PlantillaMediaRequest | None]):
@@ -178,7 +170,7 @@ class PlantillaMediaScreen(ModalScreen[PlantillaMediaRequest | None]):
         year = self._year()
         if year is None:
             return
-        average_workforce = _parse_average_workforce(self.query_one("#plantilla-workforce", Input).value)
+        average_workforce = try_parse_canonical_decimal(self.query_one("#plantilla-workforce", Input).value)
         if average_workforce is None:
             self._refuse(tr("flows.manager.plantilla_media.workforce_not_number"))
             return

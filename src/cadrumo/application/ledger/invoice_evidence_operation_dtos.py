@@ -51,6 +51,8 @@ from ..ledger.invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
 )
 from ..ledger.structured_invoice_ports import (
     StructuredInvoiceClassificationKind,
@@ -149,6 +151,41 @@ class DraftDiscrepancyProjectionV1(BaseModel):
             detail=value.detail,
             expected=_decimal(value.expected),
             observed=_decimal(value.observed),
+        )
+
+
+class LabelReadingFallbackProjectionV1(BaseModel):
+    """Why a draft's label reading stood without its model fill.
+
+    Kept beside a draft projection, never inside it: the fallback describes the
+    reader, not the document, and a stored draft does not carry it, so folding
+    it into the draft would change the digest a review is bound to.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    cause: LabelReadingFallbackCause
+    unread_fields: Annotated[tuple[_FieldName, ...], Field(min_length=1, max_length=128)]
+    reader_error_type: Annotated[str, Field(min_length=1, max_length=2_048)]
+    failed_condition_id: _ShortText | None = None
+
+    @classmethod
+    def from_fallback(cls, value: LabelReadingFallback) -> Self:
+        """Copy the machine facts of one fallback; it holds no document text."""
+        return cls(
+            cause=value.cause,
+            unread_fields=value.unread_fields,
+            reader_error_type=value.reader_error_type,
+            failed_condition_id=value.failed_condition_id,
+        )
+
+    def to_fallback(self) -> LabelReadingFallback:
+        """Restore the canonical record the frontend notice projectors read."""
+        return LabelReadingFallback(
+            cause=self.cause,
+            unread_fields=self.unread_fields,
+            reader_error_type=self.reader_error_type,
+            failed_condition_id=self.failed_condition_id,
         )
 
 
@@ -610,6 +647,7 @@ class InvoiceConfirmationProjectionV1(BaseModel):
     confirmation_id: Annotated[str, Field(min_length=16, max_length=16)] | None = None
     confirmed_provenance: _ProvenanceRows = ()
     establishment: ConfirmedEstablishmentProjectionV1 | None = None
+    label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
 
     @classmethod
     def from_result(cls, result: InvoiceConfirmationResult) -> Self:
@@ -632,6 +670,11 @@ class InvoiceConfirmationProjectionV1(BaseModel):
                 if result.establishment is None
                 else ConfirmedEstablishmentProjectionV1.from_establishment(result.establishment)
             ),
+            label_reading_fallback=(
+                None
+                if (fallback := result.draft.label_reading_fallback) is None
+                else LabelReadingFallbackProjectionV1.from_fallback(fallback)
+            ),
         )
 
 
@@ -650,6 +693,7 @@ __all__ = [
     "InvoiceDraftLineProjectionV1",
     "InvoiceDraftProjectionV1",
     "InvoiceDraftRateBreakdownProjectionV1",
+    "LabelReadingFallbackProjectionV1",
     "MissingClassifierInputProjectionV1",
     "PrintedTotalDiscrepancyProjectionV1",
     "RegistrationEstablishmentConflictProjectionV1",

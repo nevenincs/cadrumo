@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 from uuid import UUID
 
@@ -11,7 +12,7 @@ from pydantic import BaseModel, Field, RootModel
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.registry import OperationFrontendProjection
-from ..user_profile.access_contracts import AccessDenialCode, AccessScope, ProfileAccessStatus
+from ..user_profile.access_contracts import AccessDenialCode, AccessScope, AuthorityState, ProfileAccessStatus
 from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt
 from .access_management import (
@@ -115,6 +116,39 @@ class RuntimeProfileStatus(BaseModel):
     connection_id: UUID
     status: ProfileAccessStatus
     human_login: ProfileHumanLoginReceipt | None = None
+
+
+def status_admits_session(
+    status: ProfileAccessStatus,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    at: datetime,
+    requires_automation_grant: bool,
+) -> bool:
+    """Whether ``status`` reports this exact lease as live and undenied at ``at``.
+
+    Only API-key sessions carry an automation grant; a human session has none,
+    so callers holding an API-key lease ask for the grant to be active too.
+    """
+    admitted = (
+        status.connected
+        and status.credential_authenticated
+        and status.profile_bound
+        and status.profile_id == profile_id
+        and status.session_id == session_id
+        and status.session_expires_at is not None
+        and status.session_expires_at > at
+        and status.denial is None
+    )
+    if not admitted or not requires_automation_grant:
+        return admitted
+    return (
+        status.grant_valid
+        and status.grant_state is AuthorityState.ACTIVE
+        and status.grant_expires_at is not None
+        and status.grant_expires_at > at
+    )
 
 
 class RuntimeProfileStatusTransfer(BaseModel):

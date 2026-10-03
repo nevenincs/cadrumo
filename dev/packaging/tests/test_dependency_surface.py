@@ -8,8 +8,9 @@ import sys
 
 import pytest
 
+from ..dependency_contract import pyproject_surfaces
 from ..dependency_surface import _summary
-from ..lane_verification_core import find_repo_root, pyproject_surfaces
+from ..lane_verification_core import find_repo_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

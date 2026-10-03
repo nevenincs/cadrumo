@@ -7,7 +7,6 @@ remain application/domain policy, and credentials never leave this adapter.
 from __future__ import annotations
 
 import mimetypes
-import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -15,15 +14,17 @@ from uuid import UUID
 from ....application.ledger.evidence_ingestion_operation_ports import EvidenceAcquisitionListing
 from ....application.ledger.evidence_sweep_ports import EvidenceSweepDocument, EvidenceSweepFileNotReachableError
 from ....core.external_constants import PDF_MIME_TYPE
+from ....core.google_drive_reference import (
+    build_google_drive_file_reference,
+    parse_google_drive_folder_id,
+)
 from ....domain.attachments.enums import AttachmentSource
 from ..storage.errors import OutboundStoragePermissionError, OutboundStorageValidationError
 from ..storage.factory import build_google_credentials
-from .document_link_resolver import list_drive_folder_documents, parse_drive_file_id, resolve_document_link
+from .document_link_resolver import list_drive_folder_documents, resolve_document_link
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
-
-_DRIVE_FOLDER_URL = re.compile(r"/folders/(?P<id>[A-Za-z0-9_-]{10,})")
 
 
 def sniff_document_mime_type(reference: str, data: bytes) -> str:
@@ -40,8 +41,7 @@ def sniff_document_mime_type(reference: str, data: bytes) -> str:
 
 def parse_drive_folder_reference(reference: str) -> str:
     """Resolve the existing folder URL grammar or canonical bare Drive ID."""
-    match = _DRIVE_FOLDER_URL.search(reference.strip())
-    folder_id = str(match.group("id")) if match is not None else parse_drive_file_id(reference)
+    folder_id = parse_google_drive_folder_id(reference)
     if folder_id is None:
         raise OutboundStorageValidationError(
             translated_message="cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised",
@@ -91,9 +91,14 @@ class DriveEvidenceAcquisition:
     def fetch_folder_document(self, document: EvidenceSweepDocument) -> bytes:
         """Translate exactly the canonical per-file permission refusal."""
         try:
-            return self.fetch(
-                source=AttachmentSource.GOOGLE_DRIVE, reference=f"https://drive.google.com/file/d/{document.file_id}"
-            )
+            reference = build_google_drive_file_reference(document.file_id)
+        except ValueError as error:
+            raise OutboundStorageValidationError(
+                "Drive folder entry does not contain a valid file ID",
+                context={"field": "file_id"},
+            ) from error
+        try:
+            return self.fetch(source=AttachmentSource.GOOGLE_DRIVE, reference=reference)
         except OutboundStoragePermissionError as error:
             raise EvidenceSweepFileNotReachableError from error
 

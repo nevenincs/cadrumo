@@ -16,7 +16,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.bucket import BucketId
@@ -141,7 +141,7 @@ class FiledCasillaSkipRow(BaseModel):
 class FiledCapturePairOutcome(BaseModel):
     """Actual register and capture facts for one planned modelo/year pair."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
     year: int

@@ -32,10 +32,10 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
 )
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.iva_schema_vocabulary import (
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
 from ....domain.calculations.registry.schema_exports import (

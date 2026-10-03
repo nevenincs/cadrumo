@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:496753dc171890c7455924fb249c57ff58d7e8393e7f5aecd73846638e0fb3a9'
+body_hash: 'sha256:b3b424bbaf8a33b95502253be0ba5d7ffcf07b7128a38ee76c2ac4ada76facc4'
 related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-audit]]'
@@ -30,7 +30,7 @@ Auto-generated index of all documents tagged with `#mcp-purpose-authentication`.
 
 ### audit
 
-- `2026-09-26-mcp-purpose-authentication-audit` - `mcp-purpose-authentication` audit: `Security-contract and predecessor reconciliation review`
+- `2026-09-26-mcp-purpose-authentication-audit` - `mcp-purpose-authentication` audit: profile authorization and custody
 
 ### exec
 

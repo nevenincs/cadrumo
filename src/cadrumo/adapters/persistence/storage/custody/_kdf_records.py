@@ -13,11 +13,10 @@ its failure frame, exactly as it did for the pydantic ``ValidationError``.
 
 from __future__ import annotations
 
-import base64
-import binascii
 from dataclasses import dataclass
 from typing import Final, Literal, cast, get_args
 
+from .....core.base64_codec import b64_decode_canonical
 from .._kdf_salt import KDF_SALT_BYTES
 from ..crypto.aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
 
@@ -59,14 +58,20 @@ def canonical_b64(value: str, *, field_name: str, expected_bytes: int) -> str:
     if len(value) != expected_length:
         raise ValueError(f"{field_name} must contain exactly {expected_length} base64 characters")
     try:
-        decoded = base64.b64decode(value.encode("ascii"), validate=True)
-    except (UnicodeEncodeError, binascii.Error) as exc:
+        decoded = b64_decode_canonical(value)
+    except ValueError as exc:
         raise ValueError(f"{field_name} must be canonical base64") from exc
     if len(decoded) != expected_bytes:
         raise ValueError(f"{field_name} must encode exactly {expected_bytes} bytes")
-    if base64.b64encode(decoded).decode("ascii") != value:
-        raise ValueError(f"{field_name} must use canonical base64")
     return value
+
+
+DEK_EPOCH_BYTES: Final = 16
+
+
+def canonical_dek_epoch(value: str) -> str:
+    """Return ``value`` if it is the canonical base64 of one random 128-bit DEK epoch."""
+    return canonical_b64(value, field_name="dek_epoch", expected_bytes=DEK_EPOCH_BYTES)
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +145,7 @@ def wrapped_dek_from_wire(value: object) -> WrappedDekValues:
 
 
 __all__ = [
+    "DEK_EPOCH_BYTES",
     "KDF_PARAMETER_FIELDS",
     "PROFILE_CUSTODY_KDF_ITERATIONS",
     "PROFILE_CUSTODY_KDF_MEMORY_MIB",
@@ -154,6 +160,7 @@ __all__ = [
     "KdfVersion",
     "WrappedDekValues",
     "canonical_b64",
+    "canonical_dek_epoch",
     "kdf_parameters_from_wire",
     "wrapped_dek_from_wire",
 ]

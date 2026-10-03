@@ -166,19 +166,29 @@ def _parse_doubly_marked_decimal(text: str) -> Decimal | None:
     part in runs of exactly three digits after the lead, or the token is not a
     grouped number and nothing is read from it.
     """
-    sign = ""
-    if text[:1] in "+-":
-        sign, text = text[:1], text[1:]
-    decimal_mark = "," if text.rfind(",") > text.rfind(".") else "."
+    sign, unsigned = _separate_decimal_sign(text)
+    decimal_mark = "," if unsigned.rfind(",") > unsigned.rfind(".") else "."
     group_mark = "." if decimal_mark == "," else ","
-    whole, _, fraction = text.rpartition(decimal_mark)
+    whole, _, fraction = unsigned.rpartition(decimal_mark)
     groups = whole.split(group_mark)
-    if decimal_mark in whole or not fraction.isdigit() or not all(group.isdigit() for group in groups):
-        return None
-    if not 1 <= len(groups[0]) <= _GROUP_WIDTH or any(len(group) != _GROUP_WIDTH for group in groups[1:]):
+    if not _valid_grouped_decimal_parts(whole, fraction, decimal_mark, groups):
         return None
     parsed = coerce_decimal(f"{sign}{''.join(groups)}.{fraction}")
     return parsed if parsed is not None and parsed.is_finite() else None
+
+
+def _separate_decimal_sign(text: str) -> tuple[str, str]:
+    if text[:1] in "+-":
+        return text[:1], text[1:]
+    return "", text
+
+
+def _valid_grouped_decimal_parts(whole: str, fraction: str, decimal_mark: str, groups: list[str]) -> bool:
+    if decimal_mark in whole or not fraction.isdigit() or not all(group.isdigit() for group in groups):
+        return False
+    if not 1 <= len(groups[0]) <= _GROUP_WIDTH:
+        return False
+    return all(len(group) == _GROUP_WIDTH for group in groups[1:])
 
 
 _GROUP_WIDTH = 3

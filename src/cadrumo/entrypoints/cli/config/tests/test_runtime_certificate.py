@@ -10,7 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
-from cadrumo.application.auth.certificate_source_operation import (
+from cadrumo.application.auth.certificate_source_contracts import (
     CertificateSourceRegisterProjection,
     CertificateSourceRegisterRequest,
     CertificateSourceRemoveProjection,
@@ -19,7 +19,7 @@ from cadrumo.application.auth.operator_results import CertificateSourceMutationR
 from cadrumo.core.operations import OperationEffect
 
 from ...errors import CliRefusedBoundaryError
-from ...runtime_registered_operation import RegisteredOperationCompletion
+from ...registered_operation_contracts import RegisteredOperationCompletion
 from .. import runtime_certificate as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

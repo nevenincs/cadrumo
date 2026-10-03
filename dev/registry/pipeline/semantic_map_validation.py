@@ -7,6 +7,7 @@ does not render, derive, or publish export fragments.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -376,7 +377,10 @@ def validate_declared_parts(
                 raise RegistryValidationError(
                     f"semantic-map part {entry.export_field_id!r} statement is not the text of its cell",
                 )
-            if part.printed_range not in printed:
+            range_pattern = re.escape(part.printed_range)
+            if part.length == 1:
+                range_pattern += f"(?:-{part.offset})?"
+            if re.search(rf"(?<![\d–—-]){range_pattern}(?![\d–—-])", printed) is None:
                 raise RegistryValidationError(
                     f"semantic-map part {entry.export_field_id!r} range {part.printed_range!r} is not printed "
                     "by its cell",

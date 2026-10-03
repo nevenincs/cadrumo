@@ -19,10 +19,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal
 
-import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.core.toml import read_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
@@ -405,10 +405,9 @@ def load_dp30302_field_matrix(path: Path) -> DP30302FieldMatrix:
     """Load the persisted reviewed DP30302 matrix without weakening its strict schema."""
     if not path.is_file() or is_link_like(path):
         raise RegistryValidationError(f"DP30302 field matrix path must be a real file: {path}")
-    try:
-        payload = rtoml.load(path)
-    except rtoml.TomlParsingError as exc:
-        raise RegistryValidationError(f"DP30302 field matrix is not valid TOML: {path}") from exc
+    payload = read_toml(
+        path, error_factory=lambda detail: RegistryValidationError(f"DP30302 field matrix is not valid TOML: {detail}")
+    )
     # JSON has no native tuple type, so round-tripping through model_validate_json
     # admits TOML's arrays into the model's strict tuple fields without loosening
     # the model's own strict boundary for any other caller.

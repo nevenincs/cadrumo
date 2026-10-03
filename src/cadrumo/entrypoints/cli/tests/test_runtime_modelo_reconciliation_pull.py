@@ -24,7 +24,7 @@ from ....application.modelo.reconciliation_records import (
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from .. import runtime_modelo_reconciliation_pull as bridge
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

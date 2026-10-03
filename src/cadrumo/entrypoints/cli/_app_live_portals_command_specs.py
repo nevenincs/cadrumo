@@ -8,21 +8,18 @@ from ._app_live_command_spec_support import (
     _METADATA_POLICY,
     NO_RESULT_SCHEMA,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from .command_spec import (
-    translation_key as _key,
-)
+from ._command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec
 
 LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

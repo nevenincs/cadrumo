@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import math
 import sys
 import time
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from uuid import uuid4
 
 from cadrumo.adapters.local_runtime.runtime_manager_composition import installed_runtime_manager
@@ -17,6 +17,7 @@ from ..adapters.local_runtime.posix import PosixRuntimeEndpoint
 from ..adapters.local_runtime.startup import RuntimeEndpointConnector, RuntimeLaunchDoor
 from ..adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ..application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from ..application.runtime.deadline_budget import deadline_after, require_finite_budget
 from ..application.runtime.management import (
     RuntimeConfigurableUserManager,
     RuntimeManagerInspection,
@@ -34,8 +35,15 @@ from ..application.runtime.owner_control import (
     RuntimeStopPreviewRequest,
 )
 from ..application.runtime.profile_access import RuntimeAccessRefusal
-from ..core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from ..core.async_cleanup import await_cancellation_complete, close_async_resources, retain_merged_cleanup
 from ..core.paths import effective_storage_root
+
+
+def _installed_management_endpoint(*, storage_root: Path) -> WindowsRuntimeEndpoint | PosixRuntimeEndpoint:
+    """Create the installed root's endpoint without creating a POSIX namespace."""
+    if sys.platform == "win32":
+        return WindowsRuntimeEndpoint(storage_root=storage_root)
+    return PosixRuntimeEndpoint(storage_root=storage_root, create_namespace=False)
 
 
 async def inspect_runtime_management(
@@ -47,9 +55,7 @@ async def inspect_runtime_management(
     timeout: float = 3,
 ) -> RuntimeManagementSnapshot:
     """Observe one exact owner and optional native manager without starting either."""
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    deadline = time.monotonic() + timeout
+    deadline = deadline_after(timeout)
     facts: RuntimeManagerInspection | None = None
     if manager is None:
         manager_state = manager_if_absent
@@ -84,8 +90,7 @@ async def inspect_runtime_management(
 
 async def inspect_installed_runtime_management(*, timeout: float = 3) -> RuntimeManagementSnapshot:
     """Compose the installed root's exact manager and a passive verified probe."""
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    require_finite_budget(timeout)
     try:
         root = effective_storage_root().resolve(strict=True)
         product_version = version("cadrumo")
@@ -94,11 +99,7 @@ async def inspect_installed_runtime_management(*, timeout: float = 3) -> Runtime
             listener=RuntimeListenerState.UNAVAILABLE,
             manager_availability=RuntimeManagerAvailability.UNKNOWN,
         )
-    endpoint = (
-        WindowsRuntimeEndpoint(storage_root=root)
-        if sys.platform == "win32"
-        else PosixRuntimeEndpoint(storage_root=root, create_namespace=False)
-    )
+    endpoint = _installed_management_endpoint(storage_root=root)
     try:
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
         manager_state = (
@@ -127,18 +128,13 @@ async def inspect_installed_runtime_management(*, timeout: float = 3) -> Runtime
 
 async def start_installed_runtime_management(*, timeout: float = 10) -> RuntimeManagementSnapshot:
     """Open the owner-verified launch door and report the resulting state."""
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    require_finite_budget(timeout)
     try:
         root = effective_storage_root().resolve(strict=True)
         product_version = version("cadrumo")
     except (OSError, PackageNotFoundError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
-    endpoint = (
-        WindowsRuntimeEndpoint(storage_root=root)
-        if sys.platform == "win32"
-        else PosixRuntimeEndpoint(storage_root=root, create_namespace=False)
-    )
+    endpoint = _installed_management_endpoint(storage_root=root)
     try:
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
         manager = installed_runtime_manager(root=root, endpoint=endpoint, product_version=product_version)
@@ -161,11 +157,7 @@ async def configure_installed_runtime_management(*, login_autostart: bool) -> Ru
         product_version = version("cadrumo")
     except (OSError, PackageNotFoundError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
-    endpoint = (
-        WindowsRuntimeEndpoint(storage_root=root)
-        if sys.platform == "win32"
-        else PosixRuntimeEndpoint(storage_root=root, create_namespace=False)
-    )
+    endpoint = _installed_management_endpoint(storage_root=root)
     try:
         manager = installed_runtime_manager(root=root, endpoint=endpoint, product_version=product_version)
         if not isinstance(manager, RuntimeConfigurableUserManager):
@@ -173,23 +165,6 @@ async def configure_installed_runtime_management(*, login_autostart: bool) -> Ru
         return await manager.configure(login_autostart=login_autostart)
     finally:
         endpoint.close()
-
-
-def _retain_cleanup(primary: BaseException, *earlier: BaseException | None) -> None:
-    """Keep both canonical attachment fields on the escaping primary."""
-    retained: AsyncResourceCleanupError | None = None
-    seen: set[int] = set()
-    for error in (*earlier, primary):
-        if error is None:
-            continue
-        for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error")):
-            if isinstance(candidate, AsyncResourceCleanupError) and id(candidate) not in seen:
-                seen.add(id(candidate))
-                retained = candidate if retained is None else retained.merged_with(candidate)
-    if retained is not None and retained is not primary:
-        primary.__dict__["async_cleanup_error"] = retained
-        if isinstance(primary.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
-            primary.__dict__["cleanup_error"] = retained
 
 
 class RuntimeStopConsent:
@@ -284,7 +259,7 @@ class RuntimeStopConsent:
                 raise outcome
             return outcome
         except BaseException as error:
-            _retain_cleanup(error, self._confirmation_error)
+            retain_merged_cleanup(error, self._confirmation_error)
             raise
 
     async def release(self, *, primary_error: BaseException | None = None) -> None:
@@ -300,7 +275,7 @@ class RuntimeStopConsent:
         self._adopt_cleanup(self._confirmation_error)
         self._adopt_cleanup(primary_error)
         if primary_error is not None:
-            _retain_cleanup(primary_error, self._confirmation_error)
+            retain_merged_cleanup(primary_error, self._confirmation_error)
         try:
             await close_async_resources(
                 self._connection_cleanup,
@@ -310,27 +285,22 @@ class RuntimeStopConsent:
                 cancellation=cancellation,
             )
         except BaseException as error:
-            _retain_cleanup(error, primary_error, self._confirmation_error)
+            retain_merged_cleanup(error, primary_error, self._confirmation_error)
             raise
         finally:
             if primary_error is not None:
-                _retain_cleanup(primary_error)
+                retain_merged_cleanup(primary_error)
 
 
 async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopConsent:
     """Request owner consent on a fresh connection without launching a runtime."""
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    require_finite_budget(timeout)
     try:
         root = effective_storage_root().resolve(strict=True)
         product_version = version("cadrumo")
     except (OSError, PackageNotFoundError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
-    endpoint = (
-        WindowsRuntimeEndpoint(storage_root=root)
-        if sys.platform == "win32"
-        else PosixRuntimeEndpoint(storage_root=root, create_namespace=False)
-    )
+    endpoint = _installed_management_endpoint(storage_root=root)
     connection: VerifiedRuntimeConnection | None = None
     try:
         expected = RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
@@ -346,7 +316,7 @@ async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopCo
             asyncio.to_thread(
                 connection.owner_control,
                 RuntimeStopPreviewRequest(request_id=uuid4()),
-                deadline=time.monotonic() + timeout,
+                deadline=deadline_after(timeout),
             ),
             task_name="runtime-stop-preview",
         )
@@ -357,15 +327,8 @@ async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopCo
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return RuntimeStopConsent(endpoint=endpoint, connection=connection, preview=reply)
     except BaseException as primary:
-        connection_owner: RuntimeTransportCleanup | None = None
-        if connection is not None:
-            retained = primary.__dict__.get("_runtime_transport_cleanup")
-            connection_owner = (
-                retained
-                if isinstance(retained, RuntimeTransportCleanup) and retained.resource is connection
-                else RuntimeTransportCleanup(connection)
-            )
-        _retain_cleanup(primary)
+        connection_owner = _runtime_stop_connection_owner(connection, primary)
+        retain_merged_cleanup(primary)
         try:
             await close_async_resources(
                 connection_owner,
@@ -374,9 +337,9 @@ async def preview_installed_runtime_stop(*, timeout: float = 5) -> RuntimeStopCo
                 primary_error=primary,
             )
         except BaseException as error:
-            _retain_cleanup(error, primary)
+            retain_merged_cleanup(error, primary)
             raise
-        _retain_cleanup(primary)
+        retain_merged_cleanup(primary)
         raise
 
 
@@ -388,3 +351,18 @@ __all__ = [
     "preview_installed_runtime_stop",
     "start_installed_runtime_management",
 ]
+
+
+def _runtime_stop_connection_owner(
+    connection: VerifiedRuntimeConnection | None, primary: BaseException
+) -> RuntimeTransportCleanup | None:
+    """Reuse the retained native connection owner before composing release resources."""
+    connection_owner: RuntimeTransportCleanup | None = None
+    if connection is not None:
+        retained = primary.__dict__.get("_runtime_transport_cleanup")
+        connection_owner = (
+            retained
+            if isinstance(retained, RuntimeTransportCleanup) and retained.resource is connection
+            else RuntimeTransportCleanup(connection)
+        )
+    return connection_owner

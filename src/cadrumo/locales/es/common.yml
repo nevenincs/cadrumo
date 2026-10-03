@@ -229,6 +229,8 @@ aggregation:
         casilla con origen de valor en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relación duplicado
         en la malla de fuentes.'
+      duplicate_row_binding_coordinate: 'Error interno: coordenada de fila del origen
+        de un valor de fila duplicada.'
       duplicate_row_binding_owner: 'Error interno: el mismo origen del valor de fila
         tiene dos propietarios en la malla de fuentes.'
       duplicate_row_casilla_coordinate: 'Error interno: coordenada de casilla de fila

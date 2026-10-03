@@ -73,21 +73,50 @@ class ProfileLoginInventoryV1:
     def __post_init__(self) -> None:
         """Refuse a contradictory combination of state, choices, and reason."""
         identifiers = tuple(choice.profile_id for choice in self.choices)
-        if len(identifiers) != len(set(identifiers)):
-            raise ValueError("profile login inventory choices must each name one profile once")
-        if self.state is ProfileLoginInventoryState.RECOGNIZED:
-            if not self.choices or self.reason_code is not None:
-                raise ValueError("a recognized profile inventory carries choices and no reason code")
-        elif self.choices or self.preselected_profile_id is not None:
-            raise ValueError("an unavailable or empty profile inventory cannot carry login choices")
-        unavailable = self.state in {
-            ProfileLoginInventoryState.CONCURRENT_CHANGE,
-            ProfileLoginInventoryState.DEGRADED,
-        }
-        if unavailable != (self.reason_code is not None):
-            raise ValueError("a reason code names an unavailable inventory and nothing else")
-        if self.preselected_profile_id is not None and self.preselected_profile_id not in identifiers:
-            raise ValueError("the preselected profile is absent from the recognized choices")
+        _require_unique_login_choices(identifiers)
+        _require_login_inventory_state(
+            state=self.state,
+            choices=self.choices,
+            preselected_profile_id=self.preselected_profile_id,
+            reason_code=self.reason_code,
+            identifiers=identifiers,
+        )
+
+
+def _require_unique_login_choices(identifiers: tuple[str, ...]) -> None:
+    if len(identifiers) != len(set(identifiers)):
+        raise ValueError("profile login inventory choices must each name one profile once")
+
+
+def _require_login_inventory_state(
+    *,
+    state: ProfileLoginInventoryState,
+    choices: tuple[ProfileLoginChoice, ...],
+    preselected_profile_id: str | None,
+    reason_code: str | None,
+    identifiers: tuple[str, ...],
+) -> None:
+    if state is ProfileLoginInventoryState.RECOGNIZED:
+        if not choices or reason_code is not None:
+            raise ValueError("a recognized profile inventory carries choices and no reason code")
+    elif choices or preselected_profile_id is not None:
+        raise ValueError("an unavailable or empty profile inventory cannot carry login choices")
+    _require_reason_for_unavailable_inventory(state, reason_code)
+    _require_preselection_is_available(preselected_profile_id, identifiers)
+
+
+def _require_reason_for_unavailable_inventory(state: ProfileLoginInventoryState, reason_code: str | None) -> None:
+    unavailable = state in {
+        ProfileLoginInventoryState.CONCURRENT_CHANGE,
+        ProfileLoginInventoryState.DEGRADED,
+    }
+    if unavailable != (reason_code is not None):
+        raise ValueError("a reason code names an unavailable inventory and nothing else")
+
+
+def _require_preselection_is_available(preselected_profile_id: str | None, identifiers: tuple[str, ...]) -> None:
+    if preselected_profile_id is not None and preselected_profile_id not in identifiers:
+        raise ValueError("the preselected profile is absent from the recognized choices")
 
 
 def profile_login_choices() -> tuple[ProfileLoginChoice, ...]:

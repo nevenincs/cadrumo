@@ -66,8 +66,8 @@ from ..application.auth.certificate_secret_operation import (
     build_certificate_secret_operation_definitions,
     build_certificate_secret_operation_registrations,
 )
+from ..application.auth.certificate_source_execution import CertificateSourceOperationPorts
 from ..application.auth.certificate_source_operation import (
-    CertificateSourceOperationPorts,
     build_certificate_source_check_definition,
     build_certificate_source_check_registration,
     build_certificate_source_list_definition,
@@ -210,11 +210,15 @@ from ..application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
-from ..application.ledger.invoice_evidence_operation import (
+from ..application.ledger.invoice_evidence_confirm_operation import (
     build_ledger_evidence_confirm_definition,
     build_ledger_evidence_confirm_registration,
+)
+from ..application.ledger.invoice_evidence_extract_operation import (
     build_ledger_evidence_extract_definition,
     build_ledger_evidence_extract_registration,
+)
+from ..application.ledger.invoice_evidence_readiness_operation import (
     build_ledger_evidence_reader_readiness_definition,
     build_ledger_evidence_reader_readiness_registration,
 )
@@ -234,10 +238,12 @@ from ..application.ledger.llm_diagnostics_operation import (
     build_ledger_llm_diagnostics_definition,
     build_ledger_llm_diagnostics_registration,
 )
-from ..application.ledger.llm_review_operation import (
+from ..application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
-    LedgerLlmOperationPorts,
+)
+from ..application.ledger.llm_review_execution import LedgerLlmOperationPorts
+from ..application.ledger.llm_review_operation import (
     build_ledger_llm_review_definition,
     build_ledger_llm_review_registration,
 )
@@ -511,6 +517,8 @@ from ..application.modelo.metadata_read_operation import (
 )
 from ..application.modelo.modelo_spreadsheet_operation import (
     build_modelo_spreadsheet_definitions,
+)
+from ..application.modelo.modelo_spreadsheet_registration import (
     build_modelo_spreadsheet_registration,
 )
 from ..application.modelo.operation_definitions import (
@@ -632,11 +640,11 @@ from ..application.overview.pipeline_operation import (
 )
 from ..application.overview.pipeline_read_ports import PipelineReadPortsFactory
 from ..application.overview.read_operation import (
-    OverviewReadKind,
     build_overview_read_definition,
     build_overview_read_registration,
 )
 from ..application.overview.read_ports import OverviewReadPortsFactory
+from ..application.overview.read_request import OverviewReadKind
 from ..application.prorrata_register.registered_operations import (
     build_prorrata_declare_sector_definition,
     build_prorrata_elect_especial_definition,
@@ -822,14 +830,21 @@ def _build_modelo_invoice_withholding_capture_ports(*, profile_id: str) -> Model
 
 def _build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloWorkbenchReadPorts:
     """Bind the repositories one declaration's workbench reads from to the worker's profile."""
-    from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from .adapter_composition import build_borrador_100_snapshot_repository
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
-    ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
+    objects = secure_object_repository_for_bucket(bucket_id)
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=bucket_id,
+        objects=objects,
+        operation=operation,
+    )
+    ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation, objects=objects)
     return ModeloWorkbenchReadPorts(
         work_units=ports.work_unit_repository,
         calculations=ports.calculation_repository,
-        verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
+        verifications=calculation_binding.verification_repository(),
         borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
         holiday_territory=partial(_profile_holiday_territory, bucket_id, operation),
         bucket_events=ports.bucket_event_repository,
@@ -1189,7 +1204,7 @@ def build_production_operation_registry(
         compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
     )
     iva_wallet_history_definition = build_iva_wallet_history_definition(
-        lambda: compose_live_state().iva_remote_state_port
+        lambda operation: compose_live_state(operation=operation).iva_remote_state_port
     )
     iva_wallet_history_capture_definition = build_iva_wallet_history_capture_definition(
         compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
@@ -1293,7 +1308,7 @@ def build_production_operation_registry(
             read_port=build_justificante_live_read_port(
                 build_certificate_secret_backend, resolved_operator_scope_ports, operation
             ),
-            registration_ports=build_justificante_registration_ports(),
+            registration_ports=build_justificante_registration_ports(operation),
             verifier=build_justificante_authenticity_verifier(),
         )
 

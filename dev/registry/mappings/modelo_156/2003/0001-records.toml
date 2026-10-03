@@ -1,0 +1,457 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "156"
+design_epoch = "2003"
+source_ref = "enrolled-modelo-156-layout"
+source_sha256 = "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-156-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+export_record_id = "modelo-156-afiliado"
+record_type = "afiliado"
+
+[[entries]]
+export_field_id = "modelo-156-t1-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 62
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-156-t1-modelo"
+kind = "literal"
+literal = "156"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 64
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-156-t1-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 66
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-156-t1-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 68
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-156-t1-razon-social"
+kind = "casilla"
+casilla_id = "declarante-razon-social"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 75
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-156-t1-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 78
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-156-t1-contacto-telefono"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 86
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-156-t1-contacto-nombre"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 87
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-156-t1-numero-justificante"
+kind = "casilla"
+casilla_id = "numero-justificante"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 90
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-156-t1-complementaria-sustitutiva"
+kind = "casilla"
+casilla_id = "declaracion-complementaria-sustitutiva"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 95
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-156-t1-numero-anterior"
+kind = "casilla"
+casilla_id = "numero-identificativo-anterior"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 111
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-156-t1-total-afiliados"
+kind = "casilla"
+casilla_id = "numero-total-afiliados"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 119
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-156-t1-blancos"
+kind = "filler"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 123
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-156-t2-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 134
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-156-t2-modelo"
+kind = "literal"
+literal = "156"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 136
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-156-t2-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 138
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-156-t2-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 140
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-156-t2-afiliado-nif"
+kind = "casilla"
+casilla_id = "afiliado-nif"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 142
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-156-t2-blanco-27"
+kind = "filler"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 149
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-156-t2-afiliado-nombre"
+kind = "casilla"
+casilla_id = "afiliado-nombre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 151
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-156-t2-numero-afiliacion"
+kind = "casilla"
+casilla_id = "numero-afiliacion"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 157
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-enero"
+kind = "casilla"
+casilla_id = "cotizacion-enero"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 161
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-febrero"
+kind = "casilla"
+casilla_id = "cotizacion-febrero"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 178
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-marzo"
+kind = "casilla"
+casilla_id = "cotizacion-marzo"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 194
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-abril"
+kind = "casilla"
+casilla_id = "cotizacion-abril"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 211
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-mayo"
+kind = "casilla"
+casilla_id = "cotizacion-mayo"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 227
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-junio"
+kind = "casilla"
+casilla_id = "cotizacion-junio"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 244
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-julio"
+kind = "casilla"
+casilla_id = "cotizacion-julio"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 260
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-agosto"
+kind = "casilla"
+casilla_id = "cotizacion-agosto"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 276
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-septiembre"
+kind = "casilla"
+casilla_id = "cotizacion-septiembre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 293
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-octubre"
+kind = "casilla"
+casilla_id = "cotizacion-octubre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 309
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-noviembre"
+kind = "casilla"
+casilla_id = "cotizacion-noviembre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 326
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-156-t2-cotizacion-diciembre"
+kind = "casilla"
+casilla_id = "cotizacion-diciembre"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 342
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-156-t2-blancos"
+kind = "filler"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 359
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "21"

@@ -66,6 +66,8 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import PRODUCT_PACKAGE
+from dev.product_environment import ambient_product_settings_removed
 
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
@@ -215,7 +217,7 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, 
         # Full scope watches the autodoc source so a docstring edit rebuilds its
         # API page; user scope loads no autodoc, so watching src/cadrumo would
         # only trigger rebuilds that render nothing new.
-        command.extend(["--watch", str(repo_root / "src" / "cadrumo")])
+        command.extend(["--watch", str(repo_root / PRODUCT_PACKAGE)])
     command.extend(["--host", host, "--port", str(port)])
     if open_browser:
         command.append("--open-browser")
@@ -540,7 +542,7 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     the former-product refusal inside ``conf.py``'s settings construction and
     kills every rebuild.
     """
-    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment = ambient_product_settings_removed()
     environment.update(
         {
             "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
@@ -744,24 +746,31 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    if resolution.action is ServeAction.RESPAWN:
-        stale = read_state(state_path)
-        if stale is not None:
-            print(
-                f"Existing docs server on port {port} is unresponsive; respawning (terminating pid {stale.pid}).",
-                flush=True,
-            )
-            _terminate(stale.pid)
-            clear_state(state_path, only_pid=stale.pid)
-        if not _wait_for_free(args.host, port, timeout=_PORT_RELEASE_TIMEOUT_SECONDS):
-            print(
-                f"Port {port} did not free after terminating the stale server; choose a different --port.",
-                file=sys.stderr,
-                flush=True,
-            )
-            return 1
+    if resolution.action is ServeAction.RESPAWN and not _release_stale_server(state_path, args.host, port):
+        return 1
 
     return _launch(repo_root, host=args.host, port=port, open_browser=args.open_browser, scope=args.scope)
+
+
+def _release_stale_server(state_path: Path, host: str, port: int) -> bool:
+    """Terminate the stale server and wait for its claimed port to be released."""
+    stale = read_state(state_path)
+    if stale is not None:
+        print(
+            f"Existing docs server on port {port} is unresponsive; respawning (terminating pid {stale.pid}).",
+            flush=True,
+        )
+        _terminate(stale.pid)
+        clear_state(state_path, only_pid=stale.pid)
+    if not _wait_for_free(host, port, timeout=_PORT_RELEASE_TIMEOUT_SECONDS):
+        print(
+            f"Port {port} did not free after terminating the stale server; choose a different --port.",
+            file=sys.stderr,
+            flush=True,
+        )
+        return False
+
+    return True
 
 
 if __name__ == "__main__":

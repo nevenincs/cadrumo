@@ -19,8 +19,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.invoices.catalogue_add_operation import INVOICE_ADD_OPERATION_DEFINITION_ID
-from ....application.ledger.add_operation import LEDGER_ADD_OPERATION_DEFINITION_ID
 from ....application.ledger.export_operation import LEDGER_EXPORT_OPERATION_DEFINITION_ID
+from ....application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
 from ....application.ledger.link_operation import (
     LEDGER_LINK_OPERATION_DEFINITION_ID,
 )

@@ -34,15 +34,14 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..review.filter import LedgerReviewStatus
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
@@ -57,7 +56,6 @@ from .commit_fence import (
     run_with_ledger_commit_fence,
 )
 from .export_link_operation_ports import (
-    require_export_link_profile,
     resolve_export_link_access,
     settle_export_link_failure,
 )
@@ -160,7 +158,7 @@ class LedgerLinkExecutor:
             or not isinstance(payload, LedgerLinkRequest)
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_export_link_profile(request, context, payload.profile_id)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
         tracker = LedgerCommitAttemptTracker()
 
@@ -223,7 +221,7 @@ class LedgerLinkExecutor:
                 reason=reason,
             )
             async with context.cancellation.irreversible_section():
-                require_export_link_profile(request, context, payload.profile_id)
+                require_operation_profile(request, context, payload.profile_id)
                 await context.events.effect(OperationEffect.NONE)
                 detail_ref = await context.operands.put(LedgerLinkExecutionResult(result=result), written_at=now())
             return OperationRefusalEvidence(refusal_code=LEDGER_LINK_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
@@ -263,9 +261,6 @@ def project_ledger_link_result(result: BaseModel, receipt: OperationTerminalRece
         if (
             receipt.condition is not OperationTerminalCondition.SUCCEEDED
             or receipt.effect is not OperationEffect.UPDATED
-            or receipt.result_ref is None
-            or receipt.refusal_ref is not None
-            or receipt.refusal_detail_ref is not None
         ):
             raise ValueError("ledger linkage success contradicts its terminal receipt")
     elif (
@@ -273,7 +268,6 @@ def project_ledger_link_result(result: BaseModel, receipt: OperationTerminalRece
         or receipt.effect is not OperationEffect.NONE
         or receipt.refusal_ref != LEDGER_LINK_VALIDATION_REFUSAL_CODE
         or receipt.refusal_detail_ref is None
-        or receipt.result_ref is not None
     ):
         raise ValueError("ledger linkage refusal contradicts its terminal receipt")
     return LedgerLinkOperationResult.model_validate(projection.model_dump(mode="python"), strict=True)
@@ -329,14 +323,9 @@ def build_ledger_link_definition(factory: LedgerActionPortsFactory) -> Operation
 
 def build_ledger_link_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the canonical strict mutation projection to exact purpose and consent."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerLinkRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerLinkOperationResult
-        ),
-        access_resolver=resolve_ledger_link_access,
+        public_result_type=LedgerLinkOperationResult,
         result_projector=project_ledger_link_result,
+        access_resolver=resolve_ledger_link_access,
     )

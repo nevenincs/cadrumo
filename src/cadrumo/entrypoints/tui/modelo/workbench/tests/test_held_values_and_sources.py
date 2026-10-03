@@ -71,7 +71,8 @@ from ..casilla_list import (
     stated_value_text,
     value_text,
 )
-from ..editor import CasillaEditorScreen, EditorOutcome, read_only_reason, where_from_text
+from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorOutcome, read_only_reason
+from ..editor_explanations import where_from_text
 from ..grid import CasillaListRecords
 from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
@@ -255,7 +256,9 @@ async def test_every_surface_shows_a_held_zero_and_no_figure_for_an_empty_box() 
 
         panels = {}
         for field in (held, empty):
-            panel = CasillaEditorScreen(field, parse=FakeActions().parse, language=OutputLanguage.EN)
+            panel = CasillaEditorScreen(
+                CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN)
+            )
             async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
                 await _settle(pilot)
                 panels[field.box] = _text(panel, "#editor-now-text")
@@ -306,7 +309,7 @@ async def test_a_box_no_entry_can_reach_names_no_source_and_says_it_is_empty_onc
         reason = read_only_reason(field, OutputLanguage.EN)
         assert reason is not None
         panel = CasillaEditorScreen(
-            field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason
+            CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason)
         )
         async with ScreenHostApp(panel).run_test(size=(80, 24)) as pilot:
             await _settle(pilot)
@@ -356,11 +359,13 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
         assert group_words(SourceGroupKind.AEAT_DATA).endswith(tr("tui.modelo.workbench.sources.group.aeat_data"))
         # The panel's "Now" line and where the value comes from.
         panel = CasillaEditorScreen(
-            field,
-            parse=FakeActions().parse,
-            language=language,
-            read_only_reason=read_only_reason(field, language),
-            aeat_imported=imported,
+            CasillaEditorPanel(
+                field,
+                parse=FakeActions().parse,
+                language=language,
+                read_only_reason=read_only_reason(field, language),
+                aeat_imported=imported,
+            )
         )
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
@@ -379,17 +384,21 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
 async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_filed_one_how_to_change_it() -> None:
     field = form_field("06", "Withholdings", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("0.00"))
     with override_settings(cadrumo_output_language="en"):
-        panel = CasillaEditorScreen(field, parse=FakeActions().parse, language=OutputLanguage.EN, affects="[07]")
+        panel = CasillaEditorScreen(
+            CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN, affects="[07]")
+        )
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
             affects = panel.query_one("#editor-affects").region
             entry = panel.query_one("#editor-entry").region
         filed = CasillaEditorScreen(
-            field,
-            parse=FakeActions().parse,
-            language=OutputLanguage.EN,
-            read_only_reason=read_only_reason(field, OutputLanguage.EN, recorded=True),
-            recorded=True,
+            CasillaEditorPanel(
+                field,
+                parse=FakeActions().parse,
+                language=OutputLanguage.EN,
+                read_only_reason=read_only_reason(field, OutputLanguage.EN, recorded=True),
+                recorded=True,
+            )
         )
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
             await _settle(pilot)

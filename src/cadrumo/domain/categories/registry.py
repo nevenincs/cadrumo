@@ -18,7 +18,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.schema_base import DateAxis
 from .errors import CategoryValidationError
 from .iva_hint import require_iva_deductibility_hint
@@ -119,27 +119,7 @@ def _profile_from_authority_fact(
     materialise_schedule: bool = True,
 ) -> CategoryProfile:
     values = {str(entry.key): entry.value for entry in resolved.payload.entries}
-    citations: list[CategoryCitation] = []
-    index = 0
-    while f"citation.{index}.source" in values:
-        prefix = f"citation.{index}"
-        citations.append(
-            CategoryCitation.model_validate(
-                {
-                    "source": CategoryCitationSource(str(values[f"{prefix}.source"])),
-                    "reference": str(values[f"{prefix}.reference"]),
-                    "locator": str(values[f"{prefix}.locator"]),
-                    "url": parse_http_url(str(values[f"{prefix}.url"])),
-                    "quote": str(values.get(f"{prefix}.quote", "")),
-                    "grounding": CitationGrounding(str(values[f"{prefix}.grounding"])),
-                    "grounding_reason": str(values.get(f"{prefix}.grounding_reason", "")),
-                    "legal_ref": str(values[f"{prefix}.legal_ref"]) if f"{prefix}.legal_ref" in values else None,
-                    "valid_from": values[f"{prefix}.valid_from"],
-                    "valid_to": values[f"{prefix}.valid_to"],
-                }
-            )
-        )
-        index += 1
+    citations = _category_citations(values)
     category = str(resolved.matched_selectors[0].value)
     category_token = require_spending_category(
         category,
@@ -165,7 +145,7 @@ def _profile_from_authority_fact(
     rule = {
         "kind": projected_kind,
         "notes": tr(str(values["notes"])),
-        "citations": tuple(citations),
+        "citations": citations,
         "fixed_pct": values.get("fixed_pct"),
         "default_ratio": values.get("default_ratio"),
         "statutory_multiplier": values.get("statutory_multiplier"),
@@ -201,6 +181,31 @@ def _profile_from_authority_fact(
             else None
         ),
     )
+
+
+def _category_citations(values: Mapping[str, object]) -> tuple[CategoryCitation, ...]:
+    citations: list[CategoryCitation] = []
+    index = 0
+    while f"citation.{index}.source" in values:
+        prefix = f"citation.{index}"
+        citations.append(
+            CategoryCitation.model_validate(
+                {
+                    "source": CategoryCitationSource(str(values[f"{prefix}.source"])),
+                    "reference": str(values[f"{prefix}.reference"]),
+                    "locator": str(values[f"{prefix}.locator"]),
+                    "url": parse_http_url(str(values[f"{prefix}.url"])),
+                    "quote": str(values.get(f"{prefix}.quote", "")),
+                    "grounding": CitationGrounding(str(values[f"{prefix}.grounding"])),
+                    "grounding_reason": str(values.get(f"{prefix}.grounding_reason", "")),
+                    "legal_ref": str(values[f"{prefix}.legal_ref"]) if f"{prefix}.legal_ref" in values else None,
+                    "valid_from": values[f"{prefix}.valid_from"],
+                    "valid_to": values[f"{prefix}.valid_to"],
+                }
+            )
+        )
+        index += 1
+    return tuple(citations)
 
 
 def _declared_cap_schedule(

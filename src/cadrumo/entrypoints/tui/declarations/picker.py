@@ -86,34 +86,46 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
         # within a narrow terminal even when Show all has a long translation.
         self.query_one("#declaration-picker-create", Button).display = self.modelo is not None
         if self.modelo is None:
-            table.add_column(tr("tui.declarations.list.column.declaration"))
-            model_numbers = sorted(
-                {target.modelo for target in self.targets if self.show_all or target.modelo in self.applicable}
-            )
-            for modelo in model_numbers:
-                table.add_row(modelo_title(modelo, language), key=modelo)
-            if self.preferred is not None and self.preferred.modelo in model_numbers:
-                table.move_cursor(row=model_numbers.index(self.preferred.modelo))
+            self._populate_modelos(table, language)
         else:
-            table.add_column(tr("tui.declarations.list.column.period"))
-            self.visible_targets = tuple(target for target in self.targets if target.modelo == self.modelo)
-            for index, target in enumerate(self.visible_targets):
-                table.add_row(period_words(target.period), key=str(index))
-            if self.preferred in self.visible_targets:
-                table.move_cursor(row=self.visible_targets.index(self.preferred))
+            self._populate_periods(table)
             if self.confirmation:
-                table.display = False
-                self.query_one("#declaration-picker-selection", Static).update(
-                    tr(
-                        "tui.declarations.list.new.start_confirm",
-                        modelo=modelo_title(self.modelo, language),
-                        period=period_words(self.preferred.period) if self.preferred is not None else "",
-                    )
-                )
-                self.query_one("#declaration-picker-create", Button).disabled = False
-                self.query_one("#declaration-picker-cancel", Button).focus()
+                self._show_confirmation(table, language, self.modelo)
                 return
         table.focus()
+
+    def _populate_modelos(self, table: DataTable[str], language: OutputLanguage) -> None:
+        """List the admitted Modelo choices and restore the preferred one."""
+        table.add_column(tr("tui.declarations.list.column.declaration"))
+        model_numbers = sorted(
+            {target.modelo for target in self.targets if self.show_all or target.modelo in self.applicable}
+        )
+        for modelo in model_numbers:
+            table.add_row(modelo_title(modelo, language), key=modelo)
+        if self.preferred is not None and self.preferred.modelo in model_numbers:
+            table.move_cursor(row=model_numbers.index(self.preferred.modelo))
+
+    def _populate_periods(self, table: DataTable[str]) -> None:
+        """List canonical periods for the selected Modelo."""
+        table.add_column(tr("tui.declarations.list.column.period"))
+        self.visible_targets = tuple(target for target in self.targets if target.modelo == self.modelo)
+        for index, target in enumerate(self.visible_targets):
+            table.add_row(period_words(target.period), key=str(index))
+        if self.preferred in self.visible_targets:
+            table.move_cursor(row=self.visible_targets.index(self.preferred))
+
+    def _show_confirmation(self, table: DataTable[str], language: OutputLanguage, modelo: str) -> None:
+        """Keep creation explicit and focus its cancel action first."""
+        table.display = False
+        self.query_one("#declaration-picker-selection", Static).update(
+            tr(
+                "tui.declarations.list.new.start_confirm",
+                modelo=modelo_title(modelo, language),
+                period=period_words(self.preferred.period) if self.preferred is not None else "",
+            )
+        )
+        self.query_one("#declaration-picker-create", Button).disabled = False
+        self.query_one("#declaration-picker-cancel", Button).focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Advance the Modelo step or select a period for explicit creation."""

@@ -47,11 +47,11 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.entrypoints.cli import runtime_modelo_query_read as bridge
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo.entrypoints.cli.runtime_modelo_query_read import (
     to_data_inventory_checklist,
     to_modelo_readiness_report,
 )
-from cadrumo.entrypoints.cli.runtime_registered_operation import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.period import Period, StandardPeriodCode
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -615,7 +615,7 @@ class Modelo210DevengoFactSet(BaseModel):
 class Modelo210DevolucionFactSet(BaseModel):
     """Modelo 210 devolucion facts, flat members named from the AEAT component vocabulary."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     cuenta_resto_banco: str | None = None
     cuenta_resto_ciudad: str | None = None
@@ -648,7 +648,7 @@ class Modelo210GananciaInmobiliariaFactSet(BaseModel):
 class Modelo210IngresoFactSet(BaseModel):
     """Modelo 210 ingreso facts, flat members named from the AEAT component vocabulary."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     cuenta_resto_banco: str | None = None
     cuenta_resto_ciudad: str | None = None
@@ -760,7 +760,7 @@ class Modelo210ProfileFacts(BaseModel):
     type's.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     contribuyente: Modelo210ContribuyenteFactSet | None = None
     declaracion: Modelo210DeclaracionFactSet | None = None
@@ -830,7 +830,7 @@ class Modelo202ProducerProfile(BaseModel):
     than unknown.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     taxpayer_profile: TaxpayerProfile
     activities: tuple[Modelo202ActivityFacts, ...]
@@ -1006,7 +1006,7 @@ class AmendmentEvidence(BaseModel):
 class RefundAccountSelection(BaseModel):
     """Secure account selected for a refund disposition."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     role: Literal["refund"]
     account: RefundAccount
@@ -1015,7 +1015,7 @@ class RefundAccountSelection(BaseModel):
 class ChargeAccountSelection(BaseModel):
     """Secure account selected for a direct-debit disposition."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     role: Literal["charge"]
     account: ChargeAccount
@@ -1038,7 +1038,7 @@ type FilingModelProfileFacts = (
 class FilingProducerSnapshot(BaseModel):
     """Complete immutable filing facts before registry-specific translation."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     modelo: Modelo
     taxpayer_tax_id: SubjectTaxId

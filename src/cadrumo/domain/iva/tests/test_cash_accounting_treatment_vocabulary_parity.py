@@ -29,7 +29,9 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...calculations.registry.iva_schema_vocabulary import resolve_iva_cash_accounting_catalogue
+from ...calculations.registry.iva_cash_accounting_vocabulary import (
+    resolve_iva_cash_accounting_catalogue,
+)
 from ...calculations.registry.schema_base import DateAxis
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

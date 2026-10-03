@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date
-from decimal import Decimal, InvalidOperation
 from typing import Protocol, override
 
 from textual.app import ComposeResult
@@ -15,10 +13,11 @@ from ....application.actividad_asset.history import ActivityAssetHistoryClaimRes
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models_actividad_asset import (
@@ -37,17 +36,6 @@ class _ActivityAssetScreenResult:
 
     message: str
     current_revision_id: str | None = None
-
-
-def _optional_amount(value: str) -> Decimal | None:
-    """Parse the optional free-depreciation amount; an empty field elects none."""
-    stripped = value.strip()
-    if not stripped:
-        return None
-    try:
-        return Decimal(stripped)
-    except InvalidOperation as exc:
-        raise ValueError("free-depreciation amount must be a decimal euro amount") from exc
 
 
 class ActivityAssetTuiActionsV1(Protocol):
@@ -192,9 +180,12 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
-                    covered_from=date.fromisoformat(self.query_one("#asset-covered-from", Input).value),
-                    covered_until=date.fromisoformat(self.query_one("#asset-covered-until", Input).value),
-                    requested_free_amount=_optional_amount(self.query_one("#asset-free-amount", Input).value),
+                    covered_from=require_iso8601_date(self.query_one("#asset-covered-from", Input).value),
+                    covered_until=require_iso8601_date(self.query_one("#asset-covered-until", Input).value),
+                    # An empty field elects no amount.
+                    requested_free_amount=parse_requested_free_amount(
+                        self.query_one("#asset-free-amount", Input).value.strip() or None
+                    ),
                     supersedes_claim_id=supersedes_claim_id,
                 ),
             )

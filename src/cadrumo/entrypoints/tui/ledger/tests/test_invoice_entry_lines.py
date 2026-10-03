@@ -204,3 +204,52 @@ async def test_an_invoice_is_entered_by_lines_or_by_one_base_never_both_and_neve
             assert screen.flow_state is LedgerFlowState.EDITING
             assert "Enter a taxable base, or add at least one invoice line." in _text(screen, "#ledger-refusal")
     assert not door.entries
+
+
+@pytest.mark.asyncio
+async def test_invoice_amounts_and_dates_refuse_every_shape_the_command_line_refuses() -> None:
+    door = _RecordingDoor()
+    screen = _entry_screen(door)
+    date_label = lookup_translation("tui.ledger.invoice.field.invoice_date", locale="en")
+    base_label = lookup_translation("tui.ledger.invoice.field.taxable_base", locale="en")
+    assert date_label is not None
+    assert base_label is not None
+    refused_dates = ("20260315", "2026-W11-7", "2026-03-32")
+    refused_amounts = ("1e3", "+5", "1_000", "NaN", "Infinity", "1.234", "10.005")
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
+            await pilot.pause()
+            _header(screen)
+            for raw in refused_dates:
+                _fill(screen, invoice_date=raw, taxable_base="10.00", iva_rate="21")
+                screen.query_one("#ledger-invoice-review", Button).press()
+                await pilot.pause()
+                assert screen.flow_state is LedgerFlowState.EDITING, raw
+                assert f"{date_label} must be a date written YYYY-MM-DD." in _text(screen, "#ledger-refusal"), raw
+            for raw in refused_amounts:
+                _fill(screen, invoice_date="2026-03-15", taxable_base=raw, iva_rate="21")
+                screen.query_one("#ledger-invoice-review", Button).press()
+                await pilot.pause()
+                assert screen.flow_state is LedgerFlowState.EDITING, raw
+                assert f"{base_label} must be a number" in _text(screen, "#ledger-refusal"), raw
+    assert not door.entries
+
+
+@pytest.mark.asyncio
+async def test_a_line_number_outside_the_canonical_grammar_is_refused_but_sub_cent_precision_is_kept() -> None:
+    door = _RecordingDoor()
+    screen = _entry_screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
+            await pilot.pause()
+            for raw in ("1e3", "+5", "1_000", "NaN", "-Infinity"):
+                _type_line(screen, {**_LINES[0], "quantity": raw})
+                await pilot.pause()
+                assert "Quantity must be a number" in _text(screen, "#ledger-refusal"), raw
+                assert screen.lines == [], raw
+            _type_line(screen, {**_LINES[0], "quantity": "8", "unit_price": "1.25", "subtotal": "10.00"})
+            await pilot.pause()
+            _type_line(screen, {**_LINES[1], "quantity": "40", "unit_price": "0.125", "subtotal": "5.00"})
+            await pilot.pause()
+            assert [line.unit_price for line in screen.lines] == [Decimal("1.25"), Decimal("0.125")]
+    assert not door.entries

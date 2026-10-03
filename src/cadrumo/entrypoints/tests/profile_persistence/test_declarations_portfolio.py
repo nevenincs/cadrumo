@@ -64,7 +64,6 @@ def two_persisted(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOp
                 },
                 binding_values={
                     "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-                    "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal(income),
                     "modelo-130-resultados-negativos-anteriores": Decimal(0),
                     "modelo-130-pagos-fraccionados-anteriores": Decimal(0)
                     if unit.period == _FIRST

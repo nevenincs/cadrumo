@@ -10,6 +10,13 @@ from textual.screen import Screen
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
 from ...adapters.local_runtime.workbench_generation import read_workbench_generation
+from ...application.modelo.declaration_summary import DeclarationSummaryState
+from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1, DeclarationsCalendarProjectionV1
+from ...application.modelo.declarations_workspace import (
+    DeclarationsWorkspaceDeclarationRefV1,
+    DeclarationsWorkspaceProjectionV1,
+)
+from ...application.modelo.workbench_read import ModeloWorkbenchFormReadV1
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.operator_actions.catalogue import lookup_action
 from ...application.operator_actions.models import ActionReference
@@ -22,15 +29,17 @@ from .account import AccountSessionExpiredError
 from .aeat_sync.routes import aeat_sync_screen_factory
 from .aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from .app import RootBindingV1, RootPresentationV1
-from .declarations.models import DeclarationsRefreshSnapshotV1
+from .declarations.models import DeclarationsWorkspaceWiringV1
 from .declarations.routes import declarations_screen_factory
 from .home import HomeScreen
 from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
 from .ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 from .ledger.runtime_invoice_add import compose_runtime_invoice_add_door
-from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
+from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
 from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
+from .modelo.runtime_workbench_reads import RuntimeModeloWorkbenchSource
+from .modelo.workbench.installed import compose_installed_modelo_workbench_factory
 from .navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
 from .profile.runtime_manager import RuntimeProfileManagerComposition
 from .profile.runtime_overview import read_runtime_profile_overview
@@ -169,7 +178,9 @@ class RuntimeWorkbenchRoot:
                     current[0] = captured
                 return captured
 
-            def declarations_snapshot() -> DeclarationsRefreshSnapshotV1:
+            def latest_declarations() -> tuple[
+                DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None
+            ]:
                 self._require_binding()
                 with generation_lock:
                     captured = current[0]
@@ -179,42 +190,65 @@ class RuntimeWorkbenchRoot:
                     or declarations is None
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                modelo = captured.modelo.projection
-                modelo_factory = (
-                    None
-                    if modelo is None
-                    else compose_installed_modelo_workspace_factory(
-                        bucket_id=declarations.bucket_id,
-                        declarations=declarations.declarations,
-                        projections=modelo,
-                        lifecycle_projections=captured.modelo_lifecycle.projection or (),
-                        graded_refusals=captured.modelo_graded_refusals.projection or {},
-                        lifecycle_actions_factory=lambda lifecycle: compose_runtime_modelo_lifecycle_door(
-                            self._client, lifecycle, refresh_after_success=refresh_declarations
-                        ),
-                    )
-                )
-                return DeclarationsRefreshSnapshotV1(
-                    projection=declarations,
-                    modelo_workspace_factory=modelo_factory,
-                    calendar_projection=captured.declarations_calendar.projection,
+                return declarations, captured.declarations_calendar.projection
+
+            def lifecycle_door(
+                declaration: DeclarationsWorkspaceDeclarationRefV1, read: ModeloWorkbenchFormReadV1 | None
+            ) -> ModeloWorkspaceLifecycleDoor:
+                return compose_runtime_modelo_lifecycle_door(
+                    self._client,
+                    declaration,
+                    calculation_revision_id=None if read is None else read.calculation_revision_id,
+                    verification_report_id=None if read is None else read.verification_report_id,
+                    asks_modelo_390=read is not None and read.asks_modelo_390,
+                    refresh_after_success=refresh_declarations,
                 )
 
+            def modelo_workspace_factory(declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> Screen[None]:
+                # Admit each selected declaration against the latest captured generation.
+                declarations, _ = latest_declarations()
+                return compose_installed_modelo_workbench_factory(
+                    declarations=declarations.declarations,
+                    source=lambda selected: RuntimeModeloWorkbenchSource(self._client, selected),
+                    door=lifecycle_door,
+                )(declaration)
+
+            def calendar_declaration(
+                entry: DeclarationsCalendarEntryRefV1,
+            ) -> DeclarationsWorkspaceDeclarationRefV1 | None:
+                declarations, _ = latest_declarations()
+                matches = tuple(
+                    ref
+                    for ref in declarations.declarations
+                    if (str(ref.modelo), ref.filing_year, ref.period.registry_token) == entry.semantic_key()
+                    and (ref.summary is None or ref.summary.state is not DeclarationSummaryState.UNREADABLE)
+                )
+                return matches[0] if len(matches) == 1 else None
+
+            def calendar_open(entry: DeclarationsCalendarEntryRefV1, /) -> Screen[None] | None:
+                declaration = calendar_declaration(entry)
+                return None if declaration is None else modelo_workspace_factory(declaration)
+
             def declarations_factory(context: TuiScreenContextV1) -> Screen[None]:
-                snapshot = declarations_snapshot()
+                declarations, calendar = latest_declarations()
                 create_work = compose_runtime_work_create_handoff(
                     self._client, refresh_after_success=refresh_declarations
                 )
                 return declarations_screen_factory(
-                    snapshot.projection,
-                    work_action=_action("operator.modelo.work.list"),
-                    revisions_action=_action("operator.modelo.work.revisions"),
-                    filing_action=_action("operator.modelo.filing_record.list"),
-                    modelo_workspace_factory=snapshot.modelo_workspace_factory,
-                    calendar_projection=snapshot.calendar_projection,
-                    work_create_handoff=create_work,
-                    calendar_recovery_handoff=compose_runtime_calendar_create_handoff(create_work),
-                    refresh_snapshot=declarations_snapshot,
+                    declarations,
+                    DeclarationsWorkspaceWiringV1(
+                        work_action=_action("operator.modelo.work.list"),
+                        revisions_action=_action("operator.modelo.work.revisions"),
+                        filing_action=_action("operator.modelo.filing_record.list"),
+                        modelo_workspace_factory=modelo_workspace_factory,
+                        calendar_projection=calendar,
+                        calendar_entry_handoff=calendar_open,
+                        calendar_entry_can_open=lambda entry: calendar_declaration(entry) is not None,
+                        calendar_recovery_handoff=compose_runtime_calendar_create_handoff(create_work),
+                        work_create_handoff=create_work,
+                        creation_targets=declarations.creation_targets,
+                        refresh_data=latest_declarations,
+                    ),
                 )(context)
 
             factories["workbench.declarations"] = declarations_factory

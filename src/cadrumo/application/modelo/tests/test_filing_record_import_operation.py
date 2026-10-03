@@ -399,6 +399,7 @@ def test_executor_parses_source_before_commit_and_guards_source_and_receipt_writ
 
     monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "parse_casilla_lexical_spreadsheet", parse)
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "external_filing_source_casillas", validate_source)
     monkeypatch.setattr(
         operation_module,

@@ -22,7 +22,10 @@ from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_partition import load_partitioned_corpus, partitioned_lineage_totality
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_cache import discover_modelo_sources
-from ..compiler.validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
+from ..compiler.validate_cross_revision_lineage_origin import (
+    lineage_origin_continuity_failures,
+    role_exempt_occurrences,
+)
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -154,6 +157,18 @@ def test_seeded_is_admissible_inference_not_grounding(tmp_path: Path) -> None:
     assert modelo.revisions["2025"].casillas[0].continuidad_origin is CasillaLineageOrigin.SEEDED
     assert lineage_totality((modelo,), ()).is_total
     assert not _origin_failures({"999": modelo})
+
+
+def test_role_exemption_requires_every_link_touching_an_occurrence_to_be_grounded(tmp_path: Path) -> None:
+    grounded_root = tmp_path / "grounded"
+    grounded_root.mkdir()
+    grounded = _modelo(grounded_root, successor=_row(2025, chain="base-general", origin="grounded"))
+    assert role_exempt_occurrences(grounded) == frozenset({("2024", "0001"), ("2025", "0001")})
+
+    seeded_root = tmp_path / "seeded"
+    seeded_root.mkdir()
+    seeded = _modelo(seeded_root, successor=_row(2025, chain="base-general", origin="seeded"))
+    assert role_exempt_occurrences(seeded) == frozenset()
 
 
 def test_seeded_role_drift_is_refused(tmp_path: Path) -> None:

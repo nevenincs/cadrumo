@@ -46,11 +46,10 @@ from cadrumo.application.operations.financial_operand import (
 )
 from cadrumo.application.operations.financial_operand_custody import OperationFinancialOperandCustodyState
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,

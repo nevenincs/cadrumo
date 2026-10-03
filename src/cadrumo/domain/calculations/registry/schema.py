@@ -189,6 +189,27 @@ from .schema_formula import (
     FormulaExpression,
     ParameterDefinition,
 )
+from .schema_overrides import (
+    CasillaFieldOverride as _CasillaFieldOverride,
+)
+from .schema_overrides import (
+    CasillaMemberPosition as _CasillaMemberPosition,
+)
+from .schema_overrides import (
+    CasillaMemberRemoval as _CasillaMemberRemoval,
+)
+from .schema_overrides import (
+    FamilyFieldOverride as _FamilyFieldOverride,
+)
+from .schema_overrides import (
+    FamilyMemberPosition as _FamilyMemberPosition,
+)
+from .schema_overrides import (
+    FamilyMemberRemoval as _FamilyMemberRemoval,
+)
+from .schema_overrides import (
+    SchemaFamilyDispositionDeclaration as _SchemaFamilyDispositionDeclaration,
+)
 from .schema_references import LegalReference, SourceReference
 from .schema_revision_members import (
     ApplicabilityRuleDefinition as _ApplicabilityRuleDefinition,
@@ -204,7 +225,6 @@ from .schema_revision_members import (
 )
 from .schema_surfaces import (
     CalculationCompletenessManifest,
-    CasillaConstraints,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
     validate_family_identity_uniqueness,
@@ -351,171 +371,6 @@ def _frozen_index[K, V](index: Mapping[K, Sequence[V]]) -> dict[K, tuple[V, ...]
     last-write-wins assignment; freezing is the last step before publication.
     """
     return {key: tuple(values) for key, values in index.items()}
-
-
-class SchemaFamilyDispositionDeclaration(RegistryModel):
-    """A revision's declared reason that one of its schema families does not apply.
-
-    The only way an empty family reads as anything but
-    :attr:`RegistrySchemaFamilyDisposition.BLOCKED_PENDING_EVIDENCE`, and it is
-    deliberately expensive to make: a substantive claim about what the law does
-    not require of this modelo, so it carries a reason somebody wrote and the
-    references it stands on.
-
-    The alternative — an allowlist of families permitted to be empty — was
-    rejected as the shape of the problem rather than its solution. An allowlist
-    entry records that somebody wanted the check quiet; this records what they
-    claim and what backs it, which is the thing a later reviewer can disagree
-    with.
-    """
-
-    reason: str = Field(min_length=1, max_length=1024)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class CasillaStorageSelector(RegistryModel):
-    """Unambiguous address of one effective casilla in a declared predecessor.
-
-    This selector is storage identity only.  It neither declares nor implies
-    legal continuity between the selected member and the successor edition.
-    """
-
-    revision: RevisionId
-    id: CasillaId
-
-
-class CasillaFieldOverride(RegistryModel):
-    """Typed declaration of fields changed from one predecessor casilla."""
-
-    selector: CasillaStorageSelector
-    fields: Annotated[Mapping[str, object], FROZEN_MAPPING] = Field(default_factory=dict)
-    removed_fields: tuple[str, ...] = ()
-    restate_provenance: bool = False
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_patch(self) -> CasillaFieldOverride:
-        patchable = set(CasillaDefinition.model_fields) | {"additional_source_refs"}
-        constraint_patchable = set(CasillaConstraints.model_fields) | {"additional_source_refs"}
-        malformed = sorted(
-            path
-            for path in self.removed_fields
-            if not path or any(not segment for segment in path.split(".")) or len(path.split(".")) > 2
-        )
-        if malformed:
-            raise RegistryValidationError(f"casilla field override has malformed removed fields {malformed!r}")
-        unknown_removed = {
-            path
-            for path in self.removed_fields
-            if (
-                (len(segments := path.split(".")) == 1 and segments[0] not in patchable)
-                or (len(segments) == 2 and (segments[0] != "constraints" or segments[1] not in constraint_patchable))
-            )
-        }
-        unknown = sorted((set(self.fields) - patchable) | unknown_removed)
-        if unknown:
-            raise RegistryValidationError(f"casilla field override names unknown fields {unknown!r}")
-        overlap = set(self.fields) & set(self.removed_fields)
-        constraint_fields = self.fields.get("constraints")
-        for path in self.removed_fields:
-            segments = path.split(".")
-            if len(segments) != 2 or segments[0] != "constraints" or "constraints" not in self.fields:
-                continue
-            if not isinstance(constraint_fields, Mapping) or segments[1] in constraint_fields:
-                overlap.add(path)
-        overlap = sorted(overlap)
-        if overlap:
-            raise RegistryValidationError(f"casilla field override both sets and removes fields {overlap!r}")
-        if not self.fields and not self.removed_fields and not self.restate_provenance:
-            raise RegistryValidationError("casilla field override must set or remove at least one field")
-        if "inherited_from" in self.fields or any(
-            path.split(".")[0] == "inherited_from" for path in self.removed_fields
-        ):
-            raise RegistryValidationError("inherited_from is loader-owned and cannot be overridden")
-        return self
-
-
-class CasillaMemberRemoval(RegistryModel):
-    """Explicitly remove one member inherited from the declared predecessor."""
-
-    selector: CasillaStorageSelector
-
-
-class CasillaMemberPosition(RegistryModel):
-    """Place an effective casilla without restating its payload."""
-
-    id: CasillaId
-    position: int = Field(ge=0)
-
-
-class FamilyStorageSelector(RegistryModel):
-    """Address one keyed-family member in the immediate predecessor."""
-
-    revision: RevisionId
-    id: str = Field(min_length=1)
-
-
-class FamilyFieldOverride(RegistryModel):
-    """Patch only the changed fields of one inherited keyed-family member."""
-
-    family: str = Field(min_length=1)
-    selector: FamilyStorageSelector
-    fields: Annotated[Mapping[str, object], FROZEN_MAPPING] = Field(default_factory=dict)
-    removed_fields: tuple[str, ...] = ()
-    sequence_additions: Annotated[Mapping[str, tuple[object, ...]], FROZEN_MAPPING] = Field(default_factory=dict)
-    sequence_removals: Annotated[Mapping[str, tuple[int, ...]], FROZEN_MAPPING] = Field(default_factory=dict)
-    sequence_order: Annotated[Mapping[str, tuple[int, ...]], FROZEN_MAPPING] = Field(default_factory=dict)
-    restate_identity: bool = False
-    replacement_id: str | None = Field(default=None, min_length=1)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_patch(self) -> FamilyFieldOverride:
-        from .keyed_families import family_spec
-
-        spec = family_spec(self.family)
-        if spec is None or not spec.keyed:
-            raise RegistryValidationError(
-                f"family field override requires an inherited keyed family, got {self.family!r}"
-            )
-        if (
-            not self.fields
-            and not self.removed_fields
-            and not self.sequence_additions
-            and not self.sequence_removals
-            and not self.sequence_order
-            and not self.restate_identity
-            and self.replacement_id is None
-        ):
-            raise RegistryValidationError("family field override must set or remove at least one field")
-        overlap = sorted(set(self.fields) & set(self.removed_fields))
-        if overlap:
-            raise RegistryValidationError(f"family field override both sets and removes fields {overlap!r}")
-        if spec.identity in self.fields or spec.identity in self.removed_fields:
-            raise RegistryValidationError(f"family identity {spec.identity!r} cannot be patched")
-        sequence_paths = set(self.sequence_additions) | set(self.sequence_removals) | set(self.sequence_order)
-        if "" in sequence_paths:
-            raise RegistryValidationError("family sequence paths must not be empty")
-        for path, indices in (*self.sequence_removals.items(), *self.sequence_order.items()):
-            if any(index < 0 for index in indices) or len(set(indices)) != len(indices):
-                raise RegistryValidationError(f"family sequence path {path!r} has invalid indices")
-        return self
-
-
-class FamilyMemberRemoval(RegistryModel):
-    """Explicitly remove one member inherited from a keyed family."""
-
-    family: str = Field(min_length=1)
-    selector: FamilyStorageSelector
-
-
-class FamilyMemberPosition(RegistryModel):
-    """Place one effective keyed-family member without restating its payload."""
-
-    family: str = Field(min_length=1)
-    id: str = Field(min_length=1)
-    position: int = Field(ge=0)
 
 
 class ModeloRevision(RegistryRevisionDeclaration):
@@ -701,13 +556,13 @@ class ModeloRevision(RegistryRevisionDeclaration):
             "This is not a legal-continuity declaration."
         ),
     )
-    casilla_overrides: Annotated[tuple[CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
+    casilla_overrides: Annotated[tuple[_CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    casilla_removals: Annotated[tuple[CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
+    casilla_removals: Annotated[tuple[_CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    casilla_positions: Annotated[tuple[CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
+    casilla_positions: Annotated[tuple[_CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     family_storage_baseline: Annotated[RevisionId | None, MANIFEST_ONLY] = Field(
@@ -719,13 +574,13 @@ class ModeloRevision(RegistryRevisionDeclaration):
         default=(), exclude_if=lambda value: not value
     )
     scoped_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
-    family_overrides: Annotated[tuple[FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
+    family_overrides: Annotated[tuple[_FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    family_removals: Annotated[tuple[FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
+    family_removals: Annotated[tuple[_FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    family_positions: Annotated[tuple[FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
+    family_positions: Annotated[tuple[_FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
@@ -758,7 +613,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         ),
     )
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
-    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
+    family_dispositions: Annotated[Mapping[str, _SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
     )
     restated_families: Annotated[tuple[RestatedFamilyDeclaration, ...], MANIFEST_ONLY] = Field(
@@ -901,45 +756,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     @pydantic_validation_boundary
     def _validate_family_storage_delta(self) -> ModeloRevision:
         """Keep generic storage declarations on one explicit keyed-family vocabulary."""
-        from .keyed_families import KEYED_FAMILY_SPECS
-
-        keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
-        scoped = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
-        cleared = [item.family for item in self.cleared_families]
-        named = [
-            *cleared,
-            *self.scoped_families,
-            *(item.family for item in self.family_overrides),
-            *(item.family for item in self.family_removals),
-            *(item.family for item in self.family_positions),
-        ]
-        unknown = sorted(set(named) - keyed)
-        if unknown:
-            raise RegistryValidationError(f"family storage delta names non-keyed families {unknown!r}")
-        if named and self.family_storage_baseline is None and self.predecessor is None:
-            raise RegistryValidationError(
-                "family storage delta requires family_storage_baseline or a named predecessor"
-            )
-        if len(set(cleared)) != len(cleared):
-            raise RegistryValidationError(
-                "cleared families must be unique; one family carries one authored clearance, so two entries "
-                "leave the merge with two reasons for one decision and no rule for picking between them"
-            )
-        if len(set(self.scoped_families)) != len(self.scoped_families):
-            raise RegistryValidationError("scoped families must be unique")
-        invalid_scopes = sorted(set(self.scoped_families) - scoped)
-        if invalid_scopes:
-            raise RegistryValidationError(f"family assertion scope names non-scoped families {invalid_scopes!r}")
-        operated = {
-            *(item.family for item in self.family_overrides),
-            *(item.family for item in self.family_removals),
-            *(item.family for item in self.family_positions),
-        }
-        missing_scopes = sorted((operated & scoped) - set(self.scoped_families))
-        if missing_scopes:
-            raise RegistryValidationError(
-                f"scoped family storage operations require an edition-local assertion scope {missing_scopes!r}"
-            )
+        _require_revision_family_storage_delta(self)
         return self
 
     @model_validator(mode="after")
@@ -1145,19 +962,7 @@ class ModeloDefinition(RegistryModel):
         else:
             self._directory_revision_ids = directory_revision_ids
         revision_ids = frozenset(self.revisions) if directory_revision_ids is None else directory_revision_ids
-        for key, revision in self.revisions.items():
-            if key != revision.id:
-                raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
-            if revision.reviewed_against == revision.id:
-                raise RegistryValidationError(
-                    f"revision {revision.id!r} has invalid review reference: reviewed_against cannot name itself"
-                )
-            if revision.reviewed_against is not None and revision.reviewed_against not in revision_ids:
-                raise RegistryValidationError(
-                    f"revision {revision.id!r} has dangling review reference "
-                    f"reviewed_against={revision.reviewed_against!r}; declared revisions are "
-                    f"{sorted(revision_ids)!r}"
-                )
+        _require_revision_keys_and_review_references(self.revisions, revision_ids)
         if directory_revision_ids is not None:
             _validate_selected_view_references(self.id, self.revisions, directory_revision_ids)
             return self
@@ -1166,6 +971,100 @@ class ModeloDefinition(RegistryModel):
         if failures:
             raise RegistryValidationError("; ".join(failures))
         return self
+
+
+def _require_revision_family_storage_delta(revision: ModeloRevision) -> None:
+    from .keyed_families import KEYED_FAMILY_SPECS
+
+    keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
+    scoped = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
+    cleared = [item.family for item in revision.cleared_families]
+    named = _named_storage_delta_families(revision, cleared)
+    _require_known_storage_families(named, keyed)
+    _require_storage_delta_baseline(revision, named)
+    _require_unique_clearances_and_scopes(revision, cleared)
+    operated = _operated_storage_delta_families(revision)
+    _require_scoped_storage_operations(revision, scoped, operated)
+
+
+def _named_storage_delta_families(revision: ModeloRevision, cleared: list[str]) -> list[str]:
+    return [
+        *cleared,
+        *revision.scoped_families,
+        *(item.family for item in revision.family_overrides),
+        *(item.family for item in revision.family_removals),
+        *(item.family for item in revision.family_positions),
+    ]
+
+
+def _operated_storage_delta_families(revision: ModeloRevision) -> set[str]:
+    return {
+        *(item.family for item in revision.family_overrides),
+        *(item.family for item in revision.family_removals),
+        *(item.family for item in revision.family_positions),
+    }
+
+
+def _require_known_storage_families(named: list[str], keyed: set[str]) -> None:
+    unknown = sorted(set(named) - keyed)
+    if unknown:
+        raise RegistryValidationError(f"family storage delta names non-keyed families {unknown!r}")
+
+
+def _require_storage_delta_baseline(revision: ModeloRevision, named: list[str]) -> None:
+    if named and revision.family_storage_baseline is None and revision.predecessor is None:
+        raise RegistryValidationError("family storage delta requires family_storage_baseline or a named predecessor")
+
+
+def _require_unique_clearances_and_scopes(revision: ModeloRevision, cleared: list[str]) -> None:
+    if len(set(cleared)) != len(cleared):
+        raise RegistryValidationError(
+            "cleared families must be unique; one family carries one authored clearance, so two entries "
+            "leave the merge with two reasons for one decision and no rule for picking between them"
+        )
+    if len(set(revision.scoped_families)) != len(revision.scoped_families):
+        raise RegistryValidationError("scoped families must be unique")
+
+
+def _require_scoped_storage_operations(
+    revision: ModeloRevision,
+    scoped: set[str],
+    operated: set[str],
+) -> None:
+    invalid_scopes = sorted(set(revision.scoped_families) - scoped)
+    if invalid_scopes:
+        raise RegistryValidationError(f"family assertion scope names non-scoped families {invalid_scopes!r}")
+    missing_scopes = sorted((operated & scoped) - set(revision.scoped_families))
+    if missing_scopes:
+        raise RegistryValidationError(
+            f"scoped family storage operations require an edition-local assertion scope {missing_scopes!r}"
+        )
+
+
+def _require_revision_keys_and_review_references(
+    revisions: Mapping[RevisionId, ModeloRevision],
+    revision_ids: frozenset[str],
+) -> None:
+    for key, revision in revisions.items():
+        _require_revision_key(key, revision)
+        _require_review_reference(revision, revision_ids)
+
+
+def _require_revision_key(key: RevisionId, revision: ModeloRevision) -> None:
+    if key != revision.id:
+        raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
+
+
+def _require_review_reference(revision: ModeloRevision, revision_ids: frozenset[str]) -> None:
+    if revision.reviewed_against == revision.id:
+        raise RegistryValidationError(
+            f"revision {revision.id!r} has invalid review reference: reviewed_against cannot name itself"
+        )
+    if revision.reviewed_against is not None and revision.reviewed_against not in revision_ids:
+        raise RegistryValidationError(
+            f"revision {revision.id!r} has dangling review reference "
+            f"reviewed_against={revision.reviewed_against!r}; declared revisions are {sorted(revision_ids)!r}"
+        )
 
 
 def _union_across_expectations[T](

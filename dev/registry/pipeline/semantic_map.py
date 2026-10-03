@@ -241,24 +241,40 @@ class VariableEnvelopeSemantic(_StrictModel):
 
     @model_validator(mode="after")
     def _require_complete_ordered_semantics(self) -> VariableEnvelopeSemantic:
-        roles = tuple(field.role for field in self.prefix_fields)
-        if len(set(roles)) != len(roles):
-            raise ValueError(f"variable envelope {self.record_identity!r} prefix roles must be unique")
-        remaining = iter(_PREFIX_ROLE_ORDER)
-        if not all(role in remaining for role in roles):
-            raise ValueError(
-                f"variable envelope {self.record_identity!r} prefix roles must appear in canonical source order",
-            )
-        anchors = tuple(field.anchor for field in self.prefix_fields)
-        if len(set(anchors)) != len(anchors):
-            raise ValueError(f"variable envelope {self.record_identity!r} prefix anchors must be unique")
-        if self.body_anchor.record_identity != self.record_identity:
-            raise ValueError(f"variable envelope body anchor must belong to {self.record_identity!r}")
-        if self.closer_anchor.record_identity != self.record_identity:
-            raise ValueError(f"variable envelope closer anchor must belong to {self.record_identity!r}")
-        if len(set(self.body_record_ids)) != len(self.body_record_ids):
-            raise ValueError("variable envelope body record identities must be unique and ordered")
+        _require_ordered_envelope_prefix_roles(self)
+        _require_unique_envelope_prefix_anchors(self)
+        _require_envelope_anchors_belong_to_record(self)
+        _require_unique_envelope_body_records(self)
         return self
+
+
+def _require_ordered_envelope_prefix_roles(envelope: VariableEnvelopeSemantic) -> None:
+    roles = tuple(field.role for field in envelope.prefix_fields)
+    if len(set(roles)) != len(roles):
+        raise ValueError(f"variable envelope {envelope.record_identity!r} prefix roles must be unique")
+    remaining = iter(_PREFIX_ROLE_ORDER)
+    if not all(role in remaining for role in roles):
+        raise ValueError(
+            f"variable envelope {envelope.record_identity!r} prefix roles must appear in canonical source order",
+        )
+
+
+def _require_unique_envelope_prefix_anchors(envelope: VariableEnvelopeSemantic) -> None:
+    anchors = tuple(field.anchor for field in envelope.prefix_fields)
+    if len(set(anchors)) != len(anchors):
+        raise ValueError(f"variable envelope {envelope.record_identity!r} prefix anchors must be unique")
+
+
+def _require_envelope_anchors_belong_to_record(envelope: VariableEnvelopeSemantic) -> None:
+    if envelope.body_anchor.record_identity != envelope.record_identity:
+        raise ValueError(f"variable envelope body anchor must belong to {envelope.record_identity!r}")
+    if envelope.closer_anchor.record_identity != envelope.record_identity:
+        raise ValueError(f"variable envelope closer anchor must belong to {envelope.record_identity!r}")
+
+
+def _require_unique_envelope_body_records(envelope: VariableEnvelopeSemantic) -> None:
+    if len(set(envelope.body_record_ids)) != len(envelope.body_record_ids):
+        raise ValueError("variable envelope body record identities must be unique and ordered")
 
 
 class SemanticMapPart(_StrictModel):
@@ -284,6 +300,8 @@ class SemanticMapPart(_StrictModel):
     @property
     def printed_range(self) -> str:
         """The range the design prints for this part, e.g. ``"79-80"``."""
+        if self.length == 1:
+            return str(self.offset)
         return f"{self.offset}-{self.offset + self.length - 1}"
 
 
@@ -421,31 +439,47 @@ class SemanticMap(_StrictModel):
 
     @model_validator(mode="after")
     def _require_unique_record_semantics(self) -> SemanticMap:
-        mismatched_envelopes = tuple(
-            envelope.record_identity
-            for envelope in self.variable_envelopes
-            if (envelope.source_ref != self.source_ref or envelope.source_sha256 != self.source_sha256)
-        )
-        if mismatched_envelopes:
-            raise ValueError(
-                "semantic map variable-envelope identities must match the exact semantic-map source: "
-                f"{mismatched_envelopes!r}",
-            )
-        record_keys = tuple((record.sheet, record.record_identity) for record in self.records)
-        duplicate_keys = sorted({key for key in record_keys if record_keys.count(key) > 1})
-        if duplicate_keys:
-            raise ValueError(f"semantic map contains duplicate exact record anchors: {duplicate_keys!r}")
-        record_ids = tuple(str(record.export_record_id) for record in self.records)
-        duplicate_ids = sorted({record_id for record_id in record_ids if record_ids.count(record_id) > 1})
-        if duplicate_ids:
-            raise ValueError(f"semantic map contains duplicate canonical export record ids: {duplicate_ids!r}")
-        envelope_identities = tuple(envelope.record_identity for envelope in self.variable_envelopes)
-        duplicate_envelopes = sorted(
-            {identity for identity in envelope_identities if envelope_identities.count(identity) > 1},
-        )
-        if duplicate_envelopes:
-            raise ValueError(f"semantic map contains duplicate variable-envelope identities: {duplicate_envelopes!r}")
+        _require_envelope_source_identity(self)
+        _require_unique_semantic_record_anchors(self.records)
+        _require_unique_semantic_export_record_ids(self.records)
+        _require_unique_semantic_envelope_identities(self.variable_envelopes)
         return self
+
+
+def _require_envelope_source_identity(semantic_map: SemanticMap) -> None:
+    mismatched_envelopes = tuple(
+        envelope.record_identity
+        for envelope in semantic_map.variable_envelopes
+        if (envelope.source_ref != semantic_map.source_ref or envelope.source_sha256 != semantic_map.source_sha256)
+    )
+    if mismatched_envelopes:
+        raise ValueError(
+            "semantic map variable-envelope identities must match the exact semantic-map source: "
+            f"{mismatched_envelopes!r}",
+        )
+
+
+def _require_unique_semantic_record_anchors(records: tuple[SemanticMapRecord, ...]) -> None:
+    record_keys = tuple((record.sheet, record.record_identity) for record in records)
+    duplicate_keys = sorted({key for key in record_keys if record_keys.count(key) > 1})
+    if duplicate_keys:
+        raise ValueError(f"semantic map contains duplicate exact record anchors: {duplicate_keys!r}")
+
+
+def _require_unique_semantic_export_record_ids(records: tuple[SemanticMapRecord, ...]) -> None:
+    record_ids = tuple(str(record.export_record_id) for record in records)
+    duplicate_ids = sorted({record_id for record_id in record_ids if record_ids.count(record_id) > 1})
+    if duplicate_ids:
+        raise ValueError(f"semantic map contains duplicate canonical export record ids: {duplicate_ids!r}")
+
+
+def _require_unique_semantic_envelope_identities(envelopes: tuple[VariableEnvelopeSemantic, ...]) -> None:
+    envelope_identities = tuple(envelope.record_identity for envelope in envelopes)
+    duplicate_envelopes = sorted(
+        {identity for identity in envelope_identities if envelope_identities.count(identity) > 1},
+    )
+    if duplicate_envelopes:
+        raise ValueError(f"semantic map contains duplicate variable-envelope identities: {duplicate_envelopes!r}")
 
 
 def semantic_anchor_key(anchor: SemanticMapAnchor) -> AnchorKey:
@@ -523,87 +557,136 @@ def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
 
 
 def _load_fragment(path: Path) -> SemanticMapFragment:
+    data = _fragment_payload(path)
+    data["entries"] = _compile_fragment_entries(path, data.get("entries", ()))
+    fragment = _validate_fragment_model(path, data)
+    _require_fragment_filename(path, fragment)
+    return fragment
+
+
+def _fragment_payload(path: Path) -> dict[str, object]:
     frozen = freeze_toml(
         read_toml(
             path,
             error_factory=lambda message: RegistryValidationError(message),
         ),
     )
-    data: dict[str, object] = dict(frozen)
+    return dict(frozen)
+
+
+def _compile_fragment_entries(path: Path, raw_entries: object) -> tuple[dict[str, object], ...]:
     try:
-        raw_entries = _RAW_ENTRIES_ADAPTER.validate_python(data.get("entries", ()))
+        entries = _RAW_ENTRIES_ADAPTER.validate_python(raw_entries)
     except ValidationError as exc:
         raise RegistryValidationError(
             f"invalid semantic-map fragment {path.name!r}: entries must be an array of tables",
         ) from exc
-    compiled_entries: list[object] = []
-    for raw_entry in raw_entries:
-        entry = dict(raw_entry)
-        if "header_key" in entry:
-            raise RegistryValidationError(
-                f"invalid semantic-map fragment {path.name!r}: legacy header_key is not accepted; use producer_key",
-            )
-        raw_producer_key = entry.get("producer_key")
-        if isinstance(raw_producer_key, str):
-            try:
-                entry["producer_key"] = FilingProducerKey(raw_producer_key)
-            except ValueError as exc:
-                raise RegistryValidationError(
-                    f"invalid semantic-map fragment {path.name!r}: "
-                    f"{raw_producer_key!r} is not a canonical producer_key",
-                ) from exc
-        raw_projection_ref = entry.get("projection_ref")
-        if raw_projection_ref is not None:
-            try:
-                entry["projection_ref"] = compile_filing_projection_ref(raw_projection_ref)
-            except ValidationError as exc:
-                raise RegistryValidationError(
-                    f"invalid semantic-map fragment {path.name!r}: "
-                    f"projection_ref is not canonical: {validation_error_detail(exc)}",
-                ) from exc
-            except ValueError as exc:
-                raise RegistryValidationError(
-                    f"invalid semantic-map fragment {path.name!r}: projection_ref is not canonical: {exc}",
-                ) from exc
-        for field_name, enum_type in (
-            ("draft_attribute", ExportDraftAttribute),
-            ("computed_key", ExportComputedKey),
-        ):
-            raw_value = entry.get(field_name)
-            if isinstance(raw_value, str):
-                try:
-                    entry[field_name] = enum_type(raw_value)
-                except ValueError as exc:
-                    raise RegistryValidationError(
-                        f"invalid semantic-map fragment {path.name!r}: {raw_value!r} is not a canonical {field_name}",
-                    ) from exc
-        compiled_entries.append(entry)
-    data["entries"] = tuple(compiled_entries)
+    return tuple(_compile_fragment_entry(path, raw_entry) for raw_entry in entries)
+
+
+def _compile_fragment_entry(path: Path, raw_entry: dict[str, object]) -> dict[str, object]:
+    entry = dict(raw_entry)
+    if "header_key" in entry:
+        raise RegistryValidationError(
+            f"invalid semantic-map fragment {path.name!r}: legacy header_key is not accepted; use producer_key",
+        )
+    _compile_producer_key(path, entry)
+    _compile_projection_ref(path, entry)
+    _compile_entry_enum(path, entry, "draft_attribute", ExportDraftAttribute)
+    _compile_entry_enum(path, entry, "computed_key", ExportComputedKey)
+    return entry
+
+
+def _compile_producer_key(path: Path, entry: dict[str, object]) -> None:
+    raw_producer_key = entry.get("producer_key")
+    if not isinstance(raw_producer_key, str):
+        return
+    try:
+        entry["producer_key"] = FilingProducerKey(raw_producer_key)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"invalid semantic-map fragment {path.name!r}: {raw_producer_key!r} is not a canonical producer_key",
+        ) from exc
+
+
+def _compile_projection_ref(path: Path, entry: dict[str, object]) -> None:
+    raw_projection_ref = entry.get("projection_ref")
+    if raw_projection_ref is None:
+        return
+    try:
+        entry["projection_ref"] = compile_filing_projection_ref(raw_projection_ref)
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"invalid semantic-map fragment {path.name!r}: "
+            f"projection_ref is not canonical: {validation_error_detail(exc)}",
+        ) from exc
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"invalid semantic-map fragment {path.name!r}: projection_ref is not canonical: {exc}",
+        ) from exc
+
+
+def _compile_entry_enum(
+    path: Path,
+    entry: dict[str, object],
+    field_name: str,
+    enum_type: type[ExportDraftAttribute] | type[ExportComputedKey],
+) -> None:
+    raw_value = entry.get(field_name)
+    if not isinstance(raw_value, str):
+        return
+    try:
+        entry[field_name] = enum_type(raw_value)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"invalid semantic-map fragment {path.name!r}: {raw_value!r} is not a canonical {field_name}",
+        ) from exc
+
+
+def _validate_fragment_model(path: Path, data: dict[str, object]) -> SemanticMapFragment:
     try:
         fragment = SemanticMapFragment.model_validate(data)
     except ValidationError as exc:
         raise RegistryValidationError(
             f"invalid semantic-map fragment {path.name!r}: {validation_error_detail(exc)}",
         ) from exc
+    return fragment
+
+
+def _require_fragment_filename(path: Path, fragment: SemanticMapFragment) -> None:
     filename_match = _FRAGMENT_FILENAME.fullmatch(path.stem)
     if filename_match is None or filename_match.group("fragment_id") != fragment.fragment_id:
         raise RegistryValidationError(
             f"semantic-map fragment filename {path.name!r} must be NNNN-<fragment_id>.toml",
         )
-    return fragment
 
 
 def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
     ordered = tuple(fragments)
     if not ordered:
         raise RegistryValidationError("semantic map requires at least one fragment")
+    _require_unique_fragment_ids(ordered)
+    identity = _common_fragment_identity(ordered)
+    records, entries, variable_envelopes = _merged_fragment_meaning(ordered)
+    if not records or not entries:
+        raise RegistryValidationError(
+            "compiled semantic map requires at least one record and one entry",
+        )
+    _require_no_collisions(records, entries)
+    return _build_semantic_map(identity, records, entries, variable_envelopes)
 
+
+def _require_unique_fragment_ids(ordered: tuple[SemanticMapFragment, ...]) -> None:
     duplicate_fragment_ids = _duplicates(fragment.fragment_id for fragment in ordered)
     if duplicate_fragment_ids:
         raise RegistryValidationError(
             f"semantic map contains duplicate fragment ids: {duplicate_fragment_ids!r}",
         )
 
+
+def _common_fragment_identity(
+    ordered: tuple[SemanticMapFragment, ...],
+) -> tuple[ModeloId, str, SourceRefId, str]:
     identity = (
         ordered[0].modelo,
         ordered[0].design_epoch,
@@ -625,20 +708,29 @@ def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
         raise RegistryValidationError(
             f"semantic-map fragments have conflicting modelo/design/source identities: {mismatched_fragments!r}",
         )
+    return identity
 
+
+def _merged_fragment_meaning(
+    ordered: tuple[SemanticMapFragment, ...],
+) -> tuple[tuple[SemanticMapRecord, ...], tuple[SemanticMapEntry, ...], tuple[VariableEnvelopeSemantic, ...]]:
     records = tuple(record for fragment in ordered for record in fragment.records)
     entries = tuple(entry for fragment in ordered for entry in fragment.entries)
     variable_envelopes = tuple(envelope for fragment in ordered for envelope in fragment.variable_envelopes)
-    if not records or not entries:
-        raise RegistryValidationError(
-            "compiled semantic map requires at least one record and one entry",
-        )
-    _require_no_collisions(records, entries)
+    return records, entries, variable_envelopes
+
+
+def _build_semantic_map(
+    identity: tuple[ModeloId, str, SourceRefId, str],
+    records: tuple[SemanticMapRecord, ...],
+    entries: tuple[SemanticMapEntry, ...],
+    variable_envelopes: tuple[VariableEnvelopeSemantic, ...],
+) -> SemanticMap:
     return SemanticMap(
-        modelo=ordered[0].modelo,
-        design_epoch=ordered[0].design_epoch,
-        source_ref=ordered[0].source_ref,
-        source_sha256=ordered[0].source_sha256,
+        modelo=identity[0],
+        design_epoch=identity[1],
+        source_ref=identity[2],
+        source_sha256=identity[3],
         records=tuple(
             sorted(
                 records,

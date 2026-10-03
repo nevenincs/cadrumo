@@ -18,8 +18,8 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter
+from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -102,7 +102,7 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
             raise RuntimeFrontendRefusedError("credential_rejected")
         return cast(RuntimeFrontendClient, candidate)
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", admit)
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, original))
     try:
         result = await adapter.call("authenticate", {"credential_reference": str(reference)})

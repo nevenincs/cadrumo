@@ -19,20 +19,6 @@ flows:
     select_unknown: 'Choose one of the accepted values: %{choices}.'
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
-  login:
-    cancel_button: Cancel
-    intro: Choose the profile to open and type the password that protects it. Nothing
-      is unlocked until the password is accepted.
-    password_hint: The password you chose when this profile was created. It cannot
-      be reset.
-    password_label: Password
-    profile_label: Profile
-    refusal:
-      password_required: Type the password for this profile.
-      unlock_failed: The profile could not be opened.
-    section: Profile and password
-    title: Log in to your profile
-    unlock_button: Log in
   manager:
     action:
       auth_clave_movil_route_app_request: Request in app

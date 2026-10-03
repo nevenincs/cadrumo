@@ -20,24 +20,19 @@ import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 from textual.pilot import Pilot
 
-from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ......application.modelo.edit_preflight import preflight_modelo_edit
 from ......application.modelo.verification_actions import verify_modelo_revision
 from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
-from ......domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.modelos.verification_report import VerificationReport
 from ......domain.user_profile.values import UserProfileFact
@@ -48,8 +43,8 @@ from .....tests.profile_persistence.verification_repository_support import (
     build_test_verification_repository_bundle,
 )
 from ....components.host import ScreenHostApp
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
-from ..installed import InstalledModeloWorkbench, LifecycleDoorFactory, WorkbenchRepositories
+from ....tests.modelo_workbench_session import application_workbench
+from ..installed import InstalledModeloWorkbench
 from ..progress import NextAction, WorkbenchProgress, next_action_text, workbench_progress
 from ..screen import ModeloWorkbenchScreen
 from .workbench_fixture import FakeActions
@@ -70,50 +65,9 @@ def _declaration(tmp_path: Path, *, attested: bool) -> Generator[tuple[SeededOpe
     with seeded_operator_work(
         tmp_path, modelo="190", filing_year=_YEAR, period_code="0A", extra_facts=(_EVERY_QUARTER,) if attested else ()
     ) as work:
-        unit = work.work_unit
-        installed = InstalledModeloWorkbench(
-            bucket_id=unit.bucket_id,
-            declaration=DeclarationsWorkspaceDeclarationRefV1(
-                work_unit_id=unit.work_unit_id,
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
-                state=unit.state,
-                has_current_calculation=False,
-                has_current_filing=False,
-            ),
-            operation=work.operation,
-            repositories=WorkbenchRepositories(
-                work_units=work.ports.work_unit_repository,
-                calculations=work.ports.calculation_repository,
-                verifications=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
-            ),
-            door=_door(work),
-        )
+        installed = application_workbench(work.work_unit, operation=work.operation)
         work.recalculate()
         yield work, installed
-
-
-def _door(work: SeededOperatorWork) -> LifecycleDoorFactory:
-    """The declaration's lifecycle door, for the edit admission the reader asks it for."""
-
-    def door(calculation_revision_id: str | None, verification_report_id: str | None) -> ModeloWorkspaceLifecycleDoor:
-        return ModeloWorkspaceLifecycleDoor(
-            services=cast(Any, object()),
-            work_unit_id=work.work_unit_id,
-            calculation_revision_id=calculation_revision_id,
-            verification_report_id=verification_report_id,
-            edit_admission=work.admit,
-            edit_renewal=work.renew,
-            edit_preflight=lambda submission: preflight_modelo_edit(
-                submission,
-                work_catalogue=work.ports.work_unit_repository.load(),
-                calculation_catalogue=work.ports.calculation_repository.load(),
-                tax_id_format=runtime_tax_id_format(authority=work.operation),
-            ),
-        )
-
-    return door
 
 
 def _check(work: SeededOperatorWork) -> VerificationReport:

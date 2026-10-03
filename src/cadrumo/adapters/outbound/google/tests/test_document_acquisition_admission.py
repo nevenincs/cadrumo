@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import pytest
 
+from .....application.ledger.evidence_sweep_ports import EvidenceSweepDocument
 from .....application.user_profile.access_contracts import AccessDenialCode
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....domain.attachments.enums import AttachmentSource
+from ...storage.errors import OutboundStorageValidationError
+from ..document_acquisition import DriveEvidenceAcquisition
 from ..document_link_resolver import list_drive_folder_documents, resolve_document_link
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -105,3 +110,19 @@ def test_each_list_page_renews_authority_and_second_refusal_never_executes() -> 
         list_drive_folder_documents(folder_id="synthetic-folder", service=service, before_request=admit)
     assert raised.value is refusal and admissions == 2
     assert [page.calls for page in service.resource.pages] == [1, 0]
+
+
+def test_invalid_listed_file_id_translates_before_admission_or_provider_io() -> None:
+    """A malformed provider ID remains a typed validation failure with no I/O."""
+    admissions: list[None] = []
+
+    def admit() -> None:
+        admissions.append(None)
+
+    acquisition = DriveEvidenceAcquisition(profile_id=UUID(int=1), before_read=admit)
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        acquisition.fetch_folder_document(EvidenceSweepDocument("A" * 10 + "!", "Invoice.pdf", "application/pdf"))
+
+    assert raised.value.context == {"field": "file_id"}
+    assert admissions == []

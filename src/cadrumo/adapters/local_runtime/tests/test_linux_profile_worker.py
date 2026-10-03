@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.auth.read_operation import AuthReadRequest
+from cadrumo.application.auth.auth_read_contracts import AuthReadRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,

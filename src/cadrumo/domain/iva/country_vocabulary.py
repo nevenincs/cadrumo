@@ -5,19 +5,14 @@ Private implementation for the canonical establishment resolvers.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TYPE_CHECKING
 
 from ...core.text_fold import fold_printed_phrase
+from ...core.type_guards import is_object_mapping
 from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
-
-
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow one runtime component to an object-keyed mapping before validation."""
-    return isinstance(value, Mapping)
 
 
 def normalise_printed_country_name(printed: str) -> str:
@@ -56,7 +51,7 @@ def country_codes_by_printed_name(
     from ..calculations.registry.runtime_catalogues import CountryVocabularyRecord
 
     loaded = operation.runtime_catalogue("countries")
-    if not _is_object_mapping(loaded):
+    if not is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority country component has an invalid shape")
     records = tuple(value for value in loaded.values() if isinstance(value, CountryVocabularyRecord))
     if len(records) != len(loaded):
@@ -113,7 +108,7 @@ def country_codes_by_alpha3(
     from ..calculations.registry.runtime_catalogues import CountryVocabularyRecord
 
     loaded = operation.runtime_catalogue("countries")
-    if not _is_object_mapping(loaded):
+    if not is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority country component has an invalid shape")
     records = tuple(value for value in loaded.values() if isinstance(value, CountryVocabularyRecord))
     if len(records) != len(loaded):

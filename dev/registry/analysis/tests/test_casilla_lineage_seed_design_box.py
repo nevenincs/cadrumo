@@ -11,7 +11,7 @@ printed for two unrelated campos.
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.analysis.casilla_lineage_seed import (
+from dev.registry.analysis.casilla_lineage_seed_design import (
     _DESIGN_BOX,
     DesignInventory,
     _defined_box,

@@ -285,7 +285,7 @@ def _install_runtime(
     refused: bool = False,
     expire_after_result: bool = False,
 ) -> tuple[list[dict[str, object]], _Controller, list[tuple[UUID, UUID]]]:
-    from cadrumo.entrypoints.tui.ledger import runtime_invoice_add as bridge
+    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
 
     status_checks: list[tuple[UUID, UUID]] = []
 

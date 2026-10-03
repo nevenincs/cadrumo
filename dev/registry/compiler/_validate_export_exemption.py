@@ -92,7 +92,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.export_exemption_reason import ExportExemptionReason
 from cadrumo.core.export_layout_format import ExportLayoutFormat
-from cadrumo.domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from cadrumo.domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
 from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings,
@@ -188,7 +188,7 @@ def _consumption_edges(revision: ModeloRevision, modelo_id: str) -> dict[Casilla
       not denote casillas in this revision at all.
     """
     formula_by_id = {formula.id: formula for formula in revision.formulas}
-    binding_by_id = {binding.id: binding for binding in revision.bindings}
+    binding_by_id = revision_bindings_by_id(revision)
     edges: dict[CasillaId, set[CasillaId]] = {}
     for casilla in revision.casillas:
         sources = _formula_consumption_sources(casilla, formulas=formula_by_id)

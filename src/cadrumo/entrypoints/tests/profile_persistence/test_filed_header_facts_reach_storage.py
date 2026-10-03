@@ -34,6 +34,7 @@ from cadrumo.application.live.filed_observation_persistence import filed_observa
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.live_state_composition import compose_filed_observation_persistence_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -81,12 +82,14 @@ def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) 
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        ports = compose_filed_observation_persistence_ports(
-            bucket_id=profile.bucket_id,
-            output_root=tmp_path,
-            objects=profile.repository,
-        )
-        persist_filed_calculation_observation(observation, ports=ports)
+        with bundled_indexed_authority().operation() as operation:
+            ports = compose_filed_observation_persistence_ports(
+                bucket_id=profile.bucket_id,
+                output_root=tmp_path,
+                objects=profile.repository,
+                operation=operation,
+            )
+            persist_filed_calculation_observation(observation, ports=ports)
 
         stored = CalculationObservationRepository(
             bucket_id=profile.bucket_id, objects=profile.repository

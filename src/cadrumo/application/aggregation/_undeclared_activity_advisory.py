@@ -49,6 +49,7 @@ from decimal import Decimal
 from typing import Final, NamedTuple
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
 from .renta_income_ledger import RentaIncomeLedgerAggregation
@@ -172,7 +173,7 @@ def undeclared_activity_income_advisory_observations(
 
 def _admitted_total(aggregation: RentaIncomeLedgerAggregation, casilla_id: CasillaId) -> Decimal:
     """Return what the narrowed casilla actually folded, zero when it folded nothing."""
-    return aggregation.casilla_aggregation.casilla_values.get(casilla_id, Decimal("0"))
+    return AbsentCasillaReading.SPARSE_FOLD_TOTAL.read(aggregation.casilla_aggregation.casilla_values, casilla_id)
 
 
 __all__ = [

@@ -49,7 +49,9 @@ def test_workbench_diagnostics_follow_explicit_profile_and_refuse_another_active
                 (payload[:-1] + bytes([payload[-1] ^ 0xFF]), row_id),
             )
 
-        primary_ports = build_state_projection_read_ports(diagnostics_ports=build_diagnostics_ports(bucket_id=_PRIMARY))
+        primary_ports = build_state_projection_read_ports(
+            diagnostics_ports=build_diagnostics_ports(bucket_id=_PRIMARY), operation=None
+        )
         assert primary_ports.workspace.read_workspace(bucket_id=_PRIMARY).unreadable_rows == 0
 
         secondary_diagnostics = build_diagnostics_ports(bucket_id=_SECONDARY)
@@ -57,6 +59,6 @@ def test_workbench_diagnostics_follow_explicit_profile_and_refuse_another_active
             secondary_diagnostics.secure_object_repository.list_namespaces()
 
         with runtime.switch_to_secondary():
-            secondary_ports = build_state_projection_read_ports(diagnostics_ports=secondary_diagnostics)
+            secondary_ports = build_state_projection_read_ports(diagnostics_ports=secondary_diagnostics, operation=None)
             assert secure_object_unreadable_total(ports=secondary_diagnostics) == 1
             assert secondary_ports.workspace.read_workspace(bucket_id=_SECONDARY).unreadable_rows == 1

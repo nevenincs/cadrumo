@@ -44,7 +44,6 @@ from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_
 from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -66,6 +65,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

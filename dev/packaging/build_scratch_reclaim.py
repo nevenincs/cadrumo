@@ -441,6 +441,44 @@ def _scratch_bytes(candidate: Path) -> int:
     return sum(entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file())
 
 
+def _report_unclaimed_scratch(
+    stream: TextIO,
+    var_root: Path,
+    judged: set[str],
+    measure: Callable[[Path], int] | None,
+    bloat_threshold: int,
+) -> list[tuple[Path, int]]:
+    unclaimed = sorted(
+        (
+            (candidate, measure(candidate) if measure else 0)
+            for candidate in scan_directory(var_root)
+            if candidate.name not in judged
+        ),
+        key=lambda item: -item[1],
+    )
+    for candidate, size in unclaimed:
+        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "     "
+        print(
+            f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}  -- no registered scratch family", file=stream
+        )
+    return unclaimed
+
+
+def _report_spared_scratch(
+    stream: TextIO,
+    spared: tuple[Path, ...],
+    measure: Callable[[Path], int] | None,
+    bloat_threshold: int,
+) -> None:
+    sized = sorted(
+        ((candidate, measure(candidate) if measure else 0) for candidate in spared),
+        key=lambda item: -item[1],
+    )
+    for candidate, size in sized:
+        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "SPARE"
+        print(f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+
+
 def report_var_scratch(
     stream: TextIO,
     var_root: Path,
@@ -493,27 +531,8 @@ def report_var_scratch(
     # entitled to remove". They are listed, never touched, and never counted
     # into the reclaimable total.
     judged = {candidate.name for candidate in (*reclaimable, *spared)} | ignore_names
-    unclaimed = sorted(
-        (
-            (candidate, measure(candidate) if measure else 0)
-            for candidate in scan_directory(var_root)
-            if candidate.name not in judged
-        ),
-        key=lambda item: -item[1],
-    )
-    for candidate, size in unclaimed:
-        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "     "
-        print(
-            f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}  -- no registered scratch family", file=stream
-        )
-
-    sized = sorted(
-        ((candidate, measure(candidate) if measure else 0) for candidate in spared),
-        key=lambda item: -item[1],
-    )
-    for candidate, size in sized:
-        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "SPARE"
-        print(f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+    unclaimed = _report_unclaimed_scratch(stream, var_root, judged, measure, bloat_threshold)
+    _report_spared_scratch(stream, spared, measure, bloat_threshold)
 
     unclaimed_bytes = sum(size for _candidate, size in unclaimed)
     if unclaimed:

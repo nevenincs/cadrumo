@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -98,10 +99,14 @@ def art52_reduccion_advisory_finding(
     ):
         return None
 
-    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
-    trabajador_con_contribucion_value = casilla_values.get(trabajador_con_contribucion_id, Decimal(0))
-    empresarial_value = casilla_values.get(empresarial_id, Decimal(0))
-    autonomos_empresarios_value = casilla_values.get(autonomos_empresarios_id, Decimal(0))
+    reduccion_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, reduccion_id)
+    trabajador_con_contribucion_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
+        casilla_values, trabajador_con_contribucion_id
+    )
+    empresarial_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, empresarial_id)
+    autonomos_empresarios_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
+        casilla_values, autonomos_empresarios_id
+    )
     effective_date = getattr(revision, "valid_to", None) or today_madrid()
     _registry_art52_declaration(
         revision,

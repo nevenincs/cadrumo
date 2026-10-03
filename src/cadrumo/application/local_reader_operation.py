@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.model_catalogue import ModelRole
@@ -48,11 +48,10 @@ from .operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationEventEmitter, OperationExecutorContext
 from .operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -341,13 +340,10 @@ class LocalReaderProvisionOutcome(BaseModel):
         return next((item.failed_condition_id for item in self.models if not item.succeeded), None)
 
 
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
-
-
 class LocalReaderFactV1(BaseModel):
     """One locale-neutral provisioning fact, as an immutable key/value pair."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1, max_length=128)
     value: str | int | bool
@@ -400,7 +396,7 @@ def _verdict_facts(verdict: PreconditionVerdict | None) -> tuple[LocalReaderFact
 class LocalReaderModelOutcomeV1(BaseModel):
     """Public projection of one model outcome."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     model: str | None = Field(default=None, min_length=1, max_length=256)
     roles: tuple[ModelRole, ...]
@@ -422,7 +418,7 @@ class LocalReaderModelOutcomeV1(BaseModel):
 class LocalReaderInstallOutcomeV1(BaseModel):
     """Public projection of the install request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     installed: bool
     already_installed: bool
@@ -434,7 +430,7 @@ class LocalReaderInstallOutcomeV1(BaseModel):
 class LocalReaderSetupStepOutcomeV1(BaseModel):
     """Public projection of one setup step."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     step: LocalReaderSetupStep
     state: LocalReaderSetupStepState
@@ -444,7 +440,7 @@ class LocalReaderSetupStepOutcomeV1(BaseModel):
 class LocalReaderProvisionPublicResultV1(BaseModel):
     """Public projection of a settled provisioning operation."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     action: LocalReaderProvisionAction
     succeeded: bool
@@ -996,9 +992,7 @@ def build_local_reader_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

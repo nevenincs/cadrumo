@@ -46,7 +46,15 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.fixed_width_codec import ExportEncoding
 from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+    require_period_independent_admission,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -56,11 +64,10 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -71,9 +78,6 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ._ports import FicheroBoeRecordRenderer
@@ -598,17 +602,11 @@ def project_m145_communication_result(result: BaseModel, receipt: OperationTermi
         if projected.result is None:
             raise ValueError("M145 success has no typed result")
         _require_projection_kind(projected.operation_id, projected.result)
-        if (
-            receipt.condition is not OperationTerminalCondition.SUCCEEDED
-            or receipt.result_ref is None
-            or receipt.refusal_ref is not None
-            or receipt.refusal_detail_ref is not None
-        ):
+        if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
             raise ValueError("M145 success has an incompatible terminal receipt")
     elif (
         projected.refusal is None
         or receipt.condition is not OperationTerminalCondition.REFUSED
-        or receipt.result_ref is not None
         or receipt.refusal_detail_ref is None
         or receipt.refusal_ref != projected.refusal.code
         or receipt.effect is not OperationEffect.NONE
@@ -1052,82 +1050,36 @@ def _resolve_access(
     if profile_id != context.profile_id or request.subject_ref != subject:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     admitted = context.admitted_request
-    if (
-        admitted is not None
-        and context.action
-        in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }
-        and (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != operation_id
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods
-            or not admitted.period_independent
-        )
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id="operation.observation",
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            ),
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=schema.schema_id,
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            ),
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=operation_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_period_independent_admission(admitted, profile_id=context.profile_id, definition_id=operation_id)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.TAX_VALUES}),
+        result_schema_id=None,
+    )
+    return bind_operation_access(
+        context,
+        profile_id=context.profile_id,
+        definition_id=operation_id,
+        actions=frozenset(
+            {
+                AccessAction.SUBMIT,
+                AccessAction.START,
+                AccessAction.RESUME,
+                AccessAction.OBSERVE,
+                AccessAction.RESULT,
+                AccessAction.CANCEL,
+                AccessAction.DETACH,
+                permission,
+            }
         ),
-        policy=OperationAccessPolicy(
-            definition_id=operation_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                    permission,
-                },
-            ),
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=True,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
     )
 
 

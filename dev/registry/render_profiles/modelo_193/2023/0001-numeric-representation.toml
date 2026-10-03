@@ -1,0 +1,1403 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[design_identity]
+modelo = "193"
+design_epoch = "2023"
+source_ref = "aeat-dr-193-2023"
+source_sha256 = "f0faf5a627e4601f6d7277ae13a969e11945fcabada9947fb4b98abf66d74cf1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 28
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-28-offset-1-enumeration"
+decision_statement = "The official source states the exact numeric constant '1' in this slot."
+justification = "Reviewed against aeat-dr-193-2023 source row 28, positions 1-1; source description: TIPO DE REGISTRO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 28
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["193"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 30
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-30-offset-2-enumeration"
+decision_statement = "The official source states the exact numeric constant '193' in this slot."
+justification = "Reviewed against aeat-dr-193-2023 source row 30, positions 2-4; source description: MODELO DECLARACIÓN."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 30
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 32
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-32-offset-5-year-yyyy"
+decision_statement = "Four positions carry the filing or accrual exercise."
+justification = "Reviewed against aeat-dr-193-2023 source row 32, positions 5-8; source description: EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 32
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-72-offset-59-digit-string"
+decision_statement = "The source describes a 9-position contact telephone, a digit string rather than an arithmetic quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 72, positions 59-67; source description: TELÉFONO : Campo numérico de 9"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 72
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 74
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-74-offset-68-mistyped-alphanumeric-text"
+decision_statement = "The parser gives this slot no numeric naturaleza and its source description identifies a person's name."
+justification = "Reviewed against aeat-dr-193-2023 source row 74, positions 68-107; source description: APELLIDOS Y NOMBRE: Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 74
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 86
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-86-offset-108-digit-string"
+decision_statement = "The source identifies this as an identifier whose digits are not an arithmetic quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 86, positions 108-120; source description: NÚMERO IDENTIFICATIVO DE LA DECLARACION."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 86
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 122
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-122-offset-123-digit-string"
+decision_statement = "The source identifies this as an identifier whose digits are not an arithmetic quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 122, positions 123-135; source description: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 122
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 132
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-132-offset-136-integer"
+decision_statement = "The source describes a count of declared records or recipients."
+justification = "Reviewed against aeat-dr-193-2023 source row 132, positions 136-144; source description: NÚMERO TOTAL DE PERCEPTORES."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 132
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 153
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-153-offset-145-amount-integer-part"
+decision_statement = "The parser description identifies this 13-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 153, positions 145-157; source description: Parte entera: del importe total de la"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 153
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-155-offset-158-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 155, positions 158-159; source description: Parte decimal del importe total de la"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 165
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-165-offset-160-amount-integer-part"
+decision_statement = "The parser description identifies this 13-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 165, positions 160-172; source description: Parte entera: del importe total de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 165
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 167
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-167-offset-173-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 167, positions 173-174; source description: Parte decimal del importe total de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 167
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 169
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-169-offset-175-decimal"
+decision_statement = "The mapped registry casilla is money with a two-decimal scale across this 15-position source amount."
+justification = "Reviewed against aeat-dr-193-2023 source row 169, positions 175-189; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 169
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 199
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-199-offset-220-amount-integer-part"
+decision_statement = "The parser description identifies this 13-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 199, positions 220-232; source description: Parte entera: del importe total de los"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 199
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 201
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-201-offset-233-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 201, positions 233-234; source description: Parte decimal del importe total de los"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 201
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 313
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-313-offset-1-enumeration"
+decision_statement = "The official source states the exact numeric constant '2' in this slot."
+justification = "Reviewed against aeat-dr-193-2023 source row 313, positions 1-1; source description: TIPO DE REGISTRO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 313
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["193"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 315
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-315-offset-2-enumeration"
+decision_statement = "The official source states the exact numeric constant '193' in this slot."
+justification = "Reviewed against aeat-dr-193-2023 source row 315, positions 2-4; source description: MODELO DECLARACIÓN."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 315
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 317
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-317-offset-5-year-yyyy"
+decision_statement = "Four positions carry the filing or accrual exercise."
+justification = "Reviewed against aeat-dr-193-2023 source row 317, positions 5-8; source description: EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 317
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 408
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-408-offset-77-digit-string"
+decision_statement = "The source labels a position-based code; leading zeroes are significant."
+justification = "Reviewed against aeat-dr-193-2023 source row 408, positions 77-78; source description: CÓDIGO PROVINCIA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 408
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 445
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-445-offset-79-digit-string"
+decision_statement = "The source labels a position-based code; leading zeroes are significant."
+justification = "Reviewed against aeat-dr-193-2023 source row 445, positions 79-79; source description: CLAVE CÓDIGO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 445
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 569
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-569-offset-93-digit-string"
+decision_statement = "The source labels a position-based code; leading zeroes are significant."
+justification = "Reviewed against aeat-dr-193-2023 source row 569, positions 93-94; source description: NATURALEZA"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 569
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4", "5"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 732
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-732-offset-95-enumeration"
+decision_statement = "The source explicitly enumerates the payment concept codes 1, 2, 3, 4, 5."
+justification = "Reviewed against aeat-dr-193-2023 source row 732, positions 95-95; source description: PAGO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 732
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 860
+ordinal = "18"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-860-offset-118-year-yyyy"
+decision_statement = "Four positions carry the filing or accrual exercise."
+justification = "Reviewed against aeat-dr-193-2023 source row 860, positions 118-121; source description: EJERCICIO DEVENGO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 860
+ordinal = "18"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 870
+ordinal = "19"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-870-offset-122-enumeration"
+decision_statement = "The source gives the closed type-of-perception values 1 and 2."
+justification = "Reviewed against aeat-dr-193-2023 source row 870, positions 122-122; source description: TIPO DE PERCEPCIÓN."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 870
+ordinal = "19"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 904
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-904-offset-123-amount-integer-part"
+decision_statement = "The parser description identifies this 11-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 904, positions 123-133; source description: Parte entera: del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 904
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 914
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-914-offset-134-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 914, positions 134-135; source description: Parte decimal del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 914
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 944
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-944-offset-139-amount-integer-part"
+decision_statement = "The parser description identifies this 11-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 944, positions 139-149; source description: Parte entera: del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 944
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 946
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-946-offset-150-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 946, positions 150-151; source description: Parte decimal del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 946
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 984
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-984-offset-152-amount-integer-part"
+decision_statement = "The parser description identifies this 11-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 984, positions 152-162; source description: Parte entera: del importe de la base"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 984
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 988
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-988-offset-163-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 988, positions 163-164; source description: Parte decimal del importe de la base"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 988
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1050
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1050-offset-165-amount-integer-part"
+decision_statement = "The parser description identifies this 2-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1050, positions 165-166; source description: ENTERO Numérico. Parte entera: Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1050
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1053
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1053-offset-167-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1053, positions 167-168; source description: DECIMAL Numérico. Parte decimal: Se"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1053
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1072
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1072-offset-169-amount-integer-part"
+decision_statement = "The parser description identifies this 11-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1072, positions 169-179; source description: Parte entera: de las retenciones e"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1072
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1074
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1074-offset-180-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1074, positions 180-181; source description: Parte decimal: de las retenciones e"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1074
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 9
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1083
+ordinal = "26"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1083-offset-182-decimal"
+decision_statement = "The mapped registry casilla is money with a two-decimal scale across this 11-position source amount."
+justification = "Reviewed against aeat-dr-193-2023 source row 1083, positions 182-192; source description: PENALIZACIONES"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1083
+ordinal = "26"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1195
+ordinal = "29"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1195-offset-209-date-yyyymmdd"
+decision_statement = "The exact source text specifies AAAAMMDD date order."
+justification = "Reviewed against aeat-dr-193-2023 source row 1195, positions 209-216; source description: FECHA DE INICIO DEL PRÉSTAMO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1195
+ordinal = "29"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1213
+ordinal = "30"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1213-offset-217-date-yyyymmdd"
+decision_statement = "The exact source text specifies AAAAMMDD date order."
+justification = "Reviewed against aeat-dr-193-2023 source row 1213, positions 217-224; source description: FECHA DE VENCIMIENTO DEL PRÉSTAMO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1213
+ordinal = "30"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1243
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1243-offset-225-amount-integer-part"
+decision_statement = "The parser description identifies this 10-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1243, positions 225-234; source description: Parte entera del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1243
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1245
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1245-offset-235-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1245, positions 235-236; source description: Parte decimal del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1245
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1258
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1258-offset-237-amount-integer-part"
+decision_statement = "The parser description identifies this 10-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1258, positions 237-246; source description: Parte entera del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1258
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1260-offset-247-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1260, positions 247-248; source description: Parte decimal del importe de las"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1260
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1264
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1264-offset-249-decimal"
+decision_statement = "The exact source subdivisions declare each 13-position foral amount as 11 integer and 2 decimal digits."
+justification = "Reviewed against aeat-dr-193-2023 source row 1264, positions 249-313; source description: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1264
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1464
+ordinal = "34"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1464-offset-314-enumeration"
+decision_statement = "The source explicitly assigns codes 1 and 2 to the geographic cases and 0 to every other case."
+justification = "Reviewed against aeat-dr-193-2023 source row 1464, positions 314-314; source description: CEUTA O MELILLA / ISLA DE LA PALMA"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1464
+ordinal = "34"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1520
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1520-offset-1-enumeration"
+decision_statement = "The official source states the exact numeric constant '2' in this slot."
+justification = "Reviewed against aeat-dr-193-2023 source row 1520, positions 1-1; source description: TIPO DE REGISTRO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1520
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["193"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1522
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1522-offset-2-enumeration"
+decision_statement = "The official source states the exact numeric constant '193' in this slot."
+justification = "Reviewed against aeat-dr-193-2023 source row 1522, positions 2-4; source description: MODELO DECLARACIÓN."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1522
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1524
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1524-offset-5-year-yyyy"
+decision_statement = "Four positions carry the filing or accrual exercise."
+justification = "Reviewed against aeat-dr-193-2023 source row 1524, positions 5-8; source description: EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1524
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1598
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1598-offset-195-amount-integer-part"
+decision_statement = "The parser description identifies this 11-position slot as the integer part of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1598, positions 195-205; source description: Parte entera: del importe de gastos."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1598
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1606
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-193-2023-row-1606-offset-206-amount-fractional-digits"
+decision_statement = "The parser description identifies this 2-position slot as the decimal digits of a split quantity."
+justification = "Reviewed against aeat-dr-193-2023 source row 1606, positions 206-207; source description: Parte decimal: del importe de"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1606
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"

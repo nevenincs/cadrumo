@@ -23,13 +23,14 @@ from ...calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from ...calculations.registry.facts.payloads import ScalarFactPayload
 from ...calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedGovernedFact,
     ResolvedMappingFact,
     ResolvedScalarFact,
 )
-from ...calculations.registry.facts.schema import FactOwnership, ScalarFactPayload
+from ...calculations.registry.facts.variants import FactOwnership
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.schema import SupportedFilingYearsCatalogue
 from ...calculations.registry.schema_base import DateAxis

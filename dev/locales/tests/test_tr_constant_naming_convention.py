@@ -25,7 +25,7 @@ import ast
 
 import pytest
 
-from .._ast_scanner import find_tr_constant_naming_violations, tr_constant_naming_violations_in_tree
+from .._ast_key_naming import find_tr_constant_naming_violations, tr_constant_naming_violations_in_tree
 from .._paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

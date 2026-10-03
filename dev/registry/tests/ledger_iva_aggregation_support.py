@@ -34,17 +34,17 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.iva_cash_accounting_vocabulary import (
+    require_iva_cash_accounting_treatment,
+)
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import (
     require_iva_deduction_evidence_authority,
     require_iva_deduction_fact_kind,
 )
 from cadrumo.domain.calculations.registry.iva_flow_catalogue import require_iva_flow_direction
+from cadrumo.domain.calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
-    require_iva_cash_accounting_treatment,
-    require_iva_exemption_article,
-)
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,

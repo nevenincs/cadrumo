@@ -19,7 +19,7 @@ from .....application.auth.session_acquire_operation_access import AuthSessionAc
 from .....core.auth_provider import AuthProviderKind
 from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...errors import CliRefusedBoundaryError
-from ...runtime_registered_operation import RegisteredOperationCompletion
+from ...registered_operation_contracts import RegisteredOperationCompletion
 from .. import runtime_auth_login as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -264,12 +264,22 @@ def test_a_well_formed_binding_earns_no_registration_diagnostics() -> None:
 
 def test_a_channel_the_provider_cannot_produce_is_reported() -> None:
     """A ledger aggregate does not emit text, and the diagnostic names the permitted set."""
-    binding = _binding(_LEDGER_IVA_PROVIDER, data_type="text", channel="text", op=BindingAggregationOp.COPY)
+    binding = _binding(_LEDGER_IVA_PROVIDER, data_type="text", channel="text", op=BindingAggregationOp.SUM)
 
     diagnostics = validate_binding_against_registration(binding)
 
     assert len(diagnostics) == 1
     assert "does not produce the 'text' value channel" in diagnostics[0]
+
+
+def test_a_ledger_aggregate_refuses_copy_because_its_resolver_only_sums() -> None:
+    """The ledger IVA resolver folds every matched row with a sum, so ``copy`` is not an operation it can run."""
+    binding = _binding(_LEDGER_IVA_PROVIDER, op=BindingAggregationOp.COPY)
+
+    diagnostics = validate_binding_against_registration(binding)
+
+    assert len(diagnostics) == 1
+    assert "does not support the 'copy' aggregation operation" in diagnostics[0]
 
 
 def test_an_aggregation_operation_the_provider_cannot_run_is_reported() -> None:

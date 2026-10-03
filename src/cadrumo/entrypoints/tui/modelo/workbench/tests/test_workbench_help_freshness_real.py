@@ -7,18 +7,15 @@ import threading
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 from textual.pilot import Pilot
 from textual.widgets import Static
 
-from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ......application.modelo.edit_models import (
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -30,10 +27,10 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
+from ....tests.modelo_workbench_session import application_workbench
 from ..casilla_list import CasillaListEntry
 from ..editor import CasillaEditorPanel
-from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
+from ..installed import InstalledModeloWorkbench
 from ..page_items import page_items
 from ..screen import ModeloWorkbenchScreen
 
@@ -43,44 +40,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.fixture
 def calculated(tmp_path: Path) -> Iterator[tuple[SeededOperatorWork, InstalledModeloWorkbench]]:
     with seeded_operator_work(tmp_path) as work:
-        unit = work.work_unit
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id, ports=work.ports, casilla_inputs={"06": Decimal("100")}, clock=SEEDED_AT
         )
 
-        def door(
-            calculation_revision_id: str | None, verification_report_id: str | None
-        ) -> ModeloWorkspaceLifecycleDoor:
-            return ModeloWorkspaceLifecycleDoor(
-                services=cast(Any, object()),
-                work_unit_id=unit.work_unit_id,
-                calculation_revision_id=calculation_revision_id,
-                verification_report_id=verification_report_id,
-                edit_admission=work.admit,
-                edit_renewal=work.renew,
-            )
-
         yield (
             work,
-            InstalledModeloWorkbench(
-                bucket_id=unit.bucket_id,
-                declaration=DeclarationsWorkspaceDeclarationRefV1(
-                    work_unit_id=unit.work_unit_id,
-                    modelo=unit.modelo,
-                    filing_year=unit.filing_year,
-                    period=unit.period,
-                    state=unit.state,
-                    has_current_calculation=True,
-                    has_current_filing=False,
-                ),
-                operation=work.operation,
-                repositories=WorkbenchRepositories(
-                    work_units=work.ports.work_unit_repository,
-                    calculations=work.ports.calculation_repository,
-                    verifications=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
-                ),
-                door=door,
-            ),
+            application_workbench(work.work_unit, operation=work.operation),
         )
 
 

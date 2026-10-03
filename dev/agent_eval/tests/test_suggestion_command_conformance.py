@@ -71,7 +71,9 @@ from dev._paths import REPO_ROOT
 from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from dev.agent_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
 from dev.agent_eval._runner import check_exit_code_scenario
-from dev.locales.manager import LocaleManager, LocaleNode, locale_catalogue_source
+from dev.locales.locale_nodes import LocaleNode
+from dev.locales.locale_yaml import locale_catalogue_source
+from dev.locales.manager import LocaleManager
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -26,7 +26,7 @@ from .._app_live_expedientes_payloads import ExpedientesCaptureResult
 from .._profile_authentication_gate import _uses_runtime_profile_client
 from ..command_specs import COMMAND_GRAPH
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

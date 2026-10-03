@@ -45,7 +45,7 @@ import shutil
 from pathlib import Path
 from typing import Final
 
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor
 
 __all__ = [
     "AUTHORING_AUTHORITY_DIRECTORY",
@@ -63,7 +63,7 @@ AUTHORITY_ROOT_ENV: Final[str] = "CADRUMO_AUTHORITY_ROOT"
 #: repository root. The build hook resolves the same location.
 AUTHORING_AUTHORITY_DIRECTORY: Final[str] = ".authority"
 
-_DESCRIPTOR_NAME: Final[str] = "authority.current.json"
+_DESCRIPTOR_NAME: Final[str] = AUTHORITY_DESCRIPTOR_FILENAME
 
 
 def authoring_authority_root(repo_root: Path) -> Path:

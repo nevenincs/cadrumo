@@ -10,7 +10,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
@@ -49,11 +49,10 @@ from ..operations.capabilities import (
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -165,7 +164,7 @@ CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[2]] = 2
 class CensalReviewedOperand(BaseModel):
     """Encrypted exact preimage approved or rejected by the operator."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[2] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
     observation: CensalObservation
@@ -337,37 +336,8 @@ def resolve_censal_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve only exact-profile censal work, with separate provider readiness."""
-    payload = request.payload
-    if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    baseline = payload.baseline
-    if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action in {AccessAction.REVIEW, AccessAction.RESPOND}:
-        projection = context.contract.review_projection_schema
-        if projection is None or context.contract.interaction_response_schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=projection.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-    elif context.action is AccessAction.RESULT:
-        projection = context.contract.result_schema
-        if projection is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=projection.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
+    _validated_censal_operation_access_request(request, context)
+    disclosure = _censal_operation_disclosure(context)
     return ResolvedOperationAccess(
         request=OperationAccessRequest(
             profile_id=context.profile_id,
@@ -404,6 +374,46 @@ def resolve_censal_operation_access(
             transaction_authority_required=False,
         ),
     )
+
+
+def _validated_censal_operation_access_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> CensalOperationRequest:
+    payload = request.payload
+    if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    baseline = payload.baseline
+    if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _censal_operation_disclosure(context: OperationAccessContext) -> DisclosurePermission | None:
+    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
+        return DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+            category=DisclosureCategory.OPERATION_METADATA,
+        )
+    elif context.action in {AccessAction.REVIEW, AccessAction.RESPOND}:
+        projection = context.contract.review_projection_schema
+        if projection is None or context.contract.interaction_response_schema is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        return DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=projection.schema_id,
+            category=DisclosureCategory.PROFILE_VALUES,
+        )
+    elif context.action is AccessAction.RESULT:
+        projection = context.contract.result_schema
+        if projection is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        return DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=projection.schema_id,
+            category=DisclosureCategory.PROFILE_VALUES,
+        )
+    return None
 
 
 def build_censal_operation_registration(
@@ -587,18 +597,7 @@ class CensalOperationExecutor:
         proposal_digest = checkpoint.reviewed_proposal_digest
         operand = await context.operands.resolve(proposal_digest, CensalReviewedOperand)
         if checkpoint.response_action == "reject":
-            await context.events.phase(CENSAL_PHASE_REJECT)
-            await context.events.effect(
-                OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE
-            )
-            await context.events.phase(CENSAL_PHASE_SETTLEMENT)
-            return await context.operands.put(
-                CensalOperationResult(
-                    outcome=CensalOperationOutcome.REJECTED,
-                    reviewed_proposal_digest=proposal_digest,
-                ),
-                written_at=now(),
-            )
+            return await self._settle_rejected_review(proposal_digest, operand, context)
         await context.events.phase(CENSAL_PHASE_APPLY)
         if await _acknowledge_if_cancelled(context):
             return None
@@ -607,6 +606,31 @@ class CensalOperationExecutor:
             profile_decode_context=context.authority_operation.profile_decode_context(),
         )
         await self._before_irreversible_section()
+        return await self._apply_consumed_review(proposal_digest, operand, context)
+
+    async def _settle_rejected_review(
+        self,
+        proposal_digest: str,
+        operand: CensalReviewedOperand,
+        context: OperationExecutorContext,
+    ) -> str:
+        await context.events.phase(CENSAL_PHASE_REJECT)
+        await context.events.effect(OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE)
+        await context.events.phase(CENSAL_PHASE_SETTLEMENT)
+        return await context.operands.put(
+            CensalOperationResult(
+                outcome=CensalOperationOutcome.REJECTED,
+                reviewed_proposal_digest=proposal_digest,
+            ),
+            written_at=now(),
+        )
+
+    async def _apply_consumed_review(
+        self,
+        proposal_digest: str,
+        operand: CensalReviewedOperand,
+        context: OperationExecutorContext,
+    ) -> str | None:
         entered_irreversible_section = False
         stale_conflict: ProfileRecordConflictError | None = None
         try:

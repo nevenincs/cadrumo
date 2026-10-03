@@ -6,7 +6,8 @@ import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
-from typing import Never
+from types import SimpleNamespace
+from typing import Never, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -20,12 +21,15 @@ from ....core.operations import (
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.iva.classification import InvoiceKind
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
+from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_add_operation as add_operation
 from ..catalogue_add_operation import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
@@ -127,6 +131,7 @@ def test_request_json_roundtrip_keeps_decimal_meaning_and_refuses_incomplete_lin
     ),
 )
 def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str, object], monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
 
@@ -150,6 +155,39 @@ def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str,
     assert context.operands.value.result.outcome == "validation_error"
     assert context.operands.value.result.validation_code == "invalid_invoice"
     assert len(ports.invoice_repository.load()) == 0
+
+
+def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    request = OperationRequest[InvoiceAddRequest](
+        definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=_request(),
+    )
+    events = _Events()
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            identity=OperationIdentity(
+                operation_id="a" * 64,
+                definition_id=request.definition_id,
+                subject_ref=request.subject_ref,
+            ),
+            events=events,
+        ),
+    )
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(uuid4()))
+    factory_calls: list[str] = []
+
+    def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
+        factory_calls.append(bucket_id)
+        pytest.fail("foreign active profile reached invoice creation ports")
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(InvoiceAddExecutor(unused_factory).execute(request, context))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert events.phases == events.effects == []
+    assert factory_calls == []
 
 
 def test_registration_requires_profile_scoped_commit_and_secure_request_storage() -> None:
@@ -288,6 +326,7 @@ class _Context:
 
 
 def test_executor_uses_canonical_builder_and_writer_with_commit_fenced_publication(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
     events = _Events()
@@ -338,6 +377,7 @@ def test_executor_uses_canonical_builder_and_writer_with_commit_fenced_publicati
 
 
 def test_duplicate_is_a_typed_refusal_with_secure_detail_and_no_second_write(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
 
@@ -398,6 +438,7 @@ def test_duplicate_is_a_typed_refusal_with_secure_detail_and_no_second_write(mon
 
 
 def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
 

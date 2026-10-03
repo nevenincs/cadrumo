@@ -11,13 +11,11 @@ import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 from textual.widgets import OptionList, Static
 
 from ......adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
@@ -26,11 +24,9 @@ from ......application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ......application.modelo.value_presentation import format_casilla_value
 from ......application.modelo.verification_actions import verify_modelo_revision
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock
-from ......application.operations.composition import OperationComposedServices
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -51,11 +47,12 @@ from .....tests.profile_persistence.verification_repository_support import (
 )
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
+from ....tests.modelo_workbench_session import application_workbench
 from ..casilla_list import CasillaList, CasillaListEntry
 from ..grid import CasillaListRecords
-from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
-from ..issues import WorkbenchIssuesScreen, issue_lines
+from ..installed import InstalledModeloWorkbench
+from ..issue_projection import issue_lines
+from ..issues import WorkbenchIssuesScreen
 from ..page_items import page_of, workbench_pages
 from ..screen import ModeloWorkbenchScreen
 from ..wording import does_not_apply_text
@@ -91,37 +88,9 @@ def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
 
 
 def _installed(work: SeededOperatorWork) -> InstalledModeloWorkbench:
-    unit = work.work_unit
-
-    def door(calculation_revision_id: str | None, verification_report_id: str | None) -> ModeloWorkspaceLifecycleDoor:
-        # Read-only acceptance never submits an operation. The production door
-        # and installed reader still perform their normal admission/load paths.
-        return ModeloWorkspaceLifecycleDoor(
-            services=cast(OperationComposedServices, object()),
-            work_unit_id=unit.work_unit_id,
-            calculation_revision_id=calculation_revision_id,
-            verification_report_id=verification_report_id,
-        )
-
-    return InstalledModeloWorkbench(
-        bucket_id=unit.bucket_id,
-        declaration=DeclarationsWorkspaceDeclarationRefV1(
-            work_unit_id=unit.work_unit_id,
-            modelo=unit.modelo,
-            filing_year=unit.filing_year,
-            period=unit.period,
-            state=unit.state,
-            has_current_calculation=True,
-            has_current_filing=False,
-        ),
-        operation=work.operation,
-        repositories=WorkbenchRepositories(
-            work_units=work.ports.work_unit_repository,
-            calculations=work.ports.calculation_repository,
-            verifications=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
-        ),
-        door=door,
-    )
+    # Read-only acceptance never submits an operation; the production source and
+    # door still perform their normal admission and load paths.
+    return application_workbench(work.work_unit, operation=work.operation)
 
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))

@@ -257,6 +257,7 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
                                 {
                                     "work_unit_id": unit.work_unit_id,
                                     "actor": "native-operator",
+                                    "caller_context": "explicit",
                                     "inputs": {
                                         "binding_overrides": [
                                             {"key": key, "value": "0"}

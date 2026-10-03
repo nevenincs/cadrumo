@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Final
@@ -10,10 +11,17 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
+from ....core.hex import Hex64Str
+from ....core.identity.hex_ids import CalculationRevisionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from ....core.period import Period
-from .election import WORKFORCE_CONDITIONED_METHODS, AmortizationMethod
+from .election import (
+    WORKFORCE_CONDITIONED_METHODS,
+    AmortizationMethod,
+    require_euro_cents,
+    require_free_depreciation_facts,
+)
 from .errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
 from .lifecycle import ActivityAssetRevision, AssetKind
 from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
@@ -47,19 +55,19 @@ class AmortizationClaim(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    asset_revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    asset_revision_id: Hex64Str
     asset_kind: AssetKind
     tax_year: FilingYear
     covered_from: date
     covered_until: date
     amount: Decimal
-    schedule_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    schedule_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     creating_operation: str = Field(min_length=1, max_length=256)
-    supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    calculation_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    filing_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    supersedes_claim_id: Hex64Str | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
+    filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
     free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
     free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
@@ -69,16 +77,14 @@ class AmortizationClaim(BaseModel):
     @field_validator("amount")
     @classmethod
     def _require_cents_amount(cls, value: Decimal) -> Decimal:
-        if not value.is_finite() or value < Decimal("0") or value != round_to_cents(value):
-            raise ValueError("claim amount must be a non-negative Decimal rounded to euro cents")
-        return value
+        return require_euro_cents(value, allow_zero=True, label="claim amount")
 
     @field_validator("free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
     @classmethod
     def _require_optional_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)):
-            raise ValueError("free-depreciation claim amounts must be positive Decimal amounts rounded to euro cents")
-        return value
+        if value is None:
+            return value
+        return require_euro_cents(value, allow_zero=False, label="free-depreciation claim amount")
 
     @model_validator(mode="after")
     def _validate_interval(self) -> AmortizationClaim:
@@ -86,24 +92,16 @@ class AmortizationClaim(BaseModel):
             raise ValueError("claim covered interval must be half-open and non-empty")
         if not (date(self.tax_year, 1, 1) <= self.covered_from < self.covered_until <= date(self.tax_year + 1, 1, 1)):
             raise ValueError("claim covered interval must stay inside tax_year")
-        if self.method is AmortizationMethod.LOW_VALUE_FREE:
-            if (
-                self.free_depreciation_election_reference is None
-                or self.free_depreciation_new_material_evidence_reference is None
-                or self.free_depreciation_unit_acquisition_value is None
-                or self.free_depreciation_annual_cap is None
-            ):
-                raise ValueError("free-depreciation claim requires election and annual-cap provenance")
-        elif any(
-            value is not None
-            for value in (
+        require_free_depreciation_facts(
+            self.method,
+            (
                 self.free_depreciation_election_reference,
                 self.free_depreciation_new_material_evidence_reference,
                 self.free_depreciation_unit_acquisition_value,
                 self.free_depreciation_annual_cap,
-            )
-        ):
-            raise ValueError("only a low-value claim carries free-depreciation election facts")
+            ),
+            subject="claim",
+        )
         return self
 
     @property
@@ -165,9 +163,7 @@ class ClaimProjection(BaseModel):
     @field_validator("amount")
     @classmethod
     def _require_cents_amount(cls, value: Decimal) -> Decimal:
-        if not value.is_finite() or value < Decimal("0") or value != round_to_cents(value):
-            raise ValueError("projection amount must be a non-negative Decimal rounded to euro cents")
-        return value
+        return require_euro_cents(value, allow_zero=True, label="projection amount")
 
 
 def record_claim(
@@ -175,52 +171,69 @@ def record_claim(
     candidate: AmortizationClaim,
 ) -> ClaimRecordResult:
     """Apply exact-retry, overlap-conflict, and explicit-supersession rules."""
-    for existing in existing_claims:
-        if existing.claim_id == candidate.claim_id:
-            return ClaimRecordResult(
-                claims=existing_claims,
-                claim=existing,
-                reused_existing_claim=True,
-            )
-    matching_superseded: AmortizationClaim | None = None
-    if candidate.supersedes_claim_id is not None:
-        matching_superseded = next(
-            (claim for claim in existing_claims if claim.claim_id == candidate.supersedes_claim_id),
-            None,
+    reused = _matching_claim_id(existing_claims, candidate.claim_id)
+    if reused is not None:
+        return ClaimRecordResult(claims=existing_claims, claim=reused, reused_existing_claim=True)
+    matching_superseded = _superseded_claim(existing_claims, candidate)
+    _validate_claim_interval(existing_claims, candidate, matching_superseded)
+    _require_free_depreciation_cap(existing_claims, candidate)
+    return ClaimRecordResult(claims=(*existing_claims, candidate), claim=candidate, reused_existing_claim=False)
+
+
+def _matching_claim_id(claims: tuple[AmortizationClaim, ...], claim_id: str) -> AmortizationClaim | None:
+    for claim in claims:
+        if claim.claim_id == claim_id:
+            return claim
+    return None
+
+
+def _superseded_claim(
+    existing_claims: tuple[AmortizationClaim, ...],
+    candidate: AmortizationClaim,
+) -> AmortizationClaim | None:
+    if candidate.supersedes_claim_id is None:
+        return None
+    matching = _matching_claim_id(existing_claims, candidate.supersedes_claim_id)
+    if matching is None:
+        raise ActividadAssetClaimConflictError("superseded claim is absent from history")
+    _validate_supersession_identity(matching, candidate)
+    return matching
+
+
+def _validate_supersession_identity(
+    superseded: AmortizationClaim,
+    candidate: AmortizationClaim,
+) -> None:
+    if (
+        superseded.asset_id != candidate.asset_id
+        or superseded.covered_from != candidate.covered_from
+        or superseded.covered_until != candidate.covered_until
+    ):
+        raise ActividadAssetClaimConflictError(
+            "superseding claim must preserve asset identity and covered interval",
         )
-        if matching_superseded is None:
-            raise ActividadAssetClaimConflictError("superseded claim is absent from history")
-        if (
-            matching_superseded.asset_id != candidate.asset_id
-            or matching_superseded.covered_from != candidate.covered_from
-            or matching_superseded.covered_until != candidate.covered_until
-        ):
-            raise ActividadAssetClaimConflictError(
-                "superseding claim must preserve asset identity and covered interval",
-            )
+
+
+def _validate_claim_interval(
+    existing_claims: tuple[AmortizationClaim, ...],
+    candidate: AmortizationClaim,
+    matching_superseded: AmortizationClaim | None,
+) -> None:
     for existing in effective_claims(existing_claims):
         if existing.asset_id != candidate.asset_id:
             continue
-        exact_interval = (
-            existing.covered_from == candidate.covered_from and existing.covered_until == candidate.covered_until
-        )
-        if exact_interval:
+        if _has_same_interval(existing, candidate):
             if matching_superseded is existing:
                 continue
             raise ActividadAssetClaimConflictError("same asset and covered interval already has a different claim")
         if _intervals_overlap(
-            existing.covered_from,
-            existing.covered_until,
-            candidate.covered_from,
-            candidate.covered_until,
+            existing.covered_from, existing.covered_until, candidate.covered_from, candidate.covered_until
         ):
             raise ActividadAssetClaimConflictError("activity-asset claims cannot cover overlapping intervals")
-    _require_free_depreciation_cap(existing_claims, candidate)
-    return ClaimRecordResult(
-        claims=(*existing_claims, candidate),
-        claim=candidate,
-        reused_existing_claim=False,
-    )
+
+
+def _has_same_interval(left: AmortizationClaim, right: AmortizationClaim) -> bool:
+    return left.covered_from == right.covered_from and left.covered_until == right.covered_until
 
 
 def effective_claims(claims: tuple[AmortizationClaim, ...]) -> tuple[AmortizationClaim, ...]:
@@ -289,38 +302,89 @@ def asset_schedule_history(
     resolved, which is how a superseding claim is judged without its target.
     """
     elections = {revision.revision_id: revision.amortization.fingerprint for revision in revisions}
-    effective = tuple(
-        claim
-        for claim in effective_claims(claims)
-        if claim.asset_id == asset_id and claim.claim_id != excluding_claim_id
+    effective = _asset_schedule_claims(
+        claims,
+        asset_id=asset_id,
+        excluding_claim_id=excluding_claim_id,
     )
-    if any(claim.tax_year > tax_year for claim in effective):
-        raise ActividadAssetValidationError("a later tax year already has recorded claims for this asset")
-    before = tuple(claim for claim in effective if claim.tax_year < tax_year)
-    within = tuple(claim for claim in effective if claim.tax_year == tax_year)
-    missing = {claim.asset_revision_id for claim in effective} - elections.keys()
-    if missing:
-        raise ActividadAssetValidationError("an effective claim references a revision absent from history")
+    _validate_asset_schedule_history(effective, elections, tax_year=tax_year)
+    before, within = _split_claims_by_tax_year(effective, tax_year=tax_year)
     return AssetScheduleHistory(
-        accumulated_before_tax_year=sum((claim.amount for claim in before), Decimal("0")),
-        accumulated_in_tax_year=sum((claim.amount for claim in within), Decimal("0")),
-        taxpayer_low_value_claimed_in_tax_year=sum(
-            (
-                claim.amount
-                for claim in effective_free_depreciation_claims(claims, tax_year=tax_year)
-                if claim.claim_id != excluding_claim_id
-            ),
-            Decimal("0"),
+        accumulated_before_tax_year=_amount_sum(before),
+        accumulated_in_tax_year=_amount_sum(within),
+        taxpayer_low_value_claimed_in_tax_year=_taxpayer_low_value_claim_amount(
+            claims,
+            tax_year=tax_year,
+            excluding_claim_id=excluding_claim_id,
         ),
-        election_fingerprints_before_tax_year=tuple(
-            sorted({elections[claim.asset_revision_id] for claim in before}),
-        ),
-        election_fingerprints_in_tax_year=tuple(sorted({elections[claim.asset_revision_id] for claim in within})),
+        election_fingerprints_before_tax_year=_election_fingerprints(before, elections),
+        election_fingerprints_in_tax_year=_election_fingerprints(within, elections),
         same_incentive_investment_of_other_assets=_same_incentive_investment_of_other_assets(
             revisions,
             asset_id=asset_id,
         ),
     )
+
+
+def _asset_schedule_claims(
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    asset_id: str,
+    excluding_claim_id: str | None,
+) -> tuple[AmortizationClaim, ...]:
+    return tuple(
+        claim
+        for claim in effective_claims(claims)
+        if claim.asset_id == asset_id and claim.claim_id != excluding_claim_id
+    )
+
+
+def _validate_asset_schedule_history(
+    effective: tuple[AmortizationClaim, ...],
+    elections: Mapping[str, str],
+    *,
+    tax_year: int,
+) -> None:
+    if any(claim.tax_year > tax_year for claim in effective):
+        raise ActividadAssetValidationError("a later tax year already has recorded claims for this asset")
+    missing = {claim.asset_revision_id for claim in effective} - elections.keys()
+    if missing:
+        raise ActividadAssetValidationError("an effective claim references a revision absent from history")
+
+
+def _split_claims_by_tax_year(
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    tax_year: int,
+) -> tuple[tuple[AmortizationClaim, ...], tuple[AmortizationClaim, ...]]:
+    before = tuple(claim for claim in claims if claim.tax_year < tax_year)
+    within = tuple(claim for claim in claims if claim.tax_year == tax_year)
+    return before, within
+
+
+def _amount_sum(claims: tuple[AmortizationClaim, ...]) -> Decimal:
+    return sum((claim.amount for claim in claims), Decimal("0"))
+
+
+def _taxpayer_low_value_claim_amount(
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    tax_year: int,
+    excluding_claim_id: str | None,
+) -> Decimal:
+    included = (
+        claim
+        for claim in effective_free_depreciation_claims(claims, tax_year=tax_year)
+        if claim.claim_id != excluding_claim_id
+    )
+    return sum((claim.amount for claim in included), Decimal("0"))
+
+
+def _election_fingerprints(
+    claims: tuple[AmortizationClaim, ...],
+    elections: Mapping[str, str],
+) -> tuple[str, ...]:
+    return tuple(sorted({elections[claim.asset_revision_id] for claim in claims}))
 
 
 def _same_incentive_investment_of_other_assets(

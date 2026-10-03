@@ -97,6 +97,22 @@ class CohortIdentityPayload(BaseModel):
     artifacts: tuple[ArtifactRecord, ...]
 
 
+def _validate_artifact_inventory(artifacts: tuple[ArtifactRecord, ...]) -> None:
+    names = tuple(record.name for record in artifacts)
+    paths = tuple(record.path for record in artifacts)
+    if names != tuple(sorted(names)) or len(names) != len(set(names)):
+        raise ValueError("artifact records must have unique names in canonical order")
+    if len(paths) != len(set(paths)):
+        raise ValueError("artifact records must have unique paths")
+    expected = frozenset(REQUIRED_ARTIFACT_KINDS)
+    if frozenset(names) != expected:
+        raise ValueError(f"release cohort is incomplete: expected {sorted(expected)!r}, got {sorted(names)!r}")
+    for record in artifacts:
+        expected_kind = REQUIRED_ARTIFACT_KINDS[record.name]
+        if record.kind is not expected_kind:
+            raise ValueError(f"artifact {record.name!r} must use kind {expected_kind.value!r}")
+
+
 class CohortManifest(BaseModel):
     """Persisted authority for one complete release-candidate cohort."""
 
@@ -112,23 +128,7 @@ class CohortManifest(BaseModel):
 
     @model_validator(mode="after")
     def _complete_and_canonical(self) -> Self:
-        names = tuple(record.name for record in self.artifacts)
-        paths = tuple(record.path for record in self.artifacts)
-        if names != tuple(sorted(names)) or len(names) != len(set(names)):
-            raise ValueError("artifact records must have unique names in canonical order")
-        if len(paths) != len(set(paths)):
-            raise ValueError("artifact records must have unique paths")
-        expected = frozenset(REQUIRED_ARTIFACT_KINDS)
-        if frozenset(names) != expected:
-            raise ValueError(
-                f"release cohort is incomplete: expected {sorted(expected)!r}, got {sorted(names)!r}",
-            )
-        for record in self.artifacts:
-            expected_kind = REQUIRED_ARTIFACT_KINDS[record.name]
-            if record.kind is not expected_kind:
-                raise ValueError(
-                    f"artifact {record.name!r} must use kind {expected_kind.value!r}",
-                )
+        _validate_artifact_inventory(self.artifacts)
         expected_id = cohort_identifier(
             version=self.version,
             source=self.source,

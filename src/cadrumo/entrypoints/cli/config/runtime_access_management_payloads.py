@@ -105,18 +105,7 @@ class ConfigProfileAutomationChangeResult(OutputSchema):
             EnrollmentKind.CHANGE_SCOPE,
         } or not _same_request(self.profile_id, self.submitted, self.terminal):
             raise ValueError("automation change has inconsistent request identity")
-        if self.terminal.stage is EnrollmentStage.DECLINED:
-            if self.credential_reference is not None:
-                raise ValueError("declined automation change cannot yield a credential")
-        elif self.kind is EnrollmentKind.ROTATE:
-            if self.terminal.key_id is None or self.credential_reference != self.terminal.credential_reference:
-                raise ValueError("rotation lacks its verified candidate")
-        elif (
-            self.terminal.key_id is not None
-            or self.terminal.credential_reference is not None
-            or (self.credential_reference is not None)
-        ):
-            raise ValueError("nonrotating change cannot yield a new credential")
+        _require_automation_change_terminal(self.kind, self.terminal, self.credential_reference)
         return self
 
 
@@ -183,3 +172,17 @@ __all__ = [
     "ConfigProfileSessionsResult",
     "RuntimeSessionPayload",
 ]
+
+
+def _require_automation_change_terminal(
+    kind: EnrollmentKind, terminal: AutomationReceiptProjection, credential_reference: UUID | None
+) -> None:
+    """Require declined, rotated, and nonrotating credential states after request correlation."""
+    if terminal.stage is EnrollmentStage.DECLINED:
+        if credential_reference is not None:
+            raise ValueError("declined automation change cannot yield a credential")
+    elif kind is EnrollmentKind.ROTATE:
+        if terminal.key_id is None or credential_reference != terminal.credential_reference:
+            raise ValueError("rotation lacks its verified candidate")
+    elif terminal.key_id is not None or terminal.credential_reference is not None or (credential_reference is not None):
+        raise ValueError("nonrotating change cannot yield a new credential")

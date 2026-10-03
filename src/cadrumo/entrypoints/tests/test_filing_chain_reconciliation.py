@@ -175,6 +175,7 @@ def _reconcile(profile: _Profile, operation: PinnedAuthorityOperation, entry: Ae
 
 def _seed_local_filing(
     profile: _Profile,
+    operation: PinnedAuthorityOperation,
     work_unit: WorkUnit,
     values: Mapping[CasillaId, Decimal],
     *,
@@ -195,6 +196,7 @@ def _seed_local_filing(
         now=at,
         work_unit_repository=profile.work_units,
         calculation_repository=profile.revisions,
+        operation=operation,
         justificante_repository=profile.ports.justificante_repository,
     )
     profile.revisions.save(draft.revisions)
@@ -353,7 +355,7 @@ def test_undeclared_kind_after_confirmed_entry_is_unverifiable(
 
 def test_matching_casillas_confirm_the_pending_entry(profile: _Profile, operation: PinnedAuthorityOperation) -> None:
     work_unit = _work_unit(profile, operation)
-    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500"), _C02: Decimal("300")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500"), _C02: Decimal("300")}, at=_T1)
 
     result = _reconcile(
         profile,
@@ -387,7 +389,7 @@ def test_a_register_entry_older_than_the_pending_entry_never_supersedes_it_in_th
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation)
-    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T3)
+    pending = _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T3)
 
     result = _reconcile(profile, operation, _entry("EXP-1", values={_C01: Decimal("1700")}), at=_T1)
 
@@ -405,6 +407,7 @@ def test_different_casillas_contradict_the_pending_correction(
     baseline = profile.filings.load().records[confirmed.filing_record_id]
     pending = _seed_local_filing(
         profile,
+        operation,
         work_unit,
         {_C01: Decimal("1600")},
         at=_T2,
@@ -453,7 +456,7 @@ def test_entry_without_content_leaves_the_pending_entry_unstamped(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation)
-    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T1)
     catalogue_before = profile.filings.load()
 
     result = _reconcile(profile, operation, _entry("EXP-1"), at=_T2)
@@ -473,7 +476,7 @@ def test_receipt_without_a_declared_total_map_is_unverifiable(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation)
-    _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T1)
+    _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T1)
     receipt = _justificante("M130RECEIPT0001", modelo="130", total_a_ingresar=Decimal("1500"))
 
     result = _reconcile(
@@ -494,7 +497,7 @@ def test_matching_receipt_total_confirms_with_weaker_evidence(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
     receipt = _justificante("M111RECEIPT0001", modelo="111", total_a_ingresar=Decimal("40.00"))
 
     result = _reconcile(
@@ -522,7 +525,7 @@ def test_disagreeing_receipt_total_without_casillas_is_unverifiable(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
     receipt = _justificante("M111RECEIPT0002", modelo="111", total_a_ingresar=Decimal("41.00"))
 
     result = _reconcile(

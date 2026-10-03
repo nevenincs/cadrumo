@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, authority_generation, profile_create_args
 
 from .cli_journey import (
@@ -40,6 +41,27 @@ _RATE_OBSERVATIONS: Final = (
     ("iva.repercutido.reducido", _REDUCED_IVA),
     ("iva.soportado.interiores", _PURCHASE_IVA),
 )
+
+
+def _require_issued_invoice_readback(
+    issued: Mapping[str, object], issued_transaction_ids: tuple[str, str]
+) -> tuple[tuple[str, str], tuple[str, str]]:
+    """Require issued invoice readback."""
+    raw_lines = issued.get("lines")
+    if not isinstance(raw_lines, list) or len(raw_lines) != 2:
+        raise IvaCliJourneyError("fresh-process issued invoice readback lost its two canonical lines")
+    lines = cast(list[object], raw_lines)
+    rates = tuple(
+        str(line.get("iva_rate"))
+        for line in lines
+        if isinstance(line, Mapping) and isinstance(line.get("iva_rate"), str)
+    )
+    if rates != ("RATE_21", "RATE_10"):
+        raise IvaCliJourneyError("fresh-process issued invoice readback lost its canonical rate order")
+    links_raw = issued.get("linked_transaction_ids")
+    if not isinstance(links_raw, list) or set(links_raw) != set(issued_transaction_ids):
+        raise IvaCliJourneyError("fresh-process issued invoice readback lost its two public transaction links")
+    return cast(tuple[str, str], rates), cast(tuple[str, str], tuple(links_raw))
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,7 +299,7 @@ def run_iva_multirate_cli_journey(
             f"status={verification_status}; findings={verification.get('finding_count')}"
         )
 
-    descriptor = authority_root.resolve(strict=True) / "authority.current.json"
+    descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
     return IvaMultirateCliJourneyReceipt(
         schema_version="iva-01-installed-cli-multirate-journey-v2",
         acceptance_ids=(f"IVA-CLI-MULTIRATE-{year}-1T",),
@@ -601,21 +623,7 @@ def _assert_reopened_persistence(
             result_keys=("invoice_id",),
         )
     )
-    raw_lines = issued.get("lines")
-    if not isinstance(raw_lines, list) or len(raw_lines) != 2:
-        raise IvaCliJourneyError("fresh-process issued invoice readback lost its two canonical lines")
-    lines = cast(list[object], raw_lines)
-    rates = tuple(
-        str(line.get("iva_rate"))
-        for line in lines
-        if isinstance(line, Mapping) and isinstance(line.get("iva_rate"), str)
-    )
-    if rates != ("RATE_21", "RATE_10"):
-        raise IvaCliJourneyError("fresh-process issued invoice readback lost its canonical rate order")
-    links_raw = issued.get("linked_transaction_ids")
-    if not isinstance(links_raw, list) or set(links_raw) != set(issued_transaction_ids):
-        raise IvaCliJourneyError("fresh-process issued invoice readback lost its two public transaction links")
-    return cast(tuple[str, str], rates), cast(tuple[str, str], tuple(links_raw))
+    return _require_issued_invoice_readback(issued, issued_transaction_ids)
 
 
 def _decimal_field(calculated: Mapping[str, object], casilla_id: str) -> Decimal:
@@ -627,6 +635,35 @@ def _decimal_field(calculated: Mapping[str, object], casilla_id: str) -> Decimal
         return Decimal(str(value)).quantize(Decimal("0.01"))
     except (InvalidOperation, TypeError, ValueError) as exc:
         raise IvaCliJourneyError(f"Modelo 303 calculate returned no decimal {casilla_id}") from exc
+
+
+def _require_rate_observation(
+    observations: Mapping[object, object], casilla_id: str, expected: Decimal
+) -> RateObservation:
+    """Require exact rate value and both legal and source grounding before retaining evidence."""
+    raw = observations.get(casilla_id)
+    if not isinstance(raw, Mapping):
+        raise IvaCliJourneyError(f"Modelo 303 calculate omitted rate-specific observation {casilla_id}")
+    try:
+        observed = Decimal(str(raw.get("value"))).quantize(Decimal("0.01"))
+    except (InvalidOperation, TypeError, ValueError) as exc:
+        raise IvaCliJourneyError(f"rate-specific observation {casilla_id} is not decimal") from exc
+    if observed != expected:
+        raise IvaCliJourneyError(
+            f"rate-specific observation mismatch for {casilla_id}: expected {expected:.2f}, got {observed:.2f}"
+        )
+    legal_refs = raw.get("legal_refs")
+    source_refs = raw.get("source_refs")
+    if not isinstance(legal_refs, list) or not legal_refs:
+        raise IvaCliJourneyError(f"rate-specific observation {casilla_id} has no legal grounding")
+    if not isinstance(source_refs, list) or not source_refs:
+        raise IvaCliJourneyError(f"rate-specific observation {casilla_id} has no source grounding")
+    return RateObservation(
+        casilla_id=casilla_id,
+        value=f"{observed:.2f}",
+        legal_ref_count=len(legal_refs),
+        source_ref_count=len(source_refs),
+    )
 
 
 def _rate_observations(*, calculated: Mapping[str, object]) -> tuple[RateObservation, RateObservation, RateObservation]:
@@ -641,31 +678,7 @@ def _rate_observations(*, calculated: Mapping[str, object]) -> tuple[RateObserva
     }
     resolved: list[RateObservation] = []
     for casilla_id, expected in _RATE_OBSERVATIONS:
-        raw = observations.get(casilla_id)
-        if not isinstance(raw, Mapping):
-            raise IvaCliJourneyError(f"Modelo 303 calculate omitted rate-specific observation {casilla_id}")
-        try:
-            observed = Decimal(str(raw.get("value"))).quantize(Decimal("0.01"))
-        except (InvalidOperation, TypeError, ValueError) as exc:
-            raise IvaCliJourneyError(f"rate-specific observation {casilla_id} is not decimal") from exc
-        if observed != expected:
-            raise IvaCliJourneyError(
-                f"rate-specific observation mismatch for {casilla_id}: expected {expected:.2f}, got {observed:.2f}"
-            )
-        legal_refs = raw.get("legal_refs")
-        source_refs = raw.get("source_refs")
-        if not isinstance(legal_refs, list) or not legal_refs:
-            raise IvaCliJourneyError(f"rate-specific observation {casilla_id} has no legal grounding")
-        if not isinstance(source_refs, list) or not source_refs:
-            raise IvaCliJourneyError(f"rate-specific observation {casilla_id} has no source grounding")
-        resolved.append(
-            RateObservation(
-                casilla_id=casilla_id,
-                value=f"{observed:.2f}",
-                legal_ref_count=len(legal_refs),
-                source_ref_count=len(source_refs),
-            )
-        )
+        resolved.append(_require_rate_observation(observations, casilla_id, expected))
     return cast(tuple[RateObservation, RateObservation, RateObservation], tuple(resolved))
 
 

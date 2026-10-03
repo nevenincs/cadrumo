@@ -29,7 +29,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..manager import _MODELO_SCHEMA_PREFIX, LocaleNode, _collect_required_leaves
+from ..locale_nodes import _MODELO_SCHEMA_PREFIX, LocaleNode
+from ..locale_tree import _collect_required_leaves
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

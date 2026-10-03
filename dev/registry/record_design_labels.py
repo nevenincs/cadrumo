@@ -25,13 +25,13 @@ stated it.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core.hashing import sha256_file
 from cadrumo.core.toml import load_toml
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
@@ -217,7 +217,7 @@ def _sidecar_for(source_id: str, source: Mapping[str, object]) -> Path:
     binary = DATA_ROOT / corpus_path
     if not binary.is_file():
         raise RecordDesignUnavailableError(f"source {source_id!r}: {corpus_path} is not present in this repository")
-    actual = hashlib.sha256(binary.read_bytes()).hexdigest()
+    actual = sha256_file(binary)
     if actual != declared_hash:
         raise RecordDesignUnavailableError(
             f"source {source_id!r}: {corpus_path} hashes {actual}, but the registry declares {declared_hash}; "

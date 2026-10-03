@@ -30,7 +30,7 @@ from ...core.aggregation import (
     ThirdPartyDeclarationRole,
 )
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.hashing import sha256_hex
+from ...core.hashing import prefixed_digest
 from ...core.identity.bucket import BucketId
 from ...core.modelo import Modelo
 from ...core.period import Period
@@ -1068,7 +1068,7 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
         source_ref=f"{source_kind}:{observation.invoice_id}",
         parent_source_ref=None,
         terminal_origin=TerminalOriginClass.INVOICE_CATALOGUE,
-        fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
+        fingerprint=prefixed_digest(payload.encode("utf-8")),
     )
 
 

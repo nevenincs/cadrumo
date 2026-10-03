@@ -40,10 +40,11 @@ def test_only_canonical_secret_free_drive_url_exposes_the_file_id() -> None:
         f"http://drive.google.com/file/d/{_FILE_ID}",
         f"https://drive.google.com.evil.test/file/d/{_FILE_ID}",
         f"https://user@drive.google.com/file/d/{_FILE_ID}",
+        f"https://drive.google.com:443/file/d/{_FILE_ID}",
         f"https://drive.google.com/file/d/{_FILE_ID}?access_token=secret",
         f"https://drive.google.com/file/d/{_FILE_ID}#access_token=secret",
         f"https://drive.google.com/file/d/{_FILE_ID}/view",
-        "https://drive.google.com/file/d/not-a-drive-reference",
+        "https://drive.google.com/file/d/not-a-drive!reference",
     ),
 )
 def test_hostile_or_noncanonical_locator_is_never_reflected(reference: str) -> None:

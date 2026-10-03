@@ -19,24 +19,25 @@ from cadrumo.application.modelo.mcp_query_operation import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
 )
+from cadrumo.application.modelo.operation_definitions import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.query_read_operation import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveRequest,
     ModeloRequiresProjection,
 )
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
-    OperationResultProjectionRequestV1,
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -51,7 +52,6 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.period import Period
-from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
@@ -61,7 +61,8 @@ from cadrumo.entrypoints.tests.modelo_query_operation_test_support import (
     ModeloQueryConformanceCase,
     prepare_modelo_query_conformance_case,
 )
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [
@@ -274,7 +275,10 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                     assert released.projection.authority_generation == _structured(published)["logical_generation"]
                     assert set(document["projection"]) == set(type(released.projection).model_fields)
                     public_output = canonical_json_bytes(
-                        [reply.model_dump(mode="json") for reply in (authenticated, described, submitted, observed, result)]
+                        [
+                            reply.model_dump(mode="json")
+                            for reply in (authenticated, described, submitted, observed, result)
+                        ]
                     )
                     if enrolled._credential.get_secret_value() in public_output:
                         pytest.fail("local API credential reached a general MCP response", pytrace=False)
@@ -288,7 +292,8 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                         if refusal_document is None:
                             assert refused_result.is_error is True
                             assert _structured(refused_result) == {
-                                "outcome": "refused", "code": "stale_operation_revision"
+                                "outcome": "refused",
+                                "code": "stale_operation_revision",
                             }
                         else:
                             refusal = OperationResultProjectionRefusalV1.model_validate_json(

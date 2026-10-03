@@ -19,6 +19,7 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
@@ -98,7 +99,7 @@ def _registry(operation: PinnedAuthorityOperation) -> OperationRegistry:
 
 @pytest.fixture
 def subject(monkeypatch: pytest.MonkeyPatch, authority_operation: PinnedAuthorityOperation) -> Subject:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(PROFILE_ID))
     monkeypatch.setattr(module, "now", lambda: CAPTURED_AT)
     return Subject(authority_operation)
 

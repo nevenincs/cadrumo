@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -72,7 +73,7 @@ def dt12_antiquity_advisory_finding(
     if reduccion_id is None:
         return None
 
-    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
+    reduccion_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, reduccion_id)
     if reduccion_value <= Decimal(0):
         return None
 

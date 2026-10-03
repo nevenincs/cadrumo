@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from typing import Final
 
-from .command_spec import (
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    ArgumentSpec,
     DeferredTarget,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,

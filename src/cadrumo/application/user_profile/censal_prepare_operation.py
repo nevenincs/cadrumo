@@ -10,49 +10,31 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .access_contracts import (
     AccessAction,
     AccessDenialCode,
     Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     OperationAccessPolicy,
     OperationAccessRequest,
 )
 from .access_errors import ProfileAccessRefusedError
+from .censal_access import profile_censal_access_disclosure, require_admitted_profile_censal_request
 from .censal_operation import CensalOperationRequest, build_censal_operation_request
 from .censo_sync import CENSAL_ADOPTABLE_PATHS
 from .profile_record_repository import ProfileRecordRepository
@@ -177,16 +159,9 @@ class CensalPrepareOperationExecutor:
     ) -> str:
         """Prepare the canonical review request without provider access or writes."""
         payload = request.payload
-        profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(CENSAL_PREPARE_PHASE_READ)
         projection = await asyncio.to_thread(
@@ -207,52 +182,9 @@ def resolve_censal_prepare_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve a period-independent, exact-profile read with no provider."""
-    payload = request.payload
-    if request.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID or not isinstance(
-        payload, CensalPrepareOperationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-    admitted = context.admitted_request
-    if (
-        admitted is not None
-        and context.action
-        in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }
-        and (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != request.definition_id
-            or admitted.action is not AccessAction.SUBMIT
-            or not admitted.period_independent
-            or admitted.periods
-        )
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
+    _validated_censal_prepare_request(request, context)
+    require_admitted_profile_censal_request(request, context)
+    disclosure = profile_censal_access_disclosure(context)
 
     return ResolvedOperationAccess(
         request=OperationAccessRequest(
@@ -290,6 +222,21 @@ def resolve_censal_prepare_operation_access(
     )
 
 
+def _validated_censal_prepare_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> CensalPrepareOperationRequest:
+    payload = request.payload
+    if request.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID or not isinstance(
+        payload, CensalPrepareOperationRequest
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
+        str(payload.profile_id)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
 def build_censal_prepare_operation_definition() -> OperationDefinition:
     """Declare the recorded, credential-free, nonmutating preparation read."""
     return OperationDefinition(
@@ -303,19 +250,7 @@ def build_censal_prepare_operation_definition() -> OperationDefinition:
         ),
         phase_codes=(CENSAL_PREPARE_PHASE_READ,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset(
             {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
@@ -327,18 +262,9 @@ def build_censal_prepare_operation_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the credential-free request and exact-profile result schemas."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=CensalPrepareOperationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=CensalPrepareOperationProjection,
-        ),
+        public_result_type=CensalPrepareOperationProjection,
         access_resolver=resolve_censal_prepare_operation_access,
     )
 

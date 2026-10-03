@@ -49,7 +49,9 @@ from .credentials import (
     active_auth_projection_span,
 )
 from .models import (
+    AuthCleanupIntent,
     AuthCleanupOperationKind,
+    AuthState,
 )
 from .operator_cleanup import (
     apply_auth_cleanup_intent,
@@ -694,21 +696,11 @@ async def login_operator_auth(
             )
         _provider_listing(provider_kind.value)
 
-        from ...core.access_gate.errors import AeatLiveReadNotEnabledError
-        from ...core.access_gate.gate import AeatAccessGate
-
-        gate = AeatAccessGate(resolved_settings)
-        # During pytest, the live-test opt-in remains the first refusal so
-        # test execution cannot accidentally reach external services.
-        # Outside pytest, auth login is an operational read surface and
-        # proceeds to provider readiness/session checks.
-        try:
-            gate.require_live_read(guarded_read_context=guarded_read_context)
-        except AeatLiveReadNotEnabledError as exc:
-            raise AuthLoginNotEnabledError(
-                translated_message="application.auth.operator.login.refused_live_tests_disabled",
-                context={"provider": provider_kind.value},
-            ) from exc
+        _require_live_auth_login(
+            provider_kind,
+            resolved_settings,
+            guarded_read_context=guarded_read_context,
+        )
 
         certificate_credentials = snapshot.certificate_credentials
 
@@ -784,6 +776,25 @@ async def login_operator_auth(
             reset_lock_state=result.reset_lock.state.value if result.reset_lock is not None else "",
             verification_status=getattr(result.assertion, "status", "") or "",
         )
+
+
+def _require_live_auth_login(
+    provider_kind: AuthProviderKind,
+    settings: Settings,
+    *,
+    guarded_read_context: str | None,
+) -> None:
+    """Keep the pytest live-read refusal ahead of every provider readiness check."""
+    from ...core.access_gate.errors import AeatLiveReadNotEnabledError
+    from ...core.access_gate.gate import AeatAccessGate
+
+    try:
+        AeatAccessGate(settings).require_live_read(guarded_read_context=guarded_read_context)
+    except AeatLiveReadNotEnabledError as exc:
+        raise AuthLoginNotEnabledError(
+            translated_message="application.auth.operator.login.refused_live_tests_disabled",
+            context={"provider": provider_kind.value},
+        ) from exc
 
 
 def _verified_session_update(
@@ -963,12 +974,7 @@ def logout_operator_auth(
                     return state, ()
                 if current_intent.operation_id != operation_id:
                     raise InternalInvariantError("auth cleanup intent changed during a serialized logout")
-                clears_current = (
-                    state.auth.provider in intent.provider_ids
-                    and state.auth.provider == intent.provider_at_start
-                    and state.auth.configured_at == intent.configured_at_at_start
-                    and state.auth.authenticated_at == intent.authenticated_at_at_start
-                )
+                clears_current = _logout_state_matches_intent(state.auth, intent)
                 cleared_auth = state.auth.model_copy(
                     update={
                         **({"authenticated_at": None, "subject": None} if clears_current else {}),
@@ -976,32 +982,20 @@ def logout_operator_auth(
                     },
                 )
                 clears_session_state = clears_current and intent.had_session_state
-                event_provider_ids = tuple(
-                    dict.fromkeys(
-                        (
-                            *((state.auth.provider,) if clears_session_state and state.auth.provider else ()),
-                            *intent.session_provider_ids,
-                        ),
-                    ),
+                event_provider_ids = _logout_event_provider_ids(
+                    state.auth.provider,
+                    clears_session_state=clears_session_state,
+                    intent=intent,
                 )
                 updated = _append_bucket_events(
                     state.model_copy(update={"auth": cleared_auth}),
                     tuple(("auth.session.cleared", provider_id) for provider_id in event_provider_ids),
                 )
-                from ...domain.buckets.event import BucketEventType
 
-                durable_events = tuple(
-                    _BucketEventSpec(
-                        BucketEventType.AUTH_SESSION_CLEARED,
-                        provider_id,
-                        {
-                            "provider_id": provider_id,
-                            "operation": "logout",
-                            "operation_id": operation_id,
-                        },
-                        operation_started_at,
-                    )
-                    for provider_id in event_provider_ids
+                durable_events = _logout_durable_events(
+                    event_provider_ids,
+                    operation_id=operation_id,
+                    occurred_at=operation_started_at,
                 )
                 if not durable_events:
                     return updated, ()
@@ -1022,6 +1016,53 @@ def logout_operator_auth(
         providers=intent.provider_ids,
         removed_sessions=len(intent.session_provider_ids),
         cleared_session_state=cleared_session_state,
+    )
+
+
+def _logout_state_matches_intent(auth: AuthState, intent: AuthCleanupIntent) -> bool:
+    """Whether cleanup may clear the currently configured and verified provider."""
+    return (
+        auth.provider in intent.provider_ids
+        and auth.provider == intent.provider_at_start
+        and auth.configured_at == intent.configured_at_at_start
+        and auth.authenticated_at == intent.authenticated_at_at_start
+    )
+
+
+def _logout_event_provider_ids(
+    current_provider: str | None,
+    *,
+    clears_session_state: bool,
+    intent: AuthCleanupIntent,
+) -> tuple[str, ...]:
+    """Order the current session first, then preserve the recorded provider order."""
+    return tuple(
+        dict.fromkeys(
+            (
+                *((current_provider,) if clears_session_state and current_provider else ()),
+                *intent.session_provider_ids,
+            ),
+        ),
+    )
+
+
+def _logout_durable_events(
+    provider_ids: tuple[str, ...],
+    *,
+    operation_id: str,
+    occurred_at: datetime,
+) -> tuple[_BucketEventSpec, ...]:
+    """Build the append-only logout evidence for each session removed."""
+    from ...domain.buckets.event import BucketEventType
+
+    return tuple(
+        _BucketEventSpec(
+            BucketEventType.AUTH_SESSION_CLEARED,
+            provider_id,
+            {"provider_id": provider_id, "operation": "logout", "operation_id": operation_id},
+            occurred_at,
+        )
+        for provider_id in provider_ids
     )
 
 

@@ -17,16 +17,13 @@ from ...application.modelo.wizard_context_operation import (
     ModeloWorkWizardContextProjection,
     ModeloWorkWizardContextRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import WorkUnitId
-from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...core.operations import OperationEffect
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_modelo_work_wizard_context(
@@ -53,12 +50,7 @@ def read_modelo_work_wizard_context(
         or projection.output_language is not output_language
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -98,10 +90,5 @@ def run_modelo_work_wizard_attempt(
         or invalid_effect
         or invalid_revision
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed

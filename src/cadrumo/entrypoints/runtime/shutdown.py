@@ -47,7 +47,7 @@ class RuntimeShutdownWatchdog:
         return self
 
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, _traceback: TracebackType | None
     ) -> None:
         """Disarm after serving has settled or terminated the installed process."""
         self._finished.set()

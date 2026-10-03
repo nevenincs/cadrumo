@@ -11,11 +11,11 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, JsonValue, RootModel, TypeAdapter, ValidationError
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.frontend_contracts import (
     OperationCancellationResultV1,
     OperationDetachResultV1,
-    OperationObservationResultV1,
     OperationResponseControlResultV1,
     OperationResponseMutationResultV1,
     OperationReviewProjectionResultV1,
@@ -27,7 +27,10 @@ from ....application.operations.frontend_projection import (
 from ....application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
+    OperationObservationRefusalV1,
     OperationObservationRequestV1,
+    OperationObservationResultV1,
+    OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
     OperationResponseRejectRequestV1,
@@ -42,6 +45,7 @@ from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.replay import OperationReplayLimit
 from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import remaining_budget
 from ....application.runtime.operation_access import (
     OperationManagementRequest,
     RuntimeOperationAcknowledged,
@@ -65,6 +69,80 @@ _CANCELLATION = TypeAdapter[OperationCancellationResultV1](OperationCancellation
 _DETACH = TypeAdapter[OperationDetachResultV1](OperationDetachResultV1)
 _RESPONSE_CONTROL = TypeAdapter[OperationResponseControlResultV1](OperationResponseControlResultV1)
 _RESPONSE_MUTATION = TypeAdapter[OperationResponseMutationResultV1](OperationResponseMutationResultV1)
+
+
+def _settled_result_expected[ResultT: BaseModel](
+    projection: OperationPublicProjectionV1,
+    result_type: type[ResultT],
+    result_version: int,
+) -> OperationSchemaIdentityV1:
+    return OperationSchemaIdentityV1.from_model(
+        schema_id=projection.definition_id + ".result",
+        schema_version=result_version,
+        model_type=result_type,
+    )
+
+
+def _settled_result_is_readable(
+    controller: RuntimeOperationController,
+    projection: OperationPublicProjectionV1,
+    expected: OperationSchemaIdentityV1,
+    *,
+    allow_refusal_detail: bool,
+) -> bool:
+    contract = projection.definition_contract
+    eligible_terminal = (
+        projection.terminal_condition is OperationTerminalCondition.SUCCEEDED and projection.result_ref is not None
+    ) or (
+        allow_refusal_detail
+        and projection.terminal_condition is OperationTerminalCondition.REFUSED
+        and projection.refusal_ref in contract.refusal_detail_codes
+    )
+    return not (
+        controller.client.session_id != controller.session_id
+        or projection.operation_id != controller.operation_id
+        or contract.definition_id != projection.definition_id
+        or contract.result_schema != expected
+        or projection.lifecycle is not OperationLifecycle.TERMINAL
+        or not eligible_terminal
+    )
+
+
+def _parse_settled_result[ResultT: BaseModel](
+    document: dict[str, JsonValue], result_type: type[ResultT]
+) -> OperationResultProjectionSuccessV1[ResultT]:
+    try:
+        encoded = canonical_json_bytes(document)
+        if document.get("outcome") == "refused":
+            refusal = OperationResultProjectionRefusalV1.model_validate_json(encoded)
+            raise RuntimeFrontendRefusedError(refusal.code.value)
+        # CAST-RATIONALE-TUI-SETTLED-RESULT-GENERIC: Pydantic's runtime
+        # specialization binds the success envelope's projection field to
+        # this exact result_type; __class_getitem__ has an overly broad
+        # typing stub, so restore that generic result for static checking.
+        success_type = cast(
+            "type[OperationResultProjectionSuccessV1[ResultT]]",
+            OperationResultProjectionSuccessV1.__class_getitem__(result_type),
+        )
+        result = success_type.model_validate_json(encoded)
+    except ValidationError:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+    return result
+
+
+def _settled_result_matches_binding[ResultT: BaseModel](
+    result: OperationResultProjectionSuccessV1[ResultT],
+    expected: OperationSchemaIdentityV1,
+    contract_digest: str,
+    *,
+    current_session_id: UUID,
+    session_id: UUID,
+) -> bool:
+    return (
+        result.result_schema == expected
+        and result.definition_contract_digest == contract_digest
+        and current_session_id == session_id
+    )
 
 
 class RuntimeReviewDocument(RootModel[dict[str, JsonValue]]):
@@ -176,27 +254,8 @@ class RuntimeOperationController:
     ) -> ResultT:
         """Read one exact registered terminal result through current disclosure."""
         contract = projection.definition_contract
-        schema = contract.result_schema
-        expected = OperationSchemaIdentityV1.from_model(
-            schema_id=projection.definition_id + ".result",
-            schema_version=result_version,
-            model_type=result_type,
-        )
-        eligible_terminal = (
-            projection.terminal_condition is OperationTerminalCondition.SUCCEEDED and projection.result_ref is not None
-        ) or (
-            allow_refusal_detail
-            and projection.terminal_condition is OperationTerminalCondition.REFUSED
-            and projection.refusal_ref in contract.refusal_detail_codes
-        )
-        if (
-            self.client.session_id != self.session_id
-            or projection.operation_id != self.operation_id
-            or contract.definition_id != projection.definition_id
-            or schema != expected
-            or projection.lifecycle is not OperationLifecycle.TERMINAL
-            or not eligible_terminal
-        ):
+        expected = _settled_result_expected(projection, result_type, result_version)
+        if not _settled_result_is_readable(self, projection, expected, allow_refusal_detail=allow_refusal_detail):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         request = OperationResultProjectionRequestV1(
             operation_id=self.operation_id,
@@ -212,28 +271,58 @@ class RuntimeOperationController:
             ),
             task_name="tui-runtime-result",
         )
-        try:
-            encoded = canonical_json_bytes(document)
-            if document.get("outcome") == "refused":
-                refusal = OperationResultProjectionRefusalV1.model_validate_json(encoded)
-                raise RuntimeFrontendRefusedError(refusal.code.value)
-            # CAST-RATIONALE-TUI-SETTLED-RESULT-GENERIC: Pydantic's runtime
-            # specialization binds the success envelope's projection field to
-            # this exact result_type; __class_getitem__ has an overly broad
-            # typing stub, so restore that generic result for static checking.
-            success_type = cast(
-                "type[OperationResultProjectionSuccessV1[ResultT]]",
-                OperationResultProjectionSuccessV1.__class_getitem__(result_type),
-            )
-            result = success_type.model_validate_json(encoded)
-        except ValidationError:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+        result = _parse_settled_result(document, result_type)
+        if not _settled_result_matches_binding(
+            result,
+            expected,
+            contract.definition_contract_digest,
+            current_session_id=self.client.session_id,
+            session_id=self.session_id,
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        return result.projection
+
+    async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
+        """Read a refused or failed operation's recorded public detail, or ``None`` when it has none.
+
+        The detail is presentation. An operation that recorded none, a session
+        that may no longer read it, or a malformed document leaves the caller
+        with the registered code the projection already carries.
+        """
         if (
-            result.result_schema != expected
+            self.client.session_id != self.session_id
+            or projection.operation_id != self.operation_id
+            or projection.lifecycle is not OperationLifecycle.TERMINAL
+            or projection.terminal_condition
+            not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
+        ):
+            return None
+        contract = projection.definition_contract
+        schema = operation_error_detail_schema()
+        request = OperationResultProjectionRequestV1(
+            operation_id=self.operation_id,
+            terminal_revision=projection.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=schema,
+        )
+        try:
+            document = await await_cancellation_complete(
+                asyncio.to_thread(self.client.read_result_document, request, deadline=self._call_deadline()),
+                task_name="tui-runtime-error-detail",
+            )
+            if document.get("outcome") == "refused":
+                return None
+            result = OperationResultProjectionSuccessV1[OperationErrorDetailV1].model_validate_json(
+                canonical_json_bytes(document)
+            )
+        except (RuntimeRefusalError, RuntimeFrontendRefusedError, ValidationError):
+            return None
+        if (
+            result.result_schema != schema
             or result.definition_contract_digest != contract.definition_contract_digest
             or self.client.session_id != self.session_id
         ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            return None
         return result.projection
 
     async def start(self) -> OperationId:
@@ -351,6 +440,41 @@ class RuntimeOperationController:
             OperationDetachRequestV1(operation_id=self.operation_id, expected_revision=expected_revision)
         )
         return _decode(_DETACH, document)
+
+
+async def await_terminal_projection(
+    controller: RuntimeOperationController,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    request_schema: OperationSchemaIdentityV1,
+    deadline: float,
+    poll_seconds: float = 0.05,
+) -> OperationPublicProjectionV1:
+    """Poll one started operation's current projection until it is terminal.
+
+    Each poll reads only the latest projection, never the event history. A
+    projection naming another operation, definition, subject or request schema
+    is an invalid frame; the deadline bounds both observation and waiting.
+    """
+    while True:
+        remaining_budget(deadline)
+        observed = await controller.observe(0, page_limit=1)
+        if isinstance(observed, OperationObservationRefusalV1):
+            raise RuntimeFrontendRefusedError(observed.code.value)
+        if not isinstance(observed, OperationObservationSuccessV1):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        state = observed.projection
+        if (
+            state.operation_id != controller.operation_id
+            or state.definition_id != definition_id
+            or state.subject_ref != subject_ref
+            or state.definition_contract.request_schema != request_schema
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if state.lifecycle is OperationLifecycle.TERMINAL:
+            return state
+        await asyncio.sleep(min(poll_seconds, remaining_budget(deadline)))
 
 
 def _decode[T](adapter: TypeAdapter[T], document: dict[str, JsonValue]) -> T:

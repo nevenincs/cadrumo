@@ -25543,18 +25543,6 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
-selector = {revision = "2024", id = "modelo-200-profile-sal-capital-social"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["base imponible"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "bindings"
-selector = {revision = "2024", id = "modelo-200-profile-sal-reserva-especial-dotada"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["base imponible"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "bindings"
 selector = {revision = "2024", id = "modelo-200-profile-tributacion-estado-porcentaje"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Casilla [00625] Administración del Estado"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}

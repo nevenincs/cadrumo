@@ -44,7 +44,7 @@ from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.access_policy import operation_scope_refusal
+from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation

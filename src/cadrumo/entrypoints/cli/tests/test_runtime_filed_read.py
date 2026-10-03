@@ -32,7 +32,7 @@ from .. import _app_live as handler
 from .. import runtime_filed_read as bridge
 from .._app_live_filed_payloads import FiledDiscoverResult, FiledListResult
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -163,8 +163,11 @@ def _discover_read() -> bridge.FiledDiscoverRead:
     return bridge.read_filed_discover_for_cli(cast(typer.Context, cast(object, None)))
 
 
-def test_list_submits_exact_profile_scope_and_restores_listing_rows(monkeypatch: pytest.MonkeyPatch) -> None:
-    submitted, bound_profiles = _bind_list(monkeypatch, _list_projection())
+@pytest.mark.parametrize("effect", [OperationEffect.NONE, OperationEffect.UPDATED])
+def test_list_submits_exact_profile_scope_and_restores_listing_rows(
+    monkeypatch: pytest.MonkeyPatch, effect: OperationEffect
+) -> None:
+    submitted, bound_profiles = _bind_list(monkeypatch, _list_projection(), effect=effect)
 
     read = _list_read()
 
@@ -209,7 +212,7 @@ def test_list_scope_or_receipt_mismatch_refuses_correlated_operation(
         rows = (projection.rows[0].model_copy(update={"year": 2023}),)
         projection = projection.model_copy(update={"rows": rows})
     elif mismatch == "effect":
-        effect = OperationEffect.UPDATED
+        effect = OperationEffect.UNKNOWN
     elif mismatch == "terminal":
         condition = OperationTerminalCondition.REFUSED
     elif mismatch == "refusal":

@@ -109,16 +109,16 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     from ...domain.calculations.registry.irpf_regimes import (
         irpf_special_regime_tokens as _irpf_special_regime_tokens,
     )
-    from ...domain.calculations.registry.iva_schema_vocabulary import (
+    from ...domain.calculations.registry.iva_regime_vocabulary import (
         default_iva_regime as _default_iva_regime,
     )
-    from ...domain.calculations.registry.iva_schema_vocabulary import (
+    from ...domain.calculations.registry.iva_regime_vocabulary import (
         iva_regime_choices as _iva_regime_choices,
     )
-    from ...domain.calculations.registry.iva_schema_vocabulary import (
+    from ...domain.calculations.registry.m303_schema_vocabulary import (
         m303_regime_composition_choices as _registry_m303_regime_composition_choices,
     )
-    from ...domain.calculations.registry.iva_schema_vocabulary import (
+    from ...domain.calculations.registry.m303_schema_vocabulary import (
         m303_tax_territory_choices as _registry_m303_tax_territory_choices,
     )
     from ...domain.calculations.registry.renta_codes_catalogue import (

@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Protocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 if TYPE_CHECKING:
-    from .read_operation import OverviewReadPayload, OverviewReadRequest
+    from .read_payload import OverviewReadPayload
+    from .read_request import OverviewReadRequest
 
 
 class OverviewReadPorts(Protocol):

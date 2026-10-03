@@ -429,9 +429,9 @@ def _load_clean_state_repositories(
     """Load all persistence inputs once for a clean-state evaluation."""
     return _CleanStateRepositories(
         filing_catalogue=filing_repository.load(),
-        calculation_catalogue=calculation_repository.load(),
+        calculation_catalogue=calculation_repository.load(operation=operation),
         verification_catalogue=require_verification_report_coordinates_current(
-            verification_repository.load(),
+            verification_repository.load(operation=operation),
             operation=operation,
         ),
         justificante_repository=justificante_repository,

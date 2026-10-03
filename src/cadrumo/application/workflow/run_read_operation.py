@@ -2,54 +2,37 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
-from ...core.time.clock import now
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_admitted_submission,
+    require_period_independent_admission,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES, OperationCapabilities
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
+from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .run_models import WorkflowResult
@@ -228,13 +211,7 @@ class WorkflowRunReadExecutor:
                 run=WorkflowRunSnapshot.from_run(run),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="workflow-run-read")
+        return await capture_read_result(context, read, task_name="workflow-run-read")
 
 
 class WorkflowRunListExecutor:
@@ -268,29 +245,11 @@ class WorkflowRunListExecutor:
                 runs=tuple(WorkflowRunSnapshot.from_run(run) for run in runs),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="workflow-run-list")
+        return await capture_read_result(context, read, task_name="workflow-run-list")
 
 
 def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-        sensitive_input=OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
+    return RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 
 
 def build_workflow_run_read_definition(factory: WorkflowRunReadPortsFactory) -> OperationDefinition:
@@ -331,58 +290,17 @@ def build_workflow_run_list_definition(factory: WorkflowRunReadPortsFactory) -> 
     )
 
 
-def _disclosures(context: OperationAccessContext) -> frozenset[DisclosurePermission]:
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        return frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    if context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=schema.schema_id,
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            )
-        )
-    return frozenset[DisclosurePermission]()
-
-
-def _policy(
+def _bind_run_access(
     context: OperationAccessContext, definition_id: str, *, periods: frozenset[Period], independent: bool
-) -> OperationAccessPolicy:
-    return OperationAccessPolicy(
+) -> ResolvedOperationAccess:
+    return bind_operation_access_profile(
+        context,
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
+        if independent
+        else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        profile_id=context.profile_id,
         definition_id=definition_id,
-        definition_contract_digest=context.contract.definition_contract_digest,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=_disclosures(context),
         periods=periods,
-        allow_period_independent=independent,
-        requires_all_periods=independent,
-        backend=Availability.AVAILABLE,
-        published_authority=context.published_authority,
-        provider=Availability.NOT_REQUIRED,
-        transaction_authority_required=False,
     )
 
 
@@ -401,47 +319,21 @@ def build_workflow_run_read_registration(
         independent = expected_period is None
         periods = frozenset[Period]() if expected_period is None else frozenset({expected_period.to_period()})
         admitted = context.admitted_request
-        if admitted is not None and context.action in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }:
-            if (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent != independent
-                or admitted.periods != periods
-            ):
+        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+            require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=request.definition_id)
+            if admitted.period_independent != independent or admitted.periods != periods:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         else:
             # SUBMIT and START revalidate current storage; RESULT never retargets.
             ports = _bound_ports(payload.profile_id, factory)
             _read_exact_run(payload, ports)
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=periods,
-                period_independent=independent,
-                destination_id=context.destination_id,
-            ),
-            policy=_policy(context, request.definition_id, periods=periods, independent=independent),
-        )
+        return _bind_run_access(context, request.definition_id, periods=periods, independent=independent)
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=WorkflowRunReadRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=WorkflowRunReadProjection
-        ),
-        access_resolver=resolve,
+        public_result_type=WorkflowRunReadProjection,
         result_projector=project_workflow_run_read_result,
+        access_resolver=resolve,
     )
 
 
@@ -459,46 +351,17 @@ def build_workflow_run_list_registration(
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         admitted = context.admitted_request
-        if (
-            admitted is not None
-            and context.action in {AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.CANCEL, AccessAction.DETACH}
-            and (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or not admitted.period_independent
-                or admitted.periods
+        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+            require_period_independent_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
             )
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if admitted is None or context.action not in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }:
+        else:
             _bound_ports(payload.profile_id, factory)
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=frozenset(),
-                period_independent=True,
-                destination_id=context.destination_id,
-            ),
-            policy=_policy(context, request.definition_id, periods=frozenset(), independent=True),
-        )
+        return _bind_run_access(context, request.definition_id, periods=frozenset(), independent=True)
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=WorkflowRunListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=WorkflowRunListProjection
-        ),
-        access_resolver=resolve,
+        public_result_type=WorkflowRunListProjection,
         result_projector=project_workflow_run_list_result,
+        access_resolver=resolve,
     )

@@ -21,7 +21,6 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -32,9 +31,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
-from ....domain.calculations.registry.iva_schema_vocabulary import (
-    iva_regime_simplificado_token,
-)
+from ....domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token, require_iva_regime
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef

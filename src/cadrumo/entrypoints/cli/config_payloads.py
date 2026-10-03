@@ -58,7 +58,7 @@ from ._config_quarantine_payloads import QuarantineNamespacePayload
 # guard.
 
 if TYPE_CHECKING:
-    from ...application.auth.configuration_result import AuthConfigurePublicResultV1
+    from ...application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
     from ...application.config_reset_models import ConfigResetOperation
 
 # Shared nested models (not direct CommandSpec schema targets)
@@ -705,7 +705,7 @@ class AuthConfigurePayload(OutputSchema):
     @classmethod
     def from_result(
         cls,
-        result: AuthConfigurePublicResultV1,
+        result: AuthConfigurePublicResultV2,
         *,
         precondition_action: ResolvedPreconditionAction | None,
     ) -> AuthConfigurePayload:

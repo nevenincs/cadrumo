@@ -16,7 +16,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedEntitySetFact,
     ResolvedMappingFact,
 )
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
 
@@ -59,11 +59,7 @@ def resolve_tipo_actividad_selector(
     normalized_fact_id = fact_id.strip()
     if not normalized_fact_id:
         raise TransactionValidationError("activity selector fact id must not be blank")
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise TransactionValidationError(
-            "activity selector resolution requires an explicit authority operation or scope",
-        )
+    authority = require_governed_fact_authority(authority, subject="activity selector resolution")
     if normalized_fact_id not in _registry_activity_selector_catalogue(
         effective_date=effective_date,
         authority=authority,

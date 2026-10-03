@@ -143,7 +143,7 @@ def _current_revision(
     revision_id = work_unit.current_calculation_revision_id
     if revision_id is None:
         return None
-    revision = repository.load().get(revision_id)
+    revision = repository.load(operation=operation).get(revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
@@ -171,7 +171,7 @@ def _latest_verification(
     if revision is None:
         return None
     reports = require_verification_report_coordinates_current(
-        repository.load(),
+        repository.load(operation=operation),
         operation=operation,
     ).for_calculation_revision(revision.calculation_revision_id)
     return reports[-1] if reports else None

@@ -9,30 +9,158 @@ from uuid import UUID
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
 from ....application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
+from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
     ModeloWorkCreateProjection,
     ModeloWorkCreateRefusal,
     ModeloWorkCreateRequest,
+    ModeloWorkCreateSuccess,
 )
 from ....application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
-from ....application.operations.frontend_requests import OperationObservationRefusalV1, OperationObservationSuccessV1
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.public_period import PublicPeriod
 from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.workbench_generation import WorkbenchGenerationV1
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
 from ....core.period import Period
 from ..declarations.models import CalendarRecoveryHandoffV1, ModeloWorkCreateHandoffV1, ModeloWorkCreateResultV1
-from ..operations.runtime_controller import RuntimeOperationController
+from ..operations.runtime_controller import RuntimeOperationController, await_terminal_projection
 from .lifecycle import ModeloLifecycleActionUnavailableError
+
+
+async def _read_terminal_state(
+    controller: RuntimeOperationController,
+    payload: ModeloWorkCreateRequest,
+    subject: str,
+    deadline: float,
+) -> OperationPublicProjectionV1:
+    await controller.start()
+    return await await_terminal_projection(
+        controller,
+        definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        subject_ref=subject,
+        request_schema=OperationSchemaIdentityV1.from_model(
+            schema_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID + ".request",
+            schema_version=1,
+            model_type=ModeloWorkCreateRequest,
+        ),
+        deadline=deadline,
+    )
+
+
+def _admitted_terminal_details(
+    state: OperationPublicProjectionV1,
+) -> tuple[OperationTerminalCondition, OperationEffect, str | None]:
+    condition, refusal_code = state.terminal_condition, state.refusal_ref
+    if condition is OperationTerminalCondition.SUCCEEDED:
+        return condition, state.effect, refusal_code
+    if (
+        condition is OperationTerminalCondition.REFUSED
+        and refusal_code == MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
+    ):
+        return condition, state.effect, refusal_code
+    raise RuntimeFrontendRefusedError(refusal_code or state.failure_error_code or "operation_not_successful")
+
+
+async def _read_create_projection(
+    controller: RuntimeOperationController, state: OperationPublicProjectionV1
+) -> ModeloWorkCreateProjection:
+    return await controller.read_settled_result(
+        state, ModeloWorkCreateProjection, result_version=1, allow_refusal_detail=True
+    )
+
+
+def _result_matches_request(
+    result: ModeloWorkCreateProjection,
+    payload: ModeloWorkCreateRequest,
+    client: RuntimeFrontendClient,
+    session_id: UUID,
+) -> bool:
+    return not (
+        result.profile_id != payload.profile_id
+        or result.period != payload.period
+        or client.profile_id != payload.profile_id
+        or client.session_id != session_id
+        or client.frontend is not OperationFrontendProjection.TUI
+    )
+
+
+def _is_admitted_applicability_refusal(
+    outcome: ModeloWorkCreateRefusal,
+    payload: ModeloWorkCreateRequest,
+    condition: OperationTerminalCondition,
+    effect: OperationEffect,
+    refusal_code: str | None,
+) -> bool:
+    return (
+        condition is OperationTerminalCondition.REFUSED
+        and refusal_code == MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
+        and effect is OperationEffect.NONE
+        and outcome.modelo == payload.modelo
+    )
+
+
+def _is_valid_create_success(
+    outcome: ModeloWorkCreateSuccess,
+    payload: ModeloWorkCreateRequest,
+    condition: OperationTerminalCondition,
+    effect: OperationEffect,
+    refusal_code: str | None,
+) -> bool:
+    return (
+        condition is OperationTerminalCondition.SUCCEEDED
+        and refusal_code is None
+        and effect is (OperationEffect.NONE if outcome.reused else OperationEffect.UPDATED)
+        and outcome.unit.modelo == payload.modelo
+        and outcome.name_applied is None
+        and not outcome.applicability_guard_bypassed
+    )
+
+
+def _validate_create_outcome(
+    result: ModeloWorkCreateProjection,
+    payload: ModeloWorkCreateRequest,
+    controller: RuntimeOperationController,
+    condition: OperationTerminalCondition,
+    effect: OperationEffect,
+    refusal_code: str | None,
+) -> ModeloWorkCreateSuccess:
+    outcome = result.outcome
+    if isinstance(outcome, ModeloWorkCreateRefusal):
+        if not _is_admitted_applicability_refusal(outcome, payload, condition, effect, refusal_code):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise ModeloLifecycleActionUnavailableError(
+            translated_message="tui.declarations.work_create.refusal.not_applicable",
+            context={
+                "modelo": outcome.modelo,
+                "reason": outcome.reason,
+                "operation_id": str(controller.operation_id),
+                "terminal_condition": condition.value,
+                "effect": effect.value,
+                "refusal_code": refusal_code,
+            },
+        )
+    if not _is_valid_create_success(outcome, payload, condition, effect, refusal_code):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return outcome
+
+
+def _refreshed_declaration(refreshed: object, work_unit_id: str) -> DeclarationsWorkspaceDeclarationRefV1 | None:
+    declarations = (
+        refreshed.declarations.projection.declarations
+        if isinstance(refreshed, WorkbenchGenerationV1) and refreshed.declarations.projection is not None
+        else ()
+    )
+    return next((ref for ref in declarations if ref.work_unit_id == work_unit_id), None)
 
 
 async def _create(
@@ -55,80 +183,19 @@ async def _create(
     effect = OperationEffect.UNKNOWN
     refusal_code: str | None = None
     try:
-        await controller.start()
-        while True:
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-            observed = await controller.observe(0, page_limit=1)
-            if isinstance(observed, OperationObservationRefusalV1):
-                raise RuntimeFrontendRefusedError(observed.code.value)
-            if not isinstance(observed, OperationObservationSuccessV1):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            state = observed.projection
-            if (
-                state.operation_id != controller.operation_id
-                or state.definition_id != MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-                or state.subject_ref != subject
-                or state.definition_contract.request_schema
-                != OperationSchemaIdentityV1.from_model(
-                    schema_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID + ".request",
-                    schema_version=1,
-                    model_type=ModeloWorkCreateRequest,
-                )
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if state.lifecycle is OperationLifecycle.TERMINAL:
-                condition, effect, refusal_code = state.terminal_condition, state.effect, state.refusal_ref
-                break
-            await asyncio.sleep(min(0.05, remaining))
-        if condition is not OperationTerminalCondition.SUCCEEDED and not (
-            condition is OperationTerminalCondition.REFUSED
-            and refusal_code == MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
-        ):
-            raise RuntimeFrontendRefusedError(refusal_code or state.failure_error_code or "operation_not_successful")
-        result = await controller.read_settled_result(
-            state, ModeloWorkCreateProjection, result_version=1, allow_refusal_detail=True
+        state = await _read_terminal_state(controller, payload, subject, deadline)
+        condition, effect, refusal_code = _admitted_terminal_details(state)
+        result = await _read_create_projection(controller, state)
+        if not _result_matches_request(result, payload, client, session_id):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        outcome = _validate_create_outcome(result, payload, controller, condition, effect, refusal_code)
+        refreshed = await asyncio.to_thread(refresh_after_success)
+        # The declaration just created or reopened, as the refreshed generation
+        # admits it, so the declarations list can open it straight away.
+        declaration = _refreshed_declaration(refreshed, outcome.unit.work_unit_id)
+        return ModeloWorkCreateResultV1(
+            reused=outcome.reused, declaration=declaration, advisory_keys=outcome.advisory_keys
         )
-        if (
-            result.profile_id != payload.profile_id
-            or result.period != payload.period
-            or client.profile_id != payload.profile_id
-            or client.session_id != session_id
-            or client.frontend is not OperationFrontendProjection.TUI
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        outcome = result.outcome
-        if isinstance(outcome, ModeloWorkCreateRefusal):
-            if (
-                condition is not OperationTerminalCondition.REFUSED
-                or refusal_code != MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
-                or effect is not OperationEffect.NONE
-                or outcome.modelo != payload.modelo
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            raise ModeloLifecycleActionUnavailableError(
-                translated_message="tui.declarations.work_create.refusal.not_applicable",
-                context={
-                    "modelo": outcome.modelo,
-                    "reason": outcome.reason,
-                    "operation_id": str(controller.operation_id),
-                    "terminal_condition": condition.value,
-                    "effect": effect.value,
-                    "refusal_code": refusal_code,
-                },
-            )
-        if (
-            condition is not OperationTerminalCondition.SUCCEEDED
-            or refusal_code is not None
-            or effect is not (OperationEffect.NONE if outcome.reused else OperationEffect.UPDATED)
-            or outcome.unit.modelo != payload.modelo
-            or outcome.name_applied is not None
-            or outcome.applicability_guard_bypassed
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        await asyncio.to_thread(refresh_after_success)
-        return ModeloWorkCreateResultV1(reused=outcome.reused, advisory_keys=outcome.advisory_keys)
     except Exception as error:
         if (
             isinstance(error, ModeloLifecycleActionUnavailableError)

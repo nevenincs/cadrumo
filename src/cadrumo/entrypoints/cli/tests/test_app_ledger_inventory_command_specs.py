@@ -7,19 +7,12 @@ import pytest
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
 from .._app_ledger_inventory_command_specs import LEDGER_INVENTORY_COMMAND_SPECS
+from .._command_parameter_contracts import ArgumentSpec, OptionSpec
+from .._command_shared_contracts import DeferredTarget, LiteralValue, ParameterDefault, TranslationKey, ValueContract
 from ..app_ledger_inventory_common_command_parameters import (
     INVENTORY_ACTIVIDAD_ID_ARGUMENT,
     INVENTORY_ACTIVIDAD_ID_OPTION,
     INVENTORY_YEAR_OPTION,
-)
-from ..command_spec import (
-    ArgumentSpec,
-    DeferredTarget,
-    LiteralValue,
-    OptionSpec,
-    ParameterDefault,
-    TranslationKey,
-    ValueContract,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

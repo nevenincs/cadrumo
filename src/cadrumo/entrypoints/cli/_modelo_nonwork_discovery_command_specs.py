@@ -4,17 +4,10 @@ from typing import Final
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ._modelo_nonwork_command_spec_policies import (
-    _REGISTRY_MODEL_READ,
-    _REGISTRY_READ,
-)
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -22,6 +15,11 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from ._modelo_nonwork_command_spec_policies import (
+    _REGISTRY_MODEL_READ,
+    _REGISTRY_READ,
+)
+from .command_spec import CommandSpec, InvocationSpec
 
 _REGISTRY_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
     name="year",

@@ -62,6 +62,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
     composition = compose_live_state(
         output_root=settings.cadrumo_live_state_dir / "iva-wallet",
         bucket_id=bucket_id,
+        operation=published_authority_operation(),
     )
     report = asyncio.run(
         capture_iva_compensation_wallet(

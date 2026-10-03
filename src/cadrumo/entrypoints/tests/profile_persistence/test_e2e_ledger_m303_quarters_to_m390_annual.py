@@ -283,10 +283,11 @@ def _filing_ports(
     event_repo: BucketEventHistoryRepository,
     wallet_repo: IvaWalletDecisionRepository,
     observation_repo: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> FilingActionPorts:
     """Compose complete filing ports over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -911,6 +912,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
                     event_repo=event_repo,
                     wallet_repo=wallet_repo,
                     observation_repo=observation_repo,
+                    operation=operation,
                 ),
                 clock=_IRENE_FILE_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,

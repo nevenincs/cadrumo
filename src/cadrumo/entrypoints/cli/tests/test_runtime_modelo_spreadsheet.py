@@ -20,22 +20,24 @@ from ....application.modelo.modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
     MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
     ModeloSpreadsheetCalculateOutcome,
-    ModeloSpreadsheetCalculateProjection,
     ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExportOutcome,
-    ModeloSpreadsheetExportProjection,
     ModeloSpreadsheetExportRequest,
-    ModeloSpreadsheetProjection,
     ModeloSpreadsheetPullOutcome,
-    ModeloSpreadsheetPullProjection,
     ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetVerifyOutcome,
-    ModeloSpreadsheetVerifyProjection,
     ModeloSpreadsheetVerifyRequest,
     SpreadsheetOutputPathRefusal,
-    SpreadsheetPullMetadata,
     SpreadsheetRowIngressRefusal,
     SpreadsheetSnapshotMismatchRefusal,
+)
+from ....application.modelo.modelo_spreadsheet_operation_projections import (
+    ModeloSpreadsheetCalculateProjection,
+    ModeloSpreadsheetExportProjection,
+    ModeloSpreadsheetProjection,
+    ModeloSpreadsheetPullProjection,
+    ModeloSpreadsheetVerifyProjection,
+    SpreadsheetPullMetadata,
 )
 from ....application.operations.models import OperationId
 from ....application.operations.public_period import PublicPeriod
@@ -43,7 +45,7 @@ from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import runtime_modelo_spreadsheet as runtime
 from ..errors import CliRecordedOperationError, CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

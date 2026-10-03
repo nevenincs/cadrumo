@@ -13,6 +13,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
@@ -164,8 +165,8 @@ class ModeloLifecycleAdvisories(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     version: Literal[1] = 1
-    work_unit_id: str = Field(pattern=r"^[0-9a-f]{64}$")
-    calculation_revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=1900, le=9999)
     period: str = Field(min_length=1, max_length=16)

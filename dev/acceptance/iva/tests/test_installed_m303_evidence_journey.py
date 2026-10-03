@@ -6,14 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ..installed_m303_evidence_journey import (
-    IvaInstalledM303Error,
-    ReopenReadback,
-    TuiOutcome,
-    require_outcomes,
-    require_reopen,
-    resultado_matches_oracle,
-)
+from ..m303_evidence_contracts import IvaInstalledM303Error, ReopenReadback, TuiOutcome
+from ..m303_evidence_projection import require_outcomes, require_reopen, resultado_matches_oracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

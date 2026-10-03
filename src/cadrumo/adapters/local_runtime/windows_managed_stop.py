@@ -38,7 +38,7 @@ class WindowsManagedRuntimeStop:
         return self
 
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, _traceback: TracebackType | None
     ) -> None:
         """Retain no native handle or COM wrapper requiring context cleanup."""
 

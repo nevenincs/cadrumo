@@ -19,6 +19,7 @@ from cadrumo.application.calculations.observations_repository import (
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
@@ -73,8 +74,9 @@ class ModeloExportPortsFactory(Protocol):
         *,
         bucket_id: str,
         m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
+        operation: PinnedAuthorityOperation,
     ) -> ModeloExportPorts:
-        """Return all authorities required by one export invocation."""
+        """Return all authorities for one invocation and its held operation."""
         ...
 
 

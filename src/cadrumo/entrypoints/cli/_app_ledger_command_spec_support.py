@@ -5,13 +5,11 @@ from __future__ import annotations
 from typing import Final
 
 from ...application.ledger.operator_input_contracts import OperatorInputContract
-from .command_spec import (
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
-    ArgumentSpec,
     DeferredTarget,
-    InvocationSpec,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -19,6 +17,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import InvocationSpec
 
 _GROUP_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     invoke_without_command=False,

@@ -23,7 +23,7 @@ from ..installed_provenance import (
     assert_track_text_provenance,
     main,
 )
-from ..installed_tui_journey import LedgerInstalledTuiError
+from ..installed_tui_contracts import LedgerInstalledTuiError
 from ..provenance_fixtures import provenance_cases
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

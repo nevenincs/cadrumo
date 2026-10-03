@@ -25,11 +25,10 @@ from ._app_ledger_command_spec_support import (
     _repeatable_text_option,
     _required_text_argument,
 )
-from .command_spec import (
-    CommandSpec,
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -37,6 +36,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec
 
 LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

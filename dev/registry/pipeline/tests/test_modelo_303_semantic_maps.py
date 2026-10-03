@@ -41,29 +41,23 @@ from ...analysis.m303_semantic_census import (
     resolve_semantic_home,
 )
 from ...compiler.loader import load_registry_tree
-from .._export_tree import (
+from .._export_tree import ExportTreeTransportProfile, _render_records, render_complete_export_tree
+from ..export_field_derivation import (
     _DECIMAL_CONTENT_RE,
     _INTEGER_CONTENT_RE,
     _OFFICIAL_LITERAL_RE,
     _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE,
     _QUOTED_NUMERIC_ENUMERATION_RE,
     _TRAILING_NOTE_REFERENCE_RE,
-    ExportTreeTransportProfile,
-    _render_records,
     _split_official_note_references,
-    render_complete_export_tree,
 )
-from ..export_fragment_provenance import semantic_map_digest
+from ..export_fragment_provenance_projection import semantic_map_digest
 from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileDesignIdentity,
-    RenderProfileSourceEvidence,
-    load_and_validate_render_profile,
-    render_profile_digest,
-    validate_render_profile,
-)
+from ..render_profile import load_and_validate_render_profile, render_profile_digest, validate_render_profile
+from ..render_profile_evidence import RenderProfileSourceEvidence
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileDesignIdentity
 from ..semantic_map import (
     SemanticMap,
     load_semantic_map,

@@ -163,8 +163,6 @@ application:
           li pertanyi.
         profile_tax_id_missing: L'autenticació en directe amb Cl@ve Móvil exigeix
           que el perfil actiu inclogui %{requirements}.
-        provider_close_failed: No s'ha pogut tancar de manera segura la sessió del
-          navegador AEAT; repeteix l'autenticació abans de llegir dades AEAT.
         session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
           amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
           i autentica el perfil que coincideixi abans de les lectures AEAT en directe.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from importlib import import_module
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Never, Protocol
 
 import typer
 
@@ -272,8 +272,6 @@ def _resume_or_authenticate(
     target_profile_label: str | None,
     requested_leaf: RequestedCliLeaf,
 ) -> None:
-    from ...adapters.persistence.storage.errors import KeyringUnavailableError
-    from ...application.profile_preconditions import profile_session_failure_verdict
     from ...application.user_profile.session_admission import (
         ProfileSessionAdmissionState,
         admit_profile_session,
@@ -308,19 +306,7 @@ def _resume_or_authenticate(
         raise InternalInvariantError("a refused profile admission carries no typed reason")
     if _interactive_authentication(ctx, bucket_id=bucket_id, refusal=refusal):
         return
-    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-        raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
-    common = _common()
-    verdict = profile_session_failure_verdict(
-        refusal,
-        profile_name=target_profile_label or common.active_profile_label() or bucket_id,
-    )
-    key = session_refusal_translation_key(refusal)
-    raise common.attach_cli_policy_verdict(
-        CliRefusedBoundaryError(translated_message=key, context={"reason": refusal.value}),
-        verdict=verdict,
-        requested_leaf=requested_leaf,
-    )
+    _raise_profile_resume_refusal(refusal, target_profile_label, bucket_id, requested_leaf)
 
 
 def _interactive_authentication(
@@ -355,3 +341,28 @@ __all__ = [
     "normalize_ambient_profile",
     "session_refusal_translation_key",
 ]
+
+
+def _raise_profile_resume_refusal(
+    refusal: ProfileSessionRefusalReason,
+    target_profile_label: str | None,
+    bucket_id: str,
+    requested_leaf: RequestedCliLeaf,
+) -> Never:
+    """Attach the existing typed policy verdict after interactive authentication is exhausted."""
+    from ...adapters.persistence.storage.errors import KeyringUnavailableError
+    from ...application.profile_preconditions import profile_session_failure_verdict
+
+    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
+    common = _common()
+    verdict = profile_session_failure_verdict(
+        refusal,
+        profile_name=target_profile_label or common.active_profile_label() or bucket_id,
+    )
+    key = session_refusal_translation_key(refusal)
+    raise common.attach_cli_policy_verdict(
+        CliRefusedBoundaryError(translated_message=key, context={"reason": refusal.value}),
+        verdict=verdict,
+        requested_leaf=requested_leaf,
+    )

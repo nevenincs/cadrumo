@@ -24,13 +24,14 @@ import json
 import os
 import subprocess
 import sys
-import tomllib
 from collections import Counter
 from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from cadrumo.core.toml import load_toml
 
 _CWD = os.getcwd().replace("\\", "/")
 
@@ -122,19 +123,7 @@ def platform_pin_failures(document: Mapping[str, Any]) -> list[str]:
     failures: list[str] = []
     declared: dict[str, str] = {}
     for pin in _PLATFORM_PINS:
-        location = f"[{'.'.join(pin.table)}] {pin.key}"
-        table = _table(document, pin.table)
-        value = None if table is None else table.get(pin.key)
-        if not isinstance(value, str):
-            failures.append(f"{location} is not declared; the checker would inherit the host platform")
-            continue
-        if value not in valid[pin.spelling]:
-            failures.append(
-                f"{location} = {value!r} is not a platform this project sweeps "
-                f"({', '.join(sorted(valid[pin.spelling]))})"
-            )
-            continue
-        declared[location] = next(platform.key for platform in _PLATFORMS if getattr(platform, pin.spelling) == value)
+        _validate_platform_pin(pin, document, valid, failures, declared)
     if len(set(declared.values())) > 1:
         disagreement = ", ".join(f"{location} -> {key}" for location, key in sorted(declared.items()))
         failures.append(f"the checkers declare different target platforms: {disagreement}")
@@ -143,8 +132,7 @@ def platform_pin_failures(document: Mapping[str, Any]) -> list[str]:
 
 def read_pyproject() -> Mapping[str, Any]:
     """Load the project's ``pyproject.toml`` from the repository, not the caller's directory."""
-    with (_REPOSITORY_ROOT / "pyproject.toml").open("rb") as handle:
-        return tomllib.load(handle)
+    return load_toml(_REPOSITORY_ROOT / "pyproject.toml")
 
 
 @dataclass(frozen=True)
@@ -534,11 +522,7 @@ def main() -> int:
     """Run all type checkers and emit signal-only output."""
     _make_output_host_independent()
     pin_failures = platform_pin_failures(read_pyproject())
-    if pin_failures:
-        # Refused rather than measured: a run whose target platform is unknown
-        # cannot be reported as a verdict about the tree.
-        for failure in pin_failures:
-            sys.stderr.write(f"check-types: {failure}\n")
+    if _report_platform_pin_failures(pin_failures):
         return 1
     parser = argparse.ArgumentParser(description="Signal-only ty + pyrefly + basedpyright harness.")
     output_mode = parser.add_mutually_exclusive_group()
@@ -564,16 +548,7 @@ def main() -> int:
         return 0
 
     if args.full:
-        if entries:
-            _print_full(entries)
-            print(f"\n{len(entries)} type diagnostics (advisory).")
-        else:
-            print("no type diagnostics.")
-        if suppressed:
-            print(f"\n{len(suppressed)} documented irreducible external-import gap(s) suppressed:")
-            for d, platforms in sorted(suppressed, key=lambda entry: (entry[0].path, entry[0].checker)):
-                print(f"  {d.path}:{d.line}: {d.checker}[{d.rule}] {d.message}{_scope(platforms)}")
-        return 0
+        return _emit_full_type_audit(entries, suppressed)
 
     # Never a silent cap: disclose the documented suppressions even on green.
     if suppressed:
@@ -582,6 +557,58 @@ def main() -> int:
             "(optional deps / third-party stubs) - see _IRREDUCIBLE_EXTERNAL_GAPS in dev/quality/types.py",
         )
 
+    return _emit_type_findings(entries, diagnostics)
+
+
+def _report_platform_pin_failures(failures: list[str]) -> bool:
+    """Refuse measurement when the checkers' target platform is unknown."""
+    if not failures:
+        return False
+    for failure in failures:
+        sys.stderr.write(f"check-types: {failure}\n")
+    return True
+
+
+def _validate_platform_pin(
+    pin: _PlatformPin,
+    document: Mapping[str, Any],
+    valid: dict[str, set[str]],
+    failures: list[str],
+    declared: dict[str, str],
+) -> None:
+    """Validate platform pin."""
+    location = f"[{'.'.join(pin.table)}] {pin.key}"
+    table = _table(document, pin.table)
+    value = None if table is None else table.get(pin.key)
+    if not isinstance(value, str):
+        failures.append(f"{location} is not declared; the checker would inherit the host platform")
+        return
+    if value not in valid[pin.spelling]:
+        failures.append(
+            f"{location} = {value!r} is not a platform this project sweeps ({', '.join(sorted(valid[pin.spelling]))})"
+        )
+        return
+    declared[location] = next(platform.key for platform in _PLATFORMS if getattr(platform, pin.spelling) == value)
+
+
+def _emit_full_type_audit(
+    entries: list[tuple[Diagnostic, tuple[str, ...]]], suppressed: list[tuple[Diagnostic, tuple[str, ...]]]
+) -> int:
+    """Emit full type audit."""
+    if entries:
+        _print_full(entries)
+        print(f"\n{len(entries)} type diagnostics (advisory).")
+    else:
+        print("no type diagnostics.")
+    if suppressed:
+        print(f"\n{len(suppressed)} documented irreducible external-import gap(s) suppressed:")
+        for d, platforms in sorted(suppressed, key=lambda entry: (entry[0].path, entry[0].checker)):
+            print(f"  {d.path}:{d.line}: {d.checker}[{d.rule}] {d.message}{_scope(platforms)}")
+    return 0
+
+
+def _emit_type_findings(entries: list[tuple[Diagnostic, tuple[str, ...]]], diagnostics: list[Diagnostic]) -> int:
+    """Emit type findings."""
     if not entries:
         return 0
 

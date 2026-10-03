@@ -22,18 +22,17 @@ from __future__ import annotations
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.utc import validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
     LegalRefId,
@@ -203,20 +202,7 @@ class ModeloReconciliationRecord(BaseModel):
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
     actor: ModeloActorLabel
-    reconciled_at: datetime
-
-    @field_validator("reconciled_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
-        """Hold the persisted instant to the canonical UTC-aware contract.
-
-        The record documents a canonical UTC history, but a bare ``datetime``
-        accepted a naive or ``+01:00`` value, so two reconciliations of the same
-        work unit could not be ordered against each other and a Madrid-local
-        instant read back as if it were UTC.
-        """
-        return validate_utc_aware(value)
+    reconciled_at: UtcInstant
 
 
 class ModeloReconciliationHistoryEntry(BaseModel):
@@ -255,14 +241,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     diff_count: NonNegativeInt
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     actor: ModeloActorLabel
-    reconciled_at: datetime
-
-    @field_validator("reconciled_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
-        """Project the record's UTC instant under the same canonical contract."""
-        return validate_utc_aware(value)
+    reconciled_at: UtcInstant
 
 
 class ModeloReconciliationPersistencePort(Protocol):

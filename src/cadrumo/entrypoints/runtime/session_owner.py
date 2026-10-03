@@ -18,7 +18,7 @@ from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...application.user_profile.access_contracts import AccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
-from ...application.user_profile.session_authority import SessionAuthorityFacts
+from ...application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from ...core.time.clock import now
 
 

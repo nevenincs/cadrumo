@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 import errno
 import hashlib
-import math
 import os
 import platform
 import select
@@ -13,13 +12,13 @@ import socket
 import stat
 import struct
 import sys
-import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.login import RuntimeLoginEvidence
 
 
@@ -266,9 +265,7 @@ class PosixRuntimeChannel:
                 os.close(descriptor)
 
     def _set_deadline(self, deadline: float) -> None:
-        remaining = deadline - time.monotonic()
-        if not math.isfinite(remaining) or remaining <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        remaining = remaining_budget(deadline)
         self._socket.settimeout(remaining)
 
     def read_ready(self) -> bool:

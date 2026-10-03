@@ -6,12 +6,11 @@ existing typed models. Projection and restoration validate the original models.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
-from types import GenericAlias, UnionType
-from typing import Annotated, Literal, Self, TypeAliasType, Union, cast, get_args, get_origin, get_type_hints
+from typing import Literal, Self, cast
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator, model_validator
@@ -37,6 +36,7 @@ from cadrumo.application.ledger.workspace import (
     LedgerWorkspaceEntryRefV1,
     LedgerWorkspaceProjectionV1,
 )
+from cadrumo.application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
 from cadrumo.application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarSourceStateV1,
@@ -50,10 +50,10 @@ from cadrumo.application.modelo.declarations_workspace import (
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZoneStateV1,
 )
-from cadrumo.application.modelo.edit_baseline_projection import ModeloEditApplyBaselineV1
 from cadrumo.application.modelo.row_source_fingerprint import (
     ModeloRowSourceFingerprint,
 )
+from cadrumo.application.modelo.work_form_models import ModeloFormResultDirection
 from cadrumo.application.modelo.work_review import (
     ModeloWorkBindingOrigin,
     ModeloWorkFormulaOrigin,
@@ -74,7 +74,6 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
-    ModeloWorkspaceRefusalCode,
     ModeloWorkspaceRevisionAssertionV1,
     ModeloWorkspaceSchemaIdentityV1,
     ModeloWorkspaceSchemaRecordV1,
@@ -89,6 +88,7 @@ from cadrumo.application.overview.calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
+from cadrumo.application.overview.coverage import ObligationCoverageReport
 from cadrumo.application.overview.home import (
     HomeAccountSession,
     HomeDeclarationState,
@@ -99,6 +99,7 @@ from cadrumo.application.search.installed_workbench import (
     InstalledWorkbenchSearchSnapshotV1,
 )
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission
+from cadrumo.application.state_projection import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
 from cadrumo.application.user_profile.commands import ProfilePreflightRequirement
 from cadrumo.application.workbench_generation import (
     WorkbenchGenerationAvailability,
@@ -113,11 +114,11 @@ from cadrumo.core.operator_action_enums import (
     NoRecoveryOutcome,
     OperatorActionAxis,
 )
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.schema_family_disposition import (
     RegistrySchemaFamilyDisposition,
 )
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.schema_base import CasillaSignConstraint
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -141,102 +142,19 @@ from cadrumo.domain.modelos.work_unit import WorkUnitState
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
+from .operations.public_mirror import (
+    PublicFactEntryV1,
+    PublicScalarValueV1,
+    excluded_canonical_fields,
+    project_public_mirror,
+    restore_public_mirror,
+)
 from .operations.public_period import PublicPeriod
 from .workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
     assemble_workbench_generation_search,
 )
-
-
-class PublicFactEntryV1(BaseModel):
-    """One typed, ordered fact from a canonical immutable fact map."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    key: str
-    kind: Literal["string", "integer", "boolean", "decimal", "null"]
-    text: str
-
-    @model_validator(mode="after")
-    def _validate_value(self) -> Self:
-        if self.kind == "boolean" and self.text not in {"true", "false"}:
-            raise ValueError("invalid boolean fact")
-        if self.kind == "integer" and str(int(self.text)) != self.text:
-            raise ValueError("invalid integer fact")
-        if self.kind == "decimal":
-            try:
-                value = Decimal(self.text)
-            except InvalidOperation:
-                raise ValueError("invalid decimal fact") from None
-            if not value.is_finite() or str(value) != self.text:
-                raise ValueError("invalid decimal fact")
-        if self.kind == "null" and self.text:
-            raise ValueError("null fact must carry no text")
-        return self
-
-
-class PublicScalarValueV1(BaseModel):
-    """Preserve scalar kind and decimal precision across the public schema."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal["string", "integer", "boolean", "decimal", "date", "null"]
-    text: str
-
-    @model_validator(mode="after")
-    def _validate_value(self) -> Self:
-        if self.kind == "boolean" and self.text not in {"true", "false"}:
-            raise ValueError("invalid boolean scalar")
-        if self.kind == "integer" and str(int(self.text)) != self.text:
-            raise ValueError("invalid integer scalar")
-        if self.kind == "decimal":
-            try:
-                value = Decimal(self.text)
-            except InvalidOperation:
-                raise ValueError("invalid decimal scalar") from None
-            if not value.is_finite() or str(value) != self.text:
-                raise ValueError("invalid decimal scalar")
-        if self.kind == "date":
-            try:
-                value_date = date.fromisoformat(self.text)
-            except ValueError:
-                raise ValueError("invalid date scalar") from None
-            if value_date.isoformat() != self.text:
-                raise ValueError("invalid date scalar")
-        if self.kind == "null" and self.text:
-            raise ValueError("null scalar must carry no text")
-        return self
-
-
-class PublicTextEntryV1(BaseModel):
-    """One ordered string entry from a canonical lifecycle payload."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    key: str
-    value: str
-
-
-class PublicModeloVisibleFilingTargetV1(BaseModel):
-    """Closed public fields of the canonical visible filing address."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    modelo: str
-    filing_year: int
-    period: PublicPeriod
-    registry_revision_id: str | None
-    bucket_id: str | None
-
-
-class PublicModeloExactWorkUnitTargetV1(BaseModel):
-    """Closed public fields of the canonical exact work-unit address."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    work_unit_id: str
-    bucket_id: str | None
 
 
 class PublicWorkbenchGenerationV1(BaseModel):
@@ -252,8 +170,6 @@ class PublicWorkbenchGenerationV1(BaseModel):
     declarations_calendar: PublicDeclarationsCalendarGenerationResultV1
     aeat_sync: PublicAeatSyncGenerationResultV1
     modelo: PublicModeloGenerationStateV1
-    modelo_lifecycle: PublicModeloLifecycleGenerationResultV1
-    modelo_graded_refusals: PublicModeloGradedRefusalsGenerationResultV1
     search: PublicSearchGenerationStateV1
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
@@ -366,6 +282,16 @@ class PublicDeclarationsWorkspaceProjectionV1(BaseModel):
     calculation_revisions: tuple[PublicDeclarationsWorkspaceCalculationRevisionRefV1, ...]
     filings: tuple[PublicDeclarationsWorkspaceFilingRefV1, ...]
     lifecycle: tuple[PublicDeclarationsWorkspaceLifecycleRefV1, ...]
+    creation_targets: tuple[PublicDeclarationTarget, ...]
+
+
+class PublicDeclarationTarget(BaseModel):
+    """Typed local-human workbench view of DeclarationTarget."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str
+    period: PublicPeriod
 
 
 class PublicDeclarationsWorkspaceCalculationRevisionRefV1(BaseModel):
@@ -398,6 +324,33 @@ class PublicDeclarationsWorkspaceDeclarationRefV1(BaseModel):
     has_current_calculation: bool
     has_current_filing: bool
     settled_result: str | None
+    summary: PublicDeclarationSummary | None
+
+
+class PublicDeclarationSummary(BaseModel):
+    """Typed local-human workbench view of DeclarationSummary."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    state: DeclarationSummaryState
+    blocking_count: int | None
+    checked: bool
+    result: PublicModeloFormResult | None
+    is_correction: bool
+    technical_reason: str | None
+
+
+class PublicModeloFormResult(BaseModel):
+    """Typed local-human workbench view of ModeloFormResult."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    casilla_id: str
+    box: str | None
+    value: str | None
+    direction: ModeloFormResultDirection
+    disposition: ResultDisposition | None
+    election_may_change: bool
 
 
 class PublicDeclarationsWorkspaceFilingRefV1(BaseModel):
@@ -456,6 +409,7 @@ class PublicDeclarationsCalendarProjectionV1(BaseModel):
     query_range: OverviewCalendarRange
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[PublicDeclarationsCalendarEntryRefV1, ...]
+    coverage: ObligationCoverageReport
 
 
 class PublicDeclarationsCalendarEntryRefV1(BaseModel):
@@ -481,6 +435,9 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     aeat_submission_state: OverviewAeatSubmissionState | None
     justificante_verified: bool | None
     evidence_conflicted: bool
+    aeat_submitted_at: datetime | None
+    aeat_reference_id: str | None
+    aeat_needs_check: bool
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: PublicModeloWorkConditionalRecargoPreview | None
     recovery_action: PublicDeclaredNextAction | None
@@ -800,9 +757,11 @@ class PublicProjectionModeloReadiness(BaseModel):
     profile_ready: bool
     per_operation_requirements_assessed: bool
     profile_refusal: str
+    profile_refusal_cause: ModeloProfileRefusalCause | None
     profile_precondition_verdict: PublicPreconditionVerdict | None
     registry_ready: bool
     registry_refusal: str
+    registry_refusal_cause: ModeloRegistryRefusalCause | None
     binding_ready: bool
     missing_bindings: tuple[PublicProjectionModeloBindingRequirement, ...]
     ledger_preflight_required: bool
@@ -955,6 +914,7 @@ class PublicModeloWorkReviewCasilla(BaseModel):
     official_reference: str | None
     section_path: tuple[str, ...]
     label: str
+    semantic_role: str | None
     data_type: str
     constraints: PublicCasillaConstraints | None
     declared_input_kind: InputKind
@@ -963,6 +923,7 @@ class PublicModeloWorkReviewCasilla(BaseModel):
     relation_consumption: tuple[ModeloWorkRelationConsumption, ...]
     realised_kind: ModeloValueKind
     value: PublicScalarValueV1
+    absent_by_design: bool
     origin_anomaly: ModeloWorkOriginAnomaly | None
     estado_casilla_oficial: EstadoCasillaOficial
     legal_refs: tuple[str, ...]
@@ -1024,119 +985,6 @@ class PublicModeloVerificationFinding(BaseModel):
         return self
 
 
-class PublicModeloGradedRefusalsGenerationResultV1(BaseModel):
-    """Typed local-human workbench view of ModeloGradedRefusalsGenerationResultV1."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    availability: WorkbenchGenerationAvailability
-    observed_at: datetime | None
-    refusal: str | None
-    projection: tuple[PublicGradedRefusalEntryV1, ...] | None
-
-    @model_validator(mode="after")
-    def _distinct_refusals(self) -> Self:
-        if self.projection is not None and len({item.key for item in self.projection}) != len(self.projection):
-            raise ValueError("duplicate graded-refusal key")
-        return self
-
-
-class PublicModeloWorkspaceDomainRefusalV1(BaseModel):
-    """Typed local-human workbench view of ModeloWorkspaceDomainRefusalV1."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal["domain"]
-    contract_version: Literal[1]
-    code: ModeloWorkspaceRefusalCode
-    boundary: Literal["admission", "capability", "consistency", "locale", "schema"]
-    capability: ModeloWorkspaceCapabilityName | None
-    requested_target: PublicModeloWorkspaceVisibleFilingTargetV1 | PublicModeloWorkspaceExactWorkUnitTargetV1
-    selected_target: PublicModeloWorkspaceResolvedTargetV1 | None
-    facts: tuple[ModeloWorkspaceEvidenceFactV1, ...]
-    evidence: tuple[ModeloWorkspaceLegalEvidenceReferenceV1 | ModeloWorkspaceSourceEvidenceReferenceV1, ...]
-    responsible_owner: str
-    reconsideration_condition: str
-    source_disposition: RegistrySchemaFamilyDisposition | None
-    recovery_action: ActionReference | None
-
-
-class PublicGradedRefusalEntryV1(BaseModel):
-    """One exact ordered graded-refusal key and its typed refusal."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    key: str
-    value: PublicModeloWorkspaceDomainRefusalV1
-
-
-class PublicModeloWorkspaceVisibleFilingTargetV1(BaseModel):
-    """Typed local-human workbench view of ModeloWorkspaceVisibleFilingTargetV1."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal["visible_filing"]
-    target: PublicModeloVisibleFilingTargetV1
-
-
-class PublicModeloWorkspaceExactWorkUnitTargetV1(BaseModel):
-    """Typed local-human workbench view of ModeloWorkspaceExactWorkUnitTargetV1."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal["exact_work_unit"]
-    target: PublicModeloExactWorkUnitTargetV1
-
-
-class PublicModeloLifecycleGenerationResultV1(BaseModel):
-    """Typed local-human workbench view of ModeloLifecycleGenerationResultV1."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    availability: WorkbenchGenerationAvailability
-    observed_at: datetime | None
-    refusal: str | None
-    projection: tuple[PublicModeloWorkspaceLifecycleProjectionV1, ...] | None
-
-
-class PublicModeloWorkspaceLifecycleProjectionV1(BaseModel):
-    """Typed local-human workbench view of ModeloWorkspaceLifecycleProjectionV1."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    contract_version: Literal[1]
-    target: PublicModeloWorkspaceResolvedTargetV1
-    calculation_revision_id: str | None
-    verification_report_id: str | None
-    local_filing_record_id: str | None
-    aeat_accepted: Literal[False]
-    events: tuple[PublicBucketEvent, ...]
-    edit_baseline: ModeloEditApplyBaselineV1 | None
-    asks_modelo_390: bool
-
-
-class PublicBucketEvent(BaseModel):
-    """Typed local-human workbench view of BucketEvent."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    event_id: str
-    bucket_id: str
-    event_type: BucketEventType
-    occurred_at: datetime
-    actor: str
-    object_type: BucketEventObjectType
-    object_id: str
-    payload_version: int
-    payload: tuple[PublicTextEntryV1, ...]
-
-    @model_validator(mode="after")
-    def _distinct_payload(self) -> Self:
-        if len({item.key for item in self.payload}) != len(self.payload):
-            raise ValueError("duplicate lifecycle payload key")
-        return self
-
-
 class PublicSearchGenerationStateV1(BaseModel):
     """Search state only; private identity bases are rebuilt in the reader process."""
 
@@ -1179,23 +1027,6 @@ PublicWorkbenchGenerationV1.model_rebuild()
 WorkbenchGenerationOperationProjection.model_rebuild()
 
 
-def _bare(annotation: object) -> object:
-    if isinstance(annotation, TypeAliasType):
-        return _bare(annotation.__value__)
-    origin = get_origin(annotation)
-    if origin is Annotated:
-        return _bare(get_args(annotation)[0])
-    if origin in (Union, UnionType):
-        present = tuple(item for item in get_args(annotation) if item is not type(None))
-        if len(present) == 1:
-            return _bare(present[0])
-    if isinstance(origin, TypeAliasType) and origin.__name__ == "_BoundedRefList":
-        return GenericAlias(tuple, (get_args(annotation)[0], Ellipsis))
-    if isinstance(origin, TypeAliasType):
-        raise ValueError("unreviewed generic workbench type alias")
-    return annotation
-
-
 _REVIEWED_EXCLUDED_FIELDS: frozenset[tuple[type[BaseModel], str]] = frozenset(
     {
         (DeclarationsWorkspaceProjectionV1, "bucket_id"),
@@ -1208,6 +1039,8 @@ _REVIEWED_EXCLUDED_FIELDS: frozenset[tuple[type[BaseModel], str]] = frozenset(
         (DeclarationsWorkspaceFilingRefV1, "amends_filing_record_id"),
         (DeclarationsWorkspaceLifecycleRefV1, "fact_id"),
         (DeclarationsWorkspaceLifecycleRefV1, "work_unit_id"),
+        (DeclarationSummary, "technical_reason"),
+        (DeclarationsCalendarEntryRefV1, "aeat_reference_id"),
         (DeclarationsCalendarEntryRefV1, "recovery_action"),
     }
 )
@@ -1215,45 +1048,20 @@ _REVIEWED_EXCLUDED_FIELDS: frozenset[tuple[type[BaseModel], str]] = frozenset(
 
 def _require_reviewed_exclusions() -> None:
     """Reject any new omitted canonical field before projecting owner data."""
-    discovered: set[tuple[type[BaseModel], str]] = set()
-    visited: set[type[BaseModel]] = set()
-
-    def inspect(annotation: object) -> None:
-        annotation = _bare(annotation)
-        if annotation is InstalledWorkbenchSearchSnapshotV1:
-            # Search documents and identity bases never enter the public result.
-            return
-        if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            if annotation in visited:
-                return
-            visited.add(annotation)
-            for name, field in annotation.model_fields.items():
-                if field.exclude not in (None, False):
-                    discovered.add((annotation, name))
-                inspect(field.annotation)
-            return
-        if isinstance(annotation, type) and is_dataclass(annotation):
-            for field in fields(annotation):
-                inspect(get_type_hints(annotation)[field.name])
-            return
-        for choice in get_args(annotation):
-            inspect(choice)
-
-    inspect(WorkbenchGenerationV1)
-    if frozenset(discovered) != _REVIEWED_EXCLUDED_FIELDS:
+    # Search documents and identity bases never enter the public result.
+    discovered = excluded_canonical_fields(
+        WorkbenchGenerationV1, opaque=frozenset({InstalledWorkbenchSearchSnapshotV1})
+    )
+    if discovered != _REVIEWED_EXCLUDED_FIELDS:
         raise ValueError("workbench public excluded-field inventory changed")
 
 
 _PROFILE_BOUND_PUBLIC_MODELS: frozenset[type[BaseModel]] = frozenset(
     {
-        ModeloEditApplyBaselineV1,
-        PublicModeloVisibleFilingTargetV1,
-        PublicModeloExactWorkUnitTargetV1,
         PublicDeclarationsWorkspaceProjectionV1,
         PublicLedgerWorkspaceProjectionV1,
         PublicModeloWorkspaceResolvedTargetV1,
         PublicModeloWorkReview,
-        PublicBucketEvent,
     }
 )
 
@@ -1286,250 +1094,48 @@ def _require_profile_binding(profile_id: UUID, generation: PublicWorkbenchGenera
     inspect(generation)
 
 
-def _scalar(value: object) -> PublicScalarValueV1:
-    if value is None:
-        return PublicScalarValueV1(kind="null", text="")
-    if isinstance(value, bool):
-        return PublicScalarValueV1(kind="boolean", text="true" if value else "false")
-    if isinstance(value, int):
-        return PublicScalarValueV1(kind="integer", text=str(value))
-    if isinstance(value, Decimal):
-        return PublicScalarValueV1(kind="decimal", text=str(value))
-    if isinstance(value, date):
-        return PublicScalarValueV1(kind="date", text=value.isoformat())
-    if isinstance(value, str):
-        return PublicScalarValueV1(kind="string", text=value)
-    raise TypeError("unsupported workbench scalar")
+_OMITTED: dict[type[BaseModel], frozenset[str]] = {PublicSearchGenerationStateV1: frozenset({"projection"})}
+"""Public search carries state only; its private identity is rebuilt in the reader process."""
+_WITHHELD: frozenset[tuple[type[object], str]] = frozenset({(WorkbenchGenerationV1, "search")})
 
 
-def _unscalar(value: PublicScalarValueV1) -> str | int | bool | Decimal | date | None:
-    if value.kind == "null":
-        return None
-    if value.kind == "boolean":
-        return value.text == "true"
-    if value.kind == "integer":
-        return int(value.text)
-    if value.kind == "decimal":
-        return Decimal(value.text)
-    if value.kind == "date":
-        return date.fromisoformat(value.text)
-    return value.text
+def _rebuild_search(canonical: type[object], restored: dict[str, object], public: BaseModel) -> None:
+    """Rebuild search identity from the restored sibling projections, then check its public state."""
+    if canonical is not WorkbenchGenerationV1:
+        return
+    search = assemble_workbench_generation_search(
+        ledger=cast(WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1], restored["ledger"]),
+        declarations=cast(
+            WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
+            restored["declarations"],
+        ),
+        aeat_sync=cast(WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1], restored["aeat_sync"]),
+        modelo=cast(
+            WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]],
+            restored["modelo"],
+        ),
+        ledger_admission=cast(WorkbenchDestinationAdmission, restored["ledger_admission"]),
+        declarations_admission=cast(WorkbenchDestinationAdmission, restored["declarations_admission"]),
+        aeat_sync_admission=cast(WorkbenchDestinationAdmission, restored["aeat_sync_admission"]),
+    )
+    safe_search = cast(PublicWorkbenchGenerationV1, public).search
+    if (
+        search.availability != safe_search.availability
+        or search.observed_at != safe_search.observed_at
+        or search.refusal != safe_search.refusal
+    ):
+        raise ValueError("workbench search state changed")
+    restored["search"] = search
 
 
-def _fact_entry(key: str, value: object) -> PublicFactEntryV1:
-    scalar = _scalar(value)
-    if scalar.kind == "date":
-        raise TypeError("fact maps cannot contain dates")
-    return PublicFactEntryV1(key=key, kind=scalar.kind, text=scalar.text)
+def _project(generation: WorkbenchGenerationV1) -> object:
+    return project_public_mirror(generation, WorkbenchGenerationV1, PublicWorkbenchGenerationV1, omitted=_OMITTED)
 
 
-def _mapping_key(value: object) -> str:
-    if not isinstance(value, str):
-        raise TypeError("workbench mapping key must be text")
-    return value
-
-
-def _mapping_text(value: object) -> str:
-    if not isinstance(value, str):
-        raise TypeError("workbench mapping value must be text")
-    return value
-
-
-def _public_model_type(annotation: object, value: object) -> type[BaseModel] | None:
-    annotation = _bare(annotation)
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        return annotation
-    origin = get_origin(annotation)
-    if origin in (Union, UnionType):
-        for choice in get_args(annotation):
-            candidate = _bare(choice)
-            if not isinstance(candidate, type) or not issubclass(candidate, BaseModel):
-                continue
-            if value is None:
-                continue
-            # Distinct union arms retain their canonical class-name suffix.
-            if candidate.__name__.removeprefix("Public") == type(value).__name__:
-                return candidate
-    return None
-
-
-def _project(value: object, canonical: object, public: object) -> object:
-    if value is None:
-        return None
-    canonical, public = _bare(canonical), _bare(public)
-    if public is PublicScalarValueV1:
-        return _scalar(value)
-    if isinstance(value, Mapping):
-        entries = cast(Mapping[object, object], value)
-        if not isinstance(public, type) and get_origin(public) is tuple:
-            item = get_args(public)[0]
-            if item is PublicFactEntryV1:
-                return tuple(_fact_entry(_mapping_key(key), fact) for key, fact in entries.items())
-            if item is PublicTextEntryV1:
-                return tuple(
-                    PublicTextEntryV1(key=_mapping_key(key), value=_mapping_text(fact)) for key, fact in entries.items()
-                )
-            if item is PublicGradedRefusalEntryV1:
-                return tuple(
-                    PublicGradedRefusalEntryV1(
-                        key=_mapping_key(key),
-                        value=cast(
-                            PublicModeloWorkspaceDomainRefusalV1,
-                            _project(fact, type(fact), PublicModeloWorkspaceDomainRefusalV1),
-                        ),
-                    )
-                    for key, fact in entries.items()
-                )
-        raise TypeError("unsupported workbench mapping")
-    if isinstance(value, tuple):
-        items = cast(tuple[object, ...], value)
-        canonical_args = get_args(canonical)
-        public_args = get_args(public)
-        if get_origin(public) is not tuple or not public_args:
-            raise TypeError("workbench tuple changed its public shape")
-        if len(public_args) == 2 and public_args[1] is Ellipsis:
-            canonical_item = canonical_args[0] if canonical_args else object
-            return tuple(_project(item, canonical_item, public_args[0]) for item in items)
-        if len(items) != len(public_args):
-            raise ValueError("workbench fixed tuple changed arity")
-        return tuple(_project(item, canonical_args[index], public_args[index]) for index, item in enumerate(items))
-    if isinstance(value, BaseModel) or is_dataclass(value):
-        target = _public_model_type(public, value)
-        if target is None:
-            raise TypeError("workbench public model arm is unavailable")
-        if isinstance(value, BaseModel) and target is type(value):
-            return target.model_validate_json(value.model_dump_json(), strict=True)
-        target.model_rebuild()
-        target_fields = target.model_fields
-        if isinstance(value, BaseModel):
-            source_fields = type(value).model_fields
-            source_annotations = {name: field.annotation for name, field in source_fields.items()}
-        else:
-            source_fields = {field.name: field for field in fields(value)}
-            source_annotations = get_type_hints(type(value))
-        allowed_missing: set[str] = {"projection"} if target is PublicSearchGenerationStateV1 else set()
-        if set(source_fields) - set(target_fields) != allowed_missing or set(target_fields) - set(source_fields):
-            raise ValueError("workbench public model field inventory drifted")
-        return target.model_validate(
-            {
-                name: _project(
-                    getattr(value, name),
-                    source_annotations[name],
-                    field.annotation,
-                )
-                for name, field in target_fields.items()
-            }
-        )
-    if isinstance(value, Decimal):
-        return str(value)
-    if public is str and isinstance(value, str):
-        return str(value)
-    return value
-
-
-def _restore(value: object, canonical: object, public: object) -> object:
-    if value is None:
-        return None
-    canonical, public = _bare(canonical), _bare(public)
-    if isinstance(value, PublicScalarValueV1):
-        return _unscalar(value)
-    if isinstance(value, tuple):
-        items = cast(tuple[object, ...], value)
-        public_item = get_args(public)[0] if get_origin(public) is tuple else None
-        if public_item is PublicFactEntryV1:
-            return {
-                entry.key: _unscalar(PublicScalarValueV1(kind=entry.kind, text=entry.text))
-                for entry in cast(tuple[PublicFactEntryV1, ...], items)
-            }
-        if public_item is PublicTextEntryV1:
-            return {entry.key: entry.value for entry in cast(tuple[PublicTextEntryV1, ...], items)}
-        if public_item is PublicGradedRefusalEntryV1:
-            canonical_value = get_args(canonical)[1]
-            return {
-                entry.key: _restore(entry.value, canonical_value, PublicModeloWorkspaceDomainRefusalV1)
-                for entry in cast(tuple[PublicGradedRefusalEntryV1, ...], items)
-            }
-        if get_origin(canonical) not in (tuple, Mapping):
-            raise TypeError("workbench tuple changed its canonical shape")
-        canonical_args = get_args(canonical)
-        public_args = get_args(public)
-        if len(canonical_args) == 2 and canonical_args[1] is Ellipsis:
-            return tuple(_restore(item, canonical_args[0], public_args[0]) for item in items)
-        return tuple(_restore(item, canonical_args[index], public_args[index]) for index, item in enumerate(items))
-    if isinstance(value, BaseModel):
-        type(value).model_rebuild()
-        if isinstance(canonical, type) and canonical is type(value):
-            return type(value).model_validate_json(value.model_dump_json(), strict=True)
-        if get_origin(canonical) in (Union, UnionType):
-            options = [item for item in get_args(canonical) if isinstance(_bare(item), type)]
-            matches = [
-                item
-                for item in options
-                if isinstance(candidate := _bare(item), type)
-                and value.__class__.__name__.removeprefix("Public") == candidate.__name__
-            ]
-            if len(matches) != 1:
-                raise TypeError("workbench union arm changed")
-            canonical = _bare(matches[0])
-        if not isinstance(canonical, type):
-            raise TypeError("workbench canonical model changed")
-        source_fields = type(value).model_fields
-        if issubclass(canonical, BaseModel):
-            target_fields = canonical.model_fields
-            target_annotations = {name: field.annotation for name, field in target_fields.items()}
-        elif is_dataclass(canonical_class := cast(type[object], canonical)):
-            target_fields = {field.name: field for field in fields(canonical_class)}
-            target_annotations = get_type_hints(canonical_class)
-        else:
-            raise TypeError("workbench canonical model changed")
-        if set(source_fields) - set(target_fields):
-            raise ValueError("workbench canonical model field inventory drifted")
-        restored = {
-            name: _restore(getattr(value, name), target_annotations[name], source_fields[name].annotation)
-            for name in target_fields
-            if name in source_fields and not (canonical is WorkbenchGenerationV1 and name == "search")
-        }
-        if canonical is WorkbenchGenerationV1:
-            # Public search carries state only. Rebuild its private identity
-            # from the restored sibling projections before validating the
-            # canonical result, which requires a value when AVAILABLE.
-            search = assemble_workbench_generation_search(
-                ledger=cast(WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1], restored["ledger"]),
-                declarations=cast(
-                    WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
-                    restored["declarations"],
-                ),
-                aeat_sync=cast(
-                    WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1], restored["aeat_sync"]
-                ),
-                modelo=cast(
-                    WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]],
-                    restored["modelo"],
-                ),
-                ledger_admission=cast(WorkbenchDestinationAdmission, restored["ledger_admission"]),
-                declarations_admission=cast(WorkbenchDestinationAdmission, restored["declarations_admission"]),
-                aeat_sync_admission=cast(WorkbenchDestinationAdmission, restored["aeat_sync_admission"]),
-            )
-            safe_search = cast(PublicWorkbenchGenerationV1, value).search
-            if (
-                search.availability != safe_search.availability
-                or search.observed_at != safe_search.observed_at
-                or search.refusal != safe_search.refusal
-            ):
-                raise ValueError("workbench search state changed")
-            restored["search"] = search
-        if issubclass(canonical, BaseModel):
-            return canonical.model_validate(restored)
-        return cast(Callable[..., object], canonical)(**restored)
-    if canonical is Decimal and isinstance(value, str):
-        try:
-            decimal = Decimal(value)
-        except InvalidOperation:
-            raise ValueError("invalid workbench decimal") from None
-        if not decimal.is_finite() or str(decimal) != value:
-            raise ValueError("invalid workbench decimal")
-        return decimal
-    return value
+def _restore(public: PublicWorkbenchGenerationV1) -> object:
+    return restore_public_mirror(
+        public, WorkbenchGenerationV1, PublicWorkbenchGenerationV1, withheld=_WITHHELD, complete=_rebuild_search
+    )
 
 
 def project_workbench_generation(
@@ -1537,14 +1143,14 @@ def project_workbench_generation(
 ) -> WorkbenchGenerationOperationProjection:
     """Project the complete typed generation without retaining private search identity."""
     _require_reviewed_exclusions()
-    public_generation = _project(generation, WorkbenchGenerationV1, PublicWorkbenchGenerationV1)
+    public_generation = _project(generation)
     if not isinstance(public_generation, PublicWorkbenchGenerationV1):
         raise TypeError("workbench public projection failed")
     projection = WorkbenchGenerationOperationProjection(profile_id=profile_id, generation=public_generation)
-    restored = _restore(public_generation, WorkbenchGenerationV1, PublicWorkbenchGenerationV1)
+    restored = _restore(public_generation)
     if not isinstance(restored, WorkbenchGenerationV1):
         raise TypeError("workbench canonical round-trip failed")
-    if _project(restored, WorkbenchGenerationV1, PublicWorkbenchGenerationV1) != public_generation:
+    if _project(restored) != public_generation:
         raise ValueError("workbench public projection changed canonical meaning")
     return projection
 
@@ -1553,9 +1159,9 @@ def restore_workbench_generation(projection: WorkbenchGenerationOperationProject
     """Rebuild the canonical generation and local process-keyed search identities."""
     _require_reviewed_exclusions()
     _require_profile_binding(projection.profile_id, projection.generation)
-    restored = _restore(projection.generation, WorkbenchGenerationV1, PublicWorkbenchGenerationV1)
+    restored = _restore(projection.generation)
     if not isinstance(restored, WorkbenchGenerationV1):
         raise TypeError("workbench canonical restoration failed")
-    if _project(restored, WorkbenchGenerationV1, PublicWorkbenchGenerationV1) != projection.generation:
+    if _project(restored) != projection.generation:
         raise ValueError("workbench public projection changed canonical meaning")
     return restored

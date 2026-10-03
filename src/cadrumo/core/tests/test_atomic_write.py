@@ -36,7 +36,6 @@ import pytest
 from ...tests.attribute_scope import scoped_attribute
 from .. import atomic_write
 from ..atomic_write import (
-    _write_all,
     atomic_write_best_effort_bytes,
     atomic_write_best_effort_text,
     atomic_write_bytes,
@@ -46,6 +45,7 @@ from ..atomic_write import (
     durable_write_batch,
     hardened_staged_publication,
 )
+from ..descriptor_write import write_all
 from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..errors.hierarchy import InternalInvariantError
 
@@ -135,7 +135,7 @@ def _no_reader_backpressure_child() -> None:
         os.set_blocking(write_fd, False)
         _fill_nonblocking_pipe(write_fd)
         try:
-            _write_all(write_fd, b"blocked")
+            write_all(write_fd, b"blocked")
         except BlockingIOError:
             return
         raise AssertionError("full nonblocking pipe did not propagate backpressure")
@@ -163,7 +163,7 @@ def _blocking_pipe_completion_child() -> None:
         reader.start()
         reader_started.set()
         try:
-            _write_all(write_fd, _PIPE_PAYLOAD)
+            write_all(write_fd, _PIPE_PAYLOAD)
         finally:
             _close_fd(write_fd)
             write_fd = -1
@@ -187,11 +187,11 @@ def _positive_short_write_continuation_child() -> None:
     outcome = 0
     try:
         # With no reader, the first internal os.write accepts a real positive
-        # capacity-bounded prefix. _write_all must then make another call,
+        # capacity-bounded prefix. write_all must then make another call,
         # which encounters real nonblocking backpressure.
         os.set_blocking(write_fd, False)
         try:
-            _write_all(write_fd, _PIPE_PAYLOAD)
+            write_all(write_fd, _PIPE_PAYLOAD)
         except BlockingIOError:
             pass
         else:
@@ -248,9 +248,9 @@ def _signal_interrupted_short_write_completion_child() -> None:
     try:
         # The first blocking os.write fills the real pipe and then blocks.
         # SIGALRM starts the reader and interrupts that call after a positive
-        # prefix, forcing _write_all to resume from its recorded offset.
+        # prefix, forcing write_all to resume from its recorded offset.
         setitimer(itimer_real, 0.01)
-        _write_all(write_fd, _PIPE_PAYLOAD)
+        write_all(write_fd, _PIPE_PAYLOAD)
     finally:
         setitimer(itimer_real, 0.0)
         signal.signal(sigalrm, prior_handler)

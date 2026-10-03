@@ -70,7 +70,7 @@ from ...application.user_profile.access_contracts import AccessDenialCode, Acces
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
-from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.async_cleanup import AsyncResourceCleanupError, attach_async_cleanup_error
 from ...core.time.clock import now
 from .framing import RuntimeTransportCleanup, accept_runtime_handshake, read_document, write_document, write_secret
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
@@ -120,11 +120,11 @@ def _release_worker_resources(*owners: _WorkerCleanup, primary_error: BaseExcept
     )
     if primary_error is None:
         raise cleanup from failures[0]
-    previous = primary_error.__dict__.get("async_cleanup_error")
-    if isinstance(previous, AsyncResourceCleanupError):
-        cleanup = previous.merged_with(cleanup)
-    primary_error.__dict__["async_cleanup_error"] = cleanup
-    primary_error.add_note("Worker cleanup also failed; retry through the attached async_cleanup_error")
+    attach_async_cleanup_error(
+        primary_error,
+        cleanup,
+        note="Worker cleanup also failed; retry through the attached async_cleanup_error",
+    )
 
 
 def unreturned_profile_worker(error: BaseException) -> ProfileWorkerProcess | None:

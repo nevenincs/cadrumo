@@ -18,18 +18,9 @@ from pydantic import (
 )
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventId
@@ -46,29 +37,21 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal
 from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
 from .id_resolution import normalise_transaction_id_prefix, resolve_transaction_id
@@ -83,6 +66,7 @@ from .models import (
 from .persistence_ports import LedgerPersistenceConflictError
 from .read_access import resolve_ledger_read_access
 from .transaction_projection import LedgerTransactionProjection
+from .validation_messages import bounded_validation_messages
 
 LEDGER_CLASSIFY_OPERATION_DEFINITION_ID = "ledger.classify.single"
 LEDGER_OPERATOR_IVA_DEFINITION_ID = "ledger.classify.iva-derive"
@@ -380,21 +364,15 @@ class LedgerClassifyExecutor:
         """Resolve current state, validate, and commit inside one COMMIT section."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        subject = profile_operation_subject(bucket_id)
-        if (
-            request.definition_id != LEDGER_CLASSIFY_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != bucket_id
-        ):
+        if request.definition_id != LEDGER_CLASSIFY_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_CLASSIFY_PHASE)
 
         def prepare() -> tuple[LedgerActionPorts, TransactionCatalogue, str, ManualLedgerTransactionPatch]:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
-            _require_exact_ports(ports, bucket_id=bucket_id, operation=operation)
+            require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
             catalogue = ports.transaction_repository.load()
             transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
             current = catalogue.transactions[transaction_id]
@@ -555,20 +533,6 @@ def _decimal_option(value: str | None, field_name: str) -> Decimal | None:
     return parsed
 
 
-def _require_exact_ports(
-    ports: LedgerActionPorts,
-    *,
-    bucket_id: str,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse ports whose profile or authority escaped the request."""
-    if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    for repository in (ports.invoice_repository, ports.work_unit_repository, ports.calculation_repository):
-        if getattr(repository, "bucket_id", None) != bucket_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
 def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -> LedgerClassifyOperationResult:
     """Validate exact identity, project canonical output, and enforce its byte bound."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
@@ -616,24 +580,11 @@ def _validation_kind(error: Exception) -> _ValidationKind:
 
 def _validation_messages(error: Exception) -> _ValidationMessages:
     """Retain only bounded field locations and user-actionable messages."""
-    messages: list[str] = []
-    if isinstance(error, ValidationError):
-        for item in error.errors(include_input=False, include_context=False, include_url=False)[
-            :_MAX_VALIDATION_MESSAGES
-        ]:
-            location = item.get("loc", ())
-            field_path = ".".join(str(part) for part in location if part != "__root__")
-            message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
-            detail = f"{field_path}: {message}" if field_path else message
-            if detail:
-                messages.append(detail[:2048])
-    else:
-        detail = str(error).strip()
-        if detail:
-            messages.append(detail[:2048])
-    if not messages:
-        messages.append("ledger classify values did not satisfy transaction validation")
-    return tuple(messages[:_MAX_VALIDATION_MESSAGES])
+    return bounded_validation_messages(
+        error,
+        limit=_MAX_VALIDATION_MESSAGES,
+        fallback="ledger classify values did not satisfy transaction validation",
+    )
 
 
 def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -649,10 +600,6 @@ def _project_operation_result(result: BaseModel, receipt: OperationTerminalRecei
         projected = result.result
         if (
             receipt.condition is not OperationTerminalCondition.SUCCEEDED
-            or receipt.result_ref is None
-            or receipt.refusal_ref is not None
-            or receipt.refusal_detail_ref is not None
-            or receipt.failure_error_code is not None
             or receipt.diagnostic_ref is not None
             or projected is None
             or receipt.effect is not (OperationEffect.UPDATED if projected.bucket_event_ids else OperationEffect.NONE)
@@ -663,8 +610,6 @@ def _project_operation_result(result: BaseModel, receipt: OperationTerminalRecei
         receipt.condition is not OperationTerminalCondition.REFUSED
         or receipt.refusal_ref != LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE
         or receipt.refusal_detail_ref is None
-        or receipt.result_ref is not None
-        or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
         or receipt.effect is not OperationEffect.NONE
     ):
@@ -690,19 +635,7 @@ def build_ledger_classify_definition(ports_factory: LedgerActionPortsFactory) ->
         ),
         phase_codes=(LEDGER_CLASSIFY_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE}),
@@ -733,18 +666,9 @@ def build_ledger_classify_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Enroll the exact classify request, bounded result, and access resolver."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerClassifyRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerClassifyOperationResult,
-        ),
+        public_result_type=LedgerClassifyOperationResult,
         result_projector=_project_operation_result,
         access_resolver=resolve_ledger_classify_access,
     )
@@ -834,16 +758,11 @@ class LedgerOperatorIvaExecutor:
         """Resolve and derive inside the existing COMMIT guard."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != LEDGER_OPERATOR_IVA_DEFINITION_ID
-            or context.identity.definition_id != request.definition_id
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != bucket_id
-        ):
+        if request.definition_id != LEDGER_OPERATOR_IVA_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         ports = self._ports_factory(bucket_id=bucket_id, operation=context.authority_operation)
-        _require_exact_ports(ports, bucket_id=bucket_id, operation=context.authority_operation)
+        require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=context.authority_operation)
         await context.events.phase(LEDGER_OPERATOR_IVA_DEFINITION_ID)
 
         async def refuse(error: Exception, transaction_id: str) -> OperationRefusalEvidence:
@@ -966,19 +885,10 @@ def _project_operator_iva_result(result: BaseModel, receipt: OperationTerminalRe
             receipt.condition is not OperationTerminalCondition.REFUSED
             or receipt.refusal_ref != LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE
             or receipt.refusal_detail_ref is None
-            or receipt.result_ref is not None
-            or receipt.failure_error_code is not None
             or receipt.diagnostic_ref is not None
         ):
             raise ValueError("operator IVA validation detail has an incompatible terminal receipt")
-    elif (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
+    elif receipt.condition is not OperationTerminalCondition.SUCCEEDED or receipt.diagnostic_ref is not None:
         raise ValueError("operator IVA success has an incompatible terminal receipt")
     return projection
 
@@ -996,19 +906,7 @@ def build_ledger_operator_iva_definition(ports_factory: LedgerActionPortsFactory
         ),
         phase_codes=(LEDGER_OPERATOR_IVA_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset(
             {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
@@ -1019,14 +917,9 @@ def build_ledger_operator_iva_definition(ports_factory: LedgerActionPortsFactory
 
 def build_ledger_operator_iva_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the bounded operator IVA request/result and exact access policy."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerOperatorIvaRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerOperatorIvaResult
-        ),
+        public_result_type=LedgerOperatorIvaResult,
         result_projector=_project_operator_iva_result,
         access_resolver=resolve_ledger_operator_iva_access,
     )

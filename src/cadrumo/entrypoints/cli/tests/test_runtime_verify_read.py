@@ -28,9 +28,10 @@ from ....application.live.verify_read_operation import (
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .. import runtime_profile_operation as profile_operation
 from .. import runtime_verify_read as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -109,7 +110,7 @@ def _bind(
             refusal_code=refusal_code,
         )
 
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
     return submitted, bound_profiles
 
 

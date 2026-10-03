@@ -13,8 +13,11 @@ from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...application.operations.public_scalar import PublicDecimal
+from ...application.operations.public_scalar import PublicDecimal, project_scalar
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hex import Hex64Str
+from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
 from ...domain.renta.actividad_asset.election import (
@@ -56,10 +59,10 @@ def _decimal(value: PublicDecimal | None) -> Decimal | None:
 class AcquisitionLineageSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    observed_transaction_id: str = Field(pattern=r"^[0-9a-f]{64}$")
-    observed_lineage_event_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    observed_transaction_id: TransactionId
+    observed_lineage_event_id: Hex64Str | None = None
     invoice_evidence_id: str = Field(min_length=1, max_length=256)
-    evidence_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evidence_fingerprint: Hex64Str
 
     @classmethod
     def from_domain(cls, value: AcquisitionLineageReference) -> Self:
@@ -81,7 +84,7 @@ class OpeningHistorySnapshot(BaseModel):
         return cls(
             status=value.status,
             accumulated_amount=(
-                PublicDecimal(decimal=str(value.accumulated_amount)) if value.accumulated_amount is not None else None
+                project_scalar(value.accumulated_amount) if value.accumulated_amount is not None else None
             ),
             amortization_method=value.amortization_method,
         )
@@ -166,7 +169,7 @@ class PlanAnnualAmountSnapshot(BaseModel):
 
     @classmethod
     def from_domain(cls, value: PlanAnnualAmount) -> Self:
-        return cls(tax_year=value.tax_year, amount=PublicDecimal(decimal=str(value.amount)))
+        return cls(tax_year=value.tax_year, amount=project_scalar(value.amount))
 
     def to_domain(self) -> PlanAnnualAmount:
         return PlanAnnualAmount(tax_year=self.tax_year, amount=Decimal(self.amount.decimal))
@@ -213,7 +216,7 @@ class SmallEnterpriseEvidenceSnapshot(BaseModel):
         return cls(
             evidence_reference=value.evidence_reference,
             made_available_on=value.made_available_on,
-            prior_period_net_turnover=PublicDecimal(decimal=str(value.prior_period_net_turnover)),
+            prior_period_net_turnover=project_scalar(value.prior_period_net_turnover),
         )
 
     def to_domain(self) -> SmallEnterpriseEvidence:
@@ -236,7 +239,7 @@ class LowValueElectionSnapshot(BaseModel):
         return cls(
             election_reference=value.election_reference,
             new_material_evidence_reference=value.new_material_evidence_reference,
-            unit_acquisition_value=PublicDecimal(decimal=str(value.unit_acquisition_value)),
+            unit_acquisition_value=project_scalar(value.unit_acquisition_value),
         )
 
     def to_domain(self) -> LowValueElection:
@@ -275,10 +278,10 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
             method=value.method,
             authority_class_key=value.authority_class_key,
             linear_coefficient=(
-                PublicDecimal(decimal=str(value.linear_coefficient)) if value.linear_coefficient is not None else None
+                project_scalar(value.linear_coefficient) if value.linear_coefficient is not None else None
             ),
             shift_hours_per_day=(
-                PublicDecimal(decimal=str(value.shift_hours_per_day)) if value.shift_hours_per_day is not None else None
+                project_scalar(value.shift_hours_per_day) if value.shift_hours_per_day is not None else None
             ),
             sum_of_digits_period_years=value.sum_of_digits_period_years,
             digit_order=value.digit_order,
@@ -332,7 +335,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
 
     asset_id: str = Field(min_length=1, max_length=128)
     revision_number: int = Field(ge=1)
-    supersedes_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    supersedes_revision_id: Hex64Str | None = None
     acquisition: AcquisitionLineageSnapshot
     acquisition_shape: AcquisitionShape
     asset_kind: AssetKind
@@ -357,7 +360,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             acquisition_shape=value.acquisition_shape,
             asset_kind=value.asset_kind,
             basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
-            residual_value=PublicDecimal(decimal=str(value.residual_value)),
+            residual_value=project_scalar(value.residual_value),
             in_service_date=value.in_service_date,
             out_of_service_date=value.out_of_service_date,
             opening_history=OpeningHistorySnapshot.from_domain(value.opening_history),
@@ -400,19 +403,19 @@ class AmortizationClaimSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    asset_revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    asset_revision_id: Hex64Str
     asset_kind: AssetKind
     tax_year: int = Field(ge=1900, le=9999)
     covered_from: date
     covered_until: date
     amount: PublicDecimal
-    schedule_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    schedule_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     creating_operation: str = Field(min_length=1, max_length=256)
-    supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    calculation_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    filing_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    supersedes_claim_id: Hex64Str | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
+    filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
     free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
     free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
@@ -495,14 +498,14 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    asset_revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    asset_revision_id: Hex64Str
     tax_year: int = Field(ge=1900, le=9999)
     covered_from: date
     covered_until: date
     service_days: int = Field(ge=0)
     calendar_days: int = Field(ge=365, le=366)
     amount: PublicDecimal
-    schedule_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    schedule_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
@@ -562,7 +565,7 @@ class ClaimProjectionSnapshot(BaseModel):
             target_casilla_id=value.target_casilla_id,
             tax_year=value.tax_year,
             claim_ids=value.claim_ids,
-            amount=PublicDecimal(decimal=str(value.amount)),
+            amount=project_scalar(value.amount),
         )
 
     def to_domain(self) -> ClaimProjection:

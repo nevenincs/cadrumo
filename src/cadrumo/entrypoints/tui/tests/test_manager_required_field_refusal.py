@@ -111,7 +111,7 @@ def _notice(app: ProfileManagerScreen) -> str:
 
 async def _submit(app, pilot, path: str, value: str) -> None:
     """Drive one real edit: open the dialog, type, press save."""
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     field = app._field_by_key[path]
     app.app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))

@@ -14,7 +14,6 @@ from typing import Final
 from cadrumo.core.corpus_text import CorpusAnchorResolutionError
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
-from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.core.text_fold import ascii_slug
 from cadrumo.core.type_guards import is_object_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -35,6 +34,7 @@ from dev.registry.compiler.corpus_annotation import (
     CorpusPageAnnotation,
     resolve_annotated_pdf_pages,
 )
+from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT, CorpusPathEscapeError, locate_corpus_file
 
 from .legal_grounding import PROVISION_SUFFIXED_FILENAME
 
@@ -60,17 +60,12 @@ def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
     Structured manual citations are validated by their legal-reference owner;
     their availability does not establish or invalidate an acquired PDF's identity.
     """
-    repo_root = root.resolve()
-    path = _resolve_corpus_path(repo_root, source)
-    if repo_root not in path.parents and path != repo_root:
-        raise RegistryValidationError(f"source {source.id!r} escapes repository root")
-    if path.is_file():
-        present_path = path
-    else:
-        companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
-        if companion_path is None:
-            raise RegistryValidationError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
-        present_path = companion_path
+    try:
+        present_path = locate_corpus_file(root, source.corpus_path)
+    except CorpusPathEscapeError as exc:
+        raise RegistryValidationError(f"source {source.id!r} escapes repository root") from exc
+    if present_path is None:
+        raise RegistryValidationError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
     actual_sha256, length = hash_file(present_path)
     if length != source.bytes:
         raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
@@ -258,20 +253,12 @@ def _validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, pa
         )
 
 
-def _resolve_corpus_path(root: Path, source: GeneratedArtifactSource) -> Path:
-    direct = (root / source.corpus_path).resolve()
-    if direct.is_file():
-        return direct
-    packaged = (root / "src" / "cadrumo" / "_data" / source.corpus_path).resolve()
-    return packaged if packaged.is_file() else direct
-
-
 def _bundle_root(root: Path) -> Path:
     return (
         root
         if (root / "corpus").is_dir()
-        else root / "src" / "cadrumo" / "_data"
-        if (root / "src" / "cadrumo" / "_data" / "corpus").is_dir()
+        else root / PACKAGED_DATA_ROOT
+        if (root / PACKAGED_DATA_ROOT / "corpus").is_dir()
         else root
     )
 

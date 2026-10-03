@@ -39,7 +39,8 @@ from ._google_payloads import (
     GoogleStatusResult,
     GoogleSyncProbeResult,
 )
-from .runtime_google_configuration import run_google_configuration, run_google_register
+from .runtime_google_configuration import run_google_configuration
+from .runtime_google_registration import run_google_register
 
 if TYPE_CHECKING:
     import typer

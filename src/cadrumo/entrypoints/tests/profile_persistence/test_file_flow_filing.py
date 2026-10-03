@@ -56,6 +56,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_certificate_secret_backend_factory,
 )
 
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -98,7 +100,7 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
             actor="operator-A",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -284,7 +286,9 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
     assert computing.details.extemporanea is True
 
     assert target_filing_records(
-        list_filing_records(ports=build_filing_action_ports(bucket_id=work_unit.bucket_id)),
+        list_filing_records(
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation())
+        ),
         work_unit,
     ) == (filing,)
 
@@ -354,7 +358,11 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert (
         target_filing_records(
-            list_filing_records(ports=build_filing_action_ports(bucket_id=work_unit.bucket_id)),
+            list_filing_records(
+                ports=build_filing_action_ports(
+                    bucket_id=work_unit.bucket_id, operation=published_authority_operation()
+                )
+            ),
             work_unit,
         )
         == ()
@@ -531,7 +539,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
     refreshed_filing_one = get_filing_record(
         filing_one.filing_record_id,
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
     assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_filing_one.superseded_at == T5
@@ -661,7 +669,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
     )
 
     default_listing = list_filing_records(
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
     target_default_listing = target_filing_records(default_listing, work_unit)
     assert len(target_default_listing) == 1
@@ -669,7 +677,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
 
     with_history = list_filing_records(
         include_superseded=True,
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
     assert len(target_filing_records(with_history, work_unit)) == 2
 
@@ -728,7 +736,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
 
     listed = list_filing_records(
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )
@@ -790,7 +798,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
     listed = list_filing_records(
         modelo="100",
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )
@@ -804,7 +812,7 @@ def test_get_filing_record_raises_on_missing_id(repos: Repos) -> None:
         get_filing_record(
             "0" * 64,
             ports=replace(
-                build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
                 filing_repository=fr_repo,
             ),
         )

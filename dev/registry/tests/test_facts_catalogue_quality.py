@@ -10,13 +10,10 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFamily
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import (
-    GovernedFact,
-    GovernedFactCatalogue,
-    GovernedFactFamily,
-    GovernedFactVariant,
-)
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from dev._paths import REPO_ROOT
 
 from ..analysis.facts_catalogue_quality import (

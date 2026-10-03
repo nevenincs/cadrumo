@@ -22,16 +22,14 @@ from ...application.live.remote_state_models import (
     LiveIvaAuthOutcome,
     LiveIvaReadOutcome,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.hashing import reject_duplicate_json_members
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,19 +41,10 @@ class IvaRemoteStateCaptureRead:
     report: IvaRemoteStateAcquisitionReport
 
 
-def _unique_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError("IVA evidence failure context contains duplicate keys")
-        result[key] = value
-    return result
-
-
 def _failure_context(value: str | None) -> dict[str, object] | None:
     if value is None:
         return None
-    decoded = json.loads(value, object_pairs_hook=_unique_json_object)
+    decoded = json.loads(value, object_pairs_hook=reject_duplicate_json_members)
     if not isinstance(decoded, dict):
         raise ValueError("IVA evidence failure context must be a JSON object")
     return cast(dict[str, object], decoded)
@@ -164,13 +153,7 @@ def read_iva_remote_state_capture_for_cli(
         ):
             raise ValueError("IVA evidence result disagrees with its settled receipt")
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return IvaRemoteStateCaptureRead(completion=completed, projection=projection, report=report)
 
 

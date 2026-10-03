@@ -1,0 +1,81 @@
+[[revisions.2010-y-siguientes.export_layouts]]
+id = 'generated-modelo-360-2010-y-siguientes-fichero'
+
+[[revisions.2010-y-siguientes.export_layouts.records]]
+id = 'm360-operaciones'
+record_type = 'operaciones'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f098'
+offset = 6046
+length = 148
+kind = 'casilla'
+casilla_id = 'decl.op2-proveedor-direccion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f099'
+offset = 6194
+length = 15
+kind = 'casilla'
+casilla_id = 'decl.op2-proveedor-telefono'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f100'
+offset = 6209
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.op2-proveedor-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f101'
+offset = 6211
+length = 180
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f102'
+offset = 6391
+length = 10
+kind = 'literal'
+literal = '</T360020>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[revisions.2010-y-siguientes.export_layouts.records.row_field_casilla_ids]

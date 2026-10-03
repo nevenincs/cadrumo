@@ -39,9 +39,10 @@ from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import PRODUCT_PACKAGE, is_test_source
 from dev.quality.unread_inputs import report_unread
 
-SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
+SOURCE_ROOT: Final[Path] = REPO_ROOT / PRODUCT_PACKAGE
 REGISTRY_PACKAGE_ROOT: Final[Path] = SOURCE_ROOT / "domain" / "calculations" / "registry"
 __all__ = [
     "REGISTRY_PACKAGE_ROOT",
@@ -137,7 +138,7 @@ def _tokens(text: str, codes: frozenset[str]) -> set[str]:
 
 def _iter_package_modules(package_root: Path) -> Iterator[Path]:
     for path in scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
-        if "tests" in path.relative_to(package_root).parts:
+        if is_test_source(path, root=package_root):
             continue
         yield path
 

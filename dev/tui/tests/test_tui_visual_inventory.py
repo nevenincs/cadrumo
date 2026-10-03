@@ -719,7 +719,7 @@ def test_a_harness_error_defaults_to_the_retryable_kind() -> None:
 
 def test_the_refusal_reason_is_extracted_for_the_skip_note() -> None:
     """A skipped frame must name why, in the harness's own words."""
-    from ..cli import _first_refusal_line
+    from .._render import _first_refusal_line
 
     detail = (
         "harness `open modelo-work-wizard --size 120x40 --theme dark` exited 1\n"

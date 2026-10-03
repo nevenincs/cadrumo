@@ -58,7 +58,7 @@ from cadrumo.domain.calculations.registry.binding_provider_registration import (
     validate_binding_against_registration,
 )
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.binding_targets import binding_consumers
+from cadrumo.domain.calculations.registry.binding_targets import binding_consumers, revision_bindings_by_id
 from cadrumo.domain.calculations.registry.binding_temporal import BindingApplicabilityKind
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import deducible_deduction_kind_overlaps
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
@@ -116,7 +116,7 @@ def _registration_failures(
 
 def _alternate_contract_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
     """Return failures for alternates whose value contract differs from the primary's."""
-    by_id = {binding.id: binding for binding in revision.bindings}
+    by_id = revision_bindings_by_id(revision)
     failures: list[str] = []
     for casilla in revision.casillas:
         if casilla.input_kind is not InputKind.BOUND or casilla.binding is None:

@@ -43,6 +43,9 @@ from cadrumo.domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
+from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
+    prorrata_definitive_percentage_source_casilla_id,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 
@@ -130,6 +133,21 @@ def _context(
 
 def _m303_revision() -> ModeloRevision:
     return published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
+
+
+def test_published_periodic_and_annual_revisions_select_definitive_prorrata_from_typed_binding() -> None:
+    operation = published_authority_operation()
+    m303_revision = operation.snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
+    m390_revision = operation.snapshot("390", filing_year=_FILING_YEAR, period="0A").revision
+
+    assert prorrata_definitive_percentage_source_casilla_id(m303_revision.bindings) == _CURRENT_YEAR_PRORRATA_ID
+    assert prorrata_definitive_percentage_source_casilla_id(m390_revision.bindings) == _CURRENT_YEAR_PRORRATA_ID
+
+    # The selected published revision contains a similarly named source casilla,
+    # but the selector must refuse when its typed provider is absent.
+    without_typed_bindings = m303_revision.model_copy(update={"bindings": ()})
+    assert any(casilla.id == _CURRENT_YEAR_PRORRATA_ID for casilla in without_typed_bindings.casillas)
+    assert prorrata_definitive_percentage_source_casilla_id(without_typed_bindings.bindings) is None
 
 
 def _canonical_bienes_target(*, modelo: str, period: str, output: BienesInversionRegularizacionOutput) -> str:

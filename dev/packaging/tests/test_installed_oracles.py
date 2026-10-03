@@ -30,6 +30,7 @@ from typing import Any
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.product_environment import ambient_product_settings_removed, clean_product_env
 from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
@@ -167,10 +168,8 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
 )
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.fixed_width_codec import (
-    parse_fixed_width_export_field,
-    render_fixed_width_export_field,
-)
+from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 
 descriptor_path = Path(str(files("cadrumo").joinpath(
@@ -932,7 +931,7 @@ def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     carries its own ``aeat``, and a server that reached it would serve another
     installation's command surface.
     """
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment = ambient_product_settings_removed()
     environment["PATH"] = os.pathsep.join(
         (str(venv_bin_dir(venv)), path_without_product_executables(environment.get("PATH", "")))
     )
@@ -1074,10 +1073,7 @@ async def _call_dev_installed_mcp_authenticate(
     from mcp import ClientSession
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-    environment.pop("PYTHONPATH", None)
-    environment.pop("PYTHONHOME", None)
-    environment.pop("VIRTUAL_ENV", None)
+    environment = clean_product_env()
     environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
     server = StdioServerParameters(
         command=str(executable.resolve(strict=True)),

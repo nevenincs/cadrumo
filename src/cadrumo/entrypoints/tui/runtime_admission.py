@@ -11,7 +11,7 @@ from textual.app import App
 from ...application.user_profile.login_interaction import ProfileLoginChoice
 from ...core.async_cleanup import close_async_resources
 from .launcher import run_runtime_managed_application
-from .runtime_management import RuntimeManagementCleanup
+from .runtime_management_cleanup import RuntimeManagementCleanup
 from .secret.runtime_login import (
     RuntimeClientOpener,
     RuntimeCredentialClientOpener,

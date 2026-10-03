@@ -1,38 +1,32 @@
 """The workbench's production reader and actions for one declaration.
 
-Every read goes through the form loading service against the session's pinned
-authority and the profile's repositories; every action goes through the
-declaration's lifecycle door, rebuilt on the calculation head and granting
-verification report the latest read found, so Verify and File always act on the
-revision the filer is looking at. The edit admission is taken when the form is
-read -- opening one declaration's workbench is the start of its edit session --
-and its baseline is the one every parse and apply is judged against; the door
-renews it silently before submitting and refuses, keeping the staged changes,
-when the declaration moved.
+Every read goes through the declaration's workbench source -- in the product,
+the profile worker's registered reads over the session's runtime connection --
+and every action goes through the declaration's lifecycle door, rebuilt on the
+calculation head and granting verification report the latest read found, so
+Verify and File always act on the revision the filer is looking at. The edit
+admission is taken with the form read -- opening one declaration's workbench is
+the start of its edit session -- and its baseline is the one every parse and
+apply is judged against; the door renews it silently before submitting and
+refuses, keeping the staged changes, when the declaration moved.
 
-Parsing is the application's typed grammar in the filer's language. A refusal
-comes back as the sentence that says how to fix the entry; the refused text is
-never echoed or kept.
-
-See Also:
-    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`
-        The recorded operand and result trace, read without reevaluating the formula.
-    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
-        The pinned registry snapshot supplying the selected modelo revision.
+Parsing is the application's typed grammar in the filer's language, judged
+against the admitted baseline and the governed tax-identifier format the read
+carried. A refusal comes back as the sentence that says how to fix the entry;
+the refused text is never echoed or kept.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Protocol
 
 from textual.screen import Screen
 
 from .....application.modelo.action_errors import modelo_edit_refusal_error
-from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
+from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -64,7 +58,6 @@ from .....application.modelo.edit_preflight import (
     VALUE_REFUSED_PREFIX,
 )
 from .....application.modelo.value_presentation import format_casilla_value
-from .....application.modelo.verification_actions import granting_verification_report
 from .....application.modelo.work_form_models import (
     ModeloFormAddressV1,
     ModeloFormBindingAddressV1,
@@ -72,26 +65,14 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     edit_address,
 )
-from .....application.modelo.work_form_service import (
-    ModeloWorkFormLoadV1,
-    load_modelo_work_form,
-    modelo_form_snapshot,
-)
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....application.modelo.workbench_read import ModeloWorkbenchFormReadV1
 from .....core.casilla_id import CasillaId
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
-from .....core.identity.bucket import BucketId
-from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from .....domain.calculations.registry.bindings import CasillaObservation
-from .....domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
-from .....domain.calculations.registry.tax_id_format import runtime_tax_id_format
-from .....domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-)
-from .....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .....core.identity.documents import SpanishTaxIdFormat
 from ...declarations.models import ModeloWorkspaceScreenFactoryV1
 from ..lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
@@ -112,18 +93,33 @@ from .ports import (
 from .screen import ModeloWorkbenchScreen
 
 if TYPE_CHECKING:
-    from .....application.live.borrador_100 import Borrador100SnapshotRepository
-    from .....application.modelo.operation_definitions import ModeloExportPublicResultV2
+    from .....application.modelo.export_projection import ModeloExportPublicResultV3
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
-    from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .....domain.calculations.registry.schema import RegistrySnapshot
-    from .....domain.deadlines.festivos import CalendarCCAA
-    from ...operations.controller import OperationController
+    from ...operations.controller_port import OperationControllerPort
 
-type LifecycleDoorFactory = Callable[[str | None, str | None], ModeloWorkspaceLifecycleDoor]
-"""Build the declaration's lifecycle door on a calculation head and verification report."""
 
-_M303: Final[str] = "303"
+class ModeloWorkbenchSourceV1(Protocol):
+    """Reads one declaration's form, with its edit admission, and the help of its casillas."""
+
+    def read_form(self, language: OutputLanguage) -> ModeloWorkbenchFormReadV1:
+        """Read the declaration's current form in ``language`` and admit its edit baseline."""
+        ...
+
+    def help_card(
+        self,
+        casilla_id: CasillaId,
+        *,
+        registry_revision_id: str,
+        calculation_revision_id: str | None,
+        language: OutputLanguage,
+    ) -> ModeloCasillaHelpCardV1:
+        """Assemble one casilla's help for the revision and calculation the form showed."""
+        ...
+
+
+type LifecycleDoorFactory = Callable[[ModeloWorkbenchFormReadV1 | None], ModeloWorkspaceLifecycleDoor]
+"""Build the declaration's lifecycle door on what the latest read found, or before any read."""
+
 _EDIT_UNAVAILABLE_KEY: Final[str] = "application.modelo.lifecycle.refusal.edit_unavailable"
 _SCALAR_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditScalarIntentKind]] = MappingProxyType(
     {
@@ -152,38 +148,27 @@ _BINDING_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditBindingIntentKind]]
 
 
 @dataclass(frozen=True, slots=True)
-class WorkbenchRepositories:
-    """The profile repositories one declaration's form is read from.
-
-    ``borrador_snapshots`` is the profile's AEAT draft store, read to say when
-    replayed AEAT data was imported; ``holiday_territory`` reads the profile's
-    holiday territory afresh on each read, so a deadline shifts for the
-    filer's own regional holidays and not the national ones only;
-    ``bucket_events`` is the profile's event history, read to say when the
-    latest file for the AEAT was created and whether it still matches.
-    """
-
-    work_units: WorkUnitCatalogueRepositoryProtocol
-    calculations: CalculationRevisionCatalogueRepositoryProtocol
-    verifications: VerificationReportCatalogueRepositoryProtocol
-    borrador_snapshots: Borrador100SnapshotRepository | None = None
-    holiday_territory: Callable[[], CalendarCCAA | None] | None = None
-    bucket_events: BucketEventHistoryRepositoryProtocol | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class _ReadState:
     """What the latest read found and every action is judged against."""
 
+    read: ModeloWorkbenchFormReadV1
     baseline: ModeloEditBaselineV1 | None
-    calculation_revision_id: str | None
-    verification_report_id: str | None
-    asks_m303_evidence: bool
-    registry_revision_id: str
-    #: The immutable operand traces of the calculation the form is showing.
-    observations: tuple[CasillaObservation, ...]
     #: Why the declaration cannot be edited, in the filer's words; ``None`` when it can.
     edit_refusal: str | None = None
+
+    @property
+    def tax_id_format(self) -> SpanishTaxIdFormat:
+        return self.read.tax_id_format
+
+
+@dataclass(frozen=True, slots=True)
+class _PendingApply:
+    """One submitted Apply, the renewed baseline it carried and the revision its form showed."""
+
+    operation_id: str
+    door: ModeloWorkspaceLifecycleDoor
+    baseline: ModeloEditBaselineV1
+    registry_revision_id: str
 
 
 class InstalledModeloWorkbench:
@@ -192,73 +177,37 @@ class InstalledModeloWorkbench:
     def __init__(
         self,
         *,
-        bucket_id: BucketId,
         declaration: DeclarationsWorkspaceDeclarationRefV1,
-        operation: PinnedAuthorityOperation,
-        repositories: WorkbenchRepositories,
+        source: ModeloWorkbenchSourceV1,
         door: LifecycleDoorFactory,
     ) -> None:
-        """Bind the declaration, the pinned authority, its repositories and its door factory."""
-        self._bucket_id = bucket_id
+        """Bind the declaration, its workbench source and its door factory."""
         self._declaration = declaration
-        self._operation = operation
-        self._repositories = repositories
+        self._source = source
         self._door_factory = door
         self._state: _ReadState | None = None
-        self._snapshots: dict[str, RegistrySnapshot] = {}
-        self._tax_id_format = runtime_tax_id_format(authority=operation)
-        self._apply_operation: tuple[str, ModeloWorkspaceLifecycleDoor] | None = None
+        self._apply_operation: _PendingApply | None = None
 
     # -- reading -------------------------------------------------------------
 
     def _door(self) -> ModeloWorkspaceLifecycleDoor:
         state = self._state
-        if state is None:
-            return self._door_factory(None, None)
-        return self._door_factory(state.calculation_revision_id, state.verification_report_id)
+        return self._door_factory(None if state is None else state.read)
 
     def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
-        """Admit an edit baseline, read the declaration's form and remember what the actions need."""
-        admit = self._door_factory(None, None).edit_admission
-        admission = None if admit is None else admit()
-        declaration = self._declaration
-        territory = self._repositories.holiday_territory
-        loaded = load_modelo_work_form(
-            self._bucket_id,
-            declaration.modelo,
-            declaration.filing_year,
-            declaration.period,
-            operation=self._operation,
-            work_unit_repository=self._repositories.work_units,
-            calculation_repository=self._repositories.calculations,
-            verification_repository=self._repositories.verifications,
-            admission=admission,
-            language=language,
-            borrador_snapshots=self._repositories.borrador_snapshots,
-            holiday_territory=None if territory is None else territory(),
-            bucket_events=self._repositories.bucket_events,
-        )
-        form = loaded.form
-        head_id = form.calculation_revision_id
-        head = None if head_id is None else self._repositories.calculations.load().get(head_id)
-        report = (
-            None if head_id is None else granting_verification_report(self._repositories.verifications.load(), head_id)
-        )
+        """Read the declaration's form, admitting an edit baseline, and remember what the actions need."""
+        read = self._source.read_form(language)
+        admission = read.admission
         self._state = _ReadState(
+            read=read,
             baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
             edit_refusal=(
                 resolve_error_message(modelo_edit_refusal_error(admission.refusal))
                 if isinstance(admission, ModeloEditRefusedV1)
                 else None
             ),
-            calculation_revision_id=head_id,
-            verification_report_id=None if report is None else str(report.verification_report_id),
-            asks_m303_evidence=str(declaration.modelo) == _M303
-            and (head is None or head.filing_instance_evidence is None),
-            registry_revision_id=str(form.registry_revision_id),
-            observations=() if head is None else head.observations,
         )
-        return loaded
+        return read.load
 
     def edit_refusal(self) -> str | None:
         """Why the declaration last read cannot be edited, or ``None`` when it can or was not asked."""
@@ -266,37 +215,15 @@ class InstalledModeloWorkbench:
         return None if state is None else state.edit_refusal
 
     def help_card(self, casilla_id: CasillaId, language: OutputLanguage) -> ModeloCasillaHelpCardV1:
-        """Assemble one casilla's help from the snapshot of the revision last read."""
-        declaration = self._declaration
+        """Assemble one casilla's help for the revision and calculation of the form last read."""
         state = self._state
-        revision_id = None if state is None else state.registry_revision_id
-        key = revision_id or ""
-        snapshot = self._snapshots.get(key)
-        if snapshot is None:
-            snapshot = modelo_form_snapshot(
-                self._operation,
-                declaration.modelo,
-                declaration.filing_year,
-                declaration.period,
-                revision_id
-                or str(
-                    self._operation.revision_for_context(
-                        str(declaration.modelo),
-                        filing_year=declaration.filing_year,
-                        period=declaration.period.registry_token,
-                    ).id
-                ),
-            )
-            self._snapshots[key] = snapshot
-        return build_casilla_help_card(
+        if state is None:
+            raise ModeloLifecycleActionUnavailableError(translated_message="tui.modelo.workbench.read_failed")
+        return self._source.help_card(
             casilla_id,
-            snapshot=snapshot,
-            operation=self._operation,
+            registry_revision_id=state.read.registry_revision_id,
+            calculation_revision_id=state.read.calculation_revision_id,
             language=language,
-            on=declaration.period.end_date,
-            observation=None
-            if state is None
-            else next((item for item in state.observations if item.casilla_id == casilla_id), None),
         )
 
     # -- editing -------------------------------------------------------------
@@ -315,7 +242,7 @@ class InstalledModeloWorkbench:
         result = parse_modelo_edit_lexeme(
             ModeloEditParseRequestV1(address=address, entry_locale=language, lexeme=lexeme),
             baseline=state.baseline,
-            tax_id_format=self._tax_id_format,
+            tax_id_format=state.tax_id_format,
         )
         if isinstance(result, ModeloEditParsedValueV1):
             value = result.value
@@ -351,56 +278,43 @@ class InstalledModeloWorkbench:
             operator_entries_unknown=any(finding.code == OPERATOR_LAYER_UNKNOWN for finding in result.findings),
         )
 
-    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
+    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationControllerPort:
         """Submit the staged changes as typed intents against the admitted baseline."""
         scalar, binding = _intents(changes)
         door = self._door()
-        controller = await door.apply_edits(baseline=self._baseline(), scalar_intents=scalar, binding_intents=binding)
-        self._apply_operation = None if door.edit_refusals is None else (str(controller.operation_id), door)
-        return controller
-
-    def take_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
-        """Read only this operation's validated source against the current installed coordinate."""
-        pending, self._apply_operation = self._apply_operation, None
         state = self._state
-        if pending is None:
-            return None
-        operation_id, door = pending
-        store = door.edit_refusals
-        if store is None:
-            return None
-        prerequisite = store.take(
-            operation_id,
-            work_unit_id=str(self._declaration.work_unit_id),
-            calculation_revision_id=None if state is None else state.calculation_revision_id,
+        controller, renewed = await door.apply_edits(
+            baseline=self._baseline(), scalar_intents=scalar, binding_intents=binding
         )
-        if prerequisite is None or state is None:
-            return None
-        snapshot = modelo_form_snapshot(
-            self._operation,
-            self._declaration.modelo,
-            self._declaration.filing_year,
-            self._declaration.period,
-            state.registry_revision_id,
-        )
-        providers = (
-            binding.provider for binding in snapshot.revision.bindings if binding.id in prerequisite.binding_ids
-        )
-        boxes = tuple(
-            dict.fromkeys(
-                box
-                for provider in providers
-                if isinstance(provider, PreviousFilingProvider)
-                for box in (
-                    *provider.source_casilla_ids,
-                    *((provider.source_casilla_id,) if provider.source_casilla_id else ()),
-                )
+        self._apply_operation = (
+            None
+            if state is None
+            else _PendingApply(
+                operation_id=str(controller.operation_id),
+                door=door,
+                baseline=renewed,
+                registry_revision_id=state.read.registry_revision_id,
             )
         )
+        return controller
+
+    async def take_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
+        """Read, once, the source the settled Apply named, judged against the declaration as last read."""
+        pending, self._apply_operation = self._apply_operation, None
+        state = self._state
+        if pending is None or state is None:
+            return None
+        if pending.baseline.current_calculation_revision_id != state.read.calculation_revision_id:
+            return None
+        prerequisite = await pending.door.settled_apply_prerequisite(
+            pending.operation_id, pending.baseline, pending.registry_revision_id
+        )
+        if prerequisite is None:
+            return None
         return WorkbenchApplyPrerequisite(
             address=ModeloFormCasillaAddressV1(casilla_id=prerequisite.casilla_id),
             calculation_revision_id=prerequisite.calculation_revision_id,
-            source_boxes=boxes,
+            source_boxes=prerequisite.source_boxes,
         )
 
     # -- lifecycle -----------------------------------------------------------
@@ -408,13 +322,15 @@ class InstalledModeloWorkbench:
     def calculation_evidence(self) -> WorkbenchCalculationEvidence | None:
         """Ask the ordinary Modelo 303 answers when the head records none."""
         state = self._state
-        if state is None or not state.asks_m303_evidence:
+        if state is None or not state.read.asks_m303_evidence:
             return None
         return WorkbenchCalculationEvidence(
-            work_unit_id=str(self._declaration.work_unit_id), asks_modelo_390=self._door().asks_modelo_390
+            work_unit_id=str(self._declaration.work_unit_id), asks_modelo_390=state.read.asks_modelo_390
         )
 
-    async def calculate(self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None) -> OperationController:
+    async def calculate(
+        self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None
+    ) -> OperationControllerPort:
         """Recalculate, first recording the Modelo 303 answers the filer gave."""
         door = self._door()
         if m303_evidence is None:
@@ -429,21 +345,21 @@ class InstalledModeloWorkbench:
             )
         return await door.calculate(ordinary_m303_filing_evidence=evidence)
 
-    async def verify(self) -> OperationController:
+    async def verify(self) -> OperationControllerPort:
         """Verify the calculation last read."""
         return await self._door().verify()
 
-    async def file(self) -> OperationController:
+    async def file(self) -> OperationControllerPort:
         """Record the verified calculation last read as filed locally."""
         return await self._door().file()
 
     def export_offer(self) -> WorkbenchExportOffer:
         """Offer what this installation can publish; a Modelo 303 asks its payment elections."""
         return WorkbenchExportOffer(
-            artefacts=offered_export_artefacts(), asks_elections=str(self._declaration.modelo) == _M303
+            artefacts=offered_export_artefacts(), asks_elections=str(self._declaration.modelo) == "303"
         )
 
-    async def export(self, request: WorkbenchExportRequest) -> OperationController:
+    async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
         """Export the verified calculation last read."""
         return await self._door().export(
             output_path=request.output_path,
@@ -454,7 +370,7 @@ class InstalledModeloWorkbench:
             artefact=request.artefact,
         )
 
-    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
         """Resolve one settled export's facts."""
         return await self._door().settled_export_result(projection)
 
@@ -524,18 +440,19 @@ class ModeloWorkspaceDeclarationAdmissionError(CadrumoError):
     """An installed declaration cannot open a workbench from this generation."""
 
 
+type DeclarationSourceFactory = Callable[[DeclarationsWorkspaceDeclarationRefV1], ModeloWorkbenchSourceV1]
+"""Build one declaration's workbench source on the session's runtime connection."""
+
 type DeclarationDoorFactory = Callable[
-    [DeclarationsWorkspaceDeclarationRefV1, str | None, str | None], ModeloWorkspaceLifecycleDoor
+    [DeclarationsWorkspaceDeclarationRefV1, ModeloWorkbenchFormReadV1 | None], ModeloWorkspaceLifecycleDoor
 ]
-"""Build one declaration's lifecycle door on a calculation head and verification report."""
+"""Build one declaration's lifecycle door on what its latest read found."""
 
 
 def compose_installed_modelo_workbench_factory(
     *,
-    bucket_id: BucketId,
     declarations: tuple[DeclarationsWorkspaceDeclarationRefV1, ...],
-    operation: PinnedAuthorityOperation,
-    repositories: Callable[[], WorkbenchRepositories],
+    source: DeclarationSourceFactory,
     door: DeclarationDoorFactory,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Open a workbench for exactly the declarations this generation admitted.
@@ -543,7 +460,7 @@ def compose_installed_modelo_workbench_factory(
     A declaration opens only when the generation lists it with the same
     coordinates it was selected with; a stale or duplicated one is refused
     before any screen is built. Each workbench reads its declaration afresh
-    through its own reader, so it never shows an earlier generation's figures.
+    through its own source, so it never shows an earlier generation's figures.
     """
     admitted = {str(declaration.work_unit_id): declaration for declaration in declarations}
     if len(admitted) != len(declarations):
@@ -555,11 +472,9 @@ def compose_installed_modelo_workbench_factory(
                 "the declaration target is not admitted by this workbench generation"
             )
         workbench = InstalledModeloWorkbench(
-            bucket_id=bucket_id,
             declaration=declaration,
-            operation=operation,
-            repositories=repositories(),
-            door=partial(door, declaration),
+            source=source(declaration),
+            door=lambda read: door(declaration, read),
         )
         return ModeloWorkbenchScreen(workbench, actions=workbench)
 
@@ -569,9 +484,10 @@ def compose_installed_modelo_workbench_factory(
 __all__ = [
     "WORDED_FINDING_CODES",
     "DeclarationDoorFactory",
+    "DeclarationSourceFactory",
     "InstalledModeloWorkbench",
     "LifecycleDoorFactory",
+    "ModeloWorkbenchSourceV1",
     "ModeloWorkspaceDeclarationAdmissionError",
-    "WorkbenchRepositories",
     "compose_installed_modelo_workbench_factory",
 ]

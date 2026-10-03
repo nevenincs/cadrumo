@@ -270,18 +270,11 @@ class M347ThirdPartyOperationProvider(InvoiceProviderBase):
     kind: Literal[BindingSourceKind.M347_THIRD_PARTY_OPERATION] = BindingSourceKind.M347_THIRD_PARTY_OPERATION
 
 
-def _invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
-    try:
-        return provider_member(binding, InvoiceProviderBase)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
-
-
 def is_m347_declarante_summary_invoice_binding(binding: BindingDefinition) -> bool:
     """Return whether ``binding`` is the M347 declarante-summary invoice binding.
 
     The canonical, single-defined predicate over ``_M347_DECLARANTE_SUMMARY_RECORD``,
-    read through the typed :func:`_invoice_selector` rather than a raw
+    read through the typed provider member rather than a raw
     ``selector_as_dict(binding).get("record")``: a caller outside this module
     (``application/invoices/source_resolver.py``) once carried its own copy of
     both the literal and a ``.get()`` read, so a rename of the ``record`` field
@@ -294,7 +287,7 @@ def is_m347_declarante_summary_invoice_binding(binding: BindingDefinition) -> bo
     """
     if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
         return False
-    return _invoice_selector(binding).record == _M347_DECLARANTE_SUMMARY_RECORD
+    return provider_member(binding, InvoiceProviderBase).record == _M347_DECLARANTE_SUMMARY_RECORD
 
 
 def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
@@ -405,7 +398,7 @@ def validate_invoice_binding(binding: BindingDefinition) -> list[str]:
 
 
 def _validated_invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
-    selector = _invoice_selector(binding)
+    selector = provider_member(binding, InvoiceProviderBase)
     validate_invoice_family_fact_and_aggregation(binding, selector, family_label="invoice", strict_scalar_shape=True)
     return selector
 
@@ -795,6 +788,16 @@ def _resolve_m347_declarante_summary_values(
     *,
     effective_date: date | None = None,
 ) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
+    """Resolve the Modelo 347 type 1 totals from the declarado records they summarise.
+
+    Both 347 record designs (aeat-dr-347-2011 and aeat-dr-347-2025, type 1) define the
+    totals over the emitted type 2 declarado records: positions 136-144 count those
+    records ("si un mismo declarado figura en varios registros, se computará tantas
+    veces como figure relacionado"), and positions 145-160 sum their annual amounts,
+    a negative record counting with minus. The records are therefore built here
+    exactly as the ``contraparte_clave`` row family builds them, threshold included,
+    and the totals are read off those records rather than recomputed per party.
+    """
     summary_bindings: list[BindingDefinition] = []
     invoice_family_bindings: list[BindingDefinition] = []
     for binding in revision.bindings:
@@ -810,33 +813,45 @@ def _resolve_m347_declarante_summary_values(
     if not summary_bindings:
         return {}, revision
 
-    declarable_party_ids = _m347_declarable_party_ids(
-        available,
-        effective_date=_require_m347_effective_date(effective_date),
-    )
-    thresholded = tuple(observation for observation in available if observation.party_tax_id in declarable_party_ids)
+    filing_date = _require_m347_effective_date(effective_date)
     resolved: dict[BindingId, Decimal] = {}
     for binding in summary_bindings:
         selector = _validated_invoice_selector(binding)
-        resolved[binding.id] = _aggregate_invoice_binding(
-            binding,
-            selector,
-            tuple(_filter_invoice_observations(thresholded, selector)),
+        records = build_invoice_rows(
+            "contraparte_clave",
+            tuple(_filter_invoice_observations(_observations_for_binding_source(available, binding), selector)),
+            m347_threshold_filter=lambda candidates: _m347_row_family_threshold_filter(
+                candidates,
+                effective_date=filing_date,
+            ),
         )
+        resolved[binding.id] = _m347_declarante_total(binding, selector, records)
     return resolved, revision.model_copy(update={"bindings": tuple(invoice_family_bindings)})
 
 
-def _m347_declarable_party_ids(
-    observations: tuple[InvoiceObservation, ...],
-    *,
-    effective_date: date,
-) -> frozenset[str]:
-    totals: dict[str, Decimal] = {}
-    for observation in observations:
-        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
-            observation,
-        )
-    return m347_declarable_party_ids(totals, effective_date=effective_date)
+def _m347_declarante_total(
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
+    records: tuple[Mapping[str, Decimal | str], ...],
+) -> Decimal:
+    """Read one type 1 total off the declarado records it summarises."""
+    if selector.fact == "operator_count":
+        _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.COUNT_DISTINCT)
+        return Decimal(len(records))
+    if selector.fact == "invoice_total_sum":
+        _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.SUM)
+        total = Decimal("0")
+        for record in records:
+            amount = record["importe_total"]
+            if not isinstance(amount, Decimal):
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} declarado record carries a non-decimal importe_total",
+                )
+            total += amount
+        return total
+    raise RegistryValidationError(
+        f"binding {binding.id!r} M347 declarant summary must use operator_count or invoice_total_sum",
+    )
 
 
 def _m347_row_family_threshold_filter(
@@ -948,8 +963,6 @@ def _aggregate_operator_count(
 ) -> Decimal:
     """Count the AEAT operator records represented by selected observations."""
     _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.COUNT_DISTINCT)
-    if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
-        return Decimal(len({observation.party_tax_id for observation in observations}))
     # AEAT defines this count as the number of Tipo 2 records (one per
     # (operator, clave) pair for the operador grouping; one per (operator,
     # clave, ejercicio, periodo) for the rectificacion grouping). Per
@@ -1043,7 +1056,6 @@ def _aggregate_invoice_binding(
 
 
 InvoiceProviderBase = InvoiceProviderBase
-invoice_selector = _invoice_selector
 
 
 # ---------------------------------------------------------------------------

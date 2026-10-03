@@ -9,17 +9,17 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import (
-    FactSelector,
     GovernedFact,
     GovernedFactCatalogue,
-    MappingFactPayload,
 )
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,

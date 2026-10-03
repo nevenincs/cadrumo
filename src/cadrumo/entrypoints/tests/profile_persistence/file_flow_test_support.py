@@ -532,7 +532,7 @@ def _workflow_gate(
     operation: PinnedAuthorityOperation,
 ) -> _WorkflowGate:
     profile = workflow_profile()
-    filing_ports = build_filing_action_ports(bucket_id=work_unit.bucket_id)
+    filing_ports = build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation)
     return _WorkflowGate(
         profile=profile,
         engine=build_revision_workflow_engine(
@@ -580,7 +580,7 @@ def _file_revision(
             operation=operation,
         )
         filing_ports = replace(
-            build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,

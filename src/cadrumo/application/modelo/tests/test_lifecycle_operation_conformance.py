@@ -15,16 +15,15 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import pytest
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationDurability, OperationEffect, OperationLifecycle
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
 from ...operations.models import CredentialFreeOperationRequest, OperationIdentity, OperationRequest
+from ...operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ...operations.persistence.journal import OperationPersistedSnapshot
 from ...operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
     OperationSchemaBindingV1,
@@ -128,7 +127,7 @@ class _SupersededCalculateExecutorV2:
 class _HistoricalCalculatePublicResultV1(BaseModel):
     """The exact former three-field result schema, owned only by replay tests."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     result_version: int = 1
     work_unit_id: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]

@@ -149,8 +149,6 @@ application:
           to it.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
           to carry %{requirements}.
-        provider_close_failed: AEAT browser session could not be closed safely; retry
-          authentication before reading AEAT data.
         session_identity_profile_mismatch: AEAT session identity does not match the
           active profile tax identity; clear auth sessions and authenticate the matching
           profile before live AEAT reads.

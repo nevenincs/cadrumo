@@ -73,6 +73,7 @@ def _prepare_export(profile: NativeCliProfileFixture, destination: Path) -> Prep
         return prepare_profile_export(
             _request(profile.label, destination),
             journal=_journal(profile),
+            authority_operation=operation,
             profile_decode_context=operation.profile_decode_context(),
             authorized_profile_id=profile_id,
         )

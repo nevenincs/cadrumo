@@ -2,8 +2,8 @@
 
 The workbench's installed reader and actions run against a seeded declaration
 with the real edit admission, parser, preflight, renewal and edit executor. Only
-the operation supervisor is stood in for: the door's submission is captured and
-the captured request is run through the production executor, as the supervised
+the operation supervisor is stood in for: the door's submission is recorded and
+the recorded request is run through the production executor, as the supervised
 operation would run it.
 
 * a box carried from another filing, which the form offers to replace, takes the
@@ -22,17 +22,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
-from pydantic import BaseModel
 
-from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ......application.modelo.edit_preflight import preflight_modelo_edit
 from ......application.modelo.work_form_models import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
@@ -41,13 +36,11 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     address_key,
 )
-from ......application.operations.models import OperationRequest
 from ......core.casilla_id import validated_casilla_id
 from ......core.external_constants import OutputLanguage
-from ......domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
-from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
+from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
+from ..installed import InstalledModeloWorkbench
 from ..ports import WorkbenchParsed
 from ..session import WorkbenchEditSession
 
@@ -60,77 +53,31 @@ _OVERRIDE_EDITABILITIES = {ModeloFormEditability.OVERRIDABLE_SOURCE, ModeloFormE
 class _Workbench:
     work: SeededOperatorWork
     installed: InstalledModeloWorkbench
-    submitted: list[OperationRequest[BaseModel]]
+    submissions: RecordedSubmissions
 
     def field(self, key: tuple[str, str]) -> ModeloFormField:
         form = self.installed.load(OutputLanguage.EN).form
         return next(item for item in form.fields() if address_key(item.address) == key)
 
     def apply(self, session: WorkbenchEditSession) -> None:
-        """Submit the staged changes through the installed actions, then run the captured request for real."""
+        """Submit the staged changes through the installed actions, then run the recorded request for real."""
         asyncio.run(self.installed.apply(session.payload()))
-        request = self.submitted.pop()
+        request = self.submissions.pop()
         refusal = self.work.execute(request)
         assert refusal is None, f"the edit executor refused the workbench's submission: {refusal!r}"
 
 
 @contextmanager
-def _workbench(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Workbench]:
-    submitted: list[OperationRequest[BaseModel]] = []
-
-    async def capture(_door: ModeloWorkspaceLifecycleDoor, request: OperationRequest[BaseModel]) -> object:
-        submitted.append(request)
-        return request
-
-    monkeypatch.setattr(ModeloWorkspaceLifecycleDoor, "_submit", capture)
+def _workbench(tmp_path: Path) -> Generator[_Workbench]:
+    submissions = RecordedSubmissions()
     with seeded_operator_work(tmp_path) as work:
-        unit = work.work_unit
-
-        def door(
-            calculation_revision_id: str | None, verification_report_id: str | None
-        ) -> ModeloWorkspaceLifecycleDoor:
-            return ModeloWorkspaceLifecycleDoor(
-                services=cast(Any, object()),
-                work_unit_id=work.work_unit_id,
-                calculation_revision_id=calculation_revision_id,
-                verification_report_id=verification_report_id,
-                edit_admission=work.admit,
-                edit_renewal=work.renew,
-                edit_preflight=lambda submission: preflight_modelo_edit(
-                    submission,
-                    work_catalogue=work.ports.work_unit_repository.load(),
-                    calculation_catalogue=work.ports.calculation_repository.load(),
-                    tax_id_format=runtime_tax_id_format(authority=work.operation),
-                ),
-            )
-
-        installed = InstalledModeloWorkbench(
-            bucket_id=unit.bucket_id,
-            declaration=DeclarationsWorkspaceDeclarationRefV1(
-                work_unit_id=unit.work_unit_id,
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
-                state=unit.state,
-                has_current_calculation=False,
-                has_current_filing=False,
-            ),
-            operation=work.operation,
-            repositories=WorkbenchRepositories(
-                work_units=work.ports.work_unit_repository,
-                calculations=work.ports.calculation_repository,
-                verifications=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
-            ),
-            door=door,
-        )
-        yield _Workbench(work=work, installed=installed, submitted=submitted)
+        installed = application_workbench(work.work_unit, operation=work.operation, submissions=submissions)
+        yield _Workbench(work=work, installed=installed, submissions=submissions)
 
 
 @pytest.mark.timeout(300)
-def test_a_carried_box_takes_the_filers_value_and_gives_it_back_to_its_source(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    with _workbench(tmp_path, monkeypatch) as bench:
+def test_a_carried_box_takes_the_filers_value_and_gives_it_back_to_its_source(tmp_path: Path) -> None:
+    with _workbench(tmp_path) as bench:
         bench.work.recalculate()
         form = bench.installed.load(OutputLanguage.EN).form
         carried = next(
@@ -161,11 +108,9 @@ def test_a_carried_box_takes_the_filers_value_and_gives_it_back_to_its_source(
 
 
 @pytest.mark.timeout(300)
-def test_a_declaration_calculated_elsewhere_names_the_value_applying_returns_to_source(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_declaration_calculated_elsewhere_names_the_value_applying_returns_to_source(tmp_path: Path) -> None:
     c06 = validated_casilla_id("06")
-    with _workbench(tmp_path, monkeypatch) as bench:
+    with _workbench(tmp_path) as bench:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             bench.work.work_unit_id, ports=bench.work.ports, clock=SEEDED_AT, casilla_inputs={c06: Decimal("100")}
         )

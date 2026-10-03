@@ -23,7 +23,7 @@ from cadrumo.application.runtime.contracts import (
 )
 from cadrumo.application.runtime.transport import RuntimeStatusRequest
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

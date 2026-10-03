@@ -53,13 +53,13 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import activate_subcommand_output_language, emit_envelope
+from .registered_operation_errors import submitted_operation_error
 from .runtime_modelo_dependencies import read_modelo_dependencies
 from .runtime_modelo_verification import (
     run_modelo_work_filing,
     run_modelo_work_verification,
     select_modelo_work_revision_for_cli,
 )
-from .runtime_registered_operation import submitted_operation_error
 
 
 def _dependency_inventory_item_payload(

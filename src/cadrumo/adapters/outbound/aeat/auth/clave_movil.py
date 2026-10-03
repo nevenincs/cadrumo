@@ -41,7 +41,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, override
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote
 
 from pydantic import ValidationError
 
@@ -65,7 +65,6 @@ from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....core.i18n.render import tr
 from .....core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
-from .....core.remote_authority import canonical_remote_hostname
 from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
@@ -76,6 +75,7 @@ from ._clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,
     default_sede_target_url,
+    is_authenticated_clave_landing,
     verification_probe_url,
 )
 from ._session_probe import run_authenticated_landing_probe
@@ -591,52 +591,20 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     @override
     def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
-        """Return True for a protected AEAT page reached after Cl@ve dispatch."""
-        external = self._settings.external_constants()
-        surface = external.aeat.clave_movil
-        try:
-            parsed = urlsplit(landing_url)
-        except ValueError:
-            return False
-        # The authority is decided by the one canonical helper, never by
-        # ``parsed.netloc``: that string still ends in the AEAT suffix when a
-        # credential prefix rides in front of it, so
-        # ``https://evil@www6.agenciatributaria.gob.es/`` was read as a
-        # protected AEAT landing.
-        host = canonical_remote_hostname(landing_url)
-        if host is None:
-            return False
-        host_suffix = external.aeat.domains.host_suffix.casefold()
-        if host != host_suffix and not host.endswith(f".{host_suffix}"):
-            return False
-        path = parsed.path.casefold()
-        if external.aeat.sede_paths.auth_gate_4033.casefold() in path:
-            return False
-        clave_path_markers = (
-            surface.selector_access_path_marker,
-            surface.dialogo_representacion_path_marker,
-            surface.obtener_clave_movil_path_marker,
-            surface.obtener_clave_movil_qr_path_marker,
-            surface.cancelar_clave_movil_path_marker,
+        """Return True for a protected AEAT page reached after Cl@ve Móvil dispatch."""
+        surface = self._settings.external_constants().aeat.clave_movil
+        return is_authenticated_clave_landing(
+            landing_url=landing_url,
+            target_path=target_path,
+            settings=self._settings,
+            clave_path_markers=(
+                surface.selector_access_path_marker,
+                surface.dialogo_representacion_path_marker,
+                surface.obtener_clave_movil_path_marker,
+                surface.obtener_clave_movil_qr_path_marker,
+                surface.cancelar_clave_movil_path_marker,
+            ),
         )
-        if any(marker.casefold() in path for marker in clave_path_markers):
-            return False
-        if target_path in landing_url:
-            return True
-        return self._same_aeat_application_path(landing_path=path, target_path=target_path)
-
-    @staticmethod
-    def _same_aeat_application_path(*, landing_path: str, target_path: str) -> bool:
-        target_path_only = urlsplit(target_path).path.casefold()
-        landing_parts = tuple(part for part in landing_path.split("/") if part)
-        target_parts = tuple(part for part in target_path_only.split("/") if part)
-        if len(landing_parts) < 2 or len(target_parts) < 2:
-            return False
-        if target_parts[0] == "wlpl":
-            return landing_parts[:2] == target_parts[:2]
-        if target_parts[0] == "sede":
-            return landing_parts[:2] == target_parts[:2]
-        return False
 
     @override
     def _attempt_context(self) -> dict[str, object]:

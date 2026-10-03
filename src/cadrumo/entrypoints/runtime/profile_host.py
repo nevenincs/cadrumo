@@ -52,11 +52,8 @@ from ...application.user_profile.access_contracts import (
     ProfileAccessState,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...application.user_profile.automation_administration import (
-    AutomationAdministrationService,
-    enrollment_review_digest,
-    inspect_automation_inventory,
-)
+from ...application.user_profile.automation_administration import enrollment_review_digest, inspect_automation_inventory
+from ...application.user_profile.automation_administration_service import AutomationAdministrationService
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import (
     AdministrationFacts,
@@ -71,7 +68,8 @@ from ...application.user_profile.automation_operations import (
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
 )
 from ...application.user_profile.custody_ports import bind_profile_custody_port
-from ...application.user_profile.session_authority import ProfileSessionAuthority, SessionAuthorityFacts
+from ...application.user_profile.session_authority import ProfileSessionAuthority
+from ...application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from ...core.operations import profile_operation_subject
 from ...core.time.clock import now
 from .session_owner import ProfileWorkerSessionOwner

@@ -186,10 +186,8 @@ def run_modelo_work_amend_wizard(
         client,
         ModeloWorkAmendmentContextRequest(profile_id=client.profile_id, filing_record_id=unit.current_filing_record_id),
     ).projection
-    if (
-        not isinstance(context_projection, ModeloWorkAmendmentContextProjection)
-        or context_projection.unit.work_unit_id != unit.work_unit_id
-        or context_projection.record.filing_record_id != unit.current_filing_record_id
+    if not isinstance(context_projection, ModeloWorkAmendmentContextProjection) or _amendment_context_scope_invalid(
+        context_projection, unit
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     baseline = context_projection.record
@@ -317,9 +315,7 @@ def _selection_definition(
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
     table = _ACTIVE_RUNS[run_token]
-    summary_lines = "\n".join(
-        f"  {row.number}\t{row.label}\t{baseline_values.get(row.casilla_id, Decimal('0'))}" for row in amendable
-    )
+    summary_lines = "\n".join(f"  {row.number}\t{row.label}\t{baseline_values[row.casilla_id]}" for row in amendable)
     prompt_ref = _copy_ref(run_token, "sel:prompt")
     table[prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_select_prompt",
@@ -330,7 +326,7 @@ def _selection_definition(
     )
     choices: list[FlowChoice] = []
     for row in amendable:
-        previous = baseline_values.get(row.casilla_id, Decimal("0"))
+        previous = baseline_values[row.casilla_id]
         label_ref = _copy_ref(run_token, f"sel:choice:{row.casilla_id}")
         table[label_ref] = f"{row.number} ({row.label}): {previous}"
         choices.append(FlowChoice(value=row.casilla_id, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=label_ref)))
@@ -432,7 +428,7 @@ def _prompt_values_kind_reason(
     state = _run_flow(definition)
     corrections: list[tuple[ModeloCasillaRow, Decimal, Decimal]] = []
     for row in selected:
-        previous = baseline_values.get(row.casilla_id, Decimal("0"))
+        previous = baseline_values[row.casilla_id]
         corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
     amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
     raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
@@ -483,7 +479,7 @@ def _correction_value_pages(
 ) -> list[FlowPage]:
     pages: list[FlowPage] = []
     for row in selected:
-        previous = baseline_values.get(row.casilla_id, Decimal("0"))
+        previous = baseline_values[row.casilla_id]
         prompt_ref = _copy_ref(run_token, f"val:{row.casilla_id}:prompt")
         table[prompt_ref] = tr(
             "cli.app.modelo.work.amend_wizard_value_prompt",
@@ -686,4 +682,12 @@ def work_amend_wizard(
         ),
         actor=actor,
         output_language_opt=output_language_opt,
+    )
+
+
+def _amendment_context_scope_invalid(context_projection: ModeloWorkAmendmentContextProjection, unit: WorkUnit) -> bool:
+    """Require the selected current filing record and work unit in the amendment context."""
+    return (
+        context_projection.unit.work_unit_id != unit.work_unit_id
+        or context_projection.record.filing_record_id != unit.current_filing_record_id
     )

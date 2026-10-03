@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .invoice_bindings import (
     InvoiceProviderBase,
-    invoice_selector,
     validate_invoice_family_fact_and_aggregation,
 )
 
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def _validated_counterpart_selector(binding: BindingDefinition) -> InvoiceProviderBase:
-    selector = invoice_selector(binding)
+    selector = provider_member(binding, InvoiceProviderBase)
     validate_invoice_family_fact_and_aggregation(
         binding,
         selector,

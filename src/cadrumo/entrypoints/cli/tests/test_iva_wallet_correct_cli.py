@@ -16,7 +16,7 @@ from cadrumo.core.period import Period
 from .. import _modelo_iva_wallet_cli as handler
 from .. import runtime_modelo_iva_wallet_correction as bridge
 from .._modelo_payloads_m036 import IvaWalletCorrectResult
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

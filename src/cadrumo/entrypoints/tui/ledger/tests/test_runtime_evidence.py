@@ -25,11 +25,13 @@ from cadrumo.application.ledger.evidence_read_operation import (
     LedgerEvidenceListProjection,
     LedgerEvidenceRecordProjection,
 )
-from cadrumo.application.ledger.invoice_evidence_operation import (
+from cadrumo.application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
+)
+from cadrumo.application.ledger.invoice_evidence_extract_operation import (
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
@@ -61,7 +63,7 @@ from cadrumo.core.operations import (
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.ledger.evidence import draft_lines
+from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines
 from cadrumo.entrypoints.tui.ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
 from cadrumo.entrypoints.tui.ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
@@ -73,6 +75,14 @@ _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "d" * 64
 _SOURCE_DIGEST = "a" * 64
 _DRAFT_DIGEST = "b" * 64
+#: Extraction and confirmation results carry the label-reading fallback beside
+#: the draft, so they read the second result schema; the other reads stay on the first.
+_RESULT_VERSIONS = {
+    LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID: 1,
+    LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID: 1,
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID: 2,
+    LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID: 2,
+}
 
 
 class _Client:
@@ -124,8 +134,10 @@ class _Controller:
         result_type: type[BaseModel],
         *,
         result_version: int,
+        allow_refusal_detail: bool = False,
     ) -> BaseModel:
-        assert result_version == 1
+        assert result_version == _RESULT_VERSIONS[self.definition_id]
+        assert not allow_refusal_detail
         assert type(self.result) is result_type
         return self.result
 
@@ -258,7 +270,7 @@ def _install_runtime(
     client: _Client,
     results: list[tuple[str, BaseModel, OperationEffect]],
 ) -> tuple[list[dict[str, object]], list[_Controller]]:
-    from cadrumo.entrypoints.tui.ledger import runtime_evidence as bridge
+    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
 
     submissions: list[dict[str, object]] = []
     controllers: list[_Controller] = []

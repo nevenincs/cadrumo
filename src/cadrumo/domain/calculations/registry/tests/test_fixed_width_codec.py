@@ -17,10 +17,10 @@ from ..fixed_width_codec import (
     ExportJustification,
     ExportPadding,
     FixedWidthRecordRenderError,
-    parse_fixed_width_export_field,
     render_fixed_width_export_field,
     render_fixed_width_export_record_body,
 )
+from ..fixed_width_parser import parse_fixed_width_export_field
 from ..schema_exports import ExportFieldDefinition, ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]

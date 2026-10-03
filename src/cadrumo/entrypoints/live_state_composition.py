@@ -60,7 +60,6 @@ from ..adapters.persistence.profile.calculation_observations import (
 from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ..adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
-from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.notification_documents import notification_document_repository
@@ -279,6 +278,7 @@ def compose_filed_observation_persistence_ports(
     bucket_id: str,
     output_root: Path,
     objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
 ) -> FiledObservationPersistencePorts:
     """Compose every filed-observation port against one secure backend.
 
@@ -286,7 +286,14 @@ def compose_filed_observation_persistence_ports(
     :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
     """
     work_unit_repository = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
-    calculation_revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=bucket_id,
+        objects=objects,
+        operation=operation,
+    )
+    calculation_revision_repository = calculation_binding.calculation_repository()
     filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
     bucket_event_repository = BucketEventHistoryRepository(objects=objects)
     work_lifecycle_ports = WorkLifecyclePorts(
@@ -296,8 +303,7 @@ def compose_filed_observation_persistence_ports(
     justificante_repository = JustificanteRepository(objects=objects)
     calculation_repository = CalculationObservationRepository(bucket_id=bucket_id, objects=objects)
     iva_history_repository = IvaCompensationHistoryRepository(bucket_id=bucket_id, objects=objects)
-    with bundled_indexed_authority().operation() as operation:
-        transformation = FiledDeclarationTransformationAdapter(operation=operation)
+    transformation = FiledDeclarationTransformationAdapter(operation=operation)
     return FiledObservationPersistencePorts(
         parser=FiledObservationParserAdapter(),
         transformation=transformation,
@@ -342,6 +348,7 @@ def compose_live_state(
     *,
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> LiveStateComposition:
     """Compose the shared live-state port and filed-observation ports once.
 
@@ -358,6 +365,7 @@ def compose_live_state(
         bucket_id=resolved_bucket_id,
         output_root=resolved_root,
         objects=secure_objects,
+        operation=operation,
     )
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
@@ -370,6 +378,7 @@ def compose_live_state(
     remote_port = AppIvaRemoteStatePort(
         objects=secure_objects,
         filed_observation_ports=filed_ports,
+        authority_operation=operation,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
@@ -396,6 +405,7 @@ class AppIvaRemoteStatePort:
         *,
         objects: SecureObjectRepository,
         filed_observation_ports: FiledObservationPersistencePorts,
+        authority_operation: PinnedAuthorityOperation,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
@@ -403,6 +413,7 @@ class AppIvaRemoteStatePort:
         """Bind the port to one secure backend and filed-observation bundle."""
         self._objects = objects
         self._filed_observation_ports = filed_observation_ports
+        self._authority_operation = authority_operation
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._browser_session_factory = browser_session_factory
         self._operator_scope_ports = operator_scope_ports
@@ -479,7 +490,11 @@ class AppIvaRemoteStatePort:
         """List persisted IVA history and authority decisions."""
         states = IvaCompensationHistoryRepository(objects=self._objects).list_periods()
         decisions = IvaWalletDecisionRepository(objects=self._objects).list_decisions()
-        carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year or now().year)
+        carry_forward = build_iva_compensation_carry_forward_report(
+            states,
+            as_of_year=as_of_year or now().year,
+            operation=self._authority_operation,
+        )
         return IvaCompensationHistoryReport(
             row_count=len(states),
             rows=tuple(_history_row(state) for state in states),
@@ -780,9 +795,10 @@ def aggregate_iva_compensation_history_reports(
     output_root: Path,
     year_from: int,
     year_to: int,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationHistoryCaptureReport:
     """Combine per-year history reports at the shared composition boundary."""
-    composition = compose_live_state(output_root=output_root)
+    composition = compose_live_state(output_root=output_root, operation=operation)
     reloaded = composition.iva_remote_state_port.list_history(as_of_year=None)
     return IvaCompensationHistoryCaptureReport(
         output_root=str(output_root),

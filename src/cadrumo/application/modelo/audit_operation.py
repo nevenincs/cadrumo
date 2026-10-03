@@ -17,16 +17,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -44,34 +39,31 @@ from ..evidence.models import (
 )
 from ..evidence.service import EvidenceBundleService, EvidenceBundleVerificationReport
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+    HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+    RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_declared_frontend_and_action,
+    require_period_independent_replay_or_authority,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+    RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
+)
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .audit_operation_ports import ModeloAuditOperationPorts, ModeloAuditOperationPortsFactory
@@ -81,9 +73,6 @@ MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID = "modelo.audit.query"
 MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID = "modelo.audit.export"
 _HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 _QUERY_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
-_ACTIONS = frozenset(
-    {AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME, AccessAction.OBSERVE, AccessAction.RESULT}
-)
 type ModeloAuditReadKind = Literal["view", "check"]
 
 
@@ -318,25 +307,13 @@ class ModeloAuditExportExecutionResult(BaseModel):
     projection: ModeloAuditExportProjection
 
 
-def _require_profile[T: BaseModel](
-    request: OperationRequest[T], context: OperationExecutorContext, profile_id: UUID
-) -> None:
-    if (
-        request.subject_ref != profile_operation_subject(str(profile_id))
-        or context.identity.definition_id != request.definition_id
-        or context.identity.subject_ref != request.subject_ref
-        or require_active_bucket_id() != str(profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
 def _compose[T: BaseModel](
     factory: ModeloAuditOperationPortsFactory,
     request: OperationRequest[T],
     context: OperationExecutorContext,
     profile_id: UUID,
 ) -> ModeloAuditOperationPorts:
-    _require_profile(request, context, profile_id)
+    require_operation_profile(request, context, profile_id)
     operation = context.authority_operation
     ports = factory(profile_id=profile_id, operation=operation)
     if ports.profile_id != profile_id or ports.operation is not operation:
@@ -373,7 +350,7 @@ class ModeloAuditReadExecutor:
         if request.definition_id != expected or type(request.payload) is not ModeloAuditReadRequest:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         payload = request.payload
-        _require_profile(request, context, payload.profile_id)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(expected)
 
         def read() -> ModeloAuditReadExecutionResult | ModeloAuditQueryExecutionResult:
@@ -427,7 +404,7 @@ class ModeloAuditExportExecutor:
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         payload = request.payload
-        _require_profile(request, context, payload.profile_id)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID)
 
         async def settle() -> str:
@@ -500,72 +477,17 @@ def resolve_modelo_audit_operation_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     frontends = _HUMAN_FRONTENDS if recording else _QUERY_FRONTENDS if query else _HUMAN_FRONTENDS
-    if context.frontend not in frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    actions = _ACTIONS | frozenset({AccessAction.COMMIT}) if recording else _ACTIONS
-    if context.action not in actions:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    admitted = context.admitted_request
-    if admitted is not None and context.action not in {AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME}:
-        if (
-            admitted.profile_id != payload.profile_id
-            or admitted.definition_id != expected
-            or admitted.destination_id != context.destination_id
-            or admitted.frontend is not context.frontend
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods
-            or not admitted.period_independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    elif context.authority_operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action is AccessAction.OBSERVE:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != expected + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=schema.schema_id,
-                category=category,
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=expected,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=expected,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=actions,
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            requires_human=not query,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    access_profile = (
+        HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+        if recording
+        else RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+        if query
+        else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+    )
+    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
+    return bind_operation_access_profile(
+        context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
     )
 
 
@@ -587,41 +509,15 @@ def project_modelo_audit_operation_result(result: BaseModel, receipt: OperationT
         effect = OperationEffect.UPDATED
     else:
         raise ValueError("invalid Modelo audit execution result")
-    if (
-        receipt.identity.definition_id != expected
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("Modelo audit result differs from its exact-purpose terminal receipt")
-    return type(projection).model_validate_json(projection.model_dump_json(), strict=True)
-
-
-def _capabilities(*, recording: bool) -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE
-        if recording
-        else OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=(
-            frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
-            if recording
-            else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-        ),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=expected,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=effect,
+        message="Modelo audit result differs from its exact-purpose terminal receipt",
     )
+    return type(projection).model_validate_json(projection.model_dump_json(), strict=True)
 
 
 def build_modelo_audit_operation_definitions(
@@ -640,7 +536,7 @@ def build_modelo_audit_operation_definitions(
             ),
             phase_codes=(definition_id,),
             interaction_kinds=frozenset(),
-            capabilities=_capabilities(recording=False),
+            capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
             reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
             permitted_frontends=frontends,
         )
@@ -660,7 +556,7 @@ def build_modelo_audit_operation_definitions(
         ),
         phase_codes=(MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(recording=True),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_HUMAN_FRONTENDS,
     )
@@ -679,18 +575,9 @@ def build_modelo_audit_operation_registrations(
     if len(definitions) != len(models) or {definition.definition_id for definition in definitions} != set(models):
         raise ValueError("incomplete Modelo audit operation family")
     return tuple(
-        OperationPublicDefinitionRegistrationV1.compose(
+        OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".request",
-                schema_version=1,
-                model_type=models[definition.definition_id][0],
-            ),
-            result_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".result",
-                schema_version=1,
-                model_type=models[definition.definition_id][1],
-            ),
+            public_result_type=models[definition.definition_id][1],
             result_projector=project_modelo_audit_operation_result,
             access_resolver=resolve_modelo_audit_operation_access,
         )

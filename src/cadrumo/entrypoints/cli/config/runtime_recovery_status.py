@@ -6,7 +6,7 @@ from uuid import UUID
 
 import typer
 
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....application.user_profile.recovery_status_operation import (
     RECOVERY_STATUS_OPERATION_DEFINITION_ID,
     RecoveryStatusProjection,
@@ -15,8 +15,9 @@ from ....application.user_profile.recovery_status_operation import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
-from ..runtime_registered_operation import run_registered_operation, submitted_operation_error
+from ..runtime_registered_operation import run_registered_operation
 from ._profile_support import resolve_active_profile_pointer
 
 
@@ -48,11 +49,5 @@ def read_recovery_status(ctx: typer.Context) -> RecoveryStatusResult:
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code is not None
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return result

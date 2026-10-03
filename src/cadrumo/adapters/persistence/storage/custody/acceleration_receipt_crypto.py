@@ -13,14 +13,13 @@ from datetime import datetime
 from typing import Final
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
-from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import canonical_json_bytes
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.time.utc import validate_utc_aware
+from .....core.time.utc import UtcInstant, validate_utc_aware
 from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import DecryptionError, EncryptionError
@@ -74,19 +73,12 @@ class PersistedProfileSession(BaseModel):
     session_id: UUID
     custody_generation: int = Field(ge=1)
     dek_epoch: str = Field(min_length=1, max_length=128)
-    issued_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
+    issued_at: UtcInstant
+    idle_deadline: UtcInstant
+    absolute_deadline: UtcInstant
     nonce: bytes = Field(min_length=_NONCE_BYTES, max_length=_NONCE_BYTES)
     ciphertext: bytes = Field(min_length=KEY_SIZE, max_length=KEY_SIZE)
     tag: bytes = Field(min_length=_TAG_BYTES, max_length=_TAG_BYTES)
-
-    @field_validator("issued_at", "idle_deadline", "absolute_deadline")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_utc(cls, value: datetime) -> datetime:
-        """Reject naive or non-UTC deadlines at the model boundary."""
-        return validate_utc_aware(value)
 
 
 def _associated_data(

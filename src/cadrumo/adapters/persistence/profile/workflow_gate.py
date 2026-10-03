@@ -13,7 +13,7 @@ from ....application.modelo.workflow_gate_ports import (
 )
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloPresentado
-from ..storage.errors import StorageError
+from ..storage.errors import STORAGE_OPERATION_FAILURES
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.sql.secure_objects import SecureObjectRepository
 from .filing_drafts import ModeloDraftRepository
@@ -36,7 +36,7 @@ class WorkflowGateDraftRepositoryAdapter(WorkflowGateDraftRepositoryProtocol):
         """
         try:
             self._repository.save(payload)
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("draft_save") from exc
 
 
@@ -52,7 +52,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """Load one historical submission and translate storage failures."""
         try:
             return self._repository.load(record_id)
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("submission_load") from exc
 
     @override
@@ -60,7 +60,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """Yield historical submissions while translating iteration failures."""
         try:
             yield from self._repository.iter_submissions()
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("submission_iter") from exc
 
     @override
@@ -68,7 +68,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """List historical submission ids and translate storage failures."""
         try:
             return self._repository.list_submission_ids()
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("submission_list") from exc
 
 

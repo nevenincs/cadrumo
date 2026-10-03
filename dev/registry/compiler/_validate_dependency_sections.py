@@ -7,7 +7,7 @@ second relation record family.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -16,11 +16,128 @@ from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedul
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_revision_members import (
     ConstructDefinition,
+    DependencyClassificationDefinition,
 )
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
 
 from ._validate_helpers import missing_refs
 from .validate_evidence import EvidenceValidator
+
+
+def _classification_declaration_failures(
+    *,
+    prefix: str,
+    classification: DependencyClassificationDefinition,
+    construct_by_id: Mapping[str, ConstructDefinition],
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> list[str]:
+    """Validate one classification's declared references and target constructs."""
+    failures: list[str] = []
+    owner = f"dependency classification {classification.id}"
+    failures.extend(missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
+    failures.extend(missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_source_tier(prefix, owner, classification.source_refs, "official_source_guidance"))
+    for construct_id in classification.target_constructs:
+        construct = construct_by_id.get(construct_id)
+        if construct is None:
+            failures.append(f"{prefix}: {owner} references unknown construct {construct_id!r}")
+        elif classification.id not in construct.dependency_classifications:
+            failures.append(
+                f"{prefix}: {owner} targets construct {construct_id!r} but the construct does not list it",
+            )
+    return failures
+
+
+def _binding_reference_failure(
+    *,
+    prefix: str,
+    owner: str,
+    binding_id: BindingId,
+    reference_kind: str,
+    binding_refs: Sequence[str],
+    classification_refs: Sequence[str],
+) -> str | None:
+    """Describe binding references omitted by their dependency classification."""
+    missing = sorted(set(binding_refs).difference(classification_refs))
+    if not missing:
+        return None
+    return f"{prefix}: {owner} binding {binding_id!r} does not include binding {reference_kind} refs {missing!r}"
+
+
+def _classification_binding_failures(
+    *,
+    prefix: str,
+    classification: DependencyClassificationDefinition,
+    binding_by_id: Mapping[BindingId, BindingDefinition],
+) -> list[str]:
+    """Validate every binding attached to one dependency classification."""
+    failures: list[str] = []
+    owner = f"dependency classification {classification.id}"
+    for binding_id in classification.binding_refs:
+        binding = binding_by_id.get(binding_id)
+        if binding is None:
+            failures.append(f"{prefix}: {owner} references unknown binding {binding_id!r}")
+            continue
+        source_modelo = binding_source_modelo(binding)
+        if source_modelo != classification.source_modelo:
+            failures.append(
+                f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "
+                f"binding {binding_id!r} source_modelo {source_modelo!r}",
+            )
+        for kind, binding_refs, classification_refs in (
+            ("legal", binding.legal_refs, classification.legal_refs),
+            ("source", binding.source_refs, classification.source_refs),
+        ):
+            failure = _binding_reference_failure(
+                prefix=prefix,
+                owner=owner,
+                binding_id=binding_id,
+                reference_kind=kind,
+                binding_refs=binding_refs,
+                classification_refs=classification_refs,
+            )
+            if failure is not None:
+                failures.append(failure)
+    return failures
+
+
+def _bindings_by_source_modelo(revision: ModeloRevision) -> dict[str, list[BindingDefinition]]:
+    """Group source-backed bindings by their declared source modelo."""
+    grouped: dict[str, list[BindingDefinition]] = {}
+    for binding in revision.bindings:
+        source_modelo = binding_source_modelo(binding)
+        if source_modelo is not None:
+            grouped.setdefault(source_modelo, []).append(binding)
+    return grouped
+
+
+def _binding_source_coverage_failures(
+    *,
+    prefix: str,
+    bindings_by_source: Mapping[str, list[BindingDefinition]],
+    classifications_by_source: Mapping[str, DependencyClassificationDefinition],
+) -> list[str]:
+    """Require a non-exempt classification to cover each source binding."""
+    failures: list[str] = []
+    for source_modelo, bindings in sorted(bindings_by_source.items()):
+        classification = classifications_by_source.get(source_modelo)
+        if classification is None:
+            failures.append(f"{prefix}: binding source modelo {source_modelo!r} has no dependency classification")
+            continue
+        if classification.treatment == "non_dependency":
+            failures.append(
+                f"{prefix}: binding source modelo {source_modelo!r} cannot be classified as non_dependency",
+            )
+            continue
+        declared = set(classification.binding_refs)
+        missing = sorted(binding.id for binding in bindings if binding.id not in declared)
+        if missing:
+            failures.append(
+                f"{prefix}: dependency classification {classification.id!r} does not cover binding refs {missing!r}",
+            )
+    return failures
 
 
 def validate_dependency_classification_section(
@@ -39,71 +156,34 @@ def validate_dependency_classification_section(
     classifications_by_source = {classification.source_modelo: classification for classification in classifications}
 
     for classification in classifications:
-        owner = f"dependency classification {classification.id}"
-        failures.extend(missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
-        failures.extend(missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
         failures.extend(
-            evidence.require_source_tier(prefix, owner, classification.source_refs, "official_source_guidance"),
+            _classification_declaration_failures(
+                prefix=prefix,
+                classification=classification,
+                construct_by_id=construct_by_id,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+                evidence=evidence,
+            )
         )
-        for construct_id in classification.target_constructs:
-            construct = construct_by_id.get(construct_id)
-            if construct is None:
-                failures.append(f"{prefix}: {owner} references unknown construct {construct_id!r}")
-            elif classification.id not in construct.dependency_classifications:
-                failures.append(
-                    f"{prefix}: {owner} targets construct {construct_id!r} but the construct does not list it",
-                )
-        for binding_id in classification.binding_refs:
-            binding = binding_by_id.get(binding_id)
-            if binding is None:
-                failures.append(f"{prefix}: {owner} references unknown binding {binding_id!r}")
-                continue
-            source_modelo = binding_source_modelo(binding)
-            if source_modelo != classification.source_modelo:
-                failures.append(
-                    f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "
-                    f"binding {binding_id!r} source_modelo {source_modelo!r}",
-                )
-            missing_legal_refs = sorted(set(binding.legal_refs).difference(classification.legal_refs))
-            if missing_legal_refs:
-                failures.append(
-                    f"{prefix}: {owner} binding {binding_id!r} does not include binding legal refs "
-                    f"{missing_legal_refs!r}",
-                )
-            missing_source_refs = sorted(set(binding.source_refs).difference(classification.source_refs))
-            if missing_source_refs:
-                failures.append(
-                    f"{prefix}: {owner} binding {binding_id!r} does not include binding source refs "
-                    f"{missing_source_refs!r}",
-                )
+        failures.extend(
+            _classification_binding_failures(
+                prefix=prefix,
+                classification=classification,
+                binding_by_id=binding_by_id,
+            )
+        )
 
     for duplicate in sorted(duplicates(item.source_modelo for item in classifications)):
         failures.append(f"{prefix}: duplicate dependency classification source modelo {duplicate!r}")
 
-    bindings_by_source: dict[str, list[BindingDefinition]] = {}
-    for binding in revision.bindings:
-        source_modelo = binding_source_modelo(binding)
-        if source_modelo is not None:
-            bindings_by_source.setdefault(source_modelo, []).append(binding)
-
-    for source_modelo, bindings in sorted(bindings_by_source.items()):
-        classification = classifications_by_source.get(source_modelo)
-        if classification is None:
-            failures.append(
-                f"{prefix}: binding source modelo {source_modelo!r} has no dependency classification",
-            )
-            continue
-        if classification.treatment == "non_dependency":
-            failures.append(
-                f"{prefix}: binding source modelo {source_modelo!r} cannot be classified as non_dependency",
-            )
-            continue
-        declared = set(classification.binding_refs)
-        missing = sorted(binding.id for binding in bindings if binding.id not in declared)
-        if missing:
-            failures.append(
-                f"{prefix}: dependency classification {classification.id!r} does not cover binding refs {missing!r}",
-            )
+    failures.extend(
+        _binding_source_coverage_failures(
+            prefix=prefix,
+            bindings_by_source=_bindings_by_source_modelo(revision),
+            classifications_by_source=classifications_by_source,
+        )
+    )
 
     return failures
 

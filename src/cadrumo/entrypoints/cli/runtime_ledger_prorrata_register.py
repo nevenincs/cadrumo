@@ -2,27 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.prorrata_register.registered_operations import (
-    PRORRATA_LIST_OPERATION_DEFINITION_ID,
+from ...application.prorrata_register.operation_requests import PRORRATA_LIST_OPERATION_DEFINITION_ID
+from ...application.prorrata_register.projection_contracts import (
     ProrrataListProjection,
     ProrrataMutationProjection,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
@@ -31,18 +28,6 @@ def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
     if profile_id != expected_profile_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return require_profile_client(ctx, expected_profile_id=expected_profile_id)
-
-
-def _invalid[ProjectionT: BaseModel](
-    completed: RegisteredOperationCompletion[ProjectionT],
-) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def submit_prorrata_operation[ProjectionT: BaseModel](
@@ -71,7 +56,7 @@ def submit_prorrata_operation[ProjectionT: BaseModel](
     )
     projection_profile_id = getattr(completed.projection, "profile_id", None)
     if projection_profile_id != client.profile_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -85,7 +70,7 @@ def validate_prorrata_list_completion(
         and completed.refusal_code is None
     ):
         return completed.projection
-    _invalid(completed)
+    raise invalid_completion_error(completed)
 
 
 def validate_prorrata_mutation_completion(
@@ -104,7 +89,7 @@ def validate_prorrata_mutation_completion(
         or completed.effect is not (OperationEffect.NONE if refused else OperationEffect.UPDATED)
         or completed.refusal_code != (refusal.code if refusal is not None else None)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 

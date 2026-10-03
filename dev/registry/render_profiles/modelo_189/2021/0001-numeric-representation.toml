@@ -1,0 +1,573 @@
+schema_version = 1
+fragment_id = 'numeric-representation'
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['1']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 14
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '1'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-14-enumeration'
+decision_statement = 'The exact numeric source constant is 1.'
+justification = '''The official anchor declares the literal and the source width is 1: Constante número '1'.'''
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 14
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '1'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 3
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['189']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 16
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '2'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-16-enumeration'
+decision_statement = 'The exact numeric source constant is 189.'
+justification = '''The official anchor declares the literal and the source width is 3: Constante '189'.'''
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 16
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '2'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 18
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '3'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-18-year-yyyy'
+decision_statement = 'Ejercicio is the unsigned four-digit filing year.'
+justification = 'The official source names Ejercicio and states four digits: Las cuatro cifras del ejercicio fiscal al que corresponde la declaración.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 18
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '3'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'identifier_digits'
+value_policy = 'identifier-digits'
+integer_digits = 9
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 46
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-46-identifier-digits'
+decision_statement = 'The nine-position phone slot preserves the supplied contact telephone digits.'
+justification = 'The exact parser description calls this a numeric nine-position telephone field: TELÉFONO : Campo numérico de 9 posiciones.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 46
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'mistyped_alphanumeric_text'
+value_policy = 'mistyped-alphanumeric-text'
+integer_digits = 0
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 47
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-47-mistyped-alphanumeric-text'
+decision_statement = 'The forty-position source slot is a contact name and carries text, not a numeric value.'
+justification = 'The exact parser description identifies the contact-name slot: APELLIDOS Y NOMBRE: Se consignará el'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 47
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'identifier_digits'
+value_policy = 'identifier-digits'
+integer_digits = 13
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 51
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '8'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-51-identifier-digits'
+decision_statement = 'The thirteen-position justificante number is a digit identifier.'
+justification = 'The source calls it a sequential justificante number and sets thirteen numeric positions: Se consignará el número de justificante correspondiente a la declaración. Campo de contenido numérico de 13 posiciones. El número de justificante que habrá de figurar, será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 180.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 51
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '8'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'identifier_digits'
+value_policy = 'identifier-digits'
+integer_digits = 13
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 86
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '10'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-86-identifier-digits'
+decision_statement = 'The thirteen-position previous-declaration receipt is an identifier, zero-filled when absent.'
+justification = 'The source names an identificative number and requires zeros when absent: En el caso de que se haya consignado una “C” en el campo “Declaración complementaria” o que se haya consignado “S” en el campo “Declaración sustitutiva”, se consignará el número identificativo correspondiente a la declaración a la que sustituye. En cualquier otro caso deberá rellenarse a CEROS.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 86
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '10'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'integer'
+value_policy = 'unsigned-integer'
+integer_digits = 9
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 94
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '11'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-94-integer'
+decision_statement = 'The declared-subject total is a nonnegative count.'
+justification = 'The source defines the value as the count of type-2 records: Se consignará el número total de declarados en el registro de detalle de tipo 2 por la entidad declarante. Si un mismo declarado figura en varios registros, se computará tantas veces como figure relacionado. (Número de registros de tipo 2)'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 94
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '11'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['2']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 149
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '1'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-149-enumeration'
+decision_statement = 'The exact numeric source constant is 2.'
+justification = "The official anchor declares the literal and the source width is 1: Constante '2'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 149
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '1'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 3
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['189']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 151
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '2'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-151-enumeration'
+decision_statement = 'The exact numeric source constant is 189.'
+justification = '''The official anchor declares the literal and the source width is 3: Constante '189'.'''
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 151
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '2'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 153
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '3'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-153-year-yyyy'
+decision_statement = 'Ejercicio is the unsigned four-digit filing year.'
+justification = 'The official source names Ejercicio and states four digits: Consignar lo contenido en estas mismas posiciones del registro de tipo 1.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 153
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '3'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'identifier_digits'
+value_policy = 'identifier-digits'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 210
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '8'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-210-identifier-digits'
+decision_statement = 'The province code preserves the official two-digit code, including its leading zero.'
+justification = 'The source defines two numeric positions and enumerates two-digit provincial codes.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 210
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '8'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'mistyped_alphanumeric_text'
+value_policy = 'mistyped-alphanumeric-text'
+integer_digits = 0
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 269
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '11'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-269-mistyped-alphanumeric-text'
+decision_statement = 'Clave de valor is an alphabetic code despite the official numeric naturaleza token.'
+justification = 'The same official source lists alphabetic claves for this one-position slot: Se consignará una de las claves siguientes: Clave Descripción A Acciones o participaciones en el capital o en los fondos propios de entidades jurídicas negociados en un mercado organizado. B Valores representativos de la cesión a terceros d'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 269
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '11'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+]
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 313
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '12'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-313-enumeration'
+decision_statement = 'Clave de identificación is one of the three source-listed one-digit codes.'
+justification = 'The exact official content enumerates 1, 2 and 3: Se consignará una de las claves siguientes: Clave Descripción 1 Identificación por código ISIN (código de 12 posiciones). 2 Valores extranjeros sin código ISIN. 3 Identificación por NIF. Sólo se informará este campo cuando en el campo “Clave de Valor” (posición 81) se haya consignado “A”, “B” ó “C”'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 313
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '12'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_integer_part'
+value_policy = 'integer-part'
+integer_digits = 3
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 414
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-414-amount-integer-part'
+decision_statement = 'The 3-position official integer component belongs to porcentaje-participacion.'
+justification = 'AEAT identifies this exact source anchor as the integer portion: Parte entera del porcentaje; si no tiene contenido,'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 414
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_fractional_digits'
+value_policy = 'fractional-digits'
+integer_digits = 0
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 416
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-416-amount-fractional-digits'
+decision_statement = 'The 2-position official decimal component belongs to porcentaje-participacion.'
+justification = 'AEAT identifies this exact source anchor as the decimal portion: Parte decimal del porcentaje; Figurará la parte'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 416
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_integer_part'
+value_policy = 'integer-part'
+integer_digits = 10
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 442
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-442-amount-integer-part'
+decision_statement = 'The 10-position official integer component belongs to numero-valores.'
+justification = 'AEAT identifies this exact source anchor as the integer portion: Parte entera de los valores. Si no tiene contenido, se'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 442
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_fractional_digits'
+value_policy = 'fractional-digits'
+integer_digits = 0
+decimal_digits = 6
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 444
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-444-amount-fractional-digits'
+decision_statement = 'The 6-position official decimal component belongs to numero-valores.'
+justification = 'AEAT identifies this exact source anchor as the decimal portion: Parte decimal de los valores. Si no tiene contenido, se'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 444
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_integer_part'
+value_policy = 'integer-part'
+integer_digits = 14
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 457
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-457-amount-integer-part'
+decision_statement = 'The 14-position official integer component belongs to nominal-unitario-valores.'
+justification = 'AEAT identifies this exact source anchor as the integer portion: Parte entera del importe del nominal'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 457
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_fractional_digits'
+value_policy = 'fractional-digits'
+integer_digits = 0
+decimal_digits = 4
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 459
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm189-2021-row-459-amount-fractional-digits'
+decision_statement = 'The 4-position official decimal component belongs to nominal-unitario-valores.'
+justification = 'AEAT identifies this exact source anchor as the decimal portion: Parte decimal del importe del nominal'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 459
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[design_identity]
+modelo = '189'
+design_epoch = '2021'
+source_ref = 'aeat-dr-189-2021-2022'
+source_sha256 = '9cfcec402edf965492be9c0d2aed91eed5e2b58e0f37e52bbc9c24af47f26421'

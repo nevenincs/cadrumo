@@ -7,13 +7,17 @@ from typing import TYPE_CHECKING
 
 from ..application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    ModeloWorkspaceProjectedReadV1,
     SecureProfileWorkbenchGenerationReadDoorV1,
     WorkbenchGenerationV1,
 )
 
 if TYPE_CHECKING:
-    from ..application.modelo.workspace_models import ModeloWorkspaceResultV1, ModeloWorkspaceStaticInspectionResultV1
+    from ..application.modelo.workspace_models import (
+        ModeloWorkspaceProjectionV1,
+        ModeloWorkspaceRefusedResultV1,
+        ModeloWorkspaceResultV1,
+        ModeloWorkspaceStaticInspectionResultV1,
+    )
     from ..application.operations.registry import OperationPublicContractSetV1
     from ..application.overview.home import HomeAccountSession
     from ..core.authority_grade import RegistryAuthorityGrade
@@ -37,15 +41,24 @@ def compose_secure_workbench_generation_provider(
     performs; neither this builder nor its readers select an active profile.
     """
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
     from ..core.time.clock import now
+    from .calendar_evidence_composition import compose_calendar_aeat_reader
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
     from .ledger_action_composition import compose_ledger_action_ports
 
     account_session_reader()
+    calendar_aeat_reader = compose_calendar_aeat_reader(operation)
+    objects = secure_object_repository_for_bucket(profile_id)
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=profile_id,
+        objects=objects,
+        operation=operation,
+    )
 
     def read_door() -> SecureProfileWorkbenchGenerationReadDoorV1:
-        ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
+        ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation, objects=objects)
         return SecureProfileWorkbenchGenerationReadDoorV1(
             profile_id=profile_id,
             operation=operation,
@@ -62,11 +75,12 @@ def compose_secure_workbench_generation_provider(
             invoice_repository=ledger_action_ports.invoice_repository,
             bucket_event_repository=ledger_action_ports.bucket_event_repository,
             ledger_action_ports=ledger_action_ports,
-            verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
+            verification_repository=calculation_binding.verification_repository(),
             notification_custody_reader=_notification_custody_reader(profile_id),
             result_casilla_reader=_declaration_result_casilla_reader(operation),
             operation_contracts=operation_contracts,
-            modelo_projection_reader=_modelo_projection_reader(operation),
+            modelo_projection_reader=modelo_workspace_projection_reader(operation),
+            calendar_aeat_reader=calendar_aeat_reader,
         )
 
     def capture() -> WorkbenchGenerationV1:
@@ -92,49 +106,103 @@ def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
 def _declaration_result_casilla_reader(
     operation: PinnedAuthorityOperation,
 ) -> Callable[[str, int, Period], str | None]:
-    """Resolve the selected result casilla through the pinned authority."""
+    """Name the casilla that settles one modelo revision, through the pinned authority.
+
+    Resolution failures are answered with ``None`` rather than raised. A modelo
+    or period the registry cannot select is a declaration whose result is
+    UNKNOWN, which is exactly what the surface renders; letting it escape would
+    take down a Home and Declarations read over a figure that is one column of
+    one row.
+    """
 
     def read(modelo: str, filing_year: int, period: Period) -> str | None:
         from ..application.modelo.settlement_casilla import declaration_result_casilla_id
+        from ..core.errors.hierarchy import CadrumoError
 
-        snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
-        return declaration_result_casilla_id(snapshot.revision)
+        try:
+            snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
+            return declaration_result_casilla_id(snapshot.revision)
+        except (CadrumoError, ValueError, LookupError):
+            return None
 
     return read
 
 
-def _modelo_projection_reader(
+MODELO_WORKSPACE_READ_ATTEMPTS = 3
+"""Reads of one work unit before a declaration that keeps changing is reported."""
+
+
+def modelo_workspace_projection_reader(
     operation: PinnedAuthorityOperation,
-) -> Callable[[WorkUnit], ModeloWorkspaceProjectedReadV1]:
-    """Try graded first and retain its typed refusal on static fallback."""
-    from ..application.modelo.workspace_models import ModeloWorkspaceRefusedResultV1
+) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
+    """Read one work unit's canonical workspace projection for the generation.
+
+    The read the workbench search indexes each declaration from. The output
+    language is resolved per read rather than closed over, so a profile
+    language change is honoured by the next capture.
+
+    GRADED FIRST, static inspection second, and the order is the product
+    behaviour rather than an optimisation. A graded snapshot is the admission
+    that carries materialized values, their provenance and the canonical
+    readiness report; a static inspection carries the form's layout and says
+    plainly that it measured no values. Asking for the static one first would
+    index a calculated declaration as if nothing had been measured.
+
+    The graded arm is MATCHED, never assumed: a target with no calculation
+    yet, or a revision whose declared authority cannot satisfy the requested
+    grade, is answered with a typed refusal rather than an exception, and this
+    seam answers it by reading the same target at the admission that CAN
+    answer. Every taxpayer-facing refusal the graded resolver returns leaves
+    the revision resolvable at static inspection's lower admission.
+
+    A read whose stored data moved between its captures and its currentness
+    pass refuses as ``WORKSPACE_CHANGED``; that is no answer about the
+    declaration, so the unit is read again, at most
+    :data:`MODELO_WORKSPACE_READ_ATTEMPTS` times, and a unit that never holds
+    still raises the contended :class:`ProducerCaptureError` rather than
+    retrying without limit.
+    """
+    from ..application.modelo.workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
+    from ..application.producer_capture import ProducerCaptureError
     from ..core.authority_grade import RegistryAuthorityGrade
+    from ..core.errors.hierarchy import InternalInvariantError
     from ..core.external_constants import OutputLanguage
     from ..core.i18n.render import output_language as resolve_output_language
 
-    def project(unit: WorkUnit) -> ModeloWorkspaceProjectedReadV1:
-        language = OutputLanguage(resolve_output_language())
-        result = resolve_modelo_workspace_graded_snapshot(
-            unit,
-            operation=operation,
-            output_language=language,
-            required_grade=RegistryAuthorityGrade.CALCULATION,
-        )
-        if isinstance(result, ModeloWorkspaceRefusedResultV1):
+    def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
+        for _attempt in range(MODELO_WORKSPACE_READ_ATTEMPTS):
+            language = OutputLanguage(resolve_output_language())
+            admission = resolve_modelo_workspace_graded_snapshot(
+                unit,
+                operation=operation,
+                output_language=language,
+                required_grade=RegistryAuthorityGrade.CALCULATION,
+            )
+            if not isinstance(admission, ModeloWorkspaceRefusedResultV1):
+                return admission.projection
+            if admission.refusal.code is ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
+                continue
             static = resolve_modelo_workspace_static_inspection(
                 unit,
                 operation=operation,
                 output_language=language,
             )
-            return ModeloWorkspaceProjectedReadV1(projection=static.projection, graded_refusal=result.refusal)
-        return ModeloWorkspaceProjectedReadV1(projection=result.projection)
+            if isinstance(static, ModeloWorkspaceRefusedResultV1):
+                if static.refusal.code is not ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
+                    raise InternalInvariantError(f"static inspection refused with {static.refusal.code.value}")
+                continue
+            return static.projection
+        raise ProducerCaptureError(
+            translated_message="errors.refused.producer_capture_not_current",
+            context={"reason": "contended", "attempts": MODELO_WORKSPACE_READ_ATTEMPTS},
+        )
 
     return project
 
 
 def resolve_modelo_workspace_static_inspection(
     unit: WorkUnit, *, operation: PinnedAuthorityOperation, output_language: OutputLanguage
-) -> ModeloWorkspaceStaticInspectionResultV1:
+) -> ModeloWorkspaceStaticInspectionResultV1 | ModeloWorkspaceRefusedResultV1:
     """Read one exact work unit at static inspection admission."""
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..application.modelo.work_addressing import ModeloExactWorkUnitTarget
@@ -169,6 +237,15 @@ def resolve_modelo_workspace_graded_snapshot(
         build_diagnostics_ports,
         build_state_projection_read_ports,
     )
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    objects = secure_object_repository_for_bucket(unit.bucket_id)
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=unit.bucket_id,
+        objects=objects,
+        operation=operation,
+    )
 
     return resolve_graded_snapshot_result(
         ModeloWorkspaceExactWorkUnitTargetV1(
@@ -177,9 +254,15 @@ def resolve_modelo_workspace_graded_snapshot(
         required_grade=required_grade,
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
-        calculation_ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+        calculation_ports=build_calculation_action_ports(
+            bucket_id=unit.bucket_id, operation=operation, objects=objects
+        ),
+        verification_repository=calculation_binding.verification_repository(),
         readiness_read_ports=build_state_projection_read_ports(
-            diagnostics_ports=build_diagnostics_ports(bucket_id=unit.bucket_id)
+            diagnostics_ports=build_diagnostics_ports(bucket_id=unit.bucket_id),
+            operation=operation,
+            objects=objects,
+            bucket_id=unit.bucket_id,
         ),
         operation=operation,
         output_language=output_language,
@@ -187,7 +270,9 @@ def resolve_modelo_workspace_graded_snapshot(
 
 
 __all__ = [
+    "MODELO_WORKSPACE_READ_ATTEMPTS",
     "compose_secure_workbench_generation_provider",
+    "modelo_workspace_projection_reader",
     "resolve_modelo_workspace_graded_snapshot",
     "resolve_modelo_workspace_static_inspection",
 ]

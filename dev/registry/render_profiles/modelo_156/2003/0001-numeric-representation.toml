@@ -1,0 +1,317 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 62
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-record-type"
+decision_statement = "The one-position Type 1 record-type field is the numeric constant 1."
+justification = "The official design assigns one numeric position to this constant; the semantic entry fixes its exact value to 1."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 62
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["156"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 64
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-model"
+decision_statement = "The three-position model field is the numeric constant 156."
+justification = "The official design assigns three numeric positions to this constant; the semantic entry fixes its exact value to 156."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 64
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 66
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-year"
+decision_statement = "The four-position Ejercicio field carries the four fiscal-year digits."
+justification = "The official description states four figures of the fiscal year; the filing-year draft value retains all four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 66
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 86
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-contact-phone"
+decision_statement = "The nine-position contact telephone slot carries digits without a sign or decimal component."
+justification = "The official description calls this a numeric field of nine positions; the existing contact-person phone producer supplies the corresponding digit string."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 86
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 87
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-contact-name"
+decision_statement = "The forty-position contact-name slot carries text and has no numeric representation."
+justification = "The official description identifies surnames and name; the existing full-name contact producer supplies text, and the source prints no numeric nature for this slot."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 87
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 90
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-receipt-number"
+decision_statement = "The thirteen-position justification number is an unsigned whole number."
+justification = "The official description says numeric content of thirteen positions and gives no sign or decimal component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 90
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 111
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-prior-receipt-number"
+decision_statement = "The thirteen-position prior-declaration identifier is an unsigned whole number."
+justification = "The official description says numeric content of thirteen positions and requires zeroes when no prior declaration applies."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 111
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 119
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t1-affiliate-count"
+decision_statement = "The nine-position total number of affiliate records is an unsigned whole number."
+justification = "The official description defines the value as the total number of Type 2 records."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 119
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 134
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t2-record-type"
+decision_statement = "The one-position Type 2 record-type field is the numeric constant 2."
+justification = "The official design assigns one numeric position to this constant; the semantic entry fixes its exact value to 2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 134
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["156"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 136
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t2-model"
+decision_statement = "The three-position model field is the numeric constant 156."
+justification = "The official design assigns three numeric positions to this constant; the semantic entry fixes its exact value to 156."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 136
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 138
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-t2-year"
+decision_statement = "The four-position Ejercicio field repeats the fiscal year from Type 1."
+justification = "The official description directs the filer to copy the same positions from Type 1; the filing-year draft value preserves those four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 138
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+ordinal = "3"
+
+[design_identity]
+modelo = "156"
+design_epoch = "2003"
+source_ref = "enrolled-modelo-156-layout"
+source_sha256 = "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068"

@@ -25,10 +25,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.application.user_profile.access_contracts import AuthorityState
-from cadrumo.application.user_profile.automation_administration import (
-    AutomationAdministrationService,
-    enrollment_review_digest,
-)
+from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
 

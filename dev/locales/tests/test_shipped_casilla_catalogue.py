@@ -11,14 +11,11 @@ from functools import cache
 import pytest
 
 from .._paths import LOCALES_DIR
-from ..modelo_casilla_catalogue import (
-    REVIEWED_EQUIVALENT_SPANISH,
-    SOURCE_TRUNCATED_SPANISH,
-    CatalogueFindings,
-    ModeloCasillaCatalogue,
-    edition_text_gaps,
-    repeated_edition_text,
-)
+from ..casilla_catalogue_models import CatalogueFindings
+from ..casilla_reviewed_wording import REVIEWED_EQUIVALENT_SPANISH
+from ..casilla_source_inventory import edition_text_gaps, repeated_edition_text
+from ..casilla_text_policy import SOURCE_TRUNCATED_SPANISH
+from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

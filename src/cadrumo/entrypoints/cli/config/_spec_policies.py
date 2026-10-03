@@ -8,17 +8,15 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRouteValue,
 )
 
-from ..command_spec import (
+from .._command_shared_contracts import (
     Capability,
-    CommandSpec,
-    ExecutionPolicySpec,
-    InvocationSpec,
     PerformanceClass,
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
     translation_key,
 )
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 
 def _policy(

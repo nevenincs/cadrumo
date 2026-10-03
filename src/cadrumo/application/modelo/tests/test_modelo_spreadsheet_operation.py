@@ -23,10 +23,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
 )
-from ....domain.calculations.registry.donativo_bindings import DonativoDonorObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.gasto193_bindings import Gasto193Observation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -36,10 +33,11 @@ from ....domain.calculations.registry.withholding_bindings import WithholdingObs
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from ...operations.operation_definition import OperationDefinition
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...storage.calc_sheets.engine import build_export_plan, collect_row_sets
 from ...storage.calc_sheets.parity_harness import OperatorInputScenario
 from ...storage.calc_sheets.row_set_assembly import assemble_row_sets_for_snapshot
@@ -54,14 +52,19 @@ from ...user_profile.access_contracts import (
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..export_sink import LocalFileExportReceipt, LocalFileExportSink, ModeloExportOutputPathError
-from ..modelo_spreadsheet_operation import build_modelo_spreadsheet_definitions, build_modelo_spreadsheet_registration
+from ..modelo_spreadsheet_observations import (
+    CanonicalSpreadsheetAssembledObservation,
+    project_modelo_spreadsheet_observation,
+)
+from ..modelo_spreadsheet_operation import (
+    build_modelo_spreadsheet_definitions,
+)
 from ..modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
     MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
-    CanonicalSpreadsheetAssembledObservation,
     ModeloSpreadsheetCalculateOutcome,
     ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExecutionResult,
@@ -72,20 +75,24 @@ from ..modelo_spreadsheet_operation_contracts import (
     ModeloSpreadsheetPullOutcome,
     ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetVerifyRequest,
-    SpreadsheetCalculateFacts,
-    SpreadsheetComputedCasilla,
     SpreadsheetMutationHandoff,
     SpreadsheetOutputPathRefusal,
     SpreadsheetProviderAdmission,
     SpreadsheetRowIngressRefusal,
-    SpreadsheetRowSet,
-    SpreadsheetRowSetCell,
     SpreadsheetSnapshotMismatchRefusal,
     SpreadsheetVerifyAcknowledgement,
+)
+from ..modelo_spreadsheet_operation_projections import (
+    SpreadsheetCalculateFacts,
+    SpreadsheetComputedCasilla,
+    SpreadsheetRowSet,
+    SpreadsheetRowSetCell,
     SpreadsheetVerifyFacts,
-    project_modelo_spreadsheet_observation,
 )
 from ..modelo_spreadsheet_operation_scenario import decode_modelo_spreadsheet_scenario
+from ..modelo_spreadsheet_registration import (
+    build_modelo_spreadsheet_registration,
+)
 from .m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from .m036_operation_support import policy_decision
 
@@ -394,7 +401,7 @@ def test_verify_requires_actual_write_acknowledgement_and_releases_commit_before
 ) -> None:
     scope, events, operands = _Scope(), _Events(), _Operands()
     monkeypatch.setattr(
-        "cadrumo.application.modelo.modelo_spreadsheet_operation.resolve_active_capability",
+        "cadrumo.application.modelo.modelo_spreadsheet_executor.resolve_active_capability",
         lambda _capability: SimpleNamespace(enabled=True),
     )
 
@@ -451,7 +458,7 @@ def test_changed_scenario_refuses_before_provider_admission(
 ) -> None:
     scope, events, operands = _Scope(), _Events(), _Operands()
     monkeypatch.setattr(
-        "cadrumo.application.modelo.modelo_spreadsheet_operation.resolve_active_capability",
+        "cadrumo.application.modelo.modelo_spreadsheet_executor.resolve_active_capability",
         lambda _capability: SimpleNamespace(enabled=True),
     )
     source = tmp_path / "scenario.json"
@@ -540,16 +547,6 @@ def test_prefill_admission_uses_only_published_source_periods_and_requires_a_pin
             },
         ),
         (
-            RelatedPartyOperationObservation,
-            {
-                "counterparty_tax_id": "synthetic-id",
-                "country_code": "CH",
-                "transaction_date": "2026-01-15",
-                "operation_kind_code": "01",
-                "amount": "100.00",
-            },
-        ),
-        (
             Modelo720RowObservation,
             {
                 "asset_class_code": "C",
@@ -568,30 +565,11 @@ def test_prefill_admission_uses_only_published_source_periods_and_requires_a_pin
                 "clave": "A",
             },
         ),
-        (
-            RefundOperationObservation,
-            {
-                "member_state_code": "DE",
-                "operation_kind_code": "1",
-                "operation_date": "2026-01-15",
-                "supplier_tax_id": "synthetic-id",
-                "refund_amount": "100.00",
-            },
-        ),
-        (
-            DonativoDonorObservation,
-            {
-                "donor_tax_id": "synthetic-id",
-                "transaction_date": "2026-01-15",
-                "amount_donated": "100.00",
-                "deduction_percentage": "40.00",
-            },
-        ),
         (Gasto193Observation, {"contributor_tax_id": "synthetic-id", "transaction_date": "2026-01-15"}),
         (Withholding296Observation, {"perceptor_tax_id": "synthetic-id", "transaction_date": "2026-01-15"}),
     ],
 )
-def test_all_eight_canonical_observation_families_project_without_losing_fields(
+def test_every_canonical_observation_family_projects_without_losing_fields(
     model: type[BaseModel],
     fields: dict[str, str],
     authority_operation: PinnedAuthorityOperation,
@@ -808,8 +786,8 @@ def test_snapshot_refusal_is_bound_to_exact_profile_purpose_and_workbook(
         snapshot_revision=snapshot.revision.id,
         workbook_engine_version="old",
         expected_engine_version="current",
-        workbook_registry_sha="b" * 64,
-        snapshot_registry_sha="c" * 64,
+        workbook_registry_sha="b" * 16,
+        snapshot_registry_sha="c" * 16,
     )
 
     def calculate(

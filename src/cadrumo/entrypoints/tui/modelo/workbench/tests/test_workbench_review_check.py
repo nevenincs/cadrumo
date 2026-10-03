@@ -49,7 +49,8 @@ from ......domain.modelos.verification_report import (
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
-from ..issues import WorkbenchIssuesScreen, issue_lines
+from ..issue_projection import issue_lines
+from ..issues import WorkbenchIssuesScreen
 from ..ports import WorkbenchChange, WorkbenchFinding, WorkbenchPreflight
 from ..result import ResultGroup, result_lines
 from ..review import EditReviewScreen, UnattributedBoxes, at_risk_text

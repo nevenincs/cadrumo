@@ -65,6 +65,7 @@ import grimp
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE, is_test_module_name, is_test_source
 from dev.packaging.command_execution import run_command
 from dev.quality.unread_inputs import report_unread
 
@@ -87,7 +88,7 @@ LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
 #: registry conformance and maintenance tooling is a real consumer -- the live
 #: parity oracle catalogue is assembled there and nowhere else -- so omitting it
 #: would report live oracle modules as unreferenced.
-REFERENCE_SCAN_ROOTS: Final[tuple[Path, ...]] = (SOURCE_ROOT / "cadrumo", REPO_ROOT / "dev")
+REFERENCE_SCAN_ROOTS: Final[tuple[Path, ...]] = (REPO_ROOT / PRODUCT_PACKAGE, REPO_ROOT / DEVELOPMENT_TOOLING)
 
 #: Cache directories whose redirection forces a cold load. Pointing them at
 #: empty directories denies the loader its compiled tree and denies the
@@ -103,16 +104,6 @@ TRACE_REGIMES: Final[tuple[str, ...]] = ("warm", "cold", "inspection_snapshot")
 
 class LoadCensusError(RuntimeError):
     """Raised when the census cannot be computed from the tree as it stands."""
-
-
-def is_test_module(module: str) -> bool:
-    """Return whether ``module`` belongs to the test surface rather than production.
-
-    Returns:
-        ``True`` for test packages, ``test_*`` modules and ``conftest`` modules.
-    """
-    parts = module.split(".")
-    return "tests" in parts or parts[-1].startswith("test_") or parts[-1] == "conftest"
 
 
 def build_runtime_graph() -> grimp.ImportGraph:
@@ -182,7 +173,7 @@ def module_level_importers(module: str) -> frozenset[str]:
     importers: set[str] = set()
     unread: list[str] = []
     for path in scan_directory(REGISTRY_DIR, pattern="*.py", recursive=True, require_root=True):
-        if "__pycache__" in path.parts or "tests" in path.parts:
+        if "__pycache__" in path.parts or is_test_source(path, root=REGISTRY_DIR):
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -247,7 +238,7 @@ def registry_package_modules() -> frozenset[str]:
     modules: set[str] = set()
     for path in scan_directory(REGISTRY_DIR, pattern="*.py"):
         stem = path.stem
-        if stem == "conftest":
+        if is_test_source(path, root=REGISTRY_DIR):
             continue
         modules.add(REGISTRY_PACKAGE if stem == "__init__" else f"{REGISTRY_PACKAGE}.{stem}")
     return frozenset(modules)
@@ -298,7 +289,7 @@ def census_universe(graph: grimp.ImportGraph) -> frozenset[str]:
     """
     closure = static_load_closure(graph)
     members = closure | dynamic_reach(graph, closure) | registry_package_modules()
-    return frozenset(m for m in _with_ancestor_packages(members) if not is_test_module(m))
+    return frozenset(m for m in _with_ancestor_packages(members) if not is_test_module_name(m))
 
 
 def _with_ancestor_packages(modules: Iterable[str]) -> frozenset[str]:
@@ -547,7 +538,7 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
             continue
         if module is None:
             continue
-        if production_only and is_test_module(module):
+        if production_only and is_test_module_name(module):
             continue
         package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
         loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
@@ -675,9 +666,9 @@ def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
         # The package's own production modules are already represented by graph
         # edges. Its tests are also consumers, so retain their direct canonical
         # imports in this map rather than allowing them to look unreferenced.
-        if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module(module):
+        if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(module):
             continue
-        bucket = tests if is_test_module(module) else production
+        bucket = tests if is_test_module_name(module) else production
         for node in ast.walk(tree):
             if not isinstance(node, ast.Import | ast.ImportFrom):
                 continue
@@ -717,8 +708,8 @@ def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) 
         if module == REGISTRY_PACKAGE:
             continue
         importers = graph.find_modules_that_directly_import(module)
-        in_package = {i for i in importers if i.startswith(REGISTRY_PACKAGE + ".") and not is_test_module(i)}
-        direct_tests = {i for i in importers if is_test_module(i)}
+        in_package = {i for i in importers if i.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(i)}
+        direct_tests = {i for i in importers if is_test_module_name(i)}
         if not in_package and not direct_tests and not reference_map.consumers(module):
             candidates.add(module)
     return frozenset(candidates)

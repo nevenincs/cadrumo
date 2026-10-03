@@ -7,11 +7,9 @@ from typing import Final
 from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -19,6 +17,7 @@ from .command_spec import (
     ValueContract,
     translation_key,
 )
+from .command_spec import ExecutionPolicySpec, InvocationSpec
 
 _METADATA_GROUP_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     no_args_is_help=True,

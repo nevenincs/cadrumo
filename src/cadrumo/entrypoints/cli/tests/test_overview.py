@@ -8,20 +8,17 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.overview.read_operation import (
-    OverviewReadKind,
-    OverviewReadProjection,
-    OverviewReadRequest,
-    OverviewStatusRead,
-)
+from ....application.overview.read_payload import OverviewStatusRead
 from ....application.overview.read_projection import OverviewStatusSnapshot
+from ....application.overview.read_request import OverviewReadKind, OverviewReadRequest
+from ....application.overview.read_result import OverviewReadProjection
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import _overview
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
 from ..runtime_overview import OverviewReadCompletion
-from ..runtime_registered_operation import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

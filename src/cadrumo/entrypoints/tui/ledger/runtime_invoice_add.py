@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
-import time
 from decimal import Decimal
 from typing import NoReturn
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.invoices.catalogue_add_operation import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
@@ -17,30 +15,60 @@ from ....application.invoices.catalogue_add_operation import (
     InvoiceAddResult,
 )
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.frontend_requests import (
-    OperationObservationRefusalV1,
-    OperationObservationSuccessV1,
-)
 from ....application.operations.public_scalar import PublicDecimal
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from ....domain.invoices.errors import InvoiceValidationError
-from ....entrypoints.tui.account import AccountSessionExpiredError
 from ....entrypoints.tui.ledger.models import (
     LedgerInvoiceAddResultV1,
     LedgerInvoiceEntryV1,
 )
-from ....entrypoints.tui.operations.runtime_controller import RuntimeOperationController
-from ..runtime_account_session import read_runtime_account_session
+from ....entrypoints.tui.operations.runtime_profile_session import RuntimeProfileSession
 
 _DUPLICATE_INVOICE_TRANSLATION = "application.invoices.creation.errors.duplicate_invoice"
 _INVALID_INVOICE_TRANSLATION = "errors.refused.refused_cli_validation_boundary"
+
+
+def _invoice_matches_request(result: InvoiceAddResult, request: InvoiceAddRequest, entry: LedgerInvoiceEntryV1) -> bool:
+    invoice = result.invoice
+    if invoice is None or invoice.bucket_id is None:
+        return False
+    return (
+        str(invoice.bucket_id) == str(request.profile_id)
+        and invoice.kind is entry.kind
+        and invoice.invoice_number == entry.invoice_number
+        and invoice.issued_at == entry.invoice_date
+        and invoice.counterparty_name == entry.counterparty_name
+        and invoice.counterparty_tax_id == entry.counterparty_nif
+        and invoice.counterparty_country == entry.country_code
+        and invoice.currency == entry.currency
+    )
+
+
+def _created_receipt_matches(
+    terminal_projection: OperationPublicProjectionV1,
+) -> bool:
+    return (
+        terminal_projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        and terminal_projection.effect is OperationEffect.UPDATED
+        and terminal_projection.refusal_ref is None
+        and terminal_projection.result_ref is not None
+    )
+
+
+def _validation_refusal_matches(result: InvoiceAddResult, terminal_projection: OperationPublicProjectionV1) -> bool:
+    return (
+        terminal_projection.terminal_condition is OperationTerminalCondition.REFUSED
+        and terminal_projection.effect is OperationEffect.NONE
+        and terminal_projection.refusal_ref == INVOICE_ADD_VALIDATION_REFUSAL_CODE
+        and terminal_projection.result_ref is None
+        and result.invoice is None
+        and result.validation_code is not None
+        and (result.validation_code == "duplicate_invoice") == (result.invoice_id is not None)
+    )
 
 
 class RuntimeInvoiceAddTuiDoorV1:
@@ -48,27 +76,8 @@ class RuntimeInvoiceAddTuiDoorV1:
 
     def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
         """Retain the exact TUI profile and session for this installed door."""
-        if client.frontend is not OperationFrontendProjection.TUI or not profile_label:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        self._client = client
-        self._profile_id = client.profile_id
-        self._session_id = client.session_id
-        self._profile_label = profile_label
-        self._require_binding()
-
-    def _require_binding(self) -> None:
-        if (
-            self._client.frontend is not OperationFrontendProjection.TUI
-            or self._client.profile_id != self._profile_id
-            or self._client.session_id != self._session_id
-        ):
-            raise AccountSessionExpiredError()
-        read_runtime_account_session(
-            self._client,
-            profile_id=self._profile_id,
-            session_id=self._session_id,
-            profile_label=self._profile_label,
-        )
+        self._session = RuntimeProfileSession(client, profile_label=profile_label)
+        self._profile_id = self._session.profile_id
 
     async def __call__(self, entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         """Keep every parsed entry fact and disclose only the operation's typed result."""
@@ -89,92 +98,29 @@ class RuntimeInvoiceAddTuiDoorV1:
 
     async def _execute(self, request: InvoiceAddRequest, *, entry: LedgerInvoiceEntryV1) -> InvoiceAddResult:
         """Submit, observe and disclose one typed terminal receipt in this session."""
-        self._require_binding()
-        if request.profile_id != self._profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        subject_ref = profile_operation_subject(str(self._profile_id))
-        request_schema = OperationSchemaIdentityV1.from_model(
-            schema_id=f"{INVOICE_ADD_OPERATION_DEFINITION_ID}.request",
-            schema_version=1,
-            model_type=InvoiceAddRequest,
-        )
-        deadline = time.monotonic() + 120
-        controller: RuntimeOperationController | None = None
-        terminal_projection: OperationPublicProjectionV1 | None = None
-        try:
-            controller = await RuntimeOperationController.submit(
-                self._client,
-                definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
-                subject_ref=subject_ref,
-                payload=request,
-                expected_session_id=self._session_id,
-                deadline=deadline,
-            )
-            await controller.start()
-            while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-                observed = await controller.observe(0, page_limit=1)
-                if isinstance(observed, OperationObservationRefusalV1):
-                    raise RuntimeFrontendRefusedError(observed.code.value)
-                if not isinstance(observed, OperationObservationSuccessV1):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                state = observed.projection
-                if (
-                    state.operation_id != controller.operation_id
-                    or state.definition_id != INVOICE_ADD_OPERATION_DEFINITION_ID
-                    or state.subject_ref != subject_ref
-                    or state.definition_contract.request_schema != request_schema
-                ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                if state.lifecycle is OperationLifecycle.TERMINAL:
-                    terminal_projection = state
-                    break
-                await asyncio.sleep(min(0.05, remaining))
 
-            condition = terminal_projection.terminal_condition
-            if condition is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if condition is not OperationTerminalCondition.SUCCEEDED and not (
-                condition is OperationTerminalCondition.REFUSED
-                and terminal_projection.refusal_ref in terminal_projection.definition_contract.refusal_detail_codes
-            ):
-                raise RuntimeFrontendRefusedError(
-                    terminal_projection.refusal_ref
-                    or terminal_projection.failure_error_code
-                    or "operation_not_successful"
-                )
-            result = await controller.read_settled_result(
-                terminal_projection,
-                InvoiceAddResult,
-                result_version=1,
-                allow_refusal_detail=True,
-            )
-            self._require_binding()
-            self._validate_result(
-                result,
-                request=request,
-                entry=entry,
-                terminal_projection=terminal_projection,
-            )
+        def settle(
+            result: InvoiceAddResult,
+            condition: OperationTerminalCondition,
+            terminal: OperationPublicProjectionV1,
+            operation_id: str,
+        ) -> None:
+            self._validate_result(result, request=request, entry=entry, terminal_projection=terminal)
             if result.outcome == "validation_error":
                 self._raise_validation_refusal(
                     result,
-                    operation_id=str(controller.operation_id),
+                    operation_id=operation_id,
                     terminal_condition=condition,
-                    effect=terminal_projection.effect,
+                    effect=terminal.effect,
                 )
-            return result
-        except AccountSessionExpiredError as error:
-            raise self._session_expired_with_receipt(controller, terminal_projection) from error
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
-            # A runtime denial is ordinary only while the originating session remains live.
-            try:
-                self._require_binding()
-            except AccountSessionExpiredError as error:
-                raise self._session_expired_with_receipt(controller, terminal_projection) from error
-            raise
+
+        return await self._session.run_operation(
+            request,
+            definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+            result_type=InvoiceAddResult,
+            settle=settle,
+            allow_refusal_detail=True,
+        )
 
     @staticmethod
     def _validate_result(
@@ -191,36 +137,13 @@ class RuntimeInvoiceAddTuiDoorV1:
             or terminal_projection.diagnostic_ref is not None
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        condition = terminal_projection.terminal_condition
         if result.outcome == "created":
-            invoice = result.invoice
-            if (
-                condition is not OperationTerminalCondition.SUCCEEDED
-                or terminal_projection.effect is not OperationEffect.UPDATED
-                or terminal_projection.refusal_ref is not None
-                or terminal_projection.result_ref is None
-                or invoice is None
-                or invoice.bucket_id is None
-                or str(invoice.bucket_id) != str(request.profile_id)
-                or invoice.kind is not entry.kind
-                or invoice.invoice_number != entry.invoice_number
-                or invoice.issued_at != entry.invoice_date
-                or invoice.counterparty_name != entry.counterparty_name
-                or invoice.counterparty_tax_id != entry.counterparty_nif
-                or invoice.counterparty_country != entry.country_code
-                or invoice.currency != entry.currency
+            if not _created_receipt_matches(terminal_projection) or not _invoice_matches_request(
+                result, request, entry
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             return
-        if (
-            condition is not OperationTerminalCondition.REFUSED
-            or terminal_projection.effect is not OperationEffect.NONE
-            or terminal_projection.refusal_ref != INVOICE_ADD_VALIDATION_REFUSAL_CODE
-            or terminal_projection.result_ref is not None
-            or result.invoice is not None
-            or result.validation_code is None
-            or (result.validation_code == "duplicate_invoice") != (result.invoice_id is not None)
-        ):
+        if not _validation_refusal_matches(result, terminal_projection):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
     @staticmethod
@@ -250,26 +173,6 @@ class RuntimeInvoiceAddTuiDoorV1:
                 if result.validation_code == "duplicate_invoice"
                 else _INVALID_INVOICE_TRANSLATION
             ),
-        )
-
-    @staticmethod
-    def _session_expired_with_receipt(
-        controller: RuntimeOperationController | None,
-        projection: OperationPublicProjectionV1 | None,
-    ) -> AccountSessionExpiredError:
-        """Keep a terminal write receipt visible when the retained session expires."""
-        if controller is None:
-            return AccountSessionExpiredError()
-        condition = projection.terminal_condition if projection is not None else None
-        effect = projection.effect if projection is not None else OperationEffect.UNKNOWN
-        refusal_code = projection.refusal_ref if projection is not None else None
-        return AccountSessionExpiredError(
-            context={
-                "operation_id": str(controller.operation_id),
-                "terminal_condition": condition.value if condition is not None else "unknown",
-                "effect": effect.value,
-                "refusal_code": refusal_code,
-            }
         )
 
 

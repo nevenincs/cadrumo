@@ -72,6 +72,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.entrypoints.adapter_composition import build_state_projection_read_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -619,7 +620,11 @@ def test_graded_admission_carries_the_canonical_review_of_a_calculated_unit(repo
             catalogue_repository=work_repo,
             calculation_ports=ports,
             verification_repository=verification_repo,
-            readiness_read_ports=build_state_projection_read_ports(),
+            readiness_read_ports=build_state_projection_read_ports(
+                operation=operation,
+                objects=secure_object_repository_for_bucket(stored_unit.bucket_id),
+                bucket_id=stored_unit.bucket_id,
+            ),
             operation=operation,
             output_language=OutputLanguage.EN,
         )

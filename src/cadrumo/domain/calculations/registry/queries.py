@@ -1043,8 +1043,19 @@ class PinnedRegistryQueryService:
             _raise_unscoped_as_of_query(modelo)
         directory = self._operation.modelo_directory(modelo.strip())
         if period is None:
-            metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
-            return self._context(directory, self._operation.revision(directory.modelo_id, str(metadata.id)))
+            return self._latest_revision_context(directory)
+        return self._period_revision_context(directory, period)
+
+    def _latest_revision_context(self, directory: ModeloRevisionDirectory) -> ResolvedRegistryQueryContext:
+        metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
+        revision = self._operation.revision(directory.modelo_id, str(metadata.id))
+        return self._context(directory, revision)
+
+    def _period_revision_context(
+        self,
+        directory: ModeloRevisionDirectory,
+        period: str,
+    ) -> ResolvedRegistryQueryContext:
         requested = period.strip()
         declared = tuple(token for item in directory.revisions for token in item.period_selector.declared_periods)
         if not (_BARE_PERIOD_RE.fullmatch(requested.upper()) or selector_token_for_request(declared, requested)):

@@ -40,16 +40,15 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.read_capture import capture_read_result
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationResultProjector,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -574,13 +573,7 @@ class LedgerRatiosEligibleExecutor:
                 count=len(projected),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-ratios-eligible")
+        return await capture_read_result(context, read, task_name="ledger-ratios-eligible")
 
 
 class LedgerRatiosValidateExecutor:
@@ -618,13 +611,7 @@ class LedgerRatiosValidateExecutor:
                 ),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-ratios-validate")
+        return await capture_read_result(context, read, task_name="ledger-ratios-validate")
 
 
 def _definition(
@@ -683,25 +670,15 @@ def _definition(
 def _registration(
     definition: OperationDefinition,
     *,
-    request_type: type[BaseModel],
     projection_type: type[BaseModel],
     access_resolver: OperationAccessResolver,
     result_projector: OperationResultProjector,
 ) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=projection_type,
-        ),
-        access_resolver=access_resolver,
+        public_result_type=projection_type,
         result_projector=result_projector,
+        access_resolver=access_resolver,
     )
 
 
@@ -867,7 +844,6 @@ def build_ledger_ratios_list_registration(definition: OperationDefinition) -> Op
     """Bind the list schemas, whole-profile access scope, and receipt projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosListRequest,
         projection_type=LedgerRatiosListProjection,
         access_resolver=_read_access,
         result_projector=_project_list_result,
@@ -890,7 +866,6 @@ def build_ledger_ratios_set_registration(definition: OperationDefinition) -> Ope
     """Bind the set schemas, commit access scope, and receipt projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosSetRequest,
         projection_type=LedgerRatiosSetProjection,
         access_resolver=_set_access,
         result_projector=_project_set_result,
@@ -916,7 +891,6 @@ def build_ledger_ratios_unset_registration(
     """Bind the unset schemas, commit access scope, and refusal projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosUnsetRequest,
         projection_type=LedgerRatiosUnsetProjection,
         access_resolver=_unset_access,
         result_projector=_project_unset_result,
@@ -941,7 +915,6 @@ def build_ledger_ratios_eligible_registration(
     """Bind the eligibility schemas, whole-profile access scope, and projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosEligibleRequest,
         projection_type=LedgerRatiosEligibleProjection,
         access_resolver=_read_access,
         result_projector=_project_eligible_result,
@@ -966,7 +939,6 @@ def build_ledger_ratios_validate_registration(
     """Bind the validation schemas, whole-profile access scope, and projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosValidateRequest,
         projection_type=LedgerRatiosValidateProjection,
         access_resolver=_read_access,
         result_projector=_project_validate_result,

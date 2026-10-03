@@ -9,11 +9,8 @@ import pytest
 
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
 from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
-from ....application.operations.registry import (
-    OperationDefinition,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ....application.operations.operation_definition import OperationDefinition
+from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection

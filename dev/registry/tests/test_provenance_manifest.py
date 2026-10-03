@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 from typing import cast
 
 import pytest
@@ -17,6 +18,7 @@ from cadrumo.core.filing_projection_ref import (
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiteralFact
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
@@ -35,6 +37,8 @@ from ..pipeline.export_fragment_provenance import (
     build_export_fragment_provenance_manifest,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
+)
+from ..pipeline.export_fragment_provenance_projection import (
     loader_semantic_digest,
     loader_semantic_drift,
     normalised_loader_semantics,
@@ -46,13 +50,11 @@ from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
 )
-from ..pipeline.render_profile import (
-    RENDER_PROFILE_SCHEMA_VERSION,
-    RenderProfile,
-    RenderProfileDesignIdentity,
-    RenderProfileSourceEvidence,
-    render_profile_digest,
-)
+from ..pipeline.render_profile import render_profile_digest
+from ..pipeline.render_profile_evidence import RenderProfileSourceEvidence
+from ..pipeline.render_profile_loading import RENDER_PROFILE_SCHEMA_VERSION
+from ..pipeline.render_profile_model import RenderProfile
+from ..pipeline.render_profile_model_base import RenderProfileDesignIdentity
 from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -403,6 +405,33 @@ def test_loader_semantic_digest_normalises_loader_order_but_detects_coordinate_c
 
     assert loader_semantic_digest(_loaded_layout(records_reversed=True)) == baseline
     assert loader_semantic_digest(_loaded_layout(first_offset=2)) != baseline
+
+
+def test_loader_semantics_attest_declared_literal_fact_provenance() -> None:
+    """Equal literal values from distinct facts retain distinct provenance."""
+    plain = _loaded_layout()
+    record = plain.records[0]
+    field = record.fields[0]
+    first = ExportLiteralFact(fact_id="test:literal-first", key="value")
+    second = ExportLiteralFact(fact_id="test:literal-second", key="value")
+
+    def with_fact(reference: ExportLiteralFact) -> ExportLayoutDefinition:
+        fact_field = field.model_copy(update={"literal_fact": reference})
+        fact_record = record.model_copy(update={"fields": (fact_field,)})
+        return plain.model_copy(update={"records": (fact_record, *plain.records[1:])})
+
+    plain_projection = normalised_loader_semantics(plain)
+    records = cast(list[dict[str, object]], plain_projection["records"])
+    fields = cast(list[dict[str, object]], records[0]["fields"])
+    assert "literal_fact" not in fields[0]
+    first_projection = normalised_loader_semantics(with_fact(first))
+    second_projection = normalised_loader_semantics(with_fact(second))
+
+    assert loader_semantic_digest(with_fact(first)) != loader_semantic_digest(plain)
+    assert loader_semantic_digest(with_fact(first)) != loader_semantic_digest(with_fact(second))
+    assert loader_semantic_drift(first_projection, second_projection) == (
+        "records[registro-tipo-1].fields[registro-tipo-1.literal].literal_fact.fact_id changed",
+    )
 
 
 def test_loader_semantic_drift_names_the_one_key_that_moved() -> None:
@@ -814,7 +843,8 @@ def test_an_undeclared_sign_position_is_absent_from_attested_bytes_and_a_declare
     assert loader_semantic_digest(reserved) != loader_semantic_digest(plain)
 
 
-def test_a_stored_manifest_spelling_an_undeclared_sign_position_as_null_is_not_canonical(tmp_path) -> None:
+@pytest.mark.parametrize("key", ("sign_position", "required_for", "design_type", "literal_fact"))
+def test_a_stored_manifest_spelling_an_undeclared_optional_field_as_null_is_not_canonical(tmp_path, key) -> None:
     export_root = tmp_path / "export"
     (export_root / "records").mkdir(parents=True)
     (export_root / "records" / "0001.toml").write_bytes(b"id = 'first'\n")
@@ -829,9 +859,11 @@ def test_a_stored_manifest_spelling_an_undeclared_sign_position_as_null_is_not_c
         render_profile_source_evidence=_render_profile_evidence(),
     )
     canonical = export_fragment_provenance_manifest_json_bytes(manifest)
-    assert b"sign_position" not in canonical
+    assert key.encode() not in canonical
 
-    with_null = canonical_json_bytes(manifest.model_dump(mode="json"))
+    payload = json.loads(canonical)
+    payload["field_derivations"][0]["field"][key] = None
+    with_null = canonical_json_bytes(payload)
 
     with pytest.raises(RegistryValidationError, match="not canonical"):
         load_export_fragment_provenance_manifest(with_null)

@@ -54,11 +54,12 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from dev._paths import AUTHORITY_ROOT_ENV
+from dev.product_environment import ambient_product_settings_removed
 
 from ._locale_chrome import docs_chrome
 
 if TYPE_CHECKING:
-    pass
+    from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
 
 #: Group-callback emit sites - keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
@@ -168,7 +169,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
         storage_root: Isolated Cadrumo local-storage root for the subprocess.
     """
     authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
-    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment = ambient_product_settings_removed()
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
     if authority_root:
@@ -209,7 +210,8 @@ def _rst_heading(text: str, char: str) -> str:
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
-    from cadrumo.entrypoints.cli.command_spec import ArgumentSpec, CommandSpec
+    from cadrumo.entrypoints.cli._command_parameter_contracts import ArgumentSpec
+    from cadrumo.entrypoints.cli.command_spec import CommandSpec
 
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")
@@ -492,58 +494,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     families = sorted({node.path[1] for node in leaves})
     rendered: dict[str, str] = {}
     for family in families:
-        family_nodes = tuple(node for node in leaves if node.path[1] == family)
-        groups = sorted({node.path[2] for node in family_nodes if len(node.path) > 3})
-        direct = tuple(node for node in family_nodes if len(node.path) == 3)
-        # The family landing page is the reader's entry into a whole command family,
-        # and it rendered as a bare bullet list of links: the raw family token as its
-        # title, no orientation, no heading over the direct commands, and no way back
-        # to the index. Every string below already existed, authored in four locales,
-        # and went unused -- which is also why it kept being pruned as an unused key.
-        family_parts = [
-            _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
-            "\n",
-            docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
-        ]
-        if direct:
-            family_parts.append(
-                _rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n"
-            )
-            family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
-        family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
-        if groups:
-            family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
-        for group in groups:
-            group_nodes = tuple(node for node in family_nodes if len(node.path) > 3 and node.path[2] == group)
-            content = (
-                _rst_heading(f"{family} {group}", "=")
-                + "\n"
-                + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
-            )
-            rel = f"cli/{family}/{group}.rst"
-            rendered[rel] = content
-            (output_dir / family).mkdir(parents=True, exist_ok=True)
-            _write_text_if_changed(output_dir / family / f"{group}.rst", content)
-            family_parts.append(
-                "* "
-                + docs_chrome(
-                    "docs.cli.family.group_link_line",
-                    language,
-                    target=f"{family}/{group}",
-                    family=family,
-                    group=group,
-                )
-                + "\n"
-            )
-        if groups:
-            family_parts.extend(("\n.. toctree::\n", "   :hidden:\n\n"))
-            family_parts.extend(f"   {family}/{group}\n" for group in groups)
-        if groups or direct:
-            family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
-        family_content = "".join(family_parts)
-        rel = f"cli/{family}.rst"
-        rendered[rel] = family_content
-        _write_text_if_changed(output_dir / f"{family}.rst", family_content)
+        _render_family_reference(family, leaves, language, output_dir, rendered)
     index = _render_index_page(language, family_names=families, total_leaf_count=len(leaves))
     rendered["cli/index.rst"] = index
     _write_text_if_changed(output_dir / "index.rst", index)
@@ -658,3 +609,81 @@ __all__ = [
     "generate_cli_reference",
     "generate_cli_reference_in_subprocess",
 ]
+
+
+def _render_family_reference(
+    family: str,
+    leaves: tuple[CommandSpecNode, ...],
+    language: OutputLanguage,
+    output_dir: Path,
+    rendered: dict[str, str],
+) -> None:
+    family_nodes, groups, direct = _family_graph_nodes(family, leaves)
+    # The family landing page is the reader's entry into a whole command family,
+    # and it rendered as a bare bullet list of links: the raw family token as its
+    # title, no orientation, no heading over the direct commands, and no way back
+    # to the index. Every string below already existed, authored in four locales,
+    # and went unused -- which is also why it kept being pruned as an unused key.
+    family_parts = [
+        _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
+        "\n",
+        docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
+    ]
+    if direct:
+        family_parts.append(_rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n")
+        family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
+    family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
+    if groups:
+        family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
+    for group in groups:
+        _render_group_reference(family, group, family_nodes, language, output_dir, rendered, family_parts)
+    if groups:
+        family_parts.extend(("\n.. toctree::\n", "   :hidden:\n\n"))
+        family_parts.extend(f"   {family}/{group}\n" for group in groups)
+    if groups or direct:
+        family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
+    family_content = "".join(family_parts)
+    rel = f"cli/{family}.rst"
+    rendered[rel] = family_content
+    _write_text_if_changed(output_dir / f"{family}.rst", family_content)
+
+
+def _family_graph_nodes(
+    family: str, leaves: tuple[CommandSpecNode, ...]
+) -> tuple[tuple[CommandSpecNode, ...], list[str], tuple[CommandSpecNode, ...]]:
+    family_nodes = tuple(node for node in leaves if node.path[1] == family)
+    groups = sorted({node.path[2] for node in family_nodes if len(node.path) > 3})
+    direct = tuple(node for node in family_nodes if len(node.path) == 3)
+    return family_nodes, groups, direct
+
+
+def _render_group_reference(
+    family: str,
+    group: str,
+    family_nodes: tuple[CommandSpecNode, ...],
+    language: OutputLanguage,
+    output_dir: Path,
+    rendered: dict[str, str],
+    family_parts: list[str],
+) -> None:
+    group_nodes = tuple(node for node in family_nodes if len(node.path) > 3 and node.path[2] == group)
+    content = (
+        _rst_heading(f"{family} {group}", "=")
+        + "\n"
+        + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
+    )
+    rel = f"cli/{family}/{group}.rst"
+    rendered[rel] = content
+    (output_dir / family).mkdir(parents=True, exist_ok=True)
+    _write_text_if_changed(output_dir / family / f"{group}.rst", content)
+    family_parts.append(
+        "* "
+        + docs_chrome(
+            "docs.cli.family.group_link_line",
+            language,
+            target=f"{family}/{group}",
+            family=family,
+            group=group,
+        )
+        + "\n"
+    )

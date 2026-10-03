@@ -50,7 +50,6 @@ def persisted(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
             },
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal(request.param),
-                "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal(0),
                 "modelo-130-resultados-negativos-anteriores": Decimal(0),
             },
         )

@@ -1248,7 +1248,9 @@ def _filed_revision_for_work_unit(
     persisted revision so a total reconcile and a casilla reconcile can never
     silently disagree about which revision represents "what was filed."
     """
-    catalogue = calculation_revision_catalogue_repository(bucket_id=str(work_unit.bucket_id)).load()
+    catalogue = calculation_revision_catalogue_repository(bucket_id=str(work_unit.bucket_id), operation=operation).load(
+        operation=operation
+    )
     revision = _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
     if revision is not None:
         require_calculation_revision_coordinates_current(revision, operation=operation)

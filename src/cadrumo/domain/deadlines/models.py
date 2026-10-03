@@ -10,7 +10,7 @@ Consumers import these models from this defining module.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
@@ -34,9 +34,10 @@ from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.registry_token import StrictRegistryToken
-from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_collection
 from ..calculations.registry.renta_codes_catalogue import (
@@ -143,6 +144,24 @@ class ModeloEnrollment(BaseModel):
     public_administration_budget_gt_6000000: bool = False
 
 
+def _canonical_iban(value: object, *, account: str) -> str:
+    """Return the canonical IBAN, or ``""`` for a blank one, refusing any malformed value.
+
+    Blank is returned rather than refused because the two accounts disagree on
+    what a blank means: no refund account on file, or a missing debit account.
+    """
+    if not isinstance(value, str):
+        raise DeadlineValidationError(f"{account} iban must be a string")
+    canonical = normalise_iban(value)
+    if not canonical:
+        return ""
+    if not IBAN_SHAPE_RE.match(canonical):
+        raise DeadlineValidationError(f"{account} iban does not match the ISO 13616 shape")
+    if iban_mod_97(canonical) != 1:
+        raise DeadlineValidationError(f"{account} iban fails the mod-97 check")
+    return canonical
+
+
 class RefundAccount(BaseModel):
     """The cuenta-devolución refund account AEAT pays a Modelo 303 refund into.
 
@@ -181,7 +200,7 @@ class RefundAccount(BaseModel):
             account country at export, not an operator input.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     iban: str | None = None
     swift_bic: str = ""
@@ -204,20 +223,7 @@ class RefundAccount(BaseModel):
         """
         if value is None:
             return None
-        if not isinstance(value, str):
-            raise DeadlineValidationError("refund-account iban must be a string")
-        canonical = normalise_iban(value)
-        if not canonical:
-            return None
-        if not IBAN_SHAPE_RE.match(canonical):
-            raise DeadlineValidationError(
-                f"refund-account iban {value!r} does not match the ISO 13616 shape",
-            )
-        if iban_mod_97(canonical) != 1:
-            raise DeadlineValidationError(
-                f"refund-account iban {value!r} fails the mod-97 check",
-            )
-        return canonical
+        return _canonical_iban(value, account="refund-account") or None
 
 
 class ChargeAccount(BaseModel):
@@ -239,7 +245,7 @@ class ChargeAccount(BaseModel):
             whitespace- and hyphen-stripped upper-case form.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     iban: str
 
@@ -248,19 +254,9 @@ class ChargeAccount(BaseModel):
     @pydantic_validation_boundary
     def _validate_iban(cls, value: object) -> object:
         """Reject an absent or malformed debit-account IBAN at the domain boundary."""
-        if not isinstance(value, str):
-            raise DeadlineValidationError("charge-account iban must be a string")
-        canonical = normalise_iban(value)
+        canonical = _canonical_iban(value, account="charge-account")
         if not canonical:
             raise DeadlineValidationError("charge-account iban must not be blank")
-        if not IBAN_SHAPE_RE.match(canonical):
-            raise DeadlineValidationError(
-                f"charge-account iban {value!r} does not match the ISO 13616 shape",
-            )
-        if iban_mod_97(canonical) != 1:
-            raise DeadlineValidationError(
-                f"charge-account iban {value!r} fails the mod-97 check",
-            )
         return canonical
 
 
@@ -306,7 +302,7 @@ def _project_persisted_token(
 
 
 def _iva_profile_token_resolvers() -> Mapping[str, Callable[[object], StrictRegistryToken]]:
-    from ..calculations.registry.iva_schema_vocabulary import (
+    from ..calculations.registry.m303_schema_vocabulary import (
         require_m303_regime_composition,
         require_m303_tax_territory,
     )
@@ -372,7 +368,7 @@ class ModeloIVAProfile(BaseModel):
             charge account is refused rather than reusing a refund destination.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_territory: M303TaxTerritory
     regime_composition: M303RegimeComposition
@@ -604,7 +600,7 @@ class TaxpayerProfile(BaseModel):
             undeclared.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_id: SubjectTaxId
     entity_type: EntityType | None = None
@@ -724,7 +720,7 @@ class TaxpayerProfile(BaseModel):
     @pydantic_validation_boundary
     def _validate_iva_regime_registry_membership(self) -> Self:
         """Reject IVA regime tokens that are absent from fact 0098."""
-        from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
+        from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
 
         require_iva_regime(self.iva_regime)
         return self
@@ -1038,16 +1034,9 @@ class Schedule(BaseModel):
             about the day a window opened or closed.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile: TaxpayerProfile
     year: int = Field(ge=1900, le=2999)
     obligations: tuple[ModeloDeadline, ...]
     generated_at: UtcInstant
-
-    @field_validator("generated_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_utc_generated_at(cls, value: datetime) -> datetime:
-        """Route the stamp through the canonical UTC-aware contract."""
-        return validate_utc_aware(value)

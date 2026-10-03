@@ -8,7 +8,7 @@ model:
 
 * **Duplication** (D2) -- delegates the entire measurement to
   ``dev.audit.duplication.run_duplication_scan``, the one runner
-  ``just audit-duplication`` also calls. Any clone cluster is advisory debt
+  ``just audit-dead-weight`` also calls. Any clone cluster is advisory debt
   (AMBER, carrying the measured count); a scan that demonstrably inspected the
   tree and found nothing is GREEN; a scan that could not run or produced no
   parseable evidence is AMBER-unavailable, never GREEN. jscpd has no meaningful
@@ -16,8 +16,14 @@ model:
   it is advisory by design (mirrors ``dev/audit/duplication.py``'s own
   "duplication is advisory debt, not a gate" contract).
 * **Import quality** -- consumes the authoritative ``just check-import-boundaries``
-  process result. Any non-zero result is RED; zero is GREEN. This report does
-  not parse Import Linter output or maintain a second contract inventory.
+  process result, invoking the recipe unmodified: no added arguments and no
+  report-side timeout, so the report and the recipe cannot reach different
+  verdicts on one tree. Any non-zero result is RED; zero is GREEN. A findings
+  status means the gate ran and import quality failed; any other status, or a
+  gate that cannot be launched, is RED with ``available`` false -- the gate
+  could not complete, and an unavailable blocking gate is never offered as an
+  advisory AMBER substitute. This report does not parse Import Linter output or
+  maintain a second contract inventory.
 * **Complexity** -- reuses ``dev.audit.complexity``'s live cyclomatic,
   maintainability, and cognitive scan. Any current hotspot is RED; zero is
   GREEN. This dimension has no development-state partition.
@@ -52,7 +58,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -61,7 +66,8 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
+from dev.ci.lane_recipe_commands import resolve_just_executable
+from dev.exit_codes import FINDINGS_CODES, OK
 from dev.test_runs.paths import allocate_run_directory
 
 from .complexity import scan_complexity
@@ -124,7 +130,7 @@ def audit_duplication(repo_root: Path) -> DimensionReport:
         name="duplication",
         status=Status.AMBER,
         headline=result.headline(),
-        details=["see `just audit-duplication` for the full clone report"],
+        details=["see `just audit-dead-weight` for the full clone list"],
     )
 
 
@@ -133,20 +139,30 @@ def audit_duplication(repo_root: Path) -> DimensionReport:
 # ---------------------------------------------------------------------------
 
 
+#: The recipe whose unmodified process result is the import-quality dimension.
+#: It is also the aggregate suite's row for that gate, so this report,
+#: ``just check-code`` and a contributor's own run consume one gate definition.
+IMPORT_QUALITY_RECIPE: Final[str] = "check-import-boundaries"
+
+
+def import_quality_command(just_executable: str) -> tuple[str, ...]:
+    """Return the report's import-gate invocation: the recipe, with nothing added."""
+    return (just_executable, IMPORT_QUALITY_RECIPE)
+
+
 def audit_layering(repo_root: Path) -> DimensionReport:
     """Consume the sole import-quality gate as this report's import dimension."""
-    just_executable = shutil.which("just")
-    working_directory = repo_root if repo_root.is_dir() else REPO_ROOT
-    if just_executable is None:
-        return DimensionReport(
-            name="layering",
-            status=Status.RED,
-            headline="authoritative `just check-import-boundaries` could not run: just is unavailable",
-            available=False,
-        )
-    command = (just_executable, "check-import-boundaries")
+    try:
+        command = import_quality_command(resolve_just_executable())
+    except RuntimeError as exc:
+        return _import_gate_not_run(str(exc))
     environment = os.environ.copy()
     environment["CADRUMO_IMPORT_GATE_ROOT"] = str(repo_root)
+    # No report-side wall-clock bound. The gate bounds each of its subprocess
+    # components itself (``dev.quality.import_gate --cpu-budget``/``--stall-seconds``)
+    # and reports an overrun as its own TOOL_BROKEN verdict. Full-tree runs measured 182-260 s,
+    # and 328-338 s under load; a tighter outer bound here killed only ``just``,
+    # left the gate running, and replaced the gate's verdict with a report-side one.
     try:
         result = subprocess.run(
             command,
@@ -155,35 +171,58 @@ def audit_layering(repo_root: Path) -> DimensionReport:
             encoding=_UTF_8,
             errors="replace",
             check=False,
-            cwd=working_directory,
+            cwd=repo_root if repo_root.is_dir() else REPO_ROOT,
             env=environment,
-            timeout=300,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except OSError as exc:
+        return _import_gate_not_run(str(exc))
+    return classify_import_gate_result(result.returncode, result.stdout, result.stderr)
+
+
+def classify_import_gate_result(returncode: int, stdout: str, stderr: str) -> DimensionReport:
+    """Map the import gate's exit status onto this report's severity model.
+
+    Exit 0 is GREEN. A findings status is RED: the gate ran and import quality
+    failed. Every other status is RED with ``available`` false: the gate could
+    not complete, and an unavailable blocking gate is never offered as an
+    advisory AMBER substitute.
+    """
+    if returncode == OK:
+        return DimensionReport(
+            name="layering",
+            status=Status.GREEN,
+            headline="authoritative import gate completed successfully",
+        )
+    diagnostic = (
+        _import_gate_diagnostics(stdout)
+        or [line.strip()[:500] for line in (stdout + stderr).splitlines() if line.strip()][:10]
+    )
+    details = [*diagnostic, f"run `just {IMPORT_QUALITY_RECIPE}` locally for the full import-quality result"]
+    if returncode in FINDINGS_CODES:
         return DimensionReport(
             name="layering",
             status=Status.RED,
-            headline=f"authoritative import gate could not run ({exc})",
-            available=False,
+            headline=f"authoritative import gate exited {returncode}; import quality failed",
+            details=details,
         )
-
-    if result.returncode != 0:
-        diagnostic = (
-            _import_gate_diagnostics(result.stdout)
-            or [line.strip()[:500] for line in (result.stdout + result.stderr).splitlines() if line.strip()][:10]
-        )
-        return DimensionReport(
-            name="layering",
-            status=Status.RED,
-            headline=f"authoritative import gate exited {result.returncode}; import quality failed",
-            details=[*diagnostic, "run `just check-import-boundaries` locally for the full import-quality result"],
-            available=result.returncode not in {TOOL_BROKEN, TOOL_MISSING},
-        )
-
     return DimensionReport(
         name="layering",
-        status=Status.GREEN,
-        headline="authoritative import gate completed successfully",
+        status=Status.RED,
+        headline=(
+            f"authoritative import gate exited {returncode} without completing; no import-quality verdict this cycle"
+        ),
+        details=details,
+        available=False,
+    )
+
+
+def _import_gate_not_run(reason: str) -> DimensionReport:
+    """Report a gate this process could not launch: RED and unavailable, never advisory."""
+    return DimensionReport(
+        name="layering",
+        status=Status.RED,
+        headline=f"authoritative import gate could not run: {reason}",
+        available=False,
     )
 
 

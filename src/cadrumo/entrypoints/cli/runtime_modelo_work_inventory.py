@@ -12,14 +12,15 @@ from ...application.modelo.work_inventory_operation import (
     ModeloWorkListProjection,
     ModeloWorkListRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from .common import no_active_profile_refusal
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_modelo_work_inventory(
@@ -43,17 +44,22 @@ def read_modelo_work_inventory(
         timeout=60,
     )
     projection = completed.projection
-    if (
-        projection.profile_id != client.profile_id
+    if _work_inventory_receipt_invalid(completed, projection, client.profile_id, include_discarded):
+        raise invalid_completion_error(completed)
+    return tuple(row.to_work_unit() for row in projection.units)
+
+
+def _work_inventory_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloWorkListProjection],
+    projection: ModeloWorkListProjection,
+    profile_id: UUID,
+    include_discarded: bool,
+) -> bool:
+    """Require the profile-owned read result and requested lifecycle population."""
+    return (
+        projection.profile_id != profile_id
         or projection.include_discarded is not include_discarded
         or completed.effect is not OperationEffect.NONE
-        or any(row.bucket_id != str(client.profile_id) for row in projection.units)
+        or any(row.bucket_id != str(profile_id) for row in projection.units)
         or (not include_discarded and any(row.state is not WorkUnitState.BORRADOR for row in projection.units))
-    ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
-    return tuple(row.to_work_unit() for row in projection.units)
+    )

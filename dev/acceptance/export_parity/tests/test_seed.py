@@ -14,7 +14,9 @@ import pytest
 
 from dev.acceptance.installed_cli import InstalledCli
 
-from ..seed import SeedReceipt, _Seeder, carried_years
+from ..seed import carried_years
+from ..seed_campaign import _Seeder
+from ..seed_contracts import SeedReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

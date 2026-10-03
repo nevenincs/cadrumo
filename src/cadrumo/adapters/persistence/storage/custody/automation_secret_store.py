@@ -15,6 +15,7 @@ from .....application.user_profile.automation_custody_port import (
     AutomationSecretStore,
     NativeSecretBackend,
 )
+from .automation_secret_target import require_automation_secret_target
 from .zeroise import zeroise
 
 _MAX_CREDENTIAL_BLOB_SIZE = 2560
@@ -201,8 +202,7 @@ class WindowsAutomationSecretStore:
     backend = NativeSecretBackend.WINDOWS_CREDENTIAL_MANAGER
 
     def _target(self, namespace: str, account: str) -> str:
-        if not namespace.startswith("cadrumo.automation.") or not account or len(namespace + account) > 1024:
-            raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+        require_automation_secret_target(namespace, account)
         if sys.platform != "win32":
             raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
         return namespace + ":" + account

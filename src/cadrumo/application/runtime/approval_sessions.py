@@ -19,7 +19,8 @@ from pydantic import SecretBytes
 
 from ..operations.models import OperationId
 from ..user_profile.access_contracts import ACCESS_LEASE_MAXIMUM
-from ..user_profile.automation_administration import ApprovalSession, AutomationAdministrationService
+from ..user_profile.automation_administration_service import AutomationAdministrationService
+from ..user_profile.automation_approval_session import ApprovalSession
 from ..user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ..user_profile.automation_enrollment import EnrollmentTransition
 from .approval_binding import RuntimeApprovalBinding

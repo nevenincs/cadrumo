@@ -44,6 +44,7 @@ def build_modelo_calculation_report_verification_ports(
         export_ports = build_modelo_export_ports(
             bucket_id=bucket_id,
             m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+            operation=operation,
         )
     return ModeloCalculationReportVerificationPorts(
         profile_id=profile_id,

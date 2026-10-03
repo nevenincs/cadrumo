@@ -16,18 +16,61 @@ from textual.widgets import Button, Footer, Static
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import RuntimeRefusalError
-from ...application.user_profile.access_contracts import AuthorityState, ProfileAccessStatus
+from ...application.runtime.profile_access import status_admits_session
+from ...application.user_profile.access_contracts import ProfileAccessStatus
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.i18n.render import tr
 from ...core.time.clock import now
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from .runtime_management import RuntimeManagementCleanup, RuntimeManagementScreen
+from .runtime_management import RuntimeManagementScreen
+from .runtime_management_cleanup import RuntimeManagementCleanup
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
 _STATUS_INTERVAL_SECONDS = 10.0
 type _LockAction = Literal["sign_out", "change_user"]
 type RestrictedRequesterFactory = Callable[[RuntimeFrontendClient], RuntimeAutomationRequesterScreen]
+
+
+def _restricted_disclosures(status: ProfileAccessStatus, empty: str) -> str:
+    scope = status.effective_scope
+    disclosures = sorted(
+        scope.disclosures,
+        key=lambda permission: (
+            str(permission.destination_id),
+            str(permission.projection_id),
+            permission.category.value,
+        ),
+    )
+    values = (
+        f"{permission.destination_id}/{permission.projection_id}/{permission.category.value}"
+        for permission in disclosures
+    )
+    return ", ".join(values) or empty
+
+
+def _restricted_periods(status: ProfileAccessStatus, empty: str) -> str:
+    periods = status.effective_scope.periods
+    if periods is None:
+        return tr("tui.restricted.all_periods")
+    values = ", ".join(str(item) for item in sorted(periods, key=lambda item: (item.filing_year, str(item.code))))
+    return values or empty
+
+
+def _restricted_period_independent(status: ProfileAccessStatus) -> str:
+    key = "tui.restricted.yes" if status.effective_scope.allow_period_independent else "tui.restricted.no"
+    return tr(key)
+
+
+def _restricted_scope_text(status: ProfileAccessStatus) -> tuple[str, str, str, str, str]:
+    scope = status.effective_scope
+    empty = tr("tui.restricted.none")
+    operations = ", ".join(sorted(str(item) for item in scope.operations)) or empty
+    actions = ", ".join(sorted(item.value for item in scope.actions)) or empty
+    disclosures = _restricted_disclosures(status, empty)
+    delegation = tr("tui.restricted.yes") if scope.allow_delegation else tr("tui.restricted.no")
+    periods = _restricted_periods(status, empty)
+    return operations, actions, disclosures, delegation, periods
 
 
 class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
@@ -103,20 +146,12 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             return False
 
     def _status_is_current(self, status: ProfileAccessStatus) -> bool:
-        return (
-            self._binding_is_current()
-            and status.connected
-            and status.credential_authenticated
-            and status.profile_bound
-            and status.profile_id == self._profile_id
-            and status.session_id == self._session_id
-            and status.session_expires_at is not None
-            and status.session_expires_at > now()
-            and status.grant_state is AuthorityState.ACTIVE
-            and status.grant_valid
-            and status.grant_expires_at is not None
-            and status.grant_expires_at > now()
-            and status.denial is None
+        return self._binding_is_current() and status_admits_session(
+            status,
+            profile_id=self._profile_id,
+            session_id=self._session_id,
+            at=now(),
+            requires_automation_grant=True,
         )
 
     def _start_status_read(self) -> None:
@@ -146,33 +181,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
 
     def _render_status(self, status: ProfileAccessStatus) -> None:
         """Render only the canonical non-secret effective scope and health axes."""
-        scope = status.effective_scope
-        empty = tr("tui.restricted.none")
-        operations = ", ".join(sorted(str(item) for item in scope.operations)) or empty
-        actions = ", ".join(sorted(item.value for item in scope.actions)) or empty
-        disclosures = (
-            ", ".join(
-                f"{permission.destination_id}/{permission.projection_id}/{permission.category.value}"
-                for permission in sorted(
-                    scope.disclosures,
-                    key=lambda permission: (
-                        str(permission.destination_id),
-                        str(permission.projection_id),
-                        permission.category.value,
-                    ),
-                )
-            )
-            or empty
-        )
-        delegation = tr("tui.restricted.yes") if scope.allow_delegation else tr("tui.restricted.no")
-        periods = (
-            tr("tui.restricted.all_periods")
-            if scope.periods is None
-            else ", ".join(
-                str(item) for item in sorted(scope.periods, key=lambda item: (item.filing_year, str(item.code)))
-            )
-            or empty
-        )
+        operations, actions, disclosures, delegation, periods = _restricted_scope_text(status)
         if status.session_expires_at is None or status.grant_expires_at is None:
             self._expire()
             return
@@ -197,7 +206,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             tr(
                 "tui.restricted.periods",
                 values=periods,
-                independent=tr("tui.restricted.yes") if scope.allow_period_independent else tr("tui.restricted.no"),
+                independent=_restricted_period_independent(status),
             )
         )
         self.query_one("#restricted-availability", Static).update(

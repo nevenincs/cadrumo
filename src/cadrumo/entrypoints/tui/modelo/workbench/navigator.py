@@ -33,6 +33,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final
 
+from rich.cells import cell_len
 from rich.text import Text
 
 from .....application.modelo.work_form_models import (
@@ -51,6 +52,7 @@ from .....application.modelo.work_form_models import (
     section_fields,
 )
 from .....core.i18n.render import tr
+from ...components.cell_text import ellipsize
 from .casilla_list import AddressKey
 from .page_items import WorkbenchPage
 from .vocabulary import (
@@ -68,7 +70,6 @@ _JOINERS: Final[frozenset[str]] = frozenset("/-_.")
 _CAMEL_JOIN: Final[re.Pattern[str]] = re.compile(r"[a-z][A-Z]")
 _LONGEST_PLAIN_WORD: Final[int] = 11
 _DIMMED: Final[str] = "dim"
-_ELLIPSIS: Final[str] = "…"
 _MIN_ROOM: Final[int] = 4
 
 
@@ -83,10 +84,16 @@ def looks_like_identifier(text: str) -> bool:
     stripped = text.strip()
     if not stripped or any(character.isspace() for character in stripped):
         return False
-    if any(character in _JOINERS for character in stripped) or _CAMEL_JOIN.search(stripped):
-        return True
-    lower = stripped == stripped.lower() and any(character.isalpha() for character in stripped)
-    return lower and (len(stripped) > _LONGEST_PLAIN_WORD or any(character.isdigit() for character in stripped))
+    return _has_identifier_join(stripped) or _is_long_lowercase_identifier(stripped)
+
+
+def _has_identifier_join(text: str) -> bool:
+    return any(character in _JOINERS for character in text) or _CAMEL_JOIN.search(text) is not None
+
+
+def _is_long_lowercase_identifier(text: str) -> bool:
+    lower = text == text.lower() and any(character.isalpha() for character in text)
+    return lower and (len(text) > _LONGEST_PLAIN_WORD or any(character.isdigit() for character in text))
 
 
 def readable_text(text: ModeloFormText) -> str | None:
@@ -104,6 +111,10 @@ def section_title(section: ModeloFormSection, *, page_number: int, part_number: 
     if official and not looks_like_identifier(official):
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
     boxes = list(dict.fromkeys(field.box for field in section_fields(section) if field.box))
+    return _section_location_title(boxes, page_number=page_number, part_number=part_number)
+
+
+def _section_location_title(boxes: list[str], *, page_number: int, part_number: int) -> ModeloFormText:
     if len(boxes) == 1:
         text = tr("tui.modelo.workbench.section.box", box=boxes[0])
     elif boxes and all(box.isascii() and box.isdecimal() for box in boxes):
@@ -237,12 +248,11 @@ def page_counts(page: WorkbenchPage, checked: Mapping[str, int]) -> AttentionCou
 
 def _room(width: int, lead: Text, tail: Text) -> int:
     """The cells a heading gets between what leads its line and the chips after it."""
-    return width - len(lead.plain) - (len(tail.plain) + 1 if tail.plain else 0)
+    return width - cell_len(lead.plain) - (cell_len(tail.plain) + 1 if tail.plain else 0)
 
 
 def _fit(text: str, room: int) -> str:
-    room = max(room, _MIN_ROOM)
-    return text if len(text) <= room else text[: room - 1] + _ELLIPSIS
+    return ellipsize(text, max(room, _MIN_ROOM))
 
 
 def _suffix(counts: AttentionCounts) -> tuple[Text, tuple[WorkbenchMark, ...]]:
@@ -321,28 +331,64 @@ def _section_rows(
     applies: bool,
 ) -> list[NavigatorRow]:
     """One line per heading of an open page; a page that does not apply draws its lines dimmed and uncounted."""
-    rows: list[NavigatorRow] = []
-    for group in heading_groups(page):
-        first = group[0]
-        line = Text("    ")
-        section_marks: list[WorkbenchMark] = []
-        chips = Text()
-        if show_attention and applies:
-            counts = field_counts((item for section in group for item in section_fields(section)), checked)
-            for section in group:
-                records = page.records.get(section.id)
-                counts = counts if records is None else counts + records
-            chips = counts.text()
-            line.append(f"{counts.mark.glyph} ")
-            section_marks.append(counts.mark)
-            section_marks.extend(counts.drawn())
-        line.append(_fit(first.heading.text, _room(width, line, chips)))
-        if chips.plain:
-            line.append(" ").append_text(chips)
-        if not applies:
-            line.stylize(_DIMMED)
-        rows.append(NavigatorRow(f"section:{index}:{first.id}", line, tuple(section_marks)))
-    return rows
+    return [
+        _section_row(
+            index,
+            page,
+            group,
+            checked=checked,
+            width=width,
+            show_attention=show_attention,
+            applies=applies,
+        )
+        for group in heading_groups(page)
+    ]
+
+
+def _section_row(
+    index: int,
+    page: WorkbenchPage,
+    group: tuple[ModeloFormSection, ...],
+    *,
+    checked: Mapping[str, int],
+    width: int,
+    show_attention: bool,
+    applies: bool,
+) -> NavigatorRow:
+    first = group[0]
+    line = Text("    ")
+    section_marks: list[WorkbenchMark] = []
+    chips = Text()
+    counts = _section_attention(group, page, checked, show_attention=show_attention, applies=applies)
+    if counts is not None:
+        chips = counts.text()
+        line.append(f"{counts.mark.glyph} ")
+        section_marks.append(counts.mark)
+        section_marks.extend(counts.drawn())
+    line.append(_fit(first.heading.text, _room(width, line, chips)))
+    if chips.plain:
+        line.append(" ").append_text(chips)
+    if not applies:
+        line.stylize(_DIMMED)
+    return NavigatorRow(f"section:{index}:{first.id}", line, tuple(section_marks))
+
+
+def _section_attention(
+    group: tuple[ModeloFormSection, ...],
+    page: WorkbenchPage,
+    checked: Mapping[str, int],
+    *,
+    show_attention: bool,
+    applies: bool,
+) -> AttentionCounts | None:
+    if not show_attention or not applies:
+        return None
+    counts = field_counts((item for section in group for item in section_fields(section)), checked)
+    for section in group:
+        records = page.records.get(section.id)
+        if records is not None:
+            counts = counts + records
+    return counts
 
 
 def navigator_rows(
@@ -365,36 +411,128 @@ def navigator_rows(
     """
     rows: list[NavigatorRow] = []
     for index, page in enumerate(pages):
-        applies = page.id not in inapplicable
-        # Nothing counts on a page that does not apply, nor anywhere once no attention is shown (a filed declaration).
-        counts = page_counts(page, checked) if applies and show_attention else AttentionCounts()
-        is_current = index == current
-        expanded = state.expanded(page, current=is_current, counts=counts, applies=applies) if page.sections else False
-        fold = (EXPANDED_MARK if expanded else COLLAPSED_MARK) if page.sections else None
-        marks: list[WorkbenchMark] = []
-        prompt = Text()
-        prompt.append(f"{fold.glyph} " if fold is not None else "  ")
-        if fold is not None:
-            marks.append(fold)
-        if is_current:
-            prompt.append(f"{HERE_MARK.glyph} ")
-            marks.append(HERE_MARK)
-        suffix = Text(not_applying) if not applies else Text()
-        if applies and show_attention:
-            suffix, drawn = _suffix(counts)
-            marks.extend(drawn)
-        start = len(prompt.plain)
-        prompt.append(_fit(page.heading.text, _room(width, prompt, suffix)))
-        if suffix.plain:
-            prompt.append(" ").append_text(suffix)
-        if not applies:
-            prompt.stylize(_DIMMED, start)
-        rows.append(NavigatorRow(f"page:{index}", prompt, tuple(marks)))
+        applies, counts, expanded = _navigator_page_state(
+            index,
+            page,
+            current=current,
+            state=state,
+            checked=checked,
+            show_attention=show_attention,
+            inapplicable=inapplicable,
+        )
+        rows.append(
+            _page_row(
+                index,
+                page,
+                current=index == current,
+                applies=applies,
+                counts=counts,
+                width=width,
+                show_attention=show_attention,
+                not_applying=not_applying,
+                expanded=expanded,
+            )
+        )
         if expanded:
             rows.extend(
                 _section_rows(index, page, checked=checked, width=width, show_attention=show_attention, applies=applies)
             )
     return tuple(rows)
+
+
+def _navigator_page_state(
+    index: int,
+    page: WorkbenchPage,
+    *,
+    current: int,
+    state: NavigatorState,
+    checked: Mapping[str, int],
+    show_attention: bool,
+    inapplicable: frozenset[str],
+) -> tuple[bool, AttentionCounts, bool]:
+    applies = page.id not in inapplicable
+    # Nothing counts on an inapplicable page or when attention is hidden for a filed declaration.
+    counts = page_counts(page, checked) if applies and show_attention else AttentionCounts()
+    expanded = (
+        state.expanded(page, current=index == current, counts=counts, applies=applies) if page.sections else False
+    )
+    return applies, counts, expanded
+
+
+def _page_row(
+    index: int,
+    page: WorkbenchPage,
+    *,
+    current: bool,
+    applies: bool,
+    counts: AttentionCounts,
+    width: int,
+    show_attention: bool,
+    not_applying: str,
+    expanded: bool,
+) -> NavigatorRow:
+    prompt, marks = _page_prefix(page, current=current, expanded=expanded)
+    suffix, suffix_marks = _page_suffix(
+        applies=applies,
+        show_attention=show_attention,
+        counts=counts,
+        not_applying=not_applying,
+    )
+    marks.extend(suffix_marks)
+    prompt = _finish_page_prompt(page, prompt, suffix, width=width, applies=applies)
+    return NavigatorRow(f"page:{index}", prompt, tuple(marks))
+
+
+def _page_prefix(
+    page: WorkbenchPage,
+    *,
+    current: bool,
+    expanded: bool,
+) -> tuple[Text, list[WorkbenchMark]]:
+    fold = (EXPANDED_MARK if expanded else COLLAPSED_MARK) if page.sections else None
+    marks: list[WorkbenchMark] = []
+    prompt = Text()
+    prompt.append(f"{fold.glyph} " if fold is not None else "  ")
+    if fold is not None:
+        marks.append(fold)
+    if current:
+        prompt.append(f"{HERE_MARK.glyph} ")
+        marks.append(HERE_MARK)
+
+    return prompt, marks
+
+
+def _page_suffix(
+    *,
+    applies: bool,
+    show_attention: bool,
+    counts: AttentionCounts,
+    not_applying: str,
+) -> tuple[Text, list[WorkbenchMark]]:
+    suffix = Text(not_applying) if not applies else Text()
+    marks: list[WorkbenchMark] = []
+    if applies and show_attention:
+        suffix, drawn = _suffix(counts)
+        marks.extend(drawn)
+
+    return suffix, marks
+
+
+def _finish_page_prompt(
+    page: WorkbenchPage,
+    prompt: Text,
+    suffix: Text,
+    *,
+    width: int,
+    applies: bool,
+) -> Text:
+    start = len(prompt.plain)
+    prompt.append(_fit(page.heading.text, _room(width, prompt, suffix)))
+    if suffix.plain:
+        prompt.append(" ").append_text(suffix)
+    if not applies:
+        prompt.stylize(_DIMMED, start)
+    return prompt
 
 
 def section_of(page: WorkbenchPage, field_key: AddressKey) -> ModeloFormSection | None:

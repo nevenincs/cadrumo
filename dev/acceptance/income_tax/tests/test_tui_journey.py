@@ -18,7 +18,12 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 
 from ..authority import IncomeTaxAuthorityResolution, resolve_income_tax_authority
 from ..scenario import AcceptanceOutcome
-from ..tui_journey import (
+from ..tui_continuation_evidence import (
+    canonical_financial_value_fingerprint,
+    create_continuation_checkpoint,
+    prove_continuation,
+)
+from ..tui_contracts import (
     AcceptanceCaseEvidence,
     ContinuationStateEvidence,
     InstalledTuiContract,
@@ -27,18 +32,13 @@ from ..tui_journey import (
     TuiJourneyError,
     TuiOperationBinding,
     TuiTerminalEvidence,
-    _observe_operation_terminal,
-    activate_tui_operation,
-    blocked_tui_journey_evidence,
-    build_tui_journey_evidence,
-    canonical_financial_value_fingerprint,
-    create_continuation_checkpoint,
-    installed_lifecycle_contract,
-    prove_continuation,
-    settled_notice_terminal,
-    validate_modelo_100_xsd,
-    wait_for_tui_refresh,
 )
+from ..tui_journey import blocked_tui_journey_evidence, build_tui_journey_evidence
+from ..tui_lifecycle_contract import installed_lifecycle_contract
+from ..tui_navigation import wait_for_tui_refresh
+from ..tui_operation_controls import activate_tui_operation
+from ..tui_terminal_observation import _observe_operation_terminal, settled_notice_terminal
+from ..tui_xsd_validation import validate_modelo_100_xsd
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -135,7 +135,8 @@ def test_the_lifecycle_contract_drives_controls_the_real_workbench_and_its_dialo
     from cadrumo.entrypoints.tui.modelo.workbench.ports import WorkbenchExportOffer
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 
-    from ..tui_journey import WORKBENCH_NEXT, wait_for_workbench
+    from ..tui_navigation import wait_for_workbench
+    from ..tui_selectors import WORKBENCH_NEXT
 
     contract = installed_lifecycle_contract()
     keys = {binding.activation_key for binding in (contract.calculate, contract.verify, contract.local_file)}
@@ -320,7 +321,8 @@ def test_assumed_values_are_confirmed_reviewed_and_submitted_for_apply_through_t
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader
 
-    from ..tui_journey import confirm_assumed_values, wait_for_workbench, workbench_offers
+    from ..tui_navigation import wait_for_workbench, workbench_offers
+    from ..tui_operation_controls import confirm_assumed_values
 
     actions = FakeActions()
     reader = FakeReader(form=_form_with_assumed_withholding(entries_known=entries_known))
@@ -355,7 +357,8 @@ def test_nothing_is_confirmed_when_the_workbench_offers_another_step() -> None:
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader, synthetic_form
 
-    from ..tui_journey import confirm_assumed_values, wait_for_workbench, workbench_offers
+    from ..tui_navigation import wait_for_workbench, workbench_offers
+    from ..tui_operation_controls import confirm_assumed_values
 
     actions = FakeActions()
     reader = FakeReader(form=synthetic_form(needs_input=False))
@@ -391,7 +394,7 @@ def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8()
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader, synthetic_form
 
-    from ..tui_journey import wait_for_workbench, workbench_offers
+    from ..tui_navigation import wait_for_workbench, workbench_offers
 
     actions = FakeActions()
     form = synthetic_form(needs_input=False)
@@ -425,7 +428,7 @@ def test_the_first_open_greeting_is_no_earlier_notice() -> None:
     """The greeting a session's first workbench shows reports nothing, so an operation may start under it."""
     from cadrumo.core.i18n.render import tr
 
-    from ..tui_journey import workbench_notice
+    from ..tui_readback import workbench_notice
 
     greeting = tr("tui.modelo.workbench.legend.first_open")
 

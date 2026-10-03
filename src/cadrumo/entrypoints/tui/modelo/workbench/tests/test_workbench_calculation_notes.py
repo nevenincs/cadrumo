@@ -41,7 +41,9 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
-from ..issues import IssueLevel, WorkbenchIssuesScreen, issue_lines
+from ..issue_projection import issue_lines
+from ..issue_scale import IssueLevel
+from ..issues import WorkbenchIssuesScreen
 from .workbench_fixture import synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -34,8 +34,8 @@ from ._parity_tapes import (
     run_parity_scenario,
     save_parity_tape,
 )
-from .workbook_parity import verify_workbook_backend
 from .workbook_parity_models import WorkbookBackendVerificationReport
+from .workbook_parity_workflow import verify_workbook_backend
 
 
 class RegistryOracleAuditReport(BaseModel):

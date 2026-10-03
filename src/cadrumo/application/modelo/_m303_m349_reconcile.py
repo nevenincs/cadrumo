@@ -273,7 +273,7 @@ def m303_m349_intracom_reconcile_findings(
         return []
     sibling_revision = _reconcile_revision_for_work_unit(
         sibling_unit,
-        calculation_repository.load(),
+        calculation_repository.load(operation=operation),
         operation=operation,
     )
     if sibling_revision is None:

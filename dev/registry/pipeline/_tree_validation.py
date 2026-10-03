@@ -16,6 +16,7 @@ from pathlib import Path, PurePosixPath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
@@ -36,7 +37,8 @@ from .export_fragment_provenance import (
     verify_export_fragment_provenance_manifest,
 )
 from .joined_record_design import JoinedRecordDesign
-from .render_profile import RenderProfile, RenderProfileSourceEvidence
+from .render_profile_evidence import RenderProfileSourceEvidence
+from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .tree_paths import require_existing_non_link
 
@@ -80,6 +82,10 @@ class GeneratedExportTreeValidationContext:
     #: rendered, compared, or published, and its target revision is refused:
     #: the rendered target remains the sole source of its own facts.
     continuity_metadata_modelo_root: Path | None = None
+    #: Full validated source supplies corpus context for scope-only checks.
+    #: Its target revision is always replaced with the freshly loaded candidate;
+    #: it supplies no generated layout, snapshot or target-validation verdict.
+    scope_authority: ValidatedRegistryAuthority | None = None
     #: Authority grade the caller is entitled to establish.  Existing check and
     #: validation callers keep the filing-grade default; bootstrap publication
     #: explicitly asks for calculation grade because a static generated layout
@@ -198,17 +204,20 @@ def _validated_target_snapshot(
     revision_id: str,
     target_definition: ModeloDefinition,
 ) -> RegistrySnapshot:
-    """Select the target through canonical authority, with an optional continuity witness.
+    """Select fresh target facts with separately supplied registry-wide context.
 
-    Normal candidates retain the ordinary :class:`ValidatedRegistryAuthority`
-    route.  A candidate that declares an incoming strict-continuity transition
+    The validated source can supply full corpus context for scope checks such
+    as semantic-role cardinality. Its target revision is replaced with the
+    freshly loaded candidate before validation; snapshot selection always uses
+    the candidate. Without that context, normal candidates retain the ordinary
+    authority route. A candidate that declares an incoming continuity transition
     can instead carry a separate witness for the predecessor facts that are
     intentionally absent from its target-only tree.  That witness is checked by
     the existing registry-scope validator after replacing *only* its target
     revision with the freshly loaded candidate revision; it cannot validate a
     stale target by copying one into the witness.
     """
-    if context.continuity_metadata_modelo_root is None:
+    if context.continuity_metadata_modelo_root is None and context.scope_authority is None:
         identity = resolve_registry_identity(
             registry_root,
             collect_fingerprints=collect_registry_tree_fingerprints,
@@ -223,11 +232,6 @@ def _validated_target_snapshot(
             grade=context.required_grade,
         )
 
-    continuity_modelo = _load_continuity_metadata_modelo(
-        context.continuity_metadata_modelo_root,
-        modelo_id=modelo_id,
-        revision_id=revision_id,
-    )
     loaded_modelos, catalogues = compile_registry_tree(registry_root, source_root)
     loaded_target = next((modelo for modelo in loaded_modelos if str(modelo.id) == modelo_id), None)
     if loaded_target is None:
@@ -235,15 +239,27 @@ def _validated_target_snapshot(
     if loaded_target != target_definition:
         raise RegistryValidationError("generated target loader result changed before continuity validation")
 
-    witness = continuity_modelo.model_copy(
-        update={
-            "revisions": {
-                **continuity_modelo.revisions,
-                revision_id: target_definition.revisions[revision_id],
+    if context.scope_authority is not None:
+        scoped_modelos = _candidate_scope_modelos(
+            context.scope_authority,
+            loaded_modelos,
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+        )
+    else:
+        if context.continuity_metadata_modelo_root is None:
+            raise RegistryValidationError("generated scope validation requires its declared source witness")
+        continuity_modelo = _load_continuity_metadata_modelo(
+            context.continuity_metadata_modelo_root,
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+        )
+        witness = continuity_modelo.model_copy(
+            update={
+                "revisions": {**continuity_modelo.revisions, revision_id: target_definition.revisions[revision_id]}
             },
-        },
-    )
-    scoped_modelos = tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in loaded_modelos)
+        )
+        scoped_modelos = tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in loaded_modelos)
     # Binding validators and snapshot selection resolve governed vocabulary. They
     # must read the candidate's own compiled facts, exactly as the full authority
     # compile does, never whatever authority happens to be ambient.
@@ -264,10 +280,10 @@ def _validated_target_snapshot(
         )
         for loaded_modelo in loaded_modelos:
             validator.validate_modelo(loaded_modelo)
-        continuity_failures = validate_registry_scope(scoped_modelos)
-        if continuity_failures:
+        scope_failures = validate_registry_scope(scoped_modelos)
+        if scope_failures:
             raise RegistryValidationError(
-                "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in continuity_failures)
+                "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in scope_failures)
             )
 
         # ``build_snapshot`` owns exactly the model-local validation and
@@ -285,6 +301,35 @@ def _validated_target_snapshot(
             revision_id=revision_id,
             grade=context.required_grade,
         )
+
+
+def _candidate_scope_modelos(
+    authority: ValidatedRegistryAuthority,
+    loaded_modelos: tuple[ModeloDefinition, ...],
+    *,
+    modelo_id: str,
+    revision_id: str,
+) -> tuple[ModeloDefinition, ...]:
+    """Replace only the candidate revision within the complete validated scope."""
+    source_by_id = {str(modelo.id): modelo for modelo in authority.modelos}
+    candidate_by_id = {str(modelo.id): modelo for modelo in loaded_modelos}
+    if not candidate_by_id.keys() <= source_by_id.keys():
+        raise RegistryValidationError("generated candidate contains modelos absent from its validated source scope")
+    source_target = source_by_id[modelo_id]
+    candidate_target = candidate_by_id[modelo_id]
+    if revision_id not in source_target.revisions:
+        raise RegistryValidationError("generated revision is absent from its validated source scope")
+    if source_target.model_copy(update={"revisions": candidate_target.revisions}) != candidate_target:
+        raise RegistryValidationError("generated candidate changed modelo metadata outside its target revision")
+    for candidate_id, candidate in candidate_by_id.items():
+        if candidate_id != modelo_id and candidate != source_by_id[candidate_id]:
+            raise RegistryValidationError(
+                "generated candidate changed supporting modelo facts from its validated scope"
+            )
+    witness = source_target.model_copy(
+        update={"revisions": {**source_target.revisions, revision_id: candidate_target.revisions[revision_id]}},
+    )
+    return tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in authority.modelos)
 
 
 def _load_continuity_metadata_modelo(

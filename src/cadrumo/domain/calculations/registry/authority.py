@@ -51,7 +51,7 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
-from .authority_store import AuthorityStoreError, SQLiteAuthorityReader
+from .authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityStoreError, SQLiteAuthorityReader
 from .errors import AuthorityDescriptorUnavailableError, RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
@@ -960,7 +960,7 @@ class IndexedRegistryAuthority:
             self._retired_readers = still_leased
 
 
-_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", "authority.current.json")
+_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", AUTHORITY_DESCRIPTOR_FILENAME)
 _bundled_indexed_authority_lock = RLock()
 _bundled_indexed_authority: IndexedRegistryAuthority | None = None
 

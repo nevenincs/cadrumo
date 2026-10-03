@@ -25,6 +25,7 @@ from ...core.operations import (
 )
 from ...core.time.clock import now
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva_compensation.reconciliation import (
     IvaCompensationAuthority,
     IvaCompensationDecisionReason,
@@ -43,11 +44,11 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -171,9 +172,10 @@ def _profile_ports(
     factory: ModeloIvaWalletSeedPortsFactory,
     *,
     profile_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloIvaWalletSeedPorts:
     """Build the existing wallet repository bundle and reject a foreign factory result."""
-    ports = factory(bucket_id=profile_id)
+    ports = factory(bucket_id=profile_id, operation=operation)
     if ports.work_unit_repository.bucket_id != profile_id or ports.calculation_repository.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return ports
@@ -229,20 +231,14 @@ class ModeloIvaWalletOverrideExecutor:
         """Record one override behind fresh access, pinned authority and COMMIT custody."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         period = payload.period.to_period()
         operation = context.authority_operation
         operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
-        ports = _profile_ports(self._factory, profile_id=profile_id)
+        ports = _profile_ports(self._factory, profile_id=profile_id, operation=context.authority_operation)
 
         async def commit_and_publish() -> str:
             async with context.cancellation.irreversible_section():

@@ -503,7 +503,7 @@ def _candidate_for_invoice_line(
     destination = invoice.counterparty_eu_member_state
     if destination is None:
         return None
-    rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate)
+    rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate, devengo_date)
     if rate_kind is None:
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),

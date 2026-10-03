@@ -28,6 +28,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from dev.quality.source_import_analysis import module_name_for, resolve_relative_import
 
 from ._paths import SRC_DIR
 
@@ -150,7 +151,11 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
             continue
         source = module.read_text(encoding=UTF_8_ENCODING)
         tree = ast.parse(source, filename=str(module))
-        call_names = _translation_call_names(tree)
+        call_names = _translation_call_names(
+            tree,
+            importer_mod=module_name_for(module, src_root=SRC_DIR.parent),
+            importer_is_pkg=module.name == "__init__.py",
+        )
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id not in call_names:
                 continue
@@ -160,13 +165,18 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
     return tuple(sorted(keys))
 
 
-def _translation_call_names(tree: ast.AST) -> frozenset[str]:
-    """Return local names bound to the project translation function in ``tree``."""
+def _translation_call_names(tree: ast.AST, *, importer_mod: str, importer_is_pkg: bool) -> frozenset[str]:
+    """Return local names bound to the project translation function in ``tree``.
+
+    Relative imports are resolved from the importing module's actual package
+    context so a spelling such as ``from .render import tr`` is not assigned
+    a fabricated top-level package.
+    """
     names: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.ImportFrom) or node.module is None:
             continue
-        imported_module = f"cadrumo.{node.module}" if node.level else node.module
+        imported_module = resolve_relative_import(importer_mod, importer_is_pkg, node.level, node.module)
         if imported_module not in _CANONICAL_TRANSLATION_MODULES:
             continue
         names.update(alias.asname or alias.name for alias in node.names if alias.name == "tr")

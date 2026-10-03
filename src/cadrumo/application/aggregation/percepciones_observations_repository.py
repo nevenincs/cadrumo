@@ -26,22 +26,7 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .errors import AggregationValidationError
-
-
-def _validate_key_component(token: str, *, context: str) -> str:
-    """Reject key components that would compose an unsafe repository id."""
-    if not token:
-        violation = "empty_repository_id"
-    elif "/" in token or "\\" in token:
-        violation = "repository_id_separator"
-    elif token in {".", ".."} or token.startswith("."):
-        violation = "repository_id_dot_token"
-    else:
-        return token
-    raise AggregationValidationError(
-        tr("errors.integrity.integrity_storage_path_containment"),
-        context={"path_context": context, "violation": violation},
-    )
+from .observation_key_component import validate_observation_key_component
 
 
 def _hashed_tax_id_token(tax_id: str) -> str:
@@ -79,16 +64,16 @@ def percepcion_observation_key(
                 "max_year": str(FILING_YEAR_MAX),
             },
         )
-    _validate_key_component(modelo, context="modelo")
+    validate_observation_key_component(modelo, context="modelo")
     period_token = period.registry_token
-    _validate_key_component(period_token, context="period")
-    _validate_key_component(clave, context="clave")
+    validate_observation_key_component(period_token, context="period")
+    validate_observation_key_component(clave, context="clave")
     subclave_token = subclave or "-"
-    _validate_key_component(subclave_token, context="subclave")
+    validate_observation_key_component(subclave_token, context="subclave")
     prefix = f"{modelo}:{filing_year}:{period_token}:{_hashed_tax_id_token(perceptor_tax_id)}:{clave}:{subclave_token}"
     if projection_identity is None:
         return prefix
-    _validate_key_component(projection_identity, context="projection_identity")
+    validate_observation_key_component(projection_identity, context="projection_identity")
     return f"{prefix}:{projection_identity}"
 
 

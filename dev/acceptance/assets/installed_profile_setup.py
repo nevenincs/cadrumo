@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, cast
 
+from cadrumo.core.hashing import sha256_file, sha256_hex
 from dev.acceptance.assets.installed_journey import build_assets_installed_environment
 
 _SCHEMA_VERSION = "activity-asset-installed-cli-profile-setup-v2"
@@ -80,11 +81,6 @@ class InstalledCliProfileSetupError(RuntimeError):
         """Keep the sanitized receipt available to the calling acceptance driver."""
         super().__init__("installed CLI profile setup did not establish canonical readiness")
         self.receipt = receipt
-
-
-def _digest(payload: bytes) -> str:
-    """Record a stream identity without retaining its content."""
-    return hashlib.sha256(payload).hexdigest()
 
 
 def _public_response_metadata(stdout: bytes, stderr: bytes) -> tuple[str | None, str | None, str | None, bool | None]:
@@ -171,8 +167,8 @@ def _run_command(
         return_code=process.returncode,
         timed_out=timed_out,
         cleanup=cleanup,
-        stdout_sha256=_digest(stdout),
-        stderr_sha256=_digest(stderr),
+        stdout_sha256=sha256_hex(stdout),
+        stderr_sha256=sha256_hex(stderr),
         response_status=response_status,
         error_code=error_code,
         setup_state=setup_state,
@@ -209,6 +205,14 @@ def _command_failed(command: InstalledCliCommandReceipt) -> bool:
     return command.return_code != 0 or command.timed_out or command.cleanup == "failed"
 
 
+def _prepare_profile_setup_storage(aeat_executable: Path, storage_root: Path) -> None:
+    if not aeat_executable.is_file():
+        raise ValueError("installed CLI profile setup requires an existing aeat executable")
+    if storage_root.exists() and any(storage_root.iterdir()):
+        raise ValueError("installed CLI profile setup requires an empty scenario storage root")
+    storage_root.mkdir(parents=True, exist_ok=True)
+
+
 def run_installed_cli_profile_setup(
     *,
     aeat_executable: Path,
@@ -220,12 +224,8 @@ def run_installed_cli_profile_setup(
     timeout_seconds: float = 90.0,
 ) -> InstalledCliProfileSetupReceipt:
     """Create, reopen, complete, and verify a synthetic profile through installed CLI commands."""
-    if not aeat_executable.is_file():
-        raise ValueError("installed CLI profile setup requires an existing aeat executable")
-    if storage_root.exists() and any(storage_root.iterdir()):
-        raise ValueError("installed CLI profile setup requires an empty scenario storage root")
-    storage_root.mkdir(parents=True, exist_ok=True)
-    executable_sha256 = hashlib.sha256(aeat_executable.read_bytes()).hexdigest()
+    _prepare_profile_setup_storage(aeat_executable, storage_root)
+    executable_sha256 = sha256_file(aeat_executable)
     commands: list[InstalledCliCommandReceipt] = []
     creation_secrets = json.dumps(
         {"passphrase": passphrase, "passphrase_confirmation": passphrase}, separators=(",", ":")

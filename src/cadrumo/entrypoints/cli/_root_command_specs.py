@@ -7,25 +7,21 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_secret_contracts import MachineSecretFieldSpec, ProfileSecretChannelKind, ProfileSecretSpec
+from ._command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    MachineSecretFieldSpec,
-    OptionSpec,
     ParameterDefault,
-    ProfileSecretChannelKind,
-    ProfileSecretSpec,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("...core.output_rendering", "OutputFormat", __package__))

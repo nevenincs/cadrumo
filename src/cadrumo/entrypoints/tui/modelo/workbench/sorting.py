@@ -100,33 +100,77 @@ def _unit_key(unit: list[CasillaListEntry], order: SortOrder) -> tuple[object, .
     return ()
 
 
-def _units(page: WorkbenchPage, items: tuple[object, ...]) -> list[list[CasillaListEntry]]:
-    """The page's shown boxes as sortable units: a grid row's boxes together, any other box alone."""
-    sections: dict[AddressKey, str] = {
+def _section_headings(page: WorkbenchPage) -> dict[AddressKey, str]:
+    return {
         address_key(field.address): section.heading.text
         for section in page.sections
         for field in section_fields(section)
     }
+
+
+def _append_heading_unit(
+    item: CasillaListHeading,
+    units: list[list[CasillaListEntry]],
+) -> tuple[list[CasillaListEntry] | None, str]:
+    row: list[CasillaListEntry] | None = [] if item.level else None
+    row_heading = item.text if item.level else ""
+    if row is not None:
+        units.append(row)
+    return row, row_heading
+
+
+def _append_entry_unit(
+    page: WorkbenchPage,
+    item: CasillaListEntry,
+    *,
+    sections: Mapping[AddressKey, str],
+    row: list[CasillaListEntry] | None,
+    row_heading: str,
+    units: list[list[CasillaListEntry]],
+) -> None:
+    place = _entry_place(page, item, sections)
+    label = _entry_label(item, row=row, row_heading=row_heading)
+    entry = replace(item, indent=0, label=_SEPARATOR.join(part for part in (label, place) if part))
+    if row is not None and item.indent:
+        row.append(entry)
+    else:
+        units.append([entry])
+
+
+def _entry_place(page: WorkbenchPage, item: CasillaListEntry, sections: Mapping[AddressKey, str]) -> str:
+    return _SEPARATOR.join(part for part in (page.heading.text, sections.get(item.key)) if part)
+
+
+def _entry_label(
+    item: CasillaListEntry,
+    *,
+    row: list[CasillaListEntry] | None,
+    row_heading: str,
+) -> str:
+    own = item.label or readable_text(item.field.label) or description_text(item.field) or ""
+    if row is not None and item.indent and row_heading:
+        return f"{row_heading}: {own}"
+    return own
+
+
+def _units(page: WorkbenchPage, items: tuple[object, ...]) -> list[list[CasillaListEntry]]:
+    """The page's shown boxes as sortable units: a grid row's boxes together, any other box alone."""
+    sections = _section_headings(page)
     units: list[list[CasillaListEntry]] = []
     row: list[CasillaListEntry] | None = None
     row_heading = ""
     for item in items:
         if isinstance(item, CasillaListHeading):
-            row = [] if item.level else None
-            row_heading = item.text if item.level else ""
-            if row is not None:
-                units.append(row)
-            continue
-        if not isinstance(item, CasillaListEntry):
-            continue
-        place = _SEPARATOR.join(part for part in (page.heading.text, sections.get(item.key)) if part)
-        own = item.label or readable_text(item.field.label) or description_text(item.field) or ""
-        label = f"{row_heading}: {own}" if row is not None and item.indent and row_heading else own
-        entry = replace(item, indent=0, label=_SEPARATOR.join(part for part in (label, place) if part))
-        if row is not None and item.indent:
-            row.append(entry)
-        else:
-            units.append([entry])
+            row, row_heading = _append_heading_unit(item, units)
+        elif isinstance(item, CasillaListEntry):
+            _append_entry_unit(
+                page,
+                item,
+                sections=sections,
+                row=row,
+                row_heading=row_heading,
+                units=units,
+            )
     return [unit for unit in units if unit]
 
 

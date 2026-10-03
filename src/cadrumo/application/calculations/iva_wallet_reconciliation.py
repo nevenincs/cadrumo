@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, ClassVar
 from pydantic import BaseModel, ConfigDict
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.hashing import sha256_hex
+from ...core.hashing import prefixed_digest
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -156,7 +156,7 @@ class IvaWalletDecisionSourceResolver:
                     "target_period": str(decision.target_period),
                 },
             )
-        fingerprint = f"sha256:{sha256_hex(decision.model_dump_json().encode('utf-8'))}"
+        fingerprint = prefixed_digest(decision.model_dump_json().encode("utf-8"))
         from .observations_repository import iva_wallet_decision_event_key
 
         primary_ref = iva_wallet_decision_event_key(decision)

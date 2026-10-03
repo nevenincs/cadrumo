@@ -24,8 +24,10 @@ from ...adapters.persistence.storage.custody.automation_store import AutomationC
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.runtime.access_management import (
     RuntimeAccessManagementRequest,
+    RuntimeAutomationDeny,
     RuntimeProfileRecoveryPrepare,
     RuntimeProfileResume,
+    RuntimeSessionInventory,
 )
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
@@ -45,9 +47,16 @@ from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationContract,
     RuntimeOperationContractReply,
+    RuntimeOperationControl,
+    RuntimeOperationManage,
+    RuntimeOperationObserve,
     RuntimeOperationReply,
     RuntimeOperationRequest,
+    RuntimeOperationResult,
+    RuntimeOperationResultPage,
+    RuntimeOperationReview,
     RuntimeOperationSecret,
+    RuntimeOperationSubmit,
     RuntimeOperationSubmitPayload,
 )
 from ...application.runtime.profile_access import (
@@ -66,6 +75,7 @@ from ...application.user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
     AccessDenied,
+    AccessScope,
     AccessSession,
     Availability,
     LoginEligibility,
@@ -84,6 +94,25 @@ from .enrollment_connections import RuntimeEnrollmentConnections
 from .operation_projection import prepare_operation_projection
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .submission_stream import stream_operation_submission
+
+type _RuntimeOperationReplyRequest = (
+    RuntimeOperationContract
+    | RuntimeOperationSubmitPayload
+    | RuntimeOperationSubmit
+    | RuntimeOperationControl
+    | RuntimeOperationObserve
+    | RuntimeOperationResult
+    | RuntimeOperationResultPage
+    | RuntimeOperationReview
+    | RuntimeOperationManage
+)
+type _ExistingRuntimeAccessRequest = RuntimeAutomationDeny | RuntimeProfileResume | RuntimeSessionInventory
+
+
+@dataclass(frozen=True, slots=True)
+class _ApiKeyLogin:
+    credential: SecretBytes
+    scope: AccessScope
 
 
 @dataclass
@@ -247,6 +276,15 @@ class RuntimeProfileConnections:
     def _prepare(
         self, context: RuntimeConnectionContext, channel: RuntimeByteChannel, request: RuntimeProfileLogin
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        self._validate_login_request(request)
+        connection = self._existing_or_captured_connection(context, channel, request)
+        host = self._host(request.profile_id, context)
+        with host.guard:
+            self._prepare_profile_login(connection, host, context, request)
+        return connection, host
+
+    @staticmethod
+    def _validate_login_request(request: RuntimeProfileLogin) -> None:
         if request.method in {"password", "receipt"} and request.scope is not None:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if request.method in {"password", "receipt"} and request.frontend not in {
@@ -259,6 +297,13 @@ class RuntimeProfileConnections:
             or request.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+    def _existing_or_captured_connection(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeProfileLogin,
+    ) -> ProfileConnection:
         with self._guard:
             previous = self._connections.get(context.connection_id)
         if previous is not None:
@@ -269,40 +314,54 @@ class RuntimeProfileConnections:
                 or previous.method == "enrollment"
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-            connection = previous
-        else:
-            login = self._capture(channel)
-            observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
-            if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            connection = ProfileConnection(context, login, uuid4(), request.profile_id, request.frontend)
-        host = self._host(request.profile_id, context)
-        with host.guard:
+            return previous
+        login = self._capture(channel)
+        observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
+        if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        return ProfileConnection(context, login, uuid4(), request.profile_id, request.frontend)
+
+    def _prepare_profile_login(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeProfileLogin,
+    ) -> None:
+        if not self._admitting():
+            raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+        self._retire_invalid_prior_session(connection, host, context, request)
+        observation = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
+        if not observation.active or (request.method in {"password", "receipt"} and observation.locked):
+            raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
+        connection.method = request.method
+        connection.persist_human_receipt = request.persist_receipt
+        if request.method in {"password", "receipt"}:
+            connection.client_id = uuid4()
+        with self._guard:
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-            if connection.session_id is not None:
-                try:
-                    prior = self._status(connection, host, request.request_id, connection.session_id)
-                    valid = isinstance(prior, RuntimeProfileStatus) and prior.status.denial is None
-                except AutomationCustodyError:
-                    valid = False
-                if valid:
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-                host.authority.disconnect(context.connection_id)
-                connection.session_id = None
-            observation = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
-            if not observation.active or (request.method in {"password", "receipt"} and observation.locked):
-                raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
-            connection.method = request.method
-            connection.persist_human_receipt = request.persist_receipt
-            if request.method in {"password", "receipt"}:
-                connection.client_id = uuid4()
-            with self._guard:
-                if not self._admitting():
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                self._connections[context.connection_id] = connection
-                self._logins[connection.login.login_id] = connection.login
-        return connection, host
+            self._connections[context.connection_id] = connection
+            self._logins[connection.login.login_id] = connection.login
+
+    def _retire_invalid_prior_session(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeProfileLogin,
+    ) -> None:
+        if connection.session_id is None:
+            return
+        try:
+            prior = self._status(connection, host, request.request_id, connection.session_id)
+            valid = isinstance(prior, RuntimeProfileStatus) and prior.status.denial is None
+        except AutomationCustodyError:
+            valid = False
+        if valid:
+            raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        host.authority.disconnect(context.connection_id)
+        connection.session_id = None
 
     def _prepare_enrollment(
         self, context: RuntimeConnectionContext, channel: RuntimeByteChannel, request: RuntimeEnrollmentPrepare
@@ -380,39 +439,54 @@ class RuntimeProfileConnections:
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         if isinstance(request, RuntimeProfileRecoveryPrepare):
-            if request.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            with self._guard:
-                connection = self._connections.get(context.connection_id)
-            if connection is None:
-                connection, host = self._prepare_unadmitted(context, channel, request, method="management")
-            else:
-                if (
-                    connection.context != context
-                    or connection.profile_id != request.profile_id
-                    or connection.frontend is not request.frontend
-                    or connection.method != "management"
-                    or connection.session_id is not None
-                ):
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-                host = self._host(request.profile_id, context)
+            connection, host = self._resolve_recovery_access(context, channel, request)
         else:
-            connection = self._connected(context.connection_id)
-            with self._guard:
-                host = self._profiles.get(request.profile_id)
-            if host is None or connection.context != context or connection.profile_id != request.profile_id:
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            if isinstance(request, RuntimeProfileResume):
-                if (
-                    connection.method != "management"
-                    or connection.session_id is not None
-                    or connection.frontend is not request.frontend
-                    or connection.recovery_generation != request.lock_generation
-                ):
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-            elif connection.session_id != request.session_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
+            connection, host = self._resolve_existing_access(context, request)
         self._validate_access_connection(connection, host)
+        return connection, host
+
+    def _resolve_recovery_access(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeProfileRecoveryPrepare,
+    ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        if request.frontend not in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        with self._guard:
+            connection = self._connections.get(context.connection_id)
+        if connection is None:
+            return self._prepare_unadmitted(context, channel, request, method="management")
+        if (
+            connection.context != context
+            or connection.profile_id != request.profile_id
+            or connection.frontend is not request.frontend
+            or connection.method != "management"
+            or connection.session_id is not None
+        ):
+            raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        return connection, self._host(request.profile_id, context)
+
+    def _resolve_existing_access(
+        self,
+        context: RuntimeConnectionContext,
+        request: _ExistingRuntimeAccessRequest,
+    ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        connection = self._connected(context.connection_id)
+        with self._guard:
+            host = self._profiles.get(request.profile_id)
+        if host is None or connection.context != context or connection.profile_id != request.profile_id:
+            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+        if isinstance(request, RuntimeProfileResume):
+            if (
+                connection.method != "management"
+                or connection.session_id is not None
+                or connection.frontend is not request.frontend
+                or connection.recovery_generation != request.lock_generation
+            ):
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        elif connection.session_id != request.session_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
         return connection, host
 
     def _profile_lock_changed(self, profile_id: UUID) -> None:
@@ -550,37 +624,66 @@ class RuntimeProfileConnections:
         # Slow/unresponsive secret senders do not hold any profile admission guard.
         with read_secret(channel, deadline=time.monotonic() + 10) as secret:
             if request.method in {"password", "receipt"}:
-                with host.guard:
-                    if not self._admitting():
-                        raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                    connection.human_secret = secret
-                try:
-                    admitted = host.authority.admit_human(connection_id=context.connection_id)
-                finally:
-                    with host.guard:
-                        connection.human_secret = None
+                admitted = self._admit_human_login(connection, host, context, secret)
             else:
-                with host.guard:
-                    if not self._admitting():
-                        raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                    credential = SecretBytes(bytes(secret))
-                    key_id, _ = host.issuer.verifier(credential)
-                    snapshot = host.store.snapshot()
-                    key = next((item for item in snapshot.keys if item.key_id == key_id), None)
-                    grant = next(
-                        (item for item in snapshot.grants if key is not None and item.grant_id == key.grant_id), None
-                    )
-                    if grant is None:
-                        return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-                    # This is routing from protected state, not proof. No lease is
-                    # published until the existing authority verifies and unwraps it.
-                    connection.client_id = grant.client_id
+                api_login = self._prepare_api_key_login(connection, host, secret, request)
+                if isinstance(api_login, AccessDenied):
+                    return api_login
                 admitted = host.authority.admit_api_key(
                     connection_id=context.connection_id,
                     target=host.store.binding,
-                    credential=credential,
-                    scope=request.scope or grant.scope,
+                    credential=api_login.credential,
+                    scope=api_login.scope,
                 )
+        return self._finish_login(connection, host, context, request, admitted)
+
+    def _admit_human_login(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        secret: bytearray,
+    ) -> AccessSession | AccessDenied:
+        with host.guard:
+            if not self._admitting():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            connection.human_secret = secret
+        try:
+            return host.authority.admit_human(connection_id=context.connection_id)
+        finally:
+            with host.guard:
+                connection.human_secret = None
+
+    def _prepare_api_key_login(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        secret: bytearray,
+        request: RuntimeProfileLogin,
+    ) -> _ApiKeyLogin | AccessDenied:
+        with host.guard:
+            if not self._admitting():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            credential = SecretBytes(bytes(secret))
+            key_id, _ = host.issuer.verifier(credential)
+            snapshot = host.store.snapshot()
+            key = next((item for item in snapshot.keys if item.key_id == key_id), None)
+            grant = next((item for item in snapshot.grants if key is not None and item.grant_id == key.grant_id), None)
+            if grant is None:
+                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+            # This is routing from protected state, not proof. No lease is
+            # published until the existing authority verifies and unwraps it.
+            connection.client_id = grant.client_id
+            return _ApiKeyLogin(credential, request.scope or grant.scope)
+
+    def _finish_login(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeProfileLogin,
+        admitted: AccessSession | AccessDenied,
+    ) -> RuntimeProfileStatus | AccessDenied:
         with host.guard:
             if isinstance(admitted, AccessDenied):
                 return admitted
@@ -604,33 +707,59 @@ class RuntimeProfileConnections:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         with self._guard:
             host = self._profiles[connection.profile_id]
+        return self._handle_session_action(connection, host, context, request)
+
+    def _handle_session_action(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeSessionRequest,
+    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | AccessDenied:
         with host.guard:
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
             if request.action == "session_lock":
-                retired = host.authority.lock_session(
-                    connection_id=context.connection_id,
-                    session_id=request.session_id,
-                    target_session_id=request.target_session_id or request.session_id,
-                )
-                if isinstance(retired, AccessDenied):
-                    return retired
-                self._retired(retired)
-                return RuntimeSessionsLocked(
-                    request_id=request.request_id,
-                    runtime_boot_id=self.boot,
-                    connection_id=context.connection_id,
-                    session_ids=retired,
-                )
+                return self._lock_session(connection, host, context, request)
             if request.target_session_id is not None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             if request.action == "session_refresh":
-                refreshed = host.authority.refresh_api_key(
-                    connection_id=context.connection_id, session_id=request.session_id
-                )
-                if not isinstance(refreshed, AccessSession):
-                    return refreshed
+                return self._refresh_session(connection, host, context, request)
             return self._status(connection, host, request.request_id, request.session_id)
+
+    def _lock_session(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeSessionRequest,
+    ) -> RuntimeSessionsLocked | AccessDenied:
+        retired = host.authority.lock_session(
+            connection_id=context.connection_id,
+            session_id=request.session_id,
+            target_session_id=request.target_session_id or request.session_id,
+        )
+        if isinstance(retired, AccessDenied):
+            return retired
+        self._retired(retired)
+        return RuntimeSessionsLocked(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            session_ids=retired,
+        )
+
+    def _refresh_session(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeSessionRequest,
+    ) -> RuntimeProfileStatus | AccessDenied:
+        refreshed = host.authority.refresh_api_key(connection_id=context.connection_id, session_id=request.session_id)
+        if not isinstance(refreshed, AccessSession):
+            return refreshed
+        return self._status(connection, host, request.request_id, request.session_id)
 
     def _retired(self, identities: tuple[UUID, ...]) -> None:
         with self._guard:
@@ -752,75 +881,14 @@ class RuntimeProfileConnections:
         deadline = time.monotonic() + 5
         with ExitStack() as release_guard:
             try:
-                if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-                if not self._admitting():
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
-                connection = self._connected(context.connection_id)
-                if connection.context != context or connection.profile_id != request.profile_id:
-                    raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-                if connection.session_id != request.session_id:
-                    raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
-                with self._guard:
-                    host = self._profiles.get(connection.profile_id)
-                if host is None:
-                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+                connection, host = self._operation_target(context, channel, request)
                 if isinstance(request, RuntimeOperationSecret):
                     self._operation_secret(host, connection, channel, request)
                     return
-                if isinstance(request, RuntimeOperationContract):
-                    # Public registry discovery has no private domain operands.
-                    # Hold the profile fence while observing its current scope.
-                    release_guard.enter_context(host.guard)
-                    status = self._status(connection, host, request.request_id, request.session_id)
-                    if isinstance(status, AccessDenied):
-                        raise ProfileAccessRefusedError(status.code)
-                    if status.status.denial is not None:
-                        raise ProfileAccessRefusedError(status.status.denial)
-                    if request.definition_id not in status.status.effective_scope.operations:
-                        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                    description = host.owner.operation_worker().describe(request.session_id, request.definition_id)
-                    contract = description.contract
-                    if connection.frontend not in contract.permitted_frontends:
-                        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-                    reply = RuntimeOperationContractReply(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.boot,
-                        connection_id=context.connection_id,
-                        contract=contract,
-                        request_json_schema=description.request_json_schema,
-                    )
-                    expires_at = status.status.session_expires_at
-                elif isinstance(request, RuntimeOperationSubmitPayload):
-                    self._require_upload_session(connection, host, request)
-                    contract = (
-                        host.owner.operation_worker().describe(request.session_id, request.definition_id).contract
-                    )
-                    if connection.frontend not in contract.permitted_frontends:
-                        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-                    reply, release = stream_operation_submission(
-                        host,
-                        connection,
-                        request,
-                        channel,
-                        slots=self._submission_slots,
-                        require_session=lambda: self._require_upload_session(connection, host, request),
-                        deadline=time.monotonic() + SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
-                    )
-                    allowed = release_guard.enter_context(host.authorize(release))
-                    expires_at = allowed.expires_at
-                else:
-                    # Worker callbacks need this same profile guard; never hold
-                    # it while waiting for the native execution channel.
-                    reply, release = prepare_operation_projection(host, connection, request)
-                    allowed = release_guard.enter_context(host.authorize(release))
-                    expires_at = allowed.expires_at
-                if expires_at is None:
-                    raise ProfileAccessRefusedError(AccessDenialCode.SESSION_INACTIVE)
-                remaining = (expires_at - self._wall_clock()).total_seconds()
-                if remaining <= 0:
-                    raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
-                deadline = time.monotonic() + min(5, remaining)
+                reply, expires_at = self._operation_reply(
+                    connection, host, context, channel, request, release_guard=release_guard
+                )
+                deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RuntimeRefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
                 reply = RuntimeAccessRefusal(
@@ -833,6 +901,112 @@ class RuntimeProfileConnections:
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
             write_document(channel, reply, deadline=deadline)
+
+    def _operation_target(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeOperationRequest,
+    ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        if context.runtime_boot_id != self.boot or context.peer != channel.peer:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        if not self._admitting():
+            raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+        connection = self._connected(context.connection_id)
+        if connection.context != context or connection.profile_id != request.profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if connection.session_id != request.session_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
+        with self._guard:
+            host = self._profiles.get(connection.profile_id)
+        if host is None:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        return connection, host
+
+    def _operation_reply(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: _RuntimeOperationReplyRequest,
+        *,
+        release_guard: ExitStack,
+    ) -> tuple[RuntimeOperationReply, datetime | None]:
+        if isinstance(request, RuntimeOperationContract):
+            return self._contract_reply(connection, host, context, request, release_guard=release_guard)
+        if isinstance(request, RuntimeOperationSubmitPayload):
+            return self._submit_payload_reply(connection, host, channel, request, release_guard=release_guard)
+        # Worker callbacks need this same profile guard; never hold it while
+        # waiting for the native execution channel.
+        reply, release = prepare_operation_projection(host, connection, request)
+        allowed = release_guard.enter_context(host.authorize(release))
+        return reply, allowed.expires_at
+
+    def _contract_reply(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeOperationContract,
+        *,
+        release_guard: ExitStack,
+    ) -> tuple[RuntimeOperationContractReply, datetime | None]:
+        # Public registry discovery has no private domain operands. Hold the
+        # profile fence while observing its current scope.
+        release_guard.enter_context(host.guard)
+        status = self._status(connection, host, request.request_id, request.session_id)
+        if isinstance(status, AccessDenied):
+            raise ProfileAccessRefusedError(status.code)
+        if status.status.denial is not None:
+            raise ProfileAccessRefusedError(status.status.denial)
+        if request.definition_id not in status.status.effective_scope.operations:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        description = host.owner.operation_worker().describe(request.session_id, request.definition_id)
+        contract = description.contract
+        if connection.frontend not in contract.permitted_frontends:
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        reply = RuntimeOperationContractReply(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            contract=contract,
+            request_json_schema=description.request_json_schema,
+        )
+        return reply, status.status.session_expires_at
+
+    def _submit_payload_reply(
+        self,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        channel: RuntimeByteChannel,
+        request: RuntimeOperationSubmitPayload,
+        *,
+        release_guard: ExitStack,
+    ) -> tuple[RuntimeOperationReply, datetime | None]:
+        self._require_upload_session(connection, host, request)
+        contract = host.owner.operation_worker().describe(request.session_id, request.definition_id).contract
+        if connection.frontend not in contract.permitted_frontends:
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        reply, release = stream_operation_submission(
+            host,
+            connection,
+            request,
+            channel,
+            slots=self._submission_slots,
+            require_session=lambda: self._require_upload_session(connection, host, request),
+            deadline=time.monotonic() + SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
+        )
+        allowed = release_guard.enter_context(host.authorize(release))
+        return reply, allowed.expires_at
+
+    def _operation_deadline(self, expires_at: datetime | None) -> float:
+        if expires_at is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.SESSION_INACTIVE)
+        remaining = (expires_at - self._wall_clock()).total_seconds()
+        if remaining <= 0:
+            raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+        return time.monotonic() + min(5, remaining)
 
     def _require_upload_session(
         self, connection: ProfileConnection, host: RuntimeProfileHost, request: RuntimeOperationSubmitPayload
@@ -941,6 +1115,18 @@ class RuntimeProfileConnections:
     def _drain_profiles(self, *, deadline: float) -> RuntimeProfileDrainResult:
         if self._drain_result is not None:
             return self._drain_result
+        records = self._snapshot_drain_records(deadline=deadline)
+        self._enrollments.close()
+        approval_failures = self._prepare_drain_requests(records, deadline=deadline)
+        self._join_drain_requests(records, deadline=deadline)
+        self._start_needed_containment(records, deadline=deadline)
+        self._join_drain_containment(records, deadline=deadline)
+        result = self._collect_drain_result(records, approval_failures, deadline=deadline)
+        if not result.uncontained and not result.unsettled:
+            self._commit_drain_result(result, deadline=deadline)
+        return result
+
+    def _snapshot_drain_records(self, *, deadline: float) -> tuple[tuple[UUID, _ProfileDrainRecord], ...]:
         if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
             raise RuntimeShutdownIncompleteError()
         try:
@@ -952,7 +1138,14 @@ class RuntimeProfileConnections:
             records = tuple(self._drain_records.items())
         finally:
             self._guard.release()
-        self._enrollments.close()
+        return records
+
+    def _prepare_drain_requests(
+        self,
+        records: tuple[tuple[UUID, _ProfileDrainRecord], ...],
+        *,
+        deadline: float,
+    ) -> set[UUID]:
         approval_failures: set[UUID] = set()
         for profile_id, record in records:
             try:
@@ -977,21 +1170,49 @@ class RuntimeProfileConnections:
                     contained = record.contained
                 if not contained:
                     self._start_drain_containment(record, deadline=deadline)
+        return approval_failures
+
+    @staticmethod
+    def _join_drain_requests(
+        records: tuple[tuple[UUID, _ProfileDrainRecord], ...],
+        *,
+        deadline: float,
+    ) -> None:
         for _, record in records:
             if record.request is not None and record.request.ident is not None:
                 record.request.join(timeout=max(0.0, deadline - time.monotonic()))
 
-        uncontained: list[UUID] = []
-        unsettled: list[UUID] = list(approval_failures)
+    def _start_needed_containment(
+        self,
+        records: tuple[tuple[UUID, _ProfileDrainRecord], ...],
+        *,
+        deadline: float,
+    ) -> None:
         for _, record in records:
             with record.guard:
                 contained = record.contained
             if record.worker is not None and not contained and record.containment is None:
                 self._start_drain_containment(record, deadline=deadline)
+
+    @staticmethod
+    def _join_drain_containment(
+        records: tuple[tuple[UUID, _ProfileDrainRecord], ...],
+        *,
+        deadline: float,
+    ) -> None:
         for _, record in records:
             if record.containment is not None and record.containment.ident is not None:
                 record.containment.join(timeout=max(0.0, deadline - time.monotonic()))
 
+    def _collect_drain_result(
+        self,
+        records: tuple[tuple[UUID, _ProfileDrainRecord], ...],
+        approval_failures: set[UUID],
+        *,
+        deadline: float,
+    ) -> RuntimeProfileDrainResult:
+        uncontained: list[UUID] = []
+        unsettled: list[UUID] = list(approval_failures)
         received: dict[UUID, ProfileWorkerDrained] = {}
         for profile_id, record in records:
             with record.guard:
@@ -1000,10 +1221,7 @@ class RuntimeProfileConnections:
                 received[profile_id] = receipt
             if record.worker is not None and not contained:
                 uncontained.append(profile_id)
-            running = any(
-                thread is not None and (thread.ident is None or thread.is_alive())
-                for thread in (record.request, record.containment)
-            )
+            running = self._drain_threads_running(record)
             if running:
                 unsettled.append(profile_id)
             # A pre-fence launch may own a native scope without a published
@@ -1013,18 +1231,44 @@ class RuntimeProfileConnections:
                 continue
             if running or (record.worker is not None and not contained):
                 continue
-            try:
-                record.host.owner.settle(deadline=deadline)
-            except Exception:
+            self._settle_drained_record(profile_id, record, unsettled, deadline=deadline)
+        return self._build_drain_result(records, received, uncontained, unsettled)
+
+    @staticmethod
+    def _drain_threads_running(record: _ProfileDrainRecord) -> bool:
+        return any(
+            thread is not None and (thread.ident is None or thread.is_alive())
+            for thread in (record.request, record.containment)
+        )
+
+    @staticmethod
+    def _settle_drained_record(
+        profile_id: UUID,
+        record: _ProfileDrainRecord,
+        unsettled: list[UUID],
+        *,
+        deadline: float,
+    ) -> None:
+        try:
+            record.host.owner.settle(deadline=deadline)
+        except Exception:
+            unsettled.append(profile_id)
+        try:
+            # Callback settlement may complete a retired proof phase. Reap
+            # again and retain this host if any proof still owns cleanup.
+            if record.host.approvals.close():
                 unsettled.append(profile_id)
-            try:
-                # Callback settlement may complete a retired proof phase. Reap
-                # again and retain this host if any proof still owns cleanup.
-                if record.host.approvals.close():
-                    unsettled.append(profile_id)
-            except Exception:
-                unsettled.append(profile_id)
-        result = RuntimeProfileDrainResult(
+        except Exception:
+            unsettled.append(profile_id)
+
+    @staticmethod
+    def _build_drain_result(
+        records: tuple[tuple[UUID, _ProfileDrainRecord], ...],
+        received: dict[UUID, ProfileWorkerDrained],
+        uncontained: list[UUID],
+        unsettled: list[UUID],
+    ) -> RuntimeProfileDrainResult:
+        return RuntimeProfileDrainResult(
             receipts=tuple(received[profile_id] for profile_id in sorted(received)),
             missing_receipts=tuple(
                 sorted(
@@ -1036,18 +1280,19 @@ class RuntimeProfileConnections:
             uncontained=tuple(sorted(set(uncontained))),
             unsettled=tuple(sorted(set(unsettled))),
         )
-        if not uncontained and not unsettled:
-            if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
-                raise RuntimeShutdownIncompleteError()
-            try:
-                self._profiles.clear()
-                self._connections.clear()
-                self._logins.clear()
-                self._drain_result = result
+
+    def _commit_drain_result(self, result: RuntimeProfileDrainResult, *, deadline: float) -> None:
+        if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            raise RuntimeShutdownIncompleteError()
+        try:
+            self._profiles.clear()
+            self._connections.clear()
+            self._logins.clear()
+            self._drain_result = result
+            if self._drain_records is not None:
                 self._drain_records.clear()
-            finally:
-                self._guard.release()
-        return result
+        finally:
+            self._guard.release()
 
     @staticmethod
     def _start_drain_request(record: _ProfileDrainRecord, *, deadline: float) -> None:

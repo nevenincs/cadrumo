@@ -71,10 +71,8 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
-from cadrumo.application.user_profile.session_authority import (
-    ProfileSessionAuthority,
-    SessionAuthorityFacts,
-)
+from cadrumo.application.user_profile.session_authority import ProfileSessionAuthority
+from cadrumo.application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.time.utc import UtcInstant
 

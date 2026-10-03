@@ -31,7 +31,13 @@ from ..lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from ..schedule import AssetScheduleHistory, ScheduleAuthority, ScheduledAmortizationCharge, schedule_charge
+from ..schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+    parse_requested_free_amount,
+    schedule_charge,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -229,3 +235,14 @@ def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation
             history=AssetScheduleHistory(),
             requested_free_amount=Decimal("30.00"),
         )
+
+
+def test_requested_free_amount_text_follows_the_canonical_decimal_grammar() -> None:
+    assert parse_requested_free_amount(None) is None
+    assert parse_requested_free_amount(" 250.00 ") == Decimal("250.00")
+    # Sign and cent precision are the schedule's own refusal, not the reader's.
+    assert parse_requested_free_amount("-1") == Decimal("-1")
+    assert parse_requested_free_amount("0.125") == Decimal("0.125")
+    for raw in ("", "NaN", "Infinity", "1e3", "+5", "1_000", "1.234", "1,5"):
+        with pytest.raises(ActividadAssetValidationError, match="decimal euro amount"):
+            parse_requested_free_amount(raw)

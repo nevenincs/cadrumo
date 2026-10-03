@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import IO, Protocol, cast, override
 
@@ -113,48 +113,93 @@ def _scan_shard_for_key(handle: IO[str], key: str) -> str | None:
     at the key itself, a second document -- raises :class:`_UnscannableShardError`, as
     does a key the shard lacks.
     """
-    mappings: list[_MappingFrame] = []
-    # A sequence flattens to one stringified value, so nothing under it is a key.
-    opaque_depth = 0
-    documents = 0
+    state = _ShardScanState(key)
     for event in cast(_EventStream, yaml).parse(handle, yaml.CSafeLoader):
-        if isinstance(event, yaml.AliasEvent) or getattr(event, "anchor", None) is not None:
-            raise _UnscannableShardError
-        if isinstance(event, yaml.DocumentStartEvent):
-            documents += 1
-            if documents > 1:
-                raise _UnscannableShardError
-            continue
-        if opaque_depth:
-            if isinstance(event, yaml.CollectionStartEvent):
-                opaque_depth += 1
-            elif isinstance(event, yaml.CollectionEndEvent):
-                opaque_depth -= 1
-                if not opaque_depth:
-                    _close_value(mappings)
-            continue
-        frame = mappings[-1] if mappings else None
-        if frame is not None and frame.pending_path is None:
-            if not isinstance(event, yaml.ScalarEvent | yaml.MappingEndEvent):
-                raise _UnscannableShardError
-            if isinstance(event, yaml.ScalarEvent):
-                frame.pending_path = _child_path(frame.path, _scalar_value(event))
-                continue
-        if isinstance(event, yaml.MappingEndEvent):
-            mappings.pop()
-            _close_value(mappings)
-        elif isinstance(event, yaml.ScalarEvent):
-            if frame is not None and frame.pending_path == key:
-                return _flat_value(_scalar_value(event))
-            _close_value(mappings)
-        elif isinstance(event, yaml.CollectionStartEvent):
-            if frame is not None and frame.pending_path == key:
-                raise _UnscannableShardError
-            if isinstance(event, yaml.SequenceStartEvent):
-                opaque_depth = 1
-            else:
-                mappings.append(_MappingFrame(path="" if frame is None else (frame.pending_path or "")))
+        found, value = state.consume(event)
+        if found:
+            return value
     raise _UnscannableShardError
+
+
+@dataclass(slots=True)
+class _ShardScanState:
+    key: str
+    mappings: list[_MappingFrame] = field(default_factory=list)
+    opaque_depth: int = 0
+    documents: int = 0
+
+    def consume(self, event: yaml.Event) -> tuple[bool, str | None]:
+        _reject_unsupported_scan_event(event)
+        if isinstance(event, yaml.DocumentStartEvent):
+            self._count_document()
+            return False, None
+        if self.opaque_depth:
+            self._consume_opaque_event(event)
+            return False, None
+        return self._consume_mapping_event(event)
+
+    def _count_document(self) -> None:
+        self.documents += 1
+        if self.documents > 1:
+            raise _UnscannableShardError
+
+    def _consume_opaque_event(self, event: yaml.Event) -> None:
+        if isinstance(event, yaml.CollectionStartEvent):
+            self.opaque_depth += 1
+        elif isinstance(event, yaml.CollectionEndEvent):
+            self.opaque_depth -= 1
+            if not self.opaque_depth:
+                _close_value(self.mappings)
+
+    def _consume_mapping_event(self, event: yaml.Event) -> tuple[bool, str | None]:
+        frame = self.mappings[-1] if self.mappings else None
+        if frame is not None and frame.pending_path is None:
+            _set_pending_mapping_key(frame, event)
+            if isinstance(event, yaml.ScalarEvent):
+                return False, None
+        if isinstance(event, yaml.MappingEndEvent):
+            self.mappings.pop()
+            _close_value(self.mappings)
+        elif isinstance(event, yaml.ScalarEvent):
+            return self._consume_scalar_value(frame, event)
+        elif isinstance(event, yaml.CollectionStartEvent):
+            self._consume_nested_collection(frame, event)
+        return False, None
+
+    def _consume_scalar_value(
+        self,
+        frame: _MappingFrame | None,
+        event: yaml.ScalarEvent,
+    ) -> tuple[bool, str | None]:
+        if frame is not None and frame.pending_path == self.key:
+            return True, _flat_value(_scalar_value(event))
+        _close_value(self.mappings)
+        return False, None
+
+    def _consume_nested_collection(
+        self,
+        frame: _MappingFrame | None,
+        event: yaml.CollectionStartEvent,
+    ) -> None:
+        if frame is not None and frame.pending_path == self.key:
+            raise _UnscannableShardError
+        if isinstance(event, yaml.SequenceStartEvent):
+            # A sequence flattens to one stringified value, so nothing under it is a key.
+            self.opaque_depth = 1
+            return
+        self.mappings.append(_MappingFrame(path="" if frame is None else (frame.pending_path or "")))
+
+
+def _reject_unsupported_scan_event(event: yaml.Event) -> None:
+    if isinstance(event, yaml.AliasEvent) or getattr(event, "anchor", None) is not None:
+        raise _UnscannableShardError
+
+
+def _set_pending_mapping_key(frame: _MappingFrame, event: yaml.Event) -> None:
+    if not isinstance(event, yaml.ScalarEvent | yaml.MappingEndEvent):
+        raise _UnscannableShardError
+    if isinstance(event, yaml.ScalarEvent):
+        frame.pending_path = _child_path(frame.path, _scalar_value(event))
 
 
 def _close_value(mappings: list[_MappingFrame]) -> None:

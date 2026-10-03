@@ -230,7 +230,10 @@ def _consume_total_row(
     if label_index is None:
         return False
     row_total = positive_integer_after(values, label_index)
-    has_variable_total = any(optional_text(candidate) == "Variable" for candidate in values[label_index + 1 :])
+    has_variable_total = any(
+        (text := optional_text(candidate)) is not None and text.casefold() == "variable"
+        for candidate in values[label_index + 1 :]
+    )
     if has_variable_total:
         parsed_rows.variable_total_marker_rows.append(row_number)
     if row_total is not None and has_variable_total:
@@ -266,7 +269,7 @@ def _consume_field_row(
     # field is still a plain sequential ``int``, so they keep reading the
     # int-or-None form.
     row_shape = _workbook_field_row(header, values)
-    if row_shape.raw_length == "Variable":
+    if row_shape.raw_length is not None and row_shape.raw_length.casefold() == "variable":
         _consume_variable_body_row(parsed_rows, sheet_name, header, row_number, values, row_shape)
         return
     if row_shape.raw_offset == "***":

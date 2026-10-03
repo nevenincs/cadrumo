@@ -321,7 +321,7 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(
         stale_finalized_revisions=(blocker,),
     )
 
-    notices = stale_finalized_revision_notices(result)
+    notices = stale_finalized_revision_notices(result.stale_finalized_revisions)
     assert len(notices) == 1
     message = notices[0].message
     assert "work discard" not in message

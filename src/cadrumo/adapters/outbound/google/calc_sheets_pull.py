@@ -46,7 +46,7 @@ from enum import StrEnum
 # google-api-python-client-stubs ships ``googleapiclient.discovery.Resource``
 # as the typed surface for service objects returned by ``build()``.
 # We import it under TYPE_CHECKING so the runtime dependency stays optional
-# (the ImportError path in ``_drive_service`` / ``_sheets_service`` guards the
+# (the ImportError path in ``drive_v3_service`` / ``sheets_v4_service`` guards the
 # live path) while the type-checker can narrow the ``Any`` service returns.
 from typing import TYPE_CHECKING, Any, Final
 
@@ -95,11 +95,10 @@ from ....domain.period import calculation_filing_date
 from ..storage.errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
-    OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
 from ._preconditions import google_terminal_refusal
-from .api import execute_request
+from .api import RequestRetryPolicy, drive_v3_service, execute_request, sheets_v4_service
 from .calc_sheets_pull_records import (
     BindingEdit as _BindingEdit,
 )
@@ -164,6 +163,9 @@ class CalcSheetsPullPreconditionCondition(StrEnum):
     EDIT_CASILLA_INPUT = "google.calc_sheets.pull.edit_casilla_input"
 
 
+_CLIENT_UNAVAILABLE_CONDITION: Final[str] = CalcSheetsPullPreconditionCondition.API_CLIENT_AVAILABLE.value
+
+
 def _calc_sheets_pull_terminal_refusal(
     error: OutboundStorageError,
     condition: CalcSheetsPullPreconditionCondition,
@@ -181,50 +183,6 @@ def _calc_sheets_pull_terminal_refusal(
     )
 
 
-def _drive_service(credentials: Credentials) -> DriveResource:
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        error = OutboundStorageNetworkError(
-            f"googleapiclient not importable: {exc}",
-            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
-        )
-        raise _calc_sheets_pull_terminal_refusal(
-            error,
-            CalcSheetsPullPreconditionCondition.API_CLIENT_AVAILABLE,
-            facts={
-                "client_available": False,
-                "dependency": "google_api_python_client",
-                "service_name": "drive",
-                "service_version": "v3",
-            },
-            outcome=NoRecoveryOutcome.SAFETY,
-        ) from exc
-    return build("drive", "v3", credentials=credentials, cache_discovery=False)
-
-
-def _sheets_service(credentials: Credentials) -> SheetsResource:
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        error = OutboundStorageNetworkError(
-            f"googleapiclient not importable: {exc}",
-            translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
-        )
-        raise _calc_sheets_pull_terminal_refusal(
-            error,
-            CalcSheetsPullPreconditionCondition.API_CLIENT_AVAILABLE,
-            facts={
-                "client_available": False,
-                "dependency": "google_api_python_client",
-                "service_name": "sheets",
-                "service_version": "v4",
-            },
-            outcome=NoRecoveryOutcome.SAFETY,
-        ) from exc
-    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
-
-
 def _verify_ownership(drive_service: DriveResource, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
@@ -233,6 +191,7 @@ def _verify_ownership(drive_service: DriveResource, spreadsheet_id: str) -> None
             fields="id,name,appProperties",
         ),
         action="drive.files.get.appProperties",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     raw_app_properties = file_meta.get("appProperties")
     if raw_app_properties is not None and not is_str_keyed_dict(raw_app_properties):
@@ -274,6 +233,7 @@ def _read_developer_metadata(
             fields="developerMetadata(metadataKey,metadataValue,location)",
         ),
         action="sheets.spreadsheets.get.developerMetadata",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     raw_entries = spreadsheet.get("developerMetadata")
     if raw_entries is None:
@@ -534,8 +494,8 @@ def pull_operator_edits(
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
 
-    drive = _drive_service(credentials)
-    sheets = _sheets_service(credentials)
+    drive = drive_v3_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
+    sheets = sheets_v4_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
 
     _verify_ownership(drive, spreadsheet_id)
     metadata_pairs = _read_developer_metadata(sheets, spreadsheet_id)
@@ -638,6 +598,7 @@ def _batch_get_values(
             valueRenderOption="UNFORMATTED_VALUE",
         ),
         action="sheets.spreadsheets.values.batchGet",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     return [_as_value_range(entry) for entry in response.get("valueRanges", [])]
 
@@ -952,6 +913,7 @@ def _batch_get_values_for_row_sets(
             valueRenderOption="UNFORMATTED_VALUE",
         ),
         action="sheets.spreadsheets.values.batchGet.row_sets",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     return [_as_value_range(entry) for entry in response.get("valueRanges", [])]
 

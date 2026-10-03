@@ -13,6 +13,8 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.usage_ratios.model import UsageRatioProfile
+from ..user_profile.access_contracts import AccessDenialCode
+from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import PurchaseInvoiceEvidence
 from .protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
@@ -49,4 +51,18 @@ class LedgerActionPortsFactory(Protocol):
         ...
 
 
-__all__ = ["LedgerActionPorts", "LedgerActionPortsFactory"]
+def require_exact_ledger_action_ports(
+    ports: LedgerActionPorts,
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse ports whose profile bucket or registry pin escaped the request."""
+    if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    for repository in (ports.invoice_repository, ports.work_unit_repository, ports.calculation_repository):
+        if getattr(repository, "bucket_id", None) != bucket_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+__all__ = ["LedgerActionPorts", "LedgerActionPortsFactory", "require_exact_ledger_action_ports"]

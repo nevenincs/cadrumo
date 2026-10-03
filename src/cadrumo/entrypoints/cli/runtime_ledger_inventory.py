@@ -29,7 +29,6 @@ from ...application.inventory.registered_operation import (
     InventoryValuationOperationProjection,
     InventoryValuationPreviewRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .errors import CliRefusedBoundaryError
@@ -40,18 +39,16 @@ from .ledger_business_payloads import (
     InventoryMovementAddResult,
     InventoryValuationPreviewPayload,
 )
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 ProjectionT = TypeVar("ProjectionT", bound=BaseModel)
 
 type _JsonValue = bool | int | float | str | list[_JsonValue] | dict[str, _JsonValue] | None
 
-_REFUSAL_MESSAGES = {
+_REFUSAL_LOCALE_KEYS = {
     "activity_conflict": "application.inventory.service.errors.actividad_conflict",
     "activity_not_found": "application.inventory.service.errors.actividad_not_found",
     "invalid_valuation_method": "application.inventory.service.errors.invalid_valuation_method",
@@ -91,24 +88,8 @@ def _run[ProjectionT: BaseModel](
     )
     projection_profile = getattr(completed.projection, "profile_id", None)
     if projection_profile is not None and projection_profile != client.profile_id:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return completed
-
-
-def _invalid_result[ResultT: BaseModel](completed: RegisteredOperationCompletion[ResultT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _raise_registered_refusal[ResultT: BaseModel](
@@ -119,9 +100,9 @@ def _raise_registered_refusal[ResultT: BaseModel](
         completed.terminal_condition is not OperationTerminalCondition.REFUSED
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code != refusal.code
-        or refusal.reason not in _REFUSAL_MESSAGES
+        or refusal.reason not in _REFUSAL_LOCALE_KEYS
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     context: dict[str, str] = {
         "operation_id": str(completed.operation_id),
         "terminal_condition": completed.terminal_condition.value,
@@ -138,7 +119,7 @@ def _raise_registered_refusal[ResultT: BaseModel](
     if refusal.valuation_method is not None:
         context["valuation_method"] = refusal.valuation_method
     raise CliRefusedBoundaryError(
-        translated_message=_REFUSAL_MESSAGES[refusal.reason],
+        translated_message=_REFUSAL_LOCALE_KEYS[refusal.reason],
         context=context,
     )
 
@@ -185,7 +166,7 @@ def read_inventory_catalogue(
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code is not None
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     payload = InventoryListResult.model_validate(
         {
             "bucket_id": str(client_profile),
@@ -221,7 +202,7 @@ def create_inventory_ledger(
     projection = completed.projection
     if projection.outcome == "refused":
         if projection.refusal is None:
-            _invalid_result(completed)
+            raise invalid_completion_error(completed)
         _raise_registered_refusal(completed, projection.refusal)
     ledger = projection.ledger
     if (
@@ -233,7 +214,7 @@ def create_inventory_ledger(
         or len(projection.bucket_event_ids) != 1
         or not ledger.bucket_event_ids
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     payload = InventoryCreateResult.model_validate_json(_ledger_payload_json(ledger))
     return completed, payload
 
@@ -254,7 +235,7 @@ def add_inventory_movement(
     projection = completed.projection
     if projection.outcome == "refused":
         if projection.refusal is None:
-            _invalid_result(completed)
+            raise invalid_completion_error(completed)
         _raise_registered_refusal(completed, projection.refusal)
     ledger = projection.ledger
     if (
@@ -266,7 +247,7 @@ def add_inventory_movement(
         or len(projection.bucket_event_ids) != 1
         or not ledger.bucket_event_ids
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     return completed, InventoryMovementAddResult.model_validate_json(_ledger_payload_json(ledger))
 
 
@@ -286,7 +267,7 @@ def preview_inventory_valuation(
     projection = completed.projection
     if projection.outcome == "refused":
         if projection.refusal is None:
-            _invalid_result(completed)
+            raise invalid_completion_error(completed)
         _raise_registered_refusal(completed, projection.refusal)
     preview = projection.preview
     if (
@@ -298,7 +279,7 @@ def preview_inventory_valuation(
         or completed.refusal_code is not None
         or len(preview.bucket_event_ids) != 1
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     return completed, InventoryValuationPreviewPayload(
         actividad_id=preview.actividad_id,
         year=preview.year,
@@ -328,7 +309,7 @@ def record_inventory_closing_authority(
     projection = completed.projection
     if projection.outcome == "refused":
         if projection.refusal is None:
-            _invalid_result(completed)
+            raise invalid_completion_error(completed)
         _raise_registered_refusal(completed, projection.refusal)
     record = projection.record
     expected_effect = OperationEffect.UPDATED if record is not None and record.changed else OperationEffect.NONE
@@ -336,11 +317,9 @@ def record_inventory_closing_authority(
         projection.outcome != "recorded"
         or record is None
         or record.profile_id != request.profile_id
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not expected_effect
-        or completed.refusal_code is not None
+        or _inventory_authority_receipt_invalid(completed, expected_effect)
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     return completed, InventoryClosingAuthorityRecordResult(
         actividad_id=record.actividad_id,
         year=record.year,
@@ -358,3 +337,15 @@ __all__ = [
     "read_inventory_catalogue",
     "record_inventory_closing_authority",
 ]
+
+
+def _inventory_authority_receipt_invalid(
+    completed: RegisteredOperationCompletion[InventoryClosingAuthorityOperationProjection],
+    expected_effect: OperationEffect,
+) -> bool:
+    """Require the expected inventory authority mutation effect and successful terminal receipt."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not expected_effect
+        or completed.refusal_code is not None
+    )

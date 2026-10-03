@@ -31,6 +31,7 @@ from hashlib import sha256
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Final, Protocol, cast
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
@@ -38,20 +39,20 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, confirmable
-from cadrumo.application.user_profile.login_interaction import profile_login_choices
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, confirmable
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.theme import resolve_theme_name
 from cadrumo.entrypoints.tui.declarations.controller import DeclarationsWorkspaceScreen
-from cadrumo.entrypoints.tui.installed_session import compose_authenticated_root_inputs_provider
-from cadrumo.entrypoints.tui.launcher import (
-    InstalledWorkbenchRootCompositionV1,
-    compose_installed_workbench_root,
-    operation_services_scope,
-)
 from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList, CasillaListEntry
 from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel, CasillaEditorScreen
@@ -63,6 +64,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILITIES
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
+from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.tests.frame import capture
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
@@ -94,6 +96,22 @@ _TYPED_SAMPLES: Final[Mapping[str, str]] = {
 """What the review walk types, by the box's value kind; a kind not listed is passed over."""
 
 type _Walk = Callable[["SequenceScenario", Pilot[object]], Awaitable[None]]
+
+
+def _require_no_confirmable_value(form: ModeloWorkForm, scenario: SequenceScenario) -> None:
+    """Require no confirmable value."""
+    steps = {
+        workbench_progress(form, staged=0, verified=verified, filed=False).next_action for verified in (False, True)
+    }
+    if steps != {NextAction.CONFIRM}:
+        raise PageUnavailableError(
+            f"{scenario.sequence_id}: F8 would {', '.join(sorted(step.value for step in steps))}, not confirm"
+        )
+    assumed = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
+    if any(confirmable(field) for field in assumed):
+        raise PageUnavailableError(
+            f"{scenario.sequence_id}: an assumed value can be confirmed from a list, so F8 opens the list"
+        )
 
 
 class _WorkerCompletion(Protocol):
@@ -321,18 +339,7 @@ async def _press_f8_with_nothing_to_confirm(scenario: SequenceScenario, pilot: P
     form = workbench.form
     if form is None or workbench.recorded or not form.edit_admitted or workbench.staged_changes:
         raise PageUnavailableError(f"{scenario.sequence_id}: the declaration admits no confirmation here")
-    steps = {
-        workbench_progress(form, staged=0, verified=verified, filed=False).next_action for verified in (False, True)
-    }
-    if steps != {NextAction.CONFIRM}:
-        raise PageUnavailableError(
-            f"{scenario.sequence_id}: F8 would {', '.join(sorted(step.value for step in steps))}, not confirm"
-        )
-    assumed = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
-    if any(confirmable(field) for field in assumed):
-        raise PageUnavailableError(
-            f"{scenario.sequence_id}: an assumed value can be confirmed from a list, so F8 opens the list"
-        )
+    _require_no_confirmable_value(form, scenario)
     await pilot.press("f8")
     await _settle(pilot)
 
@@ -568,13 +575,22 @@ async def _capture_all(
     sandbox: SequenceSandbox,
     shots: tuple[Shot, ...],
 ) -> tuple[tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
-    provider = compose_authenticated_root_inputs_provider(
-        profile_id=sandbox.profile_id,
-        profile_label=SANDBOX_PROFILE_LABEL,
-        login_choices=profile_login_choices(),
+    # The sandbox already runs the profile worker for its storage root; the
+    # frames are taken through the same authenticated runtime root the
+    # installed TUI composes, never through an in-process service graph.
+    client = await open_installed_runtime_client(
+        profile_id=UUID(sandbox.profile_id), frontend=OperationFrontendProjection.TUI
     )
-    async with operation_services_scope() as runtime:
-        root = compose_installed_workbench_root(provider(runtime))
+    try:
+        secret = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
+        await asyncio.to_thread(client.login_password, secret)
+        workbench = RuntimeWorkbenchRoot(
+            client,
+            profile_label=SANDBOX_PROFILE_LABEL,
+            output_language=OutputLanguage(output_language()),
+            open_recovery_client=_no_recovery,
+        )
+        root = await asyncio.to_thread(workbench.load)
         frames: list[ScenarioFrame] = []
         refusals: list[ShotRefusal] = []
         for shot in shots:
@@ -587,11 +603,18 @@ async def _capture_all(
                     )
                 )
         return tuple(frames), tuple(refusals)
+    finally:
+        await asyncio.to_thread(client.close)
+
+
+async def _no_recovery() -> RuntimeFrontendClient:
+    """A review capture never opens profile recovery."""
+    raise ScenarioError("a scenario capture must not open profile recovery")
 
 
 async def _capture(
     scenario: SequenceScenario,
-    root: InstalledWorkbenchRootCompositionV1,
+    root: RootBindingV1,
     shot: Shot,
 ) -> ScenarioFrame:
     route = root.destination_catalogue.resolve(_DECLARATIONS_DESTINATION)

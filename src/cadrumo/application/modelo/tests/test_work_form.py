@@ -47,7 +47,8 @@ from ..edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from ..edit_value_grammar import binding_value_grammar, casilla_value_grammar
-from ..work_form import ModeloWorkFormLayoutError, build_modelo_work_form
+from ..work_form import build_modelo_work_form
+from ..work_form_errors import ModeloWorkFormLayoutError
 from ..work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,

@@ -15,15 +15,11 @@ from ...application.live.notification_document_read_operation import (
     NotificationDocumentViewPublicResultV1,
     NotificationDocumentViewRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,16 +53,6 @@ def _require_read_receipt(completed: _NotificationDocumentReadCompletion) -> Non
         raise ValueError("notification-document read result disagrees with its settled receipt")
 
 
-def _invalid_frame(completed: _NotificationDocumentReadCompletion) -> CliRefusedBoundaryError:
-    return submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
-
-
 def read_notification_document_view_for_cli(
     ctx: typer.Context,
     *,
@@ -94,7 +80,7 @@ def read_notification_document_view_for_cli(
             raise ValueError("notification-document view result does not match its submitted scope")
         _require_read_receipt(completed)
     except Exception:
-        raise _invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
     return NotificationDocumentViewRead(completion=completed, projection=projection)
 
 
@@ -124,7 +110,7 @@ def read_notification_document_history_for_cli(
             raise ValueError("notification-document history result does not match its submitted profile and rows")
         _require_read_receipt(completed)
     except Exception:
-        raise _invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
     return NotificationDocumentHistoryRead(completion=completed, projection=projection)
 
 

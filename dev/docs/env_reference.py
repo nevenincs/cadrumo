@@ -74,19 +74,7 @@ def _default_cell(field: FieldInfo, language: OutputLanguage) -> str:
     default = field.default
     if default is PydanticUndefined or field.default_factory is not None:
         return "(derived)"
-    if default is None:
-        return docs_chrome("docs.cli.env.default_unset", language)
-    if isinstance(default, bool):
-        return "`true`" if default else "`false`"
-    if isinstance(default, Enum):
-        return f"`{default.value}`"
-    if isinstance(default, (int, float)):
-        return f"`{default}`"
-    if isinstance(default, str):
-        return f"`{default}`" if default else docs_chrome("docs.cli.env.default_empty", language)
-    if isinstance(default, Path):
-        return "(derived)"
-    return "(derived)"
+    return _plain_default_cell(default, language)
 
 
 def _type_cell(field: FieldInfo) -> str:
@@ -151,6 +139,23 @@ def main(argv: list[str] | None = None) -> int:
     path.write_text(fresh, encoding=_UTF_8, newline="\n")
     print(f"Wrote {path}")
     return 0
+
+
+def _plain_default_cell(default: object, language: OutputLanguage) -> str:
+    """Plain default cell."""
+    if default is None:
+        return docs_chrome("docs.cli.env.default_unset", language)
+    if isinstance(default, bool):
+        return "`true`" if default else "`false`"
+    if isinstance(default, Enum):
+        return f"`{default.value}`"
+    if isinstance(default, (int, float)):
+        return f"`{default}`"
+    if isinstance(default, str):
+        return f"`{default}`" if default else docs_chrome("docs.cli.env.default_empty", language)
+    if isinstance(default, Path):
+        return "(derived)"
+    return "(derived)"
 
 
 if __name__ == "__main__":

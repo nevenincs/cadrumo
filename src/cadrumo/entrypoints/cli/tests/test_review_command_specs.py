@@ -9,7 +9,7 @@ from .._command_runtime import build_command_subtree
 from .._command_target import resolve_deferred_target
 from .._review_command_specs import REVIEW_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import CommandSpecGraph
+from ..command_graph import CommandSpecGraph
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

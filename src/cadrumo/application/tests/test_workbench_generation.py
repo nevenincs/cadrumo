@@ -126,7 +126,7 @@ class _Repository[ValueT]:
         self.calls += 1
         return self.value
 
-    def load_revisioned(self) -> tuple[ValueT, str]:
+    def load_revisioned(self, *, operation: PinnedAuthorityOperation | None = None) -> tuple[ValueT, str]:
         self.calls += 1
         index = min(self.calls - 1, len(self.revisions) - 1)
         return self.value, self.revisions[index]

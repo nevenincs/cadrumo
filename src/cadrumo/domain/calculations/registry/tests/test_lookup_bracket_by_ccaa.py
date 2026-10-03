@@ -13,6 +13,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ..errors import RegistryValidationError
 from ..schema_formula import BracketEntry, FormulaExpression, ParameterDefinition
@@ -232,6 +233,26 @@ def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
 
     # Both authoring shapes must dispatch to the same table and produce identical output.
     assert dict_form_result == entry_array_result
+
+
+def test_dispatch_table_entries_refuse_non_string_entry_keys_at_the_model_boundary() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        FormulaExpression.model_validate(
+            {
+                "op": "lookup_bracket_by_ccaa",
+                "args": (
+                    {"literal": Decimal("20000")},
+                    {"binding": "renta-profile-tax-residence-ccaa"},
+                    {"dispatch_table_entries": [{1: "bad-key", "key": "madrid", "parameter": "renta-test"}]},
+                ),
+            },
+        )
+
+    boundary_error = exc_info.value.errors()[0].get("ctx", {}).get("error")
+    assert isinstance(boundary_error, ValueError)
+    assert isinstance(boundary_error.__cause__, RegistryValidationError)
+    assert str(boundary_error.__cause__) == "dispatch_table_entries entry keys must be strings"
+    assert isinstance(boundary_error.__cause__.__cause__, ValidationError)
 
 
 def test_lookup_bracket_by_ccaa_raises_on_missing_dispatch_key() -> None:

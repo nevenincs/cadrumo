@@ -23,16 +23,13 @@ from ...application.live.filed_read_operation import (
     FiledListRequest,
 )
 from ...application.live.remote_state_models import FiledDataCaptureFailureRow
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,29 +85,26 @@ def _read_list_projection(
     *,
     request: FiledListRequest,
 ) -> tuple[tuple[FiledDataListingRow, ...], tuple[FiledDataCaptureFailureRow, ...]]:
-    if (
-        projection.modelo_filter != request.modelo
-        or projection.year_from != request.year_from
-        or projection.year_to != request.year_to
-    ):
+    if _filed_listing_request_differs(projection, request):
         raise ValueError("filed-list result does not match its submitted scope")
     rows = tuple(_listing_row(row) for row in projection.rows)
     failures = tuple(_listing_failure(row) for row in projection.failures)
     if projection.row_count != len(rows) or projection.failed_count != len(failures):
         raise ValueError("filed-list counts do not match their reconstructed rows")
-    if any(
-        not request.year_from <= row.year <= request.year_to
-        or (request.modelo is not None and row.modelo != request.modelo)
-        for row in rows
-    ):
+    if any(_filed_listing_scope_invalid(row, request) for row in rows):
         raise ValueError("filed-list row falls outside its submitted scope")
-    if any(
-        not request.year_from <= row.year <= request.year_to
-        or (request.modelo is not None and row.modelo != request.modelo)
-        for row in failures
-    ):
+    if any(_filed_listing_scope_invalid(row, request) for row in failures):
         raise ValueError("filed-list failure falls outside its submitted scope")
     return rows, failures
+
+
+def _filed_listing_request_differs(projection: FiledListPublicResultV1, request: FiledListRequest) -> bool:
+    """Correlate the projected model and year bounds with the exact submitted scope."""
+    return (
+        projection.modelo_filter != request.modelo
+        or projection.year_from != request.year_from
+        or projection.year_to != request.year_to
+    )
 
 
 def _discover_report(projection: FiledDiscoverPublicResultV1) -> FiledHistoryDiscoveryReport:
@@ -139,19 +133,6 @@ def _require_settled_none(
         or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
     ):
         raise ValueError("filed read result disagrees with its settled receipt")
-
-
-def _correlated_invalid_frame(
-    completed: RegisteredOperationCompletion[FiledListPublicResultV1]
-    | RegisteredOperationCompletion[FiledDiscoverPublicResultV1],
-) -> Exception:
-    return submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def read_filed_list_for_cli(
@@ -187,7 +168,7 @@ def read_filed_list_for_cli(
         rows, failures = _read_list_projection(projection, request=request)
         _require_settled_none(completed)
     except Exception:
-        raise _correlated_invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
     return FiledListRead(completion=completed, projection=projection, rows=rows, failures=failures)
 
 
@@ -213,7 +194,7 @@ def read_filed_discover_for_cli(ctx: typer.Context) -> FiledDiscoverRead:
         report = _discover_report(projection)
         _require_settled_none(completed)
     except Exception:
-        raise _correlated_invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
     return FiledDiscoverRead(completion=completed, projection=projection, report=report)
 
 
@@ -223,3 +204,12 @@ __all__ = [
     "read_filed_discover_for_cli",
     "read_filed_list_for_cli",
 ]
+
+
+def _filed_listing_scope_invalid(
+    row: FiledDataListingRow | FiledDataCaptureFailureRow, request: FiledListRequest
+) -> bool:
+    """Require each reconstructed row or failure to remain within the submitted scope."""
+    return not request.year_from <= row.year <= request.year_to or (
+        request.modelo is not None and row.modelo != request.modelo
+    )

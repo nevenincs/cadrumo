@@ -21,6 +21,7 @@ from ....domain.buckets.event_repository import append_bucket_event, build_bucke
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...bucket_event_projection import BucketEventProjection
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
@@ -48,18 +49,16 @@ from ..access_contracts import (
     SessionState,
 )
 from ..access_errors import ProfileAccessRefusedError
-from ..access_policy import evaluate_operation_access
+from ..history_contracts import ProfileHistoryExecutionResult, ProfileHistoryProjection, ProfileHistoryRequest
 from ..history_operation import (
     PROFILE_HISTORY_OPERATION_DEFINITION_ID,
-    ProfileHistoryExecutionResult,
     ProfileHistoryExecutor,
-    ProfileHistoryProjection,
     ProfileHistoryReadPorts,
-    ProfileHistoryRequest,
     build_profile_history_definition,
     build_profile_history_registration,
     resolve_profile_history_access,
 )
+from ..operation_access_policy import evaluate_operation_access
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -318,9 +317,7 @@ def test_history_result_requires_complete_profile_and_tax_disclosure_consent(
 
 @pytest.mark.asyncio
 async def test_executor_retains_full_ordered_filtered_events_without_writes(monkeypatch: pytest.MonkeyPatch) -> None:
-    from .. import history_operation as module
-
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     first = _event(marker="first", minute=1)
     chosen = _event(marker="chosen", minute=2)
     wrong_actor = _event(marker="chosen", minute=3, actor="other")

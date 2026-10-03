@@ -463,73 +463,36 @@ def _resolve_iva_transaction_classification(
 ) -> _IvaTransactionClassification | _IvaTransactionOutcome:
     rate_kind = amounts.rate_kind
     effective_category = _effective_iva_category_for(transaction, rate_kind=rate_kind, operation=operation)
-    if transaction.iva_category is not None:
-        declared_issue = _declared_category_issue(
-            transaction,
-            transaction_id=transaction_id,
-            explicit_category=effective_category,
-            invoice_kind=invoice_kind,
-            operation=operation,
-        )
-        if declared_issue is not None:
-            return _IvaTransactionOutcome(gate_issue=declared_issue)
-    effective_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-    if not is_iva_cash_accounting_none(
-        transaction.cash_accounting_treatment,
-        authority=operation,
-    ) and effective_category in registry_category_projection(
-        "cash_accounting_excluded",
-        effective_date=effective_date,
-        authority=operation,
-    ):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY,
-                detail=(
-                    f"iva_category {effective_category.value!r} is excluded from the cash-accounting regime "
-                    "under Ley 37/1992 art. 163 duodecies"
-                ),
-            ),
-        )
-    flow_direction = derive_flow_for_classification(
-        category=effective_category,
-        invoice_direction=invoice_kind,
+    declared_issue = _declared_transaction_category_issue(
+        transaction,
+        transaction_id=transaction_id,
+        effective_category=effective_category,
+        invoice_kind=invoice_kind,
+        operation=operation,
     )
+    if declared_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=declared_issue)
+    effective_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
+    cash_accounting_issue = _cash_accounting_category_issue(
+        transaction,
+        transaction_id=transaction_id,
+        effective_category=effective_category,
+        effective_date=effective_date,
+        operation=operation,
+    )
+    if cash_accounting_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=cash_accounting_issue)
+    flow_direction = derive_flow_for_classification(category=effective_category, invoice_direction=invoice_kind)
     # Input IVA is deductible only on an exact fact kind with immutable
     # provenance; refusing here reports the row instead of failing the run.
-    #
-    # Asked of fact 0085 rather than of the flow alone. Every RECEIVED row settles
-    # as ``soportado``, while LIVA art. 92.Uno grants a deduction only of a cuota
-    # that was devengada and repercutida -- so on an exempt (art. 20) or
-    # not-subject (art. 7) purchase, or a recargo de equivalencia acquisition
-    # cost, there is no deduction fact to classify and fact 0085 admits no kind
-    # for one. Demanding a classification there left the operator nothing to
-    # supply: no kind satisfied this gate and every kind failed the admissibility
-    # gate below, so an exempt insurance premium and a RETA quota could not be
-    # declared at all.
-    #
-    # Not a test of whether THIS row's cuota is zero. A 0 % tipo is sujeta y no
-    # exenta, so fact 0085 keeps ``domestic_zero`` in the domestic family and its
-    # deduction identity stays required.
-    if (
-        is_deducible_flow(flow_direction)
-        and admits_iva_deduction_classification(category=effective_category, flow_direction=flow_direction)
-        and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
-    ):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
-                detail="IVA deduction facts require an exact kind and immutable evidence provenance before calculation",
-            ),
-        )
-    # And, one step on from the screen above: the classification is PRESENT, so
-    # ask fact 0085 whether the combination it names has legal authority. This
-    # answer used to be taken only inside the observation's own model validator,
-    # after every typed gate here had passed, so an operator declaring a
-    # deduction kind their row cannot bear failed the whole calculation with an
-    # internal payload-boundary defect instead of being told which row to fix.
+    missing_deduction_issue = _missing_deduction_classification_issue(
+        transaction,
+        transaction_id=transaction_id,
+        category=effective_category,
+        flow_direction=flow_direction,
+    )
+    if missing_deduction_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=missing_deduction_issue)
     inadmissible_deduction = _inadmissible_deduction_issue(
         transaction,
         transaction_id=transaction_id,
@@ -542,6 +505,79 @@ def _resolve_iva_transaction_classification(
     if inadmissible_deduction is not None:
         return _IvaTransactionOutcome(gate_issue=inadmissible_deduction)
     return _IvaTransactionClassification(category=effective_category, flow_direction=flow_direction)
+
+
+def _declared_transaction_category_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    effective_category: IvaCategory,
+    invoice_kind: InvoiceKind,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    if transaction.iva_category is None:
+        return None
+    return _declared_category_issue(
+        transaction,
+        transaction_id=transaction_id,
+        explicit_category=effective_category,
+        invoice_kind=invoice_kind,
+        operation=operation,
+    )
+
+
+def _cash_accounting_category_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    effective_category: IvaCategory,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    if is_iva_cash_accounting_none(transaction.cash_accounting_treatment, authority=operation):
+        return None
+    excluded = registry_category_projection(
+        "cash_accounting_excluded",
+        effective_date=effective_date,
+        authority=operation,
+    )
+    if effective_category not in excluded:
+        return None
+    return IvaLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        reason=IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY,
+        detail=(
+            f"iva_category {effective_category.value!r} is excluded from the cash-accounting regime "
+            "under Ley 37/1992 art. 163 duodecies"
+        ),
+    )
+
+
+def _missing_deduction_classification_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    category: IvaCategory,
+    flow_direction: IvaFlowDirection,
+) -> IvaLedgerAggregationIssue | None:
+    # Input IVA is deductible only on an exact fact kind with immutable
+    # provenance; refusing here reports the row instead of failing the run.
+    # Asked of fact 0085 rather than of the flow alone. Every RECEIVED row
+    # settles as ``soportado``, while LIVA art. 92.Uno grants a deduction only
+    # of a cuota that was devengada and repercutida. Exempt, not-subject, or
+    # recargo-cost rows therefore have no deduction identity to supply. A 0 %
+    # sujeta row remains in the domestic family and still requires its identity.
+    if not (
+        is_deducible_flow(flow_direction)
+        and admits_iva_deduction_classification(category=category, flow_direction=flow_direction)
+        and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
+    ):
+        return None
+    return IvaLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        reason=IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
+        detail="IVA deduction facts require an exact kind and immutable evidence provenance before calculation",
+    )
 
 
 def _inadmissible_deduction_issue(

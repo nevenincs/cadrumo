@@ -19,20 +19,6 @@ flows:
     select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
-  login:
-    cancel_button: Mégse
-    intro: Válaszd ki a megnyitni kívánt profilt, és írd be a hozzá tartozó jelszót.
-      Semmi sem nyílik meg, amíg a jelszót el nem fogadja a program.
-    password_hint: Az a jelszó, amelyet a profil létrehozásakor választottál. Nem
-      állítható vissza.
-    password_label: Jelszó
-    profile_label: Profil
-    refusal:
-      password_required: Írd be az ehhez a profilhoz tartozó jelszót.
-      unlock_failed: A profilt nem sikerült megnyitni.
-    section: Profil és jelszó
-    title: Jelentkezz be a profilodba
-    unlock_button: Bejelentkezés
   manager:
     action:
       auth_clave_movil_route_app_request: Kérés az alkalmazásban

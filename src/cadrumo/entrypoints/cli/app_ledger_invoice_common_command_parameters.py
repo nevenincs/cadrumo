@@ -6,9 +6,9 @@ from typing import Final
 
 from ...application.ledger.operator_input_contracts import INVOICE_CLASS_INPUT
 from ._app_ledger_command_spec_support import _option_from_application_contract
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,

@@ -7,20 +7,17 @@ import asyncio
 import pytest
 from textual.widgets import Input, Static
 
-from cadrumo.application.user_profile.login_interaction import profile_login_choices
-from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.components.widgets import DisclosureGroup
-from cadrumo.entrypoints.tui.installed_session import compose_authenticated_account_inputs
-from cadrumo.entrypoints.tui.profile.overview import FieldEditScreen
+from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen
 from cadrumo.entrypoints.tui.profile.setup_journey import ProfileSetupStage
-from cadrumo.entrypoints.tui.tests.fixture import PROFILE_LABEL
 from dev.tui.harness.profile_fixtures import (
     ProfileFixtureState,
     build_profile_fixture,
     profile_fixture_interfaces,
     profile_fixture_storage,
+    profile_review_doors,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -75,20 +72,12 @@ async def test_profile_frames_reach_their_declared_state_and_keep_real_saved_fac
                     assert "identity.tax_id" in screen.overview.missing_required
             if state is ProfileFixtureState.SAVED_EDIT:
                 with bundled_indexed_authority().operation() as operation:
-                    saved = compose_authenticated_account_inputs(
-                        profile_id=require_active_bucket_id(),
-                        profile_label=PROFILE_LABEL,
-                        login_choices=profile_login_choices(),
-                        operation=operation,
-                    )
+                    saved = profile_review_doors(operation).overview()
                 field = next(
-                    field
-                    for section in saved.profile_overview.sections
-                    for field in section.fields
-                    if field.path == "identity.name"
+                    field for section in saved.sections for field in section.fields if field.path == "identity.name"
                 )
                 assert field.value == "Synthetic edited name"
-                assert saved.profile_overview.setup_state is ProfileSetupState.COMPLETE
+                assert saved.setup_state is ProfileSetupState.COMPLETE
 
 
 @pytest.mark.asyncio

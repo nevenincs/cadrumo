@@ -10,6 +10,7 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -163,7 +164,6 @@ def _login_through_the_prompt(
     from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
     from ....application.operations.registry import OperationFrontendProjection
     from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-    from ....application.user_profile.access_contracts import AccessDenialCode
     from ....application.user_profile.login_session import (
         ProfileLoginOutcome,
         ProfileReceiptRefusedError,
@@ -216,18 +216,7 @@ def _login_through_the_prompt(
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         # The live connection proves admission; the persisted pointer remains
         # non-authoritative metadata and cannot retarget an existing session.
-        current = client.status().status
-        if (
-            current.denial is not None
-            or not current.connected
-            or not current.credential_authenticated
-            or not current.profile_bound
-            or current.profile_id != client.profile_id
-            or current.session_id != client.session_id
-        ):
-            raise RuntimeFrontendRefusedError(
-                current.denial.value if current.denial is not None else AccessDenialCode.AUTHENTICATION_REQUIRED.value
-            )
+        _require_current_profile_login(client)
         with active_profile_pointer_transaction() as selection:
             selection.compare_and_select(expected=captured, bucket_id=target.bucket_id)
         return ProfileLoginOutcome(
@@ -349,3 +338,22 @@ def config_logout(
 
 
 __all__ = ["config_login", "config_logout"]
+
+
+def _require_current_profile_login(client: RuntimeFrontendClient) -> None:
+    """Require the exact connected authenticated runtime session before selecting its pointer."""
+    from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+    from ....application.user_profile.access_contracts import AccessDenialCode
+
+    current = client.status().status
+    if (
+        current.denial is not None
+        or not current.connected
+        or not current.credential_authenticated
+        or not current.profile_bound
+        or current.profile_id != client.profile_id
+        or current.session_id != client.session_id
+    ):
+        raise RuntimeFrontendRefusedError(
+            current.denial.value if current.denial is not None else AccessDenialCode.AUTHENTICATION_REQUIRED.value
+        )

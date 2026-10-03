@@ -17,7 +17,7 @@ from __future__ import annotations
 from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_references import LegalReferenceKind
 
 _SETUP_FACT_ID = "-".join(
@@ -34,9 +34,7 @@ def mapping_fact_entries(fact_id: str, *, authority: GovernedFactSource | None =
     """
     from .schema_base import DateAxis
 
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("setup mapping fact requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="setup mapping fact")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=fact_id,

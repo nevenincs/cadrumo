@@ -31,6 +31,7 @@ from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period
 from .errors import AggregationValidationError
+from .observation_key_component import validate_observation_key_component
 from .observation_window import hashed_tax_id_token
 from .retenciones import RetencionObservation
 
@@ -60,31 +61,15 @@ def retencion_observation_key(
                 "max_year": str(FILING_YEAR_MAX),
             },
         )
-    _validate_key_component(modelo, context="modelo")
+    validate_observation_key_component(modelo, context="modelo")
     period_token = period.registry_token
-    _validate_key_component(period_token, context="period")
-    _validate_key_component(str(scheme.value), context="scheme")
+    validate_observation_key_component(period_token, context="period")
+    validate_observation_key_component(str(scheme.value), context="scheme")
     hashed_token = hashed_tax_id_token(perceptor_nif, field_name="perceptor_nif")
     if projection_identity is None:
         return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}"
-    _validate_key_component(projection_identity, context="projection_identity")
+    validate_observation_key_component(projection_identity, context="projection_identity")
     return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}:{projection_identity}"
-
-
-def _validate_key_component(token: str, *, context: str) -> str:
-    """Reject key components that would compose an unsafe persistence identifier."""
-    if not token:
-        violation = "empty_repository_id"
-    elif "/" in token or "\\" in token:
-        violation = "repository_id_separator"
-    elif token in {".", ".."} or token.startswith("."):
-        violation = "repository_id_dot_token"
-    else:
-        return token
-    raise AggregationValidationError(
-        tr("errors.integrity.integrity_storage_path_containment"),
-        context={"path_context": context, "violation": violation},
-    )
 
 
 class RetencionObservationPersistenceError(CadrumoError):

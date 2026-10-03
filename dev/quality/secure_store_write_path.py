@@ -56,11 +56,12 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.toml import parse_toml
+from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
 
 from .unread_inputs import report_unread
 
 _REPO_BASE: Final = "SecureBoundRepository"
-_SOURCE_ROOT: Final = Path(__file__).resolve().parents[2] / "src" / "cadrumo"
+_SOURCE_ROOT: Final = Path(__file__).resolve().parents[2] / PRODUCT_PACKAGE
 _DECLARATION: Final = Path(__file__).resolve().parent / "secure_store_write_path.toml"
 
 #: A method mutates the store when any snake_case token of its name is one of
@@ -141,7 +142,7 @@ def _production_modules(root: Path) -> dict[Path, ast.Module]:
     trees: dict[Path, ast.Module] = {}
     unread: list[str] = []
     for path in sorted(root.rglob("*.py")):
-        if "tests" in path.parts or "__pycache__" in path.parts or path.name.startswith("test_"):
+        if not is_production_source(path, root=root):
             continue
         try:
             trees[path] = ast.parse(path.read_text(encoding="utf-8"))
@@ -177,19 +178,7 @@ def _protocol_aliases(trees: dict[Path, ast.Module], repositories: frozenset[str
     implementers: dict[str, set[str]] = {}
     for tree in trees.values():
         for node in ast.walk(tree):
-            if not isinstance(node, ast.ClassDef):
-                continue
-            # A structural port named after its repository is that repository's
-            # port even when the class does not list it as a base.
-            named_for = node.name.removesuffix("Protocol")
-            if node.name != named_for and named_for in repositories:
-                implementers.setdefault(node.name, set()).add(named_for)
-            if node.name not in repositories:
-                continue
-            for base in node.bases:
-                name = _called_name(base) if isinstance(base, ast.Name | ast.Attribute) else None
-                if name is not None and name.endswith("Protocol"):
-                    implementers.setdefault(name, set()).add(node.name)
+            _collect_protocol_implementer(node, repositories, implementers)
     return {protocol: next(iter(names)) for protocol, names in implementers.items() if len(names) == 1}
 
 
@@ -243,30 +232,7 @@ def _bindings(
     attributes: dict[str, str] = {}
     accessors: dict[str, str] = {}
     for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            arguments = node.args
-            for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs):
-                for repository in _annotated_repositories(argument.annotation, repositories):
-                    names[argument.arg] = repository
-            for repository in _annotated_repositories(node.returns, repositories):
-                accessors[node.name] = repository
-        elif isinstance(node, ast.AnnAssign):
-            for repository in _annotated_repositories(node.annotation, repositories):
-                if isinstance(node.target, ast.Name):
-                    names[node.target.id] = repository
-                    # A class-body field is reached as ``holder.field``.
-                    attributes[node.target.id] = repository
-                elif isinstance(node.target, ast.Attribute):
-                    attributes[node.target.attr] = repository
-        elif isinstance(node, ast.Assign):
-            source = _construction_source(node.value, repositories, names)
-            if source is None:
-                continue
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    names[target.id] = source
-                elif isinstance(target, ast.Attribute):
-                    attributes[target.attr] = source
+        _collect_repository_binding(node, repositories, names, attributes, accessors)
     return names, attributes, accessors
 
 
@@ -308,27 +274,9 @@ def collect_store_usage(root: Path = _SOURCE_ROOT) -> tuple[StoreUsage, ...]:
         # module's, so two adapters in one module that both hold a
         # ``_repository`` resolve to their own stores rather than the last one.
         for unit in tree.body:
-            names, attributes, accessors = module_names, module_attributes, module_accessors
-            if isinstance(unit, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
-                unit_names, unit_attributes, unit_accessors = _bindings(unit, repositories)
-                names = {**module_names, **unit_names}
-                attributes = {**module_attributes, **unit_attributes}
-                accessors = {**module_accessors, **unit_accessors}
-            for node in ast.walk(unit):
-                if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                    continue
-                repository = _receiver_repository(
-                    node.func.value,
-                    repositories=repositories,
-                    names=names,
-                    attributes=attributes,
-                    accessors=accessors,
-                )
-                if repository is None:
-                    continue
-                repository = aliases.get(repository, repository)
-                target = writes if _is_mutator(node.func.attr) else reads
-                target[repository].add(module)
+            _collect_store_unit(
+                unit, module_names, module_attributes, module_accessors, repositories, aliases, writes, reads, module
+            )
     return tuple(
         StoreUsage(
             name=name,
@@ -394,6 +342,126 @@ def main() -> int:
     for problem in problems:
         print(f"  {problem}")
     return 1 if problems else 0
+
+
+def _collect_protocol_implementer(
+    node: ast.AST, repositories: frozenset[str], implementers: dict[str, set[str]]
+) -> None:
+    """Collect protocol implementer."""
+    if not isinstance(node, ast.ClassDef):
+        return
+    # A structural port named after its repository is that repository's
+    # port even when the class does not list it as a base.
+    named_for = node.name.removesuffix("Protocol")
+    if node.name != named_for and named_for in repositories:
+        implementers.setdefault(node.name, set()).add(named_for)
+    if node.name not in repositories:
+        return
+    for base in node.bases:
+        name = _called_name(base) if isinstance(base, ast.Name | ast.Attribute) else None
+        if name is not None and name.endswith("Protocol"):
+            implementers.setdefault(name, set()).add(node.name)
+
+
+def _collect_repository_binding(
+    node: ast.AST,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    attributes: dict[str, str],
+    accessors: dict[str, str],
+) -> None:
+    """Collect repository binding."""
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+        _collect_callable_repository_binding(node, repositories, names, accessors)
+    elif isinstance(node, ast.AnnAssign):
+        _collect_annotated_repository_binding(node, repositories, names, attributes)
+    elif isinstance(node, ast.Assign):
+        source = _construction_source(node.value, repositories, names)
+        if source is None:
+            return
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                names[target.id] = source
+            elif isinstance(target, ast.Attribute):
+                attributes[target.attr] = source
+
+
+def _collect_store_call(
+    node: ast.AST,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    attributes: dict[str, str],
+    accessors: dict[str, str],
+    aliases: dict[str, str],
+    writes: dict[str, set[str]],
+    reads: dict[str, set[str]],
+    module: str,
+) -> None:
+    """Collect store call."""
+    if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+        return
+    repository = _receiver_repository(
+        node.func.value,
+        repositories=repositories,
+        names=names,
+        attributes=attributes,
+        accessors=accessors,
+    )
+    if repository is None:
+        return
+    repository = aliases.get(repository, repository)
+    target = writes if _is_mutator(node.func.attr) else reads
+    target[repository].add(module)
+
+
+def _collect_store_unit(
+    unit: ast.stmt,
+    module_names: dict[str, str],
+    module_attributes: dict[str, str],
+    module_accessors: dict[str, str],
+    repositories: frozenset[str],
+    aliases: dict[str, str],
+    writes: dict[str, set[str]],
+    reads: dict[str, set[str]],
+    module: str,
+) -> None:
+    """Collect store unit."""
+    names, attributes, accessors = module_names, module_attributes, module_accessors
+    if isinstance(unit, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+        unit_names, unit_attributes, unit_accessors = _bindings(unit, repositories)
+        names = {**module_names, **unit_names}
+        attributes = {**module_attributes, **unit_attributes}
+        accessors = {**module_accessors, **unit_accessors}
+    for node in ast.walk(unit):
+        _collect_store_call(node, repositories, names, attributes, accessors, aliases, writes, reads, module)
+
+
+def _collect_callable_repository_binding(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    accessors: dict[str, str],
+) -> None:
+    """Collect callable repository binding."""
+    arguments = node.args
+    for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs):
+        for repository in _annotated_repositories(argument.annotation, repositories):
+            names[argument.arg] = repository
+    for repository in _annotated_repositories(node.returns, repositories):
+        accessors[node.name] = repository
+
+
+def _collect_annotated_repository_binding(
+    node: ast.AnnAssign, repositories: frozenset[str], names: dict[str, str], attributes: dict[str, str]
+) -> None:
+    """Collect annotated repository binding."""
+    for repository in _annotated_repositories(node.annotation, repositories):
+        if isinstance(node.target, ast.Name):
+            names[node.target.id] = repository
+            # A class-body field is reached as ``holder.field``.
+            attributes[node.target.id] = repository
+        elif isinstance(node.target, ast.Attribute):
+            attributes[node.target.attr] = repository
 
 
 if __name__ == "__main__":

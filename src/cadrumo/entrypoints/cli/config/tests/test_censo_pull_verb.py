@@ -43,7 +43,7 @@ from ...tests.cli_runner import invoke_cached_cli
 from .. import _censo_transport
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 from .._censo_review_cli import confirm_censal_review
-from ..runtime_censal_review import CensalRuntimeReviewResult
+from ..runtime_censal_contracts import CensalRuntimeReviewResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

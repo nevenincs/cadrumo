@@ -60,6 +60,7 @@ from .bundle_export_operation import (
     ProfileBundleExportJournalError,
     ProfileBundleExportJournalNotFoundError,
     ProfileBundleExportJournalRepository,
+    ProfileBundleExportJournalScan,
     ProfileBundleExportOperation,
     ProfileBundleExportOperationStatus,
     derive_export_operation_id,
@@ -72,6 +73,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import UserProfilePortableExport
     from ..workflow.profile_bucket_models import ProfileBucketPointer
@@ -152,6 +154,7 @@ def _require_recoverable_target(operation: ProfileBundleExportOperation) -> None
 def export_profile_bundle(
     request: ProfileBundleExportRequest,
     *,
+    authority_operation: PinnedAuthorityOperation,
     profile_decode_context: ProfileDecodeContext,
     authorized_profile_id: str | None = None,
 ) -> ProfileBundleExportResult:
@@ -171,6 +174,11 @@ def export_profile_bundle(
     recovery sweep to that exact profile. An ambient selection cannot change
     it; unreadable recovery ownership refuses without disclosing journal IDs.
     """
+    if profile_decode_context.generation != authority_operation.generation:
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export",
+            context={"authority_generation_matches": False},
+        )
     request = _anchored_export_request(request)
     if authorized_profile_id is not None:
         authorized_profile_id = canonical_profile_bucket_id(authorized_profile_id)
@@ -188,6 +196,7 @@ def export_profile_bundle(
             prepared = prepare_profile_export(
                 request,
                 journal=journal,
+                authority_operation=authority_operation,
                 profile_decode_context=profile_decode_context,
                 authorized_profile_id=authorized_profile_id,
             )
@@ -264,6 +273,7 @@ def prepare_profile_export(
     request: ProfileBundleExportRequest,
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
+    authority_operation: PinnedAuthorityOperation,
     profile_decode_context: ProfileDecodeContext,
     authorized_profile_id: str | None = None,
 ) -> PreparedProfileExport:
@@ -290,13 +300,22 @@ def prepare_profile_export(
     """
     from .profile_record_repository import require_profile_record_session
 
+    if profile_decode_context.generation != authority_operation.generation:
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export",
+            context={"authority_generation_matches": False},
+        )
     request = _anchored_export_request(request)
     repository = journal or ProfileBundleExportJournalRepository()
     target = ProfileBundleExportTarget(destination=request.destination)
     pointer = _resolve_export_profile(request.profile_name, authorized_profile_id=authorized_profile_id)
     _refuse_link_target(request.destination)
     require_profile_record_session(pointer.bucket_id, profile_decode_context=profile_decode_context)
-    bundle = _serialize_export_bundle(pointer.bucket_id, profile_decode_context=profile_decode_context)
+    bundle = _serialize_export_bundle(
+        pointer.bucket_id,
+        authority_operation=authority_operation,
+        profile_decode_context=profile_decode_context,
+    )
     payload = _render_export_payload(bundle, request=request)
     payload_bytes = payload.encode(UTF_8_ENCODING)
     categories = bundle_data_categories(bundle)
@@ -454,13 +473,39 @@ def reconcile_prepared_exports(
     if authorized_profile_id is not None:
         authorized_profile_id = canonical_profile_bucket_id(authorized_profile_id)
     scan = repository.scan()
+    _require_scoped_scan_ownership(scan, authorized_profile_id)
+    reconciled: list[ProfileBundleExportOperation] = []
+    failures = _unreadable_reconciliation_failures(scan)
+    for operation in scan.operations:
+        if authorized_profile_id is not None and operation.profile_id != authorized_profile_id:
+            continue
+        current, failure = _reconcile_scanned_operation(
+            repository,
+            operation,
+            profile_decode_context=profile_decode_context,
+            authorized_profile_id=authorized_profile_id,
+            mutation_writer=mutation_writer,
+            event_repository=event_repository,
+        )
+        if failure is not None:
+            failures.append(failure)
+        if current is not None:
+            reconciled.append(current)
+    return ProfileBundleExportReconciliation(reconciled=tuple(reconciled), failures=tuple(failures))
+
+
+def _require_scoped_scan_ownership(scan: ProfileBundleExportJournalScan, authorized_profile_id: str | None) -> None:
     if authorized_profile_id is not None and scan.unreadable:
         # Unknown ownership cannot authorize cleanup or disclosure of its ID.
         raise ProfileExportError(
             translated_message="errors.fail.profile_export", context={"reconciliation_available": False}
         )
-    reconciled: list[ProfileBundleExportOperation] = []
-    failures = [
+
+
+def _unreadable_reconciliation_failures(
+    scan: ProfileBundleExportJournalScan,
+) -> list[ProfileBundleExportReconcileFailure]:
+    return [
         ProfileBundleExportReconcileFailure(
             journal_id=unreadable.journal_id,
             destination=None,
@@ -468,35 +513,38 @@ def reconcile_prepared_exports(
         )
         for unreadable in scan.unreadable
     ]
-    for operation in scan.operations:
-        if authorized_profile_id is not None and operation.profile_id != authorized_profile_id:
-            continue
-        try:
-            _require_recoverable_target(operation)
-            current = _reconcile_one_operation(
-                repository,
-                operation,
-                profile_decode_context=profile_decode_context,
-                authorized_profile_id=authorized_profile_id,
-                mutation_writer=mutation_writer,
-                event_repository=event_repository,
-            )
-        except Exception as exc:
-            get_logger(__name__).warning(
-                "profile export reconciliation could not finalise one operation",
-                extra={"error_type": type(exc).__name__},
-            )
-            failures.append(
-                ProfileBundleExportReconcileFailure(
-                    journal_id=operation.operation_id,
-                    destination=operation.destination,
-                    reason=type(exc).__name__,
-                ),
-            )
-            continue
-        if current is not None:
-            reconciled.append(current)
-    return ProfileBundleExportReconciliation(reconciled=tuple(reconciled), failures=tuple(failures))
+
+
+def _reconcile_scanned_operation(
+    repository: ProfileBundleExportJournalRepository,
+    operation: ProfileBundleExportOperation,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+    authorized_profile_id: str | None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> tuple[ProfileBundleExportOperation | None, ProfileBundleExportReconcileFailure | None]:
+    try:
+        _require_recoverable_target(operation)
+        current = _reconcile_one_operation(
+            repository,
+            operation,
+            profile_decode_context=profile_decode_context,
+            authorized_profile_id=authorized_profile_id,
+            mutation_writer=mutation_writer,
+            event_repository=event_repository,
+        )
+    except Exception as exc:
+        get_logger(__name__).warning(
+            "profile export reconciliation could not finalise one operation",
+            extra={"error_type": type(exc).__name__},
+        )
+        return None, ProfileBundleExportReconcileFailure(
+            journal_id=operation.operation_id,
+            destination=operation.destination,
+            reason=type(exc).__name__,
+        )
+    return current, None
 
 
 def _reconcile_one_operation(
@@ -641,11 +689,16 @@ def _resolve_export_profile(
 def _serialize_export_bundle(
     bucket_id: str,
     *,
+    authority_operation: PinnedAuthorityOperation,
     profile_decode_context: ProfileDecodeContext,
 ) -> UserProfilePortableExport:
     from .bundle import serialize_profile_bundle
 
-    return serialize_profile_bundle(bucket_id=bucket_id, profile_decode_context=profile_decode_context)
+    return serialize_profile_bundle(
+        bucket_id=bucket_id,
+        authority_operation=authority_operation,
+        profile_decode_context=profile_decode_context,
+    )
 
 
 def _render_export_payload(

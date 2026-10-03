@@ -35,6 +35,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -500,7 +501,7 @@ def _parse_projection_binding_overrides(
     if not binding_overrides:
         return extra_bindings, extra_enum_bindings
 
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     known_binding_ids = set(bindings_by_id)
     enum_channel_ids = enum_consumed_binding_ids(revision)
     date_channel_ids = revision_date_binding_ids(revision)

@@ -23,7 +23,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....domain.contribuyente.inventory.records import ValuationMethod
 from .. import runtime_ledger_inventory as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

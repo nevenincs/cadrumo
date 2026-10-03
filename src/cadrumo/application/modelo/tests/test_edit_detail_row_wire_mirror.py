@@ -20,8 +20,9 @@ from decimal import Decimal
 from typing import Annotated
 
 import pytest
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
@@ -379,7 +380,7 @@ def test_the_credential_free_check_still_refuses_a_free_form_key_field() -> None
     """
 
     class AddressCarryingTheJoinedKey(BaseModel):
-        model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+        model_config = STRICT_FROZEN_CONFIG
 
         natural_key: Annotated[str, Field(min_length=1, max_length=256)]
 

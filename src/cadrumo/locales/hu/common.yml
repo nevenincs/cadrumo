@@ -217,6 +217,7 @@ aggregation:
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő tulajdonos egy értékforrással
         rendelkező rovatnál a forráshálón.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
+      duplicate_row_binding_coordinate: 'Belső hiba: duplikált sorérték-forrás koordináta.'
       duplicate_row_binding_owner: 'Belső hiba: ugyanannak a sorérték-forrásnak két
         tulajdonosa van a forráshálón.'
       duplicate_row_casilla_coordinate: 'Belső hiba: duplikált sor-mező koordináta.'

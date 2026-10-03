@@ -6,13 +6,9 @@ from dataclasses import dataclass
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
-from .frontend_contracts import (
-    OperationObservationResultV1,
-    OperationPublicEventV1,
-    OperationPublicPendingInteractionV1,
-)
 from .frontend_projection import (
     OperationNoPendingInteractionV1,
+    OperationPublicPendingInteractionV1,
     OperationPublicProgressV1,
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -23,11 +19,13 @@ from .frontend_requests import (
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
+    OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
     OperationPublicDiagnosticEventV1,
     OperationPublicEffectEventV1,
     OperationPublicEventPageV1,
+    OperationPublicEventV1,
     OperationPublicInteractionEventV1,
     OperationPublicLogEventV1,
     OperationPublicNoticeEventV1,

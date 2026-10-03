@@ -208,6 +208,43 @@ def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
         raise SystemExit(f"installed CLI oracle returned unexpected evidence: {tax_document!r}")
 
 
+def _finish_homebrew_evidence(
+    run_root: Path,
+    evidence: dict[str, object],
+    cleanup_errors: list[str],
+    cleanup: dict[str, object],
+    started_at: datetime,
+) -> None:
+    if evidence and not cleanup_errors:
+        evidence["status"] = "passed"
+        evidence["completed_at"] = datetime.now(UTC).isoformat()
+        evidence["cleanup"] = cleanup
+        _write_json(run_root / "homebrew-evidence.json", evidence)
+    if cleanup_errors:
+        failure_path = run_root / "homebrew-failure.json"
+        failure: dict[str, object]
+        if failure_path.is_file():
+            loaded_failure = json.loads(failure_path.read_text(encoding=_UTF_8))
+            failure = dict(loaded_failure) if isinstance(loaded_failure, dict) else {}
+        else:
+            failure = {
+                "schema": "cadrumo.packaging.homebrew-smoke-failure.v1",
+                "status": "failed",
+                "started_at": started_at.isoformat(),
+                "failed_at": datetime.now(UTC).isoformat(),
+            }
+        failure["cleanup"] = cleanup
+        _write_json(failure_path, failure)
+        raise SystemExit("; ".join(cleanup_errors))
+
+
+def _require_homebrew_platform() -> None:
+    if platform.system() not in {"Darwin", "Linux"}:
+        raise SystemExit(f"Homebrew smoke requires macOS or Linux; got {platform.system()}")
+    if platform.machine().casefold() not in {"x86_64", "amd64", "arm64", "aarch64"}:
+        raise SystemExit(f"unsupported Homebrew smoke architecture: {platform.machine()}")
+
+
 def run_homebrew_smoke(
     *,
     formula_path: Path,
@@ -234,10 +271,7 @@ def run_homebrew_smoke(
         raise SystemExit(f"Homebrew executable is not a file: {brew}")
     repo = repo_root.resolve(strict=True)
     _require_valid_tap_name(tap_name)
-    if platform.system() not in {"Darwin", "Linux"}:
-        raise SystemExit(f"Homebrew smoke requires macOS or Linux; got {platform.system()}")
-    if platform.machine().casefold() not in {"x86_64", "amd64", "arm64", "aarch64"}:
-        raise SystemExit(f"unsupported Homebrew smoke architecture: {platform.machine()}")
+    _require_homebrew_platform()
     os.environ["HOMEBREW_NO_AUTO_UPDATE"] = "1"
     brew_prefix = brew.parent.parent
     os.environ["PATH"] = os.pathsep.join(
@@ -488,6 +522,7 @@ def run_homebrew_smoke(
         server.server_close()
         server_thread.join(timeout=5)
 
+        cleanup: dict[str, object]
         if retain_install:
             # The workflow's later emit step hashes the INSTALLED executables
             # (the mint-time isolation proof), so the keg must survive this
@@ -523,27 +558,7 @@ def run_homebrew_smoke(
             )
             cleanup_errors.extend(deferred_errors)
             cleanup["errors"] = cleanup_errors
-        if evidence and not cleanup_errors:
-            evidence["status"] = "passed"
-            evidence["completed_at"] = datetime.now(UTC).isoformat()
-            evidence["cleanup"] = cleanup
-            _write_json(run_root / "homebrew-evidence.json", evidence)
-        if cleanup_errors:
-            failure_path = run_root / "homebrew-failure.json"
-            failure: dict[str, object]
-            if failure_path.is_file():
-                loaded_failure = json.loads(failure_path.read_text(encoding=_UTF_8))
-                failure = dict(loaded_failure) if isinstance(loaded_failure, dict) else {}
-            else:
-                failure = {
-                    "schema": "cadrumo.packaging.homebrew-smoke-failure.v1",
-                    "status": "failed",
-                    "started_at": started_at.isoformat(),
-                    "failed_at": datetime.now(UTC).isoformat(),
-                }
-            failure["cleanup"] = cleanup
-            _write_json(failure_path, failure)
-            raise SystemExit("; ".join(cleanup_errors))
+        _finish_homebrew_evidence(run_root, evidence, cleanup_errors, cleanup, started_at)
 
     return run_root / "homebrew-evidence.json"
 
@@ -566,6 +581,25 @@ def cleanup_state_document(
         "installed_prefix": None if installed_prefix is None else str(installed_prefix),
         "preexisting_formulae": sorted(preexisting_formulae),
         "preexisting_taps": sorted(preexisting_taps),
+    }
+
+
+def _brew_retained_state(
+    retained_formulae: set[str],
+    retained_taps: set[str],
+    installed_prefix: Path | None,
+    cleanup_errors: list[str],
+) -> dict[str, object]:
+    if retained_formulae:
+        cleanup_errors.append(f"cleanup retained formulae: {sorted(retained_formulae)!r}")
+    if retained_taps:
+        cleanup_errors.append(f"cleanup retained taps: {sorted(retained_taps)!r}")
+    if installed_prefix is not None and installed_prefix.exists():
+        cleanup_errors.append(f"cleanup retained installed prefix: {installed_prefix}")
+    return {
+        "retained_formulae": sorted(retained_formulae),
+        "retained_taps": sorted(retained_taps),
+        "installed_prefix_absent": installed_prefix is None or not installed_prefix.exists(),
     }
 
 
@@ -677,17 +711,7 @@ def _run_brew_cleanup(
         )
         - preexisting_taps
     )
-    if retained_formulae:
-        cleanup_errors.append(f"cleanup retained formulae: {sorted(retained_formulae)!r}")
-    if retained_taps:
-        cleanup_errors.append(f"cleanup retained taps: {sorted(retained_taps)!r}")
-    if installed_prefix is not None and installed_prefix.exists():
-        cleanup_errors.append(f"cleanup retained installed prefix: {installed_prefix}")
-    cleanup: dict[str, object] = {
-        "retained_formulae": sorted(retained_formulae),
-        "retained_taps": sorted(retained_taps),
-        "installed_prefix_absent": installed_prefix is None or not installed_prefix.exists(),
-    }
+    cleanup = _brew_retained_state(retained_formulae, retained_taps, installed_prefix, cleanup_errors)
     return cleanup_errors, cleanup
 
 

@@ -15,17 +15,35 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.transactions.errors import TransactionValidationError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
+
+
+def require_ledger_import_correlation(
+    completed: RegisteredOperationCompletion[LedgerImportResultProjection],
+    profile_id: UUID,
+    files: tuple[Path, ...],
+    dry_run: bool,
+    verify: bool,
+    period: Period | None,
+) -> None:
+    """Require ledger import correlation."""
+    result = completed.projection
+    expected_effect = OperationEffect.UPDATED if not dry_run and result.imported > 0 else OperationEffect.NONE
+    invalid = (
+        invalid_ledger_import_receipt(completed, result, profile_id, expected_effect)
+        or invalid_ledger_import_selection(result, dry_run, verify, period)
+        or len(result.validations) != len(result.sources)
+        or (len(result.validations) + len(result.refused_files) != len(files))
+    )
+    if invalid:
+        raise invalid_completion_error(completed)
 
 
 def import_ledger_sources_for_cli(
@@ -62,29 +80,35 @@ def import_ledger_sources_for_cli(
         result_version=1,
         timeout=120,
     )
-    result = completed.projection
-    expected_effect = OperationEffect.UPDATED if not dry_run and result.imported > 0 else OperationEffect.NONE
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or result.profile_id != client.profile_id
-        or result.bucket_id != str(client.profile_id)
-        or result.dry_run is not dry_run
-        or result.verify is not verify
-        or result.period != (PublicPeriod.from_period(period) if period is not None else None)
-        or len(result.validations) != len(result.sources)
-        or len(result.validations) + len(result.refused_files) != len(files)
-    )
-    if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+    require_ledger_import_correlation(completed, client.profile_id, files, dry_run, verify, period)
     return completed
 
 
 __all__ = ["import_ledger_sources_for_cli"]
+
+
+def invalid_ledger_import_receipt(
+    completed: RegisteredOperationCompletion[LedgerImportResultProjection],
+    result: LedgerImportResultProjection,
+    profile_id: UUID,
+    expected_effect: OperationEffect,
+) -> bool:
+    """Invalid ledger import receipt."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or (result.profile_id != profile_id)
+        or (result.bucket_id != str(profile_id))
+    )
+
+
+def invalid_ledger_import_selection(
+    result: LedgerImportResultProjection, dry_run: bool, verify: bool, period: Period | None
+) -> bool:
+    """Invalid ledger import selection."""
+    return (
+        result.dry_run is not dry_run
+        or result.verify is not verify
+        or result.period != (PublicPeriod.from_period(period) if period is not None else None)
+    )

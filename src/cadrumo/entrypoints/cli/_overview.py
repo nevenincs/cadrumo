@@ -13,17 +13,16 @@ from ...application.cli_exception_preconditions import (
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.operator_actions.models import ActionReference
-from ...application.overview.read_operation import (
+from ...application.overview.read_payload import (
     OverviewAgendaRead,
     OverviewBacklogRead,
     OverviewCalendarRead,
     OverviewExplainRead,
     OverviewPrepareRead,
-    OverviewReadKind,
-    OverviewReadRequest,
     OverviewStatusRead,
 )
 from ...application.overview.read_projection import OverviewNoticeSnapshot
+from ...application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
@@ -54,9 +53,9 @@ from .common import (
 )
 from .errors import CliRefusedBoundaryError
 from .period_parsing import _canonical_period
+from .registered_operation_errors import submitted_operation_error
 from .runtime_overview import OverviewReadCompletion, read_overview
 from .runtime_overview_pipeline import read_overview_pipeline
-from .runtime_registered_operation import submitted_operation_error
 
 
 def _request(kind: OverviewReadKind, **fields: object) -> OverviewReadRequest:
@@ -235,46 +234,7 @@ def overview_calendar(
                 deemed_served_legal_ref=payload.deemed_served_legal_ref,
             )
         else:
-            survey = payload.survey
-            if survey is None:
-                raise ValueError("overview calendar survey is missing")
-            lines = [
-                f"from\t{survey.from_date.isoformat()}",
-                f"to\t{survey.to_date.isoformat()}",
-                f"profiles\t{int(survey.active_calendar is not None)}",
-            ]
-            for pointer in survey.locked:
-                lines.extend(
-                    (
-                        f"profile\t{pointer.profile_id}\t{pointer.label}",
-                        f"profile_locked\t{pointer.profile_id}\t{pointer.label}",
-                    )
-                )
-            lines.extend(
-                f"profile_setup_incomplete\t{pointer.profile_id}\t{pointer.label}"
-                for pointer in survey.setup_incomplete
-            )
-            profiles: list[dict[str, object]] = []
-            notices: list[Notice] = []
-            if survey.active_calendar is not None and survey.active_profile_id and survey.active_label:
-                calendar = survey.active_calendar.to_calendar()
-                if calendar.warnings and not allow_incomplete:
-                    raise _incomplete_refusal(
-                        completed,
-                        payload.refusal_requirements,
-                        undeclared=False,
-                        warning_count=len(calendar.warnings),
-                    )
-                profile, profile_lines, profile_notices = overview_calendar_profile_output(
-                    bucket_id=survey.active_profile_id,
-                    label=survey.active_label,
-                    cal=calendar,
-                    deemed_served_legal_ref=payload.deemed_served_legal_ref,
-                )
-                profiles.append(profile)
-                lines.extend(profile_lines)
-                notices.extend(profile_notices)
-            typed = OverviewCalendarResult.model_validate({"profiles": profiles})
+            typed, lines, notices = _overview_calendar_survey_output(completed, payload, allow_incomplete)
         emit_envelope(ctx, command="overview.calendar", result=typed, lines=lines, notices=notices)
 
     _emit_read(completed, render)
@@ -426,3 +386,49 @@ __all__ = [
     "overview_prepare",
     "overview_status",
 ]
+
+
+def _overview_calendar_survey_output(
+    completed: OverviewReadCompletion, payload: OverviewCalendarRead, allow_incomplete: bool
+) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
+    """Render locked and active profiles with the existing incomplete-calendar refusals."""
+    survey = payload.survey
+    if survey is None:
+        raise ValueError("overview calendar survey is missing")
+    lines = [
+        f"from\t{survey.from_date.isoformat()}",
+        f"to\t{survey.to_date.isoformat()}",
+        f"profiles\t{int(survey.active_calendar is not None)}",
+    ]
+    for pointer in survey.locked:
+        lines.extend(
+            (
+                f"profile\t{pointer.profile_id}\t{pointer.label}",
+                f"profile_locked\t{pointer.profile_id}\t{pointer.label}",
+            )
+        )
+    lines.extend(
+        f"profile_setup_incomplete\t{pointer.profile_id}\t{pointer.label}" for pointer in survey.setup_incomplete
+    )
+    profiles: list[dict[str, object]] = []
+    notices: list[Notice] = []
+    if survey.active_calendar is not None and survey.active_profile_id and survey.active_label:
+        calendar = survey.active_calendar.to_calendar()
+        if calendar.warnings and not allow_incomplete:
+            raise _incomplete_refusal(
+                completed,
+                payload.refusal_requirements,
+                undeclared=False,
+                warning_count=len(calendar.warnings),
+            )
+        profile, profile_lines, profile_notices = overview_calendar_profile_output(
+            bucket_id=survey.active_profile_id,
+            label=survey.active_label,
+            cal=calendar,
+            deemed_served_legal_ref=payload.deemed_served_legal_ref,
+        )
+        profiles.append(profile)
+        lines.extend(profile_lines)
+        notices.extend(profile_notices)
+    typed = OverviewCalendarResult.model_validate({"profiles": profiles})
+    return typed, lines, notices

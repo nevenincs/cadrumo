@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import UTF_8
 
 from .acquire_common import (
@@ -29,7 +30,7 @@ from .cohort_manifest import load_release_cohort
 from .command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
-_DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"
+_DEFAULT_REPO: Final[str] = PRODUCT_IDENTITY.repository
 
 
 def _resolve_gh(override: Path | None) -> Path:

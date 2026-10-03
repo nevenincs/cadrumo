@@ -51,8 +51,8 @@ from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
-    loader_semantic_digest,
 )
+from ..export_fragment_provenance_projection import loader_semantic_digest
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view

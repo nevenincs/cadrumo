@@ -12,14 +12,19 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ....core.time.clock import today_madrid
 from ...iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    unique_mapping_legal_refs,
+)
+from .governed_fact_scope import governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA flow catalogue"
@@ -147,56 +152,15 @@ class IvaFlowDirectionCatalogue:
         return self.deducible_token in self.settlement_sides_for(value)
 
 
-def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
-    refs = tuple(token.strip() for token in value.split(",") if token.strip())
-    if not refs or len(refs) != len(set(refs)):
-        raise RegistryValidationError(f"IVA flow catalogue {key!r} must contain unique legal references")
-    return refs
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IVA flow catalogue entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IVA flow catalogue key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IVA flow catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("IVA flow catalogue requires an explicit authority operation or scope")
-
-
-def _selected_mapping_entries(
-    *,
-    effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
-) -> Mapping[str, str]:
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_mapping_entries(effective_date)
-    return _resolve_entries(effective_date=effective_date, authority=selected)
-
-
-def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
+def _settlement_definitions(
+    entries: Mapping[str, str],
+) -> tuple[list[IvaSettlementSideDefinition], tuple[str, ...]]:
     settlement_definitions: list[IvaSettlementSideDefinition] = []
     settlement_tokens = unique_mapping_tokens(entries, _SETTLEMENT_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for raw_token in settlement_tokens:
@@ -208,12 +172,18 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
             IvaSettlementSideDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     if len({item.token for item in settlement_definitions}) != len(settlement_definitions):
         raise RegistryValidationError("IVA flow catalogue contains duplicate settlement sides")
+    return settlement_definitions, settlement_tokens
 
+
+def _settlement_predicates(
+    entries: Mapping[str, str],
+    settlement_definitions: list[IvaSettlementSideDefinition],
+) -> tuple[IvaSettlementSide, IvaSettlementSide]:
     settlement_choice_set = frozenset(item.token for item in settlement_definitions)
     devengada_token = IvaSettlementSide.from_registry(
         required_mapping_entry(entries, f"{_SETTLEMENT_PREFIX}devengada.value", subject=_ENTRY_SUBJECT),
@@ -223,11 +193,50 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     )
     if devengada_token not in settlement_choice_set or deducible_token not in settlement_choice_set:
         raise RegistryValidationError("IVA flow catalogue names an undeclared settlement-side predicate")
+    return devengada_token, deducible_token
 
+
+def _no_settlement_token(entries: Mapping[str, str], settlement_tokens: tuple[str, ...]) -> str:
     no_settlement_token = required_mapping_entry(entries, _NO_SETTLEMENT_KEY, subject=_ENTRY_SUBJECT)
     if no_settlement_token in settlement_tokens:
         raise RegistryValidationError("IVA flow catalogue no-settlement token collides with a settlement side")
+    return no_settlement_token
 
+
+def _flow_settlement_sides(
+    raw_token: str,
+    raw_sides: str,
+    *,
+    no_settlement_token: str,
+    settlement_choice_set: frozenset[IvaSettlementSide],
+) -> frozenset[IvaSettlementSide]:
+    if raw_sides == no_settlement_token:
+        return frozenset[IvaSettlementSide]()
+    side_tokens = tuple(token.strip() for token in raw_sides.split(",") if token.strip())
+    if not side_tokens or len(side_tokens) != len(set(side_tokens)):
+        raise RegistryValidationError(
+            f"IVA flow direction {raw_token!r} must declare unique settlement sides",
+        )
+    typed_sides: list[IvaSettlementSide] = []
+    for side in side_tokens:
+        projected_side = IvaSettlementSide.from_registry(side)
+        if not isinstance(projected_side, IvaSettlementSide):
+            raise RegistryValidationError("IVA flow catalogue projected an invalid settlement side")
+        typed_sides.append(projected_side)
+    settlement_sides = frozenset(typed_sides)
+    if not settlement_sides.issubset(settlement_choice_set):
+        raise RegistryValidationError(
+            f"IVA flow direction {raw_token!r} names an undeclared settlement side",
+        )
+    return settlement_sides
+
+
+def _flow_definitions(
+    entries: Mapping[str, str],
+    *,
+    no_settlement_token: str,
+    settlement_choice_set: frozenset[IvaSettlementSide],
+) -> list[IvaFlowDirectionDefinition]:
     flow_definitions: list[IvaFlowDirectionDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _FLOW_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IvaFlowDirection.from_registry(raw_token)
@@ -235,74 +244,69 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IVA flow direction {raw_token!r} declares a mismatched value")
         raw_sides = required_mapping_entry(entries, f"{prefix}settlement_sides", subject=_ENTRY_SUBJECT)
-        if raw_sides == no_settlement_token:
-            settlement_sides: frozenset[IvaSettlementSide] = frozenset[IvaSettlementSide]()
-        else:
-            side_tokens = tuple(token.strip() for token in raw_sides.split(",") if token.strip())
-            if not side_tokens or len(side_tokens) != len(set(side_tokens)):
-                raise RegistryValidationError(
-                    f"IVA flow direction {raw_token!r} must declare unique settlement sides",
-                )
-            typed_sides: list[IvaSettlementSide] = []
-            for side in side_tokens:
-                projected_side = IvaSettlementSide.from_registry(side)
-                if not isinstance(projected_side, IvaSettlementSide):
-                    raise RegistryValidationError("IVA flow catalogue projected an invalid settlement side")
-                typed_sides.append(projected_side)
-            settlement_sides = frozenset(typed_sides)
-            if not settlement_sides.issubset(settlement_choice_set):
-                raise RegistryValidationError(
-                    f"IVA flow direction {raw_token!r} names an undeclared settlement side",
-                )
         flow_definitions.append(
             IvaFlowDirectionDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
-                settlement_sides=settlement_sides,
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
+                settlement_sides=_flow_settlement_sides(
+                    raw_token,
+                    raw_sides,
+                    no_settlement_token=no_settlement_token,
+                    settlement_choice_set=settlement_choice_set,
+                ),
             ),
         )
     if len({item.token for item in flow_definitions}) != len(flow_definitions):
         raise RegistryValidationError("IVA flow catalogue contains duplicate flow directions")
+    return flow_definitions
 
+
+def _flow_pointer(
+    entries: Mapping[str, str], key: str, declared_flows: frozenset[IvaFlowDirection]
+) -> IvaFlowDirection:
+    token = IvaFlowDirection.from_registry(required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT))
+    if token not in declared_flows:
+        raise RegistryValidationError(f"IVA flow catalogue pointer {key!r} names an undeclared flow")
+    return token
+
+
+def _require_distinct_flow_pointers(catalogue: IvaFlowDirectionCatalogue) -> None:
+    pointers = {
+        catalogue.issued_token,
+        catalogue.received_token,
+        catalogue.recipient_reverse_charge_token,
+        catalogue.supplier_reverse_charge_token,
+    }
+    if len(pointers) < 4:
+        raise RegistryValidationError("IVA flow catalogue pointers must identify four distinct flow directions")
+
+
+def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
+    settlement_definitions, settlement_tokens = _settlement_definitions(entries)
+    devengada_token, deducible_token = _settlement_predicates(entries, settlement_definitions)
+    no_settlement_token = _no_settlement_token(entries, settlement_tokens)
+    settlement_choice_set = frozenset(item.token for item in settlement_definitions)
+    flow_definitions = _flow_definitions(
+        entries,
+        no_settlement_token=no_settlement_token,
+        settlement_choice_set=settlement_choice_set,
+    )
     declared_flows = frozenset(item.token for item in flow_definitions)
-
-    def _flow_pointer(key: str) -> IvaFlowDirection:
-        token = IvaFlowDirection.from_registry(required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT))
-        if token not in declared_flows:
-            raise RegistryValidationError(f"IVA flow catalogue pointer {key!r} names an undeclared flow")
-        return token
-
     catalogue = IvaFlowDirectionCatalogue(
         declarations=entries,
         definitions=tuple(flow_definitions),
         settlement_definitions=tuple(settlement_definitions),
         no_settlement_token=no_settlement_token,
-        issued_token=_flow_pointer(_ISSUED_KEY),
-        received_token=_flow_pointer(_RECEIVED_KEY),
-        recipient_reverse_charge_token=_flow_pointer(_RECIPIENT_REVERSE_CHARGE_KEY),
-        supplier_reverse_charge_token=_flow_pointer(_SUPPLIER_REVERSE_CHARGE_KEY),
+        issued_token=_flow_pointer(entries, _ISSUED_KEY, declared_flows),
+        received_token=_flow_pointer(entries, _RECEIVED_KEY, declared_flows),
+        recipient_reverse_charge_token=_flow_pointer(entries, _RECIPIENT_REVERSE_CHARGE_KEY, declared_flows),
+        supplier_reverse_charge_token=_flow_pointer(entries, _SUPPLIER_REVERSE_CHARGE_KEY, declared_flows),
         devengada_token=devengada_token,
         deducible_token=deducible_token,
     )
-    if (
-        len(
-            {
-                catalogue.issued_token,
-                catalogue.received_token,
-                catalogue.recipient_reverse_charge_token,
-                catalogue.supplier_reverse_charge_token,
-            },
-        )
-        < 4
-    ):
-        raise RegistryValidationError("IVA flow catalogue pointers must identify four distinct flow directions")
+    _require_distinct_flow_pointers(catalogue)
     return catalogue
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> IvaFlowDirectionCatalogue:
-    return _catalogue(_bundled_mapping_entries(effective_date))
 
 
 def resolve_iva_flow_direction_catalogue(
@@ -315,10 +319,7 @@ def resolve_iva_flow_direction_catalogue(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    coordinate = effective_date or today_madrid()
-    if authority is None and governed_facts_in_scope() is None:
-        return _bundled_catalogue(coordinate)
-    return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))
+    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 def require_iva_flow_direction(

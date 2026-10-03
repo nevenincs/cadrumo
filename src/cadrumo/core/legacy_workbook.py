@@ -146,27 +146,33 @@ def _formula_cells_by_worksheet(stream: bytes) -> list[frozenset[tuple[int, int]
     worksheet's own nesting level count: a chart embedded in a sheet carries
     its own BOF..EOF substream, whose records are not the sheet's cells.
     """
-    worksheet_offsets = [
+    return [_formula_cells_in_worksheet(stream, offset) for offset in _worksheet_offsets(stream)]
+
+
+def _worksheet_offsets(stream: bytes) -> list[int]:
+    """Return worksheet substream offsets in the order xlrd assigns sheets."""
+    return [
         struct.unpack_from("<I", payload, 0)[0]
         for code, _position, payload in _records(stream, 0)
         if code == _RECORD_BOUNDSHEET and len(payload) >= 6 and payload[5] == _BOUNDSHEET_WORKSHEET
     ]
-    sheets: list[frozenset[tuple[int, int]]] = []
-    for offset in worksheet_offsets:
-        cells: set[tuple[int, int]] = set()
-        depth = 0
-        for code, _position, payload in _records(stream, offset):
-            if code == _RECORD_BOF:
-                depth += 1
-            elif code == _RECORD_EOF:
-                depth -= 1
-            elif code == _RECORD_FORMULA and depth == 1:
-                if len(payload) < 4:
-                    raise TabularSourceError("legacy workbook FORMULA record is truncated")
-                row, column = struct.unpack_from("<HH", payload, 0)
-                cells.add((row, column))
-        sheets.append(frozenset(cells))
-    return sheets
+
+
+def _formula_cells_in_worksheet(stream: bytes, offset: int) -> frozenset[tuple[int, int]]:
+    """Collect formula coordinates at the worksheet's own record nesting level."""
+    cells: set[tuple[int, int]] = set()
+    depth = 0
+    for code, _position, payload in _records(stream, offset):
+        if code == _RECORD_BOF:
+            depth += 1
+        elif code == _RECORD_EOF:
+            depth -= 1
+        elif code == _RECORD_FORMULA and depth == 1:
+            if len(payload) < 4:
+                raise TabularSourceError("legacy workbook FORMULA record is truncated")
+            row, column = struct.unpack_from("<HH", payload, 0)
+            cells.add((row, column))
+    return frozenset(cells)
 
 
 def _worksheet(book: Book, sheet: Sheet, formula_cells: frozenset[tuple[int, int]]) -> LegacyWorksheet:

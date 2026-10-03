@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from typer.testing import CliRunner
@@ -16,20 +17,19 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
+from .. import cli as cli_module
 from .._export_tree import render_complete_export_tree
-from .._tree_publication import (
-    GeneratedExportTreePublicationContext,
-    GeneratedExportTreeTargetStateReceipt,
-    require_expected_target_state,
-)
 from .._tree_validation import GeneratedExportTreeValidationContext
 from ..candidate_staging import (
+    _bootstrap_target_from_row,
     retarget_bootstrap_construct_export_layout,
     stage_continuity_metadata,
 )
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
+    TargetCurrentnessFact,
+    TargetCurrentnessState,
     app,
     check_prepared_invocation,
     prepare_generated_tree_invocation,
@@ -45,6 +45,8 @@ from ..render_check import (
     RevisionRenderInputs,
     revision_render_inputs,
 )
+from ..tree_publication_contracts import GeneratedExportTreePublicationContext, GeneratedExportTreeTargetStateReceipt
+from ..tree_publication_paths import require_expected_target_state
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_authorities,
@@ -198,6 +200,25 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
         )
 
 
+def test_bootstrap_supersession_accepts_an_explicit_zero_construct_reference_pin() -> None:
+    """A reviewed manual layout may be replaced when no construct points to it."""
+    target = _bootstrap_target_from_row(
+        {
+            "modelo": "360",
+            "revision": "2023-y-siguientes",
+            "source_ref": "aeat-dr-360",
+            "source_sha256": "a" * 64,
+            "layout_id": "generated-modelo-360",
+            "line_ending": "crlf",
+            "supersedes_layout_id": "modelo-360-fichero-boe",
+            "superseded_construct_references": 0,
+        },
+    )
+
+    assert target.supersedes_layout_id == "modelo-360-fichero-boe"
+    assert target.superseded_construct_references == 0
+
+
 #: The reviewed Modelo 200 design whose export publication retires its bootstrap authorization.
 _M200_BOOTSTRAP_DESIGN_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
 _M200_BOOTSTRAP_DESIGN = source_with_sha256(_M200_BOOTSTRAP_DESIGN_SHA256)
@@ -262,6 +283,28 @@ def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_muta
         )
 
     assert path.read_bytes() == original
+
+
+def test_bootstrap_construct_retarget_changes_only_the_pinned_reference(tmp_path: Path) -> None:
+    """A positive reviewed reference count retargets its member and preserves unrelated layout ids."""
+    path = tmp_path / "revisions" / "2022" / "constructs" / "0001-constructs.toml"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        '[[revisions."2022".constructs]]\nid = "annual"\nexport_layouts = ["manual-layout", "unrelated-layout"]\n',
+        encoding="utf-8",
+    )
+
+    retarget_bootstrap_construct_export_layout(
+        tmp_path,
+        revision="2022",
+        superseded_layout_id="manual-layout",
+        generated_layout_id="generated-layout",
+        expected_references=1,
+    )
+
+    payload = parse_toml(path.read_text("utf-8"))
+    construct = payload["revisions"]["2022"]["constructs"][0]
+    assert construct["export_layouts"] == ["generated-layout", "unrelated-layout"]
 
 
 def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> None:
@@ -442,6 +485,83 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     publish_prepared_invocation(publication, publication_rendered, publication_target_state)
 
     assert first.target_export_root.is_dir()
+
+
+def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The final currency callback's supplied authority takes the read-only prepare path."""
+    invocation = GeneratedTreeInvocation("184", "2025-y-siguientes", "fixture-source", 2025, "0A")
+    target_root = tmp_path / "live-registry" / "aeat"
+    (target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export").mkdir(
+        parents=True,
+    )
+    authority = SimpleNamespace(
+        catalogues=SimpleNamespace(
+            sources={
+                invocation.source_ref: SimpleNamespace(id=invocation.source_ref, sha256="a" * 64),
+            },
+        ),
+    )
+    monkeypatch.setattr(cli_module, "bundled_path", lambda *_parts: target_root)
+    monkeypatch.setattr(cli_module, "compile_validated_authority", lambda *_args, **_kwargs: authority)
+
+    def reject_recovery(**_kwargs: object) -> bool:
+        raise AssertionError("final live validation re-entered transaction recovery")
+
+    monkeypatch.setattr(cli_module, "recover_interrupted_supersession_bundle", reject_recovery)
+    monkeypatch.setattr(cli_module, "supporting_modelos", lambda _modelo: frozenset())
+    monkeypatch.setattr(
+        cli_module,
+        "revision_render_inputs",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            revision_id=invocation.revision,
+            layout_id="fixture-layout",
+            joined=object(),
+            semantic_map=object(),
+            transport_profile=SimpleNamespace(design_epoch="2025"),
+            render_profile=object(),
+            render_profile_source_evidence=object(),
+        ),
+    )
+    monkeypatch.setattr(cli_module, "stage_generated_export_candidate", lambda *_args, **_kwargs: target_root)
+    monkeypatch.setattr(cli_module, "stage_continuity_metadata", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(cli_module, "stage_published_modelo", lambda *_args, **_kwargs: None)
+    real_prepare = cli_module.prepare_generated_tree_invocation
+    prepared_authorities: list[object] = []
+
+    def inspect_read_only_prepare(
+        selected: GeneratedTreeInvocation,
+        root: Path,
+        *,
+        authority: object | None = None,
+    ) -> PreparedGeneratedTreeInvocation:
+        assert authority is not None
+        prepared_authorities.append(authority)
+        return real_prepare(selected, root, authority=authority)
+
+    def currentness_with_real_prepare(
+        modelo: str,
+        revision: str,
+        source_ref: str,
+        filing_year: int,
+        period: str,
+        *,
+        authority: object,
+    ) -> TargetCurrentnessFact:
+        inspect_read_only_prepare(
+            GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period),
+            tmp_path / "currentness",
+            authority=authority,
+        )
+        return TargetCurrentnessFact(modelo, revision, TargetCurrentnessState.CURRENT)
+
+    monkeypatch.setattr(cli_module, "target_currentness", currentness_with_real_prepare)
+
+    cli_module._validate_final_live_target(SimpleNamespace(invocation=invocation, target_root=target_root))
+
+    assert prepared_authorities == [authority]
 
 
 def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authority() -> None:

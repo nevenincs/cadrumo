@@ -13,50 +13,33 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..modelo.selectors import ModeloCalculationRevisionSelector
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_admitted_submission,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .abort import WorkflowAbortReason
@@ -433,19 +416,7 @@ def build_workflow_resume_definition(
         ),
         phase_codes=(WORKFLOW_RESUME_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         refusal_detail_codes=frozenset({WORKFLOW_RESUME_REFUSAL_CODE, WORKFLOW_RESUME_AMBIGUITY_CODE}),
@@ -467,85 +438,23 @@ def build_workflow_resume_registration(definition: OperationDefinition) -> Opera
         independent = constraint is None
         periods = frozenset[Period]() if constraint is None else frozenset({constraint.to_period()})
         admitted = context.admitted_request
-        if admitted is not None and (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != request.definition_id
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods != periods
-            or admitted.period_independent != independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
+        if admitted is not None:
+            require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=request.definition_id)
+            if admitted.periods != periods or admitted.period_independent != independent:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=schema.schema_id,
-                        category=DisclosureCategory.TAX_VALUES,
-                    ),
-                )
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=periods,
-                period_independent=independent,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                    }
-                ),
-                disclosures=disclosures,
-                periods=periods,
-                allow_period_independent=independent,
-                requires_all_periods=independent,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                transaction_authority_required=False,
-            ),
+        return bind_operation_access_profile(
+            context,
+            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
+            if independent
+            else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            profile_id=context.profile_id,
+            definition_id=request.definition_id,
+            periods=periods,
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=WorkflowResumeRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=WorkflowResumeProjection,
-        ),
-        access_resolver=resolve,
+        public_result_type=WorkflowResumeProjection,
         result_projector=project_workflow_resume_result,
+        access_resolver=resolve,
     )

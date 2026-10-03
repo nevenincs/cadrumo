@@ -214,6 +214,8 @@ aggregation:
         a value source in the source mesh.'
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
+      duplicate_row_binding_coordinate: 'Internal error: duplicate row value source
+        coordinate.'
       duplicate_row_binding_owner: 'Internal error: the same row value source has
         two owners in the source mesh.'
       duplicate_row_casilla_coordinate: 'Internal error: duplicate row-casilla coordinate.'

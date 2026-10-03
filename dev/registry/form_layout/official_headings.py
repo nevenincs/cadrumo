@@ -26,6 +26,7 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.hashing import sha256_file
 from cadrumo.core.toml import load_toml
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormDesignSource
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -184,7 +185,7 @@ def quoted_source_lines(source: SourceReference, data_root: Path) -> tuple[tuple
     extracted = binary.with_name(binary.name + ".extracted.md")
     read = extracted if extracted.is_file() else binary
     text = _decoded(read.read_bytes())
-    pinned = FormDesignSource(source_ref=str(source.id), sha256=hashlib.sha256(read.read_bytes()).hexdigest())
+    pinned = FormDesignSource(source_ref=str(source.id), sha256=sha256_file(read))
     return tuple(text.splitlines()), pinned
 
 

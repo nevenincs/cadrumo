@@ -60,7 +60,9 @@ from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..casilla_list import CasillaListHeading
 from ..header import missing_count
-from ..issues import IssueLevel, IssueLine, WorkbenchIssuesScreen, issue_lines
+from ..issue_projection import issue_lines
+from ..issue_scale import IssueLevel, IssueLine
+from ..issues import WorkbenchIssuesScreen
 from ..navigator import NavigatorState, navigator_rows, presented_form
 from ..page_items import WorkbenchPage, page_items, workbench_pages
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK, DONE_MARK, MISSING_MARK

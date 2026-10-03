@@ -6,21 +6,23 @@ from uuid import UUID
 
 import typer
 
-from ....application.auth.catalogue import get_auth_provider
-from ....application.auth.read_operation import (
+from ....application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AuthReadKind,
     AuthReadProjection,
     AuthReadRequest,
     AuthReadResult,
 )
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.auth.catalogue import get_auth_provider
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.external_constants import OutputLanguage
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import OperationEffect, profile_operation_subject
 from ..common import activate_subcommand_output_language
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
-from ..runtime_registered_operation import run_registered_operation, submitted_operation_error
+from ..runtime_registered_operation import run_registered_operation
 from ._profile_support import require_active_profile_pointer
 from .runtime_profile_view import resolve_runtime_profile_output_language
 
@@ -72,19 +74,23 @@ def cli_auth_read(
             projected.profile_id != profile_id
             or projected.kind != kind
             or result is None
-            or (
-                kind == "diagnostics_view"
-                and result.diagnostics_view is not None
-                and result.diagnostics_view.diagnostic_id != diagnostic_id
-            )
-            or completed.effect is not OperationEffect.NONE
+            or _auth_read_detail_invalid(completed, result, kind, diagnostic_id)
         ):
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=OperationTerminalCondition.SUCCEEDED,
-                effect=completed.effect,
-            )
+            raise invalid_completion_error(completed)
         return result
     except RuntimeRefusalError as error:
         raise CliRefusedBoundaryError(context={"reason": error.reason.value}) from error
+
+
+def _auth_read_detail_invalid(
+    completed: RegisteredOperationCompletion[AuthReadProjection],
+    result: AuthReadResult,
+    kind: AuthReadKind,
+    diagnostic_id: str | None,
+) -> bool:
+    """Correlate diagnostic identity and read-only effect after the typed result exists."""
+    return (
+        kind == "diagnostics_view"
+        and result.diagnostics_view is not None
+        and (result.diagnostics_view.diagnostic_id != diagnostic_id)
+    ) or completed.effect is not OperationEffect.NONE

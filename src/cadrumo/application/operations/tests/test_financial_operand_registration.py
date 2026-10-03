@@ -15,11 +15,8 @@ from ..financial_operand_custody import (
     OperationFinancialOperandCustodyCheckpoint,
     OperationFinancialOperandCustodyState,
 )
-from ..registry import (
-    OperationDefinition,
-    OperationEffectReceipt,
-    OperationReconciliationPolicy,
-)
+from ..operation_definition import OperationDefinition
+from ..registry import OperationEffectReceipt, OperationReconciliationPolicy
 from .test_registry import definition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -219,7 +219,7 @@ def test_import_of_a_declared_correction_amends_the_prior_filing(
 
     refreshed_first = get_filing_record(
         first.filing_record_id,
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
     )
     assert refreshed_first.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_first.superseded_by_filing_record_id == second.filing_record_id
@@ -317,7 +317,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: P
     assert amended.amends_filing_record_id == imported.filing_record_id
     refreshed_baseline = get_filing_record(
         imported.filing_record_id,
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
     )
     assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id

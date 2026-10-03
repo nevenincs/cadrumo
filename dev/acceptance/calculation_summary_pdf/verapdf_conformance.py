@@ -25,7 +25,6 @@ Run with ``just test-calculation-summary-pdf``.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import io
 import json
 import shutil
@@ -48,6 +47,7 @@ from cadrumo.adapters.outbound.calculation_summary_pdf.tests.summary_report_supp
 from cadrumo.application.modelo.calculation_report import ModeloCalculationReportRow
 from cadrumo.application.modelo.calculation_summary_pdf_ports import CSV_ATTACHMENT_NAME
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.hashing import sha256_file
 from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.exit_codes import FAILED, OK, TOOL_MISSING
@@ -64,6 +64,18 @@ POSITIVE_FLAVOURS: Final[tuple[str, ...]] = ("3a", "3u", "ua1")
 _MAIN_CLASS: Final[str] = "org.verapdf.apps.GreenfieldCliWrapper"
 _TIMEOUT_SECONDS: Final[float] = 900.0
 _LONG_REPORT_ROW_COUNT: Final[int] = 140
+
+
+def _validate_expectations(
+    java: str, jar: Path, expectations: tuple[Expectation, ...]
+) -> dict[tuple[str, str], Verdict]:
+    """Validate expectations."""
+    verdicts: dict[tuple[str, str], Verdict] = {}
+    for flavour in sorted({expectation.flavour for expectation in expectations}):
+        files = [expectation.path for expectation in expectations if expectation.flavour == flavour]
+        for verdict in validate(java, jar, flavour, files):
+            verdicts[(verdict.file, flavour)] = verdict
+    return verdicts
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,7 +104,7 @@ def jar_path() -> Path:
 
 def require_pinned_jar(jar: Path) -> None:
     """Refuse a jar whose bytes are not the pinned release."""
-    digest = hashlib.sha256(jar.read_bytes()).hexdigest()
+    digest = sha256_file(jar)
     if digest != VERAPDF_JAR_SHA256:
         raise SystemExit(
             f"veraPDF {VERAPDF_VERSION} jar digest mismatch at {jar}\n"
@@ -262,11 +274,7 @@ def main(argv: list[str] | None = None) -> int:
         return TOOL_MISSING
     jar = ensure_jar()
     expectations = write_fixtures(options.output_dir)
-    verdicts: dict[tuple[str, str], Verdict] = {}
-    for flavour in sorted({expectation.flavour for expectation in expectations}):
-        files = [expectation.path for expectation in expectations if expectation.flavour == flavour]
-        for verdict in validate(java, jar, flavour, files):
-            verdicts[(verdict.file, flavour)] = verdict
+    verdicts = _validate_expectations(java, jar, expectations)
     for expectation in expectations:
         verdict = verdicts.get((expectation.path.name, expectation.flavour))
         state = "missing" if verdict is None else ("compliant" if verdict.compliant else "refused")

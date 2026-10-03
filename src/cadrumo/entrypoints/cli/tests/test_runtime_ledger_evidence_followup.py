@@ -48,7 +48,7 @@ from ..ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceReviewListResult,
 )
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -59,6 +59,15 @@ _EVIDENCE_REFERENCE = "evidence-followup-reference"
 _OPERATION_ID = "f" * 64
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 _CAPTURED_AT = datetime(2026, 9, 30, 11, 30, tzinfo=UTC)
+#: The review view carries the stored label-reading fallback beside its draft,
+#: so it alone reads the second result schema.
+_RESULT_VERSIONS = {
+    LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID: 1,
+    LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID: 1,
+    LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID: 1,
+    LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID: 1,
+    LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID: 2,
+}
 
 
 def _attachment() -> AttachmentReviewItem:
@@ -183,7 +192,8 @@ def _bind(
         assert kwargs["definition_id"] == definition_id
         assert kwargs["subject_ref"] == profile_operation_subject(str(profile_id))
         assert kwargs["result_type"] is type(projection)
-        assert kwargs["request_version"] == kwargs["result_version"] == 1
+        assert kwargs["request_version"] == 1
+        assert kwargs["result_version"] == _RESULT_VERSIONS[definition_id]
         assert kwargs["timeout"] == 120
         return RegisteredOperationCompletion(
             operation_id=cast("OperationId", _OPERATION_ID),

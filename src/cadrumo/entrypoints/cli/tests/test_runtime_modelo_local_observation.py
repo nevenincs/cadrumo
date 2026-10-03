@@ -33,7 +33,7 @@ from ....core.period import Period
 from .. import runtime_modelo_local_observation as bridge
 from .._filing_chain_payloads import ObservationLayersPayload
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

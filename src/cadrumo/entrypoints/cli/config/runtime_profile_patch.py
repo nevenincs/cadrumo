@@ -14,7 +14,7 @@ from ....application.user_profile.operations import (
     ProfilePatchOperationRequest,
     ProfilePatchValue,
 )
-from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
+from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewItem, ProfileViewPageKind
 from ....application.wizard.patch_edit import WizardPatchPersister, validate_profile_patch
 from ..runtime_profile_binding import require_profile_client
 from ._runtime_profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
@@ -63,14 +63,20 @@ def runtime_patch_persister(
         if not isinstance(projection, ProfilePatchOperationProjection):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         items = current.items(ProfileViewPageKind.FACTS)
-        if not all(isinstance(item, ProfileViewFactItem) for item in items):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        facts = {item.path: item.value for item in items if isinstance(item, ProfileViewFactItem)}
-        if len(facts) != len(items):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        facts = _settled_profile_patch_facts(items)
         return facts, projection.changed
 
     return persist
 
 
 __all__ = ["runtime_patch_persister"]
+
+
+def _settled_profile_patch_facts(items: tuple[ProfileViewItem, ...]) -> dict[str, str]:
+    """Accept only a complete fact page after its registered mutation has settled."""
+    if not all(isinstance(item, ProfileViewFactItem) for item in items):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    facts = {item.path: item.value for item in items if isinstance(item, ProfileViewFactItem)}
+    if len(facts) != len(items):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return facts

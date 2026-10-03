@@ -23,7 +23,6 @@ from ..adapters.outbound.aeat.verify.contract import (
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
-from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
@@ -246,7 +245,7 @@ def build_justificante_capture_service(bucket_id: str) -> JustificanteCaptureSna
     )
 
 
-def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
+def build_justificante_registration_ports(operation: PinnedAuthorityOperation) -> JustificanteRegistrationPorts:
     """Bind receipt metadata, the filing catalogue and chain reconciliation to the active bucket.
 
     Every repository shares one secure-object backend, so a reconciliation
@@ -256,6 +255,13 @@ def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
     objects = secure_object_repository_for_bucket(bucket_id)
     justificante_repository = JustificanteRepository(bucket_id=bucket_id, objects=objects)
     filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=bucket_id,
+        objects=objects,
+        operation=operation,
+    )
     return JustificanteRegistrationPorts(
         parse_pdf=parse_justificante_bytes,
         metadata=_JustificanteMetadata(justificante_repository),
@@ -265,7 +271,7 @@ def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
                 work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects),
                 bucket_event_repository=BucketEventHistoryRepository(objects=objects),
             ),
-            calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+            calculation_repository=calculation_binding.calculation_repository(),
             filing_repository=filing_repository,
             justificante_repository=justificante_repository,
             observation_repository=CalculationObservationRepository(bucket_id=bucket_id, objects=objects),

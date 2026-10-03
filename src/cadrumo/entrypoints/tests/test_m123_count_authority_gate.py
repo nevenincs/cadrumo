@@ -305,7 +305,7 @@ def test_evidence_captured_after_verification_refuses_filing_and_export(
                 approved_verification_report_id=granted.verification_report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=build_operator_scope_ports(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                 actor="test",
                 workflow_profile=_workflow_profile(),
                 operation=operation,

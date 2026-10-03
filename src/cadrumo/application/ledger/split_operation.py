@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from dataclasses import dataclass, replace
-from datetime import date
+from dataclasses import replace
 from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
@@ -13,53 +11,35 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.hashing import HEX_ALPHABET
+from ...core.hex import Hex64Str
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ...core.secure_object_write import SecureObjectWrite
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.enums import BusinessClassification, SplitRole
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal, resolve_revision_guarded_transaction_repository
 from .actions_split_merge import split_transaction
 from .id_resolution import resolve_transaction_id
 from .models import SplitChildCommand, SplitTransactionResult
-from .persistence_ports import LedgerPersistenceConflictError
-from .protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
+from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
 from .read_access import resolve_ledger_read_access
 
 LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
@@ -71,8 +51,6 @@ _DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 _Description = Annotated[str, Field(min_length=1, max_length=1024)]
 _Reason = Annotated[str, Field(max_length=500)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
-_TransactionIdText = Annotated[str, Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")]
-_Hex64Text = Annotated[str, Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")]
 
 
 class LedgerSplitChildRequest(BaseModel):
@@ -146,13 +124,13 @@ class LedgerSplitOperationResult(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    parent_transaction_id: _TransactionIdText
-    split_group_id: _Hex64Text
+    parent_transaction_id: TransactionId
+    split_group_id: Hex64Str
     child_transaction_ids: Annotated[
-        tuple[_TransactionIdText, ...],
+        tuple[TransactionId, ...],
         Field(min_length=2, max_length=_MAX_SPLIT_CHILDREN),
     ]
-    bucket_event_id: _Hex64Text
+    bucket_event_id: Hex64Str
     parent_business_classification: BusinessClassification
 
     @model_validator(mode="after")
@@ -177,73 +155,6 @@ class LedgerSplitExecutionResult(BaseModel):
         return self
 
 
-@dataclass(frozen=True, slots=True)
-class _PinnedRevisionedTransactionRepository:
-    """Forward one already-loaded catalogue/revision to the canonical split action."""
-
-    repository: RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
-    catalogue: TransactionCatalogue
-    revision_id: str
-
-    @property
-    def bucket_id(self) -> str:
-        return self.repository.bucket_id
-
-    def exists(self) -> bool:
-        return self.repository.exists()
-
-    def load(self) -> TransactionCatalogue:
-        return self.catalogue
-
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        return self.repository.load_for_date_range(start, end)
-
-    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        return self.repository.load_by_ids(transaction_ids)
-
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        return self.repository.partition_by_date_range(start, end)
-
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        _ = catalogue
-        raise LedgerPersistenceConflictError("ledger split requires the pinned catalogue revision")
-
-    def save_with_secure_object_writes(
-        self,
-        catalogue: TransactionCatalogue,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        _ = catalogue, extra_writes
-        raise LedgerPersistenceConflictError("ledger split requires the pinned catalogue revision")
-
-    def replace_if_current_with_secure_object_writes(
-        self,
-        current: Transaction,
-        replacement: Transaction,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        _ = current, replacement, extra_writes
-        raise LedgerPersistenceConflictError("ledger split requires the pinned catalogue revision")
-
-    def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
-        return self.catalogue, self.revision_id
-
-    def save_if_revision_with_secure_object_writes(
-        self,
-        catalogue: TransactionCatalogue,
-        *,
-        expected_revision_id: str,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        if expected_revision_id != self.revision_id:
-            raise LedgerPersistenceConflictError("ledger split attempted to write against another snapshot")
-        self.repository.save_if_revision_with_secure_object_writes(
-            catalogue,
-            expected_revision_id=self.revision_id,
-            extra_writes=extra_writes,
-        )
-
-
 class LedgerSplitExecutor:
     """Resolve the prefix and commit its split under one pinned full-catalogue revision."""
 
@@ -259,21 +170,15 @@ class LedgerSplitExecutor:
         """Resolve and mutate the exact profile's current split cohort."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        subject = profile_operation_subject(bucket_id)
-        if (
-            request.definition_id != LEDGER_SPLIT_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != bucket_id
-        ):
+        if request.definition_id != LEDGER_SPLIT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_SPLIT_PHASE)
 
         def split() -> LedgerSplitOperationResult:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
-            _require_exact_ports(ports, bucket_id=bucket_id, operation=operation)
+            require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
             revisioned_repository = resolve_revision_guarded_transaction_repository(
                 bucket_id=bucket_id,
                 repository=ports.transaction_repository,
@@ -294,10 +199,11 @@ class LedgerSplitExecutor:
                 child_count=len(children),
                 parent_business_classification=current.business_classification,
             )
-            pinned_repository = _PinnedRevisionedTransactionRepository(
+            pinned_repository = PinnedRevisionedTransactionRepository(
                 repository=revisioned_repository,
                 catalogue=catalogue,
                 revision_id=revision_id,
+                action="split",
             )
             pinned_ports = replace(ports, transaction_repository=pinned_repository)
             result = split_transaction(
@@ -351,6 +257,11 @@ def _preflight_result(
         bucket_event_id="b" * 64,
         parent_business_classification=parent_business_classification,
     )
+    _require_result_bound(projection)
+
+
+def _require_result_bound(projection: LedgerSplitOperationResult) -> None:
+    """Reject a result projection larger than its registered byte bound."""
     if len(projection.model_dump_json().encode("utf-8")) > _MAX_SPLIT_RESULT_JSON_BYTES:
         raise TransactionValidationError("ledger split result exceeds its registered projection bound")
 
@@ -405,36 +316,17 @@ def _operation_result(
         bucket_event_id=result.bucket_event_id,
         parent_business_classification=parent.business_classification,
     )
-    if len(projection.model_dump_json().encode("utf-8")) > _MAX_SPLIT_RESULT_JSON_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    _require_result_bound(projection)
     return projection
 
 
-def _require_exact_ports(
-    ports: LedgerActionPorts,
-    *,
-    bucket_id: str,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    for repository in (ports.invoice_repository, ports.work_unit_repository, ports.calculation_repository):
-        if getattr(repository, "bucket_id", None) != bucket_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
 def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
-    if (
-        type(result) is not LedgerSplitExecutionResult
-        or receipt.identity.definition_id != LEDGER_SPLIT_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(result.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or receipt.effect is not OperationEffect.UPDATED
+    if type(result) is not LedgerSplitExecutionResult or not terminal_receipt_matches(
+        receipt,
+        definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(result.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
     ):
         raise ValueError("ledger split result has an incompatible terminal receipt")
     return result.result
@@ -453,19 +345,7 @@ def build_ledger_split_definition(ports_factory: LedgerActionPortsFactory) -> Op
         ),
         phase_codes=(LEDGER_SPLIT_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -496,18 +376,9 @@ def build_ledger_split_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Enroll secure request/result schemas and their exact-profile access gate."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerSplitRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerSplitOperationResult,
-        ),
+        public_result_type=LedgerSplitOperationResult,
         result_projector=_project_operation_result,
         access_resolver=resolve_ledger_split_access,
     )

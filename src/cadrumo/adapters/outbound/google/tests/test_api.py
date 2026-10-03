@@ -30,7 +30,7 @@ from ...storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
-from ..api import _ExecutableRequest, execute_request
+from ..api import RequestRetryPolicy, _ExecutableRequest, execute_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -62,6 +62,7 @@ def _assert_verdict(
 def _local_google_request(
     *responses: tuple[int, bytes],
     postproc: PostProcessor | None = None,
+    method: str = "GET",
 ) -> Generator[tuple[HttpRequest, list[str]]]:
     requested_paths: list[str] = []
     response_sequence = responses or ((200, _json_body({})),)
@@ -77,6 +78,10 @@ def _local_google_request(
             self.end_headers()
             self.wfile.write(body)
 
+        def do_POST(self) -> None:
+            self.rfile.read(int(self.headers.get("Content-Length", "0")))
+            self.do_GET()
+
         @override
         def log_message(self, format: str, *args: object) -> None:
             return
@@ -89,6 +94,9 @@ def _local_google_request(
                 httplib2.Http(),
                 postproc or JsonModel().response,
                 f"http://127.0.0.1:{server.server_port}/google-api-test",
+                method=method,
+                body="{}" if method == "POST" else None,
+                headers={"content-type": "application/json"} if method == "POST" else {},
             )
             yield request, requested_paths
         finally:
@@ -120,7 +128,7 @@ def test_executable_request_protocol_accepts_concrete_impl() -> None:
     # without raising a TypeError — the call itself exercises the protocol.
     with _local_google_request((200, _json_body({"spreadsheetId": "x"}))) as (request, _paths):
         req: _ExecutableRequest[dict[str, Any]] = request
-        result = execute_request(req, action="test.check")
+        result = execute_request(req, action="test.check", retry=RequestRetryPolicy.REPLAY_SAFE)
     assert result == {"spreadsheetId": "x"}
 
 
@@ -134,7 +142,7 @@ def test_execute_request_returns_mapping_response() -> None:
 
     payload: dict[str, Any] = {"kind": "drive#file", "id": "abc123"}
     with _local_google_request((200, _json_body(payload))) as (req, _paths):
-        result = execute_request(req, action="drive.files.get")
+        result = execute_request(req, action="drive.files.get", retry=RequestRetryPolicy.REPLAY_SAFE)
 
     assert isinstance(result, dict)
     assert result["id"] == "abc123"
@@ -149,7 +157,7 @@ def test_execute_request_refuses_non_mapping_success_responses(payload: object) 
         _local_google_request((200, body)) as (req, _paths),
         pytest.raises(OutboundStorageNetworkError, match="non-mapping response body") as excinfo,
     ):
-        execute_request(req, action="drive.files.list")
+        execute_request(req, action="drive.files.list", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         excinfo.value,
         "google.api.response_not_mapping",
@@ -165,7 +173,7 @@ def test_execute_request_passes_nested_dict_payload_intact() -> None:
 
     payload: dict[str, Any] = {"developerMetadata": [{"metadataKey": "cadrumo_vault_app", "metadataValue": "cadrumo"}]}
     with _local_google_request((200, _json_body(payload))) as (req, _paths):
-        result = execute_request(req, action="sheets.spreadsheets.get")
+        result = execute_request(req, action="sheets.spreadsheets.get", retry=RequestRetryPolicy.REPLAY_SAFE)
 
     assert result["developerMetadata"][0]["metadataKey"] == "cadrumo_vault_app"
 
@@ -175,10 +183,47 @@ def test_execute_request_enables_google_client_retries() -> None:
 
     payload: dict[str, Any] = {"spreadsheetId": "retry-check"}
     with _local_google_request((500, b"try again"), (200, _json_body(payload))) as (req, requested_paths):
-        result = execute_request(req, action="sheets.spreadsheets.get")
+        result = execute_request(req, action="sheets.spreadsheets.get", retry=RequestRetryPolicy.REPLAY_SAFE)
 
     assert result["spreadsheetId"] == "retry-check"
     assert requested_paths == ["/google-api-test", "/google-api-test"]
+
+
+def test_single_attempt_request_is_not_replayed_after_a_transient_failure() -> None:
+    """A create whose response is lost must not be re-sent, or it applies twice."""
+
+    with (
+        _local_google_request((503, b"unavailable"), (200, _json_body({"id": "dup"})), method="POST") as (
+            req,
+            requested_paths,
+        ),
+        pytest.raises(OutboundStorageNetworkError) as raised,
+    ):
+        execute_request(req, action="drive.files.create.folder", retry=RequestRetryPolicy.SINGLE_ATTEMPT)
+
+    assert requested_paths == ["/google-api-test"]
+    assert raised.value.context == {"action": "drive.files.create.folder", "effect_uncertain": True}
+    _assert_verdict(
+        raised.value,
+        "google.api.transport_unavailable",
+        NoRecoveryOutcome.SAFETY,
+        {"operation": "drive.files.create.folder", "effect_uncertain": True},
+    )
+
+
+def test_single_attempt_request_succeeds_without_retry_bookkeeping() -> None:
+    with _local_google_request((200, _json_body({"id": "once"})), method="POST") as (req, requested_paths):
+        result = execute_request(req, action="drive.files.create.folder", retry=RequestRetryPolicy.SINGLE_ATTEMPT)
+
+    assert result == {"id": "once"}
+    assert requested_paths == ["/google-api-test"]
+
+
+def test_replay_safe_failure_does_not_claim_an_uncertain_effect() -> None:
+    with _request_raising(_make_http_error(500)) as (req, _paths), pytest.raises(OutboundStorageNetworkError) as raised:
+        execute_request(req, action="drive.files.get", retry=RequestRetryPolicy.REPLAY_SAFE)
+
+    assert raised.value.context == {"action": "drive.files.get", "effect_uncertain": False}
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +248,7 @@ def test_permission_http_errors_translate_to_permission_error(status: int) -> No
         _request_raising(_make_http_error(status)) as (req, _paths),
         pytest.raises(OutboundStoragePermissionError) as raised,
     ):
-        execute_request(req, action="drive.files.get")
+        execute_request(req, action="drive.files.get", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         raised.value,
         "google.api.permission_denied",
@@ -223,7 +268,7 @@ def test_http_403_rate_limit_translates_to_quota_error() -> None:
             OutboundStorageQuotaError,
         ) as raised,
     ):
-        execute_request(req, action="sheets.spreadsheets.get")
+        execute_request(req, action="sheets.spreadsheets.get", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         raised.value,
         "google.api.quota_exhausted",
@@ -234,7 +279,7 @@ def test_http_403_rate_limit_translates_to_quota_error() -> None:
 
 def test_http_429_translates_to_quota_error() -> None:
     with _request_raising(_make_http_error(429)) as (req, _paths), pytest.raises(OutboundStorageQuotaError) as raised:
-        execute_request(req, action="sheets.spreadsheets.get")
+        execute_request(req, action="sheets.spreadsheets.get", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         raised.value,
         "google.api.quota_exhausted",
@@ -248,7 +293,7 @@ def test_http_404_translates_to_not_found_error() -> None:
         _request_raising(_make_http_error(404)) as (req, _paths),
         pytest.raises(OutboundStorageNotFoundError) as raised,
     ):
-        execute_request(req, action="drive.files.get")
+        execute_request(req, action="drive.files.get", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         raised.value,
         "google.api.target_not_found",
@@ -259,7 +304,7 @@ def test_http_404_translates_to_not_found_error() -> None:
 
 def test_http_500_translates_to_network_error() -> None:
     with _request_raising(_make_http_error(500)) as (req, _paths), pytest.raises(OutboundStorageNetworkError) as raised:
-        execute_request(req, action="drive.files.get")
+        execute_request(req, action="drive.files.get", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         raised.value,
         "google.api.transport_unavailable",
@@ -273,7 +318,7 @@ def test_generic_exception_translates_to_network_error() -> None:
         _request_raising(ConnectionError("timeout")) as (req, _paths),
         pytest.raises(OutboundStorageNetworkError) as raised,
     ):
-        execute_request(req, action="sheets.values.batchGet")
+        execute_request(req, action="sheets.values.batchGet", retry=RequestRetryPolicy.REPLAY_SAFE)
     _assert_verdict(
         raised.value,
         "google.api.transport_unavailable",
@@ -295,6 +340,6 @@ def test_outbound_storage_error_is_not_re_wrapped() -> None:
         translated_message="adapters.google.calc_sheets.errors.api_call_failed",
     )
     with _request_raising(inner) as (req, _paths), pytest.raises(OutboundStorageNetworkError) as exc_info:
-        execute_request(req, action="any.action")
+        execute_request(req, action="any.action", retry=RequestRetryPolicy.REPLAY_SAFE)
 
     assert exc_info.value is inner

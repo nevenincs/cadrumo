@@ -400,22 +400,41 @@ def row_binding_casilla_ids_by_field(
     for record in layout.records:
         if not record.row_field_casilla_ids:
             continue
-        for field in record.fields:
-            if field.kind != CasillaFieldKind.BINDING or field.binding is None:
-                continue
-            binding = bindings.get(str(field.binding))
-            if binding is None:
-                continue
-            selector = binding_export_selector(binding, revision=revision)
-            if selector is None:
-                continue
-            row_field = _row_binding_field(binding, selector)
-            if row_field is None:
-                continue
-            casilla_id = record.row_field_casilla_ids.get(row_field)
-            if casilla_id is not None:
-                casilla_ids[field.id] = casilla_id
+        casilla_ids.update(_row_binding_casillas_for_record(record, bindings, revision))
     return casilla_ids
+
+
+def _row_binding_casillas_for_record(
+    record: ExportRecordDefinition,
+    bindings: Mapping[str, BindingDefinition],
+    revision: ModeloRevision,
+) -> dict[ExportFieldId, CasillaId]:
+    casilla_ids: dict[ExportFieldId, CasillaId] = {}
+    for field in record.fields:
+        casilla_id = _row_binding_casilla_for_field(field, record, bindings, revision)
+        if casilla_id is not None:
+            casilla_ids[field.id] = casilla_id
+    return casilla_ids
+
+
+def _row_binding_casilla_for_field(
+    field: ExportFieldDefinition,
+    record: ExportRecordDefinition,
+    bindings: Mapping[str, BindingDefinition],
+    revision: ModeloRevision,
+) -> CasillaId | None:
+    if field.kind != CasillaFieldKind.BINDING or field.binding is None:
+        return None
+    binding = bindings.get(str(field.binding))
+    if binding is None:
+        return None
+    selector = binding_export_selector(binding, revision=revision)
+    if selector is None:
+        return None
+    row_field = _row_binding_field(binding, selector)
+    if row_field is None:
+        return None
+    return record.row_field_casilla_ids.get(row_field)
 
 
 def _row_binding_field(binding: BindingDefinition, selector: BindingExportSelector) -> str | None:

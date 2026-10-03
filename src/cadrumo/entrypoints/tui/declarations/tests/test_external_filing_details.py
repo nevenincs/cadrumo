@@ -15,11 +15,13 @@ from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import DeclarationsWorkspaceController, declarations_copy
+from ..controller import DeclarationsWorkspaceController
 from ..external_details import ExternalFilingDetailsScreen
+from ..models import DeclarationsWorkspaceWiringV1
 from ..overview import DeclarationsOverviewScreen
 from .portfolio_fixtures import portfolio_projection
 
@@ -59,10 +61,12 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
         controller = DeclarationsWorkspaceController(
             TuiScreenContextV1(destination="workbench.declarations"),
             workspace,
-            work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
-            revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
-            filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
-            calendar_projection=calendar,
+            DeclarationsWorkspaceWiringV1(
+                work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
+                revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
+                filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
+                calendar_projection=calendar,
+            ),
         )
         screen = DeclarationsOverviewScreen(controller)
         app = ScreenHostApp(screen)
@@ -76,7 +80,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             assert local.declaration is not None and local.declaration.summary is not None
             assert local.declaration.summary.result == private_amount
             local_text = "\n".join(str(cell) for cell in table.get_row(local.key))
-            assert declarations_copy("tui.declarations.list.state.local_draft") in local_text
+            assert tr("tui.declarations.list.state.local_draft") in local_text
             table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == external.key))
             table.focus()
             await pilot.press("enter")
@@ -86,7 +90,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             assert app.focused is modal.query_one("#external-filing-close", Button)
             text = "\n".join(str(widget.render()) for widget in modal.query(Static))
             for key in ("confirmed", "no_refile", "unavailable"):
-                assert declarations_copy("tui.declarations.list.aeat_unlinked.help." + key) in text
+                assert tr("tui.declarations.list.aeat_unlinked.help." + key) in text
             assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
             assert "2025" in text and "15" in text
             assert external.calendar is not None and external.calendar.aeat_reference_id is not None

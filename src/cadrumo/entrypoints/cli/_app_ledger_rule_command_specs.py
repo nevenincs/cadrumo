@@ -11,11 +11,10 @@ from ._app_ledger_rule_ratio_command_spec_support import (
     _LEDGER_RULE_RATIO_LEAF_INVOCATION,
     _RULE_ACTOR_OPTION,
 )
-from .command_spec import (
-    CommandSpec,
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -23,6 +22,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec
 
 LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

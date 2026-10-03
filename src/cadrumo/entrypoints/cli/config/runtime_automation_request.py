@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_store_composition i
 from ....adapters.local_runtime.automation_requester import AutomationRequesterJourney
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
@@ -103,13 +103,6 @@ def stage_automation_change_input(*, selection: MachineSecretSelection, kind: ob
     payload = read_machine_secret_payload(AutomationChangeInput, selection=selection)
     _matching_change_payload(payload, kind)
     stage_machine_secret_payload(payload)
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
 
 
 def automation_create(
@@ -203,12 +196,12 @@ def automation_change(
                 profile_id=profile_id,
                 credential_reference=reference,
                 frontend=OperationFrontendProjection.CLI,
-                timeout=_remaining(deadline),
+                timeout=remaining_budget(deadline),
                 secrets_store=store,
             )
         )
         try:
-            return fresh.reconcile_enrollment(submitted.request_id, timeout=_remaining(deadline))
+            return fresh.reconcile_enrollment(submitted.request_id, timeout=remaining_budget(deadline))
         finally:
             fresh.close()
 

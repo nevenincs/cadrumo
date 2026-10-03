@@ -42,6 +42,7 @@ from .....application.user_profile.automation_lifecycle import (
     AutomationDenialReceipt,
     ProfileGlobalLockState,
 )
+from .....core.base64_codec import b64_decode_canonical
 from .....core.hashing import canonical_json_bytes
 from .....core.time.utc import UtcInstant
 from .automation_crypto import (
@@ -65,6 +66,7 @@ from .automation_records import (
     StoredAutomationGrant,
 )
 from .automation_secret_store import native_automation_secret_store
+from .automation_secret_target import AUTOMATION_NAMESPACE_PREFIX
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     clear_profile_custody_local_record,
@@ -75,9 +77,15 @@ from .filesystem import (
 from .filesystem_primitives import anchor_directory, ensure_profile_custody_local_directory
 from .zeroise import zeroise
 
-CONTROL_NAMESPACE = "cadrumo.automation.control-anchor.v1"
-WRAP_NAMESPACE = "cadrumo.automation.grant-wrap.v1"
-CLIENT_NAMESPACE = "cadrumo.automation.client-key.v1"
+CONTROL_NAMESPACE = f"{AUTOMATION_NAMESPACE_PREFIX}control-anchor.v1"
+WRAP_NAMESPACE = f"{AUTOMATION_NAMESPACE_PREFIX}grant-wrap.v1"
+CLIENT_NAMESPACE = f"{AUTOMATION_NAMESPACE_PREFIX}client-key.v1"
+
+
+def _native_account(root: Path, installation_id: UUID, profile_id: UUID) -> str:
+    """Name one profile's native credentials, scoped to the storage root they belong to."""
+    root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
+    return f"{root_digest}/{installation_id}/{profile_id}"
 
 
 def _changed[T: BaseModel](value: T, **changes: object) -> T:
@@ -116,8 +124,7 @@ class AutomationControlStore:
         if secrets_store is not None:
             self.secrets = secrets_store
         self.directory = root / ".automation-v1" / str(binding.installation_id) / str(binding.profile_id)
-        root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
-        self.account = f"{root_digest}/{binding.installation_id}/{binding.profile_id}"
+        self.account = _native_account(root, binding.installation_id, binding.profile_id)
 
     @property
     def secrets(self) -> AutomationSecretStore:
@@ -237,8 +244,8 @@ class AutomationControlStore:
     @staticmethod
     def _control_key(anchor: ProtectedControlAnchor) -> SecretBytes:
         try:
-            key = base64.b64decode(anchor.control_key_b64, validate=True)
-            if len(key) != 32 or base64.b64encode(key).decode("ascii") != anchor.control_key_b64:
+            key = b64_decode_canonical(anchor.control_key_b64)
+            if len(key) != 32:
                 raise ValueError
             return SecretBytes(key)
         except ValueError:
@@ -671,8 +678,7 @@ class AutomationControlStore:
         intent = parse_record(AutomationRetirementIntent, raw)
         if directory != root / ".automation-v1" / str(intent.installation_id) / str(intent.profile_id):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
-        root_digest = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
-        account = f"{root_digest}/{intent.installation_id}/{intent.profile_id}"
+        account = _native_account(root, intent.installation_id, intent.profile_id)
         protected = secrets_store.read(CONTROL_NAMESPACE, account)
         wraps: set[UUID] = set()
         if protected is not None:

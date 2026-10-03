@@ -192,9 +192,9 @@ class Acquisition:
     def __init__(self, subject: Subject) -> None:
         self.subject = subject
         self.refused: set[str] = set()
-        self.documents = (
-            EvidenceSweepDocument("first", "First invoice.pdf", "application/pdf"),
-            EvidenceSweepDocument("second", "Second invoice.pdf", "application/pdf"),
+        self.documents: tuple[EvidenceSweepDocument, ...] = (
+            EvidenceSweepDocument("A" * 10, "First invoice.pdf", "application/pdf"),
+            EvidenceSweepDocument("B" * 24, "Second invoice.pdf", "application/pdf"),
         )
         self.calls: list[str] = []
         self.revoke_after_first = False
@@ -217,7 +217,7 @@ class Acquisition:
         self.calls.append(document.file_id)
         if document.file_id in self.refused:
             raise EvidenceSweepFileNotReachableError()
-        if self.revoke_after_first and document.file_id == "second":
+        if self.revoke_after_first and document.file_id == self.documents[1].file_id:
             self.subject.fence.deny = True
             self.subject.before_read()
         return b"%PDF-synthetic " + document.file_id.encode()

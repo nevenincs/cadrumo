@@ -15,13 +15,15 @@ from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.attachments.enums import DocumentLinkSource
+from ....domain.attachments.errors import AttachmentValidationError
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.classification import InvoiceKind
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
+from ...operations.operation_definition import OperationDefinition
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import AccessAction, AccessAllowed, AccessDenied, Availability, DisclosureCategory
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..batch_ingest import (
@@ -44,6 +46,8 @@ from ..evidence_ingestion_operation import (
     build_ledger_evidence_ingestion_registrations,
     project_ledger_evidence_ingestion_result,
 )
+from ..evidence_sweep_ports import EvidenceSweepDocument
+from ..invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ..persistence_ports import LedgerPersistenceConflictError
 from ..preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from .bulk_classify_operation_support import PROFILE_ID
@@ -112,6 +116,16 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
             refusal_code="not_readable" if status == "refused" else None,
             refusal_verdict=verdict if status == "refused" else None,
             needed_inference=letter != "a",
+            label_reading_fallback=(
+                LabelReadingFallback(
+                    cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+                    unread_fields=("supplier_name",),
+                    reader_error_type="LLMBusyError",
+                    failed_condition_id="llm.local_inference.slot_available",
+                )
+                if status == "no_op"
+                else None
+            ),
         )
         for letter, status in cases
     )
@@ -127,6 +141,7 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
     snapshot = LedgerEvidenceBatchSnapshot.from_run(run)
     restored = LedgerEvidenceBatchSnapshot.model_validate_json(snapshot.model_dump_json()).to_run()
     assert restored.model_dump(mode="json") == run.model_dump(mode="json")
+    assert restored.items[1].label_reading_fallback == rows[1].label_reading_fallback
     assert restored.summary == run.summary and restored.any_failed and restored.any_deferred
 
 
@@ -267,7 +282,7 @@ def test_single_pull_preserves_full_mutation_and_separate_real_writer_count(subj
 
 
 def test_folder_sweep_retains_order_skipped_and_individual_scope_refusal(subject: Subject) -> None:
-    subject.acquisition.refused.add("second")
+    subject.acquisition.refused.add(subject.acquisition.documents[1].file_id)
     _run(
         subject,
         LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder", note="human note"),
@@ -276,7 +291,9 @@ def test_folder_sweep_retains_order_skipped_and_individual_scope_refusal(subject
     result = subject.operands.values[0]
     assert isinstance(result, LedgerEvidencePullAllExecutionResult)
     projection = result.projection
-    assert tuple(row.file_id for row in projection.files) == ("first", "second")
+    assert tuple(row.file_id for row in projection.files) == tuple(
+        document.file_id for document in subject.acquisition.documents
+    )
     assert (
         projection.total_documents,
         projection.fetched_count,
@@ -285,6 +302,35 @@ def test_folder_sweep_retains_order_skipped_and_individual_scope_refusal(subject
     ) == (2, 1, 1, 3)
     assert projection.files[1].refusal_reason is not None
     assert projection.effect is OperationEffect.PARTIAL and projection.write_count == 2
+
+
+def test_folder_sweep_persists_canonical_url_context_ids(subject: Subject) -> None:
+    """Application provenance accepts complete provider IDs of URL-context lengths."""
+    subject.acquisition.documents = (
+        EvidenceSweepDocument("A" * 10, "Ten.pdf", "application/pdf"),
+        EvidenceSweepDocument("B" * 24, "Twenty-four.pdf", "application/pdf"),
+    )
+
+    _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
+
+    result = subject.operands.values[0]
+    assert isinstance(result, LedgerEvidencePullAllExecutionResult)
+    for row in result.projection.files:
+        assert row.fetched and row.attachment_id is not None
+        attachment = subject.store.manifests[row.attachment_id]
+        assert attachment.source_reference == f"https://drive.google.com/file/d/{row.file_id}"
+
+
+@pytest.mark.parametrize("file_id", ("A" * 9, "A" * 10 + "!"))
+def test_folder_sweep_rejects_malformed_provider_id_before_fetch_or_write(subject: Subject, file_id: str) -> None:
+    """An unconstrained acquisition port cannot pass an invalid ID to fetch or custody."""
+    subject.acquisition.documents = (EvidenceSweepDocument(file_id, "Invalid.pdf", "application/pdf"),)
+
+    with pytest.raises(AttachmentValidationError, match="invalid file ID"):
+        _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
+
+    assert subject.acquisition.calls == ["human-folder"]
+    assert not subject.store.blobs and not subject.store.manifests
 
 
 @pytest.mark.parametrize(
@@ -311,7 +357,7 @@ def test_pull_opened_row_cas_preserves_prior_custody_effect(
 
 
 def test_folder_all_refused_succeeds_without_local_mutations(subject: Subject) -> None:
-    subject.acquisition.refused.update({"first", "second"})
+    subject.acquisition.refused.update(document.file_id for document in subject.acquisition.documents)
     _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
     result = subject.operands.values[0]
     assert isinstance(result, LedgerEvidencePullAllExecutionResult)

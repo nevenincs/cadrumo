@@ -96,6 +96,28 @@ _ROLE_SUPPLIER: Final = "supplier"
 _ROLE_CUSTOMER: Final = "customer"
 
 
+def _require_mapping_targets(self: FieldMapping) -> None:
+    """Require mapping targets."""
+    if self.kind is MappingKind.DIRECT and not self.draft_field:
+        raise ValueError("a direct mapping must name draft_field")
+    if self.kind is MappingKind.ROLE_DEPENDENT and not (self.supplier_field and self.customer_field):
+        raise ValueError("a role-dependent mapping must name both supplier_field and customer_field")
+    if self.kind is MappingKind.COMPOSITE and not self.leaves:
+        raise ValueError("a composite mapping must name its leaves")
+
+
+def _require_mapping_context(self: FieldMapping) -> None:
+    """Require mapping context."""
+    if self.kind is MappingKind.SUPERSEDED and not (self.draft_field and self.superseded_by):
+        raise ValueError("a superseded mapping must name both draft_field and superseded_by")
+    if self.kind in _NON_SCORED_KINDS and not self.rationale.strip():
+        raise ValueError("an unscored field must state why it is not scored")
+    if self.kind not in _DRAFT_FIELD_KINDS and self.draft_field:
+        raise ValueError(f"draft_field is not read for a {self.kind.value} mapping")
+    if self.kind is not MappingKind.SUPERSEDED and self.superseded_by:
+        raise ValueError(f"superseded_by is not read for a {self.kind.value} mapping")
+
+
 class MappingValidationError(RuntimeError):
     """The declared map does not fit the product it claims to map onto."""
 
@@ -198,20 +220,8 @@ class FieldMapping(BaseModel):
         Each kind reads exactly one set of fields, so a half-filled entry would
         silently behave as whichever kind the consumer happened to branch on.
         """
-        if self.kind is MappingKind.DIRECT and not self.draft_field:
-            raise ValueError("a direct mapping must name draft_field")
-        if self.kind is MappingKind.ROLE_DEPENDENT and not (self.supplier_field and self.customer_field):
-            raise ValueError("a role-dependent mapping must name both supplier_field and customer_field")
-        if self.kind is MappingKind.COMPOSITE and not self.leaves:
-            raise ValueError("a composite mapping must name its leaves")
-        if self.kind is MappingKind.SUPERSEDED and not (self.draft_field and self.superseded_by):
-            raise ValueError("a superseded mapping must name both draft_field and superseded_by")
-        if self.kind in _NON_SCORED_KINDS and not self.rationale.strip():
-            raise ValueError("an unscored field must state why it is not scored")
-        if self.kind not in _DRAFT_FIELD_KINDS and self.draft_field:
-            raise ValueError(f"draft_field is not read for a {self.kind.value} mapping")
-        if self.kind is not MappingKind.SUPERSEDED and self.superseded_by:
-            raise ValueError(f"superseded_by is not read for a {self.kind.value} mapping")
+        _require_mapping_targets(self)
+        _require_mapping_context(self)
         return self
 
     def target_fields(self) -> tuple[str, ...]:
@@ -523,20 +533,7 @@ def project_emission(document: IngestCorpusDocument, draft_payload: Mapping[str,
     """
     projected: dict[str, Any] = {}
     for key_field, mapping in KEY_FIELD_MAPPINGS.items():
-        if mapping.kind in _NON_SCORED_KINDS or not _claims_draft_slot(key_field, document):
-            continue
-        if mapping.kind in _DRAFT_FIELD_KINDS:
-            direct = mapping.draft_field
-            if direct is not None and direct in draft_payload:
-                projected[key_field] = draft_payload[direct]
-        elif mapping.kind is MappingKind.ROLE_DEPENDENT:
-            target = _resolved_role_target(mapping, document)
-            if target is not None and target in draft_payload:
-                projected[key_field] = draft_payload[target]
-        elif mapping.kind is MappingKind.COMPOSITE:
-            for leaf, target in mapping.leaves.items():
-                if target in draft_payload:
-                    projected[f"{key_field}{COMPOSITE_LEAF_SEPARATOR}{leaf}"] = draft_payload[target]
+        _project_key_field(key_field, mapping, document, draft_payload, projected)
     return projected
 
 
@@ -562,3 +559,33 @@ def unmapped_slot_census(key: CorpusKey) -> tuple[tuple[MappingKind, str, int, s
         count = sum(1 for document in key.documents if document.ground_truth.get(key_field) is not None)
         rows.append((mapping.kind, key_field, count, mapping.rationale))
     return tuple(sorted(rows, key=lambda row: (row[0].value, -row[2], row[1])))
+
+
+def _project_key_field(
+    key_field: str,
+    mapping: FieldMapping,
+    document: IngestCorpusDocument,
+    draft_payload: Mapping[str, Any],
+    projected: dict[str, Any],
+) -> None:
+    """Project key field."""
+    if mapping.kind in _NON_SCORED_KINDS or not _claims_draft_slot(key_field, document):
+        return
+    if mapping.kind in _DRAFT_FIELD_KINDS:
+        direct = mapping.draft_field
+        _copy_projected_target(key_field, direct, draft_payload, projected)
+    elif mapping.kind is MappingKind.ROLE_DEPENDENT:
+        target = _resolved_role_target(mapping, document)
+        _copy_projected_target(key_field, target, draft_payload, projected)
+    elif mapping.kind is MappingKind.COMPOSITE:
+        for leaf, target in mapping.leaves.items():
+            if target in draft_payload:
+                projected[f"{key_field}{COMPOSITE_LEAF_SEPARATOR}{leaf}"] = draft_payload[target]
+
+
+def _copy_projected_target(
+    key_field: str, target: str | None, draft_payload: Mapping[str, Any], projected: dict[str, Any]
+) -> None:
+    """Copy an available direct or role-resolved value without transforming it."""
+    if target is not None and target in draft_payload:
+        projected[key_field] = draft_payload[target]

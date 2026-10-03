@@ -10,12 +10,10 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import EventFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import EventFactQuery, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import (
-    EventFactPayload,
-    FactSelector,
-    GovernedFactCatalogue,
-)
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.deadlines.festivos import (
     HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,

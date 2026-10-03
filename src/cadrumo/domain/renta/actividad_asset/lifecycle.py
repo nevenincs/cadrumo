@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import content_hash_hex
+from ....core.hex import Hex64Str
+from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
@@ -54,10 +56,10 @@ class AcquisitionLineageReference(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    observed_transaction_id: str = Field(pattern=r"^[0-9a-f]{64}$")
-    observed_lineage_event_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    observed_transaction_id: TransactionId
+    observed_lineage_event_id: Hex64Str | None = None
     invoice_evidence_id: str = Field(min_length=1, max_length=256)
-    evidence_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evidence_fingerprint: Hex64Str
 
     def resolve_current_transaction_id(self, replacements: dict[str, str]) -> str:
         """Follow a supplied canonical edit-lineage map without minting an ID.
@@ -272,7 +274,7 @@ class ActivityAssetRevision(BaseModel):
 
     asset_id: str = Field(min_length=1, max_length=128)
     revision_number: int = Field(ge=1)
-    supersedes_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    supersedes_revision_id: Hex64Str | None = None
     acquisition: AcquisitionLineageReference
     acquisition_shape: AcquisitionShape
     asset_kind: AssetKind
@@ -304,23 +306,12 @@ class ActivityAssetRevision(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_revision_shape(self) -> Self:
-        if self.revision_number == 1 and self.supersedes_revision_id is not None:
-            raise ValueError("first asset revision cannot supersede another revision")
-        if self.revision_number > 1 and self.supersedes_revision_id is None:
-            raise ValueError("later asset revisions require supersedes_revision_id")
-        if self.acquisition_shape is not AcquisitionShape.PRIMARY_PURCHASE:
-            raise ValueError("initial activity-asset support requires one primary purchase transaction")
-        if self.out_of_service_date is not None and self.out_of_service_date <= self.in_service_date:
-            raise ValueError("out_of_service_date must be after in_service_date")
-        if self.residual_value >= self.basis.deductible_basis():
-            raise ValueError("residual_value must be below allocated depreciation basis")
-        if self.building_construction_date is not None:
-            if self.acquired_condition is not AcquiredCondition.USED:
-                raise ValueError("building_construction_date is only a fact of a used asset")
-            if self.building_construction_date > self.in_service_date:
-                raise ValueError("building_construction_date cannot follow in_service_date")
-        if self.vehicle_affectation is not None and self.asset_kind is not AssetKind.MATERIAL:
-            raise ValueError("vehicle_affectation is only a fact of a material asset")
+        _validate_revision_lineage(self)
+        _validate_primary_purchase(self)
+        _validate_service_dates(self)
+        _validate_residual_basis(self)
+        _validate_building_construction_date(self)
+        _validate_vehicle_affectation(self)
         return self
 
     def amortizable_basis(self) -> Decimal:
@@ -337,6 +328,41 @@ class ActivityAssetRevision(BaseModel):
     def is_stale_for(self, replacements: dict[str, str]) -> bool:
         """Return whether canonical lineage now resolves beyond the observed transaction ID."""
         return self.acquisition.resolve_current_transaction_id(replacements) != self.acquisition.observed_transaction_id
+
+
+def _validate_revision_lineage(revision: ActivityAssetRevision) -> None:
+    if revision.revision_number == 1 and revision.supersedes_revision_id is not None:
+        raise ValueError("first asset revision cannot supersede another revision")
+    if revision.revision_number > 1 and revision.supersedes_revision_id is None:
+        raise ValueError("later asset revisions require supersedes_revision_id")
+
+
+def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
+    if revision.acquisition_shape is not AcquisitionShape.PRIMARY_PURCHASE:
+        raise ValueError("initial activity-asset support requires one primary purchase transaction")
+
+
+def _validate_service_dates(revision: ActivityAssetRevision) -> None:
+    if revision.out_of_service_date is not None and revision.out_of_service_date <= revision.in_service_date:
+        raise ValueError("out_of_service_date must be after in_service_date")
+
+
+def _validate_residual_basis(revision: ActivityAssetRevision) -> None:
+    if revision.residual_value >= revision.basis.deductible_basis():
+        raise ValueError("residual_value must be below allocated depreciation basis")
+
+
+def _validate_building_construction_date(revision: ActivityAssetRevision) -> None:
+    if revision.building_construction_date is not None:
+        if revision.acquired_condition is not AcquiredCondition.USED:
+            raise ValueError("building_construction_date is only a fact of a used asset")
+        if revision.building_construction_date > revision.in_service_date:
+            raise ValueError("building_construction_date cannot follow in_service_date")
+
+
+def _validate_vehicle_affectation(revision: ActivityAssetRevision) -> None:
+    if revision.vehicle_affectation is not None and revision.asset_kind is not AssetKind.MATERIAL:
+        raise ValueError("vehicle_affectation is only a fact of a material asset")
 
 
 __all__ = [

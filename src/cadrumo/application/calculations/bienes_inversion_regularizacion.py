@@ -51,6 +51,9 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    prorrata_definitive_percentage_source_casilla_id,
+)
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
@@ -154,14 +157,6 @@ def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId | None) 
     return tuple(dict.fromkeys((*casilla.legal_refs, *binding_refs)))
 
 
-def _prorrata_casilla_id(revision: ModeloRevision) -> CasillaId | None:
-    for casilla in revision.casillas:
-        tokens = str(casilla.id).casefold().replace(".", "-").split("-")
-        if "prorrata" in tokens and "porcentaje" in tokens:
-            return casilla.id
-    return None
-
-
 def _settlement_period_tokens(revision: ModeloRevision) -> tuple[str, ...]:
     tokens: list[str] = []
     for binding in revision.bindings:
@@ -222,7 +217,7 @@ def _current_year_prorrata_from_m303_observation(
     revision: ModeloRevision,
     operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
-    prorrata_id = _prorrata_casilla_id(revision)
+    prorrata_id = prorrata_definitive_percentage_source_casilla_id(revision.bindings)
     if prorrata_id is None:
         return None
     for token in reversed(_settlement_period_tokens(revision)):
@@ -308,7 +303,7 @@ def _current_year_values_for_context(
 ) -> dict[CasillaId, Decimal]:
     """Combine injected current-year values with the M390 stamped M303 fallback."""
     values = dict(current_year_values)
-    prorrata_id = _prorrata_casilla_id(revision)
+    prorrata_id = prorrata_definitive_percentage_source_casilla_id(revision.bindings)
     if prorrata_id is not None and prorrata_id not in values and modelo == Modelo("390").value:
         observed_pct = _current_year_prorrata_from_m303_observation(
             observation_repository,
@@ -705,7 +700,7 @@ class BienesInversionRegularizacionSourceResolver:
             revision=context.revision,
             operation=self._operation,
         )
-        prorrata_id = _prorrata_casilla_id(context.revision)
+        prorrata_id = prorrata_definitive_percentage_source_casilla_id(context.revision.bindings)
         projections = _project_regularizaciones(
             register,
             parameters=parameters,

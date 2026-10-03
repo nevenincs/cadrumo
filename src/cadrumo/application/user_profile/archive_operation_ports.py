@@ -78,28 +78,11 @@ class ProfileArchivePushReport(BaseModel):
 
     @model_validator(mode="after")
     def _complete_counts(self) -> Self:
-        for rows in (self.pushed_by_namespace, self.skipped_by_namespace, self.manifest_pushed_by_namespace):
-            keys = tuple(row.namespace for row in rows)
-            if keys != tuple(sorted(set(keys))):
-                raise ValueError("mirror namespace counts must be sorted and unique")
-        if (
-            self.pushed_total != sum(row.count for row in self.pushed_by_namespace)
-            or self.skipped_total != sum(row.count for row in self.skipped_by_namespace)
-            or self.manifest_pushed_total != len(self.manifest_pushed_by_namespace)
-            or self.failed_total != len(self.failed_objects)
-            or self.manifest_failed_total != len(self.failed_manifests)
-            or self.manifest_degraded_total != len(self.degraded_manifests)
-        ):
-            raise ValueError("mirror report counts disagree with its complete outcomes")
-        if self.dry_run and (
-            self.pushed_by_namespace
-            or self.failed_objects
-            or self.manifest_pushed_by_namespace
-            or self.failed_manifests
-            or self.degraded_manifests
-            or self.cleanup_failed_objects
-        ):
-            raise ValueError("dry mirror preview must not contain provider outcomes")
+        _validate_namespace_count_order(
+            (self.pushed_by_namespace, self.skipped_by_namespace, self.manifest_pushed_by_namespace)
+        )
+        _validate_outcome_counts(self)
+        _validate_dry_run_outcomes(self)
         return self
 
     def pushed_counts(self) -> dict[str, int]:
@@ -113,6 +96,49 @@ class ProfileArchivePushReport(BaseModel):
     def manifest_pushed_counts(self) -> dict[str, int]:
         """Restore the complete uploaded manifest counts."""
         return {row.namespace: row.count for row in self.manifest_pushed_by_namespace}
+
+
+def _validate_namespace_count_order(rows_by_kind: tuple[tuple[ArchiveNamespaceCount, ...], ...]) -> None:
+    for rows in rows_by_kind:
+        keys = tuple(row.namespace for row in rows)
+        if keys != tuple(sorted(set(keys))):
+            raise ValueError("mirror namespace counts must be sorted and unique")
+
+
+def _validate_outcome_counts(report: ProfileArchivePushReport) -> None:
+    if not _aggregate_counts_match(report) or not _failure_counts_match(report):
+        raise ValueError("mirror report counts disagree with its complete outcomes")
+
+
+def _aggregate_counts_match(report: ProfileArchivePushReport) -> bool:
+    return (
+        report.pushed_total == sum(row.count for row in report.pushed_by_namespace)
+        and report.skipped_total == sum(row.count for row in report.skipped_by_namespace)
+        and report.manifest_pushed_total == len(report.manifest_pushed_by_namespace)
+    )
+
+
+def _failure_counts_match(report: ProfileArchivePushReport) -> bool:
+    return (
+        report.failed_total == len(report.failed_objects)
+        and report.manifest_failed_total == len(report.failed_manifests)
+        and report.manifest_degraded_total == len(report.degraded_manifests)
+    )
+
+
+def _validate_dry_run_outcomes(report: ProfileArchivePushReport) -> None:
+    if report.dry_run and (_has_provider_mutations(report) or _has_provider_failures(report)):
+        raise ValueError("dry mirror preview must not contain provider outcomes")
+
+
+def _has_provider_mutations(report: ProfileArchivePushReport) -> bool:
+    return bool(report.pushed_by_namespace or report.manifest_pushed_by_namespace)
+
+
+def _has_provider_failures(report: ProfileArchivePushReport) -> bool:
+    return bool(
+        report.failed_objects or report.failed_manifests or report.degraded_manifests or report.cleanup_failed_objects
+    )
 
 
 class ProfileArchiveExportPort(Protocol):

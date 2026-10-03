@@ -54,7 +54,8 @@ from dev._paths import UTF_8
 
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
-from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation
+from .legal_catalogue import LEGAL_CATALOGUE_RELPATH
+from .legal_reference_routing import legal_citation
 from .terminology_handbook.enums import TermStatus
 from .terminology_handbook.loader import TerminologyHandbook, load_bundled_terminology_handbook
 from .terminology_handbook.schema import ConceptRecord, LanguageSection
@@ -69,7 +70,7 @@ _UTF_8 = UTF_8
 #: is in the read set before paying for the projection, and a second literal copy
 #: of the path there could drift from this one silently. The sibling generated
 #: surfaces publish theirs for the same reason
-#: (:data:`~dev.docs.legal_reference.LEGAL_REFERENCE_DIR`,
+#: (:data:`~dev.docs.legal_reference_routing.LEGAL_REFERENCE_DIR`,
 #: :data:`~dev.docs.terminology.casilla_anchor.CASILLA_REFERENCE_DIR`).
 GLOSSARY_REFERENCE_RELPATH: Final[str] = "_generated/glossary.rst"
 
@@ -141,20 +142,7 @@ def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
             continue
         legal_tables = cast(dict[object, object], legal)
         for ref_id, body in legal_tables.items():
-            if not isinstance(ref_id, str) or not isinstance(body, dict):
-                continue
-            table = cast(dict[str, object], body)
-            permalink = table.get("permalink")
-            kind = table.get("kind")
-            article = table.get("article")
-            section = table.get("section")
-            if isinstance(permalink, str) and permalink:
-                grounding[ref_id] = LegalGrounding(
-                    permalink=permalink,
-                    kind=kind if isinstance(kind, str) else "",
-                    article=article if isinstance(article, str) else None,
-                    section=section if isinstance(section, str) else None,
-                )
+            _catalogue_legal_grounding(ref_id, body, grounding)
     return grounding
 
 
@@ -429,3 +417,21 @@ def generate_glossary_reference(
         # CheckCarriageReturn (D004) then flags on every regeneration.
         output_path.write_text(rst, encoding=_UTF_8, newline="\n")
     return result
+
+
+def _catalogue_legal_grounding(ref_id: object, body: object, grounding: dict[str, LegalGrounding]) -> None:
+    """Catalogue legal grounding."""
+    if not isinstance(ref_id, str) or not isinstance(body, dict):
+        return
+    table = cast(dict[str, object], body)
+    permalink = table.get("permalink")
+    kind = table.get("kind")
+    article = table.get("article")
+    section = table.get("section")
+    if isinstance(permalink, str) and permalink:
+        grounding[ref_id] = LegalGrounding(
+            permalink=permalink,
+            kind=kind if isinstance(kind, str) else "",
+            article=article if isinstance(article, str) else None,
+            section=section if isinstance(section, str) else None,
+        )

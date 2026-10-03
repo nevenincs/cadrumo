@@ -27,6 +27,7 @@ from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n.render import tr
 from .....core.identity.tax_id import tax_id_identity_token
 from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.remote_authority import canonical_remote_hostname, is_current_aeat_host
 from .....core.text_fold import fold_for_matching
 
 if TYPE_CHECKING:
@@ -60,24 +61,20 @@ EXTERNAL = Settings.external_constants()
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
     """Return whether ``current_url`` is AEAT's configured auth-gate landing.
 
-    The detector accepts the configured AEAT host or a real subdomain, but not
-    a user-info or port-shaped authority that merely ends in that suffix.
-    Callers retain responsibility for translating an affirmative result into
-    their surface-specific navigation error.
+    The shared remote-authority contract admits only HTTPS URLs with a bare
+    hostname. This detector retains its configured current-AEAT-suffix scope
+    and local 4033 path classification. Callers retain responsibility for
+    translating an affirmative result into their surface-specific navigation
+    error.
     """
     if not current_url:
         return False
+    host = canonical_remote_hostname(current_url)
+    if host is None or not is_current_aeat_host(host):
+        return False
     try:
         parsed = urlsplit(current_url)
-        if parsed.username is not None or parsed.password is not None or parsed.port is not None:
-            return False
     except ValueError:
-        return False
-    host = parsed.hostname
-    if host is None:
-        return False
-    host_suffix = EXTERNAL.aeat.domains.host_suffix.casefold()
-    if host.casefold() != host_suffix and not host.casefold().endswith(f".{host_suffix}"):
         return False
     return EXTERNAL.aeat.sede_paths.auth_gate_4033.casefold() in parsed.path.casefold()
 

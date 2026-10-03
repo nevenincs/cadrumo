@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
@@ -11,7 +13,6 @@ from ...application.modelo.filing_record_list_operation import (
     ModeloFilingRecordListProjection,
     ModeloFilingRecordListRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
@@ -19,13 +20,19 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
 from ._filing_chain_payloads import AeatRegisterRefPayload
 from ._modelo_payloads import ExternalEvidencePayload, ModeloRecordPayload
-from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
+
+
+def _filing_list_modelo_filter(bucket_id: str | None, profile_id: str, modelo: str | ModeloCode | None) -> str | None:
+    """Filing list modelo filter."""
+    scoped_bucket_filter = bucket_id.strip() if bucket_id is not None and bucket_id.strip() else None
+    if scoped_bucket_filter is not None and scoped_bucket_filter != profile_id:
+        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+    modelo_filter = str(ModeloCode(str(modelo))) if modelo is not None else None
+    return modelo_filter
 
 
 def _payload_from_projection_row(row: ModeloFilingRecordListEntryProjection) -> ModeloRecordPayload:
@@ -77,18 +84,6 @@ def _payload_from_projection_row(row: ModeloFilingRecordListEntryProjection) -> 
     )
 
 
-def _invalid_frame(
-    completed: RegisteredOperationCompletion[ModeloFilingRecordListProjection],
-) -> CliRefusedBoundaryError:
-    return submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
-
-
 def read_modelo_filing_record_list(
     ctx: typer.Context,
     *,
@@ -99,10 +94,7 @@ def read_modelo_filing_record_list(
     """Return the complete list for the invocation's bound profile."""
     client = bound_profile_client(ctx)
     profile_id = str(client.profile_id)
-    scoped_bucket_filter = bucket_id.strip() if bucket_id is not None and bucket_id.strip() else None
-    if scoped_bucket_filter is not None and scoped_bucket_filter != profile_id:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
-    modelo_filter = str(ModeloCode(str(modelo))) if modelo is not None else None
+    modelo_filter = _filing_list_modelo_filter(bucket_id, profile_id, modelo)
     request = ModeloFilingRecordListRequest(
         profile_id=client.profile_id,
         modelo=modelo_filter,
@@ -120,31 +112,58 @@ def read_modelo_filing_record_list(
     )
     projection = completed.projection
     try:
-        valid_projection = isinstance(projection, ModeloFilingRecordListProjection) and (
-            completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
-            and completed.refusal_code is None
-            and completed.effect is OperationEffect.NONE
-            and projection.result_version == 1
-            and projection.profile_id == client.profile_id
-            and projection.modelo == modelo_filter
-            and projection.include_superseded is include_superseded
-            and projection.record_count == len(projection.records)
-            and all(row.bucket_id == profile_id for row in projection.records)
-            and (modelo_filter is None or all(row.modelo == modelo_filter for row in projection.records))
-            and (include_superseded or all(row.status is ModeloRecordStatus.VIGENTE for row in projection.records))
-            and all(
-                row.aeat_accepted == (row.confirmation is AeatConfirmationState.CONFIRMADA)
-                for row in projection.records
-            )
+        valid_projection = (
+            isinstance(projection, ModeloFilingRecordListProjection)
+            and _filing_list_receipt_valid(completed, projection, client.profile_id, modelo_filter, include_superseded)
+            and _filing_list_scope_valid(projection, profile_id, modelo_filter, include_superseded)
+            and _filing_list_confirmation_valid(projection)
         )
     except Exception:
         valid_projection = False
     if not valid_projection:
-        raise _invalid_frame(completed)
+        raise invalid_completion_error(completed)
     try:
         return tuple(_payload_from_projection_row(row) for row in projection.records)
     except Exception:
-        raise _invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
 
 
 __all__ = ["read_modelo_filing_record_list"]
+
+
+def _filing_list_receipt_valid(
+    completed: RegisteredOperationCompletion[ModeloFilingRecordListProjection],
+    projection: ModeloFilingRecordListProjection,
+    requested_profile_id: UUID,
+    modelo_filter: str | None,
+    include_superseded: bool,
+) -> bool:
+    """Correlate the unchanged list receipt and exact requested filters."""
+    return (
+        completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        and completed.refusal_code is None
+        and (completed.effect is OperationEffect.NONE)
+        and (projection.result_version == 1)
+        and (projection.profile_id == requested_profile_id)
+        and (projection.modelo == modelo_filter)
+        and (projection.include_superseded is include_superseded)
+    )
+
+
+def _filing_list_scope_valid(
+    projection: ModeloFilingRecordListProjection, profile_id: str, modelo_filter: str | None, include_superseded: bool
+) -> bool:
+    """Require row count, profile ownership, modelo, and supersession scope."""
+    return (
+        projection.record_count == len(projection.records)
+        and all(row.bucket_id == profile_id for row in projection.records)
+        and (modelo_filter is None or all(row.modelo == modelo_filter for row in projection.records))
+        and (include_superseded or all(row.status is ModeloRecordStatus.VIGENTE for row in projection.records))
+    )
+
+
+def _filing_list_confirmation_valid(projection: ModeloFilingRecordListProjection) -> bool:
+    """Require each acceptance flag to agree with its confirmation state."""
+    return all(
+        row.aeat_accepted == (row.confirmation is AeatConfirmationState.CONFIRMADA) for row in projection.records
+    )

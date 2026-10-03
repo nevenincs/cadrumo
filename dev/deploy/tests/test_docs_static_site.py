@@ -27,21 +27,15 @@ from dev.docs.build import pagefind_index_mode
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
 
-from .. import docs_static_site as _docs_static_site
-from ..docs_static_site import (
-    _DOWNLOAD_LATEST_SCHEMA,
-    _DOWNLOAD_LATEST_STATIC_PATH,
-    _REQUIRED_ARTIFACTS,
-    CANONICAL_DOCS_BASE_URL,
-    _build_language_roots,
-    _clear_apex,
-    _compose_apex,
-    _dry_run,
+from .. import docs_delivery_activation as _docs_delivery_activation
+from .. import docs_site_build as _docs_site_build
+from .. import docs_site_languages as _docs_site_languages
+from ..docs_delivery_contracts import _REQUIRED_ARTIFACTS, CANONICAL_DOCS_BASE_URL
+from ..docs_site_build import _build_language_roots, _clear_apex, _compose_apex
+from ..docs_site_download import _DOWNLOAD_LATEST_SCHEMA, _DOWNLOAD_LATEST_STATIC_PATH, _refresh_download_latest
+from ..docs_site_languages import (
     _language_build_environments,
     _language_site_url,
-    _refresh_download_latest,
-    _validate_language_entry,
-    _validate_language_roots,
     _write_language_entry,
     language_build_command,
     language_build_environment,
@@ -49,6 +43,8 @@ from ..docs_static_site import (
     root_build_jobs,
     site_build_environment,
 )
+from ..docs_site_preflight import _validate_language_entry, _validate_language_roots
+from ..docs_static_site import _dry_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -317,7 +313,7 @@ def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses() -> None
     """
     with (
         _replacing(
-            _docs_static_site,
+            _docs_site_languages,
             "language_build_environment",
             lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
         ),
@@ -431,7 +427,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     dry run that passes where a publish refuses, with a green suite. So the
     inlined form is refused here by name.
     """
-    calls = _direct_calls(_docs_static_site._publish)
+    calls = _direct_calls(_docs_delivery_activation._publish)
     assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
@@ -441,7 +437,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     )
     assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"
 
-    assert inspect.signature(_dry_run).parameters["build"].default is _docs_static_site._build_site_roots
+    assert inspect.signature(_dry_run).parameters["build"].default is _docs_site_build._build_site_roots
 
 
 def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:

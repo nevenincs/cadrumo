@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ....application.auth.diagnostics import AuthDiagnosticPhoneState
+from ....application.auth.diagnostics import AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ....core.external_constants import OutputLanguage
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
@@ -25,23 +25,7 @@ def auth_diagnostics_list(
         raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     lines = [f"row_count\t{report.row_count}"]
     for row in report.rows:
-        lines.append(
-            "\t".join(
-                (
-                    row.diagnostic_id or "-",
-                    row.captured_at.isoformat(),
-                    row.reason,
-                    f"mode={row.auth_mode or '-'}",
-                    f"identity_kind={row.identity_kind or '-'}",
-                    f"profile={row.active_profile_label or row.active_profile_id or '-'}",
-                    f"alignment={row.identity_alignment or '-'}",
-                    f"headless={row.headless if row.headless is not None else '-'}",
-                    f"phone_state={row.phone_state or '-'}",
-                    f"html={row.html_captured}",
-                    f"screenshot={row.screenshot_captured}",
-                ),
-            ),
-        )
+        lines.append(_auth_diagnostic_text_row(row))
     list_result = AuthDiagnosticsListResult(row_count=report.row_count, rows=list(report.rows))
     emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
 
@@ -149,3 +133,22 @@ def auth_diagnostics_report(
 
 
 __all__ = ["auth_diagnostics_list", "auth_diagnostics_report", "auth_diagnostics_view"]
+
+
+def _auth_diagnostic_text_row(row: AuthDiagnosticSummary) -> str:
+    """Render one public diagnostic summary with the established absent-field markers."""
+    return "\t".join(
+        (
+            row.diagnostic_id or "-",
+            row.captured_at.isoformat(),
+            row.reason,
+            f"mode={row.auth_mode or '-'}",
+            f"identity_kind={row.identity_kind or '-'}",
+            f"profile={row.active_profile_label or row.active_profile_id or '-'}",
+            f"alignment={row.identity_alignment or '-'}",
+            f"headless={(row.headless if row.headless is not None else '-')}",
+            f"phone_state={row.phone_state or '-'}",
+            f"html={row.html_captured}",
+            f"screenshot={row.screenshot_captured}",
+        )
+    )

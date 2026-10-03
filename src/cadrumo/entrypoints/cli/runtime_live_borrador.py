@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal, Never
 
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ...application.live.borrador_100_operation import (
     BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
@@ -20,25 +20,12 @@ from ...application.live.snapshot_base import SnapshotLifecycleState, SnapshotSt
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 type _ReadKind = Literal["list", "view", "latest"]
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    """Reject a projection that does not correlate with its worker receipt."""
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _invalid_request() -> Never:
@@ -83,38 +70,14 @@ def read_borrador_100_for_cli(
         or projection.profile_id != client.profile_id
         or projection.kind != kind
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
 
     if kind == "list":
-        selected_state = state.as_lifecycle_state()
-        if (
-            projection.snapshot is not None
-            or projection.filing_year is not None
-            or (selected_state is not None and any(row.state is not selected_state for row in projection.rows))
-        ):
-            _invalid(completed)
+        _require_borrador_list(completed, projection, state)
     elif kind == "view":
-        record = projection.snapshot
-        if (
-            record is None
-            or projection.rows
-            or projection.filing_year is not None
-            or snapshot_id is None
-            or not str(record.snapshot_id).startswith(snapshot_id.strip())
-        ):
-            _invalid(completed)
+        _require_borrador_view(completed, projection, snapshot_id)
     else:
-        record = projection.snapshot
-        if (
-            projection.rows
-            or projection.filing_year != filing_year
-            or filing_year is None
-            or (
-                record is not None
-                and (record.filing_year != filing_year or record.state is not SnapshotLifecycleState.ACTIVE)
-            )
-        ):
-            _invalid(completed)
+        _require_borrador_latest(completed, projection, filing_year)
     return projection
 
 
@@ -159,8 +122,59 @@ def import_borrador_100_for_cli(
         or snapshot.period != period
         or snapshot.source_url != expected_source
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
 __all__ = ["import_borrador_100_for_cli", "read_borrador_100_for_cli"]
+
+
+def _require_borrador_list(
+    completed: RegisteredOperationCompletion[Borrador100ReadProjection],
+    projection: Borrador100ReadProjection,
+    state: SnapshotStateFilter,
+) -> None:
+    """Correlate the selected borrador read shape with the request."""
+    selected_state = state.as_lifecycle_state()
+    if (
+        projection.snapshot is not None
+        or projection.filing_year is not None
+        or (selected_state is not None and any(row.state is not selected_state for row in projection.rows))
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _require_borrador_view(
+    completed: RegisteredOperationCompletion[Borrador100ReadProjection],
+    projection: Borrador100ReadProjection,
+    snapshot_id: str | None,
+) -> None:
+    """Correlate the selected borrador read shape with the request."""
+    record = projection.snapshot
+    if (
+        record is None
+        or projection.rows
+        or projection.filing_year is not None
+        or snapshot_id is None
+        or not str(record.snapshot_id).startswith(snapshot_id.strip())
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _require_borrador_latest(
+    completed: RegisteredOperationCompletion[Borrador100ReadProjection],
+    projection: Borrador100ReadProjection,
+    filing_year: int | None,
+) -> None:
+    """Correlate the selected borrador read shape with the request."""
+    record = projection.snapshot
+    if (
+        projection.rows
+        or projection.filing_year != filing_year
+        or filing_year is None
+        or (
+            record is not None
+            and (record.filing_year != filing_year or record.state is not SnapshotLifecycleState.ACTIVE)
+        )
+    ):
+        raise invalid_completion_error(completed)

@@ -8,13 +8,12 @@ from datetime import timedelta
 from enum import StrEnum
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.schema import (
+from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFamily, ScalarFactPayload
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from cadrumo.domain.calculations.registry.facts.variants import (
     FactOwnership,
     FactSelector,
-    GovernedFact,
-    GovernedFactFamily,
     GovernedFactVariant,
-    ScalarFactPayload,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import DateAxis

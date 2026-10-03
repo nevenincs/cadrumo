@@ -15,22 +15,18 @@ from ._app_live_command_spec_support import (
     _REQUIRED_FILING_YEAR_OPTION,
     NO_RESULT_SCHEMA,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    ExecutionPolicySpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from .command_spec import (
-    translation_key as _key,
-)
+from ._command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec, ExecutionPolicySpec
 
 LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

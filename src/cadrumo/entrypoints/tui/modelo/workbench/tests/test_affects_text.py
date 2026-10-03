@@ -11,12 +11,13 @@ from __future__ import annotations
 
 import pytest
 
-from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1, ModeloHelpBoxV1, ModeloHelpReachV1
+from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
+from ......application.modelo.casilla_help_reach import ModeloHelpBoxV1, ModeloHelpReachV1
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
-from ..editor import affects_text
+from ..editor_explanations import affects_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

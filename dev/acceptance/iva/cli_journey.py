@@ -8,7 +8,6 @@ year is explicit; every date and synthetic reference is derived from it.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import secrets
 from collections.abc import Mapping
@@ -18,7 +17,9 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from dev.acceptance.installed_cli import (
@@ -40,6 +41,45 @@ _EXPORT_ARTIFACT_PLACEHOLDER: Final = "<local-m303-export-artifact>"
 _DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER: Final = b"0000"
 _DEVELOPMENT_MOCK_DEVELOPER_TAX_ID: Final = b"X0000000T"
 _AUTHORITY_GENERATION: Final = authority_generation
+
+
+def _require_ordinary_calculation(
+    reopened: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, work_unit_id: str
+) -> tuple[str, Decimal]:
+    """Require ordinary calculation."""
+    calculated = _result(
+        _run(
+            reopened,
+            receipts,
+            artifact,
+            (
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--no-joint-return-elected",
+            ),
+            result_keys=("calculation_revision_id",),
+        )
+    )
+    if calculated.get("saved") is not True:
+        raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
+    revision_id = _required_id(calculated, "calculation_revision_id")
+    casillas_raw = calculated.get("casilla_values")
+    if not isinstance(casillas_raw, dict):
+        raise IvaCliJourneyError("Modelo 303 calculate returned no public casilla projection")
+    casillas = cast(dict[str, object], casillas_raw)
+    raw_resultado = casillas.get("iva.resultado")
+    try:
+        iva_resultado = Decimal(str(raw_resultado)).quantize(Decimal("0.01"))
+    except Exception as exc:  # Decimal exposes several public parse exceptions.
+        raise IvaCliJourneyError("Modelo 303 calculate returned no decimal iva.resultado") from exc
+    if iva_resultado != _EXPECTED_RESULT:
+        raise IvaCliJourneyError(
+            f"independent IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+        )
+    return revision_id, iva_resultado
 
 
 class IvaCliJourneyError(RuntimeError):
@@ -355,38 +395,7 @@ def run_iva_m303_cli_journey(
         )
     )
     work_unit_id = _required_id(created, "work_unit_id")
-    calculated = _result(
-        _run(
-            reopened,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "calculate",
-                work_unit_id,
-                "--no-joint-return-elected",
-            ),
-            result_keys=("calculation_revision_id",),
-        )
-    )
-    if calculated.get("saved") is not True:
-        raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    revision_id = _required_id(calculated, "calculation_revision_id")
-    casillas_raw = calculated.get("casilla_values")
-    if not isinstance(casillas_raw, dict):
-        raise IvaCliJourneyError("Modelo 303 calculate returned no public casilla projection")
-    casillas = cast(dict[str, object], casillas_raw)
-    raw_resultado = casillas.get("iva.resultado")
-    try:
-        iva_resultado = Decimal(str(raw_resultado)).quantize(Decimal("0.01"))
-    except Exception as exc:  # Decimal exposes several public parse exceptions.
-        raise IvaCliJourneyError("Modelo 303 calculate returned no decimal iva.resultado") from exc
-    if iva_resultado != _EXPECTED_RESULT:
-        raise IvaCliJourneyError(
-            f"independent IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
-        )
+    revision_id, iva_resultado = _require_ordinary_calculation(reopened, receipts, artifact, work_unit_id)
 
     export_cli = InstalledCli(
         cli.executable,
@@ -446,7 +455,7 @@ def run_iva_m303_cli_journey(
             f"canonical export IVA result mismatch: expected {_EXPECTED_RESULT:.2f}, got {parsed_resultado:.2f}"
         )
 
-    descriptor = authority_root.resolve(strict=True) / "authority.current.json"
+    descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
     return IvaM303CliJourneyReceipt(
         schema_version="iva-01-installed-cli-journey-v3",
         filing_year=year,
@@ -470,7 +479,7 @@ def run_iva_m303_cli_journey(
         export_status="verified_exported",
         export_artifact=_EXPORT_ARTIFACT_PLACEHOLDER,
         export_size=len(payload),
-        export_sha256=_sha256_bytes(payload),
+        export_sha256=sha256_hex(payload),
         export_layout_id=export_layout_id,
         export_parser_verdict="canonical_export_parser_verified",
         exported_iva_resultado=f"{parsed_resultado:.2f}",
@@ -678,7 +687,7 @@ def _parse_exported_iva_resultado(
     *, authority_root: Path, journey_year: IvaJourneyYear, payload: bytes
 ) -> tuple[str, Decimal]:
     """Read the selected official M303 layout and its semantic IVA result field."""
-    descriptor = authority_root.resolve(strict=True) / "authority.current.json"
+    descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
     try:
         authority = IndexedRegistryAuthority(descriptor)
         with authority.operation() as operation:
@@ -721,11 +730,7 @@ def _required_text(payload: Mapping[str, object], key: str) -> str:
 
 
 def _sha256_path(path: Path) -> str:
-    return _sha256_bytes(path.read_bytes())
-
-
-def _sha256_bytes(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
+    return sha256_hex(path.read_bytes())
 
 
 def _checkout_source_identity() -> str:

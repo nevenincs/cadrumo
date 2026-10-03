@@ -11,6 +11,15 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....application.ledger.action_ports import LedgerActionPorts
+from ....application.ledger.ledger_add_command import resolve_ledger_add_prorrata_advisory_facts
+from ....application.ledger.ledger_add_contracts import (
+    LEDGER_ADD_OPERATION_DEFINITION_ID,
+    LEDGER_ADD_VALIDATION_REFUSAL_CODE,
+    LedgerAddExecutionResult,
+    LedgerAddOperationResult,
+    LedgerAddRequest,
+)
+from ....application.ledger.ledger_add_results import project_ledger_add_result
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -38,8 +47,8 @@ _EVENT_ID = "e" * 64
 _NOW = datetime(2026, 4, 15, 9, 30, tzinfo=UTC)
 
 
-def _request() -> add_operation.LedgerAddRequest:
-    return add_operation.LedgerAddRequest(
+def _request() -> LedgerAddRequest:
+    return LedgerAddRequest(
         profile_id=_PROFILE,
         booked_date="2026-04-15",
         amount="10.00",
@@ -98,7 +107,7 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
     return OperationTerminalReceipt(
         identity=OperationIdentity(
             operation_id=_OPERATION_ID,
-            definition_id=add_operation.LEDGER_ADD_OPERATION_DEFINITION_ID,
+            definition_id=LEDGER_ADD_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
         ),
         revision=1,
@@ -106,7 +115,7 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
         effect=effect,
         settled_at=_NOW,
         result_ref=None if refused else "f" * 64,
-        refusal_ref=add_operation.LEDGER_ADD_VALIDATION_REFUSAL_CODE if refused else None,
+        refusal_ref=LEDGER_ADD_VALIDATION_REFUSAL_CODE if refused else None,
         refusal_detail_ref="c" * 64 if refused else None,
     )
 
@@ -114,12 +123,12 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
 def test_wire_schema_keeps_governed_tokens_as_bounded_strings_and_roundtrips() -> None:
     request = _request()
 
-    assert add_operation.LedgerAddRequest.model_validate_json(request.model_dump_json()) == request
-    schema = add_operation.LedgerAddRequest.model_json_schema()
+    assert LedgerAddRequest.model_validate_json(request.model_dump_json()) == request
+    schema = LedgerAddRequest.model_json_schema()
     assert schema["properties"]["iva_category"]["anyOf"][0]["type"] == "string"
     assert schema["properties"]["counterparty_identification_state"]["anyOf"][0]["type"] == "string"
     with pytest.raises(ValidationError):
-        add_operation.LedgerAddRequest(
+        LedgerAddRequest(
             profile_id=_PROFILE,
             booked_date="2026-04-15",
             amount="1.000",
@@ -139,7 +148,7 @@ def test_registration_requires_commit_and_refuses_another_profile() -> None:
     registration = add_operation.build_ledger_add_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     request = OperationRequest[BaseModel](
-        definition_id=add_operation.LEDGER_ADD_OPERATION_DEFINITION_ID,
+        definition_id=LEDGER_ADD_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=_request(),
     )
@@ -172,42 +181,42 @@ def test_registration_requires_commit_and_refuses_another_profile() -> None:
 
 
 def test_terminal_projector_rejects_effect_mismatch_and_preserves_refusal() -> None:
-    projected = add_operation.LedgerAddOperationResult.created(
+    projected = LedgerAddOperationResult.created(
         _PROFILE,
         transaction=_transaction(),
         review_status=LedgerReviewStatus.PENDING,
         bucket_event_ids=(_EVENT_ID,),
     )
-    execution = add_operation.LedgerAddExecutionResult(
+    execution = LedgerAddExecutionResult(
         outcome="created",
         profile_id=_PROFILE,
         result=projected,
     )
 
     assert (
-        add_operation._project_operation_result(
+        project_ledger_add_result(
             execution,
             _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
         )
         == projected
     )
     with pytest.raises(ValueError, match="incompatible terminal receipt"):
-        add_operation._project_operation_result(
+        project_ledger_add_result(
             execution,
             _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
         )
 
-    refusal = add_operation.LedgerAddExecutionResult(
+    refusal = LedgerAddExecutionResult(
         outcome="validation_error",
         profile_id=_PROFILE,
         validation_code="invalid_command",
         validation_messages=("amount: must be a non-negative magnitude",),
     )
-    projected_refusal = add_operation._project_operation_result(
+    projected_refusal = project_ledger_add_result(
         refusal,
         _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE),
     )
-    assert isinstance(projected_refusal, add_operation.LedgerAddOperationResult)
+    assert isinstance(projected_refusal, LedgerAddOperationResult)
     assert projected_refusal.outcome == "validation_error"
     assert projected_refusal.validation_messages == refusal.validation_messages
 
@@ -228,7 +237,7 @@ def test_prorrata_advisory_facts_are_resolved_from_the_requested_profile_before_
         requested_buckets.append(bucket_id)
         return cast(ProrrataRegisterServiceRepositoryProtocol, repository)
 
-    payload = add_operation.LedgerAddRequest(
+    payload = LedgerAddRequest(
         profile_id=_PROFILE,
         booked_date="2026-04-15",
         amount="10.00",
@@ -255,7 +264,7 @@ def test_prorrata_advisory_facts_are_resolved_from_the_requested_profile_before_
         source_command="aeat app ledger add",
     )
 
-    facts = add_operation._prorrata_advisory_facts(payload, command, repository_factory, operation)
+    facts = resolve_ledger_add_prorrata_advisory_facts(payload, command, repository_factory, operation)
 
     assert requested_buckets == [str(_PROFILE)]
     assert facts == (True, True)

@@ -4,23 +4,23 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, ProfileAuthenticationPosture
 
-from ..command_spec import (
-    ArgumentSpec,
-    CommandSpec,
-    DeferredTarget,
-    InvocationSpec,
-    LazyBinding,
+from .._command_parameter_contracts import ArgumentSpec, OptionSpec
+from .._command_secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
-    OptionSpec,
+)
+from .._command_shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from ..command_spec import CommandSpec, InvocationSpec
 from ._spec_policies import PROFILE_DESTRUCTIVE, PROFILE_READ
 
 _LANGUAGE = OptionSpec(

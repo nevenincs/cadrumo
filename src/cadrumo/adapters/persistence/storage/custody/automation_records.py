@@ -11,9 +11,8 @@ from .....application.user_profile.access_contracts import AuthorityState, Autom
 from .....application.user_profile.automation_custody_port import AutomationKeyVerifier
 from .....application.user_profile.automation_enrollment import EnrollmentRecord
 from .....application.user_profile.automation_lifecycle import AutomationDenial, ProfileGlobalLockState
+from .....core.hex import Hex64Str
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-type RecordDigest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 
 
 class StoredAutomationGrant(BaseModel):
@@ -101,7 +100,7 @@ class ControlWitness(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     record_id: UUID
     revision: Annotated[int, Field(ge=1)]
-    digest: RecordDigest
+    digest: Hex64Str
 
 
 class ProtectedControlAnchor(BaseModel):

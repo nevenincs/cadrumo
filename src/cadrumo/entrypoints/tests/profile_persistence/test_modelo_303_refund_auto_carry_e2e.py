@@ -307,7 +307,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator",
             workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             operation=operation,
             settings=Settings(
                 cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,

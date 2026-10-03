@@ -16,7 +16,7 @@ from ....core.export_layout_format import ExportLayoutFormat
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_value_policy import ParsedExportPolicyValue
-from .fixed_width_codec import parse_fixed_width_export_field
+from .fixed_width_parser import parse_fixed_width_export_field
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from .schema_base import RegistryModel
 from .schema_exports import (

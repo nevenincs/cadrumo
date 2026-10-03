@@ -15,17 +15,10 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -34,24 +27,16 @@ from ...domain.modelos.filing_text import ModeloActorLabel, OperatorReason
 from ..calculations.observations_repository import ObservationSourceKind
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -152,6 +137,7 @@ class ModeloLocalObservationMutationProjection(BaseModel):
 
     @field_validator("captured_at")
     @classmethod
+    @pydantic_validation_boundary
     def _captured_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -221,18 +207,14 @@ def project_modelo_local_observation_result(
         raise ValueError("invalid local observation operation result")
     report = ModeloLocalObservationMutationReport.model_validate(result.model_dump(mode="python"), strict=True)
     projection = report.projection
-    if (
-        receipt.identity.definition_id != MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("local observation result contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        message="local observation result contradicts its terminal receipt",
+    )
     if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES:
         raise ValueError("local observation result exceeds the projection document limit")
     return projection
@@ -317,15 +299,9 @@ class ModeloLocalObservationMutationExecutor:
         """Commit one audited override or clear under the supervisor COMMIT fence."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject_ref = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject_ref
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject_ref
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         period = payload.period.to_period()
         actor = payload.actor or f"profile:{profile_id}"
@@ -426,19 +402,7 @@ def build_modelo_local_observation_definition(factory: CalculationActionPortsFac
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -475,18 +439,9 @@ def build_modelo_local_observation_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the secure request and receipt-projected output schemas."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloLocalObservationMutationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloLocalObservationMutationProjection,
-        ),
+        public_result_type=ModeloLocalObservationMutationProjection,
         result_projector=project_modelo_local_observation_result,
         access_resolver=resolve_modelo_local_observation_access,
     )

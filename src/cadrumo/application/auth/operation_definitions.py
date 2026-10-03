@@ -11,12 +11,13 @@ from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -71,7 +72,6 @@ AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
 PROFILE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
 _PROFILE_LOGIN_KIND = "profile.login.passphrase"
 _PROFILE_ROTATION_KIND = "profile.passphrase.rotation"
-_PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 type ProfileRotationFinalizer = Callable[[OperationExecutorContext, ProfilePassphraseRotationOutcome], Awaitable[None]]
 
 
@@ -90,13 +90,13 @@ class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
 
 
 class AuthConfigureOperationRequest(BaseModel):
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: AuthProviderKind
     certificate_path: Path | None = None
     clave_movil_route: ClaveMovilRoute | None = None
     expected_profile_revision: int | None = Field(default=None, ge=0)
-    expected_profile_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    expected_profile_digest: Hex64Str | None = None
 
     @model_validator(mode="after")
     def _complete_baseline(self) -> AuthConfigureOperationRequest:
@@ -108,7 +108,7 @@ class AuthConfigureOperationRequest(BaseModel):
 
 
 class AuthSessionAcquireOperationRequest(BaseModel):
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: AuthProviderKind | None = None
     fresh: bool = False
@@ -116,7 +116,7 @@ class AuthSessionAcquireOperationRequest(BaseModel):
 
 
 class AuthTeardownOperationRequest(BaseModel):
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: AuthProviderKind | None = None
     all_providers: bool = False
@@ -683,22 +683,11 @@ def build_auth_operation_registrations(
                     access_resolver=resolve_auth_session_acquire_access,
                 )
                 if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose(
+                else OperationPublicDefinitionRegistrationV1.compose_request_result(
                     definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=definition.request_type,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.result",
-                        schema_version=1,
-                        model_type=(
-                            AuthLogoutResult
-                            if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
-                            else AuthResetResult
-                        ),
-                    ),
+                    public_result_type=AuthLogoutResult
+                    if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
+                    else AuthResetResult,
                     access_resolver=resolve_auth_teardown_access,
                 )
                 if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}

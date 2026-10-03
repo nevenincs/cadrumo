@@ -142,7 +142,9 @@ class _ExecutorPort:
                 ),
             )
 
-        monkeypatch.setattr(subject, "require_active_bucket_id", lambda: str(_PROFILE))
+        monkeypatch.setattr(
+            "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE)
+        )
         monkeypatch.setattr(subject, "derive_operator_iva_substrate", derive)
         self.executor = subject.LedgerOperatorIvaExecutor(cast(LedgerActionPortsFactory, lambda **_kwargs: self.ports))
 

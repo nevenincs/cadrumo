@@ -30,6 +30,7 @@ from ..atribucion_member import (
     _decimal,
     _invalid_value_refusals,
     _missing_fields,
+    _optional_bool,
     _SocioFacts,
 )
 
@@ -106,3 +107,24 @@ def test_a_malformed_string_raises_the_module_s_own_error() -> None:
 def test_a_well_formed_string_still_converts() -> None:
     """The guard must catch the parse failure without refusing valid text."""
     assert _decimal(" 40 ") == Decimal("40")
+
+
+@pytest.mark.parametrize("raw", ["sí", "Sí", "si", "S", "yes", "true", "1", "x", "X", "verdadero"])
+def test_a_recognised_affirmative_reads_as_a_member_at_year_end(raw: str) -> None:
+    assert _optional_bool(raw) is True
+
+
+@pytest.mark.parametrize("raw", ["no", "No", "n", "false", "0", "falso"])
+def test_a_recognised_negative_reads_as_not_a_member(raw: str) -> None:
+    assert _optional_bool(raw) is False
+
+
+@pytest.mark.parametrize("raw", [None, "", "   "])
+def test_an_absent_answer_stays_absent_rather_than_false(raw: str | None) -> None:
+    assert _optional_bool(raw) is None
+
+
+@pytest.mark.parametrize("raw", ["quizás", "2", "yes please"])
+def test_an_unrecognised_answer_is_refused_rather_than_read_as_false(raw: str) -> None:
+    with pytest.raises(ValueError, match="recognised yes/no token"):
+        _optional_bool(raw)

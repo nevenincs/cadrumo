@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     OverrideFactQuery,
     ScalarFactQuery,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.authority import compiled_bundled_authority

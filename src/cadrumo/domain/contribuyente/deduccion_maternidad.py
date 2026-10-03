@@ -53,7 +53,12 @@ def _resolve_maternidad_formula_spec(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("maternity formula specification must resolve as a mapping fact")
+    declarations = _maternidad_formula_declarations(resolved)
+    _require_maternidad_formula_keys(declarations)
+    return authority, effective_date, declarations
 
+
+def _maternidad_formula_declarations(resolved: ResolvedMappingFact) -> dict[str, str]:
     declarations: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if type(entry.key) is not str or type(entry.value) is not str:
@@ -65,11 +70,13 @@ def _resolve_maternidad_formula_spec(
         if key in declarations:
             raise RegistryValidationError(f"maternity formula specification repeats key {key!r}")
         declarations[key] = value
+    return declarations
 
+
+def _require_maternidad_formula_keys(declarations: dict[str, str]) -> None:
     missing = _REQUIRED_FORMULA_SPEC_KEYS - declarations.keys()
     if missing:
         raise RegistryValidationError(f"maternity formula specification is missing required keys {sorted(missing)!r}")
-    return authority, effective_date, declarations
 
 
 def _resolve_maternidad_scalar(

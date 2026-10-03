@@ -12,7 +12,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import _modelo_iva_wallet_cli as handler
 from .. import runtime_modelo_iva_wallet_balance as bridge
 from .._modelo_iva_wallet_payloads import IvaWalletBalanceResult
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

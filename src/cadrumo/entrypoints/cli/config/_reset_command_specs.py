@@ -4,19 +4,18 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ..command_spec import (
+from .._command_parameter_contracts import OptionSpec
+from .._command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
-    CommandSpec,
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
 )
+from ..command_spec import CommandSpec, InvocationSpec
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 

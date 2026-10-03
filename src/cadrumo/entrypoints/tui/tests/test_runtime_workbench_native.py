@@ -109,7 +109,8 @@ from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
 from cadrumo.entrypoints.tui.launcher import main, run_precomposed_runtime_root_session
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloWorkspaceLifecycleDoor
-from cadrumo.entrypoints.tui.modelo.view.overview import ModeloWorkspaceOverviewScreen
+from cadrumo.entrypoints.tui.modelo.workbench.installed import InstalledModeloWorkbench
+from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
@@ -282,22 +283,12 @@ def test_in_process_secure_generation_captures_the_seeded_profile(
         if generation.search.availability is WorkbenchGenerationAvailability.AVAILABLE:
             assert restored_generation.search.projection is not None
 
-        public_rows = parsed_projection.generation.modelo_lifecycle.projection
-        assert public_rows is not None
-        captured_public_row = next(
-            row
-            for row in public_rows
-            if row.edit_baseline is not None
-            and row.edit_baseline.current_calculation_revision_id == calculation_revision_id
+        public_declarations = parsed_projection.generation.declarations.projection
+        assert public_declarations is not None
+        tampered_declarations = parsed_projection.generation.declarations.model_copy(
+            update={"projection": public_declarations.model_copy(update={"bucket_id": str(uuid4())})}
         )
-        assert captured_public_row.edit_baseline is not None
-        tampered_baseline = captured_public_row.edit_baseline.model_copy(update={"bucket_id": str(uuid4())})
-        tampered_row = captured_public_row.model_copy(update={"edit_baseline": tampered_baseline})
-        tampered_rows = tuple(tampered_row if row is captured_public_row else row for row in public_rows)
-        tampered_lifecycle = parsed_projection.generation.modelo_lifecycle.model_copy(
-            update={"projection": tampered_rows}
-        )
-        tampered_generation = parsed_projection.generation.model_copy(update={"modelo_lifecycle": tampered_lifecycle})
+        tampered_generation = parsed_projection.generation.model_copy(update={"declarations": tampered_declarations})
         tampered_projection = parsed_projection.model_copy(update={"generation": tampered_generation})
         with pytest.raises(ValidationError, match="workbench projection profile mismatch"):
             WorkbenchGenerationOperationProjection.model_validate_json(
@@ -322,13 +313,11 @@ def test_in_process_secure_generation_captures_the_seeded_profile(
 
     assert generation.contract_version == 1
     assert generation.home.projection is not None
-    lifecycle_rows = generation.modelo_lifecycle.projection
-    assert lifecycle_rows is not None
-    captured = next(row for row in lifecycle_rows if row.target.work_unit_id == work_unit.work_unit_id)
-    assert captured.target.bucket_id == str(profile_id)
-    assert captured.calculation_revision_id == calculation_revision_id
-    assert captured.edit_baseline is not None
-    assert captured.edit_baseline.current_calculation_revision_id == calculation_revision_id
+    declarations = generation.declarations.projection
+    assert declarations is not None
+    assert declarations.bucket_id == str(profile_id)
+    assert any(row.work_unit_id == work_unit.work_unit_id for row in declarations.declarations)
+    assert declarations.creation_targets
 
 
 def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
@@ -424,6 +413,8 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        # The installed runtime validates the operation graph before listening.
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
@@ -455,16 +446,16 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                     cleanup.callback(second.close)
                     cleanup.callback(mcp.close)
                     password = bytearray(PROFILE_INPUT.encode())
-                    human.login_password(password, timeout=25)
+                    human.login_password(password)
                     assert not any(password)
                     key = bytearray(possession.get_secret_value())
-                    api.login_api_key(key, timeout=25)
+                    api.login_api_key(key)
                     assert not any(key)
                     second_password = bytearray(PROFILE_INPUT.encode())
-                    second.login_password(second_password, timeout=25)
+                    second.login_password(second_password)
                     assert not any(second_password)
                     mcp_key = bytearray(possession.get_secret_value())
-                    mcp.login_api_key(mcp_key, timeout=25)
+                    mcp.login_api_key(mcp_key)
                     assert not any(mcp_key)
 
                     mcp_contract = mcp_raw.operation(
@@ -560,17 +551,10 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                     assert generation.ledger_admission.destination == "workbench.ledger"
                     assert generation.declarations_admission.destination == "workbench.declarations"
                     assert generation.aeat_sync_admission.destination == "workbench.aeat_sync"
-                    lifecycle_rows = generation.modelo_lifecycle.projection
-                    assert lifecycle_rows is not None
-                    captured_lifecycle = next(row for row in lifecycle_rows if row.target.work_unit_id == work_unit_id)
-                    assert captured_lifecycle.target.bucket_id == str(profile_id)
-                    assert captured_lifecycle.calculation_revision_id == calculation_revision_id
-                    assert captured_lifecycle.verification_report_id is None
-                    assert captured_lifecycle.edit_baseline is not None
-                    assert captured_lifecycle.edit_baseline.bucket_id == str(profile_id)
-                    assert captured_lifecycle.edit_baseline.work_unit_id == work_unit_id
-                    assert captured_lifecycle.edit_baseline.current_calculation_revision_id == calculation_revision_id
-                    assert captured_lifecycle.asks_modelo_390 is False
+                    native_declarations = generation.declarations.projection
+                    assert native_declarations is not None
+                    assert native_declarations.bucket_id == str(profile_id)
+                    assert any(row.work_unit_id == work_unit_id for row in native_declarations.declarations)
 
                     generation_projection = project_workbench_generation(profile_id, generation)
                     generation_wire = canonical_json_bytes(generation_projection.model_dump(mode="json"))
@@ -583,38 +567,9 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         projection=generation_projection,
                     )
                     generation_document_bytes = canonical_json_bytes(generation_document.model_dump(mode="json"))
-                    public_lifecycle = generation_projection.generation.modelo_lifecycle
-                    assert public_lifecycle.projection is not None
-                    without_baselines = tuple(
-                        item.model_copy(update={"edit_baseline": None}) for item in public_lifecycle.projection
-                    )
-                    without_baseline_generation = generation_projection.model_copy(
-                        update={
-                            "generation": generation_projection.generation.model_copy(
-                                update={
-                                    "modelo_lifecycle": public_lifecycle.model_copy(
-                                        update={"projection": without_baselines}
-                                    )
-                                }
-                            )
-                        }
-                    )
-                    without_baseline_document = OperationResultProjectionSuccessV1[
-                        WorkbenchGenerationOperationProjection
-                    ](
-                        result_schema=schema,
-                        definition_contract_digest=digest,
-                        projection=without_baseline_generation,
-                    )
-                    baseline_added_bytes = len(generation_document_bytes) - len(
-                        canonical_json_bytes(without_baseline_document.model_dump(mode="json"))
-                    )
-                    assert baseline_added_bytes > 0
                     assert len(generation_document_bytes) <= PROJECTION_DOCUMENT_MAX_BYTES
                     logging.getLogger(__name__).info(
-                        "native workbench generation: %d canonical bytes; lifecycle baselines add %d bytes",
-                        len(generation_document_bytes),
-                        baseline_added_bytes,
+                        "native workbench generation: %d canonical bytes", len(generation_document_bytes)
                     )
 
                     async def reject_recovery() -> RuntimeFrontendClient:
@@ -675,20 +630,24 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         workspace_screen = declarations_screen.controller.modelo_workspace_factory
                         assert workspace_screen is not None
                         opened_workspace = workspace_screen(declaration)
-                        assert isinstance(opened_workspace, ModeloWorkspaceOverviewScreen)
-                        lifecycle = opened_workspace._session.lifecycle
-                        assert lifecycle is not None
-                        assert lifecycle.target.bucket_id == str(profile_id)
-                        assert lifecycle.target.work_unit_id == work_unit_id
-                        assert lifecycle.calculation_revision_id == calculation_revision_id
-                        assert lifecycle.verification_report_id is None
-                        assert lifecycle.edit_baseline is not None
-                        assert lifecycle.edit_baseline.current_calculation_revision_id == calculation_revision_id
-                        assert lifecycle.asks_modelo_390 is False
-                        actions = opened_workspace._session.lifecycle_actions
+                        assert isinstance(opened_workspace, ModeloWorkbenchScreen)
+                        workbench = opened_workspace._reader
+                        assert isinstance(workbench, InstalledModeloWorkbench)
+                        # The form, its edit baseline and the facts the actions need are read by
+                        # the worker's registered operation over this human session.
+                        loaded = reader.submit(workbench.load, OutputLanguage.ES).result(timeout=90)
+                        assert loaded.form.work_unit_id == work_unit_id
+                        assert loaded.form.calculation_revision_id == calculation_revision_id
+                        assert workbench.edit_refusal() is None
+                        card_box = loaded.form.result_addresses[0] if loaded.form.result_addresses else None
+                        if card_box is not None:
+                            card = reader.submit(workbench.help_card, card_box, OutputLanguage.ES).result(timeout=90)
+                            assert card.casilla_id == card_box
+                        actions = workbench._door()
                         assert isinstance(actions, ModeloWorkspaceLifecycleDoor)
                         assert actions.work_unit_id == work_unit_id
-                        assert actions.edit_baseline == lifecycle.edit_baseline.to_baseline()
+                        assert actions.calculation_revision_id == calculation_revision_id
+                        assert actions.verification_report_id is None
                         assert actions.asks_modelo_390 is False
                         assert callable(actions.refresh_after_success)
 
@@ -706,49 +665,14 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         refresh = actions.refresh_after_success
                         assert callable(refresh)
 
-                        async def refresh_and_reopen() -> WorkbenchGenerationV1:
-                            captured = await asyncio.to_thread(refresh)
-                            assert isinstance(captured, WorkbenchGenerationV1)
-                            assert declarations_screen.controller.refresh_from_capture()
-                            refreshed_factory = declarations_screen.controller.modelo_workspace_factory
-                            assert refreshed_factory is not None
-                            refreshed_declaration = next(
-                                item
-                                for item in declarations_screen.controller.projection.declarations
-                                if item.work_unit_id == work_unit_id
-                            )
-                            refreshed_workspace = refreshed_factory(refreshed_declaration)
-                            assert isinstance(refreshed_workspace, ModeloWorkspaceOverviewScreen)
-                            refreshed_lifecycle = refreshed_workspace._session.lifecycle
-                            assert refreshed_lifecycle is not None
-                            assert refreshed_lifecycle.target.bucket_id == str(profile_id)
-                            assert refreshed_lifecycle.target.work_unit_id == work_unit_id
-                            assert refreshed_lifecycle.calculation_revision_id == calculation_revision_id
-                            assert refreshed_lifecycle.verification_report_id == (verification.verification_report_id)
-                            assert refreshed_lifecycle.edit_baseline is not None
-                            assert (
-                                refreshed_lifecycle.edit_baseline.current_calculation_revision_id
-                                == calculation_revision_id
-                            )
-                            assert refreshed_lifecycle.asks_modelo_390 is False
-                            refreshed_actions = refreshed_workspace._session.lifecycle_actions
-                            assert isinstance(refreshed_actions, ModeloWorkspaceLifecycleDoor)
-                            assert refreshed_actions.edit_baseline == refreshed_lifecycle.edit_baseline.to_baseline()
-                            assert refreshed_actions.asks_modelo_390 is False
-                            return captured
-
-                        refreshed_generation = asyncio.run(refresh_and_reopen())
-                        refreshed_rows = refreshed_generation.modelo_lifecycle.projection
-                        assert refreshed_rows is not None
-                        refreshed_capture = next(
-                            row for row in refreshed_rows if row.target.work_unit_id == work_unit_id
-                        )
-                        assert refreshed_capture.target.bucket_id == str(profile_id)
-                        assert refreshed_capture.verification_report_id == verification.verification_report_id
-                        assert refreshed_capture.edit_baseline is not None
-                        assert (
-                            refreshed_capture.edit_baseline.current_calculation_revision_id == calculation_revision_id
-                        )
+                        captured = reader.submit(refresh).result(timeout=90)
+                        assert isinstance(captured, WorkbenchGenerationV1)
+                        assert declarations_screen.controller.refresh_from_capture()
+                        reread = reader.submit(workbench.load, OutputLanguage.ES).result(timeout=90)
+                        assert reread.form.calculation_revision_id == calculation_revision_id
+                        refreshed_actions = workbench._door()
+                        assert refreshed_actions.calculation_revision_id == calculation_revision_id
+                        assert refreshed_actions.verification_report_id == verification.verification_report_id
                         with pytest.raises(RuntimeFrontendRefusedError) as api_root_denied:
                             reader.submit(api_root.load).result(timeout=90)
                         assert api_root_denied.value.reason == AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value
@@ -837,6 +761,8 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(tm
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        # The installed runtime validates the operation graph before listening.
+        profiles.prepare_registry()
         server = RuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
@@ -915,7 +841,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(tm
                     )
                     cleanup.callback(observer.close)
                     observer_password = bytearray(PROFILE_INPUT.encode())
-                    observer.login_password(observer_password, timeout=25)
+                    observer.login_password(observer_password)
                     assert not any(observer_password)
                     assert main(headless=True, auto_pilot=drive) == 0
                     assert stages == [

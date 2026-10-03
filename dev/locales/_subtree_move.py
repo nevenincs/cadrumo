@@ -173,29 +173,19 @@ def plan_locale_subtree_move(
     removals: list[tuple[str, str]] = []
 
     for locale in sorted(leaves_by_locale):
-        leaves = leaves_by_locale[locale]
-        source_keys = sorted(key for key in leaves if key.startswith(f"{source}."))
-        for source_key in source_keys:
-            value = leaves[source_key]
-            tail = source_key[len(source) :]
-            carried = False
-            for destination in destinations:
-                destination_key = f"{destination}{tail}"
-                permitted = permitted_destination_keys.get(destination) if permitted_destination_keys else None
-                if permitted is not None and destination_key not in permitted:
-                    continue
-                if value is None and not destination_key.startswith(_MODELO_SCHEMA_PREFIX):
-                    raise LocaleError(
-                        f"Cannot move an absent value to {destination_key!r}: "
-                        "only Modelo schema keys may carry an absent locale value",
-                    )
-                disposition = _decide(leaves, destination_key, value, on_conflict)
-                entries.append(LocaleMoveEntry(locale, source_key, destination_key, disposition, value))
-                carried = carried or disposition in _CARRIED_DISPOSITIONS
-            if not carried:
-                undistributed.append((locale, source_key))
-            if not keep_source and (carried or drop_undistributed):
-                removals.append((locale, source_key))
+        collect_locale_subtree_moves(
+            locale,
+            leaves_by_locale,
+            source,
+            destinations,
+            keep_source,
+            drop_undistributed,
+            on_conflict,
+            permitted_destination_keys,
+            entries,
+            undistributed,
+            removals,
+        )
 
     return LocaleSubtreeMovePlan(
         source_prefix=source,
@@ -240,3 +230,59 @@ __all__ = [
     "normalise_key_prefix",
     "plan_locale_subtree_move",
 ]
+
+
+def collect_locale_subtree_moves(
+    locale: str,
+    leaves_by_locale: Mapping[str, Mapping[str, str | None]],
+    source: str,
+    destinations: tuple[str, ...],
+    keep_source: bool,
+    drop_undistributed: bool,
+    on_conflict: LocaleMoveConflict,
+    permitted_destination_keys: Mapping[str, frozenset[str]] | None,
+    entries: list[LocaleMoveEntry],
+    undistributed: list[tuple[str, str]],
+    removals: list[tuple[str, str]],
+) -> None:
+    """Collect locale subtree moves."""
+    leaves = leaves_by_locale[locale]
+    source_keys = sorted(key for key in leaves if key.startswith(f"{source}."))
+    for source_key in source_keys:
+        carried = collect_subtree_source_leaf(
+            locale, leaves, source_key, source, destinations, on_conflict, permitted_destination_keys, entries
+        )
+        if not carried:
+            undistributed.append((locale, source_key))
+        if not keep_source and (carried or drop_undistributed):
+            removals.append((locale, source_key))
+
+
+def collect_subtree_source_leaf(
+    locale: str,
+    leaves: Mapping[str, str | None],
+    source_key: str,
+    source: str,
+    destinations: tuple[str, ...],
+    on_conflict: LocaleMoveConflict,
+    permitted_destination_keys: Mapping[str, frozenset[str]] | None,
+    entries: list[LocaleMoveEntry],
+) -> bool:
+    """Collect subtree source leaf."""
+    value = leaves[source_key]
+    tail = source_key[len(source) :]
+    carried = False
+    for destination in destinations:
+        destination_key = f"{destination}{tail}"
+        permitted = permitted_destination_keys.get(destination) if permitted_destination_keys else None
+        if permitted is not None and destination_key not in permitted:
+            continue
+        if value is None and not destination_key.startswith(_MODELO_SCHEMA_PREFIX):
+            raise LocaleError(
+                f"Cannot move an absent value to {destination_key!r}: "
+                "only Modelo schema keys may carry an absent locale value",
+            )
+        disposition = _decide(leaves, destination_key, value, on_conflict)
+        entries.append(LocaleMoveEntry(locale, source_key, destination_key, disposition, value))
+        carried = carried or disposition in _CARRIED_DISPOSITIONS
+    return carried

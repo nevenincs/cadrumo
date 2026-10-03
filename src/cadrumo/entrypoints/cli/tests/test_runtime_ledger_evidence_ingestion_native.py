@@ -19,12 +19,12 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.ledger.add_operation import LEDGER_ADD_OPERATION_DEFINITION_ID
 from ....application.ledger.evidence_ingestion_operation import (
     LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_PULL_ALL_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
 )
+from ....application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
 from ....core.config import load_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result

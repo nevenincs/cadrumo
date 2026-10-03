@@ -7,8 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect
 from ...core.period import Period
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
@@ -23,20 +22,6 @@ from ..user_profile.access_contracts import (
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .commit_fence import LedgerCommitAttemptTracker
 from .read_access import resolve_ledger_read_access
-
-
-def require_export_link_profile[RequestT: BaseModel](
-    request: OperationRequest[RequestT], context: OperationExecutorContext, profile_id: UUID
-) -> None:
-    """Check the immutable worker subject before composing any private ports."""
-    subject = profile_operation_subject(str(profile_id))
-    if (
-        request.subject_ref != subject
-        or context.identity.subject_ref != subject
-        or context.identity.definition_id != request.definition_id
-        or require_active_bucket_id() != str(profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def resolve_export_link_access(

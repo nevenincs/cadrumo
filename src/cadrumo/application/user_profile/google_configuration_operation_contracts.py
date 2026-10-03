@@ -14,6 +14,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationIdentity, OperationRevision
+from ..operations.registry import OperationSchemaBindingV1
 from .google_configuration_operation_refusal import GoogleConfigurationRefusalProjection
 
 GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID = "config.google.credential-source.set"
@@ -244,6 +245,45 @@ class GoogleConfigurationOutcome(BaseModel):
         return self
 
 
+GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]]] = {
+    GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID: (
+        GoogleCredentialSourceSetRequest,
+        GoogleCredentialSourceSetProjection,
+    ),
+    GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID: (
+        GoogleCredentialSourceViewRequest,
+        GoogleCredentialSourceViewProjection,
+    ),
+    GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID: (GoogleFolderSetRequest, GoogleFolderSetProjection),
+    GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: (GoogleFolderViewRequest, GoogleFolderViewProjection),
+    GOOGLE_LOGIN_OPERATION_DEFINITION_ID: (GoogleLoginRequest, GoogleLoginProjection),
+    GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: (GoogleLogoutRequest, GoogleLogoutProjection),
+    GOOGLE_PROBE_OPERATION_DEFINITION_ID: (GoogleProbeRequest, GoogleProbeProjection),
+    GOOGLE_REGISTER_OPERATION_DEFINITION_ID: (GoogleRegisterRequest, GoogleRegisterProjection),
+    GOOGLE_STATUS_OPERATION_DEFINITION_ID: (GoogleStatusRequest, GoogleStatusProjection),
+}
+GOOGLE_CONFIGURATION_REQUEST_TYPES = (
+    GoogleCredentialSourceSetRequest,
+    GoogleCredentialSourceViewRequest,
+    GoogleFolderSetRequest,
+    GoogleFolderViewRequest,
+    GoogleLoginRequest,
+    GoogleLogoutRequest,
+    GoogleProbeRequest,
+    GoogleRegisterRequest,
+    GoogleStatusRequest,
+)
+
+
+class GoogleConfigurationExecutionResult(BaseModel):
+    """Encrypted complete result bound to the actual invocation and effect."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    identity: OperationIdentity
+    projection: GoogleConfigurationOutcome
+    effect: Literal["none", "updated", "partial", "unknown"]
+
+
 class GoogleConsentProposal(BaseModel):
     """Exact revision and request whose human terminal presence is acknowledged."""
 
@@ -278,9 +318,25 @@ class GoogleConsentResponse(BaseModel):
     intent: OperationResponseIntentValue
 
 
+GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID + ".review",
+    schema_version=1,
+    model_type=GoogleConsentReviewProjection,
+)
+GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID + ".response",
+    schema_version=1,
+    model_type=GoogleConsentResponse,
+)
+
+
 __all__ = [
+    "GOOGLE_CONFIGURATION_CONTRACTS",
     "GOOGLE_CONFIGURATION_EXPORT_DISABLED_CODE",
+    "GOOGLE_CONFIGURATION_REQUEST_TYPES",
     "GOOGLE_CONSENT_PRESENTATION_CODE",
+    "GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING",
+    "GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING",
     "GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID",
     "GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID",
     "GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID",
@@ -291,6 +347,7 @@ __all__ = [
     "GOOGLE_REGISTER_INPUT_KIND",
     "GOOGLE_REGISTER_OPERATION_DEFINITION_ID",
     "GOOGLE_STATUS_OPERATION_DEFINITION_ID",
+    "GoogleConfigurationExecutionResult",
     "GoogleConfigurationExportDisabledError",
     "GoogleConfigurationOutcome",
     "GoogleConfigurationProjection",

@@ -68,8 +68,9 @@ Where it stops
   whose regimen-simplificado record does not repeat per projection row. It is
   the modelo's first edition and names no predecessor, so the gate does not
   require its bytes.
-- Draft construction and these facts read the bundled registry, as the gate
-  documents; they select the edition, and the bytes judge its export surface.
+- These facts read the published bundled generation, not the tree under
+  comparison; the gate builds them once per scenario and renders the same
+  facts through both trees, so the bytes judge the edition's export surface.
 """
 
 from __future__ import annotations
@@ -138,15 +139,14 @@ from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister,
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-    ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     general_prorrata_register_regime,
@@ -182,7 +182,6 @@ from cadrumo.domain.prorrata_register.register import (
     SectorDefinition,
 )
 
-from .compiler.authority import compiled_bundled_authority
 from .compiler.loader import load_modelo_directory, load_shared_catalogues
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
@@ -579,14 +578,19 @@ def m303_export_scenario(period: Period) -> EditionExportScenario:
 
 
 def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
-    authority = compiled_bundled_authority()
+    """Build the scenario's facts from one published bundled generation.
+
+    The edition snapshot, the governed facts and the regimen calculation all
+    read the same pinned operation, so the facts never mix a source compile
+    with the published generation, and building them does not compile the
+    whole bundled registry.
+    """
     with bundled_indexed_authority().operation() as operation:
-        registry_snapshot = authority.snapshot(
+        registry_snapshot = operation.snapshot(
             str(Modelo("303")), filing_year=period.filing_year, period=period.registry_token
         )
         m303_filing_facts = _m303_filing_facts(
             period,
-            authority=authority,
             registry_snapshot=registry_snapshot,
             operation=operation,
         )
@@ -621,13 +625,11 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
 def _m303_filing_facts(
     period: Period,
     *,
-    authority: ValidatedRegistryAuthority,
     registry_snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
 ) -> M303FilingFacts:
     regimen = _m303_regimen_simplificado_evidence(
         period,
-        authority=authority,
         registry_snapshot=registry_snapshot,
         operation=operation,
     )
@@ -662,8 +664,8 @@ def _m303_filing_facts(
             period=period, recipient_of_cash_accounting_operations=False, source_ledger_ids=()
         ),
         prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
-        prorrata_register=_m303_prorrata_register(period, authority=authority),
-        differentiated_contributions=_m303_differentiated_contributions(period=period, authority=authority),
+        prorrata_register=_m303_prorrata_register(period, operation=operation),
+        differentiated_contributions=_m303_differentiated_contributions(period=period, operation=operation),
         bienes_register=BienesInversionIvaRegister(),
         regularisation_result=RegistroRegularizacionResult(
             regularizacion_year=period.filing_year,
@@ -681,13 +683,12 @@ def _m303_filing_facts(
 def _m303_regimen_simplificado_evidence(
     period: Period,
     *,
-    authority: ValidatedRegistryAuthority,
     registry_snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
 ) -> M303RegimenSimplificadoFilingEvidence:
     """One non-agricultural activity from the edition's own Orden, so the repeated record emits once."""
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=authority)
+        scope=m303_regime_composition_simplified_scope("simplified", authority=operation)
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot, scope_decision=scope
@@ -740,9 +741,9 @@ def _m303_regimen_simplificado_evidence(
     )
 
 
-def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAuthority) -> ProrrataRegister:
+def _m303_prorrata_register(period: Period, *, operation: PinnedAuthorityOperation) -> ProrrataRegister:
     """A general-regime register carrying the prior year's definitive percentage for the common and both sectors."""
-    prior_snapshot_ref = authority.snapshot(
+    prior_snapshot_ref = operation.snapshot(
         str(Modelo("303")), filing_year=period.filing_year - 1, period="4T"
     ).snapshot_ref
     return ProrrataRegister(
@@ -777,12 +778,12 @@ def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAutho
 
 
 def _m303_differentiated_contributions(
-    *, period: Period, authority: ValidatedRegistryAuthority
+    *, period: Period, operation: PinnedAuthorityOperation
 ) -> tuple[IvaDifferentiatedDeductionContribution, ...]:
     """One contribution per deduction kind the differentiated sectors declare, in each sector."""
     kinds = iva_deduction_fact_kinds(
         effective_date=period.end_date,
-        authority=authority,
+        authority=operation,
     )
     return tuple(
         IvaDifferentiatedDeductionContribution(

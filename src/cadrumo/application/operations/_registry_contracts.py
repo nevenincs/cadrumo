@@ -19,8 +19,8 @@ from ...core.operations import OperationInteractionKind
 from ._model_contract import require_strict_frozen_operation_model_graph
 
 if TYPE_CHECKING:
+    from .operation_definition import OperationDefinition
     from .registry import (
-        OperationDefinition,
         OperationPublicDefinitionContractV1,
         OperationPublicDefinitionRegistrationV1,
         OperationSchemaIdentityV1,

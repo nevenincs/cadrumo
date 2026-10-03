@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import math
-import time
 from collections.abc import Callable
 from typing import Protocol
 
@@ -14,8 +12,14 @@ from ...application.runtime.contracts import (
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
+from ...application.runtime.deadline_budget import deadline_after, remaining_budget
 from ...application.runtime.management import RuntimeUserManager
-from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from ...core.async_cleanup import (
+    AsyncResourceCleanupError,
+    attach_async_cleanup_error,
+    await_cancellation_complete,
+    close_async_resources,
+)
 from .framing import RuntimeTransportCleanup, VerifiedRuntimeConnection
 
 
@@ -32,13 +36,6 @@ class RuntimeEndpointConnector(Protocol):
         ...
 
 
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if not math.isfinite(remaining) or remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
-
-
 def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
     """Keep failed startup owners visible after cancellation or deadline mapping."""
     for name in ("async_cleanup_error", "cleanup_error"):
@@ -46,10 +43,7 @@ def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
         if isinstance(failure, BaseException) and not isinstance(failure, AsyncResourceCleanupError):
             failure = failure.__dict__.get("async_cleanup_error")
         if isinstance(failure, AsyncResourceCleanupError):
-            previous = target.__dict__.get("async_cleanup_error")
-            if isinstance(previous, AsyncResourceCleanupError) and previous is not failure:
-                failure = previous.merged_with(failure)
-            target.__dict__["async_cleanup_error"] = failure
+            attach_async_cleanup_error(target, failure)
 
 
 class RuntimeLaunchDoor:
@@ -82,7 +76,7 @@ class RuntimeLaunchDoor:
 
     async def _connect(self, deadline: float) -> VerifiedRuntimeConnection:
         def connect() -> VerifiedRuntimeConnection:
-            channel = self._endpoint.connect(timeout=min(0.5, _remaining(deadline)))
+            channel = self._endpoint.connect(timeout=min(0.5, remaining_budget(deadline)))
             return VerifiedRuntimeConnection(channel, expected=self._expected, deadline=deadline)
 
         task = asyncio.create_task(asyncio.to_thread(connect))
@@ -109,9 +103,7 @@ class RuntimeLaunchDoor:
 
     async def open(self, *, timeout: float = 10) -> VerifiedRuntimeConnection:
         """Return a peer/cohort-verified connection without transmitting credentials."""
-        if not math.isfinite(timeout) or timeout <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        deadline = time.monotonic() + timeout
+        deadline = deadline_after(timeout)
         try:
             async with asyncio.timeout(timeout):
                 try:
@@ -129,16 +121,16 @@ class RuntimeLaunchDoor:
                     raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
                 # login_autostart is deliberately not an admission condition.
                 # Native manager adapters re-check the binding before control.
-                _remaining(deadline)
+                remaining_budget(deadline)
                 await manager.start()
                 while True:
-                    _remaining(deadline)
+                    remaining_budget(deadline)
                     try:
                         return await self._connect(deadline)
                     except RuntimeRefusalError as error:
                         if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
                             raise
-                    await asyncio.sleep(min(0.05, _remaining(deadline)))
+                    await asyncio.sleep(min(0.05, remaining_budget(deadline)))
         except TimeoutError as error:
             refusal = RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
             if isinstance(error.__cause__, asyncio.CancelledError):

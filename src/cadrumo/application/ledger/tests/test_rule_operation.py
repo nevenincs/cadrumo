@@ -45,11 +45,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
-from ..rule_operation import (
-    LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_VALIDATION_REFUSAL_CODE,
+from ..rule_contracts import (
     LedgerRuleAddProjection,
     LedgerRuleAddRequest,
     LedgerRuleApplyExecutionResult,
@@ -58,6 +54,11 @@ from ..rule_operation import (
     LedgerRuleListProjection,
     LedgerRuleListRequest,
     LedgerRuleRowProjection,
+)
+from ..rule_operation import (
+    LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
+    LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
+    LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
     _TrackedRuleRepository,
     build_ledger_rule_add_definition,
     build_ledger_rule_add_registration,
@@ -66,6 +67,7 @@ from ..rule_operation import (
     build_ledger_rule_list_definition,
     build_ledger_rule_list_registration,
 )
+from ..rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

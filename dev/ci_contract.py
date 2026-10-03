@@ -58,6 +58,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import override
 
@@ -101,6 +102,40 @@ ALLOWLIST_NAME = "ci-contract-allow.txt"
 #: parameter list may hold `=`, quotes and spaces, so the name pattern stays
 #: permissive and the line shape decides.
 _RECIPE = re.compile(r"^([a-zA-Z0-9_][a-zA-Z0-9_-]*)")
+
+
+def _check_matrix_selector(value: str, lines: list[str], index: int, refuse: Callable[[int, str], None]) -> None:
+    """Check matrix selector."""
+    only = _MATRIX_ONLY.fullmatch(value)
+    legs = _matrix_values(lines, index, {only.group(1)}) if only else []
+    if not legs:
+        refuse(
+            index,
+            f"runs-on `{value[:60]}` is an unresolved expression; " + "it cannot be proven self-hosted",
+        )
+        return
+    for number, leg in legs:
+        if not _names_self_hosted(_labels(leg)):
+            refuse(number, f"matrix leg `{leg[:60]}` names no self-hosted label")
+
+
+def _scalar_selector_proven(raw: str, matrix: object, depth: int) -> bool:
+    """Scalar selector proven."""
+    raw = raw.strip()
+    if _GUARDED_MATRIX.fullmatch(raw) or _closed_mapping(raw):
+        return True
+    ref = _MATRIX_ONLY.fullmatch(raw)
+    if ref:
+        return _matrix_proven(matrix, ref[1], depth)
+    return "${{" not in raw and _names_self_hosted([raw])
+
+
+def _configure_report_streams() -> None:
+    """Configure report streams."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
 
 
 class Finding:
@@ -170,15 +205,7 @@ def _run_commands(text: str) -> list[tuple[int, str, str]]:
             continue
         # Block scalar: the first line of the body that is a command.
         body = index + 1
-        while body < len(lines):
-            candidate = lines[body]
-            if candidate.strip() and not candidate.startswith(indent + " "):
-                break
-            stripped = candidate.strip()
-            if stripped and not stripped.startswith("#"):
-                found.append((body + 1, name, stripped))
-                break
-            body += 1
+        body = _read_block_command(lines, body, indent, name, found)
         index = body + 1
     return found
 
@@ -320,17 +347,7 @@ def _matrix_values(lines: list[str], index: int, keys: set[str]) -> list[tuple[i
     found: list[tuple[int, str]] = []
     body = _block(lines, strategy)
     for number in body:
-        match = re.match(r"^\s*(?:-\s+)?([\w-]+):\s*(.*?)\s*$", lines[number])
-        if not match or match.group(1) not in keys:
-            continue
-        value = _strip_comment(match.group(2))
-        if value:
-            found.append((number, value))
-            continue
-        for item in _block(lines, number):
-            listed = re.match(r"^\s*-\s+(.*?)\s*$", lines[item])
-            if listed:
-                found.append((item, _strip_comment(listed.group(1))))
+        _record_matrix_value(number, lines, keys, found)
     return found
 
 
@@ -393,17 +410,7 @@ def _external_reusable_jobs(lines: list[str]) -> list[tuple[int, str]]:
         return []
     job_indent = _indent(lines[body[0]])
     for header in (n for n in body if _indent(lines[n]) == job_indent):
-        fields = _block(lines, header)
-        if not fields:
-            continue
-        field_indent = _indent(lines[fields[0]])
-        for number in fields:
-            line = lines[number]
-            if _indent(line) != field_indent or not line.strip().startswith("uses:"):
-                continue
-            target = _strip_comment(line.strip()[len("uses:") :]).strip("'\"")
-            if not target.startswith("./.github/workflows/"):
-                found.append((number, target))
+        _record_external_reusable_job(header, lines, found)
     return found
 
 
@@ -429,35 +436,11 @@ def _runner_placement_lines(path: Path, text: str) -> list[Finding]:
         )
 
     for index, line in enumerate(lines):
-        match = _RUNS_ON.match(line)
-        if not match or not _meaningful(line):
-            continue
-        value = _strip_comment(match.group(2))
-        if not value:
-            if not _names_self_hosted(_nested_labels(lines, index)):
-                refuse(index, "runs-on names no self-hosted label")
-            continue
-        if value.startswith(("{", "[")) or "${{" not in value:
-            if not _literal_placement(value):
-                refuse(index, f"runs-on `{value[:60]}` names no self-hosted label")
-            continue
-        if _GUARDED_MATRIX.fullmatch(value) or _closed_mapping(value):
-            continue
-        only = _MATRIX_ONLY.fullmatch(value)
-        legs = _matrix_values(lines, index, {only.group(1)}) if only else []
-        if not legs:
-            refuse(
-                index,
-                f"runs-on `{value[:60]}` is an unresolved expression; " + "it cannot be proven self-hosted",
-            )
-            continue
-        for number, leg in legs:
-            if not _names_self_hosted(_labels(leg)):
-                refuse(number, f"matrix leg `{leg[:60]}` names no self-hosted label")
+        _check_runner_selector(index, line, lines, refuse)
     return findings
 
 
-def _matrix_proven(matrix, key, depth):
+def _matrix_proven(matrix: object, key: str, depth: int) -> bool:
     if not isinstance(matrix, dict):
         return False
     axis = matrix.get(key)
@@ -475,20 +458,14 @@ def _matrix_proven(matrix, key, depth):
     return bool(values) and all(_selector_proven(value, {}, depth + 1) for value in values)
 
 
-def _selector_proven(raw, matrix, depth=0):
+def _selector_proven(raw: object, matrix: object, depth: int = 0) -> bool:
     if depth > 20 or not isinstance(raw, (str, list, dict)):
         return False
     if isinstance(raw, dict):
         return _selector_proven(raw.get("labels"), matrix, depth + 1)
     if isinstance(raw, list):
         return all(isinstance(label, str) for label in raw) and _names_self_hosted(raw)
-    raw = raw.strip()
-    if _GUARDED_MATRIX.fullmatch(raw) or _closed_mapping(raw):
-        return True
-    ref = _MATRIX_ONLY.fullmatch(raw)
-    if ref:
-        return _matrix_proven(matrix, ref[1], depth)
-    return "${{" not in raw and _names_self_hosted([raw])
+    return _scalar_selector_proven(raw, matrix, depth)
 
 
 def runner_placement(path: Path, text: str) -> list[Finding]:
@@ -505,20 +482,11 @@ def runner_placement(path: Path, text: str) -> list[Finding]:
     if not isinstance(document, dict) or not isinstance(document.get("jobs"), dict):
         return fail("workflow has no jobs mapping")
 
-    findings = []
+    findings: list[Finding] = []
     for name, job in document["jobs"].items():
-        if not isinstance(job, dict):
-            return fail(f"{name}: invalid job mapping")
-        if "uses" in job and "runs-on" not in job:
-            target = job["uses"]
-            if not isinstance(target, str) or not target.startswith("./.github/workflows/"):
-                return fail(f"{name}: {target} is an external reusable workflow; " + "placement is unobservable")
-            continue
-        strategy = job.get("strategy", {})
-        if not isinstance(strategy, dict):
-            return fail(f"{name}: invalid strategy mapping")
-        if not _selector_proven(job.get("runs-on"), strategy.get("matrix")):
-            findings.extend(fail(f"{name}: unresolved expression or " + "selector names no self-hosted label"))
+        fatal = _check_placement_job(name, job, findings, fail)
+        if fatal is not None:
+            return fatal
     # Preserve original source locations when the ordinary block form supplies them.
     return (_runner_placement_lines(path, text) or findings) if findings else []
 
@@ -532,64 +500,7 @@ def audit(root: Path) -> list[Finding]:
     findings: list[Finding] = []
 
     for path in workflows:
-        text = path.read_text(encoding="utf-8")
-        name = path.name
-        findings.extend(runner_placement(path, text))
-
-        for needle, why in BANNED_INSTALLS:
-            for number, line in enumerate(text.splitlines(), start=1):
-                if needle in line and not line.lstrip().startswith("#"):
-                    findings.append(Finding(path, number, "install", f"{needle}: {why}"))
-
-        calls_just = any(_first_word(command) == "just" for _, _, command in _run_commands(text))
-        if calls_just:
-            provisioning = "\n".join([text, *_local_action_texts(text, root)])
-            if JUST_INSTALL_USES not in provisioning:
-                findings.append(
-                    Finding(
-                        path,
-                        1,
-                        "install",
-                        f"calls `just`, but installs it without {JUST_INSTALL_USES}",
-                    )
-                )
-            elif JUST_INSTALL_TOOL not in provisioning:
-                findings.append(
-                    Finding(
-                        path,
-                        1,
-                        "install",
-                        f"installs `just` off the floor pin {JUST_INSTALL_TOOL}",
-                    )
-                )
-
-        for number, step, command in _run_commands(text):
-            key = f"{name}:{step}"
-            if command.strip() == RUNNER_POLICY_COMMAND or key in allowlist or name in allowlist:
-                continue
-            word = _first_word(command)
-            if word == "just":
-                called = command.split()[1] if len(command.split()) > 1 else ""
-                if recipes and called and called not in recipes:
-                    findings.append(
-                        Finding(
-                            path,
-                            number,
-                            "recipe",
-                            f"`just {called}` names no recipe in the justfile",
-                        )
-                    )
-                continue
-            if word in ALLOWED_COMMANDS:
-                continue
-            findings.append(
-                Finding(
-                    path,
-                    number,
-                    "shape",
-                    f"`{command[:60]}` names a tool; call a recipe, or name `{key}` in .github/{ALLOWLIST_NAME}",
-                )
-            )
+        _audit_workflow_contract(path, root, allowlist, recipes, findings)
 
     return findings
 
@@ -600,10 +511,7 @@ def main(argv: list[str] | None = None) -> int:
     # arrow in one - and the default Windows console encoding is cp1252. A
     # checker that raises UnicodeEncodeError while reporting a finding has
     # turned a fixable finding into a crash, so the stream is widened first.
-    for stream in (sys.stdout, sys.stderr):
-        reconfigure = getattr(stream, "reconfigure", None)
-        if reconfigure is not None:
-            reconfigure(encoding="utf-8", errors="replace")
+    _configure_report_streams()
 
     args = list(sys.argv[1:] if argv is None else argv)
     placement_only = "--runner-placement-only" in args
@@ -615,7 +523,7 @@ def main(argv: list[str] | None = None) -> int:
         if not paths:
             print("FAIL: no workflows found", file=sys.stderr)
             return 1
-        findings = [finding for path in paths for finding in runner_placement(path, path.read_text(encoding="utf-8"))]
+        findings = _placement_findings(paths)
     else:
         findings = audit(root)
     for finding in findings:
@@ -635,6 +543,170 @@ def main(argv: list[str] | None = None) -> int:
         else "PASS: every workflow runs self-hosted, " + "calls recipes and installs one pinned `just`."
     )
     return 0
+
+
+def _record_matrix_value(number: int, lines: list[str], keys: set[str], found: list[tuple[int, str]]) -> None:
+    """Record matrix value."""
+    match = re.match(r"^\s*(?:-\s+)?([\w-]+):\s*(.*?)\s*$", lines[number])
+    if not match or match.group(1) not in keys:
+        return
+    value = _strip_comment(match.group(2))
+    if value:
+        found.append((number, value))
+        return
+    for item in _block(lines, number):
+        listed = re.match(r"^\s*-\s+(.*?)\s*$", lines[item])
+        if listed:
+            found.append((item, _strip_comment(listed.group(1))))
+
+
+def _record_external_reusable_job(header: int, lines: list[str], found: list[tuple[int, str]]) -> None:
+    """Record external reusable job."""
+    fields = _block(lines, header)
+    if not fields:
+        return
+    field_indent = _indent(lines[fields[0]])
+    for number in fields:
+        line = lines[number]
+        if _indent(line) != field_indent or not line.strip().startswith("uses:"):
+            continue
+        target = _strip_comment(line.strip()[len("uses:") :]).strip("'\"")
+        if not target.startswith("./.github/workflows/"):
+            found.append((number, target))
+
+
+def _check_runner_selector(index: int, line: str, lines: list[str], refuse: Callable[[int, str], None]) -> None:
+    """Check runner selector."""
+    match = _RUNS_ON.match(line)
+    if not match or not _meaningful(line):
+        return
+    value = _strip_comment(match.group(2))
+    if not value:
+        if not _names_self_hosted(_nested_labels(lines, index)):
+            refuse(index, "runs-on names no self-hosted label")
+        return
+    if value.startswith(("{", "[")) or "${{" not in value:
+        if not _literal_placement(value):
+            refuse(index, f"runs-on `{value[:60]}` names no self-hosted label")
+        return
+    if _GUARDED_MATRIX.fullmatch(value) or _closed_mapping(value):
+        return
+    _check_matrix_selector(value, lines, index, refuse)
+
+
+def _audit_workflow_contract(
+    path: Path, root: Path, allowlist: set[str], recipes: set[str], findings: list[Finding]
+) -> None:
+    """Audit workflow contract."""
+    text = path.read_text(encoding="utf-8")
+    name = path.name
+    findings.extend(runner_placement(path, text))
+
+    for needle, why in BANNED_INSTALLS:
+        for number, line in enumerate(text.splitlines(), start=1):
+            if needle in line and not line.lstrip().startswith("#"):
+                findings.append(Finding(path, number, "install", f"{needle}: {why}"))
+
+    calls_just = any(_first_word(command) == "just" for _, _, command in _run_commands(text))
+    if calls_just:
+        provisioning = "\n".join([text, *_local_action_texts(text, root)])
+        if JUST_INSTALL_USES not in provisioning:
+            findings.append(
+                Finding(
+                    path,
+                    1,
+                    "install",
+                    f"calls `just`, but installs it without {JUST_INSTALL_USES}",
+                )
+            )
+        elif JUST_INSTALL_TOOL not in provisioning:
+            findings.append(
+                Finding(
+                    path,
+                    1,
+                    "install",
+                    f"installs `just` off the floor pin {JUST_INSTALL_TOOL}",
+                )
+            )
+
+    for number, step, command in _run_commands(text):
+        _audit_run_command(number, step, command, name, path, allowlist, recipes, findings)
+
+
+def _audit_run_command(
+    number: int,
+    step: str,
+    command: str,
+    name: str,
+    path: Path,
+    allowlist: set[str],
+    recipes: set[str],
+    findings: list[Finding],
+) -> None:
+    """Audit run command."""
+    key = f"{name}:{step}"
+    if command.strip() == RUNNER_POLICY_COMMAND or key in allowlist or name in allowlist:
+        return
+    word = _first_word(command)
+    if word == "just":
+        called = command.split()[1] if len(command.split()) > 1 else ""
+        if recipes and called and called not in recipes:
+            findings.append(
+                Finding(
+                    path,
+                    number,
+                    "recipe",
+                    f"`just {called}` names no recipe in the justfile",
+                )
+            )
+        return
+    if word in ALLOWED_COMMANDS:
+        return
+    findings.append(
+        Finding(
+            path,
+            number,
+            "shape",
+            f"`{command[:60]}` names a tool; call a recipe, or name `{key}` in .github/{ALLOWLIST_NAME}",
+        )
+    )
+
+
+def _read_block_command(lines: list[str], body: int, indent: str, name: str, found: list[tuple[int, str, str]]) -> int:
+    """Read the first non-comment scalar command and retain the next parser cursor."""
+    while body < len(lines):
+        candidate = lines[body]
+        if candidate.strip() and not candidate.startswith(indent + " "):
+            break
+        stripped = candidate.strip()
+        if stripped and not stripped.startswith("#"):
+            found.append((body + 1, name, stripped))
+            break
+        body += 1
+    return body
+
+
+def _placement_findings(paths: list[Path]) -> list[Finding]:
+    """Project runner-placement findings in the discovered workflow order."""
+    return [finding for path in paths for finding in runner_placement(path, path.read_text(encoding="utf-8"))]
+
+
+def _check_placement_job(
+    name: object, job: object, findings: list[Finding], fail: Callable[[str], list[Finding]]
+) -> list[Finding] | None:
+    """Retain fatal job-shape refusals separately from ordinary selector findings."""
+    if not isinstance(job, dict):
+        return fail(f"{name}: invalid job mapping")
+    if "uses" in job and "runs-on" not in job:
+        target = job["uses"]
+        if not isinstance(target, str) or not target.startswith("./.github/workflows/"):
+            return fail(f"{name}: {target} is an external reusable workflow; " + "placement is unobservable")
+        return None
+    strategy = job.get("strategy", {})
+    if not isinstance(strategy, dict):
+        return fail(f"{name}: invalid strategy mapping")
+    if not _selector_proven(job.get("runs-on"), strategy.get("matrix")):
+        findings.extend(fail(f"{name}: unresolved expression or " + "selector names no self-hosted label"))
 
 
 if __name__ == "__main__":

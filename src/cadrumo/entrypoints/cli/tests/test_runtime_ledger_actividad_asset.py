@@ -64,7 +64,7 @@ from ....domain.renta.actividad_asset.lifecycle import (
 )
 from ....domain.renta.actividad_asset.schedule import ScheduleAuthority, ScheduledAmortizationCharge, schedule_charge
 from .. import runtime_ledger_actividad_asset as bridge
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

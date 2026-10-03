@@ -33,7 +33,7 @@ from .. import runtime_modelo_verification_report_read as bridge
 from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
 from .._modelo_rendering import verification_report_lines, verification_report_payload
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

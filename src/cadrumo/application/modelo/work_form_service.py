@@ -43,9 +43,7 @@ from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.deadlines.errors import DeadlineValidationError
-from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage, shift_deadline
-from ...domain.deadlines.plazo import resolve_filing_window
+from ...domain.deadlines.festivos import CalendarCCAA
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
@@ -56,12 +54,14 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from .calculation_notes import CALCULATION_NOTES
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
+from .effective_deadline import resolve_effective_filing_deadline
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormDeadline,
     ModeloFormExport,
+    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
@@ -112,12 +112,15 @@ class ModeloFormValueChangeV1(BaseModel):
 
 
 def _head(
-    calculation_revision_id: str | None, calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
+    calculation_revision_id: str | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[bool, CalculationRevision | None]:
     """Return whether the head resolved, and the head; no calculation resolves to ``None``."""
     if calculation_revision_id is None:
         return True, None
-    head = calculation_repository.load().get(calculation_revision_id)
+    head = calculation_repository.load(operation=operation).get(calculation_revision_id)
     return head is not None, head
 
 
@@ -162,23 +165,18 @@ def modelo_form_deadline(
             unknown rather than absent.
         DeadlineValidationError: More than one window matches the declaration.
     """
-    window = resolve_filing_window(str(modelo), period.filing_year, period, authority=operation)
-    if window is None:
+    deadline = resolve_effective_filing_deadline(
+        str(modelo), period.filing_year, period, holiday_territory=holiday_territory, operation=operation
+    )
+    if deadline is None:
         return None
-    nominal = window.closes_on
-    try:
-        shift = shift_deadline(nominal, modelo=str(modelo), ccaa_code=holiday_territory, operation=operation)
-    except DeadlineValidationError:
-        closes_on, coverage = nominal, DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    else:
-        closes_on, coverage = shift.adjusted_close_date, shift.coverage
     return ModeloFormDeadline(
-        closes_on=closes_on,
-        nominal_closes_on=nominal,
-        holiday_coverage=coverage,
+        closes_on=deadline.closes_on,
+        nominal_closes_on=deadline.nominal_closes_on,
+        holiday_coverage=deadline.holiday_coverage,
         reference_on=reference_on,
-        days_remaining=(closes_on - reference_on).days if reference_on <= closes_on else None,
-        days_overdue=(reference_on - closes_on).days if reference_on > closes_on else None,
+        days_remaining=deadline.days_remaining_on(reference_on),
+        days_overdue=deadline.days_overdue_on(reference_on),
     )
 
 
@@ -235,7 +233,7 @@ def load_modelo_work_form(
     )
     snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
     layout = operation.form_layout(str(modelo), review.registry_revision_id)
-    resolved, head = _head(review.calculation_revision_id, calculation_repository)
+    resolved, head = _head(review.calculation_revision_id, calculation_repository, operation=operation)
     context = caller_context_of(head)
     layer = context.operator_layer if resolved else None
     surface = (
@@ -310,7 +308,7 @@ def modelo_work_form_changes(before: ModeloWorkForm, after: ModeloWorkForm) -> t
     changes: list[ModeloFormValueChangeV1] = []
     for key, field in later.items():
         previous = earlier.get(key)
-        if previous is not None and previous.value == field.value and previous.origin is field.origin:
+        if _same_form_value(previous, field):
             continue
         changes.append(
             ModeloFormValueChangeV1(
@@ -337,6 +335,10 @@ def modelo_work_form_changes(before: ModeloWorkForm, after: ModeloWorkForm) -> t
         if key not in later
     )
     return tuple(changes)
+
+
+def _same_form_value(previous: ModeloFormField | None, current: ModeloFormField) -> bool:
+    return previous is not None and previous.value == current.value and previous.origin is current.origin
 
 
 __all__ = [

@@ -13,16 +13,15 @@ non-sensitive strings carried through :class:`AeatLoginAssertionError`.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
-from .....core.errors.hierarchy import AeatLoginAssertionError, pydantic_validation_boundary
+from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.time.utc import validate_utc_aware
+from .....core.time.utc import UtcInstant
 from .....core.type_guards import is_str_keyed_dict
 
 AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 2
@@ -44,24 +43,10 @@ class PersistedSessionMetadata(BaseModel):
     certificate_thumbprint: str = Field(min_length=1)
     certificate_subject: str = Field(min_length=1)
     certificate_nif: str = Field(min_length=1)
-    authenticated_at: datetime
-    idle_deadline: datetime
+    authenticated_at: UtcInstant
+    idle_deadline: UtcInstant
     storage_state_sha256: ContentDigest
     protected_resource_url: str = AEAT_CERTIFICATE_PROTECTED_URL
-
-    @field_validator("authenticated_at", "idle_deadline")
-    @classmethod
-    @pydantic_validation_boundary
-    def _instants_are_utc(cls, value: datetime) -> datetime:
-        """Reject a session instant that is naive or not UTC.
-
-        The metadata is persisted inside the encrypted session envelope as
-        JSON, which preserves the offset, so the canonical contract holds at
-        this boundary. Both fields are compared against the clock on resume:
-        a naive value would be read as UTC and could extend or expire an idle
-        deadline by the local offset.
-        """
-        return validate_utc_aware(value)
 
     @field_validator("protected_resource_url")
     @classmethod

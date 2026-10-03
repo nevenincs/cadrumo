@@ -22,22 +22,37 @@ declarable-amount false-fire guard.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
-from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
-from .errors import RegistryValidationError
+from ._ledger_binding_resolution import (
+    cash_received_total,
+    casilla_target_matcher,
+    ingresos_integros_total,
+    resolve_ledger_family_binding_values,
+    unsupported_ledger_family_observations,
+)
 from .ids import BindingId
-from .ledger_binding_selector_support import ImpatriadoLedgerIncomeFact, mapping_lacks_fact
+from .ledger_binding_selector_support import (
+    IMPATRIADO_LEDGER_INCOME_FACTS,
+    ImpatriadoLedgerIncomeFact,
+    LedgerIncomeFact,
+    mapping_lacks_fact,
+)
+from .ledger_binding_validation import (
+    ledger_binding_build_diagnostics,
+    ledger_binding_selector,
+    require_ledger_aggregation_op,
+    require_ledger_fact,
+    require_ledger_target_casilla,
+)
 
 # Ledger-aggregation binding source kinds, imported from the canonical
 # :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS` definition. Every
@@ -137,7 +152,7 @@ class LedgerImpatriadoIncomeProvider(BaseModel):
         if mapping_lacks_fact(value):
             raise ValueError(
                 "ledger_impatriado_income_aggregation selector requires an explicit 'fact'; "
-                f"accepted facts are {sorted(_IMPATRIADO_SUPPORTED_FACTS)!r}",
+                f"accepted facts are {sorted(IMPATRIADO_LEDGER_INCOME_FACTS)!r}",
             )
         return value
 
@@ -149,42 +164,23 @@ _IMPATRIADO_BASE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
     "_IMPATRIADO_BASE_CASILLAS",
     "impatriado.base-liquidable-general",
 )
-# The complete accepted ``fact`` set for this family, shared by the
-# missing-``fact`` refusal message and the build-time invariant so the two can
-# never name different sets.
-_IMPATRIADO_SUPPORTED_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "cash_received_sum"})
-
-
-def _impatriado_ledger_income_selector(binding: BindingDefinition) -> LedgerImpatriadoIncomeProvider:
-    try:
-        return provider_member(binding, LedgerImpatriadoIncomeProvider)
-    except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_impatriado_income_aggregation selector: {exc}",
-        ) from exc
 
 
 def validate_ledger_impatriado_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
     """Validate a ``ledger_impatriado_income_aggregation`` binding definition."""
-    if binding.source != BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_impatriado_income_aggregation source")
-    selector = _impatriado_ledger_income_selector(binding)
-    if selector.target_casilla_id not in _IMPATRIADO_BASE_CASILLAS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
-            f"is outside the supported Modelo 151 base casillas {sorted(_IMPATRIADO_BASE_CASILLAS)!r}",
-        )
-    op = binding_aggregation_op(binding)
-    if op != BindingAggregationOp.SUM:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_impatriado_income_aggregation supports only "
-            f"aggregation op 'sum', got {op.value!r}",
-        )
-    if selector.fact not in _IMPATRIADO_SUPPORTED_FACTS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_impatriado_income_aggregation supports only "
-            f"facts {sorted(_IMPATRIADO_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
-        )
+    selector = ledger_binding_selector(
+        binding,
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+        LedgerImpatriadoIncomeProvider,
+    )
+    require_ledger_target_casilla(
+        binding,
+        selector.target_casilla_id,
+        _IMPATRIADO_BASE_CASILLAS,
+        scope="supported Modelo 151 base casillas",
+    )
+    require_ledger_aggregation_op(binding)
+    require_ledger_fact(binding, selector.fact, IMPATRIADO_LEDGER_INCOME_FACTS)
 
 
 def validate_ledger_impatriado_income_aggregation_binding(binding: BindingDefinition) -> list[str]:
@@ -195,12 +191,9 @@ def validate_ledger_impatriado_income_aggregation_binding(binding: BindingDefini
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_impatriado_income_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, LedgerImpatriadoIncomeProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(
+    return ledger_binding_build_diagnostics(
         binding,
-        "ledger_impatriado_income_aggregation",
+        LedgerImpatriadoIncomeProvider,
         validate_ledger_impatriado_income_aggregation_binding_definition,
     )
 
@@ -230,34 +223,14 @@ class ImpatriadoIncomeObservationProtocol(Protocol):
         ...
 
 
-def _impatriado_income_build_matcher(
-    selector: LedgerImpatriadoIncomeProvider,
-) -> Callable[[ImpatriadoIncomeObservationProtocol], bool]:
-    target_casilla_id = selector.target_casilla_id
-
-    def matcher(observation: ImpatriadoIncomeObservationProtocol) -> bool:
-        return observation.target_casilla_id == target_casilla_id
-
-    return matcher
-
-
 def _impatriado_income_aggregate(
     matched: Sequence[ImpatriadoIncomeObservationProtocol],
     selector: LedgerImpatriadoIncomeProvider,
 ) -> Decimal:
-    if selector.fact == "ingresos_integros_sum":
-        return sum(
-            (
-                observation.taxable_base_amount
-                if observation.taxable_base_amount is not None
-                else observation.gross_amount
-                for observation in matched
-            ),
-            Decimal("0"),
-        )
-    # cash_received_sum: the raw bank-credited magnitude, ignoring any declared
-    # base. ``fact`` is a required closed Literal, so this is that member alone.
-    return sum((observation.gross_amount for observation in matched), Decimal("0"))
+    if selector.fact == LedgerIncomeFact.INGRESOS_INTEGROS_SUM:
+        return ingresos_integros_total(matched)
+    # ``fact`` is a required closed Literal, so this is cash_received_sum alone.
+    return cash_received_total(matched)
 
 
 def resolve_ledger_impatriado_income_aggregation_binding_values(
@@ -283,8 +256,8 @@ def resolve_ledger_impatriado_income_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-        parse_selector=_impatriado_ledger_income_selector,
-        build_matcher=_impatriado_income_build_matcher,
+        provider_model=LedgerImpatriadoIncomeProvider,
+        build_matcher=casilla_target_matcher,
         aggregate=_impatriado_income_aggregate,
     )
 
@@ -307,7 +280,7 @@ def unsupported_ledger_impatriado_income_observations(
     see that function for the shared fail-closed contract (why an unmatched
     observation is a modelling gap, not a legitimate zero). This family's
     own contribution is narrow: the ``target_casilla_id`` match predicate
-    (reused from the resolver's ``_impatriado_income_build_matcher``) and a
+    (the shared casilla-keyed matcher the resolver also uses) and a
     false-fire guard that excludes an observation whose declarable amount —
     ``max(gross_amount, taxable_base_amount)`` when a base is declared,
     ``gross_amount`` otherwise — is zero. No ``extra_exclusion``.
@@ -320,8 +293,8 @@ def unsupported_ledger_impatriado_income_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-        parse_selector=_impatriado_ledger_income_selector,
-        build_matcher=_impatriado_income_build_matcher,
+        provider_model=LedgerImpatriadoIncomeProvider,
+        build_matcher=casilla_target_matcher,
         is_declarable=_impatriado_income_is_declarable,
     )
 

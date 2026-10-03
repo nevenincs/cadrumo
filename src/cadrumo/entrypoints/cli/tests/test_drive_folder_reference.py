@@ -5,8 +5,8 @@ grammar looks for ``/d/<id>`` or ``?id=``. So the reference a user copies out of
 the browser to sweep a folder — the one form this verb exists to take — was
 refused as unrecognisable, and the parser had no test of any kind.
 
-Folder-URL knowledge is kept here rather than widened into
-``parse_drive_file_id``: a single-document pull should keep refusing a folder
+Folder-URL knowledge lives in the core reference grammar rather than in the
+file parser: a single-document pull should keep refusing a folder
 link at the boundary rather than accepting it and failing later against the
 media endpoint, where the operator would read a scope error instead of "that is
 a folder".
@@ -22,6 +22,7 @@ from ..ledger_lifecycle_cli import _parse_drive_folder_reference
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ID = "1AbCdEfGhIjKlMnOpQrStUvWxYz012345"
+_ID_10 = "A" * 10
 
 
 @pytest.mark.parametrize(
@@ -48,12 +49,20 @@ def test_a_file_url_still_resolves() -> None:
     assert _parse_drive_folder_reference(f"https://drive.google.com/file/d/{_ID}/view") == _ID
 
 
+def test_a_ten_character_folder_url_resolves_without_accepting_a_prefix() -> None:
+    """The URL-context minimum is ten and invalid suffixes are not truncated."""
+    assert _parse_drive_folder_reference(f"https://drive.google.com/drive/folders/{_ID_10}") == _ID_10
+    with pytest.raises(typer.BadParameter):
+        _parse_drive_folder_reference(f"https://drive.google.com/drive/folders/{_ID_10}!")
+
+
 @pytest.mark.parametrize(
     "reference",
     [
         pytest.param("not a drive reference", id="prose"),
         pytest.param("", id="empty"),
         pytest.param("https://drive.google.com/drive/folders/short", id="too-short-to-be-an-id"),
+        pytest.param(f"https://drive.google.com/drive/folders/{'A' * 9}", id="nine-character-folder-id"),
     ],
 )
 def test_an_unrecognisable_reference_is_refused(reference: str) -> None:

@@ -26,6 +26,7 @@ from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationSuccessV1,
@@ -48,7 +49,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
 from ....core.time.clock import now
 from ..components.theme import tokenised
-from .controller_port import OperationControllerPort
+from .controller_port import OperationControllerPort, OperationErrorDetailPort
 from .interactions import (
     OperationModalInteractionStateV1,
     OperationModalReviewInteractionV1,
@@ -56,7 +57,7 @@ from .interactions import (
 )
 from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
-from .refusal_explanation import public_refusal_explanation
+from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
 _POLL_INTERVAL = timedelta(milliseconds=200)
 
@@ -67,6 +68,8 @@ class OperationModalSettledOutcomeV1(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["settled"] = "settled"
     view_model: OperationModalViewModelV1
+    #: The stopped executor's own localized message, when it recorded one.
+    error_explanation: str | None = None
 
 
 class OperationModalDetachedOutcomeV1(BaseModel):
@@ -204,13 +207,21 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 return
             self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
-                self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model))
+                explanation = await self._settled_error_explanation(observed.projection)
+                self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model, error_explanation=explanation))
                 return
             await asyncio.sleep(_POLL_INTERVAL.total_seconds())
 
     def _observing(self) -> bool:
         """Read the current state, which another action may change across an await."""
         return not self._observation_stopped
+
+    async def _settled_error_explanation(self, projection: OperationPublicProjectionV1) -> str | None:
+        """Read the stopped executor's own message when the bound controller can supply its detail."""
+        controller = self._controller
+        if not isinstance(controller, OperationErrorDetailPort):
+            return None
+        return operation_error_explanation(await controller.settled_error_detail(projection))
 
     def _runtime_access_lost(self, error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> None:
         self._observation_stopped = True

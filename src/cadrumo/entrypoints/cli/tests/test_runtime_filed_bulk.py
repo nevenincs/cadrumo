@@ -30,9 +30,10 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....core.period import Period
 from .. import _app_live as handler
 from .. import runtime_filed_bulk as bridge
+from .. import runtime_profile_operation as profile_operation
 from .._app_live_filed_payloads import FiledCaptureResult
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -186,7 +187,7 @@ def _bind(
             refusal_code=refusal_code,
         )
 
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
     return submissions, profile_bindings
 
 

@@ -36,7 +36,7 @@ from .modelo_bindings_actividad_assets import (
     classify_ledger_expenses_against_asset_register,
     register_owned_acquisition_diagnostics,
 )
-from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from .renta_ledger import RentaLedgerExpenseAggregation, aggregate_renta_ledger_expenses_from_repositories
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -82,18 +82,9 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         self._usage_ratio_profile_loader = usage_ratio_profile_loader
         self._activity_asset_history_repository = activity_asset_history_repository
 
-    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
-
-        Returns:
-            An empty resolution when the revision declares no such binding
-            source, a degraded resolution on repository failure, or the
-            aggregated :class:`~.source_mesh.CalculationSourceResolution`
-            with its binding values, diagnostics, and provenance.
-        """
-        if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
-            return empty_source_resolution(self.resolver_id, self.owned_sources)
-
+    def _aggregate(
+        self, context: CalculationSourceContext
+    ) -> RentaLedgerExpenseAggregation | CalculationSourceResolution:
         try:
             profile = context.profile
             with source_context_operation(context) as operation:
@@ -104,7 +95,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     operation=operation,
                     profile_record=profile.record if profile is not None else None,
                 )
-                aggregation = aggregate_renta_ledger_expenses_from_repositories(
+                return aggregate_renta_ledger_expenses_from_repositories(
                     bucket_id=context.bucket_id,
                     period=aggregation_period_for_modelo(
                         filing_year=context.filing_year,
@@ -126,6 +117,22 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
+
+        Returns:
+            An empty resolution when the revision declares no such binding
+            source, a degraded resolution on repository failure, or the
+            aggregated :class:`~.source_mesh.CalculationSourceResolution`
+            with its binding values, diagnostics, and provenance.
+        """
+        if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
+
+        aggregation = self._aggregate(context)
+        if isinstance(aggregation, CalculationSourceResolution):
+            return aggregation
         asset_history = self._activity_asset_history_repository.load()
         register_owned = classify_ledger_expenses_against_asset_register(
             asset_history.revisions,

@@ -13,6 +13,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Final, Literal
 
+from .....core.descriptor_write import write_all
 from .errors import ProfileCustodyPathAbsentError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_COMMIT_FILENAME: Final = "profile.commit.v1.json"
@@ -421,12 +422,7 @@ def write_exclusive_fsynced_fd(parent_fd: int, name: str, payload: bytes) -> Non
 
 def _write_exclusive_descriptor_fsynced(descriptor: int, payload: bytes) -> None:
     try:
-        offset = 0
-        while offset < len(payload):
-            written = os.write(descriptor, payload[offset:])
-            if written <= 0:
-                raise OSError("profile capsule staging short write")
-            offset += written
+        write_all(descriptor, payload)
         os.fsync(descriptor)
     except OSError as exc:
         raise ProfileCustodyRecordError("profile capsule staging record could not be fsynced") from exc

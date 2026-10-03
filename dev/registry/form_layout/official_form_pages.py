@@ -20,7 +20,6 @@ reference.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
@@ -28,6 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.hashing import sha256_file
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormDesignSource
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -151,7 +151,7 @@ def _form_pages(
     binary = data_root / source.corpus_path
     if not binary.is_file():
         raise OfficialFormUnavailableError(f"source {ref!r}: {source.corpus_path} is not present")
-    actual = hashlib.sha256(binary.read_bytes()).hexdigest()
+    actual = sha256_file(binary)
     if actual != source.sha256:
         raise OfficialFormUnavailableError(
             f"source {ref!r}: {source.corpus_path} hashes {actual}, not the catalogued {source.sha256}"
@@ -168,7 +168,7 @@ def _form_pages(
     texts = [unit.text for unit in extracted.units]
     running = _running_keys(texts)
     pages = [_printed_page(ref, unit.title or "", unit.text, running) for unit in extracted.units]
-    pin = FormDesignSource(source_ref=ref, sha256=hashlib.sha256(text_path.read_bytes()).hexdigest())
+    pin = FormDesignSource(source_ref=ref, sha256=sha256_file(text_path))
     return pages, pin
 
 

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import math
-import os
 import re
 import subprocess
 import sys
@@ -24,6 +23,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.tests.golden_comparison import canonicalise
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
+from dev.product_environment import ambient_product_settings_removed
 
 from .authority_currency import require_current_authority
 from .compare import check_transcript, evaluate_expectations
@@ -251,67 +251,7 @@ def discover_sequences(
             problems.append(f"page {page!r} does not exist under {root}")
 
     for path in page_files:
-        docname = path.relative_to(root).with_suffix("").as_posix()
-        try:
-            text = path.read_text(encoding=_UTF_8)
-        except OSError as exc:
-            problems.append(f"page {docname!r}: cannot read ({exc})")
-            continue
-        raw_directives = _extract_directives(text, page=docname, problems=problems)
-        if raw_directives:
-            prerequisite_problem = _profile_prerequisite_problem(text, docname, raw_directives[0].line_number)
-            if prerequisite_problem is not None:
-                problems.append(prerequisite_problem)
-        for raw in raw_directives:
-            found_id = raw.sequence_id
-            if sequence_id is not None and found_id != sequence_id:
-                continue
-            if found_id in seen_ids:
-                problems.append(
-                    f"page {docname!r}: duplicate sequence id {found_id!r} "
-                    f"(already declared on page {seen_ids[found_id]!r}); sequence ids are "
-                    "globally unique",
-                )
-                continue
-            seen_ids[found_id] = docname
-            if raw.body.strip():
-                problems.append(
-                    f"page {docname!r} sequence {found_id!r}: cli-sequence directive bodies "
-                    "must be empty; commands and development metadata belong in the keyed "
-                    "private contract under docs/_sequences/contracts",
-                )
-                continue
-            private_public_options = sorted(set(raw.options) - {"verify"})
-            if private_public_options:
-                rendered = ", ".join(f":{key}:" for key in private_public_options)
-                problems.append(
-                    f"page {docname!r} sequence {found_id!r}: private option(s) {rendered} "
-                    "must live in the keyed sequence contract, not user-facing Markdown",
-                )
-                continue
-            try:
-                contract_options, contract_body = read_sequence_contract(
-                    docname,
-                    found_id,
-                    docs_root=root,
-                    contracts_root=contracts_root,
-                )
-                options = {**contract_options, **raw.options}
-                sequence = parse_sequence(sequence_id=found_id, options=options, body=contract_body)
-            except SequenceParseError as exc:
-                problems.extend(f"page {docname!r}: {problem}" for problem in exc.problems)
-                continue
-            except SequenceEngineError as exc:
-                problems.append(str(exc))
-                continue
-            discovered.append(
-                DiscoveredSequence(
-                    page=docname,
-                    sequence_id=found_id,
-                    line_number=raw.line_number,
-                    sequence=sequence,
-                ),
-            )
+        _discover_page_sequences(path, root, contracts_root, sequence_id, discovered, problems, seen_ids)
 
     if sequence_id is not None and not discovered and not problems:
         problems.append(f"no enrolled cli-sequence with id {sequence_id!r} was found under {root}")
@@ -467,7 +407,7 @@ def english_pinned_environment() -> dict[str, str]:
     composed its own environment would drift from this one and measure a
     differently-configured product.
     """
-    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment = ambient_product_settings_removed()
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
@@ -737,24 +677,7 @@ def check_page_coherence(
         # An all-@static sequence runs nothing, so it produces no transcript;
         # only executable sequences take part in the cumulative page run and the
         # transcript alignment below.
-        executable = [item for item in items if item.sequence.executed_frames]
-        try:
-            with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
-                with _sequence_progress_scope(docname):
-                    transcripts = execute_page_sequences(
-                        [item.sequence for item in executable],
-                        label=docname,
-                        sandbox_root=Path(tmp),
-                    )
-                for item, transcript in zip(executable, transcripts, strict=True):
-                    all_problems.extend(
-                        f"{COHERENCE_TIER_PREFIX}: {problem}"
-                        for problem in evaluate_expectations(item.sequence, transcript, page=docname)
-                    )
-        except SequenceEngineError as exc:
-            all_problems.append(
-                f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {exc}",
-            )
+        _check_page_coherence_items(docname, items, all_problems)
     return tuple(all_problems)
 
 
@@ -811,3 +734,112 @@ def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | No
     except SequenceEngineError:
         return None
     return next((item.page for item in discovered if item.sequence_id == sequence_id), None)
+
+
+def _discover_page_sequences(
+    path: Path,
+    root: Path,
+    contracts_root: Path | None,
+    sequence_id: str | None,
+    discovered: list[DiscoveredSequence],
+    problems: list[str],
+    seen_ids: dict[str, str],
+) -> None:
+    """Discover page sequences."""
+    docname = path.relative_to(root).with_suffix("").as_posix()
+    try:
+        text = path.read_text(encoding=_UTF_8)
+    except OSError as exc:
+        problems.append(f"page {docname!r}: cannot read ({exc})")
+        return
+    raw_directives = _extract_directives(text, page=docname, problems=problems)
+    if raw_directives:
+        prerequisite_problem = _profile_prerequisite_problem(text, docname, raw_directives[0].line_number)
+        if prerequisite_problem is not None:
+            problems.append(prerequisite_problem)
+    for raw in raw_directives:
+        _discover_raw_sequence(raw, docname, root, contracts_root, sequence_id, discovered, problems, seen_ids)
+
+
+def _discover_raw_sequence(
+    raw: _RawDirective,
+    docname: str,
+    root: Path,
+    contracts_root: Path | None,
+    sequence_id: str | None,
+    discovered: list[DiscoveredSequence],
+    problems: list[str],
+    seen_ids: dict[str, str],
+) -> None:
+    """Discover raw sequence."""
+    found_id = raw.sequence_id
+    if sequence_id is not None and found_id != sequence_id:
+        return
+    if found_id in seen_ids:
+        problems.append(
+            f"page {docname!r}: duplicate sequence id {found_id!r} "
+            f"(already declared on page {seen_ids[found_id]!r}); sequence ids are "
+            "globally unique",
+        )
+        return
+    seen_ids[found_id] = docname
+    if raw.body.strip():
+        problems.append(
+            f"page {docname!r} sequence {found_id!r}: cli-sequence directive bodies "
+            "must be empty; commands and development metadata belong in the keyed "
+            "private contract under docs/_sequences/contracts",
+        )
+        return
+    private_public_options = sorted(set(raw.options) - {"verify"})
+    if private_public_options:
+        rendered = ", ".join(f":{key}:" for key in private_public_options)
+        problems.append(
+            f"page {docname!r} sequence {found_id!r}: private option(s) {rendered} "
+            "must live in the keyed sequence contract, not user-facing Markdown",
+        )
+        return
+    try:
+        contract_options, contract_body = read_sequence_contract(
+            docname,
+            found_id,
+            docs_root=root,
+            contracts_root=contracts_root,
+        )
+        options = {**contract_options, **raw.options}
+        sequence = parse_sequence(sequence_id=found_id, options=options, body=contract_body)
+    except SequenceParseError as exc:
+        problems.extend(f"page {docname!r}: {problem}" for problem in exc.problems)
+        return
+    except SequenceEngineError as exc:
+        problems.append(str(exc))
+        return
+    discovered.append(
+        DiscoveredSequence(
+            page=docname,
+            sequence_id=found_id,
+            line_number=raw.line_number,
+            sequence=sequence,
+        ),
+    )
+
+
+def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], all_problems: list[str]) -> None:
+    """Check page coherence items."""
+    executable = [item for item in items if item.sequence.executed_frames]
+    try:
+        with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
+            with _sequence_progress_scope(docname):
+                transcripts = execute_page_sequences(
+                    [item.sequence for item in executable],
+                    label=docname,
+                    sandbox_root=Path(tmp),
+                )
+            for item, transcript in zip(executable, transcripts, strict=True):
+                all_problems.extend(
+                    f"{COHERENCE_TIER_PREFIX}: {problem}"
+                    for problem in evaluate_expectations(item.sequence, transcript, page=docname)
+                )
+    except SequenceEngineError as exc:
+        all_problems.append(
+            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {exc}",
+        )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Never
+from uuid import UUID
 
 import typer
 
@@ -16,24 +16,11 @@ from ...application.ledger.llm_diagnostics_operation import (
     LedgerLlmDiagnosticsRequest,
 )
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid(completed: RegisteredOperationCompletion[LedgerLlmDiagnosticsProjection]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_ledger_llm_diagnostics_for_cli(
@@ -63,24 +50,36 @@ def read_ledger_llm_diagnostics_for_cli(
         timeout=60,
     )
     projection = completed.projection
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-        or projection.profile_id != client.profile_id
-        or projection.operation_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID
-        or projection.outcome != "completed"
-        or projection.effect is not OperationEffect.NONE
-        or projection.since != since
-        or projection.until != until
-        or projection.low_confidence_threshold != public_threshold
-    ):
-        _invalid(completed)
+    if _llm_diagnostics_receipt_invalid(completed, projection, client.profile_id, since, until, public_threshold):
+        raise invalid_completion_error(completed)
 
     report = projection.to_report()
     if report.since != since or report.until != until or report.low_confidence_threshold != low_confidence_threshold:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return report
 
 
 __all__ = ["read_ledger_llm_diagnostics_for_cli"]
+
+
+def _llm_diagnostics_receipt_invalid(
+    completed: RegisteredOperationCompletion[LedgerLlmDiagnosticsProjection],
+    projection: LedgerLlmDiagnosticsProjection,
+    profile_id: UUID,
+    since: date | None,
+    until: date | None,
+    public_threshold: PublicDecimal,
+) -> bool:
+    """Correlate the settled read receipt and exact metric window and threshold."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+        or (projection.profile_id != profile_id)
+        or (projection.operation_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID)
+        or (projection.outcome != "completed")
+        or (projection.effect is not OperationEffect.NONE)
+        or (projection.since != since)
+        or (projection.until != until)
+        or (projection.low_confidence_threshold != public_threshold)
+    )

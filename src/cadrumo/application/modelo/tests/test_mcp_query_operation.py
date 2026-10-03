@@ -9,11 +9,14 @@ import pytest
 
 from cadrumo.application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
 from cadrumo.application.modelo import mcp_query_operation as subject
-from cadrumo.application.modelo.mcp_query_operation import (
+from cadrumo.application.modelo.mcp_binding_validation import validate_typed_binding_value
+from cadrumo.application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloBindingValueContractUnsupportedError,
     ModeloBindingValueInvalidError,
     ModeloReadinessSummaryProjection,
+)
+from cadrumo.application.modelo.mcp_query_operation import (
     build_modelo_bindings_resolve_typed_definition,
     build_modelo_bindings_resolve_typed_registration,
     build_modelo_readiness_summary_definition,
@@ -60,7 +63,7 @@ def test_typed_binding_value_preserves_accepted_exact_input_and_rejects_invalid_
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.snapshot("303", filing_year=2025, period="1T")
         binding = next(row for row in snapshot.revision.bindings if row.value.channel is BindingValueChannel.DECIMAL)
-        value = subject._validated_value(
+        value = validate_typed_binding_value(
             binding, "0.75", snapshot, operation=operation, effective_date=date(2025, 3, 31)
         )
         assert value.binding_id == binding.id
@@ -68,7 +71,9 @@ def test_typed_binding_value_preserves_accepted_exact_input_and_rejects_invalid_
         assert value.channel is BindingValueChannel.DECIMAL
         rejected = "not-a-decimal-secret-value"
         with pytest.raises(ModeloBindingValueInvalidError) as raised:
-            subject._validated_value(binding, rejected, snapshot, operation=operation, effective_date=date(2025, 3, 31))
+            validate_typed_binding_value(
+                binding, rejected, snapshot, operation=operation, effective_date=date(2025, 3, 31)
+            )
         assert rejected not in str(raised.value)
 
 
@@ -83,7 +88,9 @@ def test_missing_official_text_grammar_refuses_without_treating_arbitrary_text_a
         )
         rejected = "free-form-private-value"
         with pytest.raises(ModeloBindingValueContractUnsupportedError) as raised:
-            subject._validated_value(binding, rejected, snapshot, operation=operation, effective_date=date(2025, 3, 31))
+            validate_typed_binding_value(
+                binding, rejected, snapshot, operation=operation, effective_date=date(2025, 3, 31)
+            )
         assert rejected not in str(raised.value)
 
 
@@ -110,7 +117,7 @@ def test_declared_enum_rejects_outside_member_even_when_target_text_pattern_acce
         )
         revision = snapshot.revision.model_copy(update={"casillas": (target,)})
         selected = snapshot.model_copy(update={"revision": revision})
-        accepted = subject._validated_value(
+        accepted = validate_typed_binding_value(
             binding, "alta", selected, operation=operation, effective_date=date(2025, 3, 31)
         )
         assert accepted.value == "alta"
@@ -118,7 +125,9 @@ def test_declared_enum_rejects_outside_member_even_when_target_text_pattern_acce
         assert target.constraints is not None
         assert target.constraints.violates_text(rejected) is None
         with pytest.raises(ModeloBindingValueInvalidError):
-            subject._validated_value(binding, rejected, selected, operation=operation, effective_date=date(2025, 3, 31))
+            validate_typed_binding_value(
+                binding, rejected, selected, operation=operation, effective_date=date(2025, 3, 31)
+            )
 
 
 def test_readiness_summary_preserves_axes_and_typed_cause_without_diagnostic_detail(

@@ -109,6 +109,18 @@ def resolve_perceptor_clave_scope(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("perceptor clave scope must resolve as a mapping fact")
+    entries = _scope_entries(resolved)
+    casillas = _casilla_scopes(entries)
+    return PerceptorClaveScope(
+        modelo_id=_required_scope_entry(entries, "modelo"),
+        row_clave_binding=_required_scope_entry(entries, "row_clave_binding"),
+        row_subclave_binding=_required_scope_entry(entries, "row_subclave_binding"),
+        casillas=MappingProxyType(casillas),
+        effective_date=effective_date,
+    )
+
+
+def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
@@ -116,13 +128,17 @@ def resolve_perceptor_clave_scope(
         if entry.key in entries:
             raise RegistryValidationError(f"duplicate perceptor clave scope key {entry.key!r}")
         entries[entry.key] = entry.value.strip()
+    return entries
 
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if not value:
-            raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
-        return value
 
+def _required_scope_entry(entries: Mapping[str, str], key: str) -> str:
+    value = entries.get(key)
+    if not value:
+        raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
+    return value
+
+
+def _casilla_scopes(entries: Mapping[str, str]) -> dict[CasillaId, tuple[ClaveScopeToken, ...]]:
     casillas: dict[CasillaId, tuple[ClaveScopeToken, ...]] = {}
     for key, value in entries.items():
         if key in _RESERVED_KEYS:
@@ -136,13 +152,7 @@ def resolve_perceptor_clave_scope(
         casillas[casilla_id] = tokens
     if not casillas:
         raise RegistryValidationError("perceptor clave scope declares no casilla")
-    return PerceptorClaveScope(
-        modelo_id=required("modelo"),
-        row_clave_binding=required("row_clave_binding"),
-        row_subclave_binding=required("row_subclave_binding"),
-        casillas=MappingProxyType(casillas),
-        effective_date=effective_date,
-    )
+    return casillas
 
 
 def row_field_value_bindings(revision: ModeloRevision) -> dict[CasillaId, BindingId]:

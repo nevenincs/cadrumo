@@ -96,8 +96,7 @@ def modelo_project(
     before :func:`emit_envelope` renders JSON or table output.
     """
     profile_id = UUID(active_bucket_id_or_refuse())
-    casilla_pairs = dict(parse_casilla_override(spec) for spec in casilla or ())
-    binding_pairs = dict(parse_binding_override(spec) for spec in binding or ())
+    casilla_pairs, binding_pairs = _projection_override_pairs(casilla, binding)
     try:
         service_result = run_modelo_project(
             ctx,
@@ -265,3 +264,12 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
     compare_result = _compare_result_payload(service_result)
     lines = _compare_lines(service_result)
     emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)
+
+
+def _projection_override_pairs(
+    casilla: list[str] | None, binding: list[str] | None
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Parse casilla overrides before binding overrides with their established parsers."""
+    casilla_pairs = dict(parse_casilla_override(spec) for spec in casilla or ())
+    binding_pairs = dict(parse_binding_override(spec) for spec in binding or ())
+    return casilla_pairs, binding_pairs

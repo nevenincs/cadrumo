@@ -51,6 +51,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -749,7 +750,7 @@ def _prefilled_bindings(
     selector, so a binding resolved outside a requirement still names where its
     value came from.
     """
-    binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
+    binding_index = revision_bindings_by_id(snapshot.revision)
     requirement_index = _requirements_by_binding(snapshot)
     pre_activity_zero_binding_ids = _pre_activity_scoped_binding_ids(snapshot, activity_start_date)
 

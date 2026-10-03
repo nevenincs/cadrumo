@@ -8,16 +8,10 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_5,
 )
-from .app_ledger_inventory_common_command_parameters import (
-    INVENTORY_ACTIVIDAD_ID_ARGUMENT,
-    INVENTORY_YEAR_OPTION,
-)
-from .command_spec import (
-    CommandSpec,
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -25,6 +19,11 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .app_ledger_inventory_common_command_parameters import (
+    INVENTORY_ACTIVIDAD_ID_ARGUMENT,
+    INVENTORY_YEAR_OPTION,
+)
+from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

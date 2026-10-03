@@ -12,7 +12,6 @@ column headings, the row labels, and for each cell its box number and value.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Final
 
@@ -23,6 +22,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormRate,
     ModeloFormRepeatingRow,
 )
+from ...components.cell_text import longest_word, wrap_words
 
 type GridKey = tuple[str, str]
 """A cell's semantic address, as the casilla list keys its cursor."""
@@ -43,51 +43,20 @@ GRID_VALUE_FLOOR: Final[int] = 12
 GRID_RECORD_HEADING_FLOOR: Final[int] = 16
 #: A rate column makes room for at least this many cells.
 GRID_RATE_FLOOR: Final[int] = 4
-_BREAKABLE_SPACE: Final[re.Pattern[str]] = re.compile(r"[^\S\u00a0]+")
-"""Where a text may break: any space except a no-break space, which holds "art. 71" or "1 000" together."""
-
-
-def wrap_text(text: str, width: int) -> tuple[str, ...]:
-    """Break ``text`` into lines of at most ``width`` cells, at spaces where it can; nothing is dropped."""
-    width = max(width, 1)
-    lines: list[str] = []
-    line = ""
-    for word in _BREAKABLE_SPACE.split(text.strip()):
-        candidate = f"{line} {word}" if line else word
-        if cell_len(candidate) <= width:
-            line = candidate
-            continue
-        if line:
-            lines.append(line)
-        line = word
-        while cell_len(line) > width:
-            cut = len(line)
-            while cut > 1 and cell_len(line[:cut]) > width:
-                cut -= 1
-            lines.append(line[:cut])
-            line = line[cut:]
-    if line or not lines:
-        lines.append(line)
-    return tuple(lines)
 
 
 def wrap_label(text: str, width: int) -> tuple[str, ...]:
     """Break a row label into lines of ``width`` cells, each line after the first indented under the first."""
-    first = wrap_text(text, width)
+    first = wrap_words(text, width)
     if len(first) == 1:
         return first
-    rest = wrap_text(text[len(first[0]) :], max(width - GRID_LABEL_INDENT, 1))
+    rest = wrap_words(text[len(first[0]) :], max(width - GRID_LABEL_INDENT, 1))
     return (first[0], *(" " * GRID_LABEL_INDENT + line for line in rest))
 
 
 def _whole(text: str, width: int) -> bool:
     """Whether every word of a label fits its column, the first line's own and the indented lines'."""
     return longest_word(text) <= max(width - GRID_LABEL_INDENT, 1) or cell_len(text) <= width
-
-
-def longest_word(text: str) -> int:
-    """The widest unbreakable run of ``text``, in cells."""
-    return max((cell_len(word) for word in _BREAKABLE_SPACE.split(text.strip())), default=0)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -187,6 +156,37 @@ def cell_width(box: int, value: int) -> int:
     return 1 + box + 1 + value + 2
 
 
+def _column_measurements(
+    headings: tuple[str, ...],
+    columns: tuple[tuple[GridCellText, ...], ...],
+    literals: tuple[tuple[str, ...], ...],
+) -> tuple[list[int], list[int], list[int]]:
+    boxes: list[int] = []
+    values: list[int] = []
+    widths: list[int] = []
+    for heading, cells, fixed in zip(headings, columns, literals, strict=True):
+        box = max((cell_len(cell.box) for cell in cells), default=0)
+        floor = GRID_RATE_FLOOR if cells and all(cell.rate for cell in cells) else GRID_VALUE_FLOOR
+        widest = max((cell_len(text) for text in (*(cell.value for cell in cells), *fixed)), default=1)
+        value = max(widest, floor if cells else 1)
+        boxes.append(box)
+        values.append(value)
+        widths.append(max(cell_width(box, value), longest_word(heading)))
+    return boxes, values, widths
+
+
+def _label_width(labels: tuple[str, ...], width: int, cells_width: int) -> int | None:
+    room = width - GRID_LEAD - 1 - cells_width
+    widest_label = max((cell_len(label) for label in labels), default=0)
+    label = min(GRID_LABEL_CAP, widest_label, room)
+    if label < 1 and widest_label:
+        return None
+    label = max(label, 1)
+    if any(len(wrap_label(text, label)) > GRID_LABEL_LINES or not _whole(text, label) for text in labels):
+        return None
+    return label
+
+
 def measure_table(
     headings: tuple[str, ...],
     columns: tuple[tuple[GridCellText, ...], ...],
@@ -200,27 +200,12 @@ def measure_table(
     lines with no word cut, so a grid whose labels would lose a word, or run
     down the side far past its own cells, goes stacked rather than cut a row.
     """
-    boxes: list[int] = []
-    values: list[int] = []
-    widths: list[int] = []
-    for heading, cells, fixed in zip(headings, columns, literals, strict=True):
-        box = max((cell_len(cell.box) for cell in cells), default=0)
-        floor = GRID_RATE_FLOOR if cells and all(cell.rate for cell in cells) else GRID_VALUE_FLOOR
-        widest = max((cell_len(text) for text in (*(cell.value for cell in cells), *fixed)), default=1)
-        value = max(widest, floor if cells else 1)
-        boxes.append(box)
-        values.append(value)
-        widths.append(max(cell_width(box, value), longest_word(heading)))
+    boxes, values, widths = _column_measurements(headings, columns, literals)
     cells_width = sum(widths) + GRID_GAP * max(len(widths) - 1, 0)
-    room = width - GRID_LEAD - 1 - cells_width
-    widest_label = max((cell_len(label) for label in labels), default=0)
-    label = min(GRID_LABEL_CAP, widest_label, room)
-    if label < 1 and widest_label:
+    label = _label_width(labels, width, cells_width)
+    if label is None:
         return None
-    label = max(label, 1)
-    if any(len(wrap_label(text, label)) > GRID_LABEL_LINES or not _whole(text, label) for text in labels):
-        return None
-    header = tuple(wrap_text(heading, column_width) for heading, column_width in zip(headings, widths, strict=True))
+    header = tuple(wrap_words(heading, column_width) for heading, column_width in zip(headings, widths, strict=True))
     return TableGeometry(label=label, boxes=tuple(boxes), values=tuple(values), widths=tuple(widths), header=header)
 
 
@@ -255,7 +240,7 @@ def measure_records(
     total = GRID_LEAD + index + sum(widths) + GRID_GAP * len(widths)
     if total > width:
         return RecordsGeometry(table=False, index=index, widths=widths, header=())
-    header = tuple(wrap_text(heading, column_width) for heading, column_width in zip(headings, widths, strict=True))
+    header = tuple(wrap_words(heading, column_width) for heading, column_width in zip(headings, widths, strict=True))
     return RecordsGeometry(table=True, index=index, widths=widths, header=header)
 
 
@@ -272,7 +257,7 @@ def stacked_record_lines(
     continuation = " " * len(prefix)
     lines: list[str] = []
     for heading, value in zip(headings, values, strict=True):
-        wrapped = wrap_text(f"{heading}: {value}", max(width - len(prefix), 1))
+        wrapped = wrap_words(f"{heading}: {value}", max(width - len(prefix), 1))
         lines.extend((prefix if number == 0 else continuation) + line for number, line in enumerate(wrapped))
     return tuple(lines)
 
@@ -295,10 +280,8 @@ __all__ = [
     "RecordsGeometry",
     "TableGeometry",
     "cell_width",
-    "longest_word",
     "measure_records",
     "measure_table",
     "stacked_record_lines",
     "wrap_label",
-    "wrap_text",
 ]

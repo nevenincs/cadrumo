@@ -27,7 +27,6 @@ __all__ = [
     "M303RegimenSimplificadoAnnualSummaryProvider",
     "M303RegimenSimplificadoAnnualSummaryRequirement",
     "m303_regimen_simplificado_annual_summary_requirement",
-    "m303_regimen_simplificado_annual_summary_selector",
     "validate_m303_regimen_simplificado_annual_summary_revision",
 ]
 
@@ -111,18 +110,6 @@ class M303RegimenSimplificadoAnnualSummaryRequirement(BaseModel):
         return dict(value)
 
 
-def m303_regimen_simplificado_annual_summary_selector(
-    binding: BindingDefinition,
-) -> M303RegimenSimplificadoAnnualSummaryProvider:
-    """Parse one declared simplified-regime annual-summary selector."""
-    try:
-        return provider_member(binding, M303RegimenSimplificadoAnnualSummaryProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed m303_regimen_simplificado_annual_summary selector: {exc}",
-        ) from exc
-
-
 def m303_regimen_simplificado_annual_summary_requirement(
     revision: ModeloRevision,
 ) -> M303RegimenSimplificadoAnnualSummaryRequirement | None:
@@ -134,7 +121,7 @@ def m303_regimen_simplificado_annual_summary_requirement(
     bindings = _annual_summary_bindings(revision)
     if not bindings:
         return None
-    first_selector = m303_regimen_simplificado_annual_summary_selector(bindings[0])
+    first_selector = provider_member(bindings[0], M303RegimenSimplificadoAnnualSummaryProvider)
     binding_ids_by_summary_casilla_id, legal_refs, source_refs = _collect_bindings(bindings, first_selector)
     return M303RegimenSimplificadoAnnualSummaryRequirement(
         source_modelo=first_selector.source_modelo,
@@ -182,7 +169,7 @@ def _collect_bindings(
     legal_refs: set[LegalRefId] = set()
     source_refs: set[SourceRefId] = set()
     for binding in bindings:
-        selector = m303_regimen_simplificado_annual_summary_selector(binding)
+        selector = provider_member(binding, M303RegimenSimplificadoAnnualSummaryProvider)
         if (
             selector.source_modelo != first_selector.source_modelo
             or selector.temporal != first_selector.temporal

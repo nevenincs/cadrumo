@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_family_delta import collapse_keyed_families
+from ..edition_family_delta_collapse import collapse_keyed_families
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

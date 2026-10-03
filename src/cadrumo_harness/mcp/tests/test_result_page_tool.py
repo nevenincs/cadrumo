@@ -24,7 +24,8 @@ from cadrumo.application.runtime.projection_pages import (
     project_document_page,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

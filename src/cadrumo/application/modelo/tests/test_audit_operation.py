@@ -24,6 +24,7 @@ from ...evidence.models import (
     EvidenceBundleVerificationError,
     VerificationCheck,
 )
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -47,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 @pytest.fixture
 def subject(authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch) -> Subject:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(PROFILE_ID))
     return Subject(authority_operation)
 
 

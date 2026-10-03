@@ -22,7 +22,6 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     validating_governed_facts,
 )
-from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     binding_locale_key,
@@ -72,16 +71,13 @@ from .loader_materialisation import (
     _load_modelo_directory_cached,
     _load_modelo_manifest,
     _load_modelo_revisions,
-    _materialise_revisions,
     _refresh_modelo_directory_fingerprints_after_load_error,
     _refresh_registry_tree_fingerprints_after_load_error,
     _RegistryPathFingerprints,
     _toml_fingerprint,
     _validate_legal_directory,
 )
-from .loader_materialisation import (
-    inherit_keyed_family as _inherit_keyed_family,
-)
+from .revision_materialisation import _materialise_revisions
 
 
 def _authored_facts_fingerprint(facts_directory: Path) -> tuple[tuple[str, int, int], ...]:
@@ -181,47 +177,6 @@ def load_modelo_directory(directory: Path, *, tax_id_format: SpanishTaxIdFormat 
             if refreshed == fingerprints:
                 raise
             return _load_modelo_directory_cached(str(resolved), refreshed, tax_id_format)
-
-
-def inherit_keyed_family(
-    subject: str,
-    *,
-    revision_id: str,
-    predecessor_id: str,
-    predecessor: Mapping[str, object],
-    section: str,
-    identity: str,
-    identity_fields: tuple[str, ...] = (),
-    casilla_identity_fields: tuple[str, ...] = (),
-    period_scoped: bool = False,
-    inherited: tuple[object, ...],
-    inherited_casillas: tuple[object, ...] = (),
-    successor_casillas: tuple[object, ...] = (),
-    successor: Mapping[str, object],
-) -> tuple[object, ...]:
-    """Apply the compiler's canonical keyed-family inheritance semantics.
-
-    Registry migration tools use this supported boundary to prove prospective
-    family enrollment against the same merge implementation as compilation,
-    without importing compiler internals or constructing their private models.
-    """
-    return _inherit_keyed_family(
-        subject,
-        revision_id=revision_id,
-        predecessor_id=predecessor_id,
-        predecessor=predecessor,
-        family=KeyedFamilySpec(
-            section=section,
-            identity=identity,
-            identity_fields=identity_fields,
-            casilla_identity_fields=casilla_identity_fields,
-            period_scoped=period_scoped,
-        ),
-        inherited=inherited,
-        inherited_casillas=inherited_casillas,
-        successor_casillas=successor_casillas,
-        successor=successor,
-    )
 
 
 def load_modelo_source(source: ModeloSource, *, tax_id_format: SpanishTaxIdFormat | None = None) -> ModeloDefinition:

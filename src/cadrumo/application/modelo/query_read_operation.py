@@ -16,7 +16,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
@@ -47,11 +46,11 @@ from ..operations.capabilities import (
 )
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -106,7 +105,7 @@ class ModeloQueryReadPorts:
 class ModeloQueryReadPortsFactory(Protocol):
     """Executable composition binds the readiness reader to a profile."""
 
-    def __call__(self, *, bucket_id: str) -> ModeloQueryReadPorts:
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloQueryReadPorts:
         """Return the reader for the exact requested profile."""
         ...
 
@@ -510,13 +509,9 @@ def require_modelo_query_worker_identity[PayloadT: BaseModel](
 ) -> str:
     """Require one exact-profile subject and active bucket for a query executor."""
     bucket_id = str(profile_id)
-    if (
-        request.definition_id != definition_id
-        or request.subject_ref != profile_operation_subject(bucket_id)
-        or context.identity.subject_ref != request.subject_ref
-        or require_active_bucket_id() != bucket_id
-    ):
+    if request.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    require_operation_profile(request, context, profile_id)
     return bucket_id
 
 
@@ -665,7 +660,7 @@ def read_modelo_readiness(
 ) -> ProjectionModeloReadiness:
     """Evaluate one canonical readiness report under the retained authority pin."""
     bucket_id = str(payload.profile_id)
-    ports = factory(bucket_id=bucket_id)
+    ports = factory(bucket_id=bucket_id, operation=operation)
     if ports.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     profile = ports.read_ports.profile.read_profile(profile_id=bucket_id)

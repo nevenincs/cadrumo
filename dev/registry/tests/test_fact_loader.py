@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily
+from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFamily
 
 from ..compiler.fact_loader import load_governed_fact_file, load_governed_facts
 

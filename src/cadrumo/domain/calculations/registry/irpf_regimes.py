@@ -5,17 +5,23 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.time.clock import today_madrid
 from ...deadlines.models import IrpfEstimationRegime, IrpfSpecialRegime
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    unique_mapping_legal_refs,
+)
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
     governed_facts_in_scope,
+    require_governed_fact_authority,
     validating_governed_facts,
 )
 from .schema_base import DateAxis
@@ -122,17 +128,6 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
     return value.strip()
 
 
-def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IRPF regime vocabulary {key!r} must contain unique legal references")
-    return values
-
-
 def _modelos(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(
         token.strip()
@@ -157,38 +152,10 @@ def _window_years(entries: Mapping[str, str], key: str) -> int | None:
     return value
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IRPF regime vocabulary entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IRPF regime vocabulary key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_mapping_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IRPF regime vocabulary must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("IRPF regime catalogue requires an explicit authority operation or scope")
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_irpf_regime_vocabulary(
@@ -198,10 +165,7 @@ def resolve_irpf_regime_vocabulary(
 ) -> IrpfRegimeVocabulary:
     """Resolve and validate all five IRPF regime tokens from fact 0125."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        _bundled_mapping_entries(coordinate)
-        raise RegistryValidationError("the unscoped vocabulary path must refuse")
+    selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     if selected is governed_facts_in_scope():
         return _scoped_irpf_regime_vocabulary(coordinate)
     with validating_governed_facts(selected):
@@ -211,10 +175,7 @@ def resolve_irpf_regime_vocabulary(
 @cache_governed_projection(maxsize=64)
 def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary:
     """Build the vocabulary once per scoped authority generation and coordinate."""
-    selected = governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("a scoped vocabulary projection ran without its scope")
-    entries = _resolve_mapping_entries(effective_date=effective_date, authority=selected)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     estimation_regimes: list[IrpfEstimationRegimeDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _ESTIMATION_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IrpfEstimationRegime(raw_token, _registry_validated=True)
@@ -227,7 +188,7 @@ def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 filing_modelos=_modelos(entries, f"{prefix}filing_modelos"),
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
 
@@ -245,7 +206,7 @@ def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary
                 tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 filing_modelos=_modelos(entries, f"{prefix}filing_modelos"),
                 window_years=_window_years(entries, f"{prefix}window_years"),
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     return IrpfRegimeVocabulary(

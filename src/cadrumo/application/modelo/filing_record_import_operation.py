@@ -18,15 +18,7 @@ from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import FilingRecordId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.modelos.filing_record import (
@@ -36,24 +28,21 @@ from ...domain.modelos.filing_record import (
 from ...domain.modelos.filing_text import EvidenceReference
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    require_single_period_admission,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -304,18 +293,14 @@ def _project_filing_record_import(
     report = ModeloFilingRecordImportOperationReport.model_validate(result, strict=True)
     projection = report.projection
     expected_effect = OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE
-    if (
-        receipt.identity.definition_id != MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not expected_effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("filing import projection contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=expected_effect,
+        message="filing import projection contradicts its terminal receipt",
+    )
     return projection
 
 
@@ -405,15 +390,9 @@ class ModeloFilingRecordImportExecutor:
         """Import one filing while guarding every possible domain write."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
 
@@ -517,19 +496,7 @@ def build_modelo_filing_record_import_definition(
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -576,21 +543,10 @@ def build_modelo_filing_record_import_registration(
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
         admitted = context.admitted_request
-        if admitted is not None and context.action in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }:
-            if (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent
-                or len(admitted.periods) != 1
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = admitted.periods
+        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+            periods = require_single_period_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
+            )
         else:
             period = _resolve_import_period(payload, context, ports_factory)
             periods = frozenset({period})
@@ -621,18 +577,9 @@ def build_modelo_filing_record_import_registration(
             policy = policy.model_copy(update={"disclosures": disclosures})
         return ResolvedOperationAccess(request=resolved.request, policy=policy)
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloFilingRecordImportRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloFilingRecordImportProjection,
-        ),
+        public_result_type=ModeloFilingRecordImportProjection,
         result_projector=_project_filing_record_import,
         access_resolver=resolve,
     )

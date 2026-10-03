@@ -47,6 +47,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -146,7 +147,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     if casilla_id is None:
         return None
 
-    if casilla_values.get(casilla_id, Decimal(0)) != Decimal(0):
+    if AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, casilla_id) != Decimal(0):
         # The auto-trigger already populated the casilla; nothing to advise.
         return None
 

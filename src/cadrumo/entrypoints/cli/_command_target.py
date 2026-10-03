@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 
 from ...core.errors.hierarchy import InternalInvariantError
-from .command_spec import DeferredTarget
+from ._command_shared_contracts import DeferredTarget
 
 
 def resolve_deferred_target(target: DeferredTarget) -> object:

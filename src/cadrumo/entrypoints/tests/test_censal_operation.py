@@ -24,8 +24,8 @@ from cadrumo.application.operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
-from cadrumo.application.operations.registry import OperationDefinition
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (

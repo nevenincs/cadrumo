@@ -310,6 +310,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def seed(**kwargs: object) -> object:
         seen.append(kwargs)
@@ -390,6 +391,7 @@ def test_seed_authority_refusal_precedes_commit_and_duplicate_is_effect_none(
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.seed_iva_compensation_period_for_bucket",
         lambda **_kwargs: pytest.fail("seed service must not run without pinned source authority"),
@@ -446,6 +448,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_override_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def record(**kwargs: object) -> object:
         seen.append(kwargs)

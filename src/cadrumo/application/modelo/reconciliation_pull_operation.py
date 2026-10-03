@@ -15,15 +15,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..ledger.read_access import resolve_ledger_read_access
@@ -32,23 +24,20 @@ from ..live.justificante import (
     JustificanteCaptureSnapshotService,
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -92,20 +81,20 @@ def _project_reconciliation_pull(result: BaseModel, receipt: OperationTerminalRe
     report = ModeloReconciliationPullOperationReport.model_validate(result, strict=True)
     projection = report.projection
     expected_source_ref = f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{report.snapshot_id}"
+    contradiction = "modelo reconciliation pull result contradicts its terminal receipt"
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        message=contradiction,
+    )
     if (
-        receipt.identity.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.bucket_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or projection.source_kind is not ModeloReconciliationEvidenceKind.JUSTIFICANTE
+        projection.source_kind is not ModeloReconciliationEvidenceKind.JUSTIFICANTE
         or projection.source_path != expected_source_ref
     ):
-        raise ValueError("modelo reconciliation pull result contradicts its terminal receipt")
+        raise ValueError(contradiction)
     return projection
 
 
@@ -124,15 +113,9 @@ class ModeloReconciliationPullExecutor:
         """Compare one captured receipt and persist its record and event."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject_ref = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject_ref
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject_ref
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
 
@@ -212,23 +195,9 @@ def build_modelo_reconciliation_pull_definition(
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -251,18 +220,9 @@ def build_modelo_reconciliation_pull_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Release the full comparison only with a truthful terminal receipt."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloReconciliationPullRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloReconciliationImportProjection,
-        ),
+        public_result_type=ModeloReconciliationImportProjection,
         result_projector=_project_reconciliation_pull,
         access_resolver=resolve_modelo_reconciliation_pull_access,
     )

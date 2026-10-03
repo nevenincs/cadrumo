@@ -3,33 +3,24 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
-from datetime import date
-from decimal import Decimal
-from types import MappingProxyType
-from typing import ClassVar, Final, override
+from typing import ClassVar, override
 
-from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.events import DescendantFocus
-from textual.geometry import Region
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.modelo.declaration_targets import DeclarationTarget
-from ....application.modelo.declarations_calendar import DeclarationsCalendarSource
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow, declaration_list_rows
 from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
-from ....core.text_fold import fold_diacritics
 from ....core.time.clock import today_madrid
 from ..components.dialogs import ConfirmScreen
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
-from ..modelo.workbench.wording import modelo_title, period_words, wrap_words
 from .controller import (
     DeclarationsRouteRequested,
     DeclarationsWorkspaceController,
@@ -39,22 +30,18 @@ from .controller import (
 )
 from .external_details import ExternalFilingDetailsScreen
 from .picker import NewDeclarationPicker
-from .row_words import is_unlinked_local_draft, row_lines
+from .portfolio_interactions import creation_notice, reveal_portfolio_row
+from .portfolio_rendering import (
+    configure_portfolio_columns,
+    populate_portfolio_groups,
+    portfolio_key_guidance,
+    portfolio_row_refusal,
+    portfolio_source_lines,
+)
+from .portfolio_rows import creation_targets, existing_declaration, preferred_creation_target, visible_portfolio_rows
 
 _FILTERS = ("all", "attention", "this_year", "recorded", "not_started")
 _SORTS = ("deadline", "modelo", "result", "state")
-
-DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
-    {
-        DeclarationListGroup.ATTENTION: "tui.declarations.list.group.attention",
-        DeclarationListGroup.IN_PROGRESS: "tui.declarations.list.group.in_progress",
-        DeclarationListGroup.READY: "tui.declarations.list.group.ready",
-        DeclarationListGroup.NOT_STARTED: "tui.declarations.list.group.not_started",
-        DeclarationListGroup.RECORDED: "tui.declarations.list.group.recorded",
-        DeclarationListGroup.AEAT_UNLINKED: "tui.declarations.list.state.aeat_unlinked",
-        DeclarationListGroup.MAYBE: "tui.declarations.list.group.maybe",
-    }
-)
 
 
 class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
@@ -132,102 +119,28 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         self._restore_declaration_focus(None)
 
     def _render_sources(self) -> None:
-        """Say which authorities were observed, including incomplete and retained evidence."""
-        lines = []
-        projection = self.controller.calendar_projection
-        if projection is not None:
-            for source in projection.sources:
-                if source.source is not DeclarationsCalendarSource.AEAT_EVIDENCE:
-                    continue
-                from .controller import timestamp_label
-
-                observed = (
-                    timestamp_label(source.observed_at)
-                    if source.observed_at is not None
-                    else tr("tui.declarations.calendar.never_observed")
-                )
-                lines.append(
-                    tr(
-                        "tui.declarations.calendar.detail.source",
-                        source=tr("tui.declarations.calendar.source." + source.source.value),
-                        availability=tr("tui.declarations.availability." + source.availability.value),
-                        observed=observed,
-                    )
-                )
-        if any(zone.availability.value == "stale" for zone in self.controller.projection.zones):
-            lines.append(tr("tui.declarations.refusal.source"))
-        self.query_one("#declarations-sources", Static).update("\n".join(lines))
+        """Say which authorities were observed, including retained evidence."""
+        self.query_one("#declarations-sources", Static).update("\n".join(portfolio_source_lines(self.controller)))
 
     def _visible_rows(self) -> list[DeclarationListRow]:
-        language = OutputLanguage(output_language())
-        terms = fold_diacritics(self.query_one("#declarations-search", Input).value.casefold()).split()
-        selected_filter = _FILTERS[self.filter_index]
         calendar = self.controller.calendar_projection
         year = today_madrid().year if calendar is None else calendar.as_of.year
-        rows = []
-        for row in self.rows:
-            if selected_filter == "attention" and row.group is not DeclarationListGroup.ATTENTION:
-                continue
-            if selected_filter == "this_year" and (row.period is None or row.period.filing_year != year):
-                continue
-            if selected_filter == "recorded" and row.group is not DeclarationListGroup.RECORDED:
-                continue
-            if selected_filter == "not_started" and row.state != "not_started":
-                continue
-            text = modelo_title(row.modelo, language) + " " + (period_words(row.period) if row.period else "")
-            if all(term in fold_diacritics(text.casefold()) for term in terms):
-                rows.append(row)
-        sort = _SORTS[self.sort_index]
-        if sort == "result":
-            rows.sort(key=_result_sort_key)
-        elif sort == "state":
-            rows.sort(key=lambda row: (row.state, row.modelo, row.deadline or date.max))
-        elif sort == "modelo":
-            rows.sort(key=lambda row: (row.modelo, row.deadline or date.max))
-        else:
-            rows.sort(key=lambda row: (row.deadline or date.max, row.modelo))
-        return rows
+        return visible_portfolio_rows(
+            self.rows,
+            self.query_one("#declarations-search", Input).value,
+            _FILTERS[self.filter_index],
+            _SORTS[self.sort_index],
+            year,
+            OutputLanguage(output_language()),
+        )
 
     def _populate(self) -> None:
         table = self.query_one("#declarations-list", ContentDataTable)
-        # Both columns already wrap to the same declared cell budget.
-        table.fill_column = None
-        selected = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
-        table.clear(columns=True)
         width = max(20, (self.size.width - 14) // 2)
-        table.add_column(tr("tui.declarations.list.column.declaration"), width=width)
-        table.add_column(tr("tui.declarations.list.column.state"), width=width)
+        selected = configure_portfolio_columns(table, width)
         visible = self._visible_rows()
         language = OutputLanguage(output_language())
-        for group in DeclarationListGroup:
-            members = [row for row in visible if row.group is group]
-            folded = not members or group in self.folded
-            mark = "▹" if folded else "▿"
-            group_key = DECLARATION_GROUP_LOCALE_KEYS[group]
-            title = "\n".join(wrap_words(f"{mark} {tr(group_key)} ({len(members)})", width))
-            table.add_row(
-                Text(title, style="bold"),
-                "",
-                key="group:" + group.value,
-                height=title.count("\n") + 1,
-            )
-            if folded:
-                continue
-            for row in members:
-                left, right = row_lines(
-                    row,
-                    language,
-                    can_open=self.controller.modelo_workspace_factory is not None,
-                    can_create=self.controller.work_create_handoff is not None,
-                )
-                left_text = "\n".join(line for part in left for line in wrap_words(part, width))
-                right_text = "\n".join(line for part in right if part for line in wrap_words(part, width))
-                table.add_row(
-                    Text(left_text),
-                    Text(right_text),
-                    height=max(left_text.count("\n"), right_text.count("\n")) + 1,
-                    key=row.key,
-                )
+        populate_portfolio_groups(table, visible, self.folded, width, language, self.controller)
         table.absorb_surplus_width()
         self.query_one("#declarations-list-context", Static).update(
             tr("tui.declarations.list.filter." + _FILTERS[self.filter_index])
@@ -241,43 +154,9 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         self._render_keys()
 
     def _render_keys(self) -> None:
-        """Keep supported list shortcuts and the selected Enter action visible."""
+        """Keep supported shortcuts and the selected Enter action visible."""
         table = self.query_one("#declarations-list", ContentDataTable)
-        shortcuts = []
-        if self.controller.work_create_handoff is not None:
-            shortcuts.append("+ " + tr("tui.declarations.list.key.new"))
-        shortcuts.extend(
-            (
-                "/ " + tr("tui.modelo.workbench.key.search"),
-                "f " + tr("tui.modelo.workbench.key.filter"),
-                "s " + tr("tui.modelo.workbench.key.sort"),
-                "t " + tr("tui.modelo.workbench.issues.technical"),
-            )
-        )
-        enter = ""
-        if table.has_focus and table.row_count:
-            key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
-            if key is not None and key.startswith("group:"):
-                enter = "Enter " + tr("tui.declarations.list.key.toggle_group")
-            else:
-                row = next((item for item in self.rows if item.key == key), None)
-                if row is not None:
-                    if row.declaration is not None and row.state != "unreadable":
-                        if self.controller.modelo_workspace_factory is not None:
-                            enter = "Enter " + tr(
-                                "tui.declarations.list.next.open_local_draft"
-                                if is_unlinked_local_draft(row)
-                                else "tui.declarations.calendar.action.open"
-                            )
-                    elif (
-                        row.state == "not_started"
-                        and row.period is not None
-                        and self.controller.work_create_handoff is not None
-                    ):
-                        enter = "Enter " + tr("tui.declarations.list.next.start")
-                    elif row.state == "aeat_unlinked":
-                        enter = "Enter " + tr("tui.declarations.calendar.action.open")
-        self.query_one("#declarations-keys", Static).update((enter + "\n" if enter else "") + " · ".join(shortcuts))
+        self.query_one("#declarations-keys", Static).update(portfolio_key_guidance(table, self.rows, self.controller))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Follow semantic row selection without promising an unavailable route."""
@@ -290,16 +169,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         table = self.query_one("#declarations-list", ContentDataTable)
         if not table.has_focus or not table.row_count:
             return
-        index = table.cursor_row
-        rows = table.ordered_rows
-        header = table.header_height if table.show_header else 0
-        top = table.virtual_region.y + header + sum(row.height for row in rows[:index])
-        page = self.query_one("#declarations-page", ContentScroll)
-        page.scroll_to_region(
-            Region(table.virtual_region.x, top, table.size.width, rows[index].height),
-            animate=False,
-            x_axis=False,
-        )
+        reveal_portfolio_row(table, self.query_one("#declarations-page", ContentScroll))
 
     def on_descendant_focus(self, event: DescendantFocus) -> None:
         """Show Enter guidance only while the declaration table owns focus."""
@@ -317,6 +187,21 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         if self.is_mounted and self.query("#declarations-list"):
             self._populate()
 
+    def _activate_row(self, row: DeclarationListRow) -> None:
+        """Open exactly the selected row or confirm its supported creation."""
+        if row.declaration is not None and row.state != "unreadable":
+            self._open(row.declaration)
+        elif row.state == "not_started" and row.period is not None and self.controller.work_create_handoff is not None:
+            target = DeclarationTarget(row.modelo, row.period)
+            self.app.push_screen(
+                NewDeclarationPicker((target,), frozenset({row.modelo}), preferred=target, confirmation=True),
+                self._create_selected,
+            )
+        elif row.state == "aeat_unlinked":
+            self.app.push_screen(ExternalFilingDetailsScreen(row))
+        else:
+            self.query_one("#declarations-refusal", Static).update(portfolio_row_refusal(row))
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Fold a group, open admitted local work, or confirm starting a due return."""
         if self.handle_navigation(event) or event.data_table.id != "declarations-list":
@@ -330,27 +215,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             self._populate()
             return
         row = next(item for item in self.rows if item.key == key)
-        if row.declaration is not None and row.state != "unreadable":
-            self._open(row.declaration)
-        elif row.state == "not_started" and row.period is not None and self.controller.work_create_handoff is not None:
-            target = DeclarationTarget(row.modelo, row.period)
-            self.app.push_screen(
-                NewDeclarationPicker((target,), frozenset({row.modelo}), preferred=target, confirmation=True),
-                self._create_selected,
-            )
-        elif row.state == "aeat_unlinked":
-            self.app.push_screen(ExternalFilingDetailsScreen(row))
-        else:
-            key = (
-                "tui.declarations.list.aeat_unlinked.help.confirmed"
-                if row.state == "aeat_unlinked"
-                else "tui.declarations.list.unreadable.help"
-                if row.state == "unreadable"
-                else "tui.declarations.list.maybe.help"
-                if row.state == "maybe"
-                else "tui.declarations.list.aeat_needs_check.help"
-            )
-            self.query_one("#declarations-refusal", Static).update(tr(key))
+        self._activate_row(row)
 
     def _open(self, declaration: DeclarationsWorkspaceDeclarationRefV1) -> None:
         factory = self.controller.modelo_workspace_factory
@@ -379,25 +244,13 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         if self._creating or self.controller.work_create_handoff is None:
             return
         applicable = frozenset(row.modelo for row in self.rows if row.state != "maybe")
-        targets = self.controller.creation_targets or tuple(
-            DeclarationTarget(row.modelo, row.period)
-            for row in self.rows
-            if row.period is not None and row.state == "not_started"
-        )
-        due = sorted((row for row in self.rows if row.state == "not_started"), key=lambda row: row.deadline or date.max)
-        preferred = DeclarationTarget(due[0].modelo, due[0].period) if due and due[0].period is not None else None
+        targets = creation_targets(self.rows, self.controller.creation_targets)
+        preferred = preferred_creation_target(self.rows)
         self.app.push_screen(NewDeclarationPicker(targets, applicable, preferred=preferred), self._create_selected)
 
     def _create_selected(self, target: DeclarationTarget | None) -> None:
         if target is not None and not self._creating:
-            existing = next(
-                (
-                    row.declaration
-                    for row in self.rows
-                    if row.declaration is not None and row.modelo == target.modelo and row.period == target.period
-                ),
-                None,
-            )
+            existing = existing_declaration(self.rows, target)
             if existing is not None:
                 self.app.push_screen(
                     ConfirmScreen(
@@ -421,17 +274,14 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         notice.update(tr("tui.declarations.work_create.progress"))
         try:
             result = await asyncio.to_thread(handoff, target.modelo, target.period.filing_year, target.period)
+            # Obligations the new declaration brings with it are said whether or not it opens.
+            advisories = tuple(tr(key) for key in result.advisory_keys)
             if result.declaration is not None:
+                if advisories:
+                    notice.update("\n".join(advisories))
                 self._open(result.declaration)
             else:
-                notice.update(
-                    tr(
-                        "tui.declarations.work_create.reused"
-                        if result.reused
-                        else "tui.declarations.work_create.created",
-                        address=natural_address(target.modelo, target.period.filing_year, target.period),
-                    )
-                )
+                notice.update(creation_notice(result, target, advisories))
         except CadrumoError as refusal:
             notice.update(work_create_refusal_message(refusal))
         finally:
@@ -465,8 +315,7 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             )
 
     def _restore_declaration_focus(self, _: None) -> None:
-        if self.controller.refresh_data is not None:
-            self.controller.projection, self.controller.calendar_projection = self.controller.refresh_data()
+        if self.controller.refresh_from_capture():
             self.rows = declaration_list_rows(self.controller.projection, self.controller.calendar_projection)
             self._populate()
         table = self.query_one("#declarations-list", DataTable)
@@ -476,9 +325,3 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
         if index is not None:
             table.move_cursor(row=index)
         table.focus()
-
-
-def _result_sort_key(row: DeclarationListRow) -> tuple[bool, Decimal, str]:
-    summary = None if row.declaration is None else row.declaration.summary
-    value = None if summary is None or summary.result is None else summary.result.value
-    return (value is None, value if value is not None else Decimal(0), row.modelo)

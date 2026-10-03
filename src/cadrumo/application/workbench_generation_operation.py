@@ -11,35 +11,19 @@ from pydantic import BaseModel
 from ..core.async_cleanup import await_cancellation_complete
 from ..core.external_constants import OutputLanguage
 from ..core.hashing import canonical_json_bytes
-from ..core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ..core.operations import OperationEffect, profile_operation_subject
 from ..core.time.clock import now
 from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from .operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from .operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from .operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID, OperationResultProjectionSuccessV1
 from .operations.models import CredentialFreeOperationRequest, OperationRequest
+from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
 from .operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .user_profile.access_contracts import (
@@ -143,19 +127,7 @@ def build_workbench_generation_operation_definition(
         ),
         phase_codes=(_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
@@ -167,18 +139,9 @@ def build_workbench_generation_operation_registration(
     """Expose the exact request and bound generation through canonical schemas."""
     if definition.definition_id != WORKBENCH_GENERATION_OPERATION_DEFINITION_ID:
         raise ValueError("wrong workbench generation definition")
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=WorkbenchGenerationOperationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=WorkbenchGenerationOperationProjection,
-        ),
+        public_result_type=WorkbenchGenerationOperationProjection,
         access_resolver=resolve_workbench_generation_access,
     )
 

@@ -28,19 +28,19 @@ from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
-from ..storage.errors import StorageError
+from ..storage.errors import STORAGE_OPERATION_FAILURES
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 def _translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
-    """Translate persistence failures into the application-owned error."""
+    """Translate storage failures into the application-owned error."""
     try:
         return action()
     except PercepcionObservationPersistenceError:
         raise
-    except (StorageError, OSError, TypeError, KeyError) as exc:
+    except (*STORAGE_OPERATION_FAILURES, TypeError, KeyError) as exc:
         raise PercepcionObservationPersistenceError(operation) from exc
 
 

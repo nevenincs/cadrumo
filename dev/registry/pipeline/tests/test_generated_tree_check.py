@@ -36,8 +36,8 @@ from .._tree_check import (
 from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
-    normalised_loader_semantics,
 )
+from ..export_fragment_provenance_projection import normalised_loader_semantics
 from ..joined_record_design import JoinedRecordDesign
 from ..semantic_map import SemanticMap
 from ._generated_tree_test_support import (

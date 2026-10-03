@@ -19,14 +19,12 @@ import asyncio
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 from textual.color import Color
 from textual.pilot import Pilot
 from textual.widgets import Static
 
-from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from ......adapters.persistence.profile.tests.modelo_export_support import (
     export_taxpayer_profile,
@@ -34,7 +32,6 @@ from ......adapters.persistence.profile.tests.modelo_export_support import (
     seed_profile,
     seed_revision,
 )
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ......application.modelo.export import ModeloExportCommand, export_modelo_revision
 from ......application.modelo.work_form_models import ModeloFormExport, ModeloWorkForm
 from ......core.casilla_id import validated_casilla_id
@@ -48,9 +45,8 @@ from ......domain.modelos.repository import upsert_work_unit
 from ......domain.modelos.work_unit import WorkUnitCatalogue
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
+from ....tests.modelo_workbench_session import application_workbench
 from ..export import WorkbenchExportScreen
-from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
 from ..screen import ModeloWorkbenchScreen
 from ..wording import day_text
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
@@ -192,31 +188,7 @@ def test_a_file_exported_for_real_reaches_the_header_through_the_installed_workb
         )
         unit = ports.work_unit.load().get(work_unit_id)
         assert unit is not None
-        installed = InstalledModeloWorkbench(
-            bucket_id=unit.bucket_id,
-            declaration=DeclarationsWorkspaceDeclarationRefV1(
-                work_unit_id=unit.work_unit_id,
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
-                state=unit.state,
-                has_current_calculation=True,
-                has_current_filing=False,
-            ),
-            operation=operation,
-            repositories=WorkbenchRepositories(
-                work_units=ports.work_unit,
-                calculations=ports.calculation,
-                verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
-                bucket_events=ports.bucket_event,
-            ),
-            door=lambda calculation, report: ModeloWorkspaceLifecycleDoor(
-                services=cast(Any, object()),
-                work_unit_id=work_unit_id,
-                calculation_revision_id=calculation,
-                verification_report_id=report,
-            ),
-        )
+        installed = application_workbench(unit, operation=operation)
         read = installed.load(_EN).form.last_export
         expected = tr("tui.modelo.workbench.header.file_created", date=day_text(exported_at, _EN))
 

@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import typer
 
-from ....application.runtime.contracts import RuntimeRefusalCode
 from ....application.user_profile.censal_prepare_operation import (
     CENSAL_PREPARE_OPERATION_DEFINITION_ID,
     CensalPrepareOperationProjection,
     CensalPrepareOperationRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import bound_profile_client
-from ..runtime_registered_operation import run_registered_operation, submitted_operation_error
+from ..runtime_registered_operation import run_registered_operation
 
 
 def prepare_censal_review(ctx: typer.Context) -> CensalPrepareOperationProjection:
@@ -36,12 +36,7 @@ def prepare_censal_review(ctx: typer.Context) -> CensalPrepareOperationProjectio
         or projection.profile_id != client.profile_id
         or projection.operation_request.baseline.profile_id != str(client.profile_id)
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 

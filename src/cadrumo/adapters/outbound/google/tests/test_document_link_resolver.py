@@ -3,7 +3,7 @@
 The integration deliberately requests only the non-sensitive ``drive.file``
 scope. This gate locks the resolver's contract offline, with no network:
 
-- ``parse_drive_file_id`` recovers a Drive file id from the three recorded link
+- ``parse_google_drive_file_id`` recovers a Drive file id from the three recorded link
   shapes (``/file/d/<id>``, ``?id=<id>``, bare id) and returns ``None`` otherwise;
 - the Drive download path preserves Google ``files.get_media`` byte payloads;
 - Gmail links, arbitrary external URLs, and ``drive.file``-unreachable Drive files
@@ -20,6 +20,7 @@ from typing import Never
 
 import pytest
 
+from .....core.google_drive_reference import parse_google_drive_file_id
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....domain.attachments.enums import AttachmentSource
 from ...storage.errors import (
@@ -28,7 +29,7 @@ from ...storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
 )
-from ..document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
+from ..document_link_resolver import _download_drive_file_from_service, resolve_document_link
 from .drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -60,7 +61,7 @@ def _assert_closed_outcome(
     assert verdict.no_recovery_outcome is outcome
 
 
-def test_parse_drive_file_id_accepts_recorded_shapes_and_rejects_non_ids() -> None:
+def test_parse_google_drive_file_id_accepts_recorded_shapes_and_rejects_non_ids() -> None:
     cases: tuple[tuple[str, str, str | None], ...] = (
         ("drive file URL", f"https://drive.google.com/file/d/{_FILE_ID}/view", _FILE_ID),
         ("drive open URL", f"https://drive.google.com/open?id={_FILE_ID}", _FILE_ID),
@@ -73,7 +74,42 @@ def test_parse_drive_file_id_accepts_recorded_shapes_and_rejects_non_ids() -> No
     )
 
     for label, reference, expected in cases:
-        assert parse_drive_file_id(reference) == expected, label
+        assert parse_google_drive_file_id(reference) == expected, label
+
+
+@pytest.mark.parametrize("file_id", ("A" * 10, "A" * 24, "A" * 25))
+def test_url_context_ids_reach_the_real_resolver_media_boundary(file_id: str) -> None:
+    """The public resolver sends the whole admitted ID to its injected provider."""
+    with drive_media_endpoint(payload=b"%PDF-short-url-id") as endpoint:
+        payload = resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=f"https://drive.google.com/file/d/{file_id}/view",
+            credentials=None,
+            service=endpoint.service,
+        )
+
+    assert payload == b"%PDF-short-url-id"
+    assert endpoint.requested_paths == [f"/drive/v3/files/{file_id}?alt=media"]
+
+
+@pytest.mark.parametrize(
+    "reference",
+    (
+        "A" * 24,
+        f"https://drive.google.com/file/d/{'A' * 10}!",
+        f"https://drive.google.com/open?id={'A' * 10}.pdf",
+    ),
+)
+def test_partial_or_bare_short_id_is_refused_before_provider_media(reference: str) -> None:
+    with drive_media_endpoint(payload=b"unused") as endpoint, pytest.raises(OutboundStorageValidationError):
+        resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=reference,
+            credentials=None,
+            service=endpoint.service,
+        )
+
+    assert endpoint.requested_paths == []
 
 
 def test_unresolvable_remote_sources_name_required_sensitive_scope() -> None:
@@ -133,7 +169,8 @@ import importlib.abc
 import json
 import sys
 
-from cadrumo.adapters.outbound.google.document_link_resolver import _drive_service
+from cadrumo.adapters.outbound.google.document_link_resolver import resolve_document_link
+from cadrumo.domain.attachments.enums import AttachmentSource
 from cadrumo.adapters.outbound.storage.errors import OutboundStorageNetworkError
 
 
@@ -147,7 +184,7 @@ class _MissingGoogleApiFinder(importlib.abc.MetaPathFinder):
 finder = _MissingGoogleApiFinder()
 sys.meta_path.insert(0, finder)
 try:
-    _drive_service(None)
+    resolve_document_link(source=AttachmentSource.GOOGLE_DRIVE, reference=\"1AbCdEfGhIjKlMnOpQrStUvWxYz012345\", credentials=object())
 except OutboundStorageNetworkError as error:
     verdict = error.terminal_precondition_verdict
 else:
@@ -181,7 +218,12 @@ print(json.dumps({
         "evidence_condition_id": "google.document_link.api_client_available",
         "evidence_id": "google.document_link.api_client_available.observation",
         "provenance": "runtime_observation",
-        "values": {"client_available": False, "dependency": "google_api_python_client"},
+        "values": {
+            "client_available": False,
+            "dependency": "google_api_python_client",
+            "service_name": "drive",
+            "service_version": "v3",
+        },
         "action": None,
         "conditionality": "not_applicable",
         "outcome": "safety",

@@ -12,14 +12,14 @@ from ...application.ledger.check_operation import (
     LedgerCheckRequest,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from .errors import CliRefusedBoundaryError
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_ledger_check_for_cli(
@@ -51,10 +51,5 @@ def read_ledger_check_for_cli(
         or result.period != target_period
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return result

@@ -19,7 +19,7 @@ from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..controller import DeclarationsWorkspaceController
-from ..models import ModeloWorkCreateResultV1
+from ..models import DeclarationsWorkspaceWiringV1, ModeloWorkCreateResultV1
 from ..overview import DeclarationsOverviewScreen
 from .portfolio_fixtures import portfolio_projection
 
@@ -50,12 +50,14 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
     controller = DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         workspace,
-        work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
-        revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
-        filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
-        calendar_projection=calendar,
-        modelo_workspace_factory=lambda declaration: Screen(),
-        work_create_handoff=_refuse_creation,
+        DeclarationsWorkspaceWiringV1(
+            work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
+            revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
+            filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
+            calendar_projection=calendar,
+            modelo_workspace_factory=lambda declaration: Screen(),
+            work_create_handoff=_refuse_creation,
+        ),
     )
     with override_settings(cadrumo_output_language=locale.value):
         screen = DeclarationsOverviewScreen(controller)

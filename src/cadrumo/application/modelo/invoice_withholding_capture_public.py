@@ -7,13 +7,13 @@ Canonical aggregation and withholding models are restored before service use.
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
-from enum import Enum
-from typing import Literal, Self, cast
+from typing import Literal, Self
 
 from pydantic import BaseModel, Field
 
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
 from ..aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ..aggregation.retenciones import Modelo193NonpaymentCause
 from ..aggregation.service import PerModeloAggregationCommand
@@ -23,32 +23,9 @@ from ..aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
+from ..operations.public_model_conversion import domain_value, public_value
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal
-
-
-def _public_value(value: object) -> object:
-    """Copy one domain value into a public DTO without implicit scalar coercion."""
-    if isinstance(value, Decimal):
-        return PublicDecimal(decimal=str(value))
-    if isinstance(value, Enum):
-        return value.value
-    if isinstance(value, BaseModel):
-        return {name: _public_value(getattr(value, name)) for name in type(value).model_fields}
-    if isinstance(value, tuple):
-        return tuple(_public_value(item) for item in cast(tuple[object, ...], value))
-    return value
-
-
-def _domain_value(value: object) -> object:
-    """Restore public decimal wrappers before canonical domain validation."""
-    if isinstance(value, PublicDecimal):
-        return Decimal(value.decimal)
-    if isinstance(value, BaseModel):
-        return {name: _domain_value(getattr(value, name)) for name in type(value).model_fields}
-    if isinstance(value, tuple):
-        return tuple(_domain_value(item) for item in cast(tuple[object, ...], value))
-    return value
 
 
 class PublicAnnualRecipientDetail(BaseModel):
@@ -154,7 +131,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     @classmethod
     def from_domain(cls, value: BaseModel) -> Self:
         """Project every canonical annual-recipient field into the public graph."""
-        return cls.model_validate(_public_value(value), strict=True)
+        return cls.model_validate(public_value(value), strict=True)
 
 
 class PublicModelo180Address(BaseModel):
@@ -162,11 +139,11 @@ class PublicModelo180Address(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    province_code: str = Field(pattern=r"^\d{2}$")
+    province_code: SpanishProvinceCode
     municipality_code: str = Field(pattern=r"^\d{3}$")
     municipality: str = Field(min_length=1, max_length=30)
     locality: str = Field(min_length=1, max_length=30)
-    postal_code: str = Field(pattern=r"^\d{5}$")
+    postal_code: SpanishPostcode
     street_type: str = Field(min_length=1, max_length=5)
     street_name: str = Field(min_length=1, max_length=50)
     number_type: str = Field(min_length=1, max_length=3)
@@ -189,7 +166,7 @@ class PublicModelo180Property(BaseModel):
     situation: Literal["1", "2", "3", "4"]
     cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
     address: PublicModelo180Address
-    recipient_province_code: str = Field(pattern=r"^\d{2}$")
+    recipient_province_code: SpanishProvinceCode
     modality: Literal["1", "2"]
     accrual_year: int = Field(ge=1900, le=9999)
     withholding_percentage: PublicDecimal
@@ -212,7 +189,7 @@ class PublicWithholdingBaseline(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     scope_token: str = Field(min_length=1, max_length=256)
-    generation_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    generation_id: Hex64Str
 
 
 class PublicInvoiceWithholdingEvidence(BaseModel):
@@ -220,7 +197,7 @@ class PublicInvoiceWithholdingEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    invoice_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    invoice_id: Hex64Str
     income_kind: WithholdingIncomeKind
     scheme: str = Field(pattern=r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
     recipient_tax_status: WithholdingRecipientTaxStatus
@@ -247,11 +224,11 @@ class PublicInvoiceWithholdingEvidence(BaseModel):
         """Copy every canonical evidence field into the public request graph."""
         # Canonical domain enums are serialized to their public wire values by
         # _public_value. Pydantic restores only the declared closed enum values.
-        return cls.model_validate(_public_value(value), strict=False)
+        return cls.model_validate(public_value(value), strict=False)
 
     def to_domain(self) -> InvoiceWithholdingEvidenceRequest:
         """Revalidate the complete evidence under the canonical service contract."""
-        restored = InvoiceWithholdingEvidenceRequest.model_validate(_domain_value(self), strict=False)
+        restored = InvoiceWithholdingEvidenceRequest.model_validate(domain_value(self), strict=False)
         if type(self).from_domain(restored) != self:
             raise ValueError("invoice withholding evidence must use canonical values")
         return restored
@@ -273,7 +250,6 @@ class PublicInvoiceWithholdingCommand(BaseModel):
                 value.retencion_observations,
                 value.counterpart_observations,
                 value.foreign_asset_observations,
-                value.withholding_observations,
             )
         ):
             raise ValueError("received-invoice capture forbids caller-authored observations")

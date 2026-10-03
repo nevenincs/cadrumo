@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
-from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hashing import canonical_json_bytes, prefixed_digest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.time.clock import now
@@ -478,7 +478,7 @@ def _redacted_ref(value: object) -> str:
         return ""
     if text.startswith("sha256:"):
         return text
-    return f"sha256:{sha256_hex(text.encode(UTF_8_ENCODING))}"
+    return prefixed_digest(text.encode(UTF_8_ENCODING))
 
 
 def _optional_bool(value: object) -> bool | None:

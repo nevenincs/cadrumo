@@ -51,7 +51,7 @@ from ...application.runtime.profile_access import (
     RuntimeRequest,
 )
 from ...application.runtime.transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
-from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.async_cleanup import AsyncResourceCleanupError, attach_async_cleanup_error
 from ...core.time.clock import now
 from .framing import (
     RuntimeTransportCleanup,
@@ -488,11 +488,11 @@ class RuntimeTransportServer:
             )
             if primary_error is None:
                 raise cleanup_error from release_error
-            previous = primary_error.__dict__.get("async_cleanup_error")
-            if isinstance(previous, AsyncResourceCleanupError):
-                cleanup_error = previous.merged_with(cleanup_error)
-            primary_error.__dict__["async_cleanup_error"] = cleanup_error
-            primary_error.add_note("Listener cleanup also failed; retry through the attached async_cleanup_error")
+            attach_async_cleanup_error(
+                primary_error,
+                cleanup_error,
+                note="Listener cleanup also failed; retry through the attached async_cleanup_error",
+            )
 
     def _accept_connections(self, workers: ThreadPoolExecutor) -> None:
         while not self.stop.is_set():

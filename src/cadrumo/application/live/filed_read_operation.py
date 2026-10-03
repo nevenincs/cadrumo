@@ -39,10 +39,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -185,7 +184,14 @@ class FiledReadComposition(Protocol):
         ...
 
 
-FiledReadCompositionFactory = Callable[[], FiledReadComposition]
+class FiledReadCompositionFactory(Protocol):
+    """Compose filed-register readers under the operation's held authority pin."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> FiledReadComposition:
+        """Return the authenticated Sede reader bundle for this operation."""
+        ...
+
+
 FiledReadProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
 
 
@@ -243,7 +249,7 @@ class FiledListExecutor:
         payload = request.payload
         await context.events.phase(_LIST_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
+        composition = self._composition_factory(operation=context.authority_operation)
         resources = self._browser_resources_factory()
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_LIST_PHASES[1])
@@ -315,7 +321,7 @@ class FiledDiscoverExecutor:
         await context.events.phase(_DISCOVER_PHASES[0])
         self._provider_preflight(request.payload.profile_id, context.authority_operation)
         profile = self._profile_resolver(context.authority_operation)
-        composition = self._composition_factory()
+        composition = self._composition_factory(operation=context.authority_operation)
         resources = self._browser_resources_factory()
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_DISCOVER_PHASES[1])

@@ -154,8 +154,6 @@ application:
           NIE vagy CIF, ezért nem igazolható, hogy a Cl@ve munkamenet hozzá tartozik.
         profile_tax_id_missing: 'A Cl@ve Móvil élő hitelesítéshez az aktív profilnak
           tartalmaznia kell a következőt: %{requirements}.'
-        provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
-          bezárni; az AEAT adatok olvasása előtt hitelesítsen újra.
         session_identity_profile_mismatch: Az AEAT munkamenet azonossága nem egyezik
           az aktív profil adóazonosítójával; töröld a hitelesítési munkameneteket,
           és hitelesítsd az egyező profilt.

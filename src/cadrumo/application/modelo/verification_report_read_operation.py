@@ -2,31 +2,23 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from decimal import Decimal
+from functools import partial
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, field_validator, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import profile_operation_subject
 from ...core.period import Period, PeriodError
-from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import (
@@ -47,35 +39,29 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_period_independent_admission,
+    require_single_period_admission,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -147,6 +133,10 @@ class ModeloVerificationFactProjection(BaseModel):
             if not _decimal_fact_is_bounded(decimal_value):
                 raise ValueError("decimal verification fact exceeds the public result bound")
         return self
+
+    def typed_value(self) -> str | int | bool | Decimal:
+        """Restore the domain fact's own type, decimals included."""
+        return Decimal(str(self.value)) if self.value_kind == "decimal" else self.value
 
     @classmethod
     def from_fact(cls, key: str, value: str | int | bool | Decimal) -> ModeloVerificationFactProjection:
@@ -257,6 +247,21 @@ class ModeloVerificationFindingProjection(BaseModel):
             source_refs=finding.source_refs,
         )
 
+    def to_finding(self) -> ModeloVerificationFinding:
+        """Restore the persisted domain finding this projection copied, without authoring a new one."""
+        return ModeloVerificationFinding.model_validate(
+            {
+                "kind": self.kind,
+                "severity": self.severity,
+                "casilla_id": self.casilla_id,
+                "expectation_id": self.expectation_id,
+                "message_locale_key": self.message_locale_key,
+                "message_facts": {fact.key: fact.typed_value() for fact in self.message_facts},
+                "legal_refs": self.legal_refs,
+                "source_refs": self.source_refs,
+            }
+        )
+
 
 def _decimal_fact_is_bounded(value: Decimal) -> bool:
     """Apply the public fact bounds without changing a decimal value."""
@@ -300,6 +305,7 @@ class ModeloVerificationReportProjection(BaseModel):
 
     @field_validator("run_at")
     @classmethod
+    @pydantic_validation_boundary
     def _run_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -342,6 +348,27 @@ class ModeloVerificationReportProjection(BaseModel):
             run_at=report.run_at,
             verified_by=report.verified_by,
             findings=tuple(ModeloVerificationFindingProjection.from_finding(finding) for finding in report.findings),
+        )
+
+    def to_report(self) -> VerificationReport:
+        """Restore the persisted domain report, so the existing renderer owns localization."""
+        snapshot = self.registry_snapshot_ref
+        return VerificationReport(
+            verification_report_id=self.verification_report_id,
+            calculation_revision_id=self.calculation_revision_id,
+            registry_snapshot_ref=RegistrySnapshotRef(
+                modelo=snapshot.modelo,
+                revision_id=snapshot.revision_id,
+                modelo_year=snapshot.modelo_year,
+                period=snapshot.period,
+            ),
+            completeness_status=self.completeness_status,
+            findings=tuple(finding.to_finding() for finding in self.findings),
+            resolved_casilla_ids=self.resolved_casilla_ids,
+            missing_required_casilla_ids=self.missing_required_casilla_ids,
+            run_at=self.run_at,
+            verified_by=self.verified_by,
+            granted_verificado_completo=self.granted_verificado_completo,
         )
 
 
@@ -578,15 +605,11 @@ class ModeloVerificationReportListExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID)
 
-        async def capture() -> str:
-            projection = await asyncio.to_thread(
-                _capture_list, payload, self._factory, operation=context.authority_operation
-            )
-            reference = await context.operands.put(projection, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="modelo-verification-report-list")
+        return await capture_read_result(
+            context,
+            partial(_capture_list, payload, self._factory, operation=context.authority_operation),
+            task_name="modelo-verification-report-list",
+        )
 
 
 class ModeloVerificationReportViewExecutor:
@@ -613,15 +636,11 @@ class ModeloVerificationReportViewExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID)
 
-        async def capture() -> str:
-            projection = await asyncio.to_thread(
-                _capture_view, payload, self._factory, operation=context.authority_operation
-            )
-            reference = await context.operands.put(projection, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="modelo-verification-report-view")
+        return await capture_read_result(
+            context,
+            partial(_capture_view, payload, self._factory, operation=context.authority_operation),
+            task_name="modelo-verification-report-view",
+        )
 
 
 def build_modelo_verification_report_list_definition(
@@ -670,50 +689,10 @@ def _build_read_definition(
         ),
         phase_codes=(definition_id,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
-
-
-def _disclosures(context: OperationAccessContext) -> frozenset[DisclosurePermission]:
-    """Return only operation metadata or the schema-bound tax-value result."""
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        return frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    if context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=schema.schema_id,
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            )
-        )
-    return frozenset[DisclosurePermission]()
 
 
 def _access_resolution(
@@ -734,22 +713,16 @@ def _access_resolution(
 
     independent = isinstance(payload, ModeloVerificationReportListRequest) and payload.calculation_revision_id is None
     admitted = context.admitted_request
-    if admitted is not None and context.action in {
-        AccessAction.OBSERVE,
-        AccessAction.RESULT,
-        AccessAction.CANCEL,
-        AccessAction.DETACH,
-    }:
-        if (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != request.definition_id
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.period_independent != independent
-            or (independent and admitted.periods)
-            or (not independent and len(admitted.periods) != 1)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        periods: frozenset[Period] = admitted.periods
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        periods = frozenset[Period]()
+        if independent:
+            require_period_independent_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
+            )
+        else:
+            periods = require_single_period_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
+            )
     elif independent:
         periods = frozenset[Period]()
     else:
@@ -782,39 +755,14 @@ def _access_resolution(
             )
         periods = frozenset({period})
 
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=periods,
-            period_independent=independent,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=_disclosures(context),
-            periods=periods,
-            allow_period_independent=independent,
-            requires_all_periods=independent,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    return bind_operation_access_profile(
+        context,
+        LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS
+        if independent
+        else LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        periods=periods,
     )
 
 
@@ -833,18 +781,9 @@ def build_modelo_verification_report_list_registration(
             factory=factory,
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloVerificationReportListRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloVerificationReportListProjection,
-        ),
+        public_result_type=ModeloVerificationReportListProjection,
         access_resolver=resolve,
     )
 
@@ -864,18 +803,9 @@ def build_modelo_verification_report_view_registration(
             factory=factory,
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloVerificationReportViewRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloVerificationReportViewProjection,
-        ),
+        public_result_type=ModeloVerificationReportViewProjection,
         access_resolver=resolve,
     )
 

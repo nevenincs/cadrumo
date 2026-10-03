@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -15,6 +16,7 @@ from ...application.user_profile.profile_read_ports import ProfilePathValuesRead
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -30,6 +32,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
+    ActividadAssetError,
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
@@ -49,17 +52,15 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_scalar import PublicDecimal
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationResultProjector,
-    OperationSchemaBindingV1,
 )
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.projection import PreconditionVerdictSnapshot
@@ -93,7 +94,6 @@ _REFUSAL_CODES = frozenset({_REFUSED_VALIDATION, _REFUSED_UNSUPPORTED, _REFUSED_
 _AssetId = Annotated[str, Field(min_length=1, max_length=128)]
 _OperationName = Annotated[str, Field(min_length=1, max_length=256)]
 _TaxYear = Annotated[int, Field(ge=1900, le=9999)]
-_Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 _RefusalCode = Literal[
     "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
     "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
@@ -128,8 +128,8 @@ class ActivityAssetAuthorityProvenance(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    logical_generation: _Digest
-    reader_incarnation: _Digest
+    logical_generation: Hex64Str
+    reader_incarnation: Hex64Str
 
 
 class ActivityAssetRefusal(BaseModel):
@@ -139,6 +139,21 @@ class ActivityAssetRefusal(BaseModel):
 
     code: _RefusalCode
     precondition_verdict: PreconditionVerdictSnapshot | None = None
+
+    def to_domain_error(self, *, context: Mapping[str, object]) -> ActividadAssetError:
+        """Rebuild the domain refusal this detail was recorded from, carrying the settled receipt facts."""
+        if self.code == _REFUSED_INCOMPLETE:
+            return ActividadAssetIncompleteError(
+                context=context,
+                precondition_verdict=(
+                    self.precondition_verdict.to_verdict() if self.precondition_verdict is not None else None
+                ),
+            )
+        if self.code == _REFUSED_UNSUPPORTED:
+            return ActividadAssetUnsupportedError(context=context)
+        if self.code == _REFUSED_CLAIM_CONFLICT:
+            return ActividadAssetClaimConflictError(context=context)
+        return ActividadAssetValidationError(context=context)
 
 
 class _ActivityAssetRefusalResult(BaseModel):
@@ -201,7 +216,7 @@ class ActivityAssetForecastRequest(BaseModel):
     covered_from: date
     covered_until: date
     requested_free_amount: PublicDecimal | None = None
-    supersedes_claim_id: _Digest | None = None
+    supersedes_claim_id: Hex64Str | None = None
 
 
 class ActivityAssetClaimRequest(BaseModel):
@@ -212,7 +227,7 @@ class ActivityAssetClaimRequest(BaseModel):
     profile_id: UUID
     forecast: ScheduledAmortizationChargeSnapshot
     creating_operation: _OperationName
-    supersedes_claim_id: _Digest | None = None
+    supersedes_claim_id: Hex64Str | None = None
 
 
 class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
@@ -247,7 +262,7 @@ class ActivityAssetInspectionRevision(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     revision: ActivityAssetRevisionSnapshot
-    revision_id: _Digest
+    revision_id: Hex64Str
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -300,7 +315,7 @@ class ActivityAssetForecastResult(_ActivityAssetOperationResult):
 
 class ActivityAssetClaimResult(_ActivityAssetOperationResult):
     claim_result: ActivityAssetHistoryClaimResult | None = None
-    claim_id: _Digest | None = None
+    claim_id: Hex64Str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -416,7 +431,7 @@ class ActivityAssetClaimProjection(_ActivityAssetOperationProjection):
     """Public complete history/claim receipt and its deterministic claim ID."""
 
     claim_result: ActivityAssetHistoryClaimResultSnapshot | None = None
-    claim_id: _Digest | None = None
+    claim_id: Hex64Str | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -504,6 +519,7 @@ def _activity_asset_operations(
             covered_until=covered_until,
             history=history,
             taxpayer_workforce=taxpayer_workforce,
+            legal_reference=operation.legal_reference,
             requested_free_amount=requested_free_amount,
         )
 
@@ -1051,13 +1067,7 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {
-                OperationFrontendProjection.CLI,
-                OperationFrontendProjection.MCP,
-                OperationFrontendProjection.TUI,
-            }
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=_REFUSAL_CODES,
     )
 
@@ -1065,24 +1075,14 @@ def _definition(
 def _registration(
     definition: OperationDefinition,
     *,
-    request_type: type[BaseModel],
     projection_type: type[BaseModel],
     result_projector: OperationResultProjector,
 ) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=projection_type,
-        ),
-        access_resolver=resolve_activity_asset_access,
+        public_result_type=projection_type,
         result_projector=result_projector,
+        access_resolver=resolve_activity_asset_access,
     )
 
 
@@ -1293,7 +1293,6 @@ def build_activity_asset_create_registration(
     """Register the typed create request and projection schemas."""
     return _registration(
         definition,
-        request_type=ActivityAssetCreateRequest,
         projection_type=ActivityAssetCreateProjection,
         result_projector=_project_create,
     )
@@ -1318,7 +1317,6 @@ def build_activity_asset_inspect_registration(
     """Register the typed inspect request and projection schemas."""
     return _registration(
         definition,
-        request_type=ActivityAssetInspectRequest,
         projection_type=ActivityAssetInspectProjection,
         result_projector=_project_inspect,
     )
@@ -1343,7 +1341,6 @@ def build_activity_asset_correct_registration(
     """Register the typed correction request and projection schemas."""
     return _registration(
         definition,
-        request_type=ActivityAssetCorrectRequest,
         projection_type=ActivityAssetCorrectProjection,
         result_projector=_project_correct,
     )
@@ -1368,7 +1365,6 @@ def build_activity_asset_forecast_registration(
     """Register the typed forecast request and projection schemas."""
     return _registration(
         definition,
-        request_type=ActivityAssetForecastRequest,
         projection_type=ActivityAssetForecastProjection,
         result_projector=_project_forecast,
     )
@@ -1391,7 +1387,6 @@ def build_activity_asset_claim_registration(definition: OperationDefinition) -> 
     """Register the typed claim request and projection schemas."""
     return _registration(
         definition,
-        request_type=ActivityAssetClaimRequest,
         projection_type=ActivityAssetClaimProjection,
         result_projector=_project_claim,
     )
@@ -1418,7 +1413,6 @@ def build_activity_asset_filing_handoff_registration(
     """Register the typed filing handoff request and projection schemas."""
     return _registration(
         definition,
-        request_type=ActivityAssetFilingHandoffRequest,
         projection_type=ActivityAssetFilingHandoffProjection,
         result_projector=_project_filing_handoff,
     )

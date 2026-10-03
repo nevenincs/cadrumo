@@ -8,12 +8,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.facts.schema import (
-    FactSelector,
+from cadrumo.domain.calculations.registry.facts.payloads import (
     MappingFactEntry,
     MappingFactPayload,
     ScalarFactPayload,
 )
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 
 from ..compiler.fact_loader import load_governed_fact_file
 

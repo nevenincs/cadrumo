@@ -33,7 +33,7 @@ from ..operation_composition import build_production_operation_registry
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .launcher import run_precomposed_runtime_root_session, run_runtime_managed_application
 from .runtime_admission import runtime_login_session
-from .runtime_management import RuntimeManagementCleanup
+from .runtime_management_cleanup import RuntimeManagementCleanup
 from .runtime_workbench import RuntimeWorkbenchRoot
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 from .secret.runtime_login import RuntimeLoginMethod

@@ -32,10 +32,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -141,7 +140,7 @@ class IvaWalletHistoryCaptureExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory(payload.output_root)
+        composition = self._composition_factory(payload.output_root, operation=context.authority_operation)
         resources = self._browser_resources_factory()
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_PHASES[1])

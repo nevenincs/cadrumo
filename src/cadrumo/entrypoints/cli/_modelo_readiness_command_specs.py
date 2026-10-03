@@ -7,21 +7,19 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _CALCULATION_READ = ExecutionPolicySpec(
     capabilities=frozenset({"calculation", "encrypted-facts"}),

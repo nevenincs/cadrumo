@@ -5,6 +5,17 @@ from typing import Final
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ._command_parameter_contracts import ArgumentSpec, OptionSpec
+from ._command_shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
 from ._modelo_nonwork_command_spec_policies import (
     _CALCULATION_WRITE,
     _CRYPTO_FACT_FILE_WRITE,
@@ -15,20 +26,7 @@ from ._modelo_nonwork_common_command_parameters import (
     CALCULATION_REVISION_SELECTOR_OPTIONS,
     FILING_ELECTION_OPTIONS,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
-    DeferredTarget,
-    InvocationSpec,
-    LazyBinding,
-    OptionSpec,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
+from .command_spec import CommandSpec, InvocationSpec
 
 _REVIEW_PACKAGE_INPUT: Final[ArgumentSpec] = ArgumentSpec(
     name="package",

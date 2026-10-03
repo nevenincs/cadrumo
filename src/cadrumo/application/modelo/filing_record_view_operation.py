@@ -2,33 +2,23 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.casilla_id import validated_casilla_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import profile_operation_subject
 from ...core.period import Period
-from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.filing_text import ModeloActorLabel, OperatorReason
 from ..calculations.observations_repository import (
     ObservationEnvelopePayload,
@@ -36,39 +26,32 @@ from ..calculations.observations_repository import (
     ObservationOverride,
     ObservationSourceKind,
 )
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_single_period_admission,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
+from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from .filing_record_ownership import load_profile_filing_record
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 
 MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID = "modelo.filing_record.view"
@@ -107,6 +90,7 @@ class ModeloFilingObservationLayerProjection(BaseModel):
 
     @field_validator("captured_at")
     @classmethod
+    @pydantic_validation_boundary
     def _captured_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -146,6 +130,7 @@ class ModeloFilingObservationOverrideProjection(BaseModel):
 
     @field_validator("recorded_at")
     @classmethod
+    @pydantic_validation_boundary
     def _recorded_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -238,33 +223,6 @@ class ModeloFilingRecordViewProjection(BaseModel):
         return self
 
 
-def _select_record(
-    payload: ModeloFilingRecordViewRequest,
-    bundle: VerificationRepositoryBundle,
-) -> ModeloRecord:
-    """Load and correlate the receipt with its exact owning work unit."""
-    profile_id = str(payload.profile_id)
-    if bundle.filing.bucket_id != profile_id or bundle.work_unit.bucket_id != profile_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    record = bundle.filing.load().get(payload.filing_record_id)
-    if record is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if record.bucket_id != profile_id or record.filing_record_id != payload.filing_record_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    unit = bundle.work_unit.load().get(record.work_unit_id)
-    if unit is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if (
-        unit.bucket_id != profile_id
-        or unit.work_unit_id != record.work_unit_id
-        or unit.modelo != record.modelo
-        or unit.filing_year != record.filing_year
-        or unit.period != record.period
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return record
-
-
 def _resolve_period(
     payload: ModeloFilingRecordViewRequest,
     factory: VerificationRepositoryBundleFactory,
@@ -273,7 +231,9 @@ def _resolve_period(
 ) -> PublicPeriod:
     """Resolve exact filing scope without reading observation values at admission."""
     bundle = factory(str(payload.profile_id), operation=operation)
-    record = _select_record(payload, bundle)
+    record, _unit = load_profile_filing_record(
+        bundle, profile_id=payload.profile_id, filing_record_id=payload.filing_record_id
+    )
     return PublicPeriod.from_period(record.period)
 
 
@@ -282,7 +242,9 @@ def _capture(
     bundle: VerificationRepositoryBundle,
 ) -> ModeloFilingRecordViewProjection:
     """Capture one receipt and both canonical observation layers together."""
-    record = _select_record(payload, bundle)
+    record, _unit = load_profile_filing_record(
+        bundle, profile_id=payload.profile_id, filing_record_id=payload.filing_record_id
+    )
     layers = bundle.observation.load_observation_layers(str(record.modelo), record.period, member_nif=record.member_nif)
     projection = ModeloFilingRecordViewProjection(
         profile_id=payload.profile_id,
@@ -323,13 +285,7 @@ class ModeloFilingRecordViewExecutor:
             bundle = self._factory(str(payload.profile_id), operation=context.authority_operation)
             return _capture(payload, bundle)
 
-        async def capture() -> str:
-            projection = await asyncio.to_thread(read)
-            reference = await context.operands.put(projection, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="modelo-filing-record-view")
+        return await capture_read_result(context, read, task_name="modelo-filing-record-view")
 
 
 def build_modelo_filing_record_view_definition(
@@ -347,19 +303,7 @@ def build_modelo_filing_record_view_definition(
         ),
         phase_codes=(MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -383,21 +327,10 @@ def build_modelo_filing_record_view_registration(
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
         admitted = context.admitted_request
-        if admitted is not None and context.action in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }:
-            if (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent
-                or len(admitted.periods) != 1
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = admitted.periods
+        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+            periods = require_single_period_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
+            )
         else:
             if context.authority_operation is None:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -408,76 +341,17 @@ def build_modelo_filing_record_view_registration(
             ).to_period()
             periods = frozenset({period})
 
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=schema.schema_id,
-                        category=DisclosureCategory.TAX_VALUES,
-                    ),
-                )
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=periods,
-                period_independent=False,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                    }
-                ),
-                disclosures=disclosures,
-                periods=periods,
-                allow_period_independent=False,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                transaction_authority_required=False,
-            ),
+        return bind_operation_access_profile(
+            context,
+            LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            profile_id=context.profile_id,
+            definition_id=request.definition_id,
+            periods=periods,
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloFilingRecordViewRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloFilingRecordViewProjection,
-        ),
+        public_result_type=ModeloFilingRecordViewProjection,
         access_resolver=resolve,
     )
 

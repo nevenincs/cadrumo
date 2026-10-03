@@ -72,6 +72,7 @@ from ..calculations.registry.ids import BindingId, RelationId
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
 from .calculation_revision_identity import (
@@ -1076,21 +1077,27 @@ class CalculationRevision(BaseModel):
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowBindingKey, RowSourceIdentity]).validate_python(value)
         elif isinstance(value, (list, tuple)):
-            typed = {}
-            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = (raw.get("binding_id"), raw.get("row_index"))
-                identity = RowSourceIdentity.model_validate(
-                    {
-                        "source_kind": raw.get("source_kind"),
-                        "source_row_identity": raw.get("source_row_identity"),
-                        "fingerprint": raw.get("fingerprint"),
-                        "row_set_grouping": raw.get("row_set_grouping"),
-                    },
-                )
-                parsed_key = TypeAdapter(tuple[BindingId, int]).validate_python(key)
-                if parsed_key in typed:
-                    raise ModeloValidationError("row source identities contain a duplicate coordinate")
-                typed[parsed_key] = identity
+            typed = index_unique_row_coordinates(
+                (
+                    (
+                        TypeAdapter(tuple[BindingId, int]).validate_python(
+                            (raw.get("binding_id"), raw.get("row_index"))
+                        ),
+                        RowSourceIdentity.model_validate(
+                            {
+                                "source_kind": raw.get("source_kind"),
+                                "source_row_identity": raw.get("source_row_identity"),
+                                "fingerprint": raw.get("fingerprint"),
+                                "row_set_grouping": raw.get("row_set_grouping"),
+                            },
+                        ),
+                    )
+                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                ),
+                duplicate=lambda _coordinate: ModeloValidationError(
+                    "row source identities contain a duplicate coordinate"
+                ),
+            )
         else:
             raise ModeloValidationError("row source identities must be a coordinate mapping")
         if any(row_index < 1 for _binding_id, row_index in typed):
@@ -1112,12 +1119,20 @@ class CalculationRevision(BaseModel):
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
         elif isinstance(value, list):
-            typed = {}
-            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
-                if key in typed:
-                    raise ModeloValidationError("row casilla values contain a duplicate coordinate")
-                typed[key] = TypeAdapter(Decimal).validate_python(raw.get("value"))
+            typed = index_unique_row_coordinates(
+                (
+                    (
+                        TypeAdapter(tuple[CasillaId, int]).validate_python(
+                            (raw.get("casilla_id"), raw.get("row_index"))
+                        ),
+                        TypeAdapter(Decimal).validate_python(raw.get("value")),
+                    )
+                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                ),
+                duplicate=lambda _coordinate: ModeloValidationError(
+                    "row casilla values contain a duplicate coordinate"
+                ),
+            )
         else:
             raise ModeloValidationError("row casilla values must be a coordinate mapping")
         if any(row_index < 1 for _casilla_id, row_index in typed):
@@ -1141,20 +1156,28 @@ class CalculationRevision(BaseModel):
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
         elif isinstance(value, list):
-            typed = {}
-            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
-                if key in typed:
-                    raise ModeloValidationError("row casilla provenance contains a duplicate coordinate")
-                typed[key] = DirectRowMaterializationProvenance.model_validate(
-                    {
-                        "source_binding_id": raw.get("source_binding_id"),
-                        "source_row_index": raw.get("source_row_index"),
-                        "source_identity": raw.get("source_identity"),
-                        "materialization_rule_id": raw.get("materialization_rule_id"),
-                        "materialization_rule_version": raw.get("materialization_rule_version"),
-                    }
-                )
+            typed = index_unique_row_coordinates(
+                (
+                    (
+                        TypeAdapter(tuple[CasillaId, int]).validate_python(
+                            (raw.get("casilla_id"), raw.get("row_index"))
+                        ),
+                        DirectRowMaterializationProvenance.model_validate(
+                            {
+                                "source_binding_id": raw.get("source_binding_id"),
+                                "source_row_index": raw.get("source_row_index"),
+                                "source_identity": raw.get("source_identity"),
+                                "materialization_rule_id": raw.get("materialization_rule_id"),
+                                "materialization_rule_version": raw.get("materialization_rule_version"),
+                            }
+                        ),
+                    )
+                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                ),
+                duplicate=lambda _coordinate: ModeloValidationError(
+                    "row casilla provenance contains a duplicate coordinate"
+                ),
+            )
         else:
             raise ModeloValidationError("row casilla provenance must be a coordinate mapping")
         if any(row_index < 1 for _casilla_id, row_index in typed):

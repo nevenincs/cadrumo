@@ -36,6 +36,53 @@ def _csv(value: str) -> tuple[str, ...]:
     return values
 
 
+def _scope_partitions(declarations: Mapping[str, str]) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
+    catalogue = frozenset(_csv(declarations["catalogue.codes"]))
+    suppressed = frozenset(_csv(declarations["scope.suppressed.codes"]))
+    registry_out = frozenset(_csv(declarations["scope.registry_out_of_scope.codes"]))
+    return catalogue, suppressed, registry_out
+
+
+def _scope_reasons(declarations: Mapping[str, str]) -> dict[str, str]:
+    reasons: dict[str, str] = {}
+    groups: dict[str, dict[str, str]] = {}
+    for key, value in declarations.items():
+        if key.startswith("scope.code.") and key.endswith(".reason"):
+            reasons[key.removeprefix("scope.code.").removesuffix(".reason")] = value
+        elif key.startswith("scope.group."):
+            _, _, group, field = key.split(".", 3)
+            groups.setdefault(group, {})[field] = value
+    for group, fields in groups.items():
+        reason = fields.get("reason", "").strip()
+        if not reason:
+            raise CoreValidationError(f"Modelo scope group {group!r} has no reason")
+        for code in _csv(fields.get("codes", "")):
+            if code in reasons and reasons[code] != reason:
+                raise CoreValidationError(f"Modelo scope code {code!r} has conflicting reasons")
+            reasons[code] = reason
+    return reasons
+
+
+def _validate_scope_partitions(
+    reasons: Mapping[str, str],
+    catalogue: frozenset[str],
+    suppressed: frozenset[str],
+    registry_out: frozenset[str],
+) -> None:
+    if not set(reasons).issubset(catalogue) or not suppressed.issubset(reasons) or not registry_out.issubset(reasons):
+        raise CoreValidationError("Modelo scope partitions disagree with the published catalogue")
+
+
+def _scope_projection(
+    reasons: Mapping[str, str],
+    suppressed: frozenset[str],
+    registry_out: frozenset[str],
+) -> tuple[Mapping[Modelo, str], frozenset[Modelo]]:
+    out_of_scope = {Modelo(code): reason for code, reason in reasons.items() if code not in suppressed}
+    non_registry = frozenset(Modelo(code) for code in reasons if code not in registry_out)
+    return out_of_scope, non_registry
+
+
 def resolve_modelo_obligation_scope(
     *,
     effective_date: date | None = None,
@@ -61,30 +108,10 @@ def resolve_modelo_obligation_scope(
     if not isinstance(resolved, ResolvedMappingFact):
         raise CoreValidationError("Modelo obligation scope did not resolve as a mapping")
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-    catalogue = frozenset(_csv(declarations["catalogue.codes"]))
-    suppressed = frozenset(_csv(declarations["scope.suppressed.codes"]))
-    registry_out = frozenset(_csv(declarations["scope.registry_out_of_scope.codes"]))
-    reasons: dict[str, str] = {}
-    groups: dict[str, dict[str, str]] = {}
-    for key, value in declarations.items():
-        if key.startswith("scope.code.") and key.endswith(".reason"):
-            reasons[key.removeprefix("scope.code.").removesuffix(".reason")] = value
-        elif key.startswith("scope.group."):
-            _, _, group, field = key.split(".", 3)
-            groups.setdefault(group, {})[field] = value
-    for group, fields in groups.items():
-        reason = fields.get("reason", "").strip()
-        if not reason:
-            raise CoreValidationError(f"Modelo scope group {group!r} has no reason")
-        for code in _csv(fields.get("codes", "")):
-            if code in reasons and reasons[code] != reason:
-                raise CoreValidationError(f"Modelo scope code {code!r} has conflicting reasons")
-            reasons[code] = reason
-    if not set(reasons).issubset(catalogue) or not suppressed.issubset(reasons) or not registry_out.issubset(reasons):
-        raise CoreValidationError("Modelo scope partitions disagree with the published catalogue")
-    out_of_scope = {Modelo(code): reason for code, reason in reasons.items() if code not in suppressed}
-    non_registry = frozenset(Modelo(code) for code in reasons if code not in registry_out)
-    return out_of_scope, non_registry
+    catalogue, suppressed, registry_out = _scope_partitions(declarations)
+    reasons = _scope_reasons(declarations)
+    _validate_scope_partitions(reasons, catalogue, suppressed, registry_out)
+    return _scope_projection(reasons, suppressed, registry_out)
 
 
 class _ScopeMapping(Mapping[Modelo, str]):

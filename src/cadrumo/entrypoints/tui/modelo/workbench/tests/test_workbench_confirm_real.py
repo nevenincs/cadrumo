@@ -19,30 +19,23 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
-from pydantic import BaseModel
 from textual.widgets import Static
 
-from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ......application.modelo.edit_preflight import preflight_modelo_edit
 from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloFormOrigin
-from ......application.operations.models import OperationRequest
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
-from ......domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
-from ..editor import CasillaEditorScreen, EditorDecision, EditorOutcome
+from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
+from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorDecision, EditorOutcome
 from ..header import StatusLine, status_line
-from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
+from ..installed import InstalledModeloWorkbench
 from ..session import WorkbenchEditSession
 from ..vocabulary import origin_words
 
@@ -55,7 +48,7 @@ _BOX = validated_casilla_id("06")
 class _Bench:
     work: SeededOperatorWork
     installed: InstalledModeloWorkbench
-    submitted: list[OperationRequest[BaseModel]]
+    submissions: RecordedSubmissions
 
     def box(self) -> ModeloFormField:
         form = self.installed.load(OutputLanguage.EN).form
@@ -68,55 +61,11 @@ class _Bench:
 
 
 @contextmanager
-def _bench(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Bench]:
-    submitted: list[OperationRequest[BaseModel]] = []
-
-    async def capture(_door: ModeloWorkspaceLifecycleDoor, request: OperationRequest[BaseModel]) -> object:
-        submitted.append(request)
-        return request
-
-    monkeypatch.setattr(ModeloWorkspaceLifecycleDoor, "_submit", capture)
+def _bench(tmp_path: Path) -> Generator[_Bench]:
+    submissions = RecordedSubmissions()
     with seeded_operator_work(tmp_path) as work:
-        unit = work.work_unit
-
-        def door(
-            calculation_revision_id: str | None, verification_report_id: str | None
-        ) -> ModeloWorkspaceLifecycleDoor:
-            return ModeloWorkspaceLifecycleDoor(
-                services=cast(Any, object()),
-                work_unit_id=work.work_unit_id,
-                calculation_revision_id=calculation_revision_id,
-                verification_report_id=verification_report_id,
-                edit_admission=work.admit,
-                edit_renewal=work.renew,
-                edit_preflight=lambda submission: preflight_modelo_edit(
-                    submission,
-                    work_catalogue=work.ports.work_unit_repository.load(),
-                    calculation_catalogue=work.ports.calculation_repository.load(),
-                    tax_id_format=runtime_tax_id_format(authority=work.operation),
-                ),
-            )
-
-        installed = InstalledModeloWorkbench(
-            bucket_id=unit.bucket_id,
-            declaration=DeclarationsWorkspaceDeclarationRefV1(
-                work_unit_id=unit.work_unit_id,
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
-                state=unit.state,
-                has_current_calculation=False,
-                has_current_filing=False,
-            ),
-            operation=work.operation,
-            repositories=WorkbenchRepositories(
-                work_units=work.ports.work_unit_repository,
-                calculations=work.ports.calculation_repository,
-                verifications=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
-            ),
-            door=door,
-        )
-        yield _Bench(work=work, installed=installed, submitted=submitted)
+        installed = application_workbench(work.work_unit, operation=work.operation, submissions=submissions)
+        yield _Bench(work=work, installed=installed, submissions=submissions)
 
 
 async def _keep_in_panel(
@@ -126,7 +75,9 @@ async def _keep_in_panel(
 
     Returns the panel's decision and the result line it showed first.
     """
-    editor = CasillaEditorScreen(field, parse=installed.parse, language=OutputLanguage.EN, status_line=status)
+    editor = CasillaEditorScreen(
+        CasillaEditorPanel(field, parse=installed.parse, language=OutputLanguage.EN, status_line=status)
+    )
     app = ScreenHostApp(editor)
     async with app.run_test(size=(80, 24)) as pilot:
         for _ in range(3):
@@ -139,10 +90,8 @@ async def _keep_in_panel(
 
 
 @pytest.mark.timeout(300)
-def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    with _bench(tmp_path, monkeypatch) as bench, override_settings(cadrumo_output_language="en"):
+def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer(tmp_path: Path) -> None:
+    with _bench(tmp_path) as bench, override_settings(cadrumo_output_language="en"):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             bench.work.work_unit_id, ports=bench.work.ports, clock=SEEDED_AT, casilla_inputs={_BOX: Decimal("100")}
         )
@@ -157,7 +106,7 @@ def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer
         assert session.stage_value(assumed, decision.value, decision.display) is None
         preflight = asyncio.run(bench.installed.preflight(session.payload()))
         asyncio.run(bench.installed.apply(session.payload()))
-        refusal = bench.work.execute(bench.submitted.pop())
+        refusal = bench.work.execute(bench.submissions.pop())
         confirmed = bench.box()
         words = origin_words(confirmed)
 

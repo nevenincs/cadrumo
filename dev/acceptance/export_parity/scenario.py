@@ -36,6 +36,25 @@ RETA_MONTHLY = Decimal("300.00")
 _QUARTER_MONTHS = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
 
+def _append_asset_purchase_invoices(received: list[ReceivedInvoice], year: int) -> None:
+    """Append asset purchase invoices."""
+    for asset in ASSETS:
+        if asset.in_service.year == year:
+            received.append(
+                ReceivedInvoice(
+                    key=f"asset-{asset.asset_id}",
+                    period=_period_of(asset.in_service),
+                    counterparty=SOFTWARE_VENDOR if asset.kind == "intangible" else SUPPLIER,
+                    category="hardware_amortizable" if asset.kind != "intangible" else "software_suscripcion",
+                    invoice_date=asset.in_service,
+                    payment_date=asset.in_service,
+                    base=asset.basis,
+                    iva_rate=IVA_GENERAL,
+                    asset_id=asset.asset_id,
+                )
+            )
+
+
 def money(value: Decimal) -> Decimal:
     """Round to euro cents, half up, as AEAT forms do."""
     return value.quantize(CENT, rounding=ROUND_HALF_UP)
@@ -297,21 +316,7 @@ def build_year(year: int) -> YearScenario:
                 iva_rate=IVA_GENERAL,
             )
         )
-    for asset in ASSETS:
-        if asset.in_service.year == year:
-            received.append(
-                ReceivedInvoice(
-                    key=f"asset-{asset.asset_id}",
-                    period=_period_of(asset.in_service),
-                    counterparty=SOFTWARE_VENDOR if asset.kind == "intangible" else SUPPLIER,
-                    category="hardware_amortizable" if asset.kind != "intangible" else "software_suscripcion",
-                    invoice_date=asset.in_service,
-                    payment_date=asset.in_service,
-                    base=asset.basis,
-                    iva_rate=IVA_GENERAL,
-                    asset_id=asset.asset_id,
-                )
-            )
+    _append_asset_purchase_invoices(received, year)
     reta_months = tuple(date(year, month, 28) for month in range(1, 13))
     return YearScenario(year=year, issued=issued, received=tuple(received), reta_months=reta_months)
 

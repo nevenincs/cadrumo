@@ -37,6 +37,7 @@ from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (
     _calendar_entry_from_obligation,
+    _entry_intersects_range,
     _registry_window_for_work_unit,
     build_overview_calendar,
     build_overview_calendar_events,
@@ -1377,3 +1378,79 @@ def test_calendar_warnings_include_registry_deadline_window_predicates(
     assert "111" in warnings_by_code["has_employees"].affected_modelos
     assert "123" in warnings_by_code["pays_capital_income_with_retencion"].affected_modelos
     assert "130" in warnings_by_code["art109_activity_income_withholding_ge_70pct"].affected_modelos
+
+
+# 2026-01-31 is a Saturday: the annual 2025 campaigns that close on it move to
+# Monday 2026-02-02, inside a February range that the nominal date misses.
+_SATURDAY_CLOSE = date(2026, 1, 31)
+_MONDAY_EFFECTIVE_CLOSE = date(2026, 2, 2)
+_FEBRUARY_2026 = OverviewCalendarRange(from_date=date(2026, 2, 1), to_date=date(2026, 2, 28))
+
+
+def test_calendar_places_a_work_unit_by_its_effective_deadline(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    assert _SATURDAY_CLOSE.weekday() == 5
+    work_unit = _annual_work_unit(modelo="180", filing_year=2025)
+    window = _registry_window_for_work_unit(work_unit, operation=authority_operation)
+    assert window is not None
+    assert window.closes_on == _SATURDAY_CLOSE
+
+    calendar = build_overview_calendar(
+        _profile(),
+        _FEBRUARY_2026,
+        operation=authority_operation,
+        today=_FEBRUARY_2026.from_date,
+        work_units=(work_unit,),
+    )
+
+    entry = next(item for item in calendar.entries if item.local_work_unit_id == work_unit.work_unit_id)
+    assert entry.closes_on == _SATURDAY_CLOSE
+    assert entry.adjusted_closes_on == _MONDAY_EFFECTIVE_CLOSE
+
+
+def test_calendar_leaves_out_a_work_unit_whose_effective_deadline_precedes_the_range(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    work_unit = _annual_work_unit(modelo="180", filing_year=2025)
+    after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
+
+    calendar = build_overview_calendar(
+        _profile(),
+        after_effective_close,
+        operation=authority_operation,
+        today=after_effective_close.from_date,
+        work_units=(work_unit,),
+    )
+
+    assert work_unit.work_unit_id not in {item.local_work_unit_id for item in calendar.entries}
+
+
+def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    obligation = ModeloDeadline(
+        modelo="190",
+        period=Period.from_year_and_code(2025, "0A"),
+        opens_on=date(2026, 1, 1),
+        closes_on=_SATURDAY_CLOSE,
+        payment_cutoff_on=None,
+        status=ObligationStatus.UPCOMING,
+        applies_because="synthetic weekend-close obligation",
+        boe_references=(),
+        recovery=None,
+    )
+    after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
+
+    assert _entry_intersects_range(
+        obligation,
+        _FEBRUARY_2026,
+        holiday_territory=None,
+        operation=authority_operation,
+    )
+    assert not _entry_intersects_range(
+        obligation,
+        after_effective_close,
+        holiday_territory=None,
+        operation=authority_operation,
+    )

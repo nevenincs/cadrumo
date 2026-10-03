@@ -48,6 +48,16 @@ _NAME_WIDTH = 34
 LANE_KINDS = frozenset({"collection", "command", "load"})
 
 
+def _validate_lane_requests(lanes: Sequence[str], preflight_count: int, lane_kinds: Mapping[str, str]) -> None:
+    """Validate lane requests."""
+    if not 0 <= preflight_count <= len(lanes):
+        raise ValueError("preflight_count must identify a prefix of the requested lanes")
+    if unknown_lanes := set(lane_kinds).difference(lanes):
+        raise ValueError(f"lane kinds name unrequested lanes: {sorted(unknown_lanes)!r}")
+    if unknown_kinds := set(lane_kinds.values()).difference(LANE_KINDS):
+        raise ValueError(f"unknown lane kinds: {sorted(unknown_kinds)!r}")
+
+
 @dataclass(frozen=True)
 class LaneResult:
     """One lane's outcome.
@@ -148,18 +158,11 @@ def _run_all(
     lane_kinds: Mapping[str, str],
 ) -> list[LaneResult | SkippedLane]:
     """Execute lanes, blocking the non-preflight suffix after a failed preflight."""
-    if not 0 <= preflight_count <= len(lanes):
-        raise ValueError("preflight_count must identify a prefix of the requested lanes")
-    if unknown_lanes := set(lane_kinds).difference(lanes):
-        raise ValueError(f"lane kinds name unrequested lanes: {sorted(unknown_lanes)!r}")
-    if unknown_kinds := set(lane_kinds.values()).difference(LANE_KINDS):
-        raise ValueError(f"unknown lane kinds: {sorted(unknown_kinds)!r}")
+    _validate_lane_requests(lanes, preflight_count, lane_kinds)
     results: list[LaneResult | SkippedLane] = []
     for index, lane in enumerate(lanes):
         kind = lane_kinds.get(lane, "command")
-        failed_preflights = tuple(
-            result.name for result in results[:preflight_count] if isinstance(result, LaneResult) and result.status != 0
-        )
+        failed_preflights = _failed_preflight_names(results, preflight_count)
         if index >= preflight_count and failed_preflights:
             blocked = SkippedLane(lane, failed_preflights)
             results.append(blocked)
@@ -303,3 +306,11 @@ def lane_command_parser() -> argparse.ArgumentParser:
     )
     lanes.add_argument("lane", nargs="+", help="just recipe names")
     return parser
+
+
+def _failed_preflight_names(results: list[LaneResult | SkippedLane], preflight_count: int) -> tuple[str, ...]:
+    """Use completed nonzero preflight results to block only the execution suffix."""
+    failed_preflights = tuple(
+        result.name for result in results[:preflight_count] if isinstance(result, LaneResult) and result.status != 0
+    )
+    return failed_preflights

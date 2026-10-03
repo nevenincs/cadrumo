@@ -59,6 +59,7 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from .. import classification
+from .._classification_predicates import matches_nothing
 from ..classification import IvaInvoiceClassificationCriteria, PartyFact
 from ..schema import EUMemberState
 
@@ -105,23 +106,23 @@ def _classification_rules(operation: PinnedAuthorityOperation) -> tuple[classifi
         effective_date=_RULES_EFFECTIVE_DATE,
         operation=operation,
     ).rules
-    return tuple(rule for rule in rules if rule.predicate is not classification.matches_nothing)
+    return tuple(rule for rule in rules if rule.predicate is not matches_nothing)
 
 
 def _criteria_attributes_read(
     predicate: Callable[..., Any],
     *,
     seen: frozenset[str] = frozenset(),
-    module: ModuleType = classification,
+    module: ModuleType | None = None,
 ) -> set[str]:
     """Return the criteria attributes ``predicate`` reads, following its helpers.
 
     Args:
         predicate: The row's predicate, or a helper reached from one.
         seen: Names already walked, which stops a helper cycle.
-        module: Where a called name is looked up to decide whether it is a
-            module-local helper. Defaults to the classification module, which is
-            the production answer. It is a parameter rather than a constant so
+            module: Where a called name is looked up to decide whether it is a
+            module-local helper. Defaults to the predicate's defining module,
+            which is the production answer. It is a parameter rather than a constant so
             the helper-following branch can be exercised against a predicate
             declared in this test module -- the branch is inert on every live
             row (each spells the attribute out in its call arguments, which the
@@ -135,6 +136,7 @@ def _criteria_attributes_read(
             "this row declares nothing and reads nothing" and pass.
     """
     name = getattr(predicate, "__name__", repr(predicate))
+    module = module or inspect.getmodule(predicate) or classification
     if name == "<lambda>":
         return _compiled_predicate_attributes_read(predicate, module=module)
     if name in seen:
@@ -223,7 +225,7 @@ def _compiled_predicate_attributes_read(predicate: Callable[..., Any], *, module
     return found
 
 
-def _facts_read_by(predicate: Callable[..., Any], *, module: ModuleType = classification) -> set[PartyFact]:
+def _facts_read_by(predicate: Callable[..., Any], *, module: ModuleType | None = None) -> set[PartyFact]:
     """Return the party facts a predicate's reads amount to.
 
     Takes ``module`` for the same reason the extractor does, and threading it

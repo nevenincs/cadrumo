@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Generator
+from collections.abc import Collection, Generator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import fields, is_dataclass
 from enum import Enum
@@ -302,8 +302,7 @@ def _jsonable_command_surface_value(value: object) -> object:
     if is_object_dict(value):
         return {str(key): _jsonable_command_surface_value(item) for key, item in value.items()}
     if is_object_collection(value):
-        items = (_jsonable_command_surface_value(item) for item in value)
-        return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)
+        return _jsonable_command_surface_collection(value)
     if isinstance(value, BaseModel):
         return _jsonable_command_surface_value(value.model_dump(mode="json"))
     return value
@@ -349,12 +348,7 @@ def _emit_command_surface_manifest() -> None:
 
     payload = {
         "command_schemas": tuple(reference.model_dump(mode="json") for reference in references),
-        "global_flags": tuple(
-            option
-            for parameter in _COMMAND_GRAPH.root().parameters
-            for option in getattr(parameter, "declarations", ())
-            if isinstance(option, str) and option.startswith("-")
-        ),
+        "global_flags": _command_surface_global_flags(),
         "exposable_commands": tuple(
             reference.command for reference in references if is_exposable_command(reference.command)
         ),
@@ -375,3 +369,19 @@ __all__ = [
     "main",
     "resolve_cli_precondition_action",
 ]
+
+
+def _command_surface_global_flags() -> tuple[str, ...]:
+    """Enumerate every root option declaration in command-graph order."""
+    return tuple(
+        option
+        for parameter in _COMMAND_GRAPH.root().parameters
+        for option in getattr(parameter, "declarations", ())
+        if isinstance(option, str) and option.startswith("-")
+    )
+
+
+def _jsonable_command_surface_collection(value: Collection[object]) -> list[object]:
+    """Preserve ordered collections and the existing stable spelling order for sets."""
+    items = (_jsonable_command_surface_value(item) for item in value)
+    return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)

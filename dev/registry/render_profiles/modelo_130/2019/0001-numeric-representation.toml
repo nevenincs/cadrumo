@@ -1,0 +1,39 @@
+schema_version = 1
+fragment_id = 'numeric-representation'
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'DR 13001'
+source_row = 15
+record_identity = 'DR 13001'
+source_cell = 'A15'
+ordinal = '10'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm130-2019-field-10-filing-year'
+decision_statement = 'The four-character Devengo (2). Ejercicio field is the filing year as four unsigned digits.'
+justification = 'The official workbook names this Num slot Ejercicio and assigns four positions; the page maps it to filing_year, so the reviewed rule preserves all four year digits.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'DR 13001'
+source_row = 15
+record_identity = 'DR 13001'
+source_cell = 'A15'
+ordinal = '10'
+
+[design_identity]
+modelo = '130'
+design_epoch = '2019'
+source_ref = 'aeat-dr-130-2019-v12'
+source_sha256 = '58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7'

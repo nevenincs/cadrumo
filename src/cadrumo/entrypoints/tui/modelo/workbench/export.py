@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import ClassVar, Final, override
+from typing import ClassVar, Final, cast, override
 
 from textual import events
 from textual.app import ComposeResult
@@ -183,7 +183,11 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
         self.query_one("#export-path", Input).focus()
 
     def _election(self, control_id: str) -> str:
-        return str(self.query_one(f"#{control_id}", Select).value)
+        """Return the selected election, refusing rather than stringifying a blank selection."""
+        value = cast("Select[str]", self.query_one(f"#{control_id}", Select)).value
+        if not isinstance(value, str):
+            raise ValueError("required Modelo export election has no selected value")
+        return value
 
     def _request(self) -> WorkbenchExportRequest | None:
         path = self.query_one("#export-path", Input).value.strip()

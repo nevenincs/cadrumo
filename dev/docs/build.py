@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -132,66 +132,19 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
     """
     docs_root = repo_root / "docs"
     docs_api = docs_root / "api"
-    targets: list[Path] = []
-    full_build_required = False
-    api_scaffold_required = False
-    source_modules: list[tuple[str, bool]] = []
-    cli_reference_required = False
-    download_matrix_required = False
+    selection = _DocTargetSelection(targets=[], source_modules=[])
     download_descriptor_rel = _download_descriptor_path(repo_root).relative_to(repo_root)
     download_page = docs_root / "download.md"
 
     for rel_path in paths:
-        absolute = repo_root / rel_path
-        if rel_path == Path("docs/conf.py"):
-            full_build_required = True
-        elif rel_path == download_descriptor_rel:
-            # The download-channel descriptor is the source of the generated zone
-            # in docs/download.md; a descriptor edit must re-inject that zone and
-            # rebuild the page (mirroring how a CLI source edit regenerates the
-            # CLI reference).
-            download_matrix_required = True
-        elif rel_path.parts[:1] == ("docs",) and rel_path.suffix in DOC_SUFFIXES and absolute.is_file():
-            targets.append(absolute)
-        elif _is_documentable_source(repo_root, rel_path):
-            api_scaffold_required = True
-            include_parents = rel_path.name == "__init__.py" or not (repo_root / rel_path).is_file()
-            source_modules.append((_module_name_for_source(rel_path), include_parents))
-        elif _is_cli_reference_source(rel_path):
-            cli_reference_required = True
-
-    if api_scaffold_required:
-        for module_name, include_parents in source_modules:
-            targets.extend(_api_stub_targets(module_name, docs_api, include_parents=include_parents))
-    if cli_reference_required:
-        targets.extend(
-            target
-            for target in (
-                docs_root / "cli" / "index.rst",
-                docs_root / "cli" / "app.rst",
-                docs_root / "cli" / "config.rst",
-                docs_root / "cli" / "automation.rst",
-                docs_root / "cli" / "schemas.rst",
-            )
-            if target.is_file()
-        )
-    if download_matrix_required and download_page.is_file():
-        targets.append(download_page)
-
-    seen: set[Path] = set()
-    unique_targets: list[Path] = []
-    for target in targets:
-        resolved = target.resolve()
-        planned_api_stub = api_scaffold_required and target.parent == docs_api and target.suffix == ".rst"
-        if resolved not in seen and (resolved.is_file() or planned_api_stub):
-            seen.add(resolved)
-            unique_targets.append(resolved)
+        _collect_changed_doc_path(repo_root, rel_path, download_descriptor_rel, selection)
+    _expand_planned_doc_surfaces(selection, docs_root, docs_api, download_page)
     return DocBuildPlan(
-        targets=unique_targets,
-        full_build_required=full_build_required,
-        api_scaffold_required=api_scaffold_required,
-        cli_reference_required=cli_reference_required,
-        download_matrix_required=download_matrix_required,
+        targets=_unique_doc_targets(selection, docs_api),
+        full_build_required=selection.full_build_required,
+        api_scaffold_required=selection.api_scaffold_required,
+        cli_reference_required=selection.cli_reference_required,
+        download_matrix_required=selection.download_matrix_required,
     )
 
 
@@ -255,35 +208,9 @@ def resolve_preview_targets(repo_root: Path, requested: str) -> list[Path]:
         candidate = (base / stripped).resolve()
         if candidate != docs_root and docs_root not in candidate.parents:
             continue
-        if _is_generated_doc(docs_root, candidate):
-            raise SystemExit(
-                "--single-page does not support generated API/CLI pages; use the full docs build.",
-            )
-        is_directory = candidate.is_dir()
-        page = next(
-            (
-                path
-                for path in (candidate, *(candidate.parent / f"{candidate.name}{suffix}" for suffix in (".md", ".rst")))
-                if path.suffix in DOC_SUFFIXES and docs_root in path.parents and path.is_file()
-            ),
-            None,
-        )
-        if is_directory and page is not None and not names_directory:
-            raise SystemExit(
-                f"{requested!r} names both the page {page.relative_to(docs_root).as_posix()} and a directory; "
-                f"pass {page.name!r} for the page or {stripped + '/'!r} for every page under the directory.",
-            )
-        if is_directory:
-            pages = sorted(
-                source
-                for source in scan_directory(candidate, recursive=True)
-                if _is_previewable_page(docs_root, source)
-            )
-            if not pages:
-                raise SystemExit(f"--single-page found no documentation page under {requested!r}.")
+        pages = _preview_candidate_pages(docs_root, candidate, requested, names_directory, stripped)
+        if pages is not None:
             return pages
-        if page is not None and not names_directory:
-            return [page]
     raise SystemExit(f"--single-page requires an existing documentation page or directory under docs/: {requested}")
 
 
@@ -457,23 +384,7 @@ def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> in
         return 0
     removed = 0
     for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        rel = page.relative_to(html_root)
-        if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
-            continue
-        if rel.parts[0] in _ORPHAN_SKIP_SITE_ROOTS and len(rel.parts) > 1:
-            continue
-        docname = rel.with_suffix("")
-        if rel.parts[0] == "_modules":
-            if rel.as_posix() == "_modules/index.html":
-                continue
-            module_path = Path(*docname.parts[1:])
-            candidates = [repo_root / "src" / Path(f"{module_path}.py")]
-        else:
-            candidates = [docs_root / Path(f"{docname}{suffix}") for suffix in (".md", ".rst")]
-        if any(candidate.is_file() for candidate in candidates):
-            continue
-        page.unlink()
-        removed += 1
+        removed += int(_remove_orphan_page(page, html_root, docs_root, repo_root))
     if removed:
         print(f"Removed {removed} orphaned page(s) whose source no longer exists.", flush=True)
     return removed
@@ -839,7 +750,6 @@ def build_docs(
     (:func:`_full_build_source`), so several roots can build at once.
     """
     docs_root = repo_root / "docs"
-    targets = plan.targets
     canonical_html_root = docs_root / "_build" / "html"
     html_output_root = output_root if output_root is not None else canonical_html_root
     ensure_isolated_storage_root()
@@ -856,58 +766,13 @@ def build_docs(
     )
 
     if plan.full_build_required:
-        if output_root is None:
-            remove_noncanonical_build_entries(docs_root)
-        html_output_root.mkdir(parents=True, exist_ok=True)
-        with _full_build_source(docs_root, isolated=isolated_source) as source_root:
-            result = subprocess.run(
-                [*command, str(source_root), str(html_output_root)],
-                cwd=repo_root,
-                env=env,
-                check=False,
-            )
-            # Generated pages exist only in the tree the build read.
-            if result.returncode == 0:
-                remove_orphan_pages(source_root, html_output_root, repo_root)
+        result = _build_full_docs(repo_root, docs_root, html_output_root, output_root, command, env, isolated_source)
     elif single_page:
-        remove_noncanonical_build_entries(docs_root)
-        doctree_dir = preview_doctree_dir(repo_root, scope=scope, language=docs_build_language(env))
-        doctree_dir.mkdir(parents=True, exist_ok=True)
-        print(PREVIEW_SEQUENCE_NOTICE, flush=True)
-        command.extend(
-            [
-                "-d",
-                str(doctree_dir),
-                str(docs_root),
-                str(docs_root / "_build" / "html"),
-                *(target.relative_to(repo_root).as_posix() for target in targets),
-            ],
-        )
-        result = subprocess.run(command, cwd=repo_root, env=env, check=False)
+        result = _build_preview_docs(repo_root, docs_root, plan, scope, command, env)
     else:
-        generated_api_stubs = (
-            _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
-        )
-        with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-") as tmp:
-            temp_root = Path(tmp)
-            temp_docs_root = temp_root / "docs-source"
-            _copy_docs_source(docs_root, temp_docs_root)
-            if plan.cli_reference_required:
-                generate_cli_reference(temp_docs_root)
-            if plan.download_matrix_required:
-                inject_download_matrix(temp_docs_root)
-            temp_targets = _targets_for_docs_root(
-                docs_root,
-                temp_docs_root,
-                targets,
-                generated_api_stubs=generated_api_stubs,
-            )
-            if not temp_targets:
-                print("No existing documentation targets remained after temporary generation.", flush=True)
-                return
-            out_dir = temp_root / "html"
-            specific_command = [*command, str(temp_docs_root), str(out_dir), *(str(target) for target in temp_targets)]
-            result = subprocess.run(specific_command, cwd=repo_root, env=env, check=False)
+        result = _build_changed_docs(repo_root, docs_root, plan, scope, command, env)
+        if result is None:
+            return
     if result.returncode != 0:
         raise SystemExit(result.returncode)
     # The offline Ctrl-K search corpus is compiled only for a canonical full
@@ -1002,6 +867,239 @@ def update_rag_index(repo_root: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for documentation builds."""
+    args = _docs_build_arguments(argv)
+    repo_root = _repo_root()
+    output_root = _docs_output_root(args)
+    scope = _docs_language_scope(args)
+    plan = _docs_invocation_plan(repo_root, args)
+    if not plan.full_build_required and not plan.targets:
+        print("No documentation targets resolved from the given paths.", flush=True)
+        if args.rag_index:
+            update_rag_index(repo_root)
+        return 0
+
+    _announce_doc_plan(repo_root, plan, bool(args.single_page))
+    build_docs(
+        repo_root,
+        plan,
+        strict=args.strict,
+        single_page=bool(args.single_page),
+        scope=scope,
+        output_root=output_root,
+        isolated_source=args.isolated_source,
+    )
+    if args.rag_index:
+        update_rag_index(repo_root)
+    return 0
+
+
+@dataclass
+class _DocTargetSelection:
+    targets: list[Path]
+    source_modules: list[tuple[str, bool]]
+    full_build_required: bool = False
+    api_scaffold_required: bool = False
+    cli_reference_required: bool = False
+    download_matrix_required: bool = False
+
+
+def _is_authored_doc_path(rel_path: Path, absolute: Path) -> bool:
+    return rel_path.parts[:1] == ("docs",) and rel_path.suffix in DOC_SUFFIXES and absolute.is_file()
+
+
+def _collect_changed_doc_path(
+    repo_root: Path, rel_path: Path, download_descriptor_rel: Path, selection: _DocTargetSelection
+) -> None:
+    absolute = repo_root / rel_path
+    if rel_path == Path("docs/conf.py"):
+        selection.full_build_required = True
+    elif rel_path == download_descriptor_rel:
+        # The download-channel descriptor is the source of the generated zone
+        # in docs/download.md; a descriptor edit must re-inject that zone and
+        # rebuild the page (mirroring how a CLI source edit regenerates the
+        # CLI reference).
+        selection.download_matrix_required = True
+    elif _is_authored_doc_path(rel_path, absolute):
+        selection.targets.append(absolute)
+    elif _is_documentable_source(repo_root, rel_path):
+        selection.api_scaffold_required = True
+        include_parents = rel_path.name == "__init__.py" or not (repo_root / rel_path).is_file()
+        selection.source_modules.append((_module_name_for_source(rel_path), include_parents))
+    elif _is_cli_reference_source(rel_path):
+        selection.cli_reference_required = True
+
+
+def _expand_planned_doc_surfaces(
+    selection: _DocTargetSelection, docs_root: Path, docs_api: Path, download_page: Path
+) -> None:
+    if selection.api_scaffold_required:
+        for module_name, include_parents in selection.source_modules:
+            selection.targets.extend(_api_stub_targets(module_name, docs_api, include_parents=include_parents))
+    if selection.cli_reference_required:
+        selection.targets.extend(
+            target
+            for target in (
+                docs_root / "cli" / "index.rst",
+                docs_root / "cli" / "app.rst",
+                docs_root / "cli" / "config.rst",
+                docs_root / "cli" / "automation.rst",
+                docs_root / "cli" / "schemas.rst",
+            )
+            if target.is_file()
+        )
+    if selection.download_matrix_required and download_page.is_file():
+        selection.targets.append(download_page)
+
+
+def _unique_doc_targets(selection: _DocTargetSelection, docs_api: Path) -> list[Path]:
+    seen: set[Path] = set()
+    unique_targets: list[Path] = []
+    for target in selection.targets:
+        resolved = target.resolve()
+        planned_api_stub = selection.api_scaffold_required and target.parent == docs_api and target.suffix == ".rst"
+        if resolved not in seen and (resolved.is_file() or planned_api_stub):
+            seen.add(resolved)
+            unique_targets.append(resolved)
+    return unique_targets
+
+
+def _preview_candidate_pages(
+    docs_root: Path, candidate: Path, requested: str, names_directory: bool, stripped: str
+) -> list[Path] | None:
+    if _is_generated_doc(docs_root, candidate):
+        raise SystemExit(
+            "--single-page does not support generated API/CLI pages; use the full docs build.",
+        )
+    is_directory = candidate.is_dir()
+    page = _preview_page(docs_root, candidate)
+    if is_directory and page is not None and not names_directory:
+        raise SystemExit(
+            f"{requested!r} names both the page {page.relative_to(docs_root).as_posix()} and a directory; "
+            f"pass {page.name!r} for the page or {stripped + '/'!r} for every page under the directory.",
+        )
+    if is_directory:
+        return _preview_directory_pages(docs_root, candidate, requested)
+    if page is not None and not names_directory:
+        return [page]
+    return None
+
+
+def _preview_page(docs_root: Path, candidate: Path) -> Path | None:
+    page = next(
+        (
+            path
+            for path in (candidate, *(candidate.parent / f"{candidate.name}{suffix}" for suffix in (".md", ".rst")))
+            if path.suffix in DOC_SUFFIXES and docs_root in path.parents and path.is_file()
+        ),
+        None,
+    )
+    return page
+
+
+def _preview_directory_pages(docs_root: Path, candidate: Path, requested: str) -> list[Path]:
+    pages = sorted(
+        source for source in scan_directory(candidate, recursive=True) if _is_previewable_page(docs_root, source)
+    )
+    if not pages:
+        raise SystemExit(f"--single-page found no documentation page under {requested!r}.")
+    return pages
+
+
+def _remove_orphan_page(page: Path, html_root: Path, docs_root: Path, repo_root: Path) -> bool:
+    rel = page.relative_to(html_root)
+    if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
+        return False
+    if rel.parts[0] in _ORPHAN_SKIP_SITE_ROOTS and len(rel.parts) > 1:
+        return False
+    docname = rel.with_suffix("")
+    if rel.parts[0] == "_modules":
+        if rel.as_posix() == "_modules/index.html":
+            return False
+        module_path = Path(*docname.parts[1:])
+        candidates = [repo_root / "src" / Path(f"{module_path}.py")]
+    else:
+        candidates = [docs_root / Path(f"{docname}{suffix}") for suffix in (".md", ".rst")]
+    if any(candidate.is_file() for candidate in candidates):
+        return False
+    page.unlink()
+    return True
+
+
+def _build_full_docs(
+    repo_root: Path,
+    docs_root: Path,
+    html_output_root: Path,
+    output_root: Path | None,
+    command: list[str],
+    env: dict[str, str],
+    isolated_source: bool,
+) -> subprocess.CompletedProcess[bytes]:
+    if output_root is None:
+        remove_noncanonical_build_entries(docs_root)
+    html_output_root.mkdir(parents=True, exist_ok=True)
+    with _full_build_source(docs_root, isolated=isolated_source) as source_root:
+        result = subprocess.run(
+            [*command, str(source_root), str(html_output_root)],
+            cwd=repo_root,
+            env=env,
+            check=False,
+        )
+        # Generated pages exist only in the tree the build read.
+        if result.returncode == 0:
+            remove_orphan_pages(source_root, html_output_root, repo_root)
+    return result
+
+
+def _build_preview_docs(
+    repo_root: Path, docs_root: Path, plan: DocBuildPlan, scope: str, command: list[str], env: dict[str, str]
+) -> subprocess.CompletedProcess[bytes]:
+    remove_noncanonical_build_entries(docs_root)
+    doctree_dir = preview_doctree_dir(repo_root, scope=scope, language=docs_build_language(env))
+    doctree_dir.mkdir(parents=True, exist_ok=True)
+    print(PREVIEW_SEQUENCE_NOTICE, flush=True)
+    command.extend(
+        [
+            "-d",
+            str(doctree_dir),
+            str(docs_root),
+            str(docs_root / "_build" / "html"),
+            *(target.relative_to(repo_root).as_posix() for target in plan.targets),
+        ],
+    )
+    result = subprocess.run(command, cwd=repo_root, env=env, check=False)
+    return result
+
+
+def _build_changed_docs(
+    repo_root: Path, docs_root: Path, plan: DocBuildPlan, scope: str, command: list[str], env: dict[str, str]
+) -> subprocess.CompletedProcess[bytes] | None:
+    generated_api_stubs = (
+        _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
+    )
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-") as tmp:
+        temp_root = Path(tmp)
+        temp_docs_root = temp_root / "docs-source"
+        _copy_docs_source(docs_root, temp_docs_root)
+        if plan.cli_reference_required:
+            generate_cli_reference(temp_docs_root)
+        if plan.download_matrix_required:
+            inject_download_matrix(temp_docs_root)
+        temp_targets = _targets_for_docs_root(
+            docs_root,
+            temp_docs_root,
+            plan.targets,
+            generated_api_stubs=generated_api_stubs,
+        )
+        if not temp_targets:
+            print("No existing documentation targets remained after temporary generation.", flush=True)
+            return
+        out_dir = temp_root / "html"
+        specific_command = [*command, str(temp_docs_root), str(out_dir), *(str(target) for target in temp_targets)]
+        result = subprocess.run(specific_command, cwd=repo_root, env=env, check=False)
+    return result
+
+
+def _docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "paths",
@@ -1062,9 +1160,10 @@ def main(argv: list[str] | None = None) -> int:
             "build's. Lets the deploy publisher build every site root at once. Full builds only."
         ),
     )
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
 
-    repo_root = _repo_root()
+
+def _docs_output_root(args: argparse.Namespace) -> Path | None:
     output_root = Path(args.out_dir) if args.out_dir else None
     if output_root is not None and (args.single_page or args.paths):
         raise SystemExit("--out-dir applies to a whole-scope build; it cannot combine with --single-page or paths.")
@@ -1072,6 +1171,10 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(
             "--isolated-source applies to a whole-scope build; it cannot combine with --single-page or paths."
         )
+    return output_root
+
+
+def _docs_language_scope(args: argparse.Namespace) -> str:
     if args.language is not None:
         # A localized build is a user-scope build: the API autodoc tree is
         # English-only, so only the operator surface is translated. conf.py reads
@@ -1086,6 +1189,10 @@ def main(argv: list[str] | None = None) -> int:
     scope = args.scope or os.environ.get("CADRUMO_DOCS_SCOPE") or "full"
     if scope not in {"full", "user"}:
         raise SystemExit(f"scope must be 'full' or 'user'; got {scope!r}")
+    return cast(str, scope)
+
+
+def _docs_invocation_plan(repo_root: Path, args: argparse.Namespace) -> DocBuildPlan:
     if args.single_page and args.paths:
         raise SystemExit("--single-page cannot be combined with positional paths")
     if args.single_page:
@@ -1096,15 +1203,13 @@ def main(argv: list[str] | None = None) -> int:
         # No target named: build everything (docs/conf.py is the full-build
         # trigger), scoped by CADRUMO_DOCS_SCOPE/--scope.
         plan = planned_doc_targets(repo_root, [Path("docs") / "conf.py"])
-    if not plan.full_build_required and not plan.targets:
-        print("No documentation targets resolved from the given paths.", flush=True)
-        if args.rag_index:
-            update_rag_index(repo_root)
-        return 0
+    return plan
 
+
+def _announce_doc_plan(repo_root: Path, plan: DocBuildPlan, single_page: bool) -> None:
     if plan.full_build_required:
         print("Configuration changed; running an incremental full Sphinx build.", flush=True)
-    elif args.single_page:
+    elif single_page:
         print(f"Previewing {len(plan.targets)} documentation page(s):", flush=True)
         for target in plan.targets:
             print(f"  {target.relative_to(repo_root)}", flush=True)
@@ -1112,18 +1217,6 @@ def main(argv: list[str] | None = None) -> int:
         print("Building named documentation targets:", flush=True)
         for target in plan.targets:
             print(f"  {target.relative_to(repo_root)}", flush=True)
-    build_docs(
-        repo_root,
-        plan,
-        strict=args.strict,
-        single_page=bool(args.single_page),
-        scope=scope,
-        output_root=output_root,
-        isolated_source=args.isolated_source,
-    )
-    if args.rag_index:
-        update_rag_index(repo_root)
-    return 0
 
 
 if __name__ == "__main__":

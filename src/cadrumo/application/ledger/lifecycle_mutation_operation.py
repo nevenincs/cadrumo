@@ -17,16 +17,9 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -38,24 +31,15 @@ from ...domain.transactions.errors import (
 from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
@@ -84,13 +68,12 @@ LedgerLifecycleOperationId = Literal["ledger.archive", "ledger.stash", "ledger.r
 _MAX_RESULT_BYTES = 256 * 1024
 _MAX_VALIDATION_MESSAGE_LENGTH = 2048
 _MAX_RECOVERY_TRANSACTION_IDS = 256
-_HexId = Annotated[str, Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")]
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 _Reason = Annotated[str, Field(max_length=500)]
-_EventIds = Annotated[tuple[_HexId, ...], Field(min_length=1, max_length=1)]
+_EventIds = Annotated[tuple[Hex64Str, ...], Field(min_length=1, max_length=1)]
 _ValidationMessage = Annotated[str, Field(min_length=1, max_length=_MAX_VALIDATION_MESSAGE_LENGTH)]
-_RecoveryTransactionIds = Annotated[tuple[_HexId, ...], Field(max_length=_MAX_RECOVERY_TRANSACTION_IDS)]
+_RecoveryTransactionIds = Annotated[tuple[Hex64Str, ...], Field(max_length=_MAX_RECOVERY_TRANSACTION_IDS)]
 
 
 class LedgerLifecycleValidationRefusedError(CadrumoError):
@@ -139,8 +122,8 @@ class LedgerLifecycleBlockerProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    work_unit_id: _HexId
-    calculation_revision_id: _HexId
+    work_unit_id: Hex64Str
+    calculation_revision_id: Hex64Str
     revision_state: str | None = Field(default=None, min_length=1, max_length=64)
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
@@ -165,7 +148,7 @@ class LedgerLifecycleValidationProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     messages: Annotated[tuple[_ValidationMessage, ...], Field(min_length=1, max_length=16)]
-    transaction_id: _HexId | None = None
+    transaction_id: Hex64Str | None = None
     transaction_ids: _RecoveryTransactionIds = ()
     transaction_ids_omitted_count: int = Field(default=0, ge=0)
     blocking_reference: LedgerLifecycleBlockerProjection | None = None
@@ -233,7 +216,7 @@ class _PreparedLifecycleMutation(BaseModel):
 
     profile_id: UUID
     operation_id: LedgerLifecycleOperationId
-    transaction_id: _HexId
+    transaction_id: Hex64Str
 
 
 class _TrackedTransactionRepository:
@@ -641,19 +624,7 @@ def _build_definition(
         result_type=LedgerLifecycleExecutionResult,
         phase_codes=(operation_id,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE}),
@@ -744,18 +715,9 @@ def _build_registration(
     *,
     access_resolver: OperationAccessResolver,
 ) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerLifecycleMutationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerLifecycleOperationResult,
-        ),
+        public_result_type=LedgerLifecycleOperationResult,
         result_projector=_project_result,
         access_resolver=access_resolver,
     )

@@ -1,0 +1,69 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "115"
+design_epoch = "2019"
+source_ref = "aeat-dr-115-2019-v13"
+source_sha256 = "d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 11501"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 11501"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m115-2019-field-10-year-yyyy"
+decision_statement = "The four-character Identificación ejercicio is the unsigned four-digit filing year."
+justification = "AEAT names this slot Ejercicio and gives it four numeric positions; the canonical year policy preserves all four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 11501"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 11501"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 11501"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 11501"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m115-2019-field-12-integer"
+decision_statement = "The fifteen-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives fifteen unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 11501"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 11501"

@@ -73,7 +73,6 @@ from .....core.config import Settings as _Settings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
-from .....core.remote_authority import canonical_remote_hostname
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
@@ -85,6 +84,7 @@ from ._clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,
     default_sede_target_url,
+    is_authenticated_clave_landing,
     verification_probe_url,
 )
 from ._session_probe import run_authenticated_landing_probe
@@ -393,43 +393,13 @@ class ClavePermanenteAuthProvider:
         )
 
     def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
-        """Return True for a protected AEAT page reached after Cl@ve dispatch."""
-        external = self._settings.external_constants()
-        surface = self._clave_surface()
-        try:
-            parsed = urlsplit(landing_url)
-        except ValueError:
-            return False
-        # The authority is decided by the one canonical helper, never by
-        # ``parsed.netloc``: that string still ends in the AEAT suffix when a
-        # credential prefix rides in front of it, so
-        # ``https://evil@www6.agenciatributaria.gob.es/`` was read as a
-        # protected AEAT landing.
-        host = canonical_remote_hostname(landing_url)
-        if host is None:
-            return False
-        host_suffix = external.aeat.domains.host_suffix.casefold()
-        if host != host_suffix and not host.endswith(f".{host_suffix}"):
-            return False
-        path = parsed.path.casefold()
-        if external.aeat.sede_paths.auth_gate_4033.casefold() in path:
-            return False
-        if surface.selector_access_path_marker.casefold() in path:
-            return False
-        if target_path in landing_url:
-            return True
-        return self._same_aeat_application_path(landing_path=path, target_path=target_path)
-
-    @staticmethod
-    def _same_aeat_application_path(*, landing_path: str, target_path: str) -> bool:
-        target_path_only = urlsplit(target_path).path.casefold()
-        landing_parts = tuple(part for part in landing_path.split("/") if part)
-        target_parts = tuple(part for part in target_path_only.split("/") if part)
-        if len(landing_parts) < 2 or len(target_parts) < 2:
-            return False
-        if target_parts[0] in {"wlpl", "sede"}:
-            return landing_parts[:2] == target_parts[:2]
-        return False
+        """Return True for a protected AEAT page reached after Cl@ve Permanente dispatch."""
+        return is_authenticated_clave_landing(
+            landing_url=landing_url,
+            target_path=target_path,
+            settings=self._settings,
+            clave_path_markers=(self._clave_surface().selector_access_path_marker,),
+        )
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 

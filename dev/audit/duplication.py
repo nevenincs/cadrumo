@@ -4,8 +4,9 @@
 This module owns the WHOLE duplication measurement: source selection, command
 construction, execution, timeout, stdout/stderr/returncode handling, parsing,
 clone records, and availability classification. Both consumers -- the
-``just audit-duplication`` recipe and the ``dev.audit.report`` health
-dashboard's D2 dimension -- go through :func:`run_duplication_scan`. There is
+``just audit-dead-weight`` recipe (through ``dev.audit.dead_weight``) and the
+``dev.audit.report`` health dashboard's D2 dimension (``just report-code-health``)
+-- go through :func:`run_duplication_scan`. There is
 deliberately no second jscpd command anywhere in the tree: a measurement tool
 that duplicates itself is the very defect it exists to detect.
 
@@ -33,7 +34,7 @@ plus no false green -- not zero clones.
 Two limits are deliberate, recorded here so neither is re-derived as a defect:
 
 * **Scope is the product tree.** :data:`_PRODUCT_SOURCE_ROOT` is
-  ``src/cadrumo`` alone, because the governing audit scopes every instrument to
+  :data:`dev.first_party_source.PRODUCT_PACKAGE` alone, because the governing audit scopes every instrument to
   "the intended production scope" and the duplication the campaign cares about
   is duplicate AUTHORITY in shipped code -- a second writer with weaker guards,
   not two similar-looking dev scripts. ``dev/`` is therefore unmeasured by the
@@ -74,6 +75,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.first_party_source import PRODUCT_PACKAGE, production_exclusion_globs
 from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
@@ -84,8 +86,8 @@ _CLONE_CAP: Final[int] = 20
 
 _JSCPD_SPEC: Final[str] = "jscpd@4.2.0"
 _JSCPD_TIMEOUT_SECONDS: Final[float] = 300.0
-_PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
-_JSCPD_IGNORE: Final[str] = "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**"
+_PRODUCT_SOURCE_ROOT: Final[Path] = Path(PRODUCT_PACKAGE)
+_JSCPD_IGNORE: Final[str] = ",".join(production_exclusion_globs())
 
 # The jscpd summary table's "Total:" row, post-ANSI-strip, reads:
 #   | Total: | 1252 | 290727 | 1676107 | 65 | 1185 (0.41%) | 10882 (0.65%) |
@@ -412,7 +414,7 @@ def run_duplication_scan(
 
 
 def render_console_report(result: DuplicationResult) -> str:
-    """Render the operator-facing console report for ``just audit-duplication``."""
+    """Render the operator-facing console report for ``python -m dev.audit.duplication``."""
     if result.outcome is DuplicationOutcome.UNAVAILABLE:
         return f"duplication: {result.headline()}"
     if result.outcome is DuplicationOutcome.OBSERVED_ZERO:

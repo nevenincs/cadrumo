@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.registry_token import StrictRegistryToken
+from ...core.registry_token import RegistryToken, StrictRegistryToken
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
-class IvaRate(str):
+class IvaRate(RegistryToken):
     """Opaque invoice-rate token projected from the dated slot catalogue.
 
     The slot membership and its substrate semantics are governed by the IVA
@@ -50,18 +50,7 @@ class IvaRate(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct a token only after registry membership is established."""
-        if not _registry_validated:
-            raise TypeError("IvaRate tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IvaRate token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Materialise one token from the typed facts projection."""
-        return cls(value, _registry_validated=True)
+    _projection_source = "registry"
 
     @classmethod
     def _require_registry_token(cls, value: object) -> Self:
@@ -92,11 +81,6 @@ class IvaRate(str):
     @property
     def name(self) -> str:
         """Return the persisted token for diagnostics and structured context."""
-        return str(self)
-
-    @property
-    def value(self) -> str:
-        """Return the persisted token for serialization boundaries."""
         return str(self)
 
 
@@ -202,7 +186,7 @@ class InvoiceLegalMentionDeclaration:
     expects_repercutido_line: bool
 
 
-class InvoiceLegalMention(str):
+class InvoiceLegalMention(RegistryToken):
     """Opaque token for a printed notice validated against the dated registry.
 
     The legal-mention vocabulary is not a Python enum. A token can only be
@@ -214,18 +198,7 @@ class InvoiceLegalMention(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct a token only after registry membership is established."""
-        if not _registry_validated:
-            raise TypeError("InvoiceLegalMention tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("InvoiceLegalMention token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Materialise one token from the typed facts projection."""
-        return cls(value, _registry_validated=True)
+    _projection_source = "registry"
 
     @classmethod
     def _require_registry_token(cls, value: object) -> Self:
@@ -263,14 +236,23 @@ def invoice_legal_mention_declarations(
     authority: GovernedFactSource | None = None,
 ) -> tuple[InvoiceLegalMentionDeclaration, ...]:
     """Project the dated legal-mention vocabulary and semantics from the registry."""
-    if authority is None:
-        authority = governed_facts_in_scope()
-    if authority is None:
+    selected = _invoice_legal_mention_authority(authority)
+    values = _invoice_legal_mention_values(on_date, selected)
+    order = _invoice_legal_mention_order(values)
+    return tuple(_invoice_legal_mention_declaration(token, values) for token in order)
+
+
+def _invoice_legal_mention_authority(authority: GovernedFactSource | None) -> GovernedFactSource:
+    selected = authority if authority is not None else governed_facts_in_scope()
+    if selected is None:
         raise RegistryValidationError(
             "invoice legal-mention catalogue requires an explicit authority operation or scope"
         )
-    selected = authority
-    resolved = selected.resolve_governed_fact(
+    return selected
+
+
+def _invoice_legal_mention_values(on_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
+    resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_INVOICE_LEGAL_MENTION_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -279,41 +261,53 @@ def invoice_legal_mention_declarations(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("invoice legal-mention catalogue must resolve as a mapping fact")
-    values = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+
+
+def _invoice_legal_mention_order(values: Mapping[str, str]) -> tuple[str, ...]:
     try:
         order = tuple(token.strip() for token in values["legal_mention_order"].split(",") if token.strip())
     except KeyError as exc:
         raise RegistryValidationError("invoice legal-mention catalogue is missing legal_mention_order") from exc
     if not order or len(order) != len(set(order)):
         raise RegistryValidationError("invoice legal-mention catalogue has an empty or duplicate token order")
+    return order
 
-    declarations: list[InvoiceLegalMentionDeclaration] = []
-    for token in order:
-        prefix = f"legal_mention.{token}."
-        try:
-            declared_value = values[f"{prefix}value"]
-            phrase = values[f"{prefix}phrase"]
-            provision = values[f"{prefix}provision"]
-            references = tuple(ref.strip() for ref in values[f"{prefix}legal_refs"].split(",") if ref.strip())
-            expects_line = values[f"{prefix}expects_repercutido_line"]
-        except KeyError as exc:
-            raise RegistryValidationError(f"invoice legal-mention catalogue is missing {prefix}{exc.args[0]}") from exc
-        if declared_value != token or not phrase or not provision or not references:
-            raise RegistryValidationError(f"invoice legal-mention catalogue has invalid declaration for {token}")
-        if expects_line not in {"true", "false"}:
-            raise RegistryValidationError(f"invoice legal-mention catalogue has invalid line expectation for {token}")
-        declares = values.get(f"{prefix}declares")
-        declarations.append(
-            InvoiceLegalMentionDeclaration(
-                token=token,
-                phrase=phrase,
-                provision=provision,
-                legal_refs=references,
-                declares=None if declares in {None, "none"} else declares,
-                expects_repercutido_line=expects_line == "true",
-            ),
-        )
-    return tuple(declarations)
+
+def _invoice_legal_mention_declaration(token: str, values: Mapping[str, str]) -> InvoiceLegalMentionDeclaration:
+    prefix = f"legal_mention.{token}."
+    try:
+        declared_value = values[f"{prefix}value"]
+        phrase = values[f"{prefix}phrase"]
+        provision = values[f"{prefix}provision"]
+        references = tuple(ref.strip() for ref in values[f"{prefix}legal_refs"].split(",") if ref.strip())
+        expects_line = values[f"{prefix}expects_repercutido_line"]
+    except KeyError as exc:
+        raise RegistryValidationError(f"invoice legal-mention catalogue is missing {prefix}{exc.args[0]}") from exc
+    _validate_invoice_legal_mention_declaration(token, declared_value, phrase, provision, references, expects_line)
+    declares = values.get(f"{prefix}declares")
+    return InvoiceLegalMentionDeclaration(
+        token=token,
+        phrase=phrase,
+        provision=provision,
+        legal_refs=references,
+        declares=None if declares in {None, "none"} else declares,
+        expects_repercutido_line=expects_line == "true",
+    )
+
+
+def _validate_invoice_legal_mention_declaration(
+    token: str,
+    declared_value: str,
+    phrase: str,
+    provision: str,
+    references: tuple[str, ...],
+    expects_line: str,
+) -> None:
+    if declared_value != token or not phrase or not provision or not references:
+        raise RegistryValidationError(f"invoice legal-mention catalogue has invalid declaration for {token}")
+    if expects_line not in {"true", "false"}:
+        raise RegistryValidationError(f"invoice legal-mention catalogue has invalid line expectation for {token}")
 
 
 def resolve_invoice_legal_mention(
@@ -578,15 +572,7 @@ def iva_rate_kind(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | N
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
     """Resolve a printed percentage to its persisted slot at an explicit date."""
     if percentage is None:
-        for rate in iva_rate_slots_on(on_date):
-            declarations = _iva_rate_slot_registry_declarations(rate, on_date)
-            if (
-                declarations["numeric"] != "true"
-                and declarations["substrate_kind"]
-                == resolve_iva_rate_kind_catalogue(effective_date=on_date).exempt_token.value
-            ):
-                return rate
-        raise RegistryValidationError("IVA rate slot catalogue has no exempt slot")
+        return _exempt_iva_rate_slot(on_date)
     resolved_rates: list[tuple[Decimal, IvaRate]] = []
     for rate in iva_rate_slots_on(on_date):
         try:
@@ -603,6 +589,18 @@ def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
         "IVA percentage has no unique persisted rate slot at the supplied devengo date",
         context={"iva_rate": format(percentage, "f"), "on_date": on_date.isoformat(), "accepted": accepted},
     )
+
+
+def _exempt_iva_rate_slot(on_date: date) -> IvaRate:
+    for rate in iva_rate_slots_on(on_date):
+        declarations = _iva_rate_slot_registry_declarations(rate, on_date)
+        if (
+            declarations["numeric"] != "true"
+            and declarations["substrate_kind"]
+            == resolve_iva_rate_kind_catalogue(effective_date=on_date).exempt_token.value
+        ):
+            return rate
+    raise RegistryValidationError("IVA rate slot catalogue has no exempt slot")
 
 
 __all__ = [

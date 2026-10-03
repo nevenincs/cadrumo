@@ -119,15 +119,14 @@ def test_terminal_projector_rejects_forged_definition_and_result_reference() -> 
             "identity": receipt.identity.model_copy(update={"definition_id": "ledger.remove"}),
         },
     )
-    missing_result_reference = receipt.model_copy(update={"result_ref": None})
 
     with pytest.raises(ValueError):
         operation._project_operation_result(result, wrong_definition)
-    with pytest.raises(ValueError):
-        operation._project_operation_result(result, missing_result_reference)
+    with pytest.raises(ValidationError):
+        OperationTerminalReceipt.model_validate({**receipt.model_dump(), "result_ref": None})
 
 
-def test_terminal_projector_rejects_refusal_with_result_reference() -> None:
+def test_terminal_projector_rejects_foreign_refusal_and_receipt_forbids_its_result_reference() -> None:
     result = operation.LedgerUpdateExecutionResult(
         outcome="validation_error",
         profile_id=_PROFILE,
@@ -136,4 +135,6 @@ def test_terminal_projector_rejects_refusal_with_result_reference() -> None:
     receipt = _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE)
 
     with pytest.raises(ValueError):
-        operation._project_operation_result(result, receipt.model_copy(update={"result_ref": "f" * 64}))
+        operation._project_operation_result(result, receipt.model_copy(update={"refusal_ref": "REFUSED_OTHER"}))
+    with pytest.raises(ValidationError):
+        OperationTerminalReceipt.model_validate({**receipt.model_dump(), "result_ref": "f" * 64})

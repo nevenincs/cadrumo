@@ -15,7 +15,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import AD_HOC_PERIOD_CODE, Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.registry.ids import RecordId
@@ -83,7 +83,7 @@ class FilingEnvelopeOccurrence(BaseModel):
 class FilingEnvelopeRenderRequest(BaseModel):
     """Closed authority required to render one modelo's filing envelope."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     registry_snapshot: RegistrySnapshot
     layout: ExportLayoutDefinition

@@ -70,6 +70,32 @@ _TESTS_DIR: Final = "tests"
 _GIT_TIMEOUT_SECONDS: Final = 60
 
 
+def _select_path_owner(
+    path: str,
+    matched: list[ChangeClassRule],
+    root: Path,
+    packages: Sequence[str],
+    fanout: Sequence[str],
+    selection: _ChangeSelection,
+) -> None:
+    """Select path owner."""
+    is_python = path.endswith(".py")
+    under_src = path.startswith(f"{_SOURCE_ROOT}/")
+    if under_src and (is_python or not matched):
+        owner = _owning_tests(path, root)
+        if owner is None:
+            selection.reasons.append(f"{path}: no ancestor below {_SOURCE_ROOT}/ owns a tests/ directory")
+        else:
+            selection.selected.add(owner)
+        module = _module_name(path, packages)
+        if module is not None:
+            selection.changed_modules.add(module)
+            if _in_fanout(module, fanout):
+                selection.reasons.append(f"{path}: {module} is in a fan-out package")
+    elif is_python and not matched:
+        selection.reasons.append(f"{path}: Python change outside every declared change class")
+
+
 @dataclass(frozen=True, slots=True)
 class ChangeClassRule:
     """One change class: the paths it matches and what a match selects.
@@ -286,6 +312,16 @@ def _importers(modules: Iterable[str], packages: Sequence[str]) -> dict[str, set
     return {module: graph.find_modules_that_directly_import(module) for module in wanted if module in present}
 
 
+@dataclass
+class _ChangeSelection:
+    """Accumulate the coverage and broadening evidence for one change selection."""
+
+    selected: set[str]
+    reasons: list[str]
+    changed_modules: set[str]
+    ci_contracts: bool = False
+
+
 def compute_change_scope(
     changed_files: Iterable[str],
     *,
@@ -299,66 +335,40 @@ def compute_change_scope(
     contract = _contract_targets(rules)
     changed = tuple(changed_files)
     sequence_goldens = selects_sequence_goldens(changed, rules=rules)
-    selected: set[str] = set()
-    ci_contracts = False
-    reasons: list[str] = []
-    changed_modules: set[str] = set()
+    selection = _ChangeSelection(set(), [], set())
 
     for raw in changed:
-        path = _normalise(raw)
-        if not path:
-            continue
-        matched = [rule for rule in rules if not rule.contract and rule.classifies and rule.matches(path)]
-        for rule in matched:
-            selected.update(rule.targets)
-            ci_contracts = ci_contracts or rule.ci_contracts
-            if rule.broad_reason is not None:
-                reasons.append(f"{path}: {rule.broad_reason}")
-        is_python = path.endswith(".py")
-        under_src = path.startswith(f"{_SOURCE_ROOT}/")
-        if under_src and (is_python or not matched):
-            owner = _owning_tests(path, root)
-            if owner is None:
-                reasons.append(f"{path}: no ancestor below {_SOURCE_ROOT}/ owns a tests/ directory")
-            else:
-                selected.add(owner)
-            module = _module_name(path, packages)
-            if module is not None:
-                changed_modules.add(module)
-                if _in_fanout(module, fanout):
-                    reasons.append(f"{path}: {module} is in a fan-out package")
-        elif is_python and not matched:
-            reasons.append(f"{path}: Python change outside every declared change class")
+        _select_changed_path(raw, root, rules, packages, fanout, selection)
 
     graph_roots = {package: root / _SOURCE_ROOT / package for package in packages}
     try:
-        importers = _importers(changed_modules, packages)
+        importers = _importers(selection.changed_modules, packages)
     except GrimpException as error:
         importers = {}
-        reasons.append(f"import graph unavailable: {error}")
+        selection.reasons.append(f"import graph unavailable: {error}")
     for module in sorted(importers):
         for importer in sorted(importers[module]):
             importer_path = _module_path(importer, graph_roots, root)
             owner = None if importer_path is None else _owning_tests(importer_path, root)
             if owner is None:
-                reasons.append(f"{importer} imports {module} but has no owning tests/ directory")
+                selection.reasons.append(f"{importer} imports {module} but has no owning tests/ directory")
             else:
-                selected.add(owner)
+                selection.selected.add(owner)
 
-    narrowed = selected.difference(contract)
+    narrowed = selection.selected.difference(contract)
     if len(narrowed) > max_targets:
-        reasons.append(f"{len(narrowed)} targets exceed the limit of {max_targets}")
-    if reasons:
+        selection.reasons.append(f"{len(narrowed)} targets exceed the limit of {max_targets}")
+    if selection.reasons:
         return ChangeScope(
             targets=contract,
-            ci_contracts=ci_contracts,
+            ci_contracts=selection.ci_contracts,
             sequence_goldens=sequence_goldens,
             too_broad=True,
-            reason="; ".join(reasons),
+            reason="; ".join(selection.reasons),
         )
     return ChangeScope(
         targets=(*contract, *sorted(narrowed)),
-        ci_contracts=ci_contracts,
+        ci_contracts=selection.ci_contracts,
         sequence_goldens=sequence_goldens,
         too_broad=False,
         reason=None,
@@ -385,6 +395,32 @@ def main(
     if scope.too_broad:
         print(f"change scope too broad; running the contract set only: {scope.reason}", file=sys.stderr)
     return 0
+
+
+def _select_changed_path(
+    raw: str,
+    root: Path,
+    rules: Sequence[ChangeClassRule],
+    packages: Sequence[str],
+    fanout: Sequence[str],
+    selection: _ChangeSelection,
+) -> None:
+    """Select changed path."""
+    path = _normalise(raw)
+    if not path:
+        return
+    matched = [rule for rule in rules if not rule.contract and rule.classifies and rule.matches(path)]
+    for rule in matched:
+        _select_matching_rule(rule, path, selection)
+    _select_path_owner(path, matched, root, packages, fanout, selection)
+
+
+def _select_matching_rule(rule: ChangeClassRule, path: str, selection: _ChangeSelection) -> None:
+    """Select matching rule."""
+    selection.selected.update(rule.targets)
+    selection.ci_contracts = selection.ci_contracts or rule.ci_contracts
+    if rule.broad_reason is not None:
+        selection.reasons.append(f"{path}: {rule.broad_reason}")
 
 
 if __name__ == "__main__":  # pragma: no cover - entrypoint

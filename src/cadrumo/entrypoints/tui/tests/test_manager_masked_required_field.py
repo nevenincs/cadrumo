@@ -49,7 +49,8 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import FieldEditScreen, ProfileManagerScreen
+from ..profile.edit_screens import FieldEditScreen
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [

@@ -17,8 +17,10 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import validate_work_unit_selector
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def import_modelo_reconciliation(
@@ -65,22 +67,29 @@ def import_modelo_reconciliation(
         timeout=120,
     )
     projection = completed.projection
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.UPDATED
-        or projection.bucket_id != profile_id
-        or projection.source_kind is not source_kind
-        or projection.source_path != source_path
-        or (selected_id is not None and len(selected_id) != 12 and projection.work_unit_id != selected_id)
-    ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-        )
+    if _reconciliation_import_receipt_invalid(completed, projection, profile_id, source_kind, source_path, selected_id):
+        raise invalid_completion_error(completed)
     return projection.to_report()
 
 
 __all__ = ["import_modelo_reconciliation"]
+
+
+def _reconciliation_import_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloReconciliationImportProjection],
+    projection: ModeloReconciliationImportProjection,
+    profile_id: str,
+    source_kind: ModeloReconciliationEvidenceKind,
+    source_path: str,
+    selected_id: str | None,
+) -> bool:
+    """Require the submitted source, requested work selection, and profile-owned mutation receipt."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.UPDATED
+        or (projection.bucket_id != profile_id)
+        or (projection.source_kind is not source_kind)
+        or (projection.source_path != source_path)
+        or (selected_id is not None and len(selected_id) != 12 and (projection.work_unit_id != selected_id))
+    )

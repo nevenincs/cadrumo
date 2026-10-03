@@ -15,7 +15,8 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ......application.modelo.calculation_report import CalculationReportRowRole
-from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1, ModeloHelpFormulaV1
+from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
+from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form_models import (
     ModeloFormBinding,
@@ -60,9 +61,9 @@ from ..ports import (
 )
 
 if TYPE_CHECKING:
-    from ......application.modelo.operation_definitions import ModeloExportPublicResultV2
+    from ......application.modelo.export_projection import ModeloExportPublicResultV3
     from ......application.operations.frontend_projection import OperationPublicProjectionV1
-    from ....operations.controller import OperationController
+    from ....operations.controller_port import OperationControllerPort
 
 
 def _text(text: str) -> ModeloFormText:
@@ -316,12 +317,12 @@ class FakeActions:
         self.checked.append(changes)
         return self.preflight_answer
 
-    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
+    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationControllerPort:
         """Record the submitted changes, then fail as an unavailable service would."""
         self.applied.append(changes)
         raise RuntimeError("no operation service in this test")
 
-    def take_apply_prerequisite(self) -> None:
+    async def take_apply_prerequisite(self) -> None:
         """The fake failed service has no private calculation prerequisite."""
         return None
 
@@ -329,7 +330,9 @@ class FakeActions:
         """Return the evidence the next calculation asks for, as the test set it."""
         return self.evidence
 
-    async def calculate(self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None) -> OperationController:
+    async def calculate(
+        self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None
+    ) -> OperationControllerPort:
         """Record a calculate request and the evidence it carried; refuse as the test asks."""
         self.requested.append("calculate")
         self.evidence_given.append(m303_evidence)
@@ -337,12 +340,12 @@ class FakeActions:
             raise self.refusal
         raise RuntimeError("no operation service in this test")
 
-    async def verify(self) -> OperationController:
+    async def verify(self) -> OperationControllerPort:
         """Record a verify request."""
         self.requested.append("verify")
         raise RuntimeError("no operation service in this test")
 
-    async def file(self) -> OperationController:
+    async def file(self) -> OperationControllerPort:
         """Record a file request."""
         self.requested.append("file")
         raise RuntimeError("no operation service in this test")
@@ -351,12 +354,12 @@ class FakeActions:
         """Offer the filing file, and the payment elections when the test asks for them."""
         return WorkbenchExportOffer(artefacts=(ModeloExportArtefact.FICHERO_BOE,), asks_elections=self.asks_elections)
 
-    async def export(self, request: WorkbenchExportRequest) -> OperationController:
+    async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
         """Record an export request."""
         self.exports.append(request)
         raise RuntimeError("no operation service in this test")
 
-    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
         """No export ever settles in these tests."""
         return None
 

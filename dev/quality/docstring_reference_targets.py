@@ -34,6 +34,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from dev.first_party_source import DEVELOPMENT_TOOLING, HARNESS_PACKAGE, PRODUCT_PACKAGE
+
 __all__ = [
     "DanglingReference",
     "DocstringReferenceScanError",
@@ -43,13 +45,13 @@ __all__ = [
 ]
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PACKAGE_ROOT = _REPO_ROOT / "src" / "cadrumo"
+_PACKAGE_ROOT = _REPO_ROOT / PRODUCT_PACKAGE
 
 #: Trees that are not scanned for findings but whose module names a docstring
 #: may legitimately reference. A gate in `src` naming its counterpart in
 #: `dev/tests` is citing something real; reporting it would be an artefact of
 #: where this screen happens to look.
-_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / "dev", _REPO_ROOT / "src" / "cadrumo_harness")
+_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING, _REPO_ROOT / HARNESS_PACKAGE)
 
 #: Sphinx roles that name a code object. ``:ref:`` and ``:doc:`` name document
 #: anchors instead and are not this screen's business.
@@ -190,12 +192,7 @@ def docstring_references(root: Path) -> list[tuple[str, str]]:
             continue
         module = path.relative_to(root).as_posix()
         for node in ast.walk(tree):
-            if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-                text = ast.get_docstring(node)
-                if text:
-                    found.extend((module, match) for match in _ROLE.findall(text))
-            for text in _attribute_docstrings(node):
-                found.extend((module, match) for match in _ROLE.findall(text))
+            _collect_node_docstring_references(node, module, found)
     return found
 
 
@@ -262,33 +259,7 @@ def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     for module, raw in docstring_references(root):
         # A long reference wraps across lines inside its backticks; the halves
         # of a dotted path rejoin with no space, which is how Sphinx reads it.
-        target = _REWRAP.sub("", raw).lstrip("~.").split("(")[0].strip()
-        if not target:
-            continue
-        if "[" in target:
-            # A subscripted generic names its base AND its arguments, all of
-            # which the package may own: ``Envelope[BlobManifest]`` is two
-            # claims, not one unresolvable string.
-            findings.extend(
-                DanglingReference(module=module, target=part, role_text=raw)
-                for part in _subscript_names(target)
-                if part not in known and part not in modules
-            )
-            continue
-        rooted = target.startswith("cadrumo.")
-        if rooted and (target in modules or any(target.startswith(f"{name}.") for name in modules)):
-            leaf = target.rsplit(".", 1)[-1]
-            if leaf in known or target in modules:
-                continue
-            findings.append(DanglingReference(module=module, target=target, role_text=raw))
-            continue
-        leaf = target.rsplit(".", 1)[-1]
-        if leaf in known or target in modules:
-            continue
-        if not rooted and "." in target:
-            # A dotted path this package does not root is a third-party object.
-            continue
-        findings.append(DanglingReference(module=module, target=target, role_text=raw))
+        _collect_dangling_reference(module, raw, known, modules, findings)
     return tuple(findings)
 
 
@@ -305,6 +276,76 @@ def main(argv: list[str] | None = None, *, root: Path = _PACKAGE_ROOT) -> int:
     by_module = collections.Counter(finding.module for finding in findings)
     sys.stdout.write(f"summary dangling={len(findings)} modules={len(by_module)}\n")
     return 1 if findings else 0
+
+
+def _collect_node_docstring_references(node: ast.AST, module: str, found: list[tuple[str, str]]) -> None:
+    """Collect node docstring references."""
+    if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+        text = ast.get_docstring(node)
+        if text:
+            found.extend((module, match) for match in _ROLE.findall(text))
+    for text in _attribute_docstrings(node):
+        found.extend((module, match) for match in _ROLE.findall(text))
+
+
+def _collect_dangling_reference(
+    module: str, raw: str, known: set[str], modules: set[str], findings: list[DanglingReference]
+) -> None:
+    """Collect dangling reference."""
+    target = _REWRAP.sub("", raw).lstrip("~.").split("(")[0].strip()
+    if not target:
+        return
+    if _collect_generic_reference(target, module, raw, known, modules, findings):
+        return
+    rooted = target.startswith("cadrumo.")
+    _collect_plain_reference(target, module, raw, known, modules, findings, rooted)
+
+
+def _collect_generic_reference(
+    target: str, module: str, raw: str, known: set[str], modules: set[str], findings: list[DanglingReference]
+) -> bool:
+    """Collect generic reference."""
+    if "[" in target:
+        # A subscripted generic names its base AND its arguments, all of
+        # which the package may own: ``Envelope[BlobManifest]`` is two
+        # claims, not one unresolvable string.
+        findings.extend(
+            DanglingReference(module=module, target=part, role_text=raw)
+            for part in _subscript_names(target)
+            if part not in known and part not in modules
+        )
+        return True
+    return False
+
+
+def _collect_plain_reference(
+    target: str,
+    module: str,
+    raw: str,
+    known: set[str],
+    modules: set[str],
+    findings: list[DanglingReference],
+    rooted: bool,
+) -> None:
+    """Collect plain reference."""
+    if rooted and _is_owned_module_target(target, modules):
+        leaf = target.rsplit(".", 1)[-1]
+        if leaf in known or target in modules:
+            return
+        findings.append(DanglingReference(module=module, target=target, role_text=raw))
+        return
+    leaf = target.rsplit(".", 1)[-1]
+    if leaf in known or target in modules:
+        return
+    if not rooted and "." in target:
+        # A dotted path this package does not root is a third-party object.
+        return
+    findings.append(DanglingReference(module=module, target=target, role_text=raw))
+
+
+def _is_owned_module_target(target: str, modules: set[str]) -> bool:
+    """Whether a dotted target names an inventoried module or its symbol."""
+    return target in modules or any(target.startswith(f"{name}.") for name in modules)
 
 
 if __name__ == "__main__":

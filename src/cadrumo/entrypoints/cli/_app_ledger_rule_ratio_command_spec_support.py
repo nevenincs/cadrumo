@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Final
 
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,
     ValueContract,
 )
+from .command_spec import InvocationSpec
 
 _LEDGER_RULE_RATIO_LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     invoke_without_command=False,

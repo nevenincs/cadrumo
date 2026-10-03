@@ -368,6 +368,87 @@ printed whatever this says, because those are the lines the section exists for.
 """
 
 
+def _partition_worktree_entries(entries: list[Entry]) -> tuple[list[Entry], list[Entry], list[Entry], int]:
+    """Partition worktree entries."""
+    reap = sorted((entry for entry in entries if entry.verdict is Verdict.REAP), key=lambda item: -item.total_bytes)
+    spared = sorted((entry for entry in entries if entry.verdict is Verdict.FLAG), key=lambda item: -item.total_bytes)
+    keep = [entry for entry in entries if entry.verdict is Verdict.KEEP]
+    reap_bytes = sum(entry.total_bytes for entry in reap)
+    return (reap, spared, keep, reap_bytes)
+
+
+def _git_object_observations(repo_root: Path, git_dir: Path) -> list[str]:
+    """Git object observations."""
+    counts = {
+        key.strip(): value.strip()
+        for key, _, value in (line.partition(":") for line in _git(repo_root, "count-objects", "-v").splitlines())
+        if key.strip()
+    }
+
+    def number(field: str) -> int:
+        try:
+            return int(counts.get(field, "0") or 0)
+        except ValueError:
+            return 0
+
+    # `count-objects -v` reports every size in KiB, so each one is scaled here
+    # rather than handed to a byte formatter that would divide it a second time.
+    loose = number("count")
+    observations = [
+        f"objects: {loose} loose ({_human(number('size') * 1024)}),"
+        f" {number('packs')} pack(s) ({_human(number('size-pack') * 1024)})"
+    ]
+    if loose > LOOSE_OBJECT_CEILING:
+        observations.append(
+            f"BLOAT  {loose} loose objects have accrued past git's own {LOOSE_OBJECT_CEILING} threshold;"
+            " `git gc` repacks them (not run here: it rewrites the object store)"
+        )
+    if number("garbage") or number("size-garbage"):
+        observations.append(
+            f"BLOAT  {number('garbage')} unrecognised file(s)"
+            f" ({_human(number('size-garbage') * 1024)}) sit in the object store"
+        )
+    if (git_dir / "gc.log").is_file():
+        observations.append("NOTE   gc.log is present: a previous `git gc` failed and git has stopped retrying")
+    return observations
+
+
+def _print_spared_tail(rest: list[Entry], verbose: bool, stream: TextIO) -> None:
+    """Print spared tail."""
+    shown = rest if verbose else rest[:SPARED_LISTING_LIMIT]
+    for entry in shown:
+        print(f"        {_human(entry.total_bytes)}  {entry.relative}", file=stream)
+    remainder = rest[len(shown) :]
+    if remainder:
+        total = sum(entry.total_bytes for entry in remainder)
+        print(f"        ... and {len(remainder)} smaller entries, {_human(total)} (--verbose lists them)", file=stream)
+
+
+def _print_reap_families(reap: list[Entry], reap_bytes: int, applying: bool, verbose: bool, stream: TextIO) -> None:
+    """Print reap families."""
+    families = {reason: [entry for entry in reap if entry.reason == reason] for reason in {e.reason for e in reap}}
+    for reason, family in sorted(families.items(), key=lambda item: -sum(e.total_bytes for e in item[1])):
+        _print_reap_family(reason, family, verbose, stream)
+    if reap:
+        verb = "reclaimed" if applying else "reclaimable"
+        print(f"  {verb}: {_human(reap_bytes)} across {len(reap)} entries", file=stream)
+
+
+def _report_worktree(
+    repo_root: Path, selected: frozenset[str], promoted: frozenset[str], applying: bool, verbose: bool
+) -> tuple[int, list[Entry]]:
+    """Report worktree."""
+    reap_bytes = 0
+    spared: list[Entry] = []
+    if WORKTREE_FAMILY in selected:
+        entries = assess(repo_root, promoted=promoted)
+        reap_bytes, spared = _report(entries, applying=applying, verbose=verbose, stream=sys.stdout)
+        if applying:
+            reclaimed, removed = reclaim(repo_root, entries)
+            print(f"\n  removed {removed} entries, {_human(reclaimed)}", file=sys.stdout)
+    return (reap_bytes, spared)
+
+
 class Verdict(Enum):
     """What this module has decided about one ignored entry."""
 
@@ -725,37 +806,7 @@ def git_observations(repo_root: Path) -> list[str]:
     if not git_dir.is_absolute():
         git_dir = repo_root / git_dir
 
-    counts = {
-        key.strip(): value.strip()
-        for key, _, value in (line.partition(":") for line in _git(repo_root, "count-objects", "-v").splitlines())
-        if key.strip()
-    }
-
-    def number(field: str) -> int:
-        try:
-            return int(counts.get(field, "0") or 0)
-        except ValueError:
-            return 0
-
-    # `count-objects -v` reports every size in KiB, so each one is scaled here
-    # rather than handed to a byte formatter that would divide it a second time.
-    loose = number("count")
-    observations = [
-        f"objects: {loose} loose ({_human(number('size') * 1024)}),"
-        f" {number('packs')} pack(s) ({_human(number('size-pack') * 1024)})"
-    ]
-    if loose > LOOSE_OBJECT_CEILING:
-        observations.append(
-            f"BLOAT  {loose} loose objects have accrued past git's own {LOOSE_OBJECT_CEILING} threshold;"
-            " `git gc` repacks them (not run here: it rewrites the object store)"
-        )
-    if number("garbage") or number("size-garbage"):
-        observations.append(
-            f"BLOAT  {number('garbage')} unrecognised file(s)"
-            f" ({_human(number('size-garbage') * 1024)}) sit in the object store"
-        )
-    if (git_dir / "gc.log").is_file():
-        observations.append("NOTE   gc.log is present: a previous `git gc` failed and git has stopped retrying")
+    observations = _git_object_observations(repo_root, git_dir)
 
     locks = sorted(path.name for path in git_dir.glob("*.lock") if path.is_file())
     if locks:
@@ -804,13 +855,7 @@ def _print_spared(spared: list[Entry], *, verbose: bool, stream: TextIO) -> None
     rest = [entry for entry in spared if not entry.bloated]
     for entry in bloated:
         print(f"  BLOAT {_human(entry.total_bytes)}  {entry.relative}", file=stream)
-    shown = rest if verbose else rest[:SPARED_LISTING_LIMIT]
-    for entry in shown:
-        print(f"        {_human(entry.total_bytes)}  {entry.relative}", file=stream)
-    remainder = rest[len(shown) :]
-    if remainder:
-        total = sum(entry.total_bytes for entry in remainder)
-        print(f"        ... and {len(remainder)} smaller entries, {_human(total)} (--verbose lists them)", file=stream)
+    _print_spared_tail(rest, verbose, stream)
     if bloated:
         print(
             f"  {len(bloated)} entr{'y' if len(bloated) == 1 else 'ies'} above"
@@ -828,24 +873,12 @@ def _report(entries: list[Entry], *, applying: bool, verbose: bool, stream: Text
     hundred, and a per-path listing of them pushes the spared and git sections
     off the operator's screen.
     """
-    reap = sorted((entry for entry in entries if entry.verdict is Verdict.REAP), key=lambda item: -item.total_bytes)
-    spared = sorted((entry for entry in entries if entry.verdict is Verdict.FLAG), key=lambda item: -item.total_bytes)
-    keep = [entry for entry in entries if entry.verdict is Verdict.KEEP]
-    reap_bytes = sum(entry.total_bytes for entry in reap)
+    reap, spared, keep, reap_bytes = _partition_worktree_entries(entries)
 
     print("\nRegenerable build and cache output", file=stream)
     if not reap:
         print("  none present", file=stream)
-    families = {reason: [entry for entry in reap if entry.reason == reason] for reason in {e.reason for e in reap}}
-    for reason, family in sorted(families.items(), key=lambda item: -sum(e.total_bytes for e in item[1])):
-        total = sum(entry.total_bytes for entry in family)
-        print(f"  REAP {_human(total)}  {len(family):4d} entries  {reason}", file=stream)
-        if verbose:
-            for entry in family:
-                print(f"                  {_human(entry.total_bytes)}  {entry.relative}", file=stream)
-    if reap:
-        verb = "reclaimed" if applying else "reclaimable"
-        print(f"  {verb}: {_human(reap_bytes)} across {len(reap)} entries", file=stream)
+    _print_reap_families(reap, reap_bytes, applying, verbose, stream)
 
     total_spared = sum(entry.total_bytes for entry in spared)
     print(f"\nIgnored, spared, not provably regenerable: {len(spared)} entries, {_human(total_spared)}", file=stream)
@@ -902,12 +935,7 @@ def main(argv: list[str] | None = None) -> int:
 
     reap_bytes = 0
     spared: list[Entry] = []
-    if WORKTREE_FAMILY in selected:
-        entries = assess(repo_root, promoted=promoted)
-        reap_bytes, spared = _report(entries, applying=arguments.apply, verbose=arguments.verbose, stream=sys.stdout)
-        if arguments.apply:
-            reclaimed, removed = reclaim(repo_root, entries)
-            print(f"\n  removed {removed} entries, {_human(reclaimed)}", file=sys.stdout)
+    reap_bytes, spared = _report_worktree(repo_root, selected, promoted, arguments.apply, arguments.verbose)
 
     if VAR_SCRATCH_FAMILY in selected:
         report_var_scratch(
@@ -932,6 +960,15 @@ def main(argv: list[str] | None = None) -> int:
     if WORKTREE_FAMILY in selected and not reap_bytes and not spared:
         print("\nClean: no regenerable output, and nothing ignored that needs a decision.", file=sys.stdout)
     return 0
+
+
+def _print_reap_family(reason: str, family: list[Entry], verbose: bool, stream: TextIO) -> None:
+    """Print reap family."""
+    total = sum(entry.total_bytes for entry in family)
+    print(f"  REAP {_human(total)}  {len(family):4d} entries  {reason}", file=stream)
+    if verbose:
+        for entry in family:
+            print(f"                  {_human(entry.total_bytes)}  {entry.relative}", file=stream)
 
 
 if __name__ == "__main__":

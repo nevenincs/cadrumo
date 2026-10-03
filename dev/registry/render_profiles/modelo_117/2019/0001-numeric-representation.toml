@@ -1,0 +1,99 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "117"
+design_epoch = "2019"
+source_ref = "aeat-dr-117-2019"
+source_sha256 = "ea0c13a8ddf5874a944cc0acc3d26e7f4c85bec50271e734f20e81ecb68f046f"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 11701"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 11701"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m117-2019-field-10-year-yyyy"
+decision_statement = "The four-character Ejercicio is the unsigned four-digit filing year."
+justification = "AEAT labels ordinal 10 Ejercicio and assigns four Num positions; the reviewed year policy preserves all four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 11701"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 11701"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 11701"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 11701"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m117-2019-field-12-recipient-count"
+decision_statement = "The fifteen-character number of recipients for casilla 01 is an unsigned integer with no decimal component."
+justification = "The official description names a number of recipients, casilla 01, in fifteen Num positions; this is a whole nonnegative count."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 11701"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 11701"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 11701"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR 11701"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m117-2019-field-15-recipient-count"
+decision_statement = "The fifteen-character number of recipients for casilla 04 is an unsigned integer with no decimal component."
+justification = "The official description names a number of recipients, casilla 04, in fifteen Num positions; this is a whole nonnegative count."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 11701"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR 11701"

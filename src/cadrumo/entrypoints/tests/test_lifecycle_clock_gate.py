@@ -177,7 +177,7 @@ def _verify(
 
 
 def _file(revision_id: CalculationRevisionId, *, clock: datetime, operation: PinnedAuthorityOperation) -> None:
-    ports = build_filing_action_ports(bucket_id=_BUCKET_ID)
+    ports = build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation)
     granting = tuple(
         report
         for report in ports.verification_repository.load().reports.values()

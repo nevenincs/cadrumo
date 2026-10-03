@@ -118,6 +118,33 @@ def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     return value
 
 
+def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+    """Read a casilla whose official record design declares either a text or a decimal type.
+
+    Some official record designs declare a rate-like casilla as text (``X``)
+    while its siblings use a decimal type, an AEAT dictionary quirk rather than
+    a semantic difference. A text-typed casilla's value only ever reaches
+    :attr:`EvalContext.text_values`, never :attr:`EvalContext.values`, so
+    :func:`numeric_casilla_value` refuses it. A casilla the registry declares as
+    text is therefore read from ``text_values`` whether or not the operator
+    filled it, and every other casilla is read through
+    :func:`numeric_casilla_value`. An unparsable, blank or absent text value
+    resolves to zero, the same "not applied" signal a blank decimal casilla
+    gives.
+    """
+    if casilla_id in ctx.text_values or casilla_id in ctx.text_casilla_ids:
+        ctx.operand_refs.append(casilla_id)
+        ctx.operand_casilla_refs.append(casilla_id)
+        raw_text = ctx.text_values.get(casilla_id, "").strip()
+        try:
+            value = Decimal(raw_text) if raw_text else ZERO
+        except ArithmeticError:
+            value = ZERO
+        ctx.operand_values.append(value)
+        return value
+    return numeric_casilla_value(casilla_id, ctx)
+
+
 def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
     """Evaluate a resolved formula operation over decimal operands.
 

@@ -35,27 +35,33 @@ from dev.packaging.command_execution import CommandResult
 
 from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .._parity_tapes import ParityScenario
-from ..workbook_parity import (
-    LIBREOFFICE_FAILURE_CONTEXT_KEY,
-    LibreOfficeFailureCause,
-    WorkbookScanOptions,
-    _LibreOfficeConversionError,
-    _subprocess_failure_detail,
-    assert_workbook_scan_clean,
-    compare_registry_to_workbook,
+from ..workbook_parity_binary_conversion import (
     convert_binary_xls_with_libreoffice,
     converted_binary_xls_with_libreoffice,
-    discover_workbooks,
-    inventory_workbook_coverage,
-    run_registry_workbook_parity,
+)
+from ..workbook_parity_libreoffice import (
+    LIBREOFFICE_FAILURE_CONTEXT_KEY,
+    LibreOfficeFailureCause,
+    _LibreOfficeConversionError,
+    _subprocess_failure_detail,
     run_workbook_with_libreoffice,
-    scan_workbook,
-    verify_workbook_backend,
 )
 from ..workbook_parity_models import (
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,
+)
+from ..workbook_parity_scanning import (
+    WorkbookScanOptions,
+    assert_workbook_scan_clean,
+    discover_workbooks,
+    inventory_workbook_coverage,
+    scan_workbook,
+)
+from ..workbook_parity_workflow import (
+    compare_registry_to_workbook,
+    run_registry_workbook_parity,
+    verify_workbook_backend,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.external_tool, pytest.mark.hex_domain]

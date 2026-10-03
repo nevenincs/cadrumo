@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final, get_args, override
+from typing import Final, override
 
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
-from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_calendar import (
-    DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
@@ -21,28 +19,19 @@ from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
 )
-from ....application.operator_actions.models import ActionReference
 from ....application.overview.home import HomeAvailability
+from ....core.i18n.render import tr
 from ..components.widgets import ContentDataTable, ContentScroll
+from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .action_guards import require_canonical_declarations_actions
 from .calendar import DeclarationsCalendarScreen
-from .controller import (
-    DeclarationsCalendarController,
-    DeclarationsWorkspaceController,
-    DeclarationsWorkspaceScreen,
-    declarations_copy,
-)
+from .controller import DeclarationsCalendarController, DeclarationsWorkspaceController, DeclarationsWorkspaceScreen
 from .filing_history import DeclarationsFilingHistoryScreen
 from .models import (
-    CalendarEntryHandoffV1,
-    CalendarRecoveryHandoffV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
-    FilingHandoffV1,
-    ModeloWorkCreateHandoffV1,
-    ModeloWorkspaceScreenFactoryV1,
-    RevisionHandoffV1,
+    DeclarationsWorkspaceWiringV1,
 )
 from .overview import DeclarationsModeloWorkspaceLauncherScreen, DeclarationsOverviewScreen
 from .revisions import DeclarationsRevisionsScreen
@@ -60,11 +49,11 @@ class DeclarationsUnavailableScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(declarations_copy("tui.declarations.unavailable.title"), classes="cadrumo-banner", markup=False)
+        yield Static(tr("tui.declarations.unavailable.title"), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
-                declarations_copy("tui.declarations.refusal.source"),
+                tr("tui.declarations.refusal.source"),
                 id="declarations-refusal",
                 classes="declarations-refusal",
                 markup=False,
@@ -103,12 +92,7 @@ DECLARATIONS_ROUTES: Final = (
 _ROUTES_BY_ID: Final = {route.destination: route for route in DECLARATIONS_ROUTES}
 
 
-def declared_declarations_destination_ids() -> frozenset[str]:
-    """Return the destination identities from the defining literal."""
-    return frozenset(item for item in get_args(DeclarationsDestinationIdV1.__value__) if isinstance(item, str))
-
-
-if frozenset(_ROUTES_BY_ID) != declared_declarations_destination_ids() or len(_ROUTES_BY_ID) != len(
+if frozenset(_ROUTES_BY_ID) != closed_destination_ids(DeclarationsDestinationIdV1) or len(_ROUTES_BY_ID) != len(
     DECLARATIONS_ROUTES
 ):
     raise ValueError("Declarations routes must cover the closed catalogue exactly once")
@@ -175,47 +159,17 @@ def resolve_declarations_screen(
 
 def declarations_screen_factory(
     projection: DeclarationsWorkspaceProjectionV1,
-    *,
-    work_action: ActionReference,
-    revisions_action: ActionReference,
-    filing_action: ActionReference,
-    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
-    revision_handoff: RevisionHandoffV1 | None = None,
-    filing_handoff: FilingHandoffV1 | None = None,
-    calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
-    calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
-    calendar_entry_can_open: Callable[[DeclarationsCalendarEntryRefV1], bool] | None = None,
-    calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
-    work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
-    creation_targets: tuple[DeclarationTarget, ...] = (),
-    refresh_data: Callable[[], tuple[DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None]]
-    | None = None,
+    wiring: DeclarationsWorkspaceWiringV1,
 ) -> TuiScreenFactoryV1:
     """Bind only injected facts, admissions, and typed handoffs."""
     require_canonical_declarations_actions(
-        work_action=work_action,
-        revisions_action=revisions_action,
-        filing_action=filing_action,
+        work_action=wiring.work_action,
+        revisions_action=wiring.revisions_action,
+        filing_action=wiring.filing_action,
     )
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
-        controller = DeclarationsWorkspaceController(
-            context,
-            projection,
-            work_action=work_action,
-            revisions_action=revisions_action,
-            filing_action=filing_action,
-            modelo_workspace_factory=modelo_workspace_factory,
-            revision_handoff=revision_handoff,
-            filing_handoff=filing_handoff,
-            calendar_projection=calendar_projection,
-            calendar_entry_handoff=calendar_entry_handoff,
-            calendar_entry_can_open=calendar_entry_can_open,
-            calendar_recovery_handoff=calendar_recovery_handoff,
-            work_create_handoff=work_create_handoff,
-            creation_targets=creation_targets,
-            refresh_data=refresh_data,
-        )
+        controller = DeclarationsWorkspaceController(context, projection, wiring)
         # A caller that asks for a calendar row -- Home's agenda -- opens the
         # calendar itself; everything else opens on the overview, which
         # restores a declaration row from the same focus.

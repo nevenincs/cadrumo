@@ -8,7 +8,8 @@ from collections import Counter
 from pathlib import Path
 from typing import TypedDict
 
-from .lane_verification_core import SOURCE_DATA_ROOTS, find_repo_root, source_data_paths
+from .lane_verification_core import find_repo_root
+from .source_data_contract import SOURCE_DATA_ROOTS, source_data_paths
 
 
 class SourceDataSummary(TypedDict):

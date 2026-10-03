@@ -329,6 +329,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-prior-year-cuentas-valoracion-baseline"
 provider = { kind = "previous_filing", source_modelo = "720", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_id = "cuentas.valoracion" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "Modelo 720 re-declaration advisory: the prior-year valuation baseline the 20.000 EUR increase test compares against" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-2"]
@@ -341,6 +342,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-prior-year-valores-valoracion-baseline"
 provider = { kind = "previous_filing", source_modelo = "720", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_id = "valores.valoracion" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "Modelo 720 re-declaration advisory: the prior-year valuation baseline the 20.000 EUR increase test compares against" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-2"]
@@ -353,6 +355,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-prior-year-inmuebles-valoracion-baseline"
 provider = { kind = "previous_filing", source_modelo = "720", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_id = "inmuebles.valoracion" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "Modelo 720 re-declaration advisory: the prior-year valuation baseline the 20.000 EUR increase test compares against" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-2"]

@@ -239,7 +239,7 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
         allow_period_independent=True,
         allow_delegation=False,
     )
-    from ...user_profile.access_policy import operation_scope_refusal
+    from ...user_profile.operation_access_policy import operation_scope_refusal
 
     assert operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=scope) is None
     finite_scope = scope.model_copy(update={"periods": frozenset({Period.from_year_and_code(2026, "1T")})})

@@ -27,13 +27,14 @@ source diagnostics rather than silently blanking the filed calculation.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...core.i18n.translatable import Translatable as tr
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
@@ -409,14 +410,7 @@ class LedgerIvaAggregationSourceResolver:
         # Modelo 303 only pending Modelo 390 coordination (#80). Advisory, never
         # blocking: several of these categories are cuota-less BY LAW, so no tax
         # is lost -- only the base itself has nowhere on this revision to land.
-        unroutable_categories: tuple[IvaCategory, ...] = ()
-        if str(context.modelo) == Modelo("303").value:
-            present_categories = {observation.category for observation in aggregation.observations}
-            unroutable_categories = tuple(
-                category
-                for category in structurally_unroutable_iva_base_categories(context.revision)
-                if category in present_categories
-            )
+        unroutable_categories = _present_unroutable_iva_categories(context, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -547,6 +541,19 @@ class LedgerIvaAggregationSourceResolver:
                 )
             ),
         )
+
+
+def _present_unroutable_iva_categories(
+    context: CalculationSourceContext, observations: Iterable[IvaLedgerObservation]
+) -> tuple[IvaCategory, ...]:
+    if str(context.modelo) != Modelo("303").value:
+        return ()
+    present_categories = {observation.category for observation in observations}
+    return tuple(
+        category
+        for category in structurally_unroutable_iva_base_categories(context.revision)
+        if category in present_categories
+    )
 
 
 class LedgerRentaIncomeAggregationSourceResolver:
@@ -971,6 +978,26 @@ def _resolve_impatriado_registry_declarations(
     if not isinstance(resolved, ResolvedMappingFact):
         return None
 
+    entries = _impatriado_mapping_entries(resolved)
+    if entries is None:
+        return None
+    declaration_values = _impatriado_declaration_values(entries, context)
+    if declaration_values is None:
+        return None
+    modelo, target_value, jurisdiction_value, category_value = declaration_values
+    target_casilla_id = _impatriado_target_casilla(target_value)
+    if target_casilla_id is None:
+        return None
+    source_jurisdictions = _impatriado_csv_tokens(jurisdiction_value, uppercase=True)
+    eligible_income_categories = _impatriado_csv_tokens(category_value)
+    if source_jurisdictions is None or eligible_income_categories is None:
+        return None
+    if not _impatriado_jurisdictions_are_canonical(source_jurisdictions):
+        return None
+    return modelo, target_casilla_id, source_jurisdictions, eligible_income_categories
+
+
+def _impatriado_mapping_entries(resolved: ResolvedMappingFact) -> dict[str, str] | None:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
@@ -982,7 +1009,12 @@ def _resolve_impatriado_registry_declarations(
         if not value:
             return None
         entries[key] = value
+    return entries
 
+
+def _impatriado_declaration_values(
+    entries: Mapping[str, str], context: CalculationSourceContext
+) -> tuple[str, str, str, str] | None:
     modelo = entries.get("applicability.modelos")
     source_kind = entries.get("binding.source_kind")
     target_value = entries.get("target.casilla_id")
@@ -998,33 +1030,34 @@ def _resolve_impatriado_registry_declarations(
         or source_kind != _IMPATRIADO_REGISTRY_SOURCE_KIND
     ):
         return None
+    return modelo, target_value, jurisdiction_value, category_value
 
+
+def _impatriado_target_casilla(value: str) -> CasillaId | None:
     try:
-        target_casilla_id = validated_casilla_id(
-            target_value,
-            surface="impatriado registry target.casilla_id",
-        )
+        return validated_casilla_id(value, surface="impatriado registry target.casilla_id")
     except (TypeError, ValueError):
         return None
 
-    def csv_tokens(value: str, *, uppercase: bool = False) -> frozenset[str] | None:
-        raw_tokens = value.split(",")
-        if not raw_tokens or any(not token.strip() for token in raw_tokens):
-            return None
-        normalized = tuple(token.strip().upper() if uppercase else token.strip().casefold() for token in raw_tokens)
-        if len(set(normalized)) != len(normalized):
-            return None
-        if any(not token or any(not (char.isalnum() or char in "_-.") for char in token) for token in normalized):
-            return None
-        return frozenset(normalized)
 
-    source_jurisdictions = csv_tokens(jurisdiction_value, uppercase=True)
-    eligible_income_categories = csv_tokens(category_value)
-    if source_jurisdictions is None or eligible_income_categories is None:
+def _impatriado_csv_tokens(value: str, *, uppercase: bool = False) -> frozenset[str] | None:
+    raw_tokens = value.split(",")
+    if not raw_tokens or any(not token.strip() for token in raw_tokens):
         return None
-    if any(len(value) != 2 or not value.isalpha() or value != value.upper() for value in source_jurisdictions):
+    normalized = tuple(token.strip().upper() if uppercase else token.strip().casefold() for token in raw_tokens)
+    if len(set(normalized)) != len(normalized):
         return None
-    return modelo, target_casilla_id, source_jurisdictions, eligible_income_categories
+    if any(not _impatriado_token_is_valid(token) for token in normalized):
+        return None
+    return frozenset(normalized)
+
+
+def _impatriado_token_is_valid(token: str) -> bool:
+    return bool(token) and all(char.isalnum() or char in "_-." for char in token)
+
+
+def _impatriado_jurisdictions_are_canonical(jurisdictions: frozenset[str]) -> bool:
+    return all(len(value) == 2 and value.isalpha() and value == value.upper() for value in jurisdictions)
 
 
 class LedgerImpatriadoIncomeAggregationSourceResolver:
@@ -1206,9 +1239,9 @@ class LedgerIrnrIncomeAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             bound_inputs_by_casilla_id={
-                _M210_RENDIMIENTOS_INTEGROS_CASILLA: aggregation.casilla_aggregation.casilla_values.get(
+                _M210_RENDIMIENTOS_INTEGROS_CASILLA: AbsentCasillaReading.SPARSE_FOLD_TOTAL.read(
+                    aggregation.casilla_aggregation.casilla_values,
                     _M210_RENDIMIENTOS_INTEGROS_CASILLA,
-                    Decimal("0"),
                 ),
             },
             detail_rows=_irnr_annual_agrupacion_renta_rows(context, aggregation.observations),

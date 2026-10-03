@@ -33,7 +33,7 @@ from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.calculations.registry import authority as registry_authority
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ....domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue

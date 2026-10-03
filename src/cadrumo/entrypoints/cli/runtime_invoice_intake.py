@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Never
+from uuid import UUID
 
 import typer
 from pydantic import BaseModel
@@ -29,22 +30,10 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ._ledger_support import ledger_invoice_validation_no_recovery
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from .runtime_registered_operation import run_registered_operation
 
 
 def _submit[ProjectionT: BaseModel](
@@ -119,7 +108,7 @@ def submit_invoice_import(
         or completed.effect is not expected_effect
         or completed.refusal_code is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -178,47 +167,71 @@ def submit_invoice_wizard(
     )
     outcome = completed.projection
     if outcome.profile_id != client.profile_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     if outcome.outcome == "refused":
-        refusal = outcome.refusal
-        if (
-            refusal is None
-            or outcome.result is not None
-            or refusal.profile_id != client.profile_id
-            or completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code != INVOICE_WIZARD_VALIDATION_REFUSAL_CODE
-        ):
-            _invalid(completed)
-        error = refusal.to_validation_error()
-        rendered = ledger_invoice_validation_no_recovery(error)
-        if rendered is None or rendered.context is None:
-            _invalid(completed)
-        rendered.context.update(
-            {
-                "operation_id": str(completed.operation_id),
-                "terminal_condition": completed.terminal_condition.value,
-                "effect": completed.effect.value,
-                "refusal_code": completed.refusal_code,
-            }
-        )
-        raise rendered
+        _raise_invoice_wizard_refusal(completed, outcome, client.profile_id)
 
+    return _invoice_wizard_success(completed, outcome, client.profile_id, kind)
+
+
+__all__ = ["submit_invoice_import", "submit_invoice_wizard"]
+
+
+def _raise_invoice_wizard_refusal(
+    completed: RegisteredOperationCompletion[InvoiceWizardOutcome], outcome: InvoiceWizardOutcome, profile_id: UUID
+) -> Never:
+    """Translate only a correlated prewrite wizard refusal and retain its receipt."""
+    refusal = outcome.refusal
+    if (
+        refusal is None
+        or outcome.result is not None
+        or refusal.profile_id != profile_id
+        or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code != INVOICE_WIZARD_VALIDATION_REFUSAL_CODE
+    ):
+        raise invalid_completion_error(completed)
+    error = refusal.to_validation_error()
+    rendered = ledger_invoice_validation_no_recovery(error)
+    if rendered is None or rendered.context is None:
+        raise invalid_completion_error(completed)
+    rendered.context.update(
+        {
+            "operation_id": str(completed.operation_id),
+            "terminal_condition": completed.terminal_condition.value,
+            "effect": completed.effect.value,
+            "refusal_code": completed.refusal_code,
+        }
+    )
+    raise rendered
+
+
+def _invoice_wizard_success(
+    completed: RegisteredOperationCompletion[InvoiceWizardOutcome],
+    outcome: InvoiceWizardOutcome,
+    profile_id: UUID,
+    kind: InvoiceKind,
+) -> InvoiceWizardProjection:
+    """Correlate the created or reused invoice and successful receipt."""
     projection = outcome.result
     if projection is None or outcome.refusal is not None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     expected_effect = OperationEffect.NONE if projection.already_existed else OperationEffect.UPDATED
     if (
-        projection.profile_id != client.profile_id
-        or projection.invoice.bucket_id is None
-        or str(projection.invoice.bucket_id) != str(client.profile_id)
-        or projection.invoice.kind is not kind
+        _invoice_wizard_identity_invalid(projection, profile_id, kind)
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.effect is not expected_effect
         or completed.refusal_code is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
-__all__ = ["submit_invoice_import", "submit_invoice_wizard"]
+def _invoice_wizard_identity_invalid(projection: InvoiceWizardProjection, profile_id: UUID, kind: InvoiceKind) -> bool:
+    """Require exact invoice profile ownership and kind."""
+    return (
+        projection.profile_id != profile_id
+        or projection.invoice.bucket_id is None
+        or str(projection.invoice.bucket_id) != str(profile_id)
+        or (projection.invoice.kind is not kind)
+    )

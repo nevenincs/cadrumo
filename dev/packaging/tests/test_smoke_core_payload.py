@@ -24,25 +24,22 @@ from ..cohort_attestation import (
     make_test_command_spec_attestation,
 )
 from ..hashing import sha256_path
-from ..lane_verification_core import (
+from ..lane_verification_core import build_companion_wheels, build_root_snapshot, build_sdist, build_wheel
+from ..proof_ledger import recorded_proofs, reset_proof_ledger
+from ..python_cohort import load_python_cohort
+from ..smoke_core import _assert_complete_wheel_cohort
+from ..smoke_sdist_core import _assert_sdist_contains_expected_data
+from ..source_data_contract import (
     _CORPUS_SOURCE_PREFIX,
     _MANUAL_PDF_PRESENCE_FLOOR,
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
     _validated_source_data_inventory,
     assert_wheel_contains_source_data,
-    build_companion_wheels,
-    build_root_snapshot,
-    build_sdist,
     build_source_data_paths,
-    build_wheel,
     expected_wheel_data_paths,
     source_data_paths,
 )
-from ..proof_ledger import recorded_proofs, reset_proof_ledger
-from ..python_cohort import load_python_cohort
-from ..smoke_core import _assert_complete_wheel_cohort
-from ..smoke_sdist_core import _assert_sdist_contains_expected_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

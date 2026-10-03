@@ -29,16 +29,16 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...core.time.utc import validate_utc_aware
+from ...core.time.utc import UtcInstant
 from .errors import LiveApplicationInputError
 from .verify_ports import VerifyObservationPersistencePort
 
@@ -81,16 +81,9 @@ class VerifyObservation(BaseModel):
     verdict: IdentityCheckVerdictValue
     expected: IdentityCheckVerdictValue | None = Field(default=None)
     matched_expectation: bool | None = Field(default=None)
-    checked_at: datetime
+    checked_at: UtcInstant
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
-    persisted_at: datetime
-
-    @field_validator("checked_at", "persisted_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _instant_is_utc(cls, value: datetime) -> datetime:
-        """Reject a naive or non-UTC instant; see :func:`~cadrumo.core.time.utc.validate_utc_aware`."""
-        return validate_utc_aware(value)
+    persisted_at: UtcInstant
 
 
 def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:

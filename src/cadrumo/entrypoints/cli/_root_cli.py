@@ -24,7 +24,7 @@ from ._root_support import (
     is_introspection_only_invocation,
     normalize_root_active_profile,
 )
-from .common import preserve_requested_cli_leaf
+from .common import RequestedCliLeaf, preserve_requested_cli_leaf
 
 
 def root_command(
@@ -58,27 +58,7 @@ def root_command(
     if ctx.invoked_subcommand is not None and is_introspection_only_invocation(ctx):
         return
     requested = preserve_requested_cli_leaf(ctx)
-    if requested is not None and _requested_leaf_is_profile_free(requested.canonical_cli_path):
-        # A leaf that declares nothing a profile holds never reads a profile
-        # port, so composing them all would only cost the adapter imports.
-        from ..adapter_composition import profile_free_adapter_composition
-
-        ctx.with_resource(profile_free_adapter_composition())
-    else:
-        from ...application.user_profile.profile_record_repository import invocation_profile_record_handoff
-        from ..adapter_composition import profile_adapter_composition
-
-        # Enter before adapter composition snapshots the profile language.
-        # The scope is owned by this Click invocation and is reset when its
-        # resource stack closes, never by the process-wide login session.
-        ctx.with_resource(invocation_profile_record_handoff())
-        if requested is not None and _requested_leaf_writes_nothing(requested.canonical_cli_path):
-            from ...application.user_profile.profile_summary import summary_inventory_snapshot
-
-            # Composition resolves the active profile's language, so a leaf that
-            # writes nothing opens its one profile listing before that read.
-            ctx.with_resource(summary_inventory_snapshot())
-        state["adapter_composition"] = ctx.with_resource(profile_adapter_composition())
+    _enter_root_adapter_composition(ctx, requested, state)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:
         if profile is not None:
@@ -132,3 +112,30 @@ def app_root(ctx: typer.Context, help_: bool = False) -> None:
 
 
 __all__ = ["app_root", "root_command"]
+
+
+def _enter_root_adapter_composition(
+    ctx: typer.Context, requested: RequestedCliLeaf | None, state: dict[str, object]
+) -> None:
+    """Enter profile handoff and any listing scope in their original composition order."""
+    if requested is not None and _requested_leaf_is_profile_free(requested.canonical_cli_path):
+        # A leaf that declares nothing a profile holds never reads a profile
+        # port, so composing them all would only cost the adapter imports.
+        from ..adapter_composition import profile_free_adapter_composition
+
+        ctx.with_resource(profile_free_adapter_composition())
+    else:
+        from ...application.user_profile.profile_record_repository import invocation_profile_record_handoff
+        from ..adapter_composition import profile_adapter_composition
+
+        # Enter before adapter composition snapshots the profile language.
+        # The scope is owned by this Click invocation and is reset when its
+        # resource stack closes, never by the process-wide login session.
+        ctx.with_resource(invocation_profile_record_handoff())
+        if requested is not None and _requested_leaf_writes_nothing(requested.canonical_cli_path):
+            from ...application.user_profile.profile_summary import summary_inventory_snapshot
+
+            # Composition resolves the active profile's language, so a leaf that
+            # writes nothing opens its one profile listing before that read.
+            ctx.with_resource(summary_inventory_snapshot())
+        state["adapter_composition"] = ctx.with_resource(profile_adapter_composition())

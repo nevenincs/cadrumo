@@ -28,6 +28,7 @@ from .....application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     NativeSecretBackend,
 )
+from .automation_secret_target import require_automation_secret_target
 from .zeroise import zeroise
 
 _SECURITY = "/System/Library/Frameworks/Security.framework/Security"
@@ -75,21 +76,7 @@ def _status(status: int) -> None:
 
 
 def _target(namespace: str, account: str) -> None:
-    if (
-        not isinstance(namespace, str)
-        or not isinstance(account, str)
-        or not namespace.startswith("cadrumo.automation.")
-        or len(namespace) <= len("cadrumo.automation.")
-        or not account
-        or len(namespace) + len(account) > 1024
-        or any(ord(character) < 32 or ord(character) == 127 for character in namespace + account)
-    ):
-        raise _refuse()
-    try:
-        namespace.encode("utf-8", errors="strict")
-        account.encode("utf-8", errors="strict")
-    except UnicodeError:
-        raise _refuse() from None
+    require_automation_secret_target(namespace, account)
     if sys.platform != "darwin":
         raise _refuse(AutomationCustodyCode.UNSUPPORTED)
 

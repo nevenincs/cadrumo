@@ -51,7 +51,6 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         ),
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },

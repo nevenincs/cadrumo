@@ -25,13 +25,13 @@ _IDENTITY_TOKEN = re.compile(r"^[A-Za-z0-9_.:/-]+$")
 _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
     # A word printed on a foreign-language invoice, not a Cadrumo identifier.
-    "application/ledger/invoice_label_reader.py": frozenset({"vat"}),
+    "application/ledger/invoice_label_vocabulary.py": frozenset({"vat"}),
     "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
     # Label alternations matched against text printed on foreign-language invoices.
-    "application/ledger/invoice_label_reader.py": frozenset(
+    "application/ledger/invoice_label_vocabulary.py": frozenset(
         {
             r"n\.?\s?i\.?\s?f\.?[- ]iva|nif[- ]iva|vat (?:reg(?:istration)?\.? )?(?:no\.?|number|id)|vat|"
             r"tax id|c\.?\s?i\.?\s?f\.?|n\.?\s?i\.?\s?f\.?|n\.?\s?i\.?\s?e\.?|d\.?\s?n\.?\s?i\.?",
@@ -69,9 +69,6 @@ _EXTERNAL_VAT_PROSE_FRAGMENTS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"``VAT``"}),
     # Labels printed on the foreign-language invoice fixtures the reader must parse.
     "application/ledger/tests/test_invoice_label_reader.py": frozenset({"VAT ID", "VAT 0%"}),
-    "entrypoints/cli/tests/test_ledger_evidence_confirm_resolution_cli.py": frozenset(
-        {"<cbc:ID>VAT</cbc:ID>"},
-    ),
 }
 _EXTERNAL_SOURCE_PREFIXES = ("http://", "https://", "/Sede/")
 

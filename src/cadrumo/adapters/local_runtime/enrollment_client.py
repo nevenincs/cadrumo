@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-import time
 from datetime import UTC, datetime
 from typing import Never
 from uuid import UUID, uuid4
@@ -11,6 +9,7 @@ from uuid import UUID, uuid4
 from pydantic import SecretBytes
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import deadline_after
 from ...application.runtime.enrollment_access import (
     EnrollmentCredentialBinding,
     RuntimeEnrollmentDelivery,
@@ -87,12 +86,6 @@ class NativeEnrollmentClient:
     def _live(self) -> None:
         if datetime.now(UTC) >= self.prepared.expires_at:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-
-    @staticmethod
-    def _deadline(timeout: float) -> float:
-        if not math.isfinite(timeout) or timeout <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        return time.monotonic() + timeout
 
     def _checked[ReplyT: RuntimeEnrollmentRecorded | RuntimeEnrollmentIdle | RuntimeEnrollmentDelivery](
         self,
@@ -201,7 +194,7 @@ class NativeEnrollmentClient:
         )
         secret = bytearray(proposal.model_dump_json().encode("utf-8"))
         try:
-            reply = self._connection.enrollment_submit(request, secret, deadline=self._deadline(timeout))
+            reply = self._connection.enrollment_submit(request, secret, deadline=deadline_after(timeout))
         finally:
             secret[:] = bytes(len(secret))
         return self._pin_receipt(self._checked(reply, request_id=request.request_id).receipt)
@@ -215,7 +208,7 @@ class NativeEnrollmentClient:
             enrollment_request_id=self.prepared.enrollment_request_id,
         )
         reply = self._checked(
-            self._connection.enrollment_inspect(request, deadline=self._deadline(timeout)),
+            self._connection.enrollment_inspect(request, deadline=deadline_after(timeout)),
             request_id=request.request_id,
         )
         if isinstance(reply, RuntimeEnrollmentIdle):
@@ -237,7 +230,7 @@ class NativeEnrollmentClient:
                 request,
                 store=self._store_candidate,
                 possession=self._possession,
-                deadline=self._deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             request_id=request.request_id,
         )

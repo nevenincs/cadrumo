@@ -1,0 +1,757 @@
+schema_version = 1
+fragment_id = 'numeric-representation'
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['1']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 15
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '1'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-1-enumeration'
+decision_statement = 'The 1-position record type field carries the numeric constant 1.'
+justification = 'The official declarante record marks this field as the constant 1; the reviewed enumeration preserves the source token.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 15
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '1'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 3
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['180']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 18
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '2'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-2-enumeration'
+decision_statement = 'The 3-position modelo field carries the numeric constant 180.'
+justification = 'The official declarante record marks this field as the constant 180; the reviewed enumeration preserves the source token.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 18
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '2'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 21
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '3'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-5-year-yyyy'
+decision_statement = 'The four exercise digits identify the declaration year.'
+justification = 'The official design labels this Num field EJERCICIO and states it carries the four fiscal-year digits.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 21
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '3'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'digit_string'
+value_policy = 'digit-string'
+integer_digits = 9
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 56
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-59-digit-string'
+decision_statement = 'The nine-position contact telephone is a digit string.'
+justification = 'The official component description explicitly says “Campo numérico de nueve posiciones”; the field is a phone identifier, not an arithmetic quantity.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 56
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'mistyped_alphanumeric_text'
+value_policy = 'mistyped-alphanumeric-text'
+integer_digits = 0
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 57
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-68-mistyped-alphanumeric-text'
+decision_statement = 'The 40-position contact name is alphanumeric text despite the absent naturaleza.'
+justification = 'The official component is labelled APELLIDOS Y NOMBRE and gives a name, not a number; the profile records that semantic fact without inventing a numeric representation.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 57
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'identifier_digits'
+value_policy = 'identifier-digits'
+integer_digits = 13
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 61
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '8'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-108-identifier-digits'
+decision_statement = 'The 13 Num positions carry the declaration identifier, not an arithmetic amount.'
+justification = 'The official design names this field NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN; the 13-digit sequential identifier is rendered without sign or decimal scaling.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 61
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '8'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'identifier_digits'
+value_policy = 'identifier-digits'
+integer_digits = 13
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 91
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '10'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-123-identifier-digits'
+decision_statement = 'The 13 Num positions carry the prior declaration identifier, not an arithmetic amount.'
+justification = 'The official design names this field NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR; the 13-digit sequential identifier is rendered without sign or decimal scaling.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 91
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '10'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'integer'
+value_policy = 'unsigned-integer'
+integer_digits = 9
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 100
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '11'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-136-integer'
+decision_statement = 'The nine Num positions carry the total count of recipient records.'
+justification = 'The official design names this field NÚMERO TOTAL DE PERCEPTORES and describes a count of type-2 records.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 100
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '11'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_integer_part'
+value_policy = 'integer-part'
+integer_digits = 13
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 151
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-161-amount-integer-part'
+decision_statement = 'Thirteen digits carry the integer euros of the total-withholding amount.'
+justification = 'The parent official field defines the total withholding in euros; this exact child row is labelled Parte entera and occupies 13 bytes.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 151
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_fractional_digits'
+value_policy = 'fractional-digits'
+integer_digits = 0
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 153
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-174-amount-fractional-digits'
+decision_statement = 'Two digits carry the fractional euro cents of the total-withholding amount.'
+justification = 'The parent official field defines the total withholding in euros; this exact child row is labelled Parte decimal and occupies 2 bytes.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 153
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['1']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 182
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '1'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-1-enumeration'
+decision_statement = 'The 1-position record type field carries the numeric constant 1.'
+justification = 'The official perceptor record marks this field as the constant 1; the reviewed enumeration preserves the source token.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 182
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '1'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 3
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['180']
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 185
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '2'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-2-enumeration'
+decision_statement = 'The 3-position modelo field carries the numeric constant 180.'
+justification = 'The official perceptor record marks this field as the constant 180; the reviewed enumeration preserves the source token.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 185
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '2'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 188
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '3'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-5-year-yyyy'
+decision_statement = 'The four exercise digits identify the declaration year.'
+justification = 'The official design labels this Num field EJERCICIO and states it carries the four fiscal-year digits.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 188
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '3'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12',
+    '13',
+    '14',
+    '15',
+    '16',
+    '17',
+    '18',
+    '19',
+    '20',
+    '21',
+    '22',
+    '23',
+    '24',
+    '25',
+    '26',
+    '27',
+    '28',
+    '29',
+    '30',
+    '31',
+    '32',
+    '33',
+    '34',
+    '35',
+    '36',
+    '37',
+    '39',
+    '40',
+    '41',
+    '42',
+    '43',
+    '44',
+    '45',
+    '46',
+    '47',
+    '48',
+    '49',
+    '50',
+    '51',
+    '52',
+    '53',
+]
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 245
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '8'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-76-enumeration'
+decision_statement = 'The two province-code digits select one of the provinces and autonomous cities listed by the source.'
+justification = 'The exact 2023 design prints this complete province-code table; values are represented as canonical integer tokens and the fixed two-digit field preserves leading zeroes.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 245
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '8'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = [
+    '1',
+    '2',
+]
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 281
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '9'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-78-enumeration'
+decision_statement = 'One digit selects monetary income (1) or in-kind income (2).'
+justification = 'The official design lists the two modalities as keys "1" for monetary and "2" for in-kind income.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 281
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '9'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_integer_part'
+value_policy = 'integer-part'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 328
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-93-amount-integer-part'
+decision_statement = 'Two digits carry the integer part of the withholding percentage.'
+justification = 'The official parent field divides % RETENCIÓN into an ENTERO Numérico part and a DECIMAL Numérico part.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 328
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'amount_fractional_digits'
+value_policy = 'fractional-digits'
+integer_digits = 0
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 330
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-95-amount-fractional-digits'
+decision_statement = 'Two digits carry the fractional part of the withholding percentage.'
+justification = 'The official parent field divides % RETENCIÓN into an ENTERO Numérico part and a DECIMAL Numérico part.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 330
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 335
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '12'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-97-decimal'
+decision_statement = 'The 13 Num positions carry euro withholding as an implied two-decimal amount.'
+justification = 'The official design states 13 numeric positions and explicitly says amounts are in euros, but gives no split for this field. The reviewed 11+2 scale is a monetary policy, not quoted source text.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 335
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '12'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 341
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '13'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-110-year-yyyy'
+decision_statement = 'The four digits carry the accrual year.'
+justification = 'The official design labels this field EJERCICIO DEVENGO and expressly names the four digits of the accrual year.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 341
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '13'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 1
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 382
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '14'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-114-enumeration'
+decision_statement = 'One digit selects the official situation of the leased property.'
+justification = 'The official design enumerates four situation keys (1 through 4) for this one-position field.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 382
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '14'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12',
+    '13',
+    '14',
+    '15',
+    '16',
+    '17',
+    '18',
+    '19',
+    '20',
+    '21',
+    '22',
+    '23',
+    '24',
+    '25',
+    '26',
+    '27',
+    '28',
+    '29',
+    '30',
+    '31',
+    '32',
+    '33',
+    '34',
+    '35',
+    '36',
+    '37',
+    '39',
+    '40',
+    '41',
+    '42',
+    '43',
+    '44',
+    '45',
+    '46',
+    '47',
+    '48',
+    '49',
+    '50',
+    '51',
+    '52',
+    '53',
+]
+
+[singleton_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 400
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm180-2023-offset-321-enumeration'
+decision_statement = 'The two-digit address province subfield selects a code in the official province table.'
+justification = 'The address cell prints range 321-322 as CÓDIGO PROVINCIA and gives the 2023 province-code table; its part explicitly states two numeric digits.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 400
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[[signed_composite_rules]]
+rule_kind = 'signed_monetary_composite'
+integer_digits = 13
+decimal_digits = 2
+sign_policy = 'blank-or-n-leading'
+
+[signed_composite_rules.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 109
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '12'
+
+[signed_composite_rules.evidence]
+authority_kind = 'official_parser_anchor'
+decision_statement = 'The official declarante-total-base field carries a blank-or-N sign followed by a two-decimal monetary amount.'
+justification = 'The exact parser-anchored official description defines the sign token and euro amount representation; the rule is pinned to this source row and checked against its complete wire grammar.'
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 109
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '12'
+
+[[signed_composite_rules]]
+rule_kind = 'signed_monetary_composite'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'blank-or-n-leading'
+
+[signed_composite_rules.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 292
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '10'
+
+[signed_composite_rules.evidence]
+authority_kind = 'official_parser_anchor'
+decision_statement = 'The official perceptor-base field carries a blank-or-N sign followed by a two-decimal monetary amount.'
+justification = 'The exact parser-anchored official description defines the sign token and euro amount representation; the rule is pinned to this source row and checked against its complete wire grammar.'
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 292
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '10'
+
+[design_identity]
+modelo = '180'
+design_epoch = '2023'
+source_ref = 'aeat-dr-180-2023'
+source_sha256 = 'f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda'

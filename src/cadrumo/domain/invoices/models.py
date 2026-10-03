@@ -746,35 +746,10 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        if self.retention_amount is not None and self.retention_amount < Decimal("0"):
-            raise InvoiceValidationError(
-                "retention_amount must be non-negative",
-                context={"fields": ("retention_amount",)},
-            )
-        if self.retention_rate is not None:
-            if self.retention_rate < Decimal("0") or self.retention_rate > Decimal("1"):
-                raise InvoiceValidationError(
-                    "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
-                    context={"fields": ("retention_rate",)},
-                )
-            if self.retention_amount is None:
-                raise InvoiceValidationError(
-                    "retention_rate requires retention_amount; a rate alone declares no withheld figure",
-                    context={"fields": ("retention_rate", "retention_amount")},
-                )
-        if self.retention_amount is not None and self.retention_amount > self.base_total:
-            raise InvoiceValidationError(
-                "retention_amount must not exceed base_total; the retención base is the "
-                "base imponible (ingresos íntegros), not the IVA-inclusive total",
-                context={"fields": ("retention_amount", "base_total")},
-            )
-        if self.retention_rate is not None and self.retention_amount is not None:
-            expected_retencion = (self.base_total * self.retention_rate).quantize(Decimal("0.0001"))
-            if abs(self.retention_amount - expected_retencion) > CENT:
-                raise InvoiceValidationError(
-                    "retention_amount must equal base_total * retention_rate within 1 cent",
-                    context={"fields": ("retention_rate", "retention_amount", "base_total")},
-                )
+        _require_non_negative_retention_amount(self.retention_amount)
+        _validate_retention_rate_shape(self.retention_rate, self.retention_amount)
+        _require_retention_amount_within_base(self.retention_amount, self.base_total)
+        _validate_retention_rate_amount(self.retention_rate, self.retention_amount, self.base_total)
         return self
 
     @model_validator(mode="after")
@@ -805,10 +780,11 @@ class Invoice(BaseModel):
         far below its companion IVA rate (5.2 % against 21 %, 1.4 % against
         10 %, 0.5 % against 4 %), so a recargo exceeding the cuota it rides on
         is arithmetically impossible under any tier and is far more likely to
-        be the cuota written into the wrong field. The bound is deliberately
-        loose rather than a per-tier rate check: no recargo rate table ships in
-        the registry, and inventing rate literals here would put regulatory
-        values in a feature module.
+        be the cuota written into the wrong field. The bound remains generic
+        because the invoice-wide ``recargo_amount`` does not allocate the
+        surcharge across rate tiers. The authority-aware advisory checks the
+        published pairing when one cuota-bearing tier is identifiable; a
+        multi-tier invoice remains unattributed rather than guessed.
         """
         if self.recargo_amount is None:
             return self
@@ -1114,6 +1090,47 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
 
 def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
+
+
+def _require_non_negative_retention_amount(amount: Decimal | None) -> None:
+    if amount is not None and amount < Decimal("0"):
+        raise InvoiceValidationError(
+            "retention_amount must be non-negative",
+            context={"fields": ("retention_amount",)},
+        )
+
+
+def _validate_retention_rate_shape(rate: Decimal | None, amount: Decimal | None) -> None:
+    if rate is not None:
+        if rate < Decimal("0") or rate > Decimal("1"):
+            raise InvoiceValidationError(
+                "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
+                context={"fields": ("retention_rate",)},
+            )
+        if amount is None:
+            raise InvoiceValidationError(
+                "retention_rate requires retention_amount; a rate alone declares no withheld figure",
+                context={"fields": ("retention_rate", "retention_amount")},
+            )
+
+
+def _require_retention_amount_within_base(amount: Decimal | None, base: Decimal) -> None:
+    if amount is not None and amount > base:
+        raise InvoiceValidationError(
+            "retention_amount must not exceed base_total; the retención base is the "
+            "base imponible (ingresos íntegros), not the IVA-inclusive total",
+            context={"fields": ("retention_amount", "base_total")},
+        )
+
+
+def _validate_retention_rate_amount(rate: Decimal | None, amount: Decimal | None, base: Decimal) -> None:
+    if rate is not None and amount is not None:
+        expected_retencion = (base * rate).quantize(Decimal("0.0001"))
+        if abs(amount - expected_retencion) > CENT:
+            raise InvoiceValidationError(
+                "retention_amount must equal base_total * retention_rate within 1 cent",
+                context={"fields": ("retention_rate", "retention_amount", "base_total")},
+            )
 
 
 class InvoiceCatalogue(BaseModel):

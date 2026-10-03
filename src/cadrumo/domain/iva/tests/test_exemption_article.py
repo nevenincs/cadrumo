@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.iva_schema_vocabulary import resolve_iva_exemption_article_catalogue
+from ...calculations.registry.iva_legal_vocabulary import resolve_iva_exemption_article_catalogue
 from ..classification import IvaClassificationResult
 from ..schema import IvaCategory, IvaExemptionArticle
 

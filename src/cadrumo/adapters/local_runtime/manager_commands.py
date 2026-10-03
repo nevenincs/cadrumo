@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
 
 
@@ -179,9 +180,7 @@ def run_manager_command_sync(tool: NativeManagerCommand, arguments: tuple[str, .
             deadline = time.monotonic() + 5
             output = bytearray()
             while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+                remaining = remaining_budget(deadline)
                 readable, _, _ = select.select((stdout,), (), (), remaining)
                 if not readable:
                     raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)

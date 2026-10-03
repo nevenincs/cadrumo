@@ -5,15 +5,15 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
-_STRICT_VALIDATED_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+from ...core.models import STRICT_FROZEN_CONFIG
 
 
 class CensalObservationIdentity(BaseModel):
     """Exact identity group observed on the censal consulta surface."""
 
-    model_config = _STRICT_VALIDATED_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     nif: str | None = Field(default=None, max_length=32)
     apellidos_y_nombre: str | None = Field(default=None, max_length=256)
@@ -31,7 +31,7 @@ class CensalObservationIdentity(BaseModel):
 class CensalObservationAddress(BaseModel):
     """Exact fiscal or notification address group in a censal observation."""
 
-    model_config = _STRICT_VALIDATED_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tipo_via: str | None = Field(default=None, max_length=32)
     nombre_via: str | None = Field(default=None, max_length=128)
@@ -57,7 +57,7 @@ class CensalObservationAddress(BaseModel):
 class CensalObservation(BaseModel):
     """One exact, immutable read of the taxpayer's censal consulta."""
 
-    model_config = _STRICT_VALIDATED_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     identity: CensalObservationIdentity
     domicilio_fiscal: CensalObservationAddress

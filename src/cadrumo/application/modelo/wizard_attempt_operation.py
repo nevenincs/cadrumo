@@ -13,44 +13,30 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    EFFECTS_WITHOUT_PARTIAL_COMMIT,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-)
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.ids import BindingId
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_single_period_admission,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPortsFactory
@@ -157,18 +143,11 @@ class ModeloWorkWizardAttemptExecutor:
         context: OperationExecutorContext,
     ) -> str:
         """Classify only the engine's typed pre-publication refusal as needs-input."""
-        from ...core.bucket_pointer import require_active_bucket_id
-
         payload = request.payload
         work_unit_id = payload.calculation.work_unit_id
-        if (
-            request.definition_id != MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID
-            or request.subject_ref != work_unit_id
-            or context.identity.subject_ref != work_unit_id
-            or context.identity.definition_id != request.definition_id
-            or require_active_bucket_id() != str(payload.profile_id)
-        ):
+        if request.definition_id != MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id, expected_subject_ref=work_unit_id)
         await context.events.phase(MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID)
         prepared = await prepare_modelo_work_calculation(
             payload.calculation,
@@ -259,19 +238,7 @@ def build_modelo_work_wizard_attempt_definition(
         ),
         phase_codes=(MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.COOPERATIVE,
-            deadline=OperationDeadline.COOPERATIVE,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
@@ -292,22 +259,10 @@ def build_modelo_work_wizard_attempt_registration(
         if payload.profile_id != context.profile_id or request.subject_ref != payload.calculation.work_unit_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         admitted = context.admitted_request
-        if admitted is not None and context.action in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-            AccessAction.COMMIT,
-        }:
-            if (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent
-                or len(admitted.periods) != 1
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = admitted.periods
+        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS | {AccessAction.COMMIT}:
+            periods = require_single_period_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
+            )
         else:
             repository = factory().work_unit_repository
             if repository.bucket_id != str(payload.profile_id):
@@ -321,76 +276,16 @@ def build_modelo_work_wizard_attempt_registration(
             if unit.bucket_id != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             periods = frozenset({unit.period})
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=schema.schema_id,
-                        category=DisclosureCategory.TAX_VALUES,
-                    ),
-                )
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=periods,
-                period_independent=False,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                        AccessAction.COMMIT,
-                    }
-                ),
-                disclosures=disclosures,
-                periods=periods,
-                allow_period_independent=False,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                transaction_authority_required=False,
-            ),
+        return bind_operation_access_profile(
+            context,
+            COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            profile_id=context.profile_id,
+            definition_id=request.definition_id,
+            periods=periods,
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloWorkWizardAttemptRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloWorkWizardAttemptProjection,
-        ),
+        public_result_type=ModeloWorkWizardAttemptProjection,
         access_resolver=resolve,
     )

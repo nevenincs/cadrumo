@@ -1,2 +1,84 @@
 # A target's bootstrap authorization is retired once its generated tree is published.
-targets = []
+[[targets]]
+modelo = "122"
+revision = "2017-y-siguientes"
+source_ref = "aeat-dr-122-2016"
+source_sha256 = "2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7"
+layout_id = "generated-modelo-122-2017-y-siguientes-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-122-fichero-boe"
+superseded_construct_references = 0
+
+[[targets]]
+modelo = "123"
+revision = "2019-2023"
+source_ref = "aeat-dr-123-2019-2023-v13"
+source_sha256 = "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"
+layout_id = "generated-modelo-123-2019-2023-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-123-fichero-boe"
+superseded_construct_references = 0
+
+[[targets]]
+modelo = "123"
+revision = "2024-y-siguientes"
+source_ref = "aeat-dr-123-2024-v20"
+source_sha256 = "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"
+layout_id = "generated-modelo-123-2024-y-siguientes-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-123-fichero-boe"
+superseded_construct_references = 0
+[[targets]]
+modelo = "126"
+revision = "2019-y-siguientes"
+source_ref = "aeat-dr-126-2020"
+source_sha256 = "50a764a112681bd979a2c76bc0749a2c5f42eb8de577bb5512bdcc6756e06ea3"
+layout_id = "generated-modelo-126-2019-y-siguientes-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-126-fichero-boe"
+superseded_construct_references = 0
+[[targets]]
+modelo = "128"
+revision = "2019-y-siguientes"
+source_ref = "aeat-dr-128-2020"
+source_sha256 = "2cdf1540b2aaca1cd5cf5a19380179ba72271a7656eba8a6dd157833866a5cc0"
+layout_id = "generated-modelo-128-2019-y-siguientes-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-128-fichero-boe"
+superseded_construct_references = 0
+[[targets]]
+modelo = "490"
+revision = "2021"
+source_ref = "aeat-dr-490-2021"
+source_sha256 = "d8115bd4f4d18745c6a20b9b8c184582c3ddc5ba24a6c955ba51dd92f1534fa7"
+layout_id = "generated-modelo-490-2021-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-490-fichero-boe"
+superseded_construct_references = 0
+[[targets]]
+modelo = "490"
+revision = "2022-1t"
+source_ref = "aeat-dr-490-2021"
+source_sha256 = "d8115bd4f4d18745c6a20b9b8c184582c3ddc5ba24a6c955ba51dd92f1534fa7"
+layout_id = "generated-modelo-490-2022-1t-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-490-fichero-boe"
+superseded_construct_references = 0
+[[targets]]
+modelo = "490"
+revision = "2022-2t-4t"
+source_ref = "aeat-dr-490-2022-2t"
+source_sha256 = "9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66"
+layout_id = "generated-modelo-490-2022-2t-4t-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-490-fichero-boe"
+superseded_construct_references = 0
+[[targets]]
+modelo = "490"
+revision = "2023-y-siguientes"
+source_ref = "aeat-dr-490-2023"
+source_sha256 = "f55ecbfff8fb552de76f4e788ff7663269c96b6255b209b5289bf0869de89cb8"
+layout_id = "generated-modelo-490-2023-y-siguientes-fichero"
+line_ending = "none"
+supersedes_layout_id = "modelo-490-fichero-boe"
+superseded_construct_references = 0

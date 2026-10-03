@@ -37,16 +37,12 @@ from cadrumo.application.operations.interactions import (
     OperationRejectResponse,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.projection_services import (
     OperationResultProjectionService,
     OperationReviewProjectionService,
 )
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationRegistry,
-    operation_public_schema_reference,
-)
+from cadrumo.application.operations.registry import OperationRegistry, operation_public_schema_reference
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.censal_observation import (

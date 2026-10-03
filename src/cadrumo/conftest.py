@@ -227,7 +227,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.persistence.profile.justificante import JustificanteRepository
     from .adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
     from .adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
-    from .adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from .entrypoints.adapter_composition import _calculation_revision_catalogue_repository
     from .adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from .adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
@@ -273,7 +273,7 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
         bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios),
         bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),
-        bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository),
+        bind_calculation_revision_catalogue_repository_factory(_calculation_revision_catalogue_repository),
         bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository),
         bind_justificante_repository_factory(JustificanteRepository),
         bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),

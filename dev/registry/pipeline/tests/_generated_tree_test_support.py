@@ -25,12 +25,10 @@ from ..export_fragment_provenance import ExportFragmentTarget
 from ..generated_tree_inventory import GeneratedExportTree
 from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..record_design_intermediate import load_record_design_intermediate
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileSourceEvidence,
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
+from ..render_profile_evidence import RenderProfileSourceEvidence
+from ..render_profile_loading import load_render_profile
+from ..render_profile_model import RenderProfile
+from ..render_profile_source_reader import load_render_profile_source_evidence
 from ..semantic_map import SemanticMap, load_semantic_map
 
 #: The enrolled generated tree the isolated fixtures materialise.

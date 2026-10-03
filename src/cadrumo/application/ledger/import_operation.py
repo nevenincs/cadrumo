@@ -12,42 +12,27 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.severity import BaseSeverity
+from ...core.hex import Hex64Str
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
@@ -148,7 +133,7 @@ class LedgerImportSourceProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     requested: bool
-    sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    sha256: ContentDigest | None = None
 
 
 class LedgerImportDiagnosticProjection(BaseModel):
@@ -176,7 +161,7 @@ class LedgerImportResultProjection(BaseModel):
     verify: bool
     period: PublicPeriod | None = None
     bucket_id: str
-    import_batch_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    import_batch_id: Hex64Str | None = None
     bucket_event_ids: tuple[str, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_EVENTS)
     imported_transaction_refs: tuple[BucketTransactionRef, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_ROWS)
     skipped_transaction_refs: tuple[BucketTransactionRef, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_ROWS)
@@ -391,14 +376,9 @@ class LedgerImportExecutor:
         """Parse before the fresh local-write guard and publish a private result."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != LEDGER_IMPORT_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != bucket_id
-        ):
+        if request.definition_id != LEDGER_IMPORT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_IMPORT_OPERATION_DEFINITION_ID)
 
         def compose() -> tuple[
@@ -518,19 +498,7 @@ def build_ledger_import_definition(ports: LedgerImportOperationPortsFactory) -> 
         ),
         phase_codes=(LEDGER_IMPORT_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -562,18 +530,9 @@ def build_ledger_import_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the private request and its allowlisted public result projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerImportRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerImportResultProjection,
-        ),
+        public_result_type=LedgerImportResultProjection,
         result_projector=project_ledger_import_result,
         access_resolver=resolve_ledger_import_access,
     )

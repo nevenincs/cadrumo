@@ -8,23 +8,21 @@ from cadrumo.application.operator_surface.command_ports import (
 )
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .command_spec import (
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _POLICY = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "filing"}),

@@ -21,12 +21,13 @@ from .....application.ledger.workspace import (
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
+from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.attachments.enums import AttachmentSource
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import LedgerWorkspaceController, ledger_copy
+from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
 from ..reconciliation import LedgerReconciliationScreen
@@ -384,7 +385,7 @@ async def test_reconciliation_without_mutation_door_preserves_read_only_drift_an
             await pilot.press("enter")
             assert screen.flow_state is LedgerFlowState.EDITING
             assert screen.selected_pair is None
-            assert str(screen.query_one("#ledger-flow-status", Static).render()) == ledger_copy(
+            assert str(screen.query_one("#ledger-flow-status", Static).render()) == tr(
                 "tui.ledger.refusal.submission_unavailable"
             )
 

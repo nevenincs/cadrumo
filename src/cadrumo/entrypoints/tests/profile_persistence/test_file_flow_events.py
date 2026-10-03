@@ -85,7 +85,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-A",
             workflow_profile=workflow_profile(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,

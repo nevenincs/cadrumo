@@ -39,7 +39,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, NoReturn
 
 from pydantic import (
     BaseModel,
@@ -98,17 +98,7 @@ def _registry_detail_catalogue(
         raise ValueError("M349 registry selection requires both filing_year and period")
     periods = frozenset[str]()
     if filing_year is not None and period is not None:
-        if not isinstance(authority, PinnedAuthorityOperation):
-            raise ValueError("M349 registry selection requires a generation-pinned authority operation")
-        m349_revision = authority.revision_for_context(
-            "349",
-            filing_year=filing_year,
-            period=period,
-            on=as_of,
-        )
-        if not m349_revision.period_selector.declared_periods:
-            raise ValueError("selected M349 registry revision must declare detail-row scope")
-        periods = frozenset(str(candidate) for candidate in m349_revision.period_selector.declared_periods)
+        periods = _m349_detail_periods(authority, effective_date=as_of, filing_year=filing_year, period=period)
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="detail-m349-m210-catalogues",
@@ -120,6 +110,26 @@ def _registry_detail_catalogue(
         raise ValueError("detail M349/M210 catalogue must resolve as a mapping fact")
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
     return declarations, periods
+
+
+def _m349_detail_periods(
+    authority: GovernedFactSource,
+    *,
+    effective_date: date,
+    filing_year: int,
+    period: str,
+) -> frozenset[str]:
+    if not isinstance(authority, PinnedAuthorityOperation):
+        raise ValueError("M349 registry selection requires a generation-pinned authority operation")
+    m349_revision = authority.revision_for_context(
+        "349",
+        filing_year=filing_year,
+        period=period,
+        on=effective_date,
+    )
+    if not m349_revision.period_selector.declared_periods:
+        raise ValueError("selected M349 registry revision must declare detail-row scope")
+    return frozenset(str(candidate) for candidate in m349_revision.period_selector.declared_periods)
 
 
 def _required_detail_declaration(declarations: Mapping[str, str], key: str) -> str:
@@ -617,37 +627,167 @@ def validate_m349_country_prefix_context(
         raise ValueError(f"M349 operation key is not declared by the selected registry: {clave_operacion!r}")
     country = country_code.strip().upper()
     rectified_period_code = _normalise_m349_period(rectified_period) if rectified_period is not None else None
-
-    def refuse(reason: str) -> None:
-        raise Modelo349CountryPrefixContextError(
-            country_code=country,
-            clave_operacion=clave,
+    goods_only_prefix = _required_detail_declaration(declarations, "m349.goods_only_prefix")
+    if country == goods_only_prefix:
+        _validate_m349_goods_only_prefix(
+            country=country,
+            clave=clave,
             filing_year=filing_year,
             period=normalized_period,
-            reason=reason,
+            is_rectification=is_rectification,
+            rectified_year=rectified_year,
+            transition_year=transition_year,
+            service_keys=service_keys,
         )
-
-    if country == _required_detail_declaration(declarations, "m349.goods_only_prefix"):
-        if clave in service_keys:
-            refuse("Northern Ireland prefix XI is not accepted for service keys")
-        if is_rectification and rectified_year is not None and rectified_year < transition_year:
-            refuse("pre-transition rectifications use GB, not XI")
-        if not is_rectification and filing_year < transition_year:
-            refuse("XI applies only from the transition year onward")
         return
     if country != _required_detail_declaration(declarations, "m349.transition.prefix"):
         return
+    _validate_m349_transition_prefix(
+        country=country,
+        clave=clave,
+        filing_year=filing_year,
+        period=normalized_period,
+        is_rectification=is_rectification,
+        rectified_year=rectified_year,
+        rectified_period_code=rectified_period_code,
+        transition_year=transition_year,
+        first_periods=first_periods,
+        service_keys=service_keys,
+    )
+
+
+def _refuse_m349_country_prefix_context(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period: str,
+    reason: str,
+) -> NoReturn:
+    raise Modelo349CountryPrefixContextError(
+        country_code=country,
+        clave_operacion=clave,
+        filing_year=filing_year,
+        period=period,
+        reason=reason,
+    )
+
+
+def _validate_m349_goods_only_prefix(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period: str,
+    is_rectification: bool,
+    rectified_year: int | None,
+    transition_year: int,
+    service_keys: frozenset[str],
+) -> None:
+    if clave in service_keys:
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="Northern Ireland prefix XI is not accepted for service keys",
+        )
+    if is_rectification and rectified_year is not None and rectified_year < transition_year:
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="pre-transition rectifications use GB, not XI",
+        )
+    if not is_rectification and filing_year < transition_year:
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="XI applies only from the transition year onward",
+        )
+
+
+def _validate_m349_transition_prefix(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period: str,
+    is_rectification: bool,
+    rectified_year: int | None,
+    rectified_period_code: str | None,
+    transition_year: int,
+    first_periods: frozenset[str],
+    service_keys: frozenset[str],
+) -> None:
     if is_rectification:
-        if rectified_year is not None and rectified_year < transition_year:
+        if _m349_rectification_uses_legacy_prefix(rectified_year, transition_year):
             return
-        if rectified_year == transition_year and rectified_period_code in first_periods and clave not in service_keys:
+        if _m349_rectification_uses_transition_prefix(
+            rectified_year,
+            rectified_period_code,
+            transition_year=transition_year,
+            first_periods=first_periods,
+            clave=clave,
+            service_keys=service_keys,
+        ):
             return
-        refuse("GB is limited to pre-transition rectifications and the transition year's first periods")
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="GB is limited to pre-transition rectifications and the transition year's first periods",
+        )
     if filing_year < transition_year:
         return
-    if filing_year == transition_year and normalized_period in first_periods and clave not in service_keys:
+    if _m349_ordinary_operation_uses_transition_prefix(
+        filing_year,
+        period,
+        transition_year=transition_year,
+        first_periods=first_periods,
+        clave=clave,
+        service_keys=service_keys,
+    ):
         return
-    refuse("GB is not accepted for post-transition ordinary operations")
+    _refuse_m349_country_prefix_context(
+        country=country,
+        clave=clave,
+        filing_year=filing_year,
+        period=period,
+        reason="GB is not accepted for post-transition ordinary operations",
+    )
+
+
+def _m349_rectification_uses_legacy_prefix(rectified_year: int | None, transition_year: int) -> bool:
+    return rectified_year is not None and rectified_year < transition_year
+
+
+def _m349_rectification_uses_transition_prefix(
+    rectified_year: int | None,
+    rectified_period: str | None,
+    *,
+    transition_year: int,
+    first_periods: frozenset[str],
+    clave: str,
+    service_keys: frozenset[str],
+) -> bool:
+    return rectified_year == transition_year and rectified_period in first_periods and clave not in service_keys
+
+
+def _m349_ordinary_operation_uses_transition_prefix(
+    filing_year: int,
+    period: str,
+    *,
+    transition_year: int,
+    first_periods: frozenset[str],
+    clave: str,
+    service_keys: frozenset[str],
+) -> bool:
+    return filing_year == transition_year and period in first_periods and clave not in service_keys
 
 
 def _normalise_m349_period(period: str | None) -> str:
@@ -897,19 +1037,41 @@ def _validate_agrupacion_payer_grouping(
 ) -> None:
     declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
     _required_detail_declaration(declarations, "m210.grouping_period")
-    payer_mode_declarations = {
+    payer_mode_declarations = _payer_mode_declarations(declarations)
+    if _validate_declared_agrupacion_payer_mode(rows, code, payer_mode_declarations):
+        return
+    _require_single_agrupacion_payer(rows, code, payer_mode_declarations)
+
+
+def _payer_mode_declarations(declarations: Mapping[str, str]) -> dict[str, str]:
+    return {
         key.removeprefix("m210.code").removesuffix(".payer_mode"): value
         for key, value in declarations.items()
         if key.startswith("m210.code") and key.endswith(".payer_mode")
     }
+
+
+def _validate_declared_agrupacion_payer_mode(
+    rows: Sequence[Modelo210AgrupacionRentaRow],
+    code: str,
+    payer_mode_declarations: Mapping[str, str],
+) -> bool:
     required_mode = payer_mode_declarations.get(code)
-    if required_mode is not None:
-        if any(row.pagador_mode.value != required_mode for row in rows):
-            raise Modelo210AgrupacionRentaRowsError(
-                reason="payer_mode_not_declared",
-                detail="M210 payer mode does not match the selected registry declaration",
-            )
-        return
+    if required_mode is None:
+        return False
+    if any(row.pagador_mode.value != required_mode for row in rows):
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="payer_mode_not_declared",
+            detail="M210 payer mode does not match the selected registry declaration",
+        )
+    return True
+
+
+def _require_single_agrupacion_payer(
+    rows: Sequence[Modelo210AgrupacionRentaRow],
+    code: str,
+    payer_mode_declarations: Mapping[str, str],
+) -> None:
     if any(row.pagador_mode.value in payer_mode_declarations.values() for row in rows):
         raise Modelo210AgrupacionRentaRowsError(
             reason="payer_mode_not_declared",

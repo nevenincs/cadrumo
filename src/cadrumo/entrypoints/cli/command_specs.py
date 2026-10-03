@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from ._command_shared_contracts import DeferredTarget
 from ._root_command_specs import ROOT_COMMAND_SPECS
-from .command_spec import CommandSpecFamily, CommandSpecGraph, DeferredTarget
+from .command_graph import CommandSpecFamily, CommandSpecGraph
 
 
 def _family(mount_key: str, module: str, qualname: str) -> CommandSpecFamily:

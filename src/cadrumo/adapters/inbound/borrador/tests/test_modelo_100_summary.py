@@ -188,6 +188,18 @@ class TestArtefactKindDetection:
         assert filing.artefact_kind is ArtefactKind.DECLARACION
         assert filing.csv == "MNOP4321QRST8765"
 
+    @pytest.mark.parametrize("csv", ["ABCD1234", "ABCD1234EFGH5678IJKL9012M", "ABCD1234EFGH5678IJKL9012MNOP3456"])
+    def test_declaracion_csv_round_trips_across_the_canonical_width(self, tmp_path: Path, csv: str) -> None:
+        filing = parse_borrador(_generate_pdf(tmp_path, artefact_kind="DECLARACION", csv=csv))
+        assert filing.csv == csv
+
+    @pytest.mark.parametrize("csv", ["ABCD123", "ABCD1234EFGH5678IJKL9012MNOP34567"])
+    def test_declaracion_csv_outside_the_canonical_width_is_refused_not_truncated(
+        self, tmp_path: Path, csv: str
+    ) -> None:
+        with pytest.raises(BorradorParseError, match="CSV stamp"):
+            parse_borrador(_generate_pdf(tmp_path, artefact_kind="DECLARACION", csv=csv))
+
     def test_predeclaracion_with_csv_like_footer_does_not_surface_filed_csv(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(
             tmp_path,

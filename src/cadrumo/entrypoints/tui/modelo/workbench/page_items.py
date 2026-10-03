@@ -33,6 +33,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
+    ModeloFormGridCell,
     ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormOrigin,
@@ -177,26 +178,36 @@ def records_attention(
     asked = not recorded and applies
     counts: dict[str, AttentionCounts] = {}
     for section in sections:
-        columns = {
-            casilla_id
-            for block in section.blocks
-            if isinstance(block, ModeloFormRepeatingBlock)
-            for casilla_id in block.column_casilla_ids
-            if casilla_id is not None
-        }
+        columns = _record_columns(section)
         if not columns:
             continue
-        total = AttentionCounts()
-        for issue in form.issues:
-            if issue.finding.casilla_id is None or str(issue.finding.casilla_id) not in columns:
-                continue
-            level = _RECORD_FINDING_LEVELS.get(issue.attention)
-            if level is None or (level != "check" and not asked):
-                continue
-            total = total + AttentionCounts(**{level: 1, "pending": int(level != "check")})
+        total = _section_record_attention(form, columns, asked=asked)
         if total != AttentionCounts():
             counts[section.id] = total
     return MappingProxyType(counts)
+
+
+def _record_columns(section: ModeloFormSection) -> set[str]:
+    return {
+        casilla_id
+        for block in section.blocks
+        if isinstance(block, ModeloFormRepeatingBlock)
+        for casilla_id in block.column_casilla_ids
+        if casilla_id is not None
+    }
+
+
+def _section_record_attention(form: ModeloWorkForm, columns: set[str], *, asked: bool) -> AttentionCounts:
+    total = AttentionCounts()
+    for issue in form.issues:
+        casilla_id = issue.finding.casilla_id
+        if casilla_id is None or str(casilla_id) not in columns:
+            continue
+        level = _RECORD_FINDING_LEVELS.get(issue.attention)
+        if level is None or (level != "check" and not asked):
+            continue
+        total = total + AttentionCounts(**{level: 1, "pending": int(level != "check")})
+    return total
 
 
 def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
@@ -312,6 +323,74 @@ def _column_headings(columns: tuple[ModeloFormGridColumn, ...], rows: tuple[Mode
     return tuple(headings)
 
 
+def _grid_cell_item(
+    heading: str,
+    cell: ModeloFormGridCell,
+    staged: Mapping[AddressKey, StagedDisplay],
+    mode: WorkbenchFilter,
+    page: WorkbenchPage,
+    *,
+    row_label: str,
+    rate_box: ModeloFormField | None,
+    base_empty: bool | None,
+) -> tuple[CasillaListItem | None, GridSlot]:
+    field = cell.field
+    if field is not None and _shown(field, staged, mode, page):
+        entry = _entry(
+            field,
+            staged,
+            indent=2,
+            label=heading,
+            row_label=row_label,
+            rate_of_row=field is rate_box,
+            row_base_empty=base_empty,
+            page=page,
+        )
+        return entry, GridSlot(key=address_key(field.address))
+    if field is None and cell.literal is not None and mode is WorkbenchFilter.ALL:
+        return CasillaListNote(f"{heading}: {cell.literal}", indent=2), GridSlot(literal=cell.literal)
+    return None, GridSlot()
+
+
+def _grid_row_items(
+    row: ModeloFormGridRow,
+    headings: tuple[str, ...],
+    shape: GridShape,
+    staged: Mapping[AddressKey, StagedDisplay],
+    mode: WorkbenchFilter,
+    page: WorkbenchPage,
+) -> tuple[CasillaListHeading | None, list[CasillaListItem]]:
+    rate_box = _rate_box(row)
+    base_empty = _base_empty(row, rate_box)
+    row_items: list[CasillaListItem] = []
+    slots: list[GridSlot] = []
+    for heading, cell in zip(headings, row.cells, strict=True):
+        item, slot = _grid_cell_item(
+            heading,
+            cell,
+            staged,
+            mode,
+            page,
+            row_label=row.heading.text,
+            rate_box=rate_box,
+            base_empty=base_empty,
+        )
+        if item is not None:
+            row_items.append(item)
+        slots.append(slot)
+    if not row_items:
+        return None, []
+    place = GridRowPlace(
+        grid=shape,
+        heading=row.heading.text,
+        slots=tuple(slots),
+        span=len(row_items),
+        rate=None if rate_box is None else shown_rate(rate_box),
+        boxes=tuple(cell.field.box for cell in row.cells if cell.field is not None and cell.field.box),
+    )
+    return CasillaListHeading(row.heading.text, level=1, row=place), row_items
+
+
 def _grid_items(
     block: ModeloFormGridBlock,
     staged: Mapping[AddressKey, StagedDisplay],
@@ -328,42 +407,17 @@ def _grid_items(
     shape = GridShape(id=block.id, headings=headings)
     items: list[CasillaListItem] = []
     for row in block.rows:
-        row_items: list[CasillaListItem] = []
-        slots: list[GridSlot] = []
-        rate_box = _rate_box(row)
-        base_empty = _base_empty(row, rate_box)
-        for heading, cell in zip(headings, row.cells, strict=True):
-            field = cell.field
-            if field is not None and _shown(field, staged, mode, page):
-                row_items.append(
-                    _entry(
-                        field,
-                        staged,
-                        indent=2,
-                        label=heading,
-                        row_label=row.heading.text,
-                        rate_of_row=field is rate_box,
-                        row_base_empty=base_empty,
-                        page=page,
-                    )
-                )
-                slots.append(GridSlot(key=address_key(field.address)))
-            elif field is None and cell.literal is not None and mode is WorkbenchFilter.ALL:
-                row_items.append(CasillaListNote(f"{heading}: {cell.literal}", indent=2))
-                slots.append(GridSlot(literal=cell.literal))
-            else:
-                slots.append(GridSlot())
-        if not row_items:
-            continue
-        place = GridRowPlace(
-            grid=shape,
-            heading=row.heading.text,
-            slots=tuple(slots),
-            span=len(row_items),
-            rate=None if rate_box is None else shown_rate(rate_box),
-            boxes=tuple(cell.field.box for cell in row.cells if cell.field is not None and cell.field.box),
+        row_heading, row_items = _grid_row_items(
+            row,
+            headings,
+            shape,
+            staged,
+            mode,
+            page,
         )
-        items.append(CasillaListHeading(row.heading.text, level=1, row=place))
+        if row_heading is None:
+            continue
+        items.append(row_heading)
         items.extend(row_items)
     return items
 

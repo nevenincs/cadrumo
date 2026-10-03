@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, Protocol, get_args
+from typing import Final, Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -37,6 +37,7 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.models import Transaction
+from ..destination_alias import closed_destination_ids
 
 type LedgerDestinationIdV1 = Literal[
     "ledger.overview",
@@ -47,15 +48,6 @@ type LedgerDestinationIdV1 = Literal[
     "ledger.evidence",
     "ledger.reconciliation",
 ]
-
-
-def declared_ledger_destination_ids() -> frozenset[str]:
-    """Read the internal closed destination set from its defining type alias.
-
-    Defined beside the alias it reads rather than beside a consumer, so the
-    set and its declaration cannot drift apart.
-    """
-    return frozenset(item for item in get_args(LedgerDestinationIdV1.__value__) if isinstance(item, str))
 
 
 #: The one pairing of workspace area to internal destination.
@@ -95,7 +87,7 @@ def _require_total_destination_pairing() -> None:
     if tuple(LEDGER_DESTINATION_BY_AREA) != tuple(LedgerWorkspaceArea):
         raise ValueError("Ledger destinations must cover every workspace area in canonical order")
     destinations = tuple(LEDGER_DESTINATION_BY_AREA.values())
-    if frozenset(destinations) != declared_ledger_destination_ids() or len(frozenset(destinations)) != len(
+    if frozenset(destinations) != closed_destination_ids(LedgerDestinationIdV1) or len(frozenset(destinations)) != len(
         destinations
     ):
         raise ValueError("Ledger destinations must cover the internal catalogue exactly once")
@@ -599,5 +591,4 @@ __all__ = [
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",
-    "declared_ledger_destination_ids",
 ]

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
@@ -75,7 +76,9 @@ def test_extraction_outside_a_facts_scope_names_the_missing_authority() -> None:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
 
-    with pytest.raises(RegistryValidationError) as refusal:
+    with pytest.raises(
+        InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"
+    ) as refusal:
         extract_m303_annual_orden_source(
             ejercicio=2022,
             source=source,
@@ -83,7 +86,6 @@ def test_extraction_outside_a_facts_scope_names_the_missing_authority() -> None:
         )
 
     message = str(refusal.value)
-    assert "requires an explicit authority operation or scope" in message
     assert "without a matching facts projection" not in message
 
 

@@ -95,6 +95,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -209,13 +210,18 @@ class WorkDeadlinePosturePayload(OutputSchema):
     """Filing-deadline (plazo voluntario) state for the work unit.
 
     Structured result data the calculate verb exists to surface: the
-    voluntary-filing close date and in-time / overdue posture. When overdue,
-    it can carry an explicitly unassessed conditional Article 27 rate preview.
-    It never asserts surcharge or interest liability. Distinct from the
-    non-blocking advisory prose, which rides the envelope ``notices`` channel.
+    effective voluntary-filing close date (after the business-day shift), the
+    nominal close date the deadline window declares, which holidays the
+    effective date accounts for, and the in-time / overdue posture counted
+    against the effective date. When overdue, it can carry an explicitly
+    unassessed conditional Article 27 rate preview. It never asserts surcharge
+    or interest liability. Distinct from the non-blocking advisory prose, which
+    rides the envelope ``notices`` channel.
     """
 
     closes_on: date
+    nominal_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
     days_remaining: int | None = None
     days_overdue: int | None = None
     conditional_recargo_preview: WorkConditionalRecargoPreviewPayload | None = None
@@ -226,6 +232,7 @@ class WorkDeadlinePosturePayload(OutputSchema):
         """Reuse the application deadline state invariant at the JSON boundary."""
         validate_modelo_work_deadline_posture(
             closes_on=self.closes_on,
+            nominal_closes_on=self.nominal_closes_on,
             days_remaining=self.days_remaining,
             days_overdue=self.days_overdue,
         )

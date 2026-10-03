@@ -69,6 +69,7 @@ from .....application.modelo.work_form_models import (
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from ...components.app_access import TypedAppAccess
+from ...components.cell_text import ellipsize, wrap_words
 from ...components.theme import tokenised
 from .grid import (
     GRID_GAP,
@@ -83,7 +84,6 @@ from .grid import (
     measure_table,
     stacked_record_lines,
     wrap_label,
-    wrap_text,
 )
 from .keys import describe_bindings
 from .vocabulary import (
@@ -327,12 +327,8 @@ def _fit(text: str, width: int) -> str:
     """Pad or cut ``text`` to exactly ``width`` cells, marking a cut with an ellipsis."""
     if width <= 0:
         return ""
-    if cell_len(text) <= width:
-        return text + " " * (width - cell_len(text))
-    cut = text
-    while cell_len(cut) > width - 1:
-        cut = cut[:-1]
-    return cut + "…"
+    fitted = ellipsize(text, width)
+    return fitted + " " * (width - cell_len(fitted))
 
 
 def _right(text: str, width: int) -> str:
@@ -900,7 +896,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         )
 
     def _label_lines(self, entry: CasillaListEntry, columns: _Columns) -> tuple[str, ...]:
-        return wrap_text(self._label(entry), _label_width(entry, columns))
+        return wrap_words(self._label(entry), _label_width(entry, columns))
 
     def _note(self, index: int, entry: CasillaListEntry, columns: _Columns) -> str | None:
         """The optional line under a field: what a change replaces, a blocker, or where the description starts.
@@ -938,7 +934,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             return 0
         if isinstance(item, CasillaListHeading):
             if item.row is not None:
-                return len(wrap_text(self._stacked_label(item.row), width - _LEAD))
+                return len(wrap_words(self._stacked_label(item.row), width - _LEAD))
             return 1
         if isinstance(item, CasillaListRecords):
             return len(self._records.get(index, ()))
@@ -979,42 +975,58 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         stacked: set[int] = set()
         self._owner = list(range(len(self._items)))
         for grid, headings in self._grid_rows().items():
-            rows = [self._row_cells(heading) for heading in headings]
-            places = [item.row for heading in headings if isinstance(item := self._items[heading], CasillaListHeading)]
-            texts = tuple(
-                tuple(self._cell_text(index) for row in rows if (index := row[column]) is not None)
-                for column in range(len(grid.headings))
-            )
-            literals = tuple(
-                tuple(literal for place in places if place is not None and (literal := place.slots[column].literal))
-                for column in range(len(grid.headings))
-            )
-            labels = self._shown_labels(places)
-            geometry = measure_table(grid.headings, texts, literals, labels, width)
-            if geometry is None:
-                for heading in headings:
-                    stacked.update(self._owned(heading))
-                continue
-            for position, (heading, cells, place) in enumerate(zip(headings, rows, places, strict=True)):
-                for index in self._owned(heading):
-                    self._owner[index] = heading
-                for column, index in enumerate(cells):
-                    if index is not None:
-                        self._cell_of[index] = (heading, column)
-                entries = [
-                    entry
-                    for index in cells
-                    if index is not None and isinstance(entry := self._items[index], CasillaListEntry)
-                ]
-                self._tables[heading] = _TableRow(
-                    geometry=geometry,
-                    cells=cells,
-                    literals=() if place is None else tuple(slot.literal for slot in place.slots),
-                    labels=wrap_label(labels[position], geometry.label) if labels[position] else ("",),
-                    header=position == 0,
-                    level=_row_level(entries),
-                )
+            self._lay_out_grid(grid, headings, width, stacked)
         self._stacked = frozenset(stacked)
+
+    def _lay_out_grid(self, grid: GridShape, headings: list[int], width: int, stacked: set[int]) -> None:
+        rows = [self._row_cells(heading) for heading in headings]
+        places = [item.row for heading in headings if isinstance(item := self._items[heading], CasillaListHeading)]
+        texts = tuple(
+            tuple(self._cell_text(index) for row in rows if (index := row[column]) is not None)
+            for column in range(len(grid.headings))
+        )
+        literals = tuple(
+            tuple(literal for place in places if place is not None and (literal := place.slots[column].literal))
+            for column in range(len(grid.headings))
+        )
+        labels = self._shown_labels(places)
+        geometry = measure_table(grid.headings, texts, literals, labels, width)
+        if geometry is None:
+            for heading in headings:
+                stacked.update(self._owned(heading))
+            return
+        self._lay_out_grid_table(headings, rows, places, labels, geometry)
+
+    def _lay_out_grid_table(
+        self,
+        headings: list[int],
+        rows: list[tuple[int | None, ...]],
+        places: list[GridRowPlace | None],
+        labels: tuple[str, ...],
+        geometry: TableGeometry,
+    ) -> None:
+        for position, (heading, cells, place) in enumerate(zip(headings, rows, places, strict=True)):
+            self._own_table_cells(heading, cells)
+            entries = [
+                entry
+                for index in cells
+                if index is not None and isinstance(entry := self._items[index], CasillaListEntry)
+            ]
+            self._tables[heading] = _TableRow(
+                geometry=geometry,
+                cells=cells,
+                literals=() if place is None else tuple(slot.literal for slot in place.slots),
+                labels=wrap_label(labels[position], geometry.label) if labels[position] else ("",),
+                header=position == 0,
+                level=_row_level(entries),
+            )
+
+    def _own_table_cells(self, heading: int, cells: tuple[int | None, ...]) -> None:
+        for index in self._owned(heading):
+            self._owner[index] = heading
+        for column, index in enumerate(cells):
+            if index is not None:
+                self._cell_of[index] = (heading, column)
 
     def _shown_labels(self, places: list[GridRowPlace | None]) -> tuple[str, ...]:
         """Each row's label: its heading, with its rate when it has one, on every row it heads.
@@ -1155,7 +1167,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         if isinstance(item, CasillaListHeading):
             role = _heading_role(item)
             if item.row is not None:
-                lines = wrap_text(self._stacked_label(item.row), width - _LEAD)
+                lines = wrap_words(self._stacked_label(item.row), width - _LEAD)
                 return Text().append(_fit(" " * _LEAD + lines[sub_line], width), style=self._style(role))
             return Text().append(_fit(" " * (1 + 2 * item.level) + item.text, width), style=self._style(role))
         if isinstance(item, CasillaListNote):

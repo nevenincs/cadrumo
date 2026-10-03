@@ -32,18 +32,16 @@ from ...application.operator_surface.command_ports import (
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import DefaultKind, SchemaState
 from ._command_target import resolve_deferred_target
-from .command_spec import (
-    DefaultKind,
-    OptionSpec,
-    SchemaState,
-)
 
 if TYPE_CHECKING:
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
+    from ._command_parameter_contracts import ParameterSpec
     from ._command_policy import CommandExecutionPolicy
-    from .command_spec import CommandSpec, CommandSpecNode, ParameterSpec
+    from .command_spec import CommandSpec, CommandSpecNode
 
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:

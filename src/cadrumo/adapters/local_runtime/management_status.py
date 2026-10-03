@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import math
 import time
 from uuid import uuid4
 
 from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import require_finite_budget
 from ...application.runtime.management_status import RuntimeListenerState
 from ...application.runtime.transport import RuntimeStatusRequest
 from .framing import VerifiedRuntimeConnection
@@ -17,8 +17,7 @@ def probe_runtime_listener(
     endpoint: RuntimeEndpointConnector, *, expected: RuntimeClientHello, timeout: float = 3
 ) -> RuntimeListenerState:
     """Inspect an existing owner only; never call a launch or manager control door."""
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    require_finite_budget(timeout)
     if endpoint.storage_identity != expected.storage_identity:
         return RuntimeListenerState.REFUSED
     deadline = time.monotonic() + timeout

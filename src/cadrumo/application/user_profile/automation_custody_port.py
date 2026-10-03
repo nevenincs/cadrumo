@@ -12,6 +12,7 @@ from typing import Annotated, Protocol
 from pydantic import BaseModel, Field, SecretBytes
 
 from ...core.errors.hierarchy import CadrumoError
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import ApiKeyRecord, AutomationGrant, ProfileAccessBinding
@@ -22,7 +23,7 @@ class AutomationKeyVerifier(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     key: ApiKeyRecord
-    verifier: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")] = Field(repr=False)
+    verifier: Hex64Str = Field(repr=False)
 
 
 class AutomationGrantMaterial(BaseModel):

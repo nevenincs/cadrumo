@@ -57,6 +57,7 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
+from ....core.casilla_value_absence import AbsentCasillaReading
 from ....core.config import load_settings
 from ....core.decimal.coercion import coerce_decimal
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -408,7 +409,7 @@ def _compute_local(
             continue
         if casilla.input_kind == InputKind.INFORMATIONAL:
             continue
-        full_inputs[casilla.id] = inputs_by_id.get(casilla.id, Decimal("0"))
+        full_inputs[casilla.id] = AbsentCasillaReading.UNSUPPLIED_INPUT.read(inputs_by_id, casilla.id)
     binding_defaults = {binding.id: scenario.bindings.get(binding.id, Decimal("0")) for binding in revision.bindings}
     relation_defaults = {
         binding.id: scenario.relation_values.get(binding.id, Decimal("0"))

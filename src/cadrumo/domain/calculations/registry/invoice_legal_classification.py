@@ -5,14 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
-from ....core.time.clock import today_madrid
 from ...invoices.enums import InvoiceClass, InvoiceOperationDateRole
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    unique_mapping_legal_refs,
+)
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "invoice legal-classification catalogue"
@@ -122,64 +125,10 @@ class InvoiceLegalClassificationCatalogue:
         return token
 
 
-def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(
-            f"invoice legal-classification catalogue {key!r} must contain unique legal references",
-        )
-    return values
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError(
-                "invoice legal-classification catalogue entries must be string-to-string",
-            )
-        if entry.key in entries:
-            raise RegistryValidationError(
-                f"duplicate invoice legal-classification catalogue key {entry.key!r}",
-            )
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("invoice legal-classification catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError(
-        "invoice legal-classification catalogue requires an explicit authority operation or scope"
-    )
-
-
-def _selected_mapping_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_mapping_entries(effective_date)
-    return _resolve_entries(effective_date=effective_date, authority=selected)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def _pointer(
@@ -196,78 +145,10 @@ def _pointer(
 
 
 def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogue:
-    invoice_classes: list[InvoiceClassDefinition] = []
-    invoice_class_order = unique_mapping_tokens(entries, _INVOICE_CLASS_ORDER_KEY, subject=_ENTRY_SUBJECT)
-    for raw_token in invoice_class_order:
-        token = InvoiceClass.from_registry(raw_token)
-        prefix = f"{_INVOICE_CLASS_PREFIX}{raw_token}."
-        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
-            raise RegistryValidationError(f"invoice class {raw_token!r} declares a mismatched value")
-        invoice_classes.append(
-            InvoiceClassDefinition(
-                token=token,
-                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
-            ),
-        )
-    if len({item.token for item in invoice_classes}) != len(invoice_classes):
-        raise RegistryValidationError("invoice legal-classification catalogue contains duplicate invoice classes")
-
-    operation_date_roles: list[InvoiceOperationDateRoleDefinition] = []
-    operation_date_role_order = unique_mapping_tokens(entries, _OPERATION_DATE_ROLE_ORDER_KEY, subject=_ENTRY_SUBJECT)
-    for raw_token in operation_date_role_order:
-        token = InvoiceOperationDateRole.from_registry(raw_token)
-        prefix = f"{_OPERATION_DATE_ROLE_PREFIX}{raw_token}."
-        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
-            raise RegistryValidationError(f"invoice operation-date role {raw_token!r} declares a mismatched value")
-        operation_date_roles.append(
-            InvoiceOperationDateRoleDefinition(
-                token=token,
-                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
-            ),
-        )
-    if len({item.token for item in operation_date_roles}) != len(operation_date_roles):
-        raise RegistryValidationError(
-            "invoice legal-classification catalogue contains duplicate operation-date roles",
-        )
-
-    invoice_class_choices = tuple(item.token.value for item in invoice_classes)
-    operation_date_role_choices = tuple(item.token.value for item in operation_date_roles)
-    ordinaria = _pointer(
-        entries,
-        _INVOICE_CLASS_ORDINARIA_KEY,
-        invoice_class_choices,
-        label="invoice-class",
-    )
-    simplificada = _pointer(
-        entries,
-        _INVOICE_CLASS_SIMPLIFICADA_KEY,
-        invoice_class_choices,
-        label="invoice-class",
-    )
-    rectificativa = _pointer(
-        entries,
-        _INVOICE_CLASS_RECTIFICATIVA_KEY,
-        invoice_class_choices,
-        label="invoice-class",
-    )
-    if len({ordinaria, simplificada, rectificativa}) != 3:
-        raise RegistryValidationError("invoice legal-classification class pointers must be distinct")
-    operation_performed = _pointer(
-        entries,
-        _OPERATION_DATE_ROLE_PERFORMED_KEY,
-        operation_date_role_choices,
-        label="operation-date-role",
-    )
-    advance_payment_received = _pointer(
-        entries,
-        _OPERATION_DATE_ROLE_ADVANCE_KEY,
-        operation_date_role_choices,
-        label="operation-date-role",
-    )
-    if operation_performed == advance_payment_received:
-        raise RegistryValidationError("invoice legal-classification role pointers must be distinct")
+    invoice_classes = _invoice_class_definitions(entries)
+    operation_date_roles = _operation_date_role_definitions(entries)
+    ordinaria, simplificada, rectificativa = _invoice_class_semantic_tokens(entries, invoice_classes)
+    operation_performed, advance_payment_received = _operation_date_role_semantic_tokens(entries, operation_date_roles)
 
     return InvoiceLegalClassificationCatalogue(
         declarations=entries,
@@ -281,9 +162,71 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
     )
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> InvoiceLegalClassificationCatalogue:
-    return _catalogue(_bundled_mapping_entries(effective_date))
+def _invoice_class_definitions(entries: Mapping[str, str]) -> list[InvoiceClassDefinition]:
+    definitions: list[InvoiceClassDefinition] = []
+    invoice_class_order = unique_mapping_tokens(entries, _INVOICE_CLASS_ORDER_KEY, subject=_ENTRY_SUBJECT)
+    for raw_token in invoice_class_order:
+        token = InvoiceClass.from_registry(raw_token)
+        prefix = f"{_INVOICE_CLASS_PREFIX}{raw_token}."
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
+            raise RegistryValidationError(f"invoice class {raw_token!r} declares a mismatched value")
+        definitions.append(
+            InvoiceClassDefinition(
+                token=token,
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
+            ),
+        )
+    if len({item.token for item in definitions}) != len(definitions):
+        raise RegistryValidationError("invoice legal-classification catalogue contains duplicate invoice classes")
+    return definitions
+
+
+def _operation_date_role_definitions(entries: Mapping[str, str]) -> list[InvoiceOperationDateRoleDefinition]:
+    definitions: list[InvoiceOperationDateRoleDefinition] = []
+    role_order = unique_mapping_tokens(entries, _OPERATION_DATE_ROLE_ORDER_KEY, subject=_ENTRY_SUBJECT)
+    for raw_token in role_order:
+        token = InvoiceOperationDateRole.from_registry(raw_token)
+        prefix = f"{_OPERATION_DATE_ROLE_PREFIX}{raw_token}."
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
+            raise RegistryValidationError(f"invoice operation-date role {raw_token!r} declares a mismatched value")
+        definitions.append(
+            InvoiceOperationDateRoleDefinition(
+                token=token,
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
+            ),
+        )
+    if len({item.token for item in definitions}) != len(definitions):
+        raise RegistryValidationError(
+            "invoice legal-classification catalogue contains duplicate operation-date roles",
+        )
+    return definitions
+
+
+def _invoice_class_semantic_tokens(
+    entries: Mapping[str, str],
+    invoice_classes: list[InvoiceClassDefinition],
+) -> tuple[str, str, str]:
+    choices = tuple(item.token.value for item in invoice_classes)
+    ordinaria = _pointer(entries, _INVOICE_CLASS_ORDINARIA_KEY, choices, label="invoice-class")
+    simplificada = _pointer(entries, _INVOICE_CLASS_SIMPLIFICADA_KEY, choices, label="invoice-class")
+    rectificativa = _pointer(entries, _INVOICE_CLASS_RECTIFICATIVA_KEY, choices, label="invoice-class")
+    if len({ordinaria, simplificada, rectificativa}) != 3:
+        raise RegistryValidationError("invoice legal-classification class pointers must be distinct")
+    return ordinaria, simplificada, rectificativa
+
+
+def _operation_date_role_semantic_tokens(
+    entries: Mapping[str, str],
+    operation_date_roles: list[InvoiceOperationDateRoleDefinition],
+) -> tuple[str, str]:
+    choices = tuple(item.token.value for item in operation_date_roles)
+    performed = _pointer(entries, _OPERATION_DATE_ROLE_PERFORMED_KEY, choices, label="operation-date-role")
+    advance = _pointer(entries, _OPERATION_DATE_ROLE_ADVANCE_KEY, choices, label="operation-date-role")
+    if performed == advance:
+        raise RegistryValidationError("invoice legal-classification role pointers must be distinct")
+    return performed, advance
 
 
 def resolve_invoice_legal_classification_catalogue(
@@ -296,10 +239,7 @@ def resolve_invoice_legal_classification_catalogue(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    coordinate = effective_date or today_madrid()
-    if authority is None and governed_facts_in_scope() is None:
-        return _bundled_catalogue(coordinate)
-    return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))
+    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 def require_invoice_class(

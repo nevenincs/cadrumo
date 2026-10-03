@@ -21,7 +21,6 @@ deadline stay in view while the filer searches.
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -38,6 +37,7 @@ from textual.widgets.option_list import Option
 
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from .....core.text_fold import fold_for_matching
 from ...components.theme import tokenised
 from .casilla_list import AddressKey, CasillaListEntry, description_text, stated_value_text
 from .navigator import readable_text
@@ -57,12 +57,6 @@ class SearchMode(StrEnum):
 
     SEARCH = "search"
     GO_TO = "go_to"
-
-
-def folded(text: str) -> str:
-    """Text as search compares it: lower case, without accents."""
-    decomposed = unicodedata.normalize("NFKD", text.casefold())
-    return "".join(character for character in decomposed if not unicodedata.combining(character))
 
 
 def _box_number(box: str) -> str:
@@ -127,26 +121,45 @@ def search(entries: tuple[SearchEntry, ...], query: str) -> tuple[SearchEntry, .
     wanted = query.strip()
     if not wanted:
         return ()
-    tokens = folded(wanted).split()
+    tokens = fold_for_matching(wanted).split()
     number = _box_number(wanted) if _BOX_QUERY.fullmatch(wanted) else None
     digits_only = _DIGITS.fullmatch(wanted) is not None
+    ranked = _ranked_entries(entries, wanted, tokens, number, digits_only)
+    return tuple(entry for _, _, entry in sorted(ranked, key=lambda hit: (hit[0], hit[1])))
+
+
+def _ranked_entries(
+    entries: tuple[SearchEntry, ...],
+    wanted: str,
+    tokens: list[str],
+    number: str | None,
+    digits_only: bool,
+) -> list[tuple[int, int, SearchEntry]]:
     ranked: list[tuple[int, int, SearchEntry]] = []
     for position, entry in enumerate(entries):
-        rank = None
-        if number is not None and entry.box is not None:
-            box = _box_number(entry.box)
-            if box == number:
-                rank = _EXACT
-            elif _starts_with(entry.box, wanted):
-                rank = _PREFIX
-        if rank is None and not digits_only:
-            haystack = folded(f"{entry.box or ''} {entry.label} {entry.description}")
-            if all(token in haystack for token in tokens):
-                rank = _WORDS
+        rank = _entry_rank(entry, wanted, tokens, number, digits_only)
         if rank is not None:
             ranked.append((rank, position, entry))
-    ranked.sort(key=lambda hit: (hit[0], hit[1]))
-    return tuple(entry for _, _, entry in ranked)
+    return ranked
+
+
+def _entry_rank(
+    entry: SearchEntry,
+    wanted: str,
+    tokens: list[str],
+    number: str | None,
+    digits_only: bool,
+) -> int | None:
+    if number is not None and entry.box is not None:
+        box = _box_number(entry.box)
+        if box == number:
+            return _EXACT
+        if _starts_with(entry.box, wanted):
+            return _PREFIX
+    if digits_only:
+        return None
+    haystack = fold_for_matching(f"{entry.box or ''} {entry.label} {entry.description}")
+    return _WORDS if all(token in haystack for token in tokens) else None
 
 
 def _starts_with(box: str, typed: str) -> bool:
@@ -318,7 +331,6 @@ __all__ = [
     "SearchMode",
     "WorkbenchSearchPanel",
     "find_box",
-    "folded",
     "search",
     "search_entries",
 ]

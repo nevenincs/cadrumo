@@ -45,9 +45,10 @@ from openpyxl import load_workbook
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
-    iva_ledger_selector,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
@@ -284,6 +285,6 @@ def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
         ("modelo-390-volumen-exportaciones-exentas-base", "modelo-303-casilla-60-exportaciones-base"),
     )
     for annual_id, quarterly_id in pairs:
-        annual_selector = iva_ledger_selector(annual[annual_id])
-        quarterly_selector = iva_ledger_selector(quarterly[quarterly_id])
+        annual_selector = provider_member(annual[annual_id], LedgerIvaProvider)
+        quarterly_selector = provider_member(quarterly[quarterly_id], LedgerIvaProvider)
         assert set(annual_selector.categories) == set(quarterly_selector.categories)

@@ -22,10 +22,10 @@ extra fields.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 from urllib.parse import SplitResult, urlsplit
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AfterValidator, BaseModel, Field, field_validator
 
 from ....core.config import Settings
 from ....core.errors.hierarchy import pydantic_validation_boundary
@@ -94,6 +94,14 @@ def _validate_google_oauth_endpoint(value: str, *, field_name: str, expected_hos
     return endpoint
 
 
+def _validate_token_uri(value: str) -> str:
+    return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
+
+
+OAuthTokenUri = Annotated[str, Field(min_length=1), AfterValidator(_validate_token_uri)]
+"""A Google OAuth token endpoint, refused unless it is the canonical HTTPS host."""
+
+
 class OAuthClient(BaseModel):
     """Operator-imported Cloud Console Desktop OAuth client metadata.
 
@@ -111,7 +119,7 @@ class OAuthClient(BaseModel):
     client_secret: str = Field(min_length=1)
     project_id: str = Field(min_length=1)
     auth_uri: str = Field(min_length=1)
-    token_uri: str = Field(min_length=1)
+    token_uri: OAuthTokenUri
     auth_provider_x509_cert_url: str = Field(min_length=1)
     redirect_uris: tuple[str, ...] = Field(default=())
 
@@ -120,12 +128,6 @@ class OAuthClient(BaseModel):
     @pydantic_validation_boundary
     def _validate_auth_uri(cls, value: str) -> str:
         return _validate_google_oauth_endpoint(value, field_name="auth_uri", expected_host="accounts.google.com")
-
-    @field_validator("token_uri")
-    @classmethod
-    @pydantic_validation_boundary
-    def _validate_token_uri(cls, value: str) -> str:
-        return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
 
     @field_validator("auth_provider_x509_cert_url")
     @classmethod
@@ -152,7 +154,7 @@ class OAuthToken(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     refresh_token: str = Field(min_length=1)
-    token_uri: str = Field(min_length=1)
+    token_uri: OAuthTokenUri
 
     @field_validator("refresh_token")
     @classmethod
@@ -161,12 +163,6 @@ class OAuthToken(BaseModel):
         if not value.strip():
             raise ValueError("refresh_token must contain a non-whitespace token")
         return value
-
-    @field_validator("token_uri")
-    @classmethod
-    @pydantic_validation_boundary
-    def _validate_token_uri(cls, value: str) -> str:
-        return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
 
 
 class OAuthMetadata(BaseModel):

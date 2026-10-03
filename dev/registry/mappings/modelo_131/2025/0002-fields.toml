@@ -1,0 +1,2051 @@
+schema_version = 1
+fragment_id = "fields"
+modelo = "131"
+design_epoch = "2025"
+source_ref = "aeat-dr-131-2025"
+source_sha256 = "df4c23a10d836c7d1b4ba16a7758e735c6ae113c5c6c01ff6c439692d0ad4935"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-open"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "<T"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-modelo"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "131"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-number"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "01000"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-end"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = ">"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-complementaria-indicator"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-declaration-type"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+producer_key = "filing.result_disposition"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-tax-id"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+producer_key = "taxpayer.tax_id"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-declarante-apellidos"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+producer_key = "taxpayer.surnames"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-declarante-nombre"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+producer_key = "taxpayer.given_name"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-devengo-ejercicio"
+kind = "draft"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+draft_attribute = "filing_year"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-devengo-periodo"
+kind = "draft"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+draft_attribute = "period_code"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.discapacidad-33"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.discapacidad-33"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-1-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-1-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-1-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-1-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-1-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-1-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-1-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-1-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-2-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-2-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-2-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-2-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-2-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-2-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-2-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-2-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-3-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-3-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-3-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-3-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-3-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-3-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-3-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-3-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-4-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-4-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-4-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-4-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-4-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-4-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-4-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-4-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-5-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-5-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-5-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-5-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-5-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-5-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.actividad-5-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.actividad-5-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-01"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "01"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-02"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "02"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.sin-datos-base-volumen"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.sin-datos-base-volumen"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.sin-datos-base-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.sin-datos-base-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.sin-datos-base-vivienda-base"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.sin-datos-base-vivienda-base"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.sin-datos-base-vivienda-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.sin-datos-base-vivienda-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.sin-datos-base-vivienda-limite"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.sin-datos-base-vivienda-limite"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-03"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "03"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-04"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "04"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-ingresos-ordinarias-generales"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "real-decreto-ley-13-2025:art-2", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-ingresos-ordinarias-generales"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-ingresos-prioritarias-generales"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "real-decreto-ley-13-2025:art-2", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-ingresos-prioritarias-generales"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-ingresos-generales-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-ingresos-generales-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla-la-palma"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla-la-palma"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-ingresos-territoriales-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-ingresos-territoriales-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-vivienda-base"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-vivienda-base"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-vivienda-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-vivienda-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.agraria-vivienda-limite"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.agraria-vivienda-limite"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-05"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "05"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-06"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "06"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-07"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "07"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-08"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "08"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.deduccion-art-110-tramo"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.deduccion-art-110-tramo"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.deduccion-art-110-cuantia"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.deduccion-art-110-cuantia"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-09"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "09"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-10"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "10"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-11"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "11"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.vivienda-derecho-deduccion"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.vivienda-derecho-deduccion"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.vivienda-deduccion-aplicada"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.vivienda-deduccion-aplicada"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-12"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "12"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-13"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "13"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 69
+source_cell = "A69"
+ordinal = "64"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-14"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "14"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 70
+source_cell = "A70"
+ordinal = "65"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-casilla-15"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+casilla_id = "15"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 71
+source_cell = "A71"
+ordinal = "66"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.declaracion-complementaria"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.declaracion-complementaria"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01.modelo-131.page1.justificante-anterior"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.page1.justificante-anterior"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01-reservado-706"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-01-reservado-807"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-page-close"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "</T13101000>"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 76
+source_cell = "A76"
+ordinal = "71"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-open"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "<T"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-modelo"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "131"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-page"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "DPA00"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-end"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = ">"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-complementaria-indicator"
+kind = "computed"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+computed_key = "complementaria_page_marker"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.epigrafe-iae"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.epigrafe-iae"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.indicador-auxiliar-actividad-iae"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.indicador-auxiliar-actividad-iae"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.participacion-comunidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.participacion-comunidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.dias-actividad-temporada"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.dias-actividad-temporada"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.ano-inicio-actividad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.ano-inicio-actividad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.deduccion-ceuta-melilla-la-palma"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.deduccion-ceuta-melilla-la-palma"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.local-unico"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.local-unico"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.vehiculos-afectos"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.vehiculos-afectos"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.tractocamion-sin-semirremolque"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.tractocamion-sin-semirremolque"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.tractocamion-unico-sin-semirremolque"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.tractocamion-unico-sin-semirremolque"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.carga-superior-1000kg"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.carga-superior-1000kg"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.municipio-actividad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.municipio-actividad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-37"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-38"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-41"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-42"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.porcentaje-superior"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.porcentaje-superior"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-asalariado-mayor-19"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-asalariado-mayor-19"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-asalariado-menor-19"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-asalariado-menor-19"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-asalariado-discapacidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-asalariado-discapacidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-asalariado-horas-convenio"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-asalariado-horas-convenio"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.resto-personal-asalariado-mayor-19"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.resto-personal-asalariado-mayor-19"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.resto-personal-asalariado-menor-19"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.resto-personal-asalariado-menor-19"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.resto-personal-asalariado-discapacidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.resto-personal-asalariado-discapacidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.resto-personal-asalariado-horas-convenio"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.resto-personal-asalariado-horas-convenio"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-no-asalariado-titular"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-no-asalariado-titular"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-no-asalariado-conyuge"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-no-asalariado-conyuge"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.personal-no-asalariado-hijos"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.personal-no-asalariado-hijos"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-1-capacidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-1-capacidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-1-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-1-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-2-capacidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-2-capacidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-2-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-2-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-3-capacidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-3-capacidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-3-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-3-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-4-capacidad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-4-capacidad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.mesas-4-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.mesas-4-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-1-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-1-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-1-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-1-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-2-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-2-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-2-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-2-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-3-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-3-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-3-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-3-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-4-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-4-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-4-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-4-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-5-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-5-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-5-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-5-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-6-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-6-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-6-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-6-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-7-unidades"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-7-unidades"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.modulo-7-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.modulo-7-rendimiento-neto"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.incentivos-empleo"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.incentivos-empleo"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.incentivos-inversion"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.incentivos-inversion"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.indice-corrector-especial"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.indice-corrector-especial"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.indice-corrector-pequena-dimension"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.indice-corrector-pequena-dimension"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.indice-corrector-temporada"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.indice-corrector-temporada"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.indice-corrector-exceso"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.indice-corrector-exceso"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.indice-corrector-nueva-actividad"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.indice-corrector-nueva-actividad"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-365"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-375"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 69
+source_cell = "A69"
+ordinal = "64"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa.modelo-131.dpa.dias-ejercicio-trimestre"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.dpa.dias-ejercicio-trimestre"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 70
+source_cell = "A70"
+ordinal = "65"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-387"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 71
+source_cell = "A71"
+ordinal = "66"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-388"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-reservado-398"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-dpa-close"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "</T131DPA00>"
+
+[entries.anchor]
+sheet = "DPA"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+record_identity = "DPA"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did-open"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "<T"
+
+[entries.anchor]
+sheet = "DID"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DID"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did-modelo"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "131"
+
+[entries.anchor]
+sheet = "DID"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DID"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did-page"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "DID00"
+
+[entries.anchor]
+sheet = "DID"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DID"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did-end"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = ">"
+
+[entries.anchor]
+sheet = "DID"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DID"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did.modelo-131.did.iban"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1347-2024:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+binding = "modelo-131.did.iban"
+
+[entries.anchor]
+sheet = "DID"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DID"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did-reservado-46"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+
+[entries.anchor]
+sheet = "DID"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DID"
+
+[[entries]]
+export_field_id = "modelo-131-2025-did-close"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2025"]
+literal = "</T131DID00>"
+
+[entries.anchor]
+sheet = "DID"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DID"

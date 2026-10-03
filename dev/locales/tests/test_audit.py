@@ -19,7 +19,9 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..errors import LocaleError
-from ..manager import LocaleManager, _flatten_leaf_values, locale_catalogue_source
+from ..locale_tree import _flatten_leaf_values
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

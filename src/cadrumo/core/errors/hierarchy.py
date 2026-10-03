@@ -14,7 +14,6 @@ registry-owned envelope models.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from enum import StrEnum
@@ -299,33 +298,6 @@ class CoreValidationError(CoreError):
     Pydantic validators translate this registered failure to ``ValueError``
     at their narrow protocol boundary.
     """
-
-
-class PublicErrorProjectionError(CadrumoError):
-    """Forward registered public failure metadata without a private exception.
-
-    Supervised operations expose a code and an opaque correlation reference.
-    This transport preserves that code's category, retryability and runbook
-    through the common error envelope without recreating executor context.
-    """
-
-    def __init__(self, code: str, *, diagnostic_ref: str | None = None) -> None:
-        """Accept a catalogued code and an optional opaque diagnostic hash."""
-        from .error_codes import get_registered_error_code_by_code
-
-        metadata = get_registered_error_code_by_code(code)
-        if diagnostic_ref is not None and re.fullmatch(r"sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})", diagnostic_ref) is None:
-            raise InternalInvariantError("public error projection requires an opaque diagnostic reference")
-        self._public_error_code = metadata.code
-        super().__init__(
-            translated_message=metadata.message_key,
-            context={"error_code": metadata.code, "diagnostic_ref": diagnostic_ref or ""},
-        )
-
-    @property
-    def public_error_code(self) -> str:
-        """The catalogued code whose metadata the common renderer must retain."""
-        return self._public_error_code
 
 
 class ProfileAnswerTypeError(CoreValidationError):

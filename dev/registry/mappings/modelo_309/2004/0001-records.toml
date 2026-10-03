@@ -1,0 +1,1101 @@
+schema_version = 1
+fragment_id = 'records'
+modelo = '309'
+design_epoch = '2004'
+source_ref = 'aeat-dr-309-2004'
+source_sha256 = '7a855ce41e9b2363a5275b7e88a9587616cfb13db2c2e541c2665ece1815e7b6'
+
+[[records]]
+sheet = 'PDF record design'
+record_identity = 'PDF record design'
+export_record_id = 'modelo-309-historical-record'
+record_type = 'historical_fixed_width'
+required = true
+
+[[entries]]
+export_field_id = 'modelo-309-historical-modelo'
+kind = 'literal'
+literal = '309'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 4
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-moneda'
+kind = 'literal'
+literal = 'E'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 5
+record_identity = 'PDF record design'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-tipo-declaracion'
+kind = 'literal'
+literal = 'I'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 6
+record_identity = 'PDF record design'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-nif'
+kind = 'header'
+producer_key = 'presenter.tax_id'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 7
+record_identity = 'PDF record design'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-letras-etiqueta'
+kind = 'casilla'
+casilla_id = 'wire.letras-etiqueta'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 8
+record_identity = 'PDF record design'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-ejercicio'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 9
+record_identity = 'PDF record design'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-periodo'
+kind = 'casilla'
+casilla_id = 'decl.periodo'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 10
+record_identity = 'PDF record design'
+ordinal = '7'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-transmitente-nif'
+kind = 'casilla'
+casilla_id = 'decl.transmitente-nif'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 11
+record_identity = 'PDF record design'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-transmitente-apellidos'
+kind = 'casilla'
+casilla_id = 'wire.transmitente-apellidos-nombre-razon-social'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 12
+record_identity = 'PDF record design'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-transmitente-pais'
+kind = 'casilla'
+casilla_id = 'wire.transmitente-pais-texto'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 13
+record_identity = 'PDF record design'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-situacion-tributaria-agricola'
+kind = 'casilla'
+casilla_id = 'decl.situacion-tributaria-agricola'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 14
+record_identity = 'PDF record design'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-situacion-tributaria-recargo-equivalencia'
+kind = 'casilla'
+casilla_id = 'decl.situacion-tributaria-recargo-equivalencia'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 15
+record_identity = 'PDF record design'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-situacion-tributaria-sin-derecho-deduccion'
+kind = 'casilla'
+casilla_id = 'decl.situacion-tributaria-sin-derecho-deduccion'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 16
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-situacion-tributaria-persona-juridica-no-empresario'
+kind = 'casilla'
+casilla_id = 'decl.situacion-tributaria-persona-juridica-no-empresario'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 17
+record_identity = 'PDF record design'
+ordinal = '14'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-situacion-tributaria-persona-fisica-no-empresario'
+kind = 'casilla'
+casilla_id = 'decl.situacion-tributaria-persona-fisica-no-empresario'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 18
+record_identity = 'PDF record design'
+ordinal = '15'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-situacion-tributaria-otras'
+kind = 'casilla'
+casilla_id = 'decl.situacion-tributaria-otras'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 19
+record_identity = 'PDF record design'
+ordinal = '16'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-hecho-imponible-adquisicion-intracomunitaria'
+kind = 'casilla'
+casilla_id = 'decl.hecho-imponible-adquisicion-intracomunitaria'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 20
+record_identity = 'PDF record design'
+ordinal = '17'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-hecho-imponible-medios-transporte-nuevos'
+kind = 'casilla'
+casilla_id = 'decl.hecho-imponible-medios-transporte-nuevos'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 21
+record_identity = 'PDF record design'
+ordinal = '18'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-hecho-imponible-inversion-sujeto-pasivo'
+kind = 'casilla'
+casilla_id = 'decl.hecho-imponible-inversion-sujeto-pasivo'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 22
+record_identity = 'PDF record design'
+ordinal = '19'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-hecho-imponible-entrega-inversion-inmobiliaria'
+kind = 'casilla'
+casilla_id = 'decl.hecho-imponible-entrega-inversion-inmobiliaria'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 23
+record_identity = 'PDF record design'
+ordinal = '20'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-hecho-imponible-procedimiento-administrativo-judicial'
+kind = 'casilla'
+casilla_id = 'decl.hecho-imponible-procedimiento-administrativo-judicial'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 24
+record_identity = 'PDF record design'
+ordinal = '21'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-hecho-imponible-otros'
+kind = 'casilla'
+casilla_id = 'decl.hecho-imponible-otros'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 25
+record_identity = 'PDF record design'
+ordinal = '22'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-vehiculo-marca'
+kind = 'casilla'
+casilla_id = 'decl.vehiculo-marca'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 26
+record_identity = 'PDF record design'
+ordinal = '23'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-vehiculo-tipo'
+kind = 'casilla'
+casilla_id = 'decl.vehiculo-tipo'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 27
+record_identity = 'PDF record design'
+ordinal = '24'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-vehiculo-modelo'
+kind = 'casilla'
+casilla_id = 'decl.vehiculo-modelo'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 28
+record_identity = 'PDF record design'
+ordinal = '25'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-vehiculo-bastidor'
+kind = 'casilla'
+casilla_id = 'decl.vehiculo-bastidor'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 29
+record_identity = 'PDF record design'
+ordinal = '26'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-vehiculo-clasificacion'
+kind = 'casilla'
+casilla_id = 'decl.vehiculo-clasificacion'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 30
+record_identity = 'PDF record design'
+ordinal = '27'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-embarcacion-fabricante'
+kind = 'casilla'
+casilla_id = 'decl.embarcacion-fabricante'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 31
+record_identity = 'PDF record design'
+ordinal = '28'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-embarcacion-tipo'
+kind = 'casilla'
+casilla_id = 'decl.embarcacion-tipo'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 32
+record_identity = 'PDF record design'
+ordinal = '29'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-embarcacion-identificacion'
+kind = 'casilla'
+casilla_id = 'decl.embarcacion-identificacion'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 33
+record_identity = 'PDF record design'
+ordinal = '30'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-embarcacion-eslora'
+kind = 'casilla'
+casilla_id = 'decl.embarcacion-eslora'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 34
+record_identity = 'PDF record design'
+ordinal = '31'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-aeronave-fabricante'
+kind = 'casilla'
+casilla_id = 'decl.aeronave-fabricante'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 35
+record_identity = 'PDF record design'
+ordinal = '32'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-aeronave-marca'
+kind = 'casilla'
+casilla_id = 'decl.aeronave-marca'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 36
+record_identity = 'PDF record design'
+ordinal = '33'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-aeronave-serie'
+kind = 'casilla'
+casilla_id = 'decl.aeronave-serie'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 37
+record_identity = 'PDF record design'
+ordinal = '34'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-aeronave-ano'
+kind = 'casilla'
+casilla_id = 'decl.aeronave-ano'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 38
+record_identity = 'PDF record design'
+ordinal = '35'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-aeronave-peso'
+kind = 'casilla'
+casilla_id = 'decl.aeronave-peso'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 39
+record_identity = 'PDF record design'
+ordinal = '36'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-base-01'
+kind = 'casilla'
+casilla_id = 'decl.rg-base-01'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 40
+record_identity = 'PDF record design'
+ordinal = '37'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-tipo-02'
+kind = 'casilla'
+casilla_id = 'decl.rg-tipo-02'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 41
+record_identity = 'PDF record design'
+ordinal = '38'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-cuota-03'
+kind = 'casilla'
+casilla_id = 'decl.rg-cuota-03'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 42
+record_identity = 'PDF record design'
+ordinal = '39'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-base-04'
+kind = 'casilla'
+casilla_id = 'decl.rg-base-04'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 43
+record_identity = 'PDF record design'
+ordinal = '40'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-tipo-05'
+kind = 'casilla'
+casilla_id = 'decl.rg-tipo-05'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 44
+record_identity = 'PDF record design'
+ordinal = '41'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-cuota-06'
+kind = 'casilla'
+casilla_id = 'decl.rg-cuota-06'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 45
+record_identity = 'PDF record design'
+ordinal = '42'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-base-07'
+kind = 'casilla'
+casilla_id = 'decl.rg-base-07'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 46
+record_identity = 'PDF record design'
+ordinal = '43'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-tipo-08'
+kind = 'casilla'
+casilla_id = 'decl.rg-tipo-08'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 47
+record_identity = 'PDF record design'
+ordinal = '44'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-rg-cuota-09'
+kind = 'casilla'
+casilla_id = 'decl.rg-cuota-09'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 48
+record_identity = 'PDF record design'
+ordinal = '45'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-base-10'
+kind = 'casilla'
+casilla_id = 'decl.re-base-10'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 49
+record_identity = 'PDF record design'
+ordinal = '46'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-tipo-11'
+kind = 'casilla'
+casilla_id = 'decl.re-tipo-11'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 50
+record_identity = 'PDF record design'
+ordinal = '47'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-cuota-12'
+kind = 'casilla'
+casilla_id = 'decl.re-cuota-12'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 51
+record_identity = 'PDF record design'
+ordinal = '48'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-base-13'
+kind = 'casilla'
+casilla_id = 'decl.re-base-13'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 52
+record_identity = 'PDF record design'
+ordinal = '49'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-tipo-14'
+kind = 'casilla'
+casilla_id = 'decl.re-tipo-14'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 53
+record_identity = 'PDF record design'
+ordinal = '50'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-cuota-15'
+kind = 'casilla'
+casilla_id = 'decl.re-cuota-15'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 54
+record_identity = 'PDF record design'
+ordinal = '51'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-base-16'
+kind = 'casilla'
+casilla_id = 'decl.re-base-16'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 55
+record_identity = 'PDF record design'
+ordinal = '52'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-tipo-17'
+kind = 'casilla'
+casilla_id = 'decl.re-tipo-17'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 56
+record_identity = 'PDF record design'
+ordinal = '53'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-cuota-18'
+kind = 'casilla'
+casilla_id = 'decl.re-cuota-18'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 57
+record_identity = 'PDF record design'
+ordinal = '54'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-base-19'
+kind = 'casilla'
+casilla_id = 'decl.re-base-19'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 58
+record_identity = 'PDF record design'
+ordinal = '55'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-tipo-20'
+kind = 'casilla'
+casilla_id = 'decl.re-tipo-20'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 59
+record_identity = 'PDF record design'
+ordinal = '56'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-re-cuota-21'
+kind = 'casilla'
+casilla_id = 'decl.re-cuota-21'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 60
+record_identity = 'PDF record design'
+ordinal = '57'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-cuota-devengada-22'
+kind = 'casilla'
+casilla_id = 'decl.cuota-devengada-22'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 61
+record_identity = 'PDF record design'
+ordinal = '58'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-a-deducir-23'
+kind = 'casilla'
+casilla_id = 'decl.a-deducir-23'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 62
+record_identity = 'PDF record design'
+ordinal = '59'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-resultado-24'
+kind = 'casilla'
+casilla_id = 'decl.resultado-24'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 63
+record_identity = 'PDF record design'
+ordinal = '60'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-justificante-anterior'
+kind = 'casilla'
+casilla_id = 'decl.justificante-anterior'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 64
+record_identity = 'PDF record design'
+ordinal = '61'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-contacto'
+kind = 'header'
+producer_key = 'contact_person.full_name'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 65
+record_identity = 'PDF record design'
+ordinal = '62'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-telefono'
+kind = 'header'
+producer_key = 'contact_person.phone'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 66
+record_identity = 'PDF record design'
+ordinal = '63'
+
+[[entries]]
+export_field_id = 'modelo-309-historical-observaciones'
+kind = 'casilla'
+casilla_id = 'wire.observaciones'
+legal_refs = [
+    'ley-37-1992:art-161',
+    'orden-hac-3625-2003:apartado-1',
+    'orden-hac-3625-2003:apartado-3',
+]
+source_refs = ['aeat-dr-309-2004']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 67
+record_identity = 'PDF record design'
+ordinal = '64'

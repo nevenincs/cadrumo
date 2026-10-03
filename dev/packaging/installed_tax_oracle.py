@@ -21,6 +21,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
 
+from dev.product_environment import clean_product_env
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
@@ -179,9 +181,7 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     """Build an isolated product environment without inherited Cadrumo state."""
     resolved_root = storage_root.resolve()
     resolved_root.mkdir(parents=True, exist_ok=True)
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-    environment.pop("PYTHONHOME", None)
-    environment.pop("PYTHONPATH", None)
+    environment = clean_product_env()
     environment["PATH"] = path_without_product_executables(environment.get("PATH", ""))
     environment.update(
         {
@@ -429,18 +429,7 @@ def create_installed_profile(
     )
 
 
-def assert_grounded_observations(
-    observations_result: dict[str, Any],
-    *,
-    calculation_revision_id: str,
-    work_unit_id: str,
-) -> dict[str, Any]:
-    """Validate the persisted public observations against the legal oracle."""
-    if observations_result.get("calculation_revision_id") != calculation_revision_id:
-        raise InstalledTaxOracleError("persisted observations resolve a different calculation revision")
-    if observations_result.get("work_unit_id") != work_unit_id:
-        raise InstalledTaxOracleError("persisted observations resolve a different work unit")
-    observations = observations_result.get("observations")
+def _grounded_observation_target(observations: Any) -> dict[str, Any]:
     if not isinstance(observations, list) or not observations:
         raise InstalledTaxOracleError("persisted calculation has no observations")
     ungrounded = [
@@ -457,7 +446,21 @@ def assert_grounded_observations(
         raise InstalledTaxOracleError(
             f"expected one {TARGET_CASILLA} observation, got {len(targets)}",
         )
-    target = targets[0]
+    return targets[0]
+
+
+def assert_grounded_observations(
+    observations_result: dict[str, Any],
+    *,
+    calculation_revision_id: str,
+    work_unit_id: str,
+) -> dict[str, Any]:
+    """Validate the persisted public observations against the legal oracle."""
+    if observations_result.get("calculation_revision_id") != calculation_revision_id:
+        raise InstalledTaxOracleError("persisted observations resolve a different calculation revision")
+    if observations_result.get("work_unit_id") != work_unit_id:
+        raise InstalledTaxOracleError("persisted observations resolve a different work unit")
+    target = _grounded_observation_target(observations_result.get("observations"))
     if Decimal(str(target.get("value"))) != EXPECTED_VALUE:
         raise InstalledTaxOracleError(
             f"{TARGET_CASILLA} expected {EXPECTED_VALUE}, got {target.get('value')!r}",
@@ -475,6 +478,31 @@ def assert_grounded_observations(
             f"{TARGET_CASILLA} does not cite {EXPECTED_SOURCE_REF!r}",
         )
     return target
+
+
+def _assert_calculation_result(calculate_document: dict[str, Any]) -> tuple[str, set[str]]:
+    result = calculate_document["result"]
+    if result.get("saved") is not True:
+        raise InstalledTaxOracleError("calculation did not report saved=true")
+    calculation_revision_id = str(result.get("calculation_revision_id", ""))
+    if not _REVISION_ID.fullmatch(calculation_revision_id):
+        raise InstalledTaxOracleError(
+            f"calculation returned an invalid persisted revision id: {calculation_revision_id!r}",
+        )
+    casilla_values = result.get("casilla_values")
+    if not isinstance(casilla_values, dict) or Decimal(str(casilla_values.get(TARGET_CASILLA))) != EXPECTED_VALUE:
+        raise InstalledTaxOracleError(
+            f"calculation expected {TARGET_CASILLA}={EXPECTED_VALUE}, got {casilla_values!r}",
+        )
+    notices = calculate_document["notices"]
+    notice_codes = {str(notice.get("code")) for notice in notices}
+    if notice_codes - ISOLATION_NOTICE_CODES != EXPECTED_NOTICE_CODES:
+        raise InstalledTaxOracleError(
+            f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, got {sorted(notice_codes)!r}",
+        )
+    if any(notice.get("severity") != "warning" for notice in notices):
+        raise InstalledTaxOracleError(f"calculation notice severity drifted: {notices!r}")
+    return calculation_revision_id, notice_codes
 
 
 def run_installed_tax_oracle(
@@ -568,27 +596,7 @@ def run_installed_tax_oracle(
     )
     commands.append(calculate)
     calculate_document = _json_envelope(calculate, expected_command="modelo.work.calculate")
-    result = calculate_document["result"]
-    if result.get("saved") is not True:
-        raise InstalledTaxOracleError("calculation did not report saved=true")
-    calculation_revision_id = str(result.get("calculation_revision_id", ""))
-    if not _REVISION_ID.fullmatch(calculation_revision_id):
-        raise InstalledTaxOracleError(
-            f"calculation returned an invalid persisted revision id: {calculation_revision_id!r}",
-        )
-    casilla_values = result.get("casilla_values")
-    if not isinstance(casilla_values, dict) or Decimal(str(casilla_values.get(TARGET_CASILLA))) != EXPECTED_VALUE:
-        raise InstalledTaxOracleError(
-            f"calculation expected {TARGET_CASILLA}={EXPECTED_VALUE}, got {casilla_values!r}",
-        )
-    notices = calculate_document["notices"]
-    notice_codes = {str(notice.get("code")) for notice in notices}
-    if notice_codes - ISOLATION_NOTICE_CODES != EXPECTED_NOTICE_CODES:
-        raise InstalledTaxOracleError(
-            f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, got {sorted(notice_codes)!r}",
-        )
-    if any(notice.get("severity") != "warning" for notice in notices):
-        raise InstalledTaxOracleError(f"calculation notice severity drifted: {notices!r}")
+    calculation_revision_id, notice_codes = _assert_calculation_result(calculate_document)
 
     observations = _run(
         (

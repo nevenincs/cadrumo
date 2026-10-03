@@ -38,7 +38,6 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.access_policy import evaluate_operation_access, evaluate_response_scope
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalFieldIntent,
@@ -49,6 +48,7 @@ from cadrumo.application.user_profile.censal_operation import (
     build_censal_operation_registration,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access, evaluate_response_scope
 from cadrumo.application.user_profile.operations import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     USER_PROFILE_OPERATION_DEFINITIONS,

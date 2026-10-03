@@ -6,14 +6,15 @@ import asyncio
 from collections.abc import Coroutine
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
-from ...core.hashing import content_hash_hex
+from ...core.hashing import canonical_json_bytes, content_hash_hex, prefixed_digest
+from ...core.identity.digest import ContentDigest
 from ...core.operations import (
     OperationDeadline,
     OperationEffect,
@@ -21,12 +22,14 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ..user_profile.access_contracts import AccessAction
-from . import models as operation_models
+from . import _supervisor_snapshot
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
+from ._supervisor_refusal import _validated_refusal_receipt
 from .authorization import invoke_authorized
 from .capabilities import OperationRequestStoragePolicy
+from .error_detail import build_operation_error_detail
 from .errors import OperationDeclarationError, OperationExecutorReturnedNoResultError, OperationUnsettledError
 from .financial_operand import (
     OperationTransientFinancialOperandDelivery,
@@ -44,254 +47,54 @@ from .models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from .operation_definition import OperationDefinition
 from .persistence.events import (
     OperationEvent,
     OperationInteractionEvent,
     OperationNoticeEvent,
-    OperationPhaseEvent,
 )
-from .persistence.idempotency import OperationIdempotencyClaim
 from .persistence.journal import (
     OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
 )
-from .provenance import OperationAdmissionProvenance
 from .refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
-from .registry import OperationDefinition, OperationReconciliationPolicy
+from .registry import OperationReconciliationPolicy, OperationRegistry
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
-
-if TYPE_CHECKING:
-    from .persistence.journal import OperationSecureReferenceStore
-    from .registry import OperationRegistry
-
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
 
 
-async def _validated_refusal_receipt(
-    *,
+async def _stored_error_detail(
     registry: OperationRegistry,
+    definition_id: str,
     operands: OperationSecureReferenceStore | None,
-    snapshot: OperationPersistedSnapshot,
-    evidence: OperationRefusalEvidence,
-    settled_at: datetime,
-) -> OperationTerminalReceipt:
-    """Bind deliberately constructed encrypted evidence before refusing work."""
-    definition = registry.lookup(snapshot.identity.definition_id)
-    registration = registry.lookup_public_registration(snapshot.identity.definition_id)
-    schema = registration.contract.result_schema
-    projector = registration.result_projector
-    if (
-        snapshot.lifecycle is not OperationLifecycle.RUNNING
-        or snapshot.definition_contract_digest != registration.contract.definition_contract_digest
-        or evidence.refusal_code not in definition.refusal_detail_codes
-        or evidence.refusal_code not in registration.contract.refusal_detail_codes
-        or definition.result_type is None
-        or schema is None
-        or projector is None
-        or operands is None
-    ):
-        raise OperationDeclarationError("operation refusal evidence is not declared")
-    evidence = OperationRefusalEvidence.model_validate(evidence.model_dump(mode="python"))
-    receipt = OperationTerminalReceipt(
-        identity=snapshot.identity,
-        revision=snapshot.revision + 1,
-        condition=OperationTerminalCondition.REFUSED,
-        effect=snapshot.effect,
-        settled_at=settled_at,
-        refusal_ref=evidence.refusal_code,
-        refusal_detail_ref=evidence.detail_ref,
-    )
-    stored = await operands.resolve(evidence.detail_ref, definition.result_type)
-    if type(stored) is not definition.result_type:
-        raise OperationDeclarationError("operation refusal evidence has an undeclared model")
-    binding = registry.lookup_public_schema_binding(schema)
-    projected = projector(stored, receipt)
-    if type(projected) is not binding.model_type:
-        raise OperationDeclarationError("operation refusal evidence has an undeclared projection")
-    binding.model_type.model_validate(projected.model_dump(mode="python"))
-    return receipt
-
-
-def _advance_events(
-    snapshot: OperationPersistedSnapshot,
-    events: tuple[OperationEvent, ...],
-    revision: int,
-    now: datetime,
-) -> tuple[OperationEvent, ...]:
-    return tuple(
-        event.model_copy(update={"revision": revision, "sequence": snapshot.event_cursor + index + 1, "timestamp": now})
-        for index, event in enumerate(events)
-    )
-
-
-def _advance_phase_code(snapshot: OperationPersistedSnapshot, emitted: tuple[OperationEvent, ...]) -> str | None:
-    phase_events = tuple(event for event in emitted if isinstance(event, OperationPhaseEvent))
-    return snapshot.phase_code if not phase_events else phase_events[-1].phase_code
-
-
-def _advance_value[T](current: T, requested: T | None) -> T:
-    return current if requested is None else requested
-
-
-def _advanced_snapshot(
-    snapshot: OperationPersistedSnapshot,
+    error: Exception,
     *,
-    revision: int,
-    lifecycle: OperationLifecycle,
-    now: datetime,
-    emitted: tuple[OperationEvent, ...],
-    pending: OperationPendingInteraction | None,
-    consumed: tuple[OperationConsumedInteraction, ...] | None,
-    effect: OperationEffect | None,
-    execution_deadline: datetime | None,
-    cleanup_deadline: datetime | None,
-    cancellation_requested_at: datetime | None,
-    cancellation_acknowledged_at: datetime | None,
-    cancellation_deferred: bool | None,
-    executor_entered_at: datetime | None,
-) -> OperationPersistedSnapshot:
-    return snapshot.model_copy(
-        update={
-            "revision": revision,
-            "lifecycle": lifecycle,
-            "updated_at": now,
-            "event_cursor": snapshot.event_cursor + len(emitted),
-            "events": emitted,
-            "phase_code": _advance_phase_code(snapshot, emitted),
-            "pending_interaction": pending,
-            "consumed_interactions": _advance_value(snapshot.consumed_interactions, consumed),
-            "effect": _advance_value(snapshot.effect, effect),
-            "execution_deadline": _advance_value(snapshot.execution_deadline, execution_deadline),
-            "cleanup_deadline": _advance_value(snapshot.cleanup_deadline, cleanup_deadline),
-            "cancellation_requested_at": _advance_value(
-                snapshot.cancellation_requested_at,
-                cancellation_requested_at,
-            ),
-            "cancellation_acknowledged_at": _advance_value(
-                snapshot.cancellation_acknowledged_at,
-                cancellation_acknowledged_at,
-            ),
-            "cancellation_deferred": _advance_value(snapshot.cancellation_deferred, cancellation_deferred),
-            "executor_entered_at": _advance_value(snapshot.executor_entered_at, executor_entered_at),
-        }
-    )
+    written_at: datetime,
+) -> ContentDigest | None:
+    """Store the stopped executor's public detail as an encrypted operand, when its definition opts in.
 
-
-_SUSPENDED_LIFECYCLES = frozenset({OperationLifecycle.WAITING_FOR_INTERACTION, OperationLifecycle.WAITING_FOR_EXTERNAL})
-
-
-def _awaits_another_settler(snapshot: OperationPersistedSnapshot) -> bool:
-    """Whether a state left by a ``None`` return is settled by something other than the executor."""
-    return (
-        snapshot.lifecycle in _SUSPENDED_LIFECYCLES
-        or snapshot.pending_interaction is not None
-        or snapshot.cancellation_requested_at is not None
-        or snapshot.lifecycle is OperationLifecycle.TERMINAL
-    )
+    Settlement never depends on it: a definition that does not opt in, a host
+    without an operand store, an error with no public facts, or a detail that
+    cannot be built or stored leaves the receipt with the registered code it
+    has always carried.
+    """
+    if operands is None:
+        return None
+    try:
+        if not registry.lookup(definition_id).public_error_detail:
+            return None
+        detail = build_operation_error_detail(error)
+        if detail is None:
+            return None
+        return await operands.put(detail, written_at=written_at)
+    except Exception:
+        return None
 
 
 class SupervisorExecutionMixin(SupervisorHost):
     """Own request binding, executor execution, and durable interaction stages."""
-
-    @override
-    async def submit[RequestPayloadT: BaseModel](
-        self: SupervisorHost,
-        request: OperationRequest[RequestPayloadT],
-        *,
-        operation_id: OperationId | None = None,
-        provenance: OperationAdmissionProvenance | None = None,
-    ) -> OperationId:
-        """Persist one validated operation request without starting execution."""
-        definition = self.registry.lookup(request.definition_id)
-        definition_contract = self.registry.lookup_public_contract(request.definition_id)
-        self._validate_request_payload(request, definition.request_type)
-        now = self._clock()
-        identity = OperationIdentity(
-            operation_id=operation_id or operation_models.new_operation_id(),
-            definition_id=request.definition_id,
-            subject_ref=request.subject_ref,
-        )
-        if self._execution_authority is not None:
-            await self._execution_authority.require(identity=identity, request=request, action=AccessAction.SUBMIT)
-        if provenance is not None:
-            provenance.require_invocation(identity, request)
-            if self._operands is None:
-                raise ValueError("operation admission provenance requires its encrypted operand store")
-        request_storage = definition.capabilities.request_storage
-        if request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE:
-            if self._operands is None:
-                raise ValueError("secure-reference request storage requires an operand store")
-            ref = await self._operands.put(request.payload, written_at=now)
-            credential_free_request_json = None
-        else:
-            credential_free_request_json = request.payload.model_dump_json()
-            ref = content_hash_hex(request.payload.model_dump(mode="json"))
-        secret_requirement = (
-            OperationSecretRequirement(
-                identity=identity,
-                interaction_id=content_hash_hex(
-                    {
-                        "schema_version": 1,
-                        "identity": identity.model_dump(mode="json"),
-                        "revision": 0,
-                        "secret_kind": definition.ephemeral_secret.secret_kind,
-                    }
-                ),
-                revision=0,
-                secret_kind=definition.ephemeral_secret.secret_kind,
-                expires_at=now + definition.ephemeral_secret.lifetime,
-            )
-            if definition.ephemeral_secret is not None
-            else None
-        )
-        claim = (
-            OperationIdempotencyClaim.bind(
-                identity=identity, idempotency_key=request.idempotency_key, request_reference=ref
-            )
-            if request.idempotency_key
-            else None
-        )
-        existing_operation_id = await self._resolve_idempotency(claim)
-        if existing_operation_id is not None:
-            return existing_operation_id
-        provenance_reference = (
-            await self._operands.put(provenance, written_at=now)
-            if provenance is not None and self._operands is not None
-            else None
-        )
-        lease = self._candidate(identity, now)
-        replayed_operation_id = await self._acquire_submission_lease(lease, claim=claim)
-        if replayed_operation_id is not None:
-            return replayed_operation_id
-        self._leases_by_operation[identity.operation_id] = lease
-        snapshot = OperationPersistedSnapshot(
-            identity=identity,
-            definition_contract_digest=definition_contract.definition_contract_digest,
-            request_storage=request_storage,
-            request_reference=ref,
-            admission_provenance_reference=provenance_reference,
-            credential_free_request_json=credential_free_request_json,
-            secret_requirement=secret_requirement,
-            revision=0,
-            lifecycle=OperationLifecycle.CREATED,
-            started_at=now,
-            updated_at=now,
-            execution_deadline=None,
-            cleanup_deadline=None,
-            cancellation_requested_at=None,
-            cancellation_acknowledged_at=None,
-            cancellation_deferred=False,
-            idempotency_claim=claim,
-        )
-        try:
-            created_operation_id = await self._journal.create(snapshot, lease=lease)
-        except BaseException:
-            await self._release_exact_lease(lease, observed_at=self._clock())
-            raise
-        if created_operation_id != identity.operation_id:
-            await self._release_exact_lease(lease, observed_at=self._clock())
-        return created_operation_id
 
     @override
     def _require_pinned_definition(self: SupervisorHost, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
@@ -546,17 +349,23 @@ class SupervisorExecutionMixin(SupervisorHost):
         canonical operator reference. Every other exception receives a stable
         opaque correlation digest over safe lifecycle facts only; exception
         message text, arguments, contexts, tracebacks, paths, and URLs never
-        enter operation persistence.
+        enter operation persistence. The bounded public detail a frontend
+        renders is kept apart, as an encrypted operand the receipt references.
         """
         registered = get_registered_error_code(error) if isinstance(error, CadrumoError) else None
+        settled_at = self._clock()
+        error_detail_ref = await _stored_error_detail(
+            self.registry, snapshot.identity.definition_id, self._operands, error, written_at=settled_at
+        )
         if registered is not None and registered.category is ErrorCategory.REFUSED:
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
                 revision=snapshot.revision + 1,
                 condition=OperationTerminalCondition.REFUSED,
                 effect=snapshot.effect,
-                settled_at=self._clock(),
+                settled_at=settled_at,
                 refusal_ref=registered.code,
+                error_detail_ref=error_detail_ref,
             )
         else:
             receipt = OperationTerminalReceipt(
@@ -564,9 +373,10 @@ class SupervisorExecutionMixin(SupervisorHost):
                 revision=snapshot.revision + 1,
                 condition=OperationTerminalCondition.FAILED,
                 effect=snapshot.effect,
-                settled_at=self._clock(),
+                settled_at=settled_at,
                 failure_error_code=None if registered is None else registered.code,
                 diagnostic_ref=self._executor_failure_diagnostic_reference(snapshot, error),
+                error_detail_ref=error_detail_ref,
             )
         return await self.settle(snapshot.identity.operation_id, receipt)
 
@@ -584,16 +394,17 @@ class SupervisorExecutionMixin(SupervisorHost):
         filesystem path, URL, credential, or traceback fragment.
         """
         error_type = type(error)
-        digest = content_hash_hex(
-            {
-                "schema_version": 1,
-                "operation_id": snapshot.identity.operation_id,
-                "definition_id": snapshot.identity.definition_id,
-                "exception_type": f"{error_type.__module__}.{error_type.__qualname__}",
-                "terminal_revision": snapshot.revision + 1,
-            }
+        return prefixed_digest(
+            canonical_json_bytes(
+                {
+                    "schema_version": 1,
+                    "operation_id": snapshot.identity.operation_id,
+                    "definition_id": snapshot.identity.definition_id,
+                    "exception_type": f"{error_type.__module__}.{error_type.__qualname__}",
+                    "terminal_revision": snapshot.revision + 1,
+                }
+            )
         )
-        return f"sha256:{digest}"
 
     @override
     def _execution_deadline_for(self: SupervisorHost, deadline_capability: OperationDeadline) -> datetime | None:
@@ -615,15 +426,7 @@ class SupervisorExecutionMixin(SupervisorHost):
     ) -> OperationExecutorResult:
         """Await executor completion while aggregate and cleanup deadlines remain supervisor-owned."""
         entry = context.snapshot
-        if (
-            entry.cancellation_requested_at is None
-            and entry.execution_deadline is not None
-            and self._clock() >= entry.execution_deadline
-        ):
-            # A continuation resumed after its deadline starts already cancelled,
-            # so its first cooperative check observes the request instead of
-            # racing the supervisor into an irreversible section.
-            await self.request_cancel(identity.operation_id)
+        await self._request_expired_entry_cancellation(identity, entry)
         executor_task = asyncio.create_task(
             self._renew_while_executing(identity=identity, executor=executor),
             name=f"operation-supervision-{identity.operation_id}",
@@ -633,32 +436,72 @@ class SupervisorExecutionMixin(SupervisorHost):
             snapshot = context.snapshot
             now = self._clock()
             if snapshot.cancellation_requested_at is None:
-                execution_deadline = snapshot.execution_deadline
-                if execution_deadline is None:
-                    await executor_task
-                    break
-                if now >= execution_deadline:
-                    observed_revision = (await self.inspect(identity.operation_id)).revision
-                    try:
-                        await self.request_cancel(identity.operation_id)
-                    except Exception:
-                        # An operator response may commit between the deadline's
-                        # read and its write. Only that moved revision is retried;
-                        # any other refusal stands.
-                        if (await self.inspect(identity.operation_id)).revision == observed_revision:
-                            raise
-                    continue
-                await self._wait_for_executor_or_deadline(executor_task, execution_deadline, now)
-                continue
-            cleanup_deadline = snapshot.cleanup_deadline
-            if cleanup_deadline is not None and now >= cleanup_deadline:
-                context.cancellation.record_request(await self._escalate_cleanup_deadline(identity.operation_id))
-                await executor_task
+                completed = await self._watch_execution_deadline(identity, snapshot, executor_task, now)
+            else:
+                completed = await self._watch_cleanup_deadline(identity, context, snapshot, executor_task, now)
+            if completed:
                 break
-            if cleanup_deadline is None:
-                raise ValueError("durable cancellation request is missing its cleanup deadline")
-            await self._wait_for_executor_or_deadline(executor_task, cleanup_deadline, now)
         return await executor_task
+
+    @override
+    async def _request_expired_entry_cancellation(
+        self: SupervisorHost,
+        identity: OperationIdentity,
+        entry: OperationPersistedSnapshot,
+    ) -> None:
+        if (
+            entry.cancellation_requested_at is None
+            and entry.execution_deadline is not None
+            and self._clock() >= entry.execution_deadline
+        ):
+            # A continuation resumed after its deadline starts already cancelled,
+            # so its first cooperative check observes the request instead of
+            # racing the supervisor into an irreversible section.
+            await self.request_cancel(identity.operation_id)
+
+    @override
+    async def _watch_execution_deadline(
+        self: SupervisorHost,
+        identity: OperationIdentity,
+        snapshot: OperationPersistedSnapshot,
+        executor_task: asyncio.Task[OperationExecutorResult],
+        now: datetime,
+    ) -> bool:
+        execution_deadline = snapshot.execution_deadline
+        if execution_deadline is None:
+            await executor_task
+            return True
+        if now >= execution_deadline:
+            observed_revision = (await self.inspect(identity.operation_id)).revision
+            try:
+                await self.request_cancel(identity.operation_id)
+            except Exception:
+                # An operator response may commit between the deadline's read and
+                # its write. Only that moved revision is retried; other refusals stand.
+                if (await self.inspect(identity.operation_id)).revision == observed_revision:
+                    raise
+            return False
+        await self._wait_for_executor_or_deadline(executor_task, execution_deadline, now)
+        return False
+
+    @override
+    async def _watch_cleanup_deadline(
+        self: SupervisorHost,
+        identity: OperationIdentity,
+        context: DefinitionBoundContext,
+        snapshot: OperationPersistedSnapshot,
+        executor_task: asyncio.Task[OperationExecutorResult],
+        now: datetime,
+    ) -> bool:
+        cleanup_deadline = snapshot.cleanup_deadline
+        if cleanup_deadline is None:
+            raise ValueError("durable cancellation request is missing its cleanup deadline")
+        if now >= cleanup_deadline:
+            context.cancellation.record_request(await self._escalate_cleanup_deadline(identity.operation_id))
+            await executor_task
+            return True
+        await self._wait_for_executor_or_deadline(executor_task, cleanup_deadline, now)
+        return False
 
     @override
     async def _settle_returned_result(
@@ -695,7 +538,9 @@ class SupervisorExecutionMixin(SupervisorHost):
         if result_ref is None:
             returned = await self.inspect(snapshot.identity.operation_id)
             if returned.cancellation_acknowledged_at is None:
-                if _awaits_another_settler(snapshot) or _awaits_another_settler(returned):
+                if _supervisor_snapshot.awaits_another_settler(snapshot) or _supervisor_snapshot.awaits_another_settler(
+                    returned
+                ):
                     return returned
                 return await self._settle_executor_failure(returned, OperationExecutorReturnedNoResultError())
             condition = self._acknowledged_cancellation_condition(returned)
@@ -777,8 +622,8 @@ class SupervisorExecutionMixin(SupervisorHost):
         async with self._lease_lock(snapshot.identity.operation_id):
             lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
             revision = snapshot.revision + 1
-            emitted = _advance_events(snapshot, events, revision, now)
-            successor = _advanced_snapshot(
+            emitted = _supervisor_snapshot.advance_events(snapshot, events, revision, now)
+            successor = _supervisor_snapshot.advanced_snapshot(
                 snapshot,
                 revision=revision,
                 lifecycle=lifecycle,

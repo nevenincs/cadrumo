@@ -95,7 +95,7 @@ from ...domain.iva.establishment import (
     stated_country_code_status,
     territorial_scope_for_country,
 )
-from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.lookup import unique_rate_kind_for_declared_rate
 from ...domain.iva.prorrata import (
     InputClassification,
     ProrrataReference,
@@ -850,38 +850,21 @@ def _apply_especial_apportionment(
 ) -> dict[BindingId, Decimal]:
     """Route deducible cuota bindings per LIVA art. 106 prorrata especial.
 
-    Each deducible cuota binding value is recomputed as the sum, over the
-    per-classification partitions of ``observations``, of the partition's
-    canonically-resolved binding value weighted by that classification's
-    art. 106 deductible percentage (:func:`~domain.iva.prorrata.deductible_percentage_for`):
-    exclusively-deductible at 100%, exclusively-non-deductible at 0%, and
-    common-use (and unclassified inputs, the mixed-use default) at the
-    ``apportionment.percentage`` general percentage. Non-deducible bindings
-    (output cuotas, bases, recargo) keep their unapportioned aggregate.
-
-    The partitions are resolved through the SAME canonical registry resolver
-    the general path uses
-    (:func:`~domain.calculations.registry.ledger_iva_bindings.resolve_ledger_iva_aggregation_binding_values`),
-    so especial reuses one aggregation path rather than forking selector logic.
-    An all-common (or wholly-unclassified) especial bucket therefore reduces to
-    the general-percentage result exactly.
+    The shared per-observation primitive applies the art. 106 classification
+    percentages and canonical binding resolution. This wrapper replaces only
+    deducible cuota values; every other binding retains its unapportioned value.
     """
     deducible_binding_ids = _deducible_cuota_binding_ids(revision)
     if not deducible_binding_ids:
         return binding_values
-    general_percentage = apportionment.percentage
-    partitions = _partition_by_input_classification(observations, operation=operation)
-    apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
-    for classification, partition_observations in partitions.items():
-        if not partition_observations:
-            continue
-        multiplier = deductible_percentage_for(classification, general_percentage) / HUNDRED
-        if multiplier == 0:
-            # exclusively-non-deductible: contributes nothing to any deducible cuota.
-            continue
-        partition_values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
-        for binding_id in deducible_binding_ids:
-            apportioned[binding_id] += partition_values.get(binding_id, Decimal("0")) * multiplier
+    apportioned = _apportioned_deducible_cuota(
+        revision,
+        observations,
+        percentage=apportionment.percentage,
+        regime=apportionment.regime,
+        deducible_binding_ids=deducible_binding_ids,
+        operation=operation,
+    )
     return {
         binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
         for binding_id, value in binding_values.items()
@@ -1479,6 +1462,14 @@ def _registry_export_categories(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("IVA classification catalogue must resolve as a mapping fact")
+    entries = _unique_iva_classification_entries(resolved)
+    raw_categories = entries.get("counterparty.export_categories")
+    if raw_categories is None:
+        raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
+    return _parse_export_categories(raw_categories, operation=operation)
+
+
+def _unique_iva_classification_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
@@ -1486,9 +1477,11 @@ def _registry_export_categories(
         if entry.key in entries:
             raise ValueError(f"duplicate IVA classification entry {entry.key!r}")
         entries[entry.key] = entry.value
-    raw_categories = entries.get("counterparty.export_categories")
-    if raw_categories is None:
-        raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
+
+    return entries
+
+
+def _parse_export_categories(raw_categories: str, *, operation: PinnedAuthorityOperation) -> frozenset[IvaCategory]:
     try:
         categories = frozenset(
             require_iva_category(token.strip(), authority=operation)
@@ -1771,26 +1764,18 @@ def iva_rate_kind_for(
 ) -> IvaRateKind | None:
     """Return the tier a declared rate belongs to, or ``None`` if it is not one.
 
-    Delegates to :func:`rate_kinds_for_declared_rate`, the registry's own
-    value-to-tier direction. This previously iterated the tiers and called the
-    tier-to-value lookup once each, comparing percentages -- a simulation of the
-    inverse that holds only while the mapping is one-to-one per date. Spain's
-    2024 temporary food rates broke that: 2 % and 4 % were both correct
-    super-reducido rates, and the simulation found neither for a 2 % row.
-
-    When a rate matches more than one tier the FIRST registered match wins, and
-    the ambiguity is real rather than a defect -- the tiers genuinely share that
-    rate on that date, and no bundled AEAT surface carries the goods axis that
-    would separate them. Callers that must report the rate itself carry it
-    separately on the observation.
+    Delegates to the domain's exact-one projection of the registry-owned
+    value-to-tier direction. Multiple numeric rates can belong to one tier;
+    only multiple distinct matching tiers make this declared rate ambiguous.
+    Without a published discriminator that settles that ambiguity, this path
+    refuses by returning ``None``.
     """
-    matched = rate_kinds_for_declared_rate(
+    return unique_rate_kind_for_declared_rate(
         spanish_eu_member_state(effective_date=on_date, authority=operation),
         rate,
         on_date,
         operation=operation,
     )
-    return matched[0] if matched else None
 
 
 __all__ = [

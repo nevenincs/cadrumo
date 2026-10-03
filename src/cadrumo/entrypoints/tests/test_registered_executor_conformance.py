@@ -72,17 +72,17 @@ from ...application.actividad_asset.registered_operations import (
     ActivityAssetInspectProjection,
 )
 from ...application.aggregation.service import aggregate_per_modelo
+from ...application.auth.auth_read_contracts import (
+    AUTH_READ_OPERATION_DEFINITION_ID,
+    AuthReadProjection,
+    AuthReadRequest,
+)
 from ...application.auth.certificate_source_operations import (
     list_operator_certificate_sources,
     register_operator_certificate_source,
     set_operator_certificate_source_secret,
 )
 from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.auth.read_operation import (
-    AUTH_READ_OPERATION_DEFINITION_ID,
-    AuthReadProjection,
-    AuthReadRequest,
-)
 from ...application.bienes_inversion.registered_operation import (
     BienesInversionDeclareProjection,
     BienesInversionListProjection,
@@ -131,7 +131,6 @@ from ...application.ledger.actions_manual import (
     prepare_manual_transaction_update,
 )
 from ...application.ledger.actions_split_merge import split_transaction
-from ...application.ledger.add_operation import LedgerAddOperationResult, LedgerAddRequest
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachmentOperationResult,
@@ -166,7 +165,8 @@ from ...application.ledger.evidence_read_operation import (
 from ...application.ledger.history_operation import LedgerHistoryProjection, LedgerHistoryRequest
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.import_operation import LedgerImportRequest, LedgerImportResultProjection
-from ...application.ledger.invoice_evidence_operation import LedgerEvidenceConfirmProjection
+from ...application.ledger.invoice_evidence_confirm_operation import LedgerEvidenceConfirmProjection
+from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult, LedgerAddRequest
 from ...application.ledger.lifecycle_mutation_operation import (
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
@@ -191,7 +191,7 @@ from ...application.ledger.preflight_operation import LedgerPreflightProjection,
 from ...application.ledger.remove_operation import LedgerRemoveOperationResult, LedgerRemoveRequest
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection, LedgerReviewRequest
-from ...application.ledger.rule_operation import LedgerRuleAddProjection
+from ...application.ledger.rule_contracts import LedgerRuleAddProjection
 from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
@@ -259,11 +259,12 @@ from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
-from ...application.modelo.mcp_query_operation import (
+from ...application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
 )
 from ...application.modelo.operation_definitions import (
+    ModeloEditApplySubmissionV1,
     ModeloWorkCalculateRequest,
     resolve_active_workflow_profile,
 )
@@ -337,27 +338,23 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.observation import OperationObservationService
+from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.public_period import PublicPeriod
-from ...application.operations.registry import (
-    OperationDefinition,
-    OperationRegistry,
-)
+from ...application.operations.registry import OperationRegistry
 from ...application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...application.overview.pipeline_operation import OverviewPipelineProjection, OverviewPipelineRequest
 from ...application.overview.pipeline_projection import PipelineHealthSnapshot
-from ...application.overview.read_operation import (
-    OVERVIEW_READ_DEFINITION_IDS,
+from ...application.overview.read_payload import (
     OverviewAgendaRead,
     OverviewBacklogRead,
     OverviewCalendarRead,
     OverviewExplainRead,
     OverviewPrepareRead,
-    OverviewReadKind,
-    OverviewReadProjection,
-    OverviewReadRequest,
     OverviewStatusRead,
 )
-from ...application.prorrata_register.registered_operations import ProrrataListProjection, ProrrataMutationProjection
+from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, OverviewReadKind, OverviewReadRequest
+from ...application.overview.read_result import OverviewReadProjection
+from ...application.prorrata_register.projection_contracts import ProrrataListProjection, ProrrataMutationProjection
 from ...application.review.filter import LedgerReviewStatus
 from ...application.user_profile.automation_operations import build_automation_operation_definitions
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
@@ -717,6 +714,24 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             OperationEffect.NONE,
             (),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
+        ),
+        # The workbench's owner reads release taxpayer values only to a live human
+        # CLI or TUI session, which this driver is not.
+        *(
+            _RegisteredExecutorConformanceCase(
+                definition_id,
+                OperationTerminalCondition.REFUSED,
+                OperationEffect.NONE,
+                (),
+                expected_refusal_ref="REFUSED_PROFILE_ACCESS",
+            )
+            for definition_id in (
+                "modelo.work.form",
+                "modelo.work.casilla_help",
+                "modelo.edit.renew",
+                "modelo.edit.preflight",
+                "modelo.edit.apply_prerequisite",
+            )
         ),
         _RegisteredExecutorConformanceCase(
             "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
@@ -1674,7 +1689,9 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
     return transaction_id
 
 
-def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, object]:
+def _seeded_modelo_edit_submission(
+    profile_id: UUID, *, operation: PinnedAuthorityOperation
+) -> tuple[str, ModeloEditApplySubmissionV1]:
     """Build one canonical edit DTO over the revision this fixture just persisted."""
     from ...adapters.persistence.profile.modelos_calculation import (
         CalculationRevisionCatalogueRepository,
@@ -1697,7 +1714,6 @@ def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthori
         ModeloEditValueFamily,
         ModeloEditValueGrammarV1,
     )
-    from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
     from ...application.operations.registry import OperationSchemaIdentityV1
     from ...core.casilla_id import validated_casilla_id
     from ...core.hashing import content_hash_hex
@@ -2496,6 +2512,40 @@ def _payload(
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id
             values = {"profile_id": profile_id, "work_unit_id": unit.work_unit_id}
+        case "modelo.work.form":
+            unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = unit.work_unit_id
+            values = {"profile_id": profile_id, "work_unit_id": unit.work_unit_id, "output_language": OutputLanguage.ES}
+        case "modelo.work.casilla_help":
+            unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = unit.work_unit_id
+            values = {
+                "profile_id": profile_id,
+                "work_unit_id": unit.work_unit_id,
+                "casilla_id": "06",
+                "registry_revision_id": str(unit.revision_id),
+                "calculation_revision_id": None,
+                "output_language": OutputLanguage.ES,
+            }
+        case "modelo.edit.renew":
+            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            subject_ref = work_unit_id
+            values = {"profile_id": profile_id, "baseline": wire_submission.baseline}
+        case "modelo.edit.preflight":
+            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            subject_ref = work_unit_id
+            values = {"profile_id": profile_id, "submission": wire_submission}
+        case "modelo.edit.apply_prerequisite":
+            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            subject_ref = work_unit_id
+            values = {
+                "profile_id": profile_id,
+                "work_unit_id": work_unit_id,
+                "apply_operation_id": "e" * 64,
+                "baseline_id": wire_submission.baseline.baseline_id,
+                "calculation_revision_id": wire_submission.baseline.current_calculation_revision_id,
+                "registry_revision_id": wire_submission.baseline.law_selected_revision_id,
+            }
         case "modelo.work.filing_record":
             filing_record_id, _casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
             subject_ref = profile_operation_subject(str(profile_id))
@@ -4292,6 +4342,7 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                 source_kinds=canonical_aggregate.source_kinds,
                 result_row_count=canonical_aggregate.log_fields.result_row_count,
                 clave_breakdown=(),
+                absent_source_families=(),
                 withholding_window=None,
                 refusal_reason=None,
             )
@@ -6053,7 +6104,7 @@ def test_the_filing_authority_accepts_the_registered_operation_fixture(
                 approved_verification_report_id=report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=str(profile_id)),
+                ports=build_filing_action_ports(bucket_id=str(profile_id), operation=operation),
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
                 workflow_profile=resolve_active_workflow_profile(operation),
                 operation=operation,

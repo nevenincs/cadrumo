@@ -18,10 +18,10 @@ from .._app_ledger_foundation_command_specs import LEDGER_FOUNDATION_COMMAND_SPE
 from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
 from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
-from ..command_spec import (
+from .._command_parameter_contracts import OptionSpec
+from .._command_shared_contracts import (
     DeferredTarget,
     LiteralValue,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,

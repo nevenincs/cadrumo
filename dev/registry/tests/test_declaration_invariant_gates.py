@@ -49,7 +49,7 @@ from ..analysis.continuity_integrity import screen_authority as continuity_scree
 from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import resolved_export_endpoints
-from ..pipeline.render_profile import RenderProfile
+from ..pipeline.render_profile_model import RenderProfile
 from ..pipeline.semantic_map import SemanticMap
 
 _BINDING_DERIVATION = "derive_export_layouts_from_bindings"

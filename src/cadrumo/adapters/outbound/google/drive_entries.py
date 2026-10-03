@@ -39,10 +39,11 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Final, Literal
 
+from ....core.google_drive_query import escape_google_drive_query_literal as _escape_google_drive_query_literal
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ._preconditions import google_terminal_refusal
-from .api import execute_request
+from .api import RequestRetryPolicy, execute_request
 
 if TYPE_CHECKING:
     from googleapiclient._apis.drive.v3.resources import DriveResource
@@ -62,6 +63,28 @@ class DriveEntryPreconditionCondition(StrEnum):
     OWNERSHIP_ALIGNED = "google.drive_entry.ownership_aligned"
 
 
+class DriveOwnership(StrEnum):
+    """How an existing Drive entry stands against this app's ownership marker."""
+
+    OWNED = "owned"
+    UNMARKED = "unmarked"
+    FOREIGN = "foreign"
+
+
+def classify_drive_ownership(app_properties: Mapping[str, Any]) -> DriveOwnership:
+    """Classify an entry's ``appProperties`` under the one ownership policy.
+
+    A marked entry is ours. An entry with no properties at all predates marker
+    stamping and may be adopted by stamping it. Any other properties belong to
+    something else, so the entry must not be adopted.
+    """
+    if app_properties.get(OWNERSHIP_KEY) == OWNERSHIP_VALUE:
+        return DriveOwnership.OWNED
+    if not app_properties:
+        return DriveOwnership.UNMARKED
+    return DriveOwnership.FOREIGN
+
+
 def _drive_entry_terminal_refusal(
     error: OutboundStorageError,
     condition: DriveEntryPreconditionCondition,
@@ -78,35 +101,23 @@ def _drive_entry_terminal_refusal(
     )
 
 
-def escape_drive_query_name(name: str) -> str:
-    """Return ``name`` escaped for use inside a single-quoted Drive query literal.
-
-    Drive v3 query literals escape a backslash and a single quote with a
-    preceding backslash. The backslash is replaced first so an escape
-    introduced for an apostrophe is not itself re-escaped.
-
-    Args:
-        name: Raw entry name, which may contain apostrophes or backslashes.
-
-    Returns:
-        The escaped name, safe to interpolate between single quotes.
-    """
-    return name.replace("\\", "\\\\").replace("'", "\\'")
-
-
 def build_owned_entry_query(*, parent_id: str, name: str, mime_type: str) -> str:
     """Return the Drive query selecting a non-trashed child of ``parent_id``.
 
     Args:
         parent_id: Drive folder ID the entry must be parented by.
-        name: Entry name, escaped through :func:`escape_drive_query_name`.
+        name: Entry name escaped by the core Google Drive query helper.
         mime_type: Drive MIME type constraining the entry kind.
 
     Returns:
         A Drive v3 ``q`` predicate string.
     """
-    safe_name = escape_drive_query_name(name)
-    return f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{mime_type}' and trashed = false"
+    safe_parent_id = _escape_google_drive_query_literal(parent_id)
+    safe_name = _escape_google_drive_query_literal(name)
+    safe_mime_type = _escape_google_drive_query_literal(mime_type)
+    return (
+        f"'{safe_parent_id}' in parents and name = '{safe_name}' and mimeType = '{safe_mime_type}' and trashed = false"
+    )
 
 
 def require_drive_entry_id(
@@ -189,6 +200,7 @@ def find_owned_drive_entry(
     response = execute_request(
         drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
         action=list_action,
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     entries = response.get("files", [])
     if not isinstance(entries, list):
@@ -229,10 +241,11 @@ def find_owned_drive_entry(
                     "ownership_metadata_mapping": False,
                 },
             )
-        if existing.get(OWNERSHIP_KEY) == OWNERSHIP_VALUE:
+        ownership = classify_drive_ownership(existing)
+        if ownership is DriveOwnership.OWNED:
             require_drive_entry_id(entry, name=name, parent_id=parent_id)
             return entry
-        if not existing:
+        if ownership is DriveOwnership.UNMARKED:
             # Backfill the marker on an entry this app created on a previous
             # run that predated marker stamping. The ID is validated first so
             # the update call cannot be issued against a malformed entry.
@@ -244,6 +257,7 @@ def find_owned_drive_entry(
                     fields="id,appProperties",
                 ),
                 action=backfill_action,
+                retry=RequestRetryPolicy.REPLAY_SAFE,
             )
             return entry
         raise _drive_entry_terminal_refusal(
@@ -260,8 +274,9 @@ def find_owned_drive_entry(
 __all__ = [
     "OWNERSHIP_KEY",
     "OWNERSHIP_VALUE",
+    "DriveOwnership",
     "build_owned_entry_query",
-    "escape_drive_query_name",
+    "classify_drive_ownership",
     "find_owned_drive_entry",
     "require_drive_entry_id",
 ]

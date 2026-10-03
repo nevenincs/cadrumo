@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...modelo.tests.m036_operation_support import INSTANT, PROFILE_ID, policy_decision
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
@@ -46,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 @pytest.fixture
 def subject(authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch) -> Subject:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(PROFILE_ID))
     return Subject(authority_operation)
 
 

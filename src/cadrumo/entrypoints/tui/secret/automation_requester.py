@@ -27,7 +27,7 @@ from ....adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.access_contracts import (
     GRANT_DEFAULT_VALIDITY,
     AccessAction,
@@ -50,18 +50,18 @@ from ....core.time.clock import now
 type RequesterClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
 type FreshCredentialClientOpener = Callable[[UUID, UUID, float], RuntimeFrontendClient]
 
-_KIND_LABELS = {
+_KIND_LOCALE_KEYS = {
     EnrollmentKind.ENROLL: "tui.automation_request.enroll",
     EnrollmentKind.ROTATE: "tui.automation_request.rotate",
     EnrollmentKind.RENEW: "tui.automation_request.renew",
     EnrollmentKind.CHANGE_SCOPE: "tui.automation_request.change_scope",
 }
-_PERIOD_LABELS = {
+_PERIOD_LOCALE_KEYS = {
     "none": "tui.automation_inventory.no_periods",
     "all": "tui.automation_inventory.all_periods",
     "selected": "tui.automation_request.period_selected",
 }
-_OUTCOME_LABELS = {
+_OUTCOME_LOCALE_KEYS = {
     "uncertain": "tui.automation_request.uncertain",
     "complete": "tui.automation_request.complete",
     "declined": "tui.automation_request.declined",
@@ -141,7 +141,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
     DEFAULT_CSS = """
     RuntimeAutomationRequesterScreen { align: center middle; }
-    #automation-request-body { width: 112; height: 42; border: round $accent; padding: 1 2; background: $surface; }
+    #automation-request-body { width: 100%; height: 42; border: round $accent; padding: 1 2; background: $surface; }
     #automation-request-form { height: 1fr; }
     #automation-request-operations, #automation-request-actions, #automation-request-disclosures { height: 7; }
     """
@@ -232,7 +232,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                     else (EnrollmentKind.ROTATE, EnrollmentKind.RENEW, EnrollmentKind.CHANGE_SCOPE)
                 )
                 yield Select[EnrollmentKind](
-                    [(tr(_KIND_LABELS[kind]), kind) for kind in kinds],
+                    [(tr(_KIND_LOCALE_KEYS[kind]), kind) for kind in kinds],
                     value=kinds[0],
                     allow_blank=False,
                     id="automation-request-kind",
@@ -256,7 +256,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                 )
                 yield Label(tr("tui.automation_request.period_mode"))
                 yield Select[str](
-                    [(tr(_PERIOD_LABELS[mode]), mode) for mode in ("none", "all", "selected")],
+                    [(tr(_PERIOD_LOCALE_KEYS[mode]), mode) for mode in ("none", "all", "selected")],
                     value="none",
                     allow_blank=False,
                     id="automation-request-period-mode",
@@ -458,14 +458,10 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
                 reference = draft.credential_reference
             if reference is None:
                 raise ValueError("missing protected credential reference")
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            remaining = remaining_budget(deadline)
             fresh = fresh_opener(self._profile_id, reference, remaining)
             try:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+                remaining = remaining_budget(deadline)
                 return fresh.reconcile_enrollment(submitted.request_id, timeout=remaining)
             finally:
                 primary_error = sys.exception()
@@ -600,7 +596,7 @@ class RuntimeAutomationRequesterScreen(ModalScreen[AutomationRequestOutcome | No
             if outcome.stage is EnrollmentStage.DECLINED
             else "invalid"
         )
-        parts = [tr(_OUTCOME_LABELS[label])]
+        parts = [tr(_OUTCOME_LOCALE_KEYS[label])]
         if outcome.request_id is not None:
             parts.append(f"{tr('tui.automation_request.request_id')}: {outcome.request_id}")
         if outcome.review_digest is not None:

@@ -56,12 +56,17 @@ from cadrumo.application.operator_surface.command_ports import (
 )
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.entrypoints.cli.command_spec import ArgumentSpec, DefaultKind
+from cadrumo.entrypoints.cli._command_parameter_contracts import ArgumentSpec
+from cadrumo.entrypoints.cli._command_shared_contracts import DefaultKind
 
 from .cli_reference import _reference_subprocess_environment
 
 if TYPE_CHECKING:
     import click
+
+    from cadrumo.application.operator_surface.command_ports import CommandRegistrationMetadata
+    from cadrumo.entrypoints.cli.command_schema import CommandRegistrationProjection
+    from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
 
 __all__ = [
     "CLI_TREE_STATIC_RELPATH",
@@ -239,45 +244,19 @@ def _build_cli_tree_loaded() -> CliTree:
     via :func:`build_cli_tree`'s ``override_settings`` context or a subprocess
     environment) so ``tr()`` help strings resolve to English.
     """
-    from cadrumo.core.i18n.render import clear_output_language_cache, tr
+    from cadrumo.core.i18n.render import clear_output_language_cache
     from cadrumo.entrypoints.cli.command_schema import command_registration_projection
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     clear_output_language_cache()
 
     registration = command_registration_projection()
-    metadata_by_path = {
+    metadata_by_path: dict[tuple[str, ...], CommandRegistrationMetadata] = {
         ("aeat", *(row.cli_path or ())): row for row in registration.commands if row.cli_path is not None
     }
     projection: dict[str, CliCommandNode] = {}
     for node in COMMAND_GRAPH.nodes():
-        params = tuple(
-            CliParam(
-                names=(parameter.name,) if isinstance(parameter, ArgumentSpec) else parameter.declarations,
-                kind=ParamKind.ARGUMENT if isinstance(parameter, ArgumentSpec) else ParamKind.OPTION,
-                required=parameter.default.kind is DefaultKind.REQUIRED,
-                help="" if parameter.help_key is None else tr(parameter.help_key.value),
-            )
-            for parameter in node.spec.parameters
-        )
-        usage = " ".join(node.path)
-        if any(p.kind is ParamKind.OPTION for p in params):
-            usage += " [OPTIONS]"
-        if node.spec.kind != "leaf":
-            usage += " COMMAND [ARGS]..."
-        metadata = metadata_by_path.get(node.path)
-        projection[_path_key(node.path)] = CliCommandNode(
-            path=node.path,
-            kind="leaf" if node.spec.kind == "leaf" else "group",
-            help=tr(node.spec.help_key.value),
-            usage=usage,
-            params=params,
-            machine_secret_payloads=() if metadata is None else metadata.machine_secret_payloads,
-            profile_authentication=("not-applicable" if metadata is None else metadata.profile_authentication),
-            profile_authentication_contract=(
-                registration.profile_authentication_contract if node.spec.kind == "root" else None
-            ),
-        )
+        projection[_path_key(node.path)] = _project_cli_node(node, metadata_by_path, registration)
     return CliTree(projection)
 
 
@@ -427,3 +406,45 @@ def assert_documented_paths_present(tree: CliTree, documented_paths: Iterable[st
             errors.append(error)
     if errors:
         raise CliTreePathsNotFoundError(errors)
+
+
+def _project_cli_params(node: CommandSpecNode) -> tuple[CliParam, ...]:
+    from cadrumo.core.i18n.render import tr
+
+    return tuple(
+        CliParam(
+            names=(parameter.name,) if isinstance(parameter, ArgumentSpec) else parameter.declarations,
+            kind=ParamKind.ARGUMENT if isinstance(parameter, ArgumentSpec) else ParamKind.OPTION,
+            required=parameter.default.kind is DefaultKind.REQUIRED,
+            help="" if parameter.help_key is None else tr(parameter.help_key.value),
+        )
+        for parameter in node.spec.parameters
+    )
+
+
+def _project_cli_node(
+    node: CommandSpecNode,
+    metadata_by_path: dict[tuple[str, ...], CommandRegistrationMetadata],
+    registration: CommandRegistrationProjection,
+) -> CliCommandNode:
+    from cadrumo.core.i18n.render import tr
+
+    params = _project_cli_params(node)
+    usage = " ".join(node.path)
+    if any(p.kind is ParamKind.OPTION for p in params):
+        usage += " [OPTIONS]"
+    if node.spec.kind != "leaf":
+        usage += " COMMAND [ARGS]..."
+    metadata = metadata_by_path.get(node.path)
+    return CliCommandNode(
+        path=node.path,
+        kind="leaf" if node.spec.kind == "leaf" else "group",
+        help=tr(node.spec.help_key.value),
+        usage=usage,
+        params=params,
+        machine_secret_payloads=() if metadata is None else metadata.machine_secret_payloads,
+        profile_authentication=("not-applicable" if metadata is None else metadata.profile_authentication),
+        profile_authentication_contract=(
+            registration.profile_authentication_contract if node.spec.kind == "root" else None
+        ),
+    )

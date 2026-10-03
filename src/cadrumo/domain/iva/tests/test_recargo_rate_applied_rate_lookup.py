@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ..recargo_equivalencia import (
     load_recargo_rate_table,
     recargo_rate_for_applied_rate,
+    recargo_rate_record_for_applied_rate,
     resolve_recargo_rate_for_applied_rate,
 )
 
@@ -60,7 +61,15 @@ def test_recargo_lookup_retains_the_matched_authority_provenance() -> None:
         resolved = resolve_recargo_rate_for_applied_rate(
             Decimal("0.05"), _COLLISION_DATE, operation=_authority_operation_for_test
         )
+        record = recargo_rate_record_for_applied_rate(
+            Decimal("0.05"), _COLLISION_DATE, operation=_authority_operation_for_test
+        )
 
+        assert record is not None
+        assert record.iva_rate == Decimal("0.05")
+        assert record.recargo_rate == Decimal("0.0062")
+        assert (record.effective_from, record.effective_until) == (resolved.valid_from, resolved.valid_to)
+        assert record.legal_refs == resolved.legal_refs
         assert resolved.fact_id == "iva-recargo-by-applied-rate"
         assert resolved.date_axis.value == "devengo_date"
         assert resolved.effective_date == _COLLISION_DATE
@@ -95,10 +104,16 @@ def test_a_zero_rated_pairing_is_a_rate_of_zero_not_an_absent_one() -> None:
     table cannot answer.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        record = recargo_rate_record_for_applied_rate(
+            Decimal("0.00"), _COLLISION_DATE, operation=_authority_operation_for_test
+        )
         inside = recargo_rate_for_applied_rate(
             Decimal("0.00"), _COLLISION_DATE, operation=_authority_operation_for_test
         )
 
+        assert record is not None
+        assert record.recargo_rate == Decimal("0")
+        assert record.legal_refs
         assert inside == Decimal("0")
         assert inside is not None
 
@@ -118,6 +133,9 @@ def test_an_unmodelled_combination_returns_nothing_rather_than_a_near_match(
 ) -> None:
     """No nearest-match fallback: an unmodelled pairing must refuse to guess."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            recargo_rate_record_for_applied_rate(applied_rate, on_date, operation=_authority_operation_for_test) is None
+        ), why
         assert recargo_rate_for_applied_rate(applied_rate, on_date, operation=_authority_operation_for_test) is None, (
             why
         )

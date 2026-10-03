@@ -14,8 +14,7 @@ from ...adapters.persistence.profile.calculation_observations import Calculation
 from ...adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ...application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
-from ...application.prorrata_register.registered_operations import (
+from ...application.prorrata_register.operation_requests import (
     PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
@@ -27,17 +26,20 @@ from ...application.prorrata_register.registered_operations import (
     ProrrataDeclareSectorRequest,
     ProrrataElectEspecialRequest,
     ProrrataElectGeneralRequest,
+    ProrrataListRequest,
+    ProrrataRevokeEspecialRequest,
+    ProrrataSeedRequest,
+    ProrrataSeedSectorRequest,
+    ProrrataSettleSectorRequest,
+)
+from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
+from ...application.prorrata_register.projection_contracts import (
     ProrrataEntryProjection,
     ProrrataFindingProjection,
     ProrrataListProjection,
-    ProrrataListRequest,
     ProrrataMutationProjection,
-    ProrrataRevokeEspecialRequest,
     ProrrataSectorDefinitionProjection,
-    ProrrataSeedRequest,
-    ProrrataSeedSectorRequest,
     ProrrataSeedSourceProjection,
-    ProrrataSettleSectorRequest,
 )
 from ...application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,

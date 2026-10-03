@@ -36,7 +36,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.test_windows_automation_secret_store_native import (
     require_selected_normal_desktop,
 )
-from cadrumo.application.auth.read_operation import AUTH_READ_OPERATION_DEFINITION_ID, AuthReadRequest
+from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID, AuthReadRequest
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,

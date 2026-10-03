@@ -133,7 +133,10 @@ from .irpf_income_categories import (
     require_irpf_income_category,
 )
 from .irpf_regimes import irpf_estimation_regime_directa_normal_token, require_irpf_estimation_regime
-from .iva_schema_vocabulary import iva_regime_self_assessment_tokens, require_iva_regime
+from .iva_regime_vocabulary import (
+    iva_regime_self_assessment_tokens,
+    require_iva_regime,
+)
 from .schema_base import DateAxis
 from .schema_revision_members import ApplicabilityRuleDefinition
 

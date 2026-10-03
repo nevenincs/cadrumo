@@ -15,21 +15,21 @@ from dev.corpus.artifact_catalogue import (
 )
 
 from .. import sync_aeat_record_design_corpus as record_design_sync
-from ..sync_aeat_record_design_corpus import (
-    _CORPUS,
+from ..record_design_inventory import (
     _EXTRACTION_SIDECAR_DERIVATIONS,
-    _HISTORICAL_EXCLUSIONS_PATH,
     _PAGES,
     _REQUIRED,
     _STATIC,
     UNATTESTED_CORPUS_FILES,
-    _Artifact,
+)
+from ..record_design_manifests import _Artifact, _Manifest, _root_aggregate
+from ..sync_aeat_record_design_corpus import (
+    _CORPUS,
+    _HISTORICAL_EXCLUSIONS_PATH,
     _authority_failures,
     _load_manifests,
-    _Manifest,
     _payload_paths,
     _record_design_catalogue,
-    _root_aggregate,
     check,
     unattested_corpus_files,
 )

@@ -18,18 +18,10 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.authoring.casilla_shard_generation import (
-    GenerationRefusedError,
-    WaveSpec,
-    audit_sheet,
-    derive_number,
-    emit_records,
-    emitted_ids,
-    harvest_attestations,
-    is_structural,
-    normalise_for_drift,
-    reattach_attestations,
-)
+from dev.registry.authoring.casilla_shard_attestations import emitted_ids, harvest_attestations, reattach_attestations
+from dev.registry.authoring.casilla_shard_design import audit_sheet, derive_number, is_structural, normalise_for_drift
+from dev.registry.authoring.casilla_shard_generation import emit_records
+from dev.registry.authoring.casilla_shard_types import GenerationRefusedError, WaveSpec
 from dev.registry.compiler.record_design_schema import (
     RecordDesignField,
     RecordDesignSheet,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -21,13 +22,15 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...bucket_event_projection import BucketEventProjection
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.models import OperationRequest
+from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history import WorkUnitHistory
 from ..history_operation import (
     MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
+    ModeloWorkHistoryExecutor,
     ModeloWorkHistoryProjection,
     ModeloWorkHistoryRequest,
     ModeloWorkHistorySnapshot,
@@ -41,6 +44,43 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 3, 10, 12, tzinfo=UTC)
+
+
+class _GuardPhaseReachedError(Exception):
+    pass
+
+
+class _GuardEvents:
+    def __init__(self) -> None:
+        self.phases: list[str] = []
+
+    async def phase(self, phase: str) -> None:
+        self.phases.append(phase)
+        raise _GuardPhaseReachedError(phase)
+
+
+def _executor_context(
+    request: OperationRequest[ModeloWorkHistoryRequest],
+    *,
+    definition_id: str | None = None,
+    subject_ref: str | None = None,
+) -> tuple[OperationExecutorContext, _GuardEvents]:
+    events = _GuardEvents()
+    context = cast(
+        OperationExecutorContext,
+        cast(
+            object,
+            SimpleNamespace(
+                identity=OperationIdentity(
+                    operation_id="a" * 64,
+                    definition_id=definition_id if definition_id is not None else request.definition_id,
+                    subject_ref=subject_ref if subject_ref is not None else request.subject_ref,
+                ),
+                events=events,
+            ),
+        ),
+    )
+    return context, events
 
 
 def _unit() -> WorkUnit:
@@ -112,6 +152,56 @@ def _request(
         subject_ref=subject_ref or unit.work_unit_id,
         payload=ModeloWorkHistoryRequest(profile_id=profile_id, work_unit_id=unit.work_unit_id),
     )
+
+
+def _executor_request(
+    unit: WorkUnit, *, profile_id: UUID = _PROFILE, subject_ref: str | None = None
+) -> OperationRequest[ModeloWorkHistoryRequest]:
+    return OperationRequest[ModeloWorkHistoryRequest](
+        definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
+        subject_ref=subject_ref or unit.work_unit_id,
+        payload=ModeloWorkHistoryRequest(profile_id=profile_id, work_unit_id=unit.work_unit_id),
+    )
+
+
+@pytest.mark.parametrize("failure", ["wrong_unit", "identity_definition", "identity_subject", "bucket"])
+def test_history_executor_profile_guard_preserves_work_unit_subject(
+    monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    unit = _unit()
+    request_subject = "another-work-unit" if failure == "wrong_unit" else unit.work_unit_id
+    request = _executor_request(unit, subject_ref=request_subject)
+    context, events = _executor_context(
+        request,
+        definition_id="modelo.work.other" if failure == "identity_definition" else None,
+        subject_ref="another-work-unit" if failure == "identity_subject" else None,
+    )
+    active_bucket = str(_OTHER if failure == "bucket" else _PROFILE)
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: active_bucket)
+    executor = ModeloWorkHistoryExecutor(cast(ModeloHistoryPortsFactory, cast(object, lambda **_kwargs: None)))
+
+    if failure == "wrong_unit":
+        identity_subject = request.subject_ref
+        assert identity_subject != unit.work_unit_id
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(executor.execute(request, context))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert events.phases == []
+
+
+def test_history_executor_accepts_its_work_unit_subject_at_the_guard_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
+    unit = _unit()
+    request = _executor_request(unit)
+    context, events = _executor_context(request)
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    executor = ModeloWorkHistoryExecutor(cast(ModeloHistoryPortsFactory, cast(object, lambda **_kwargs: None)))
+
+    with pytest.raises(_GuardPhaseReachedError) as reached:
+        asyncio.run(executor.execute(request, context))
+
+    assert str(reached.value) == MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID
+    assert events.phases == [MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID]
 
 
 def _context(

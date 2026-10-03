@@ -35,6 +35,15 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
     assert expected == PRODUCT_IDENTITY
 
 
+def test_cohort_distributions_lists_the_product_before_its_companions() -> None:
+    """A release publishes the product and both data companions as one ordered set."""
+    assert PRODUCT_IDENTITY.cohort_distributions == (
+        PRODUCT_IDENTITY.distribution,
+        *PRODUCT_IDENTITY.companion_distributions,
+    )
+    assert len(set(PRODUCT_IDENTITY.cohort_distributions)) == 3
+
+
 @pytest.mark.parametrize(
     "relative_pyproject",
     (

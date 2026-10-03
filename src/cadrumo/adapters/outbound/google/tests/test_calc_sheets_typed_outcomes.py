@@ -128,14 +128,14 @@ def _assert_closed_outcome(
     assert verdict.no_recovery_outcome is outcome
 
 
-def _missing_google_client_outcome(*, module: str, call: str) -> dict[str, object]:
+def _missing_google_client_outcome(*, imports: str, call: str) -> dict[str, object]:
     """Run the optional-client refusal in a new interpreter without a patch seam."""
     script = f"""
 import importlib.abc
 import json
 import sys
 
-from {module} import {call}
+{imports}
 from cadrumo.adapters.outbound.storage.errors import OutboundStorageNetworkError
 
 
@@ -149,7 +149,7 @@ class _MissingGoogleApiFinder(importlib.abc.MetaPathFinder):
 finder = _MissingGoogleApiFinder()
 sys.meta_path.insert(0, finder)
 try:
-    {call}(None)
+    {call}
 except OutboundStorageNetworkError as error:
     verdict = error.terminal_precondition_verdict
 else:
@@ -185,8 +185,8 @@ print(json.dumps({{
 
 def test_apply_missing_google_api_client_is_a_closed_safety_outcome() -> None:
     outcome = _missing_google_client_outcome(
-        module="cadrumo.adapters.outbound.google.calc_sheets_apply",
-        call="_drive_service",
+        imports="from cadrumo.adapters.outbound.google.calc_sheets_apply import apply_export_plan",
+        call='apply_export_plan(None, credentials=None, root_folder_id="root")',
     )
 
     assert outcome == {
@@ -232,18 +232,20 @@ def test_preview_rejects_a_blank_root_folder_id_with_the_same_operator_decision(
     )
 
 
-@pytest.mark.parametrize(
-    ("service", "service_name", "service_version"),
-    (("_drive_service", "drive", "v3"), ("_sheets_service", "sheets", "v4")),
-)
-def test_pull_missing_google_api_client_is_a_closed_safety_outcome(
-    service: str,
-    service_name: str,
-    service_version: str,
-) -> None:
+def test_preview_missing_google_api_client_is_a_closed_safety_outcome() -> None:
     outcome = _missing_google_client_outcome(
-        module="cadrumo.adapters.outbound.google.calc_sheets_pull",
-        call=service,
+        imports="from cadrumo.adapters.outbound.google.calc_sheets_apply import preview_export_plan",
+        call='preview_export_plan(None, credentials=None, root_folder_id="root")',
+    )
+
+    assert outcome["condition_id"] == "google.calc_sheets.apply.api_client_available"
+    assert outcome["outcome"] == "safety"
+
+
+def test_pull_missing_google_api_client_is_a_closed_safety_outcome() -> None:
+    outcome = _missing_google_client_outcome(
+        imports="from cadrumo.adapters.outbound.google.calc_sheets_pull import pull_operator_edits",
+        call='pull_operator_edits(None, spreadsheet_id="sheet", credentials=None)',
     )
 
     assert outcome == {
@@ -254,13 +256,37 @@ def test_pull_missing_google_api_client_is_a_closed_safety_outcome(
         "values": {
             "client_available": False,
             "dependency": "google_api_python_client",
-            "service_name": service_name,
-            "service_version": service_version,
+            "service_name": "drive",
+            "service_version": "v3",
         },
         "action": None,
         "conditionality": "not_applicable",
         "outcome": "safety",
     }
+
+
+@pytest.mark.parametrize(
+    ("builder", "service_name", "service_version"),
+    (("drive_v3_service", "drive", "v3"), ("sheets_v4_service", "sheets", "v4")),
+)
+def test_each_shared_service_builder_names_its_service_when_the_client_is_missing(
+    builder: str,
+    service_name: str,
+    service_version: str,
+) -> None:
+    outcome = _missing_google_client_outcome(
+        imports="from cadrumo.adapters.outbound.google.api import drive_v3_service, sheets_v4_service",
+        call=f'{builder}(None, unavailable_condition_id="google.calc_sheets.pull.api_client_available")',
+    )
+
+    assert outcome["condition_id"] == "google.calc_sheets.pull.api_client_available"
+    assert outcome["values"] == {
+        "client_available": False,
+        "dependency": "google_api_python_client",
+        "service_name": service_name,
+        "service_version": service_version,
+    }
+    assert outcome["outcome"] == "safety"
 
 
 def test_pull_rejects_a_blank_spreadsheet_id_with_an_operator_decision() -> None:

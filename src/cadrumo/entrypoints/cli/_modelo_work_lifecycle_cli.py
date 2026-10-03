@@ -40,10 +40,10 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
+from .registered_operation_errors import submitted_operation_error
 from .runtime_modelo_metadata import discard_modelo_work, read_modelo_work_unit, rename_modelo_work
 from .runtime_modelo_work_create import create_modelo_work
 from .runtime_modelo_work_inventory import read_modelo_work_inventory
-from .runtime_registered_operation import submitted_operation_error
 from .state_projection_support import authority_operation
 
 

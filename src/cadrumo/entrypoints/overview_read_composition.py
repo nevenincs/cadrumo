@@ -13,15 +13,13 @@ from ..application.overview.read_calendar_projection import (
     OverviewBacklogSnapshot,
     OverviewCalendarSnapshot,
 )
-from ..application.overview.read_operation import (
+from ..application.overview.read_payload import (
     OverviewAgendaRead,
     OverviewBacklogRead,
     OverviewCalendarRead,
     OverviewExplainRead,
     OverviewPrepareRead,
-    OverviewReadKind,
     OverviewReadPayload,
-    OverviewReadRequest,
     OverviewStatusRead,
 )
 from ..application.overview.read_projection import (
@@ -34,6 +32,7 @@ from ..application.overview.read_projection import (
     OverviewPrepareSnapshot,
     OverviewStatusSnapshot,
 )
+from ..application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -157,6 +156,7 @@ class _OverviewReadPorts:
         from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
         from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
         from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
+        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
         from ..application.filing.draft_revision_gate import require_modelo_draft_coordinates_current
         from ..application.overview.calendar import build_overview_calendar
         from ..application.overview.calendar_models import OverviewCalendarRange
@@ -189,7 +189,11 @@ class _OverviewReadPorts:
             operator_scope_ports=build_operator_scope_ports(),
             state=state,
             raw_values=raw_values,
-            read_ports=build_state_projection_read_ports(),
+            read_ports=build_state_projection_read_ports(
+                operation=operation,
+                objects=secure_object_repository_for_bucket(self.bucket_id),
+                bucket_id=self.bucket_id,
+            ),
             operation=operation,
         )
         today = today_madrid()
@@ -413,6 +417,7 @@ class _OverviewReadPorts:
         from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
         from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
         from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
         from ..application.ledger.preflight import preflight_ledger_tax_readiness
         from ..application.modelo.registry_discovery import registry_describe_modelo_for_scope
@@ -423,7 +428,11 @@ class _OverviewReadPorts:
         period = request.period.to_period()
         registry_describe_modelo_for_scope(request.modelo, period=period, operation=operation)
         transactions = TransactionCatalogueRepository(bucket_id=self.bucket_id)
-        read_ports = build_state_projection_read_ports()
+        read_ports = build_state_projection_read_ports(
+            operation=operation,
+            objects=secure_object_repository_for_bucket(self.bucket_id),
+            bucket_id=self.bucket_id,
+        )
         invoices = InvoiceCatalogueRepository(bucket_id=self.bucket_id).load()
         evidence = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=self.bucket_id)).list_all(
             bucket_id=self.bucket_id

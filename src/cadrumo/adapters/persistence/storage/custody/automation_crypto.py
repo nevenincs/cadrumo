@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, SecretBytes, ValidationError
 
 from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from .....core.base64_codec import b64_decode_canonical
 from .....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
@@ -107,9 +108,7 @@ def seal_automation(plaintext: bytes, key: SecretBytes, aad: bytes) -> str:
 def open_automation(ciphertext: str, key: SecretBytes, aad: bytes) -> bytes:
     """Authenticate every routing coordinate before returning sealed contents."""
     try:
-        raw = base64.b64decode(ciphertext, validate=True)
-        if base64.b64encode(raw).decode("ascii") != ciphertext:
-            raise ValueError
+        raw = b64_decode_canonical(ciphertext)
         return decrypt_record(EncryptedBlob.from_wire(raw), key=key.get_secret_value(), associated_data=aad)
     except (DecryptionError, EncryptionError, ValueError):
         raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None

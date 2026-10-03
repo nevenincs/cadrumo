@@ -65,7 +65,11 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.operations import OperationLifecycle
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+    release_bundled_indexed_authority,
+)
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.deadlines.models import TaxpayerProfile
@@ -574,4 +578,7 @@ class ProfileWorkerOperationHost:
         self._drain_result = result
         if not result.needs_containment:
             self._lifetime.close()
+            # The worker admitted the process-shared owner for this lease; close its
+            # database handles with the host rather than at interpreter teardown.
+            release_bundled_indexed_authority()
         return result

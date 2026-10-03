@@ -25,15 +25,18 @@ from collections.abc import Iterator
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
+    FormBlockDefinition,
     FormCellKind,
     FormFieldBlock,
     FormGridBlock,
     FormLayoutDefinition,
+    FormPlacementDefinition,
     FormPlacementKind,
     FormRepeatingGroupBlock,
     FormRepeatingRowSource,
@@ -55,7 +58,24 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
             The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
-    casillas = sorted(
+    casillas = _casilla_digest_rows(revision)
+    bindings = _binding_digest_rows(revision)
+    records = _export_record_digest_rows(revision)
+    literal_scales = _literal_scale_digest_rows(revision)
+    payload: dict[str, object] = {
+        "bindings": bindings,
+        "casillas": casillas,
+        "records": records,
+        "revision": revision.id,
+    }
+    if literal_scales:
+        payload["literal_scales"] = literal_scales
+    return sha256_hex(canonical_json_bytes(payload))
+
+
+def _casilla_digest_rows(revision: ModeloRevision) -> list[tuple[object, ...]]:
+    """Project only the casilla facts that affect layout structure."""
+    return sorted(
         (
             casilla.id,
             casilla.number,
@@ -67,10 +87,18 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
         )
         for casilla in revision.casillas
     )
-    bindings = sorted(
+
+
+def _binding_digest_rows(revision: ModeloRevision) -> list[tuple[object, ...]]:
+    """Project binding identity, provider, and value-channel facts."""
+    return sorted(
         (binding.id, str(binding.provider.kind), binding.value.channel.value) for binding in revision.bindings
     )
-    records = [
+
+
+def _export_record_digest_rows(revision: ModeloRevision) -> list[tuple[object, ...]]:
+    """Project derived export-record and field coordinates used by a layout."""
+    return [
         (
             layout.id,
             record.id,
@@ -86,93 +114,119 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
         for layout in derive_export_layouts_from_bindings(revision)
         for record in layout.records
     ]
-    payload: dict[str, object] = {
-        "bindings": bindings,
-        "casillas": casillas,
-        "records": records,
-        "revision": revision.id,
-    }
-    literal_scales = [
+
+
+def _literal_scale_digest_rows(revision: ModeloRevision) -> list[tuple[object, ...]]:
+    """Project literal decimal scales when an export literal declares one."""
+    return [
         (layout.id, record.id, field.id, field.decimals)
         for layout in derive_export_layouts_from_bindings(revision)
         for record in layout.records
         for field in record.fields
         if field.literal is not None and field.decimals is not None
     ]
-    if literal_scales:
-        payload["literal_scales"] = literal_scales
-    return sha256_hex(canonical_json_bytes(payload))
+
+
+def _layout_blocks(layout: FormLayoutDefinition) -> Iterator[FormBlockDefinition]:
+    """Yield blocks in authored page, section, and block order."""
+    for page in layout.pages:
+        for section in page.sections:
+            yield from section.blocks
 
 
 def _referenced_casillas(layout: FormLayoutDefinition) -> Iterator[str]:
     """Yield every casilla id a block addresses, once per reference."""
-    for page in layout.pages:
-        for section in page.sections:
-            for block in section.blocks:
-                if isinstance(block, FormFieldBlock) and block.casilla_id is not None:
-                    yield block.casilla_id
-                elif isinstance(block, FormGridBlock):
-                    yield from (
-                        cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None
-                    )
-                elif isinstance(block, FormRepeatingGroupBlock):
-                    yield from (column.casilla_id for column in block.columns if column.casilla_id is not None)
+    for block in _layout_blocks(layout):
+        yield from _block_casilla_references(block)
+
+
+def _block_casilla_references(block: FormBlockDefinition) -> Iterator[str]:
+    """Yield the casilla ids addressed by one authored layout block."""
+    if isinstance(block, FormFieldBlock) and block.casilla_id is not None:
+        yield block.casilla_id
+    elif isinstance(block, FormGridBlock):
+        yield from (cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None)
+    elif isinstance(block, FormRepeatingGroupBlock):
+        yield from (column.casilla_id for column in block.columns if column.casilla_id is not None)
 
 
 def _referenced_bindings(layout: FormLayoutDefinition) -> Iterator[str]:
     """Yield every binding a block addresses as an input, once per reference."""
-    for page in layout.pages:
-        for section in page.sections:
-            for block in section.blocks:
-                if isinstance(block, FormFieldBlock) and block.binding_id is not None:
-                    yield block.binding_id
-                elif isinstance(block, FormGridBlock):
-                    yield from (
-                        cell.binding_id
-                        for row in block.rows
-                        for cell in row.cells
-                        if cell.kind is FormCellKind.BINDING_INPUT and cell.binding_id is not None
-                    )
-                elif isinstance(block, FormBindingInputsBlock):
-                    yield from block.binding_ids
+    for block in _layout_blocks(layout):
+        if isinstance(block, FormFieldBlock) and block.binding_id is not None:
+            yield block.binding_id
+        elif isinstance(block, FormGridBlock):
+            yield from (
+                cell.binding_id
+                for row in block.rows
+                for cell in row.cells
+                if cell.kind is FormCellKind.BINDING_INPUT and cell.binding_id is not None
+            )
+        elif isinstance(block, FormBindingInputsBlock):
+            yield from block.binding_ids
 
 
 def _repeating_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
-    bindings = {binding.id: binding for binding in revision.bindings}
+    bindings = revision_bindings_by_id(revision)
     repeating_records = {
         record.id
         for export_layout in derive_export_layouts_from_bindings(revision)
         for record in export_layout.records
         if record.repeat is not None
     }
-    for page in layout.pages:
-        for section in page.sections:
-            for block in section.blocks:
-                if not isinstance(block, FormRepeatingGroupBlock):
-                    continue
-                if block.row_source is FormRepeatingRowSource.ROW_SET_BINDING:
-                    binding = bindings.get(str(block.binding_id))
-                    if binding is None:
-                        yield f"repeating group {block.id!r} ranges over unknown binding {block.binding_id!r}"
-                    elif binding.value.channel is not BindingValueChannel.ROW_SET:
-                        yield f"repeating group {block.id!r} ranges over non-row-set binding {block.binding_id!r}"
-                elif block.export_record_id not in repeating_records:
-                    yield (
-                        f"repeating group {block.id!r} ranges over {block.export_record_id!r}, "
-                        "which is not a repeating export record"
-                    )
+    for block in _layout_blocks(layout):
+        if not isinstance(block, FormRepeatingGroupBlock):
+            continue
+        failure = _repeating_block_failure(block, bindings, repeating_records)
+        if failure is not None:
+            yield failure
+
+
+def _repeating_block_failure(
+    block: FormRepeatingGroupBlock,
+    bindings: dict[str, BindingDefinition],
+    repeating_records: set[str],
+) -> str | None:
+    """Check the row-source contract for one repeating group."""
+    if block.row_source is FormRepeatingRowSource.ROW_SET_BINDING:
+        binding = bindings.get(str(block.binding_id))
+        if binding is None:
+            return f"repeating group {block.id!r} ranges over unknown binding {block.binding_id!r}"
+        if binding.value.channel is not BindingValueChannel.ROW_SET:
+            return f"repeating group {block.id!r} ranges over non-row-set binding {block.binding_id!r}"
+        return None
+    if block.export_record_id not in repeating_records:
+        return (
+            f"repeating group {block.id!r} ranges over {block.export_record_id!r}, "
+            "which is not a repeating export record"
+        )
+    return None
 
 
 def _placement_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
     declared = {casilla.id for casilla in revision.casillas}
     placed = {placement.casilla_id: placement for placement in layout.placements}
+    references = Counter(_referenced_casillas(layout))
+    yield from _placement_domain_failures(declared, placed, references)
+    yield from _placement_count_failures(placed, references)
+
+
+def _placement_domain_failures(
+    declared: set[str],
+    placed: dict[str, FormPlacementDefinition],
+    references: Counter[str],
+) -> Iterator[str]:
+    """Report omitted, invented, or undeclared casilla placements and references."""
     for casilla_id in sorted(declared - placed.keys()):
         yield f"omits casilla {casilla_id!r}: every casilla carries exactly one placement"
     for casilla_id in sorted(placed.keys() - declared):
         yield f"places casilla {casilla_id!r}, which the revision does not declare"
-    references = Counter(_referenced_casillas(layout))
     for casilla_id in sorted(references.keys() - declared):
         yield f"shows casilla {casilla_id!r}, which the revision does not declare"
+
+
+def _placement_count_failures(placed: dict[str, FormPlacementDefinition], references: Counter[str]) -> Iterator[str]:
+    """Report references inconsistent with each placement's on-form status."""
     for casilla_id, placement in sorted(placed.items()):
         count = references.get(casilla_id, 0)
         if placement.kind is FormPlacementKind.ON_FORM and count != 1:
@@ -182,7 +236,7 @@ def _placement_failures(layout: FormLayoutDefinition, revision: ModeloRevision) 
 
 
 def _binding_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
-    bindings = {binding.id: binding for binding in revision.bindings}
+    bindings = revision_bindings_by_id(revision)
     references = Counter(_referenced_bindings(layout))
     for binding_id, count in sorted(references.items()):
         binding = bindings.get(binding_id)

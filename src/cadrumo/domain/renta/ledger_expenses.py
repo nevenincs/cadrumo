@@ -340,20 +340,33 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_period_and_invoice_state(self) -> RentaDeductibleExpenseObservation:
-        if self.category_family is not family_for(self.category):
-            raise RentaValidationError("category_family must match category")
-        if not Period.from_year_and_code(self.tax_year, "0A").contains(self.filing_date):
-            raise RentaValidationError("filing_date must fall inside the observation tax year")
-        target_casilla_id = renta_first_slice_expense_routing(effective_date=self.filing_date).get(self.category)
-        if target_casilla_id is None or self.target_casilla_id != target_casilla_id:
-            raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
-        if self.invoice_id is None and self.invoice_issue_date is not None:
-            raise RentaValidationError("invoice_issue_date requires invoice_id")
-        if self.invoice_id is None and self.invoice_evidence_status is not RentaInvoiceEvidenceStatus.NONE:
-            raise RentaValidationError("transaction-only observations must not declare linked invoice evidence")
-        if self.invoice_id is not None and self.invoice_evidence_status is not RentaInvoiceEvidenceStatus.LINKED:
-            raise RentaValidationError("linked invoice observations must declare linked invoice evidence")
+        _validate_expense_period_and_category(self)
+        _validate_expense_invoice_state(self)
         return self
+
+
+def _validate_expense_period_and_category(observation: RentaDeductibleExpenseObservation) -> None:
+    if observation.category_family is not family_for(observation.category):
+        raise RentaValidationError("category_family must match category")
+    if not Period.from_year_and_code(observation.tax_year, "0A").contains(observation.filing_date):
+        raise RentaValidationError("filing_date must fall inside the observation tax year")
+    target_casilla_id = renta_first_slice_expense_routing(effective_date=observation.filing_date).get(
+        observation.category,
+    )
+    if target_casilla_id is None or observation.target_casilla_id != target_casilla_id:
+        raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
+
+
+def _validate_expense_invoice_state(observation: RentaDeductibleExpenseObservation) -> None:
+    if observation.invoice_id is None and observation.invoice_issue_date is not None:
+        raise RentaValidationError("invoice_issue_date requires invoice_id")
+    if observation.invoice_id is None and observation.invoice_evidence_status is not RentaInvoiceEvidenceStatus.NONE:
+        raise RentaValidationError("transaction-only observations must not declare linked invoice evidence")
+    if (
+        observation.invoice_id is not None
+        and observation.invoice_evidence_status is not RentaInvoiceEvidenceStatus.LINKED
+    ):
+        raise RentaValidationError("linked invoice observations must declare linked invoice evidence")
 
 
 def normalize_spending_category(value: SpendingCategory | str) -> SpendingCategory:

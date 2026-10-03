@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cadrumo.core.corpus_text import CorpusAnchorResolutionError
+from cadrumo.core.hashing import sha256_file
 from cadrumo.core.hex import HEX_PATTERN_64
 from cadrumo.core.type_guards import is_object_dict, is_object_list
 
@@ -51,6 +51,41 @@ class CorpusPageAnnotation(BaseModel):
         return self
 
 
+def _unique_anchor_selection(annotation: CorpusPageAnnotation, anchor: str, source: Path) -> CorpusPageSelection:
+    matches = [selection for selection in annotation.selections if selection.anchor.casefold() == anchor.casefold()]
+    if len(matches) != 1:
+        raise CorpusAnchorResolutionError(f"PDF annotation anchor {anchor!r} is not unique for {source}")
+    return matches[0]
+
+
+def _page_units(units: list[object], page: int) -> list[tuple[str, str]]:
+    matches: list[tuple[str, str]] = []
+    for unit in units:
+        if not is_object_dict(unit):
+            continue
+        title = unit.get("title")
+        text = unit.get("text")
+        if isinstance(title, str) and isinstance(text, str) and text.strip() and _page_number(title) == page:
+            matches.append((title, text))
+    return matches
+
+
+def _render_annotated_pages(
+    pages: tuple[int, ...],
+    units: list[object],
+    source: Path,
+    include_title: bool,
+) -> str:
+    rendered: list[str] = []
+    for page in pages:
+        matches = _page_units(units, page)
+        if len(matches) != 1:
+            raise CorpusAnchorResolutionError(f"PDF extraction page {page} is not unique for {source}")
+        title, text = matches[0]
+        rendered.append(f"# {title}\n\n{text}" if include_title else text)
+    return "\n\n".join(rendered)
+
+
 def resolve_annotated_pdf_pages(
     source: Path,
     *,
@@ -72,34 +107,18 @@ def resolve_annotated_pdf_pages(
     try:
         annotation = CorpusPageAnnotation.model_validate_json(annotation_path.read_text(encoding="utf-8"))
         extracted: object = json.loads(extracted_path.read_text(encoding="utf-8"))
-        live_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
+        live_sha256 = sha256_file(source)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         raise CorpusAnchorResolutionError(f"PDF annotation or extraction is unreadable for {source}") from exc
     if not is_object_dict(extracted):
         raise CorpusAnchorResolutionError(f"PDF extraction is not an object for {source}")
     if annotation.source_sha256 != live_sha256 or extracted.get("source_sha256") != live_sha256:
         raise CorpusAnchorResolutionError(f"PDF annotation or extraction is stale for {source}")
-    matches = [selection for selection in annotation.selections if selection.anchor.casefold() == anchor.casefold()]
-    if len(matches) != 1:
-        raise CorpusAnchorResolutionError(f"PDF annotation anchor {anchor!r} is not unique for {source}")
+    selection = _unique_anchor_selection(annotation, anchor, source)
     units = extracted.get("units")
     if not is_object_list(units):
         raise CorpusAnchorResolutionError(f"PDF extraction has no units for {source}")
-    rendered: list[str] = []
-    for page in matches[0].pages:
-        page_units: list[tuple[str, str]] = []
-        for unit in units:
-            if not is_object_dict(unit):
-                continue
-            title = unit.get("title")
-            text = unit.get("text")
-            if isinstance(title, str) and isinstance(text, str) and text.strip() and _page_number(title) == page:
-                page_units.append((title, text))
-        if len(page_units) != 1:
-            raise CorpusAnchorResolutionError(f"PDF extraction page {page} is not unique for {source}")
-        title, text = page_units[0]
-        rendered.append(f"# {title}\n\n{text}" if include_title else text)
-    return "\n\n".join(rendered)
+    return _render_annotated_pages(selection.pages, units, source, include_title)
 
 
 def _page_number(title: str) -> int | None:

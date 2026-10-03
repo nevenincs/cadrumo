@@ -51,6 +51,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
+from dev.first_party_source import is_production_source
+
 __all__ = [
     "UnfilledField",
     "scan_unfilled_workspace_fields",
@@ -171,7 +173,7 @@ def _supplied_fields(source_root: Path, models_module: Path, known: set[str]) ->
     """Return, per model, every field name some construction site supplies."""
     supplied: dict[str, set[str]] = defaultdict(set)
     for path in source_root.rglob("*.py"):
-        if path == models_module or "tests" in path.parts:
+        if path == models_module or not is_production_source(path, root=source_root):
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -182,24 +184,7 @@ def _supplied_fields(source_root: Path, models_module: Path, known: set[str]) ->
             # and that is the same non-evidence, not a reason to lose the run.
             continue
         for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            constructed = _constructed_name(node.func, known)
-            if constructed is not None:
-                supplied[constructed].update(keyword.arg for keyword in node.keywords if keyword.arg)
-            if (
-                isinstance(node.func, ast.Attribute)
-                and node.func.attr == "model_validate"
-                and isinstance(node.func.value, ast.Name)
-                and node.func.value.id in known
-                and node.args
-                and isinstance(node.args[0], ast.Dict)
-            ):
-                supplied[node.func.value.id].update(
-                    key.value
-                    for key in node.args[0].keys
-                    if isinstance(key, ast.Constant) and isinstance(key.value, str)
-                )
+            _collect_supplied_fields(node, known, supplied)
         _record_generic_factory_construction(tree, known, supplied)
     return supplied
 
@@ -220,3 +205,28 @@ def scan_unfilled_workspace_fields(source_root: Path, models_module: Path) -> tu
             key=str,
         )
     )
+
+
+def _collect_supplied_fields(node: ast.AST, known: set[str], supplied: dict[str, set[str]]) -> None:
+    """Collect supplied fields."""
+    if not isinstance(node, ast.Call):
+        return
+    constructed = _constructed_name(node.func, known)
+    if constructed is not None:
+        supplied[constructed].update(keyword.arg for keyword in node.keywords if keyword.arg)
+    _record_validated_model_fields(node, known, supplied)
+
+
+def _record_validated_model_fields(node: ast.Call, known: set[str], supplied: dict[str, set[str]]) -> None:
+    """Record validated model fields."""
+    if (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr == "model_validate"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id in known
+        and node.args
+        and isinstance(node.args[0], ast.Dict)
+    ):
+        supplied[node.func.value.id].update(
+            key.value for key in node.args[0].keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
+        )

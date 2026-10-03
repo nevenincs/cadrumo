@@ -271,6 +271,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_correction_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def correct(**kwargs: object):
         seen.append(kwargs)
@@ -322,6 +323,7 @@ def test_known_seed_refusal_is_settled_with_no_effect(monkeypatch: pytest.Monkey
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_correction_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def refuse(**_kwargs: object):
         raise ModeloIvaWalletCorrectionNoRecordError(

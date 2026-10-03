@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from dev.locales import casilla_orthography
+from dev.locales.casilla_catalogue_models import Values
 from dev.locales.casilla_orthography import spanish_leftovers, unaccented_words
-from dev.locales.modelo_casilla_catalogue import Values
 
 pytestmark = [pytest.mark.hex_domain]
 
@@ -107,7 +107,8 @@ def test_the_shipped_interface_domains_keep_their_diacritics() -> None:
     same finding over the interface domains and the casilla catalogue together.
     """
     from dev.locales._paths import LOCALES_DIR, SRC_DIR
-    from dev.locales.manager import LocaleManager, _flatten_raw_locale_leaves
+    from dev.locales.locale_tree import _flatten_raw_locale_leaves
+    from dev.locales.manager import LocaleManager
 
     manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
     values: Values = {}

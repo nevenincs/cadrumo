@@ -17,44 +17,30 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.google_drive_reference import build_google_drive_file_reference
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource, DocumentLinkSource
+from ...domain.attachments.errors import AttachmentValidationError
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..review.filter import LedgerReviewStatus
@@ -78,12 +64,12 @@ from .evidence_port_identity import require_exact_evidence_ports
 from .evidence_sweep import EvidenceSweepRefusal, sweep_evidence_folder
 from .evidence_sweep_ports import EvidenceSweepDocument
 from .export_link_operation_ports import (
-    require_export_link_profile,
     resolve_export_link_access,
     settle_export_link_failure,
 )
 from .extraction_draft_store import bind_extraction_draft_repository_factory
 from .id_resolution import resolve_transaction_id
+from .invoice_evidence_operation_dtos import LabelReadingFallbackProjectionV1
 from .invoice_extraction_authority import default_invoice_extraction_period
 from .transaction_projection import LedgerTransactionProjection
 
@@ -151,22 +137,29 @@ class LedgerEvidenceBatchItemSnapshot(BaseModel):
     refusal_code: str | None
     refusal_verdict: PreconditionVerdictSnapshot | None
     needed_inference: bool
+    label_reading_fallback: LabelReadingFallbackProjectionV1 | None
 
     @classmethod
     def from_item(cls, item: BatchItemResult) -> LedgerEvidenceBatchItemSnapshot:
         """Copy canonical identity and outcome without exception text."""
         return cls(
-            **item.model_dump(exclude={"refusal_verdict"}),
+            **item.model_dump(exclude={"refusal_verdict", "label_reading_fallback"}),
             refusal_verdict=PreconditionVerdictSnapshot.from_verdict(item.refusal_verdict)
             if item.refusal_verdict is not None
+            else None,
+            label_reading_fallback=LabelReadingFallbackProjectionV1.from_fallback(item.label_reading_fallback)
+            if item.label_reading_fallback is not None
             else None,
         )
 
     def to_item(self) -> BatchItemResult:
         """Restore canonical row invariants for the existing human presenter."""
         return BatchItemResult(
-            **self.model_dump(exclude={"refusal_verdict"}),
+            **self.model_dump(exclude={"refusal_verdict", "label_reading_fallback"}),
             refusal_verdict=self.refusal_verdict.to_verdict() if self.refusal_verdict is not None else None,
+            label_reading_fallback=self.label_reading_fallback.to_fallback()
+            if self.label_reading_fallback is not None
+            else None,
         )
 
     @model_validator(mode="after")
@@ -422,7 +415,7 @@ async def _execute[RequestT: LedgerEvidenceBatchRequest | LedgerEvidencePullRequ
     context: OperationExecutorContext,
 ) -> str:
     payload = request.payload
-    require_export_link_profile(request, context, payload.profile_id)
+    require_operation_profile(request, context, payload.profile_id)
     expected: dict[type[BaseModel], str] = {
         LedgerEvidenceBatchRequest: LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
         LedgerEvidencePullRequest: LEDGER_EVIDENCE_PULL_OPERATION_DEFINITION_ID,
@@ -441,7 +434,7 @@ async def _execute[RequestT: LedgerEvidenceBatchRequest | LedgerEvidencePullRequ
             raise admission_failure
         try:
             async with context.cancellation.irreversible_section():
-                require_export_link_profile(request, context, payload.profile_id)
+                require_operation_profile(request, context, payload.profile_id)
         except BaseException as error:
             admission_failure = error
             writes.tracker.abort()
@@ -551,8 +544,11 @@ async def _execute[RequestT: LedgerEvidenceBatchRequest | LedgerEvidencePullRequ
             listing = ports.acquisition.list_folder(pull_all_payload.folder)
 
             def fetch(document: EvidenceSweepDocument) -> str:
+                try:
+                    reference = build_google_drive_file_reference(document.file_id)
+                except ValueError as error:
+                    raise AttachmentValidationError("Drive folder entry has an invalid file ID") from error
                 data = ports.acquisition.fetch_folder_document(document)
-                reference = f"https://drive.google.com/file/d/{document.file_id}"
                 attachment = add_attachment(
                     ports.attachment_store,
                     content=AttachmentBytesContent(data=data),
@@ -697,15 +693,13 @@ def project_ledger_evidence_ingestion_result(result: BaseModel, receipt: Operati
         raise ValueError("invalid evidence ingestion execution result")
     projection = result.projection
     if (
-        receipt.identity.definition_id != expected[type(result)]
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not projection.effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        not terminal_receipt_matches(
+            receipt,
+            definition_id=expected[type(result)],
+            subject_ref=profile_operation_subject(str(projection.profile_id)),
+            condition=OperationTerminalCondition.SUCCEEDED,
+            effect=projection.effect,
+        )
         or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
     ):
         raise ValueError("evidence ingestion projection contradicts its terminal receipt")
@@ -716,21 +710,7 @@ def build_ledger_evidence_ingestion_definitions(
     factory: LedgerEvidenceIngestionPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
     """Declare all three existing human ingestion routes and truthful effects."""
-    capabilities = OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.NONE,
-        baseline=OperationBaselinePolicy.REQUEST_BOUND,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset(
-            {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}
-        ),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
+    capabilities = RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
     return (
         OperationDefinition(
             definition_id=_IDS[0],
@@ -790,18 +770,11 @@ def build_ledger_evidence_ingestion_registrations(
         _IDS[2]: LedgerEvidencePullAllProjection,
     }
     return tuple(
-        OperationPublicDefinitionRegistrationV1.compose(
+        OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".request", schema_version=1, model_type=definition.request_type
-            ),
-            result_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".result",
-                schema_version=1,
-                model_type=result_types[definition.definition_id],
-            ),
-            access_resolver=resolve_ledger_evidence_ingestion_access,
+            public_result_type=result_types[definition.definition_id],
             result_projector=project_ledger_evidence_ingestion_result,
+            access_resolver=resolve_ledger_evidence_ingestion_access,
         )
         for definition in definitions
     )

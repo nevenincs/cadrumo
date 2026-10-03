@@ -26,16 +26,16 @@ from cadrumo.domain.calculations.registry.applicability_payer_facts import (
     resolve_payer_fact_catalogue,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactEntry
 from cadrumo.domain.calculations.registry.facts.resolution import (
     GovernedFactQuery,
     MappingFactQuery,
     ResolvedGovernedFact,
     ResolvedMappingFact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import MappingFactEntry
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from cadrumo.domain.contribuyente.entity_type import require_entity_type
 from cadrumo.domain.deadlines.models import TaxpayerProfile

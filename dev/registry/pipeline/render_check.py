@@ -55,18 +55,18 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from .record_design_intermediate import load_record_design_intermediate
-from .render_profile import (
-    RenderProfile,
-    RenderProfileSourceEvidence,
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
+from .render_profile_evidence import RenderProfileSourceEvidence
+from .render_profile_loading import load_render_profile
+from .render_profile_model import RenderProfile
+from .render_profile_source_reader import load_render_profile_source_evidence
 from .semantic_map import (
     SemanticMap,
     load_semantic_map,
@@ -247,6 +247,78 @@ class GeneratedExportBootstrapTransport:
     source_sha256: str
 
 
+def _record_design_refs(
+    selected: ModeloRevision,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> tuple[SourceRefId, ...]:
+    return tuple(
+        ref
+        for ref in selected.source_refs
+        if (source := sources.get(ref)) is not None
+        and source.kind == "record_design"
+        and source.record_design_epoch is not None
+    )
+
+
+def _select_record_design_source(
+    selected: ModeloRevision,
+    sources: Mapping[SourceRefId, SourceReference],
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None,
+) -> tuple[SourceRefId, str]:
+    design_refs = _record_design_refs(selected, sources)
+    if not design_refs:
+        raise ValueError(f"{modelo}/{revision} cites no record-design source to render from")
+    selected_source_ref = next((ref for ref in design_refs if str(ref) == source_ref), None)
+    if source_ref is not None and selected_source_ref is None:
+        raise ValueError(f"{modelo}/{revision} does not declare record-design source {source_ref!r}")
+    if selected_source_ref is None:
+        if len(design_refs) != 1:
+            raise ValueError(
+                f"{modelo}/{revision} declares multiple record-design sources; select one explicitly",
+            )
+        selected_source_ref = design_refs[0]
+    epoch = sources[selected_source_ref].record_design_epoch
+    if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
+        raise ValueError(f"source {selected_source_ref} declares no design epoch")
+    return selected_source_ref, epoch
+
+
+def _render_transport(
+    selected: ModeloRevision,
+    sources: Mapping[SourceRefId, SourceReference],
+    *,
+    modelo: str,
+    revision: str,
+    selected_source_ref: SourceRefId,
+    bootstrap_transport: GeneratedExportBootstrapTransport | None,
+) -> tuple[str, Literal["crlf", "lf", "none"]]:
+    if bootstrap_transport is not None:
+        expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
+        if bootstrap_transport.layout_id != expected_layout_id:
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r}, "
+                f"got {bootstrap_transport.layout_id!r}",
+            )
+        if bootstrap_transport.source_ref != str(selected_source_ref):
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap source must be {str(selected_source_ref)!r}, "
+                f"got {bootstrap_transport.source_ref!r}",
+            )
+        if bootstrap_transport.source_sha256 != sources[selected_source_ref].sha256:
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap source digest does not match selected source {selected_source_ref!r}"
+            )
+        return bootstrap_transport.layout_id, bootstrap_transport.line_ending
+
+    if not selected.export_layouts:
+        raise ValueError(f"{modelo}/{revision} declares no export layout to render")
+    layout = selected.export_layouts[0]
+    return str(layout.id), layout.records[0].line_ending.value
+
+
 def revision_render_inputs(
     authority: ValidatedRegistryAuthority,
     *,
@@ -268,52 +340,21 @@ def revision_render_inputs(
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
     selected = definition.revisions[revision]
     sources = authority.catalogues.sources
-    design_refs = [
-        ref
-        for ref in selected.source_refs
-        if (source := sources.get(ref)) is not None
-        and source.kind == "record_design"
-        and source.record_design_epoch is not None
-    ]
-    if not design_refs:
-        raise ValueError(f"{modelo}/{revision} cites no record-design source to render from")
-    selected_source_ref = next((ref for ref in design_refs if str(ref) == source_ref), None)
-    if source_ref is not None and selected_source_ref is None:
-        raise ValueError(f"{modelo}/{revision} does not declare record-design source {source_ref!r}")
-    if selected_source_ref is None:
-        if len(design_refs) != 1:
-            raise ValueError(
-                f"{modelo}/{revision} declares multiple record-design sources; select one explicitly",
-            )
-        selected_source_ref = design_refs[0]
-    epoch = sources[selected_source_ref].record_design_epoch
-    if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
-        raise ValueError(f"source {selected_source_ref} declares no design epoch")
-
-    if bootstrap_transport is not None:
-        expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
-        if bootstrap_transport.layout_id != expected_layout_id:
-            raise ValueError(
-                f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r}, "
-                f"got {bootstrap_transport.layout_id!r}",
-            )
-        if bootstrap_transport.source_ref != str(selected_source_ref):
-            raise ValueError(
-                f"{modelo}/{revision} bootstrap source must be {str(selected_source_ref)!r}, "
-                f"got {bootstrap_transport.source_ref!r}",
-            )
-        if bootstrap_transport.source_sha256 != sources[selected_source_ref].sha256:
-            raise ValueError(
-                f"{modelo}/{revision} bootstrap source digest does not match selected source {selected_source_ref!r}",
-            )
-        layout_id = bootstrap_transport.layout_id
-        line_ending = bootstrap_transport.line_ending
-    else:
-        if not selected.export_layouts:
-            raise ValueError(f"{modelo}/{revision} declares no export layout to render")
-        layout = selected.export_layouts[0]
-        layout_id = str(layout.id)
-        line_ending = layout.records[0].line_ending.value
+    selected_source_ref, epoch = _select_record_design_source(
+        selected,
+        sources,
+        modelo=modelo,
+        revision=revision,
+        source_ref=source_ref,
+    )
+    layout_id, line_ending = _render_transport(
+        selected,
+        sources,
+        modelo=modelo,
+        revision=revision,
+        selected_source_ref=selected_source_ref,
+        bootstrap_transport=bootstrap_transport,
+    )
 
     semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
     profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch

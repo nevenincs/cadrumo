@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Any, Final, Literal, cast, overload
 from uuid import uuid4
 
+from .....core.descriptor_write import write_all
+from .....core.windows_contention import is_windows_contention
 from ._capsule_filesystem import (
     windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
 )
@@ -337,7 +339,10 @@ def _replace_windows_local_record(path: Path, payload: bytes) -> None:
         try:
             atomic_write_hardened_bytes(path, payload, mode=0o600)
         except PermissionError as exc:
-            if time.monotonic() >= deadline:
+            # Only a Windows handle-contention code is worth waiting out. A
+            # denial raised without one (an ACL refusing the staging create)
+            # never clears, so it is refused at once instead of after the budget.
+            if not is_windows_contention(exc) or time.monotonic() >= deadline:
                 raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
             time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
         except OSError as exc:
@@ -578,12 +583,7 @@ def _posix_open_exclusive_file(parent_fd: int, name: str) -> int:
 
 
 def _write_descriptor_fsynced(descriptor: int, payload: bytes) -> None:
-    offset = 0
-    while offset < len(payload):
-        written = os.write(descriptor, payload[offset:])
-        if written <= 0:
-            raise OSError("local custody record short write")
-        offset += written
+    write_all(descriptor, payload)
     os.fsync(descriptor)
 
 

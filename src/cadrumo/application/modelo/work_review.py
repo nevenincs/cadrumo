@@ -309,8 +309,8 @@ def _work_review_owner_observation(
     revision counter, so its limb is the digest of what it holds.
     """
     _work_units, work_unit_revision = work_unit_repository.load_revisioned()
-    _calculations, calculation_revision = calculation_repository.load_revisioned()
-    verification_digest = content_hash_hex(verification_repository.load().model_dump(mode="json"))
+    _calculations, calculation_revision = calculation_repository.load_revisioned(operation=operation)
+    verification_digest = content_hash_hex(verification_repository.load(operation=operation).model_dump(mode="json"))
     return (
         work_unit_revision,
         calculation_revision,

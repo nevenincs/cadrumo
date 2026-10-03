@@ -18,6 +18,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, ValidationError
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.management import (
     RuntimeManagerInspection,
     RuntimeManagerKind,
@@ -25,6 +26,7 @@ from ...application.runtime.management import (
     RuntimeServiceBinding,
 )
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
+from ...core.descriptor_write import write_all
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .macos_process import MacosProcessWatch, read_macos_process
 from .manager_commands import NativeManagerCommand, run_manager_command
@@ -582,9 +584,7 @@ class _NativeMacosLaunchd:
             != owner.watch.observation
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        remaining = remaining_budget(deadline)
         reply = await run_manager_command(NativeManagerCommand.LAUNCHCTL, arguments, timeout=remaining)
         if reply.returncode:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
@@ -598,9 +598,7 @@ class _NativeMacosLaunchd:
                 raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
             if owner is None or owner.watch.exited:
                 return
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            remaining = remaining_budget(deadline)
             await asyncio.sleep(min(0.05, remaining))
 
     def definition_path(self, binding: RuntimeServiceBinding) -> str:
@@ -654,12 +652,7 @@ class _NativeMacosLaunchd:
             )
             descriptors.append(descriptor)
             created = True
-            remaining = memoryview(payload)
-            while remaining:
-                written = os.write(descriptor, remaining)
-                if written <= 0:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                remaining = remaining[written:]
+            write_all(descriptor, payload)
             os.fsync(descriptor)
             os.rename(temporary, name, src_dir_fd=directory, dst_dir_fd=directory)
             created = False

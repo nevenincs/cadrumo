@@ -8,393 +8,52 @@ result fields whose disclosure was authorized for the MCP destination.
 from __future__ import annotations
 
 import asyncio
-from datetime import date
 from decimal import Decimal
-from typing import Annotated, Literal, Self
-from uuid import UUID
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError, model_validator
+from pydantic import BaseModel, TypeAdapter
 
-from ...core.aggregation import BindingTypedEnumKind
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.errors.hierarchy import CadrumoError
-from ...core.external_constants import OutputLanguage
-from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
-from ...domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
-from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
-from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from ...domain.calculations.registry.entity_type import resolve_entity_vocabulary
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.rental_reduction import resolve_rental_reduction_art232_tier_catalogue
-from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
-from ...domain.calculations.registry.schema_scalars import CalendarDate, DecimalValue, validate_registry_text_scalar
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ..ledger.preflight import LedgerPreflightIssueReason
+from ...domain.calculations.registry.schema_scalars import CalendarDate, DecimalValue
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
-from ..state_projection import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
+from ..operator_actions.projection import PreconditionVerdictSnapshot
+from ..state_projection import ModeloProfileRefusalCause, ProjectionModeloReadiness
 from ..user_profile.access_contracts import AccessDenialCode, DisclosureCategory
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .mcp_binding_validation import resolve_typed_bindings
+from .mcp_query_contracts import (
+    MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID,
+    MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID,
+    ModeloBindingsResolveTypedProjection,
+    ModeloReadinessSafeLedgerIssue,
+    ModeloReadinessSafeMissingRequirement,
+    ModeloReadinessSafeRecovery,
+    ModeloReadinessSummaryProjection,
+)
 from .query_read_operation import (
-    ModeloBindingRowV1,
-    ModeloBindingsResolveProjection,
     ModeloBindingsResolveRequest,
     ModeloQueryReadPortsFactory,
-    ModeloReadinessMissingBindingV1,
     ModeloReadinessOperationRequest,
     ModeloReadinessProjection,
     modelo_query_read_capabilities,
-    read_modelo_bindings_resolve,
     read_modelo_readiness,
     require_modelo_query_worker_identity,
     resolve_modelo_query_read_access,
 )
 
-MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID = "modelo.bindings.resolve.typed"
-MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID = "modelo.readiness.summary"
-
 _DECIMAL = TypeAdapter[Decimal](DecimalValue)
 _CALENDAR_DATE = TypeAdapter[str](CalendarDate)
-_VALUE_MAX = 16_384
-
-
-class ModeloBindingValueContractUnsupportedError(CadrumoError):
-    """The pinned binding lacks an official grammar for agent value disclosure."""
-
-    def __init__(self, *, binding_id: str = "", channel: BindingValueChannel | None = None) -> None:
-        """Carry only the fixed unsupported-contract refusal text."""
-        self.binding_id = binding_id
-        self.channel = channel
-        super().__init__("modelo binding value contract unsupported")
-
-
-class ModeloBindingValueInvalidError(CadrumoError):
-    """The caller value does not satisfy its pinned official value contract."""
-
-    def __init__(self, *, binding_id: str = "", channel: BindingValueChannel | None = None) -> None:
-        """Carry only the fixed invalid-value refusal text."""
-        self.binding_id = binding_id
-        self.channel = channel
-        super().__init__("modelo binding value invalid")
-
-
-class ModeloTypedBindingValue(BaseModel):
-    """Exact canonical override value with its declared legal type and channel."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    binding_id: Annotated[str, Field(min_length=1, max_length=128)]
-    data_type: BindingDataType
-    channel: BindingValueChannel
-    value: Annotated[str, Field(min_length=1, max_length=_VALUE_MAX, repr=False)]
-
-
-class ModeloBindingsResolveTypedProjection(BaseModel):
-    """Complete pinned binding preview with only contract-validated values."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    result_version: Literal[1] = 1
-    operation: Literal["modelo.bindings.resolve.typed"] = MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID
-    authority_generation: ContentDigest
-    profile_id: UUID
-    modelo: str
-    revision: str
-    filing_year: int | None
-    period: str | None
-    override_count: int
-    binding_count: int
-    bindings: tuple[ModeloBindingRowV1, ...]
-    validated_overrides: tuple[ModeloTypedBindingValue, ...]
-
-    @model_validator(mode="after")
-    def _all_values_present(self) -> Self:
-        if self.override_count != len(self.validated_overrides) or self.binding_count != len(self.bindings):
-            raise ValueError("binding preview count mismatch")
-        overrides = {row.binding_id: row.value for row in self.validated_overrides}
-        if len(overrides) != self.override_count:
-            raise ValueError("duplicate validated binding override")
-        if {row.binding_id: row.override for row in self.bindings if row.override is not None} != overrides:
-            raise ValueError("binding preview omits a validated override")
-        return self
-
-
-class ModeloReadinessSafeRecovery(BaseModel):
-    """Allowlisted recovery identity for the canonical setup-incomplete limb."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    failed_condition_id: Literal["profile.setup.declared_complete"]
-    action_id: Literal["operator.profile.complete_setup"]
-    missing_argument_names: tuple[str, ...]
-
-
-class ModeloReadinessSafeLedgerIssue(BaseModel):
-    """Transaction address and closed reason without freeform detail."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    transaction_id: str
-    reason: LedgerPreflightIssueReason
-
-
-class ModeloReadinessSafeMissingRequirement(BaseModel):
-    """One missing profile field identified by canonical schema keys."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    section_key: Annotated[str, Field(min_length=1, max_length=64)]
-    field_key: Annotated[str, Field(min_length=1, max_length=128)]
-    legal_refs: tuple[str, ...]
-    modelos: tuple[str, ...]
-
-
-class ModeloReadinessSummaryProjection(BaseModel):
-    """Every canonical readiness axis, with typed causes and bounded facts."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    result_version: Literal[1] = 1
-    operation: Literal["modelo.readiness.summary"] = MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID
-    authority_generation: ContentDigest
-    profile_id: UUID
-    language: OutputLanguage
-    modelo: str
-    revision_id: str
-    filing_year: int
-    period: PublicPeriod
-    ready: bool
-    profile_ready: bool
-    per_operation_requirements_assessed: bool
-    profile_refusal_cause: ModeloProfileRefusalCause | None
-    profile_recovery: ModeloReadinessSafeRecovery | None
-    registry_ready: bool
-    registry_refusal_cause: ModeloRegistryRefusalCause | None
-    binding_ready: bool
-    missing: tuple[ModeloReadinessSafeMissingRequirement, ...]
-    missing_bindings: tuple[ModeloReadinessMissingBindingV1, ...]
-    ledger_preflight_required: bool
-    ledger_ready: bool | None
-    ledger_period: PublicPeriod | None
-    ledger_checked_transaction_count: int
-    ledger_issues: tuple[ModeloReadinessSafeLedgerIssue, ...]
-
-
-def _bound_targets(snapshot: RegistrySnapshot, binding_id: str) -> tuple[CasillaDefinition, ...]:
-    return tuple(
-        row for row in snapshot.revision.casillas if row.binding == binding_id or binding_id in row.alternate_bindings
-    )
-
-
-def _validate_typed_enum(
-    binding: BindingDefinition,
-    raw: str,
-    *,
-    operation: PinnedAuthorityOperation,
-    effective_date: date | None,
-) -> None:
-    kind = binding.value.typed_enum
-    if kind is None:
-        if binding.value.channel is BindingValueChannel.ENUM:
-            raise ModeloBindingValueContractUnsupportedError()
-        return
-    try:
-        if kind is BindingTypedEnumKind.CENSO_EVENT_KIND:
-            if binding.value.channel is not BindingValueChannel.ENUM:
-                raise ModeloBindingValueContractUnsupportedError()
-            CensoModeloEventKind(raw)
-        elif kind is BindingTypedEnumKind.CCAA:
-            if binding.value.channel is not BindingValueChannel.ENUM:
-                raise ModeloBindingValueContractUnsupportedError()
-            if effective_date is None:
-                raise ModeloBindingValueContractUnsupportedError()
-            try:
-                catalogue = resolve_ccaa_catalogue(effective_date=effective_date, authority=operation)
-            except (RegistrySnapshotError, RegistryValidationError):
-                raise ModeloBindingValueContractUnsupportedError() from None
-            if str(catalogue.require(raw)) != raw:
-                raise ModeloBindingValueInvalidError()
-        elif kind is BindingTypedEnumKind.LEGAL_ENTITY_FORM:
-            if binding.value.channel is not BindingValueChannel.ENUM:
-                raise ModeloBindingValueContractUnsupportedError()
-            if effective_date is None:
-                raise ModeloBindingValueContractUnsupportedError()
-            try:
-                vocabulary = resolve_entity_vocabulary(effective_date=effective_date, authority=operation)
-            except (RegistrySnapshotError, RegistryValidationError):
-                raise ModeloBindingValueContractUnsupportedError() from None
-            if str(vocabulary.require_legal_entity_form(raw)) != raw:
-                raise ModeloBindingValueInvalidError()
-        elif kind is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
-            if binding.value.channel is not BindingValueChannel.ENUM:
-                raise ModeloBindingValueContractUnsupportedError()
-            if effective_date is None:
-                raise ModeloBindingValueContractUnsupportedError()
-            try:
-                catalogue = resolve_rental_reduction_art232_tier_catalogue(
-                    effective_date=effective_date, authority=operation
-                )
-            except (RegistrySnapshotError, RegistryValidationError):
-                raise ModeloBindingValueContractUnsupportedError() from None
-            if str(catalogue.require(raw)) != raw:
-                raise ModeloBindingValueInvalidError()
-        elif kind is BindingTypedEnumKind.ESTIMACION_DIRECTA_MODALIDAD:
-            if binding.value.channel not in {BindingValueChannel.BOOLEAN, BindingValueChannel.DECIMAL}:
-                raise ModeloBindingValueContractUnsupportedError()
-            encoded = boolean_binding_encoded_values(binding)
-            if not encoded:
-                raise ModeloBindingValueContractUnsupportedError()
-            if raw not in {row.encoded_value for row in encoded}:
-                raise ModeloBindingValueInvalidError()
-        else:
-            raise ModeloBindingValueContractUnsupportedError()
-    except RegistrySnapshotError:
-        raise ModeloBindingValueContractUnsupportedError() from None
-    except (RegistryValidationError, ValueError):
-        raise ModeloBindingValueInvalidError() from None
-
-
-def _validated_value(
-    binding: BindingDefinition,
-    raw: str,
-    snapshot: RegistrySnapshot,
-    *,
-    operation: PinnedAuthorityOperation,
-    effective_date: date | None,
-) -> ModeloTypedBindingValue:
-    contract = binding.value
-    if contract.channel is BindingValueChannel.ROW_SET:
-        raise ModeloBindingValueContractUnsupportedError()
-    if not raw or len(raw) > _VALUE_MAX:
-        raise ModeloBindingValueInvalidError()
-    targets = _bound_targets(snapshot, binding.id)
-    _validate_typed_enum(binding, raw, operation=operation, effective_date=effective_date)
-    try:
-        if contract.channel is BindingValueChannel.DECIMAL:
-            if len(raw) > 128:
-                raise ModeloBindingValueInvalidError()
-            number = _DECIMAL.validate_python(raw)
-            if not number.is_finite():
-                raise ModeloBindingValueInvalidError()
-            decimal_parts = number.as_tuple()
-            if not isinstance(decimal_parts.exponent, int) or abs(decimal_parts.exponent) > 128:
-                raise ModeloBindingValueInvalidError()
-            if len(decimal_parts.digits) > 128:
-                raise ModeloBindingValueInvalidError()
-            if len(format(number, "f")) > 128:
-                raise ModeloBindingValueInvalidError()
-            encoded = boolean_binding_encoded_values(binding)
-            if encoded and raw not in {row.encoded_value for row in encoded}:
-                raise ModeloBindingValueInvalidError()
-            for target in targets:
-                constraints = target.constraints
-                if constraints is not None and constraints.violates(number) is not None:
-                    raise ModeloBindingValueInvalidError()
-        elif contract.channel is BindingValueChannel.INTEGER:
-            if len(raw) > 64 or not raw.lstrip("-").isdigit() or raw.startswith("+"):
-                raise ModeloBindingValueInvalidError()
-            canonical_integer = str(int(raw))
-            for target in targets:
-                constraints = target.constraints
-                if constraints is not None and constraints.violates(Decimal(canonical_integer)) is not None:
-                    raise ModeloBindingValueInvalidError()
-        elif contract.channel is BindingValueChannel.BOOLEAN:
-            encoded = boolean_binding_encoded_values(binding)
-            allowed = {row.encoded_value for row in encoded} if encoded else {"true", "false"}
-            if raw not in allowed:
-                raise ModeloBindingValueInvalidError()
-        elif contract.channel is BindingValueChannel.DATE:
-            declared = _CALENDAR_DATE.validate_python(raw)
-            if len(declared) == 8 and declared.isdigit():
-                date(int(declared[4:]), int(declared[2:4]), int(declared[:2]))
-            else:
-                date.fromisoformat(declared)
-        elif contract.channel in {BindingValueChannel.ENUM, BindingValueChannel.TEXT}:
-            official = contract.channel is BindingValueChannel.ENUM and contract.typed_enum is not None
-            for target in targets:
-                if target.data_type.value != "text":
-                    if target.data_type.value == "nif":
-                        raise ModeloBindingValueContractUnsupportedError()
-                    if validate_registry_text_scalar(target.data_type.value, raw) != raw:
-                        raise ModeloBindingValueInvalidError()
-                    official = True
-                constraints = target.constraints
-                if constraints is not None and (constraints.enum is not None or constraints.pattern is not None):
-                    official = True
-                    if constraints.violates_text(raw) is not None:
-                        raise ModeloBindingValueInvalidError()
-            if not official:
-                raise ModeloBindingValueContractUnsupportedError()
-        else:
-            raise ModeloBindingValueContractUnsupportedError()
-    except ModeloBindingValueContractUnsupportedError:
-        raise
-    except (RegistryValidationError, ValidationError, ValueError, OverflowError):
-        raise ModeloBindingValueInvalidError() from None
-    return ModeloTypedBindingValue(
-        binding_id=binding.id, data_type=contract.data_type, channel=contract.channel, value=raw
-    )
-
-
-def _typed_resolve(
-    payload: ModeloBindingsResolveRequest, operation: PinnedAuthorityOperation
-) -> ModeloBindingsResolveTypedProjection:
-    period = payload.period.to_period()
-    snapshot = operation.snapshot(
-        payload.modelo, filing_year=period.filing_year, period=period.registry_token, on=payload.as_of
-    )
-    declarations = {row.id: row for row in snapshot.revision.bindings}
-    for override in payload.overrides:
-        if override.binding_id not in declarations:
-            raise ModeloBindingValueInvalidError()
-    try:
-        human: ModeloBindingsResolveProjection = read_modelo_bindings_resolve(payload, operation=operation)
-    except RegistryValidationError:
-        raise ModeloBindingValueInvalidError() from None
-    if snapshot.revision.id != human.revision:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    validated_rows: list[ModeloTypedBindingValue] = []
-    for override in payload.overrides:
-        declaration = declarations.get(override.binding_id)
-        if declaration is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        try:
-            validated_rows.append(
-                _validated_value(
-                    declaration,
-                    override.value,
-                    snapshot,
-                    operation=operation,
-                    effective_date=payload.as_of or (period.end_date if period.has_date_span() else None),
-                )
-            )
-        except (ModeloBindingValueContractUnsupportedError, ModeloBindingValueInvalidError) as error:
-            raise type(error)(binding_id=declaration.id, channel=declaration.value.channel) from None
-    validated = tuple(validated_rows)
-    canonical = {row.binding_id: row.value for row in validated}
-    rows = tuple(row.model_copy(update={"override": canonical.get(row.binding_id)}) for row in human.bindings)
-    return ModeloBindingsResolveTypedProjection(
-        authority_generation=human.authority_generation,
-        profile_id=payload.profile_id,
-        modelo=human.modelo,
-        revision=human.revision,
-        filing_year=human.filing_year,
-        period=human.period,
-        override_count=human.override_count,
-        binding_count=human.binding_count,
-        bindings=rows,
-        validated_overrides=validated,
-    )
 
 
 def _readiness_summary(
@@ -405,10 +64,7 @@ def _readiness_summary(
     # The canonical reader constructs all axes once. Its human prose stays in
     # worker memory and never enters the agent result operand.
     source = read_modelo_readiness(payload, factory, operation=operation)
-    if (source.profile_refusal and source.profile_refusal_cause is None) or (
-        source.registry_refusal and source.registry_refusal_cause is None
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    _require_readiness_refusal_causes(source)
     report = ModeloReadinessProjection.from_report(
         payload.profile_id,
         source,
@@ -416,15 +72,7 @@ def _readiness_summary(
         authority_generation=operation.generation.logical_generation,
     )
     verdict = report.profile_precondition_verdict
-    if verdict is not None and source.profile_refusal_cause is not ModeloProfileRefusalCause.SETUP_INCOMPLETE:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if verdict is not None and (
-        verdict.failed_condition_id != PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
-        or verdict.action_id != "operator.profile.complete_setup"
-        or verdict.missing_argument_names
-        or verdict.argument_bindings
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    _require_safe_setup_recovery(source, verdict)
     return ModeloReadinessSummaryProjection(
         authority_generation=report.authority_generation,
         profile_id=report.profile_id,
@@ -437,36 +85,70 @@ def _readiness_summary(
         profile_ready=report.profile_ready,
         per_operation_requirements_assessed=report.per_operation_requirements_assessed,
         profile_refusal_cause=source.profile_refusal_cause,
-        profile_recovery=(
-            ModeloReadinessSafeRecovery(
-                failed_condition_id="profile.setup.declared_complete",
-                action_id="operator.profile.complete_setup",
-                missing_argument_names=(),
-            )
-            if verdict is not None
-            else None
-        ),
+        profile_recovery=_safe_setup_recovery(verdict),
         registry_ready=report.registry_ready,
         registry_refusal_cause=source.registry_refusal_cause,
         binding_ready=report.binding_ready,
-        missing=tuple(
-            ModeloReadinessSafeMissingRequirement(
-                section_key=row.section_key,
-                field_key=row.field_key,
-                legal_refs=row.legal_refs,
-                modelos=row.modelos,
-            )
-            for row in source.missing
-        ),
+        missing=_safe_missing_requirements(source),
         missing_bindings=report.missing_bindings,
         ledger_preflight_required=report.ledger_preflight_required,
         ledger_ready=report.ledger_ready,
         ledger_period=report.ledger_period,
         ledger_checked_transaction_count=report.ledger_checked_transaction_count,
-        ledger_issues=tuple(
-            ModeloReadinessSafeLedgerIssue(transaction_id=row.transaction_id, reason=row.reason)
-            for row in source.ledger_issues
-        ),
+        ledger_issues=_safe_ledger_issues(source),
+    )
+
+
+def _require_readiness_refusal_causes(source: ProjectionModeloReadiness) -> None:
+    if (source.profile_refusal and source.profile_refusal_cause is None) or (
+        source.registry_refusal and source.registry_refusal_cause is None
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def _require_safe_setup_recovery(
+    source: ProjectionModeloReadiness,
+    verdict: PreconditionVerdictSnapshot | None,
+) -> None:
+    if verdict is None:
+        return
+    if source.profile_refusal_cause is not ModeloProfileRefusalCause.SETUP_INCOMPLETE:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if (
+        verdict.failed_condition_id != PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
+        or verdict.action_id != "operator.profile.complete_setup"
+        or verdict.missing_argument_names
+        or verdict.argument_bindings
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def _safe_setup_recovery(verdict: PreconditionVerdictSnapshot | None) -> ModeloReadinessSafeRecovery | None:
+    if verdict is None:
+        return None
+    return ModeloReadinessSafeRecovery(
+        failed_condition_id="profile.setup.declared_complete",
+        action_id="operator.profile.complete_setup",
+        missing_argument_names=(),
+    )
+
+
+def _safe_missing_requirements(source: ProjectionModeloReadiness) -> tuple[ModeloReadinessSafeMissingRequirement, ...]:
+    return tuple(
+        ModeloReadinessSafeMissingRequirement(
+            section_key=row.section_key,
+            field_key=row.field_key,
+            legal_refs=row.legal_refs,
+            modelos=row.modelos,
+        )
+        for row in source.missing
+    )
+
+
+def _safe_ledger_issues(source: ProjectionModeloReadiness) -> tuple[ModeloReadinessSafeLedgerIssue, ...]:
+    return tuple(
+        ModeloReadinessSafeLedgerIssue(transaction_id=row.transaction_id, reason=row.reason)
+        for row in source.ledger_issues
     )
 
 
@@ -483,7 +165,7 @@ class ModeloBindingsResolveTypedExecutor:
         await context.events.phase(MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID)
 
         async def capture() -> str:
-            result = await asyncio.to_thread(_typed_resolve, request.payload, context.authority_operation)
+            result = await asyncio.to_thread(resolve_typed_bindings, request.payload, context.authority_operation)
             ref = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return ref
@@ -570,14 +252,9 @@ def _registration(
             result_category=DisclosureCategory.TAX_VALUES,
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=request_type
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=result_type
-        ),
+        public_result_type=result_type,
         access_resolver=resolve,
     )
 

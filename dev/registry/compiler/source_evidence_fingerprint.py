@@ -23,6 +23,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT
 
 from .loader_cache import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
 
@@ -124,7 +125,7 @@ def _source_evidence_roots(
         resolved = source_root.expanduser().resolve()
         candidates.extend(
             root / family
-            for root in (resolved, resolved / "src" / "cadrumo" / "_data")
+            for root in (resolved, resolved / PACKAGED_DATA_ROOT)
             for family in ("corpus", "manual_corpus_text")
         )
     if justificante_corpus_root is not None:

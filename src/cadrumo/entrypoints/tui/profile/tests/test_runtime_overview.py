@@ -20,8 +20,8 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewOperationProjection,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
-    read_profile_view_page,
 )
+from cadrumo.application.user_profile.view_reader import read_profile_view_page
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

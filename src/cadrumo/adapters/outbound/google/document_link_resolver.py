@@ -23,7 +23,6 @@ of being silently stored as links.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -32,7 +31,8 @@ from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.external_constants import PDF_MIME_TYPE
+from ....core.external_constants import GOOGLE_DRIVE_FOLDER_MIME_TYPE, PDF_MIME_TYPE
+from ....core.google_drive_reference import parse_google_drive_file_id
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.type_guards import is_object_list
@@ -45,21 +45,10 @@ from ..storage.errors import (
     OutboundStorageValidationError,
 )
 from ._preconditions import google_terminal_refusal
-from .api import execute_request
+from .api import RequestRetryPolicy, drive_v3_service, execute_request
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
-
-# .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
-# The bare form requires >=25 chars so a hyphenated English token (e.g.
-# "not-a-drive-reference") is not mistaken for a file id and sent to the network;
-# real Drive ids are ~28-44 chars. The URL-embedded forms are unambiguous from
-# context so they accept the shorter >=10.
-_DRIVE_ID_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
-    re.compile(r"/d/(?P<id>[A-Za-z0-9_-]{10,})"),
-    re.compile(r"[?&]id=(?P<id>[A-Za-z0-9_-]{10,})"),
-    re.compile(r"^(?P<id>[A-Za-z0-9_-]{25,})$"),
-)
 
 _GMAIL_SCOPE: Final[str] = "https://www.googleapis.com/auth/gmail.readonly"
 _DRIVE_READONLY_SCOPE: Final[str] = "https://www.googleapis.com/auth/drive.readonly"
@@ -70,7 +59,6 @@ _DRIVE_READONLY_SCOPE: Final[str] = "https://www.googleapis.com/auth/drive.reado
 _INVOICE_MIME_TYPES: Final[frozenset[str]] = frozenset(
     {PDF_MIME_TYPE, "image/png", "image/jpeg"},
 )
-_DRIVE_FOLDER_MIME_TYPE: Final[str] = "application/vnd.google-apps.folder"
 _DRIVE_LIST_PAGE_SIZE: Final[int] = 100
 
 
@@ -163,47 +151,6 @@ class DriveFolderListing:
     skipped_non_document_count: int
 
 
-def parse_drive_file_id(reference: str) -> str | None:
-    """Extract the Drive file id consumed by :func:`resolve_document_link`.
-
-    Args:
-        reference: A Drive URL, ``?id=...`` link, bare Drive file id, or
-            non-Drive reference.
-
-    Returns:
-        The parsed Drive file id, or ``None`` when ``reference`` does not carry
-        a recognisable Drive id.
-    """
-    candidate = reference.strip()
-    for pattern in _DRIVE_ID_PATTERNS:
-        match = pattern.search(candidate)
-        if match:
-            drive_id = match.group("id")
-            if isinstance(drive_id, str):
-                return drive_id
-    return None
-
-
-def _drive_service(credentials: Credentials) -> _DriveService:
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        raise _document_link_terminal_refusal(
-            OutboundStorageNetworkError(
-                "googleapiclient is not importable",
-                context={"dependency": "google-api-python-client"},
-            ),
-            DocumentLinkPreconditionCondition.API_CLIENT_AVAILABLE,
-            facts={"dependency": "google_api_python_client", "client_available": False},
-            outcome=NoRecoveryOutcome.SAFETY,
-        ) from exc
-
-    # dynamic resource; the protocol pins the files().get_media().execute
-    # surface used below.
-    # CAST-RATIONALE-thirdparty: googleapiclient build() returns an untyped Resource
-    return cast(_DriveService, build("drive", "v3", credentials=credentials, cache_discovery=False))
-
-
 def _resolved_drive_service(credentials: Credentials | None, service: _DriveService | None) -> _DriveService:
     """Return the injected Drive service, or build one from credentials.
 
@@ -217,7 +164,15 @@ def _resolved_drive_service(credentials: Credentials | None, service: _DriveServ
         raise OutboundStorageValidationError(
             "resolving a Drive document requires either credentials or an injected service",
         )
-    return _drive_service(credentials)
+    # dynamic resource; the protocol pins the files().get_media().execute
+    # surface used below.
+    # CAST-RATIONALE-thirdparty: googleapiclient build() returns an untyped Resource
+    return cast(
+        _DriveService,
+        drive_v3_service(
+            credentials, unavailable_condition_id=DocumentLinkPreconditionCondition.API_CLIENT_AVAILABLE.value
+        ),
+    )
 
 
 def resolve_document_link(
@@ -267,7 +222,7 @@ def resolve_document_link(
             outcome=NoRecoveryOutcome.SAFETY,
         )
     if source is AttachmentSource.GOOGLE_DRIVE:
-        file_id = parse_drive_file_id(reference)
+        file_id = parse_google_drive_file_id(reference)
         if file_id is None:
             raise _document_link_terminal_refusal(
                 OutboundStorageValidationError(
@@ -380,7 +335,9 @@ def list_drive_folder_documents(
 
     Args:
         folder_id: The Drive folder id (parsed the same way a document
-            reference is via :func:`parse_drive_file_id`, or passed as a bare id).
+            reference is via
+            :func:`~cadrumo.core.google_drive_reference.parse_google_drive_file_id`,
+            or passed as a bare id).
         credentials: Google OAuth credentials carrying the granted scopes.
             Optional only because ``service`` may be injected instead; one
             of the two must be supplied.
@@ -402,7 +359,7 @@ def list_drive_folder_documents(
     skipped = 0
     for document in _iter_drive_folder_files(drive_service, folder_id=folder_id, before_request=before_request):
         mime_type = document.mime_type
-        if mime_type == _DRIVE_FOLDER_MIME_TYPE:
+        if mime_type == GOOGLE_DRIVE_FOLDER_MIME_TYPE:
             continue
         if mime_type not in _INVOICE_MIME_TYPES:
             skipped += 1
@@ -475,6 +432,7 @@ def _fetch_drive_folder_page(
             # CAST-RATIONALE-thirdparty: Google Drive SDK request object is untyped at the client boundary
             cast("Any", request),
             action="drive.files.list",
+            retry=RequestRetryPolicy.REPLAY_SAFE,
         )
     except OutboundStoragePermissionError as exc:
         _raise_folder_scope_refusal(exc, folder_id=folder_id)
@@ -597,6 +555,5 @@ __all__ = [
     "DriveFolderDocument",
     "DriveFolderListing",
     "list_drive_folder_documents",
-    "parse_drive_file_id",
     "resolve_document_link",
 ]

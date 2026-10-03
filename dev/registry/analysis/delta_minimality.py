@@ -114,12 +114,12 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from dev.registry.compiler.identifier_lineage import identifier_lineage
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 from .corpus import bundled_modelo_ids
 
 __all__ = [
     "EDITION_LOCAL_FIELDS",
     "KINDS",
-    "LINEAGE_CLAIM_FIELDS",
     "EditionPredecessor",
     "MinimalityCensus",
     "MinimalityVerdict",
@@ -169,7 +169,6 @@ EDITION_LOCAL_FIELDS: Final[frozenset[str]] = frozenset({"source_refs", "export_
 
 #: Casilla fields stating a row's relationship to its predecessor, which an
 #: inherited row never carries.
-LINEAGE_CLAIM_FIELDS: Final[frozenset[str]] = frozenset({"continuidad_origin", "continuidad_evidence"})
 
 
 class PredecessorBasis(StrEnum):

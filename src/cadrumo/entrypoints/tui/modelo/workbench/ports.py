@@ -24,9 +24,9 @@ from .....core.refund_election import RefundElection
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
 
 if TYPE_CHECKING:
-    from .....application.modelo.operation_definitions import ModeloExportPublicResultV2
+    from .....application.modelo.export_projection import ModeloExportPublicResultV3
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
-    from ...operations.controller import OperationController
+    from ...operations.controller_port import OperationControllerPort
 
 
 class ModeloWorkbenchReaderV1(Protocol):
@@ -159,27 +159,29 @@ class ModeloWorkbenchActionsV1(Protocol):
         """Check the staged changes against the declaration as it stands, without applying them."""
         ...
 
-    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
+    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationControllerPort:
         """Submit the staged changes and recalculate, through the supervised operation."""
         ...
 
-    def take_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
-        """Consume this Apply's private diagnostic after it settles, including failed/canceled context."""
+    async def take_apply_prerequisite(self) -> WorkbenchApplyPrerequisite | None:
+        """Read, once, the source a refused Apply named, after it settles."""
         ...
 
     def calculation_evidence(self) -> WorkbenchCalculationEvidence | None:
         """What the next calculation must first ask the filer, or ``None`` when it asks nothing."""
         ...
 
-    async def calculate(self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None) -> OperationController:
+    async def calculate(
+        self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None
+    ) -> OperationControllerPort:
         """Recalculate the declaration, keeping the filer's values, with the answers it asked for."""
         ...
 
-    async def verify(self) -> OperationController:
+    async def verify(self) -> OperationControllerPort:
         """Verify the current calculation."""
         ...
 
-    async def file(self) -> OperationController:
+    async def file(self) -> OperationControllerPort:
         """Record the verified calculation as filed locally."""
         ...
 
@@ -187,11 +189,11 @@ class ModeloWorkbenchActionsV1(Protocol):
         """The exports on offer for this declaration."""
         ...
 
-    async def export(self, request: WorkbenchExportRequest) -> OperationController:
+    async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
         """Export the verified calculation as the filer asked."""
         ...
 
-    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
         """The facts of one settled export, or ``None`` when they cannot be read."""
         ...
 

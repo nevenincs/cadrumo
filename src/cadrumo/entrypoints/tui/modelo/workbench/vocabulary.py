@@ -371,6 +371,22 @@ _ORIGIN_TALLIES: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
 """The level each origin that is not done counts at; the tallies are the fields of :class:`AttentionCounts`."""
 
 
+def _field_attention_increments(
+    item: ModeloFormField,
+    checked_boxes: Mapping[str, int],
+    *,
+    asked: bool,
+    recorded: bool,
+    applies: bool,
+) -> tuple[int, str | None, int, int]:
+    blocks = int(bool(item.blockers) and not recorded)
+    bucket = _ORIGIN_TALLIES.get(item.origin)
+    counted_bucket = bucket if bucket is not None and (asked or item.origin not in ASKS_FOR_A_VALUE) else None
+    pending = int(field_needs_filer(item, recorded=recorded, applies=applies))
+    checked = 0 if item.box is None else checked_boxes.get(item.box, 0)
+    return blocks, counted_bucket, pending, checked
+
+
 def field_counts(
     fields: Iterable[ModeloFormField],
     checked_boxes: Mapping[str, int] | None = None,
@@ -385,20 +401,23 @@ def field_counts(
     still waits stays counted on either, since it is a fact about the box,
     not a request.
     """
-    checked = checked_boxes or {}
+    checks = checked_boxes or {}
     tallies = dict.fromkeys(("blocks", "missing", "failed", "confirm", "not_imported", "not_calculated"), 0)
     check = pending = 0
     asked = not recorded and applies
     for item in fields:
-        if item.blockers and not recorded:
-            tallies["blocks"] += 1
-        bucket = _ORIGIN_TALLIES.get(item.origin)
-        if bucket is not None and (asked or item.origin not in ASKS_FOR_A_VALUE):
+        blocks, bucket, pending_boxes, checked_count = _field_attention_increments(
+            item,
+            checks,
+            asked=asked,
+            recorded=recorded,
+            applies=applies,
+        )
+        tallies["blocks"] += blocks
+        if bucket is not None:
             tallies[bucket] += 1
-        if field_needs_filer(item, recorded=recorded, applies=applies):
-            pending += 1
-        if item.box is not None:
-            check += checked.get(item.box, 0)
+        pending += pending_boxes
+        check += checked_count
     return AttentionCounts(**tallies, check=check, pending=pending)
 
 
@@ -542,6 +561,36 @@ _FILED_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
 """Words for an origin that asks for a value, on a declaration recorded as filed: what the value is, not a request."""
 
 
+def _special_origin_words(
+    field: ModeloFormField,
+    *,
+    recorded: bool,
+    aeat_imported: date | None,
+    language: OutputLanguage | None,
+) -> str | None:
+    if recorded and field.origin in _FILED_LOCALE_KEYS:
+        return tr(_FILED_LOCALE_KEYS[field.origin])
+    if field.origin in _HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
+        return tr(_HELD_ZERO_LOCALE_KEYS[field.origin])
+    if set_by_form(field):
+        return tr(_FORM_SET_WORDS_KEY)
+    if aeat_imported is not None and language is not None and _from_aeat_data(field):
+        return tr(_AEAT_IMPORTED_ON_KEY, date=date_text(aeat_imported, language))
+    if no_earlier_filing(field):
+        return tr(_NO_EARLIER_WORDS_KEY)
+    return None
+
+
+def _source_origin_words(field: ModeloFormField) -> str:
+    source = field.source
+    if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
+        return tr(origin_words_key(field.origin))
+    if source.family is SourceFamily.EARLIER_FILINGS and len(source.earlier_filings) == 1:
+        filing = source.earlier_filings[0]
+        return tr(_NAMED_FILING_LOCALE_KEYS[field.origin], modelo=filing.modelo, period=period_words(filing.period))
+    return tr(origin_source_words_key(field.origin, source.family))
+
+
 def origin_words(
     field: ModeloFormField,
     *,
@@ -562,23 +611,15 @@ def origin_words(
     narrow for these words keeps only the glyph, so the help band calls this to
     say them for the field under the cursor.
     """
-    if recorded and field.origin in _FILED_LOCALE_KEYS:
-        return tr(_FILED_LOCALE_KEYS[field.origin])
-    if field.origin in _HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
-        return tr(_HELD_ZERO_LOCALE_KEYS[field.origin])
-    if set_by_form(field):
-        return tr(_FORM_SET_WORDS_KEY)
-    if aeat_imported is not None and language is not None and _from_aeat_data(field):
-        return tr(_AEAT_IMPORTED_ON_KEY, date=date_text(aeat_imported, language))
-    if no_earlier_filing(field):
-        return tr(_NO_EARLIER_WORDS_KEY)
-    source = field.source
-    if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
-        return tr(origin_words_key(field.origin))
-    if source.family is SourceFamily.EARLIER_FILINGS and len(source.earlier_filings) == 1:
-        filing = source.earlier_filings[0]
-        return tr(_NAMED_FILING_LOCALE_KEYS[field.origin], modelo=filing.modelo, period=period_words(filing.period))
-    return tr(origin_source_words_key(field.origin, source.family))
+    special = _special_origin_words(
+        field,
+        recorded=recorded,
+        aeat_imported=aeat_imported,
+        language=language,
+    )
+    if special is not None:
+        return special
+    return _source_origin_words(field)
 
 
 def origin_glyph(field: ModeloFormField) -> str:
@@ -637,24 +678,43 @@ def attention_words_key(attention: Attention) -> str:
     return _ATTENTION_WORDS_LOCALE_KEYS[attention]
 
 
-def _require_closed_and_distinct() -> None:
-    """Refuse a vocabulary that misses a state or lets two states share a mark."""
+def _require_origin_marks() -> None:
     if set(ORIGIN_GLYPHS) != set(ModeloFormOrigin) or set(ORIGIN_ROLES) != set(ModeloFormOrigin):
         raise ValueError("every origin needs exactly one glyph and one colour role")
+
+
+def _require_attention_marks() -> None:
     if set(ATTENTION_GLYPHS) != set(Attention) or set(ATTENTION_ROLES) != set(Attention):
         raise ValueError("every attention mark needs exactly one glyph and one colour role")
     if set(_ATTENTION_WORDS_LOCALE_KEYS) != set(Attention):
         raise ValueError("every attention mark needs its words")
+
+
+def _require_source_words() -> None:
     if set(_NAMED_FILING_LOCALE_KEYS) != set(SOURCE_WORDED_ORIGINS):
         raise ValueError("every origin worded by its source needs words for a named earlier declaration")
+
+
+def _require_attention_counts() -> None:
     if set(ORIGIN_STANDINGS) != set(ModeloFormOrigin):
         raise ValueError("every origin needs exactly one standing")
-    if set(_ORIGIN_TALLIES) != {
-        origin for origin, standing in ORIGIN_STANDINGS.items() if standing is not Standing.DONE
-    }:
+    expected_tallies = {origin for origin, standing in ORIGIN_STANDINGS.items() if standing is not Standing.DONE}
+    if set(_ORIGIN_TALLIES) != expected_tallies:
         raise ValueError("every origin that is not done needs a level to count at, and only those")
+
+
+def _require_filed_origin_words() -> None:
     if set(_FILED_LOCALE_KEYS) != ASKS_FOR_A_VALUE:
         raise ValueError("every origin that asks for a value needs words for a declaration recorded as filed")
+
+
+def _require_closed_and_distinct() -> None:
+    """Refuse a vocabulary that misses a state or lets two states share a mark."""
+    _require_origin_marks()
+    _require_attention_marks()
+    _require_source_words()
+    _require_attention_counts()
+    _require_filed_origin_words()
     require_one_meaning_per_glyph(WORKBENCH_MARKS)
 
 

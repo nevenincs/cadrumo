@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Protocol, get_args
+from typing import TYPE_CHECKING, Protocol, cast, get_args
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -174,6 +174,11 @@ _STORAGE_LABEL_SUFFIXES: tuple[str, ...] = (
 )
 
 
+def _enum_values(enum: type[Enum]) -> tuple[str, ...]:
+    """Read the declared string values in enum iteration order."""
+    return tuple(cast("str", item.value) for item in enum)
+
+
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
 
@@ -285,7 +290,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             # copy map in entrypoints/tui/ledger/controller.py.
             description="tui.ledger.review_status.* (LedgerReviewStatus)",
             key_factory=lambda v: f"tui.ledger.review_status.{v}",
-            values=tuple(status.value for status in LedgerReviewStatus),
+            values=_enum_values(LedgerReviewStatus),
         ),
         FStringKeyRegistration(
             # Bounded enumeration: the live IVA wallet renders one operator
@@ -293,7 +298,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             # enum's own value in entrypoints/cli/_app_live.py.
             description="cli.app.live.iva_wallet.acquisition.outcome.* (LiveIvaAcquisitionFailureMode)",
             key_factory=lambda v: f"cli.app.live.iva_wallet.acquisition.outcome.{v}",
-            values=tuple(mode.value for mode in LiveIvaAcquisitionFailureMode),
+            values=_enum_values(LiveIvaAcquisitionFailureMode),
         ),
         FStringKeyRegistration(
             description="errors.prefix.* (ErrorCategory)",
@@ -334,7 +339,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             # value in application/workflow/resume.py and the CLI resume command.
             description="application.workflow.errors.resume_refused_* (WorkflowResumeRefusalReason)",
             key_factory=lambda v: f"application.workflow.errors.resume_refused_{v}",
-            values=tuple(reason.value for reason in WorkflowResumeRefusalReason),
+            values=_enum_values(WorkflowResumeRefusalReason),
         ),
         FStringKeyRegistration(
             # Pinned to the literal tuple _DYNAMIC_CODES expands in
@@ -367,7 +372,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             FStringKeyRegistration(
                 description=f"{prefix}.* (AccountActionV1)",
                 key_factory=lambda v, prefix=prefix: f"{prefix}.{v}",
-                values=tuple(action.value for action in AccountActionV1),
+                values=_enum_values(AccountActionV1),
             )
             for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
         ),
@@ -447,12 +452,12 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
 
     root = "tui.modelo.workbench"
     vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (
-        ("origin", tuple(item.value for item in ModeloFormOrigin)),
+        ("origin", _enum_values(ModeloFormOrigin)),
         (
             "origin_source",
             tuple(f"{origin.value}.{family.value}" for origin in SOURCE_WORDED_ORIGINS for family in SourceFamily),
         ),
-        ("editability", tuple(item.value for item in ModeloFormEditability)),
+        ("editability", _enum_values(ModeloFormEditability)),
         ("not_writable", NOT_WRITABLE_REASONS),
         (
             "disclosure",
@@ -462,16 +467,16 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
             "layout",
             tuple(item.value for item in ModeloFormLayoutProvenance if item is not ModeloFormLayoutProvenance.REVIEWED),
         ),
-        ("filter", tuple(item.value for item in WorkbenchFilter)),
-        ("step", tuple(item.value for item in WorkbenchStep)),
-        ("next", tuple(item.value for item in NextAction)),
-        ("stage_refused", tuple(item.value for item in StageRefusal)),
+        ("filter", _enum_values(WorkbenchFilter)),
+        ("step", _enum_values(WorkbenchStep)),
+        ("next", _enum_values(NextAction)),
+        ("stage_refused", _enum_values(StageRefusal)),
         ("editor.placeholder", EDITOR_HINT_KINDS),
         ("editor.format", EDITOR_HINT_KINDS),
         ("review.effect", REVIEW_EFFECTS),
         ("review.finding", WORDED_FINDING_CODES),
-        ("result_diff.group", tuple(item.value for item in ResultGroup)),
-        ("result_diff.count", tuple(item.value for item in ResultGroup)),
+        ("result_diff.group", _enum_values(ResultGroup)),
+        ("result_diff.count", _enum_values(ResultGroup)),
         ("period", PERIOD_WORD_NAMES),
     )
     return (
@@ -486,7 +491,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         FStringKeyRegistration(
             description="application.modelo.edit.parse.* (ModeloEditParseReason)",
             key_factory=lambda value: f"application.modelo.edit.parse.{value}",
-            values=tuple(item.value for item in ModeloEditParseReason),
+            values=_enum_values(ModeloEditParseReason),
         ),
         FStringKeyRegistration(
             description="application.modelo.calc_diagnostic.*.what (calculation note reasons)",
@@ -770,14 +775,14 @@ def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
 
     axes = (
-        ("input_kind", tuple(member.value for member in InputKind)),
-        ("binding_source", tuple(member.value for member in BindingSourceKind)),
-        ("realised_kind", tuple(member.value for member in ModeloValueKind)),
-        ("origin_anomaly", tuple(member.value for member in ModeloWorkOriginAnomaly)),
-        ("estado_casilla_oficial", tuple(member.value for member in EstadoCasillaOficial)),
-        ("operator_action", tuple(member.value for member in OperatorActionAxis)),
-        ("finding_kind", tuple(member.value for member in ModeloVerificationFindingKind)),
-        ("finding_severity", tuple(member.value for member in ModeloVerificationFindingSeverity)),
+        ("input_kind", _enum_values(InputKind)),
+        ("binding_source", _enum_values(BindingSourceKind)),
+        ("realised_kind", _enum_values(ModeloValueKind)),
+        ("origin_anomaly", _enum_values(ModeloWorkOriginAnomaly)),
+        ("estado_casilla_oficial", _enum_values(EstadoCasillaOficial)),
+        ("operator_action", _enum_values(OperatorActionAxis)),
+        ("finding_kind", _enum_values(ModeloVerificationFindingKind)),
+        ("finding_severity", _enum_values(ModeloVerificationFindingSeverity)),
         ("relation_channel", get_args(RelationConsumptionChannel)),
     )
     return tuple(
@@ -807,7 +812,7 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
     ``docs`` is not among them. Until that root is admitted, this registration
     is what keeps scaffold from pruning the families as stale.
     """
-    from dev.docs.casilla_reference import display_locale_keys
+    from dev.docs.casilla_display import display_locale_keys
 
     return (
         FStringKeyRegistration(

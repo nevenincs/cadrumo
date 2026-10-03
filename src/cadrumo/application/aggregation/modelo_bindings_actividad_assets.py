@@ -8,6 +8,8 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.hex import Hex64Str
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.renta.actividad_asset.claims import (
@@ -37,7 +39,7 @@ class LedgerRentaExpenseTreatment(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    transaction_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    transaction_id: TransactionId
     category: str | None = Field(default=None, min_length=1, max_length=128)
     tax_year: int
     deductible_amount: Decimal
@@ -56,7 +58,7 @@ class RegisterOwnedAcquisition(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    transaction_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    transaction_id: TransactionId
     category: str | None = Field(default=None, min_length=1, max_length=128)
     tax_year: int
     purchase_amount: Decimal
@@ -67,7 +69,7 @@ class ActivityAssetExpenseObservation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    claim_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    claim_id: Hex64Str
     modelo: str
     period: str = Field(min_length=2, max_length=2)
     target_casilla_id: CasillaId

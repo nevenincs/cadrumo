@@ -1,10 +1,12 @@
 """Application summaries for modelo work-unit filing deadlines.
 
 This module turns a :class:`WorkUnit` into the deadline summary used by the
-calculate CLI payload. It asks the registry deadline-window surface for the
-voluntary filing close date, derives either ``days_remaining`` or
-``days_overdue`` against a reference date, and attaches the Ley 58/2003 art. 27
-recargo band when the filing is late and the band table resolves.
+calculate CLI payload. It reads the voluntary filing deadline through the
+shared effective-deadline projection, which keeps the nominal close date the
+registry declares beside the business-day close date the filer actually has,
+derives either ``days_remaining`` or ``days_overdue`` against the effective
+date, and attaches the Ley 58/2003 art. 27 recargo band when the filing is late
+and the band table resolves.
 
 An unknown registry deadline is deliberately represented as ``None`` rather
 than a blocking error. A recargo lookup failure still returns the overdue
@@ -12,8 +14,8 @@ posture, logs the validation problem, and lets the rendering layer emit the
 generic extemporaneous-filing warning.
 
 See Also:
-    :func:`cadrumo.domain.deadlines.plazo.resolve_filing_closes_on`:
-        Registry-backed lookup for the plazo voluntario close date.
+    :func:`cadrumo.application.modelo.effective_deadline.resolve_effective_filing_deadline`:
+        Nominal and business-day close dates of the plazo voluntario.
     :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
     :func:`cadrumo.entrypoints.cli._modelo_rendering.work_unit_deadline_output`:
@@ -36,9 +38,11 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
 from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
+from .effective_deadline import resolve_effective_filing_deadline
 
 _LOG = get_logger(__name__)
 
@@ -94,14 +98,20 @@ class ModeloWorkConditionalRecargoPreview(BaseModel):
 class ModeloWorkDeadlinePosture:
     """Voluntary-filing deadline posture for a modelo work unit.
 
-    ``closes_on`` is the voluntary filing close date. Exactly one posture is
-    populated by :func:`modelo_work_deadline_posture`: ``days_remaining`` for
-    an in-time reference date, or ``days_overdue`` for an overdue reference
-    date. ``conditional_recargo_preview`` is optional rate guidance only; it
-    never represents a determined surcharge or interest liability.
+    ``closes_on`` is the effective voluntary filing close date, after the
+    business-day shift; ``nominal_closes_on`` is the date the registry window
+    declares, and ``holiday_coverage`` says which holidays the effective date
+    accounts for, so an unverified date is never presented as final. Exactly
+    one posture is populated by :func:`modelo_work_deadline_posture`, counted
+    against the effective date: ``days_remaining`` for an in-time reference
+    date, or ``days_overdue`` for an overdue reference date.
+    ``conditional_recargo_preview`` is optional rate guidance only; it never
+    represents a determined surcharge or interest liability.
     """
 
     closes_on: date
+    nominal_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
     days_remaining: int | None = None
     days_overdue: int | None = None
     conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
@@ -110,9 +120,12 @@ class ModeloWorkDeadlinePosture:
         """Reject a deadline summary that cannot describe one calendar posture."""
         validate_modelo_work_deadline_posture(
             closes_on=self.closes_on,
+            nominal_closes_on=self.nominal_closes_on,
             days_remaining=self.days_remaining,
             days_overdue=self.days_overdue,
         )
+        if not isinstance(self.holiday_coverage, DeadlineHolidayCoverage):
+            raise ValueError("holiday_coverage must be a DeadlineHolidayCoverage")
 
 
 def conditional_recargo_preview_from_recovery(
@@ -136,12 +149,17 @@ def conditional_recargo_preview_from_recovery(
 def validate_modelo_work_deadline_posture(
     *,
     closes_on: date,
+    nominal_closes_on: date,
     days_remaining: int | None,
     days_overdue: int | None,
 ) -> None:
     """Enforce the canonical one-sided voluntary-deadline state contract."""
     if type(closes_on) is not date:
         raise ValueError("closes_on must be a date")
+    if type(nominal_closes_on) is not date:
+        raise ValueError("nominal_closes_on must be a date")
+    if nominal_closes_on > closes_on:
+        raise ValueError("the effective close date cannot precede the nominal close date")
 
     day_counts = (days_remaining, days_overdue)
     if sum(value is not None for value in day_counts) != 1:
@@ -157,6 +175,7 @@ def modelo_work_deadline_posture(
     *,
     reference_on: date | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    holiday_territory: CalendarCCAA | None = None,
 ) -> ModeloWorkDeadlinePosture | None:
     """Return voluntary-deadline posture and rate-only preview, if known.
 
@@ -166,7 +185,11 @@ def modelo_work_deadline_posture(
     still inside the voluntary window, the posture carries ``days_remaining``.
     When the close date has passed, it carries ``days_overdue`` and, when the
     deadline engine resolves a band, a
-    :class:`ModeloWorkConditionalRecargoPreview`.
+    :class:`ModeloWorkConditionalRecargoPreview`. Lateness is judged against
+    the effective close date: a deadline ending on a non-business day runs to
+    the next business day (Ley 39/2015 art. 30.5, applied through Ley 58/2003
+    art. 7.2), the same date the declaration editor and the filing calendar
+    show.
 
     This function deliberately has no statutory-assessment inputs.  An Article
     27 determination needs provenance-bearing filing, amount, prior-requirement,
@@ -186,8 +209,12 @@ def modelo_work_deadline_posture(
             :func:`~cadrumo.core.time.clock.frozen_clock` scope pins it. It drives the
             deadline posture and conditional preview rate; it is not a
             presentation date.
-        operation: Optional caller-pinned registry operation. When supplied, both
-            the deadline window and recargo band use its governed-fact generation.
+        operation: Optional caller-pinned registry operation. When supplied, the
+            deadline window, holiday calendar and recargo band use its
+            governed-fact generation.
+        holiday_territory: The filer's autonomous community for the holiday
+            shift. ``None`` checks national holidays only, and the posture's
+            ``holiday_coverage`` says so.
 
     Returns:
         A :class:`ModeloWorkDeadlinePosture`, or ``None`` when the registry has
@@ -198,49 +225,51 @@ def modelo_work_deadline_posture(
             Converts the summary into operator-facing payloads and notices.
     """
     from ...domain.deadlines.errors import DeadlineValidationError
-    from ...domain.deadlines.plazo import resolve_filing_closes_on
     from ...domain.deadlines.recargo import build_recovery_for_overdue
 
-    closes_on = resolve_filing_closes_on(
-        str(work_unit.modelo),
-        work_unit.filing_year,
-        work_unit.period,
-        authority=operation,
-    )
-    if closes_on is None:
-        return None
-
     resolved_reference_on = reference_on or today_madrid()
-    if resolved_reference_on <= closes_on:
-        return ModeloWorkDeadlinePosture(
-            closes_on=closes_on,
-            days_remaining=(closes_on - resolved_reference_on).days,
+    with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
+        deadline = resolve_effective_filing_deadline(
+            str(work_unit.modelo),
+            work_unit.filing_year,
+            work_unit.period,
+            holiday_territory=holiday_territory,
+            operation=pinned,
         )
-
-    days_overdue = (resolved_reference_on - closes_on).days
-    try:
-        with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
+        if deadline is None:
+            return None
+        days_overdue = deadline.days_overdue_on(resolved_reference_on)
+        if days_overdue is None:
+            return ModeloWorkDeadlinePosture(
+                closes_on=deadline.closes_on,
+                nominal_closes_on=deadline.nominal_closes_on,
+                holiday_coverage=deadline.holiday_coverage,
+                days_remaining=deadline.days_remaining_on(resolved_reference_on),
+            )
+        try:
             recovery = build_recovery_for_overdue(
-                closes_on=closes_on,
+                closes_on=deadline.closes_on,
                 reference_today=resolved_reference_on,
                 modelo=str(work_unit.modelo),
                 period=work_unit.period,
                 operation=pinned,
             )
-    except DeadlineValidationError:
-        _LOG.debug(
-            "modelo work deadline preview resolution failed; returning overdue posture without preview "
-            "modelo=%s filing_year=%s period=%s days_overdue=%s",
-            work_unit.modelo,
-            work_unit.filing_year,
-            work_unit.period.registry_token,
-            days_overdue,
-            exc_info=True,
-        )
-        return ModeloWorkDeadlinePosture(closes_on=closes_on, days_overdue=days_overdue)
+        except DeadlineValidationError:
+            _LOG.debug(
+                "modelo work deadline preview resolution failed; returning overdue posture without preview "
+                "modelo=%s filing_year=%s period=%s days_overdue=%s",
+                work_unit.modelo,
+                work_unit.filing_year,
+                work_unit.period.registry_token,
+                days_overdue,
+                exc_info=True,
+            )
+            recovery = None
 
     return ModeloWorkDeadlinePosture(
-        closes_on=closes_on,
+        closes_on=deadline.closes_on,
+        nominal_closes_on=deadline.nominal_closes_on,
+        holiday_coverage=deadline.holiday_coverage,
         days_overdue=days_overdue,
         conditional_recargo_preview=conditional_recargo_preview_from_recovery(
             recovery,

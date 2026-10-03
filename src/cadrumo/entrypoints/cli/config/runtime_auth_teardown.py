@@ -15,16 +15,14 @@ from ....application.auth.operation_definitions import (
     AuthTeardownOperationRequest,
 )
 from ....application.auth.operator_results import AuthLogoutResult, AuthResetResult
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.auth_provider import AuthProviderKind
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
-from ..runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from ..runtime_registered_operation import run_registered_operation
 from ._profile_support import resolve_active_profile_pointer
 
 
@@ -74,39 +72,55 @@ def run_auth_teardown[ResultT: BaseModel](
         raise CliRefusedBoundaryError(context={"reason": error.reason.value}) from None
     result = completed.projection
     if isinstance(result, AuthLogoutResult):
-        changed = bool(result.removed_sessions or result.cleared_session_state)
+        changed = _auth_teardown_changed(result)
         result_kind_ok = kind == "logout"
         bucket_id, providers = result.bucket_id, result.providers
     elif isinstance(result, AuthResetResult):
-        changed = bool(
-            result.removed_sessions
-            or result.cleared_provider_configuration
-            or result.cleared_locks
-            or result.removed_certificate_sources
-            or result.removed_certificate_secrets
-        )
+        changed = _auth_teardown_changed(result)
         result_kind_ok = kind == "reset"
         bucket_id, providers = result.bucket_id, result.providers
     else:
         changed = False
         result_kind_ok = False
         bucket_id, providers = None, ()
-    if (
-        not result_kind_ok
-        or bucket_id != str(profile_id)
-        or (provider_kind is not None and provider_kind.value not in providers)
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not (OperationEffect.UPDATED if changed else OperationEffect.NONE)
+    if _auth_teardown_receipt_invalid(
+        completed, result_kind_ok, bucket_id, profile_id, provider_kind, providers, changed
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return completed
 
 
 __all__ = ["run_auth_teardown"]
+
+
+def _auth_teardown_changed(result: AuthLogoutResult | AuthResetResult) -> bool:
+    """Count every existing session or protected-provider removal as a mutation."""
+    if isinstance(result, AuthLogoutResult):
+        return bool(result.removed_sessions or result.cleared_session_state)
+    return bool(
+        result.removed_sessions
+        or result.cleared_provider_configuration
+        or result.cleared_locks
+        or result.removed_certificate_sources
+        or result.removed_certificate_secrets
+    )
+
+
+def _auth_teardown_receipt_invalid[ResultT: BaseModel](
+    completed: RegisteredOperationCompletion[ResultT],
+    result_kind_ok: bool,
+    bucket_id: str | None,
+    profile_id: UUID,
+    provider_kind: AuthProviderKind | None,
+    providers: tuple[str, ...],
+    changed: bool,
+) -> bool:
+    """Correlate teardown kind, scope, and observed mutation with its receipt."""
+    return (
+        not result_kind_ok
+        or bucket_id != str(profile_id)
+        or (provider_kind is not None and provider_kind.value not in providers)
+        or (completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
+        or (completed.refusal_code is not None)
+        or (completed.effect is not (OperationEffect.UPDATED if changed else OperationEffect.NONE))
+    )

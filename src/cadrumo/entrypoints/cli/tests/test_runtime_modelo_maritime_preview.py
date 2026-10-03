@@ -23,7 +23,7 @@ from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import runtime_modelo_maritime_preview as runtime
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

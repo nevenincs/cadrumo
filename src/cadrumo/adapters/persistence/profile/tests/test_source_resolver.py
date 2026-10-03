@@ -415,7 +415,11 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         )
 
     assert floor_control.grand_total == m347_threshold
-    assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    # One counterparty with a sale (clave B) and a purchase (clave A) is two
+    # declarado records, and the type 1 count is the number of records: "si un
+    # mismo declarado figura en varios registros, se computará tantas veces como
+    # figure relacionado" (aeat-dr-347-2011 and aeat-dr-347-2025, positions 136-144).
+    assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
     assert m347_resolution.binding_values[
         "modelo-347-declarante-importe-total-anual-operaciones"
     ] == m347_threshold + Decimal("0.01")
@@ -1336,7 +1340,9 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         f"collectible_invoice:{subvencion_invoice.invoice_id}",
         f"collectible_invoice:{ordinary_invoice.invoice_id}",
     }
-    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    # The same counterparty under two claves is two declarado records, and the type 1
+    # count is the number of records (designs 2011 and 2025, positions 136-144).
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("7000.00")
 
 
@@ -1447,7 +1453,9 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         f"payable_invoice:{outside_activity_purchase.invoice_id}",
         f"payable_invoice:{within_activity_purchase.invoice_id}",
     }
-    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    # The same counterparty under two claves is two declarado records, and the type 1
+    # count is the number of records (designs 2011 and 2025, positions 136-144).
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("7000.00")
 
 

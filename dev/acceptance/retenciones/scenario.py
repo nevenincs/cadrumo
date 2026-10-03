@@ -739,15 +739,20 @@ def _assert_slice_consistency(slice_: InstalledPeriodicCliSlice) -> None:
         raise ValueError(f"{slice_.slice_id} allocations do not close the stated invoice liability")
 
 
+def _periodic_payment_rows(payments: tuple[Payment, ...], modelo: str, period: str) -> tuple[Payment, ...]:
+    """Select paid-for-recipient facts at one exact periodic coordinate."""
+    return tuple(
+        row
+        for row in payments
+        if row.modelo == modelo and row.period == period and row.direction is Direction.PAID_FOR_RECIPIENT
+    )
+
+
 def _periodic_oracle(payments: tuple[Payment, ...]) -> tuple[PeriodicOracle, ...]:
     keys = sorted({(row.modelo, row.period) for row in payments if row.direction is Direction.PAID_FOR_RECIPIENT})
     result: list[PeriodicOracle] = []
     for modelo, period in keys:
-        rows = tuple(
-            row
-            for row in payments
-            if row.modelo == modelo and row.period == period and row.direction is Direction.PAID_FOR_RECIPIENT
-        )
+        rows = _periodic_payment_rows(payments, modelo, period)
         result.append(
             PeriodicOracle(
                 modelo=modelo,

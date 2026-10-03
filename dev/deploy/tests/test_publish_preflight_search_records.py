@@ -41,12 +41,8 @@ from dev.docs.pagefind_index import (
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_static_site import (
-    _language_site_url,
-    _require_search_index,
-    _validate_language_roots,
-    localized_languages,
-)
+from ..docs_site_languages import _language_site_url, localized_languages
+from ..docs_site_preflight import _require_search_index, _validate_language_roots
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

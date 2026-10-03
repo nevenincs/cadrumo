@@ -19,33 +19,20 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationTerminalCondition,
     profile_operation_subject,
 )
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -276,28 +263,68 @@ def _require_add_result(
     payload: LedgerEvidenceAddRequest,
     bucket_id: str,
 ) -> None:
-    record = result.record
     expected_id = (
         derive_keyed_purchase_invoice_evidence_id(bucket_id=bucket_id, idempotency_key=payload.idempotency_key)
         if payload.idempotency_key is not None
         else None
     )
+    _require_add_record_identity(result.record, bucket_id=bucket_id, expected_id=expected_id)
+    _require_add_event_receipt(result, payload=payload, expected_id=expected_id)
+    _require_submitted_record_fields(result.record, payload=payload)
+
+
+def _require_add_record_identity(
+    record: PurchaseInvoiceEvidence,
+    *,
+    bucket_id: str,
+    expected_id: str | None,
+) -> None:
     if (
         record.bucket_id != bucket_id
         or record.attachment_id != record.source_sha256
         or (expected_id is not None and record.evidence_id != expected_id)
         or (expected_id is None and re.fullmatch(r"[0-9a-f]{16}", record.evidence_id) is None)
-        or len(result.bucket_event_ids) not in ({0, 1} if expected_id is not None else {1})
-        or (not result.bucket_event_ids and expected_id is None)
-        or any(not event_id or len(event_id) > 64 for event_id in result.bucket_event_ids)
-        or (result.bucket_event_ids and record.source_path != payload.source_path)
-        or record.supplier != payload.supplier
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def _require_add_event_receipt(
+    result: PurchaseInvoiceEvidenceResult,
+    *,
+    payload: LedgerEvidenceAddRequest,
+    expected_id: str | None,
+) -> None:
+    record = result.record
+    if len(result.bucket_event_ids) not in ({0, 1} if expected_id is not None else {1}):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    if not result.bucket_event_ids and expected_id is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    if any(not event_id or len(event_id) > 64 for event_id in result.bucket_event_ids):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    if result.bucket_event_ids and record.source_path != payload.source_path:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def _require_submitted_record_fields(record: PurchaseInvoiceEvidence, *, payload: LedgerEvidenceAddRequest) -> None:
+    _require_submitted_invoice_fields(record, payload=payload)
+    _require_submitted_amounts(record, payload=payload)
+
+
+def _require_submitted_invoice_fields(record: PurchaseInvoiceEvidence, *, payload: LedgerEvidenceAddRequest) -> None:
+    if (
+        record.supplier != payload.supplier
         or record.invoice_number != payload.invoice_number
         or record.invoice_date != payload.invoice_date
-        or record.taxable_base != (None if payload.taxable_base is None else Decimal(payload.taxable_base))
+        or record.notes != payload.notes
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def _require_submitted_amounts(record: PurchaseInvoiceEvidence, *, payload: LedgerEvidenceAddRequest) -> None:
+    if (
+        record.taxable_base != (None if payload.taxable_base is None else Decimal(payload.taxable_base))
         or record.iva_rate != (None if payload.iva_rate is None else Decimal(payload.iva_rate))
         or record.iva_amount != (None if payload.iva_amount is None else Decimal(payload.iva_amount))
-        or record.notes != payload.notes
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
@@ -333,7 +360,11 @@ def _check_result_size(result: BaseModel) -> None:
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     if type(result) is not LedgerEvidenceAddExecutionResult:
         raise ValueError("invalid ledger evidence add execution result")
-    profile_id = result.profile_id
+    _require_add_success_receipt(receipt, profile_id=result.profile_id)
+    return result.result
+
+
+def _require_add_success_receipt(receipt: OperationTerminalReceipt, *, profile_id: UUID) -> None:
     if (
         receipt.identity.definition_id != LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
         or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
@@ -346,7 +377,6 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
         or receipt.effect is not OperationEffect.UPDATED
     ):
         raise ValueError("ledger evidence add has an incompatible terminal receipt")
-    return result.result
 
 
 def _build_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
@@ -363,19 +393,7 @@ def _build_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDef
         ),
         phase_codes=(LEDGER_EVIDENCE_ADD_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
@@ -410,18 +428,9 @@ def build_ledger_evidence_add_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind bounded schemas, whole-profile access, and exact receipt projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerEvidenceAddRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerEvidenceAddProjection,
-        ),
+        public_result_type=LedgerEvidenceAddProjection,
         result_projector=_project_result,
         access_resolver=resolve_ledger_evidence_add_access,
     )

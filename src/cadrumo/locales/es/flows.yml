@@ -19,19 +19,6 @@ flows:
     select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
-  login:
-    cancel_button: Cancelar
-    intro: Elige el perfil que quieres abrir y escribe la contraseña que lo protege.
-      No se desbloquea nada hasta que la contraseña se acepte.
-    password_hint: La contraseña que elegiste al crear este perfil. No se puede restablecer.
-    password_label: Contraseña
-    profile_label: Perfil
-    refusal:
-      password_required: Escribe la contraseña de este perfil.
-      unlock_failed: No se ha podido abrir el perfil.
-    section: Perfil y contraseña
-    title: Inicia sesión en tu perfil
-    unlock_button: Iniciar sesión
   manager:
     action:
       auth_clave_movil_route_app_request: Solicitud en la aplicación

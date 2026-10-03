@@ -592,7 +592,7 @@ def _trace_against_store(
         statement.signing_key.public_key_hex == keypair.public_key_hex,
         CalculationSummaryVerificationReason.SIGNING_KEY_NOT_THIS_PROFILE,
     )
-    revision = export_ports.calculation.load().revisions.get(statement.calculation_revision_id)
+    revision = export_ports.calculation.load(operation=operation).revisions.get(statement.calculation_revision_id)
     if revision is None:
         checks.failed(
             CalculationSummaryCheckName.CALCULATION_REVISION,
@@ -610,7 +610,9 @@ def _trace_against_store(
         revision.registry_snapshot_ref == statement.registry_snapshot_ref,
         CalculationSummaryVerificationReason.REGISTRY_SNAPSHOT_MISMATCH,
     )
-    verification_reports = export_ports.verification.load().for_calculation_revision(revision.calculation_revision_id)
+    verification_reports = export_ports.verification.load(operation=operation).for_calculation_revision(
+        revision.calculation_revision_id
+    )
     recorded_verification = next(
         (item for item in verification_reports if item.verification_report_id == statement.verification_report_id),
         None,

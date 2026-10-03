@@ -8,7 +8,7 @@ import pytest
 from babel.messages.catalog import Catalog, Message
 from babel.messages.pofile import read_po
 
-from ..locale_mutations import _render_catalogue
+from ..locale_catalogue_io import _render_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

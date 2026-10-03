@@ -44,6 +44,7 @@ def test_dry_run_absorb_leaves_the_bucket_database_byte_identical(tmp_path: Path
                 bucket_id=profile.bucket_id,
                 output_root=tmp_path,
                 objects=profile.repository,
+                operation=operation,
             )
             accumulator = FiledCaptureAccumulator(operation=operation)
 

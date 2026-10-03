@@ -40,7 +40,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
-from ....domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
+from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.contribuyente.renta_codes import FiscalResidency

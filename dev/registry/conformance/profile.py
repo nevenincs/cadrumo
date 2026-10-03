@@ -1345,6 +1345,56 @@ def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasilla
     return tuple(projected)
 
 
+def _coverage_gates_by_tier(
+    ledgers: tuple[_ModelLawCoverageLedger, ...],
+) -> dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]]:
+    """Group the first matching gate from every coordinate by evidence tier."""
+    return {
+        tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
+        for tier in (*_REQUIRED_COVERAGE_TIERS, _EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
+    }
+
+
+def _satisfied_coverage_tiers(
+    gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]],
+) -> tuple[_EvidenceTier, ...]:
+    """Return tiers satisfied at every selector coordinate."""
+    return tuple(tier for tier, gates in gates_by_tier.items() if all(gate.status == "satisfied" for gate in gates))
+
+
+def _gapped_coverage_tiers(
+    gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]],
+) -> tuple[_EvidenceTier, ...]:
+    """Return tiers with at least one gap across selector coordinates."""
+    return tuple(tier for tier, gates in gates_by_tier.items() if any(gate.status == "gap" for gate in gates))
+
+
+def _has_filing_eligible_gap(
+    ledgers: tuple[_ModelLawCoverageLedger, ...],
+    tier: _RequiredCoverageTier,
+) -> bool:
+    """Whether a mandatory evidence tier is missing at a filing-scope coordinate."""
+    return any(
+        ledger.filing_eligible and next(gate for gate in ledger.gates if gate.tier == tier).status == "gap"
+        for ledger in ledgers
+    )
+
+
+def _required_coverage_gaps(
+    ledgers: tuple[_ModelLawCoverageLedger, ...],
+) -> tuple[_RequiredCoverageTier, ...]:
+    """Return only mandatory gaps carried by filing-eligible ledgers."""
+    return tuple(tier for tier in _REQUIRED_COVERAGE_TIERS if _has_filing_eligible_gap(ledgers, tier))
+
+
+def _coverage_authority_scope(
+    ledgers: tuple[_ModelLawCoverageLedger, ...],
+) -> RevisionCoverageAuthorityScope:
+    """Return the shared scope or the mixed scope for a multi-origin matrix."""
+    scopes: set[RevisionCoverageAuthorityScope] = {ledger.authority_scope for ledger in ledgers}
+    return next(iter(scopes)) if len(scopes) == 1 else CoverageAuthorityScope.MIXED
+
+
 def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> RevisionModelLawCoverage:
     """Aggregate every coverage cell into one visible revision projection.
 
@@ -1359,28 +1409,11 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
     """
     if not ledgers:
         raise _RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
-    gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]] = {
-        tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
-        for tier in (*_REQUIRED_COVERAGE_TIERS, _EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
-    }
-    satisfied: tuple[_EvidenceTier, ...] = tuple(
-        tier for tier, gates in gates_by_tier.items() if all(gate.status == "satisfied" for gate in gates)
-    )
-    gaps: tuple[_EvidenceTier, ...] = tuple(
-        tier for tier, gates in gates_by_tier.items() if any(gate.status == "gap" for gate in gates)
-    )
-    required_gaps: tuple[_RequiredCoverageTier, ...] = tuple(
-        tier
-        for tier in _REQUIRED_COVERAGE_TIERS
-        if any(
-            ledger.filing_eligible and next(gate for gate in ledger.gates if gate.tier == tier).status == "gap"
-            for ledger in ledgers
-        )
-    )
-    scopes: set[RevisionCoverageAuthorityScope] = {ledger.authority_scope for ledger in ledgers}
-    authority_scope: RevisionCoverageAuthorityScope = (
-        next(iter(scopes)) if len(scopes) == 1 else CoverageAuthorityScope.MIXED
-    )
+    gates_by_tier = _coverage_gates_by_tier(ledgers)
+    satisfied: tuple[_EvidenceTier, ...] = _satisfied_coverage_tiers(gates_by_tier)
+    gaps: tuple[_EvidenceTier, ...] = _gapped_coverage_tiers(gates_by_tier)
+    required_gaps: tuple[_RequiredCoverageTier, ...] = _required_coverage_gaps(ledgers)
+    authority_scope = _coverage_authority_scope(ledgers)
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,
         gap_tiers=gaps,

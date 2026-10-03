@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import replace
 from decimal import Decimal
 from types import SimpleNamespace
@@ -19,7 +21,6 @@ from .._edit_execution import _pre_effect_refusal
 from ..action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
 from ..edit_contract import ModeloEditMutationFamily
 from ..edit_models import (
-    ModeloEditBaselineV1,
     ModeloEditDomainRefusalV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -78,14 +79,6 @@ def test_unknown_or_malformed_producer_context_retains_only_the_safe_family(cont
     assert "calculation_source_unresolved" not in refusal.facts
 
 
-def _baseline() -> ModeloEditBaselineV1:
-    return ModeloEditBaselineV1.model_construct(
-        work_unit_id="a" * 64,
-        baseline_id="b" * 64,
-        current_calculation_revision_id="c" * 64,
-    )
-
-
 def _prerequisite() -> ModeloEditCalculationPrerequisiteV1:
     return ModeloEditCalculationPrerequisiteV1(
         operation_id="d" * 64,
@@ -97,43 +90,42 @@ def _prerequisite() -> ModeloEditCalculationPrerequisiteV1:
     )
 
 
-def test_only_the_registered_renewed_baseline_can_deliver_and_be_consumed_once() -> None:
+def _take(store: ModeloEditRefusalProjectionStore, **coordinates: str) -> ModeloEditCalculationPrerequisiteV1 | None:
+    exact = {"work_unit_id": "a" * 64, "baseline_id": "b" * 64, "calculation_revision_id": "c" * 64}
+    return store.take("d" * 64, **{**exact, **coordinates})
+
+
+def test_a_retained_prerequisite_is_consumed_once_by_its_exact_apply() -> None:
     store = ModeloEditRefusalProjectionStore()
-    prerequisite = _prerequisite()
-    store.observe(prerequisite)
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
-    store.expect(prerequisite.operation_id, _baseline())
-    store.observe(replace(prerequisite, baseline_id="e" * 64))
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
-    store.expect(prerequisite.operation_id, _baseline())
-    store.observe(prerequisite)
-    assert (
-        store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) == prerequisite
-    )
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
+    assert _take(store) is None
+    store.retain(_prerequisite())
+    assert _take(store) == _prerequisite()
+    assert _take(store) is None
 
 
-@pytest.mark.parametrize("work,head", [("e" * 64, "c" * 64), ("a" * 64, "e" * 64)])
-def test_a_replaced_work_coordinate_discards_the_private_projection(work: str, head: str) -> None:
+@pytest.mark.parametrize(
+    "coordinates",
+    [
+        {"work_unit_id": "e" * 64},
+        {"baseline_id": "e" * 64},
+        {"calculation_revision_id": "e" * 64},
+    ],
+)
+def test_a_read_naming_other_coordinates_discards_the_prerequisite_unread(coordinates: dict[str, str]) -> None:
     store = ModeloEditRefusalProjectionStore()
-    prerequisite = _prerequisite()
-    store.expect(prerequisite.operation_id, _baseline())
-    store.observe(prerequisite)
-    assert store.take(prerequisite.operation_id, work_unit_id=work, calculation_revision_id=head) is None
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
+    store.retain(_prerequisite())
+    assert _take(store, **coordinates) is None
+    assert _take(store) is None
 
 
-def test_terminal_consumption_and_session_cleanup_remove_unfulfilled_context() -> None:
+def test_the_store_forgets_the_oldest_prerequisite_beyond_its_bound() -> None:
     store = ModeloEditRefusalProjectionStore()
-    prerequisite = _prerequisite()
-    store.expect(prerequisite.operation_id, _baseline())
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
-    store.observe(prerequisite)
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
-    store.expect(prerequisite.operation_id, _baseline())
-    store.observe(prerequisite)
-    store.clear()
-    assert store.take(prerequisite.operation_id, work_unit_id="a" * 64, calculation_revision_id="c" * 64) is None
+    retained = [replace(_prerequisite(), operation_id=f"{index:064x}") for index in range(17)]
+    for prerequisite in retained:
+        store.retain(prerequisite)
+    exact = {"work_unit_id": "a" * 64, "baseline_id": "b" * 64, "calculation_revision_id": "c" * 64}
+    assert store.take(retained[0].operation_id, **exact) is None
+    assert store.take(retained[-1].operation_id, **exact) == retained[-1]
 
 
 @pytest.mark.asyncio
@@ -170,6 +162,10 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
         async def effect(self, effect: object) -> None:
             effects.append(effect)
 
+    @asynccontextmanager
+    async def irreversible_section() -> AsyncIterator[None]:
+        yield
+
     delivered: list[ModeloEditCalculationPrerequisiteV1] = []
 
     def unavailable(prerequisite: ModeloEditCalculationPrerequisiteV1) -> None:
@@ -187,6 +183,7 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
             events=Events(),
             identity=SimpleNamespace(operation_id="d" * 64),
             authority_operation=None,
+            cancellation=SimpleNamespace(irreversible_section=irreversible_section),
         ),
     )
     with pytest.raises(ModeloEditRefusedError) as caught:

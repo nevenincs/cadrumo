@@ -27,7 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from ...application.operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
+from ...application.operations.operation_definition import OperationDefinition
+from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...tests.inventory import package_python_files, releases_parsed_sources
 from ..operation_composition import build_production_operation_registry
 
@@ -144,22 +145,28 @@ def _declared_definition_ids() -> Mapping[str, str]:
     declared: dict[str, str] = dict(_dynamic_definition_ids())
     for path in _production_sources():
         for node in _parsed(path).body:
-            if not isinstance(node, ast.Assign):
+            if isinstance(node, ast.Assign):
+                targets = node.targets
+                value = node.value
+            elif isinstance(node, ast.AnnAssign):
+                targets = (node.target,)
+                value = node.value
+            else:
                 continue
-            if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
+            if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
                 continue
-            for target in node.targets:
+            for target in targets:
                 if isinstance(target, ast.Name) and target.id.endswith(_DEFINITION_ID_SUFFIX):
-                    declared[node.value.value] = path
+                    declared[value.value] = path
     return declared
 
 
 @cache
 def _dynamic_definition_ids() -> Mapping[str, str]:
     """Read the one enum-derived declaration family from its source module."""
-    from ...application.overview.read_operation import OVERVIEW_READ_DEFINITION_IDS
+    from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS
 
-    path = "src/cadrumo/application/overview/read_operation.py"
+    path = "src/cadrumo/application/overview/read_request.py"
     return {definition_id: path for definition_id in OVERVIEW_READ_DEFINITION_IDS.values()}
 
 

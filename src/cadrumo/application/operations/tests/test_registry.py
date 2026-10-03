@@ -58,9 +58,9 @@ from ..models import (
     OperationSnapshot,
     OperationTerminalReceipt,
 )
+from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
@@ -514,6 +514,13 @@ def snapshot(*, definition_id: str = "profile.sync", value: str = "submitted") -
         updated_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
         event_cursor=9,
     )
+
+
+def test_all_operation_frontends_names_every_declared_frontend() -> None:
+    assert isinstance(ALL_OPERATION_FRONTENDS, frozenset)
+    assert {frontend.value for frontend in ALL_OPERATION_FRONTENDS} == {"cli", "mcp", "tui"}
+    # A new frontend must be granted to all-frontend operations deliberately.
+    assert frozenset(OperationFrontendProjection) == ALL_OPERATION_FRONTENDS
 
 
 def test_registry_canonicalises_and_resolves_definition_and_action_identity() -> None:

@@ -1,0 +1,309 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "111"
+design_epoch = "2019"
+source_ref = "aeat-dr-111-2019-v18"
+source_sha256 = "5f65e85078360f576b3a80a8b4dda54eaa752b410f1e2ea00b52ec5a84d5edff"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-10-year-yyyy"
+decision_statement = "The four-character Devengo ejercicio is the unsigned four-digit filing year."
+justification = "AEAT names this slot Ejercicio and gives it four numeric positions; the canonical year policy preserves all four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-12-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-15-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-18-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-21-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-24-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-27-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-30-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-33-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "dr M11101"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M11101"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "dr M11101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m111-2019-field-36-integer"
+decision_statement = "The eight-character number of recipients is an unsigned integer with no decimal component."
+justification = "The official description names a count of perceptores. Counts are whole, nonnegative numbers; the source gives eight unsigned numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M11101"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "dr M11101"

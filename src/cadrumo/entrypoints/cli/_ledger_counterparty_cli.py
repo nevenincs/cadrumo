@@ -159,32 +159,7 @@ def counterparty_confirm(
     recorded = cast("bool", completed.projection.recorded)
     notices: list[Notice] = []
     if not recorded:
-        answered = _confirmed_answers(fact)
-        # Each axis appears in the context only when it was actually answered:
-        # the notice reports what is stored, and a key carrying an empty string
-        # for an unanswered axis would read as a stored blank answer.
-        context = {
-            "canonical_tax_identifier": fact.canonical_tax_identifier,
-            "stored_asserted_by": fact.asserted_by,
-            "supplied_asserted_by": asserted_by,
-        }
-        if fact.territorial_scope is not None:
-            context["territorial_scope"] = fact.territorial_scope
-        if fact.identification_state is not None:
-            context["identification_state"] = fact.identification_state
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.counterparty.already_confirmed",
-                message=tr(
-                    "cli.ledger.counterparty.notices.already_confirmed",
-                    identifier=fact.canonical_tax_identifier,
-                    answered=answered,
-                    asserted_by=fact.asserted_by,
-                ),
-                context=context,
-            ),
-        )
+        _append_counterparty_already_confirmed_notice(fact, asserted_by, notices)
 
     emit_envelope(
         ctx,
@@ -395,4 +370,36 @@ def counterparty_view(
         result=_counterparty_view_result(ctx, tax_identifier, evidenced_scope, resolution),
         lines=[_counterparty_view_line(tax_identifier, resolution)],
         notices=notices,
+    )
+
+
+def _append_counterparty_already_confirmed_notice(
+    fact: CounterpartyFactProjection, asserted_by: str, notices: list[Notice]
+) -> None:
+    """Report only the axes already answered by the stored counterparty fact."""
+    answered = _confirmed_answers(fact)
+    # Each axis appears in the context only when it was actually answered:
+    # the notice reports what is stored, and a key carrying an empty string
+    # for an unanswered axis would read as a stored blank answer.
+    context = {
+        "canonical_tax_identifier": fact.canonical_tax_identifier,
+        "stored_asserted_by": fact.asserted_by,
+        "supplied_asserted_by": asserted_by,
+    }
+    if fact.territorial_scope is not None:
+        context["territorial_scope"] = fact.territorial_scope
+    if fact.identification_state is not None:
+        context["identification_state"] = fact.identification_state
+    notices.append(
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.counterparty.already_confirmed",
+            message=tr(
+                "cli.ledger.counterparty.notices.already_confirmed",
+                identifier=fact.canonical_tax_identifier,
+                answered=answered,
+                asserted_by=fact.asserted_by,
+            ),
+            context=context,
+        ),
     )

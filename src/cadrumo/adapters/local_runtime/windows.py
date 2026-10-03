@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from .framing import close_runtime_transport_after_failure
 
 if TYPE_CHECKING:
@@ -111,9 +112,7 @@ def _image_path(process: int | _NativeHandle) -> Path:
 
 
 def _milliseconds(deadline: float) -> int:
-    remaining = deadline - time.monotonic()
-    if not math.isfinite(remaining) or remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    remaining = remaining_budget(deadline)
     return min(0xFFFFFFFE, max(1, math.ceil(remaining * 1000)))
 
 

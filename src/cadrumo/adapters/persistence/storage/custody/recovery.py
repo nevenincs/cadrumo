@@ -10,7 +10,6 @@ against, so a passphrase rotation that preserves the epoch leaves it valid.
 
 from __future__ import annotations
 
-import base64
 import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Final, Literal
@@ -29,6 +28,7 @@ from .....core.hashing import (
 )
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ._kdf_records import canonical_dek_epoch
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
 from .kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
@@ -45,17 +45,6 @@ if TYPE_CHECKING:
 PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION: Final = 1
 PROFILE_CUSTODY_RECOVERY_MAX_BYTES: Final = 1024
 PROFILE_CUSTODY_RECOVERY_FILENAME: Final = "recovery.v1.json"
-
-
-def validate_profile_custody_dek_epoch(value: str) -> str:
-    """Validate the immutable random 128-bit epoch's canonical representation."""
-    try:
-        decoded = base64.b64decode(value.encode("ascii"), validate=True)
-    except (UnicodeEncodeError, ValueError) as exc:
-        raise ValueError("dek_epoch must be canonical base64") from exc
-    if len(decoded) != 16 or base64.b64encode(decoded).decode("ascii") != value:
-        raise ValueError("dek_epoch must encode exactly 16 canonical bytes")
-    return value
 
 
 class ProfileCustodyRecoveryAad(BaseModel):
@@ -93,7 +82,7 @@ class _RecoveryPayload(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_epoch(cls, value: str) -> str:
-        return validate_profile_custody_dek_epoch(value)
+        return canonical_dek_epoch(value)
 
     @field_validator("previous_recovery_digest")
     @classmethod

@@ -55,14 +55,10 @@ from ...domain.calculations.registry.applicability import taxpayer_model_is_decl
 from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
-from ...domain.deadlines.errors import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
-from ...domain.deadlines.festivos import MODELOS_WITHOUT_SHIFT as _MODELOS_WITHOUT_SHIFT
 from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
-from ...domain.deadlines.festivos import load_holiday_calendar as _load_holiday_calendar
-from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
 from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Schedule as _Schedule
@@ -72,6 +68,7 @@ from ...domain.deadlines.recargo import build_recovery_for_overdue as _build_rec
 from ...domain.deadlines.recargo import load_recargo_bands as _load_recargo_bands
 from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
 from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
+from ..modelo.effective_deadline import effective_filing_deadline as _effective_filing_deadline
 from ._calendar_evidence_sources import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )
@@ -208,12 +205,51 @@ _LOCAL_WORK_UNIT_APPLIES_BECAUSE = (
 )
 
 
+def _window_intersects_range(
+    opens_on: date,
+    nominal_closes_on: date,
+    *,
+    modelo: str,
+    holiday_territory: _CalendarCCAA | None,
+    calendar_range: _OverviewCalendarRange,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Return whether [opens_on, effective close date] intersects the range.
+
+    A nominal close date just before the range can move into it when it falls
+    on a non-business day, so the row is placed by the effective date its
+    entry will display. The effective date never precedes the nominal one, so
+    it is only resolved when the nominal date alone would exclude the row.
+    """
+    if opens_on > calendar_range.to_date:
+        return False
+    if nominal_closes_on >= calendar_range.from_date:
+        return True
+    deadline = _effective_filing_deadline(
+        nominal_closes_on,
+        modelo=modelo,
+        holiday_territory=holiday_territory,
+        operation=operation,
+    )
+    return deadline.closes_on >= calendar_range.from_date
+
+
 def _entry_intersects_range(
     obligation: _ModeloDeadline,
     calendar_range: _OverviewCalendarRange,
+    *,
+    holiday_territory: _CalendarCCAA | None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
-    return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
+    """Return whether ``obligation``'s filing window, to its effective close date, intersects the range."""
+    return _window_intersects_range(
+        obligation.opens_on,
+        obligation.closes_on,
+        modelo=obligation.modelo,
+        holiday_territory=holiday_territory,
+        calendar_range=calendar_range,
+        operation=operation,
+    )
 
 
 def _calendar_entry_key(entry: _OverviewCalendarEntry) -> tuple[str, int, str]:
@@ -267,10 +303,18 @@ def _work_unit_intersects_range(
     unit: _WorkUnit,
     calendar_range: _OverviewCalendarRange,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    holiday_territory: _CalendarCCAA | None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     opens_on, closes_on, _payment_cutoff_on = _work_unit_window_dates(unit, operation=operation)
-    return closes_on >= calendar_range.from_date and opens_on <= calendar_range.to_date
+    return _window_intersects_range(
+        opens_on,
+        closes_on,
+        modelo=str(unit.modelo),
+        holiday_territory=holiday_territory,
+        calendar_range=calendar_range,
+        operation=operation,
+    )
 
 
 def _work_unit_has_filing_pointers(unit: _WorkUnit) -> bool:
@@ -427,7 +471,12 @@ def _merge_work_units_into_entries(
             )
             annotated_registry_keys.add(key)
             continue
-        if not _work_unit_intersects_range(unit, calendar_range, operation=operation):
+        if not _work_unit_intersects_range(
+            unit,
+            calendar_range,
+            holiday_territory=holiday_territory,
+            operation=operation,
+        ):
             continue
         merged.append(
             _calendar_entry_from_work_unit(
@@ -893,38 +942,14 @@ def _calendar_entry_from_obligation(
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
 ) -> _OverviewCalendarEntry:
-    try:
-        holiday_calendar = (
-            None
-            if obligation.modelo in _MODELOS_WITHOUT_SHIFT
-            else _load_holiday_calendar(obligation.closes_on.year, operation=operation)
-        )
-        shift = _shift_deadline(
-            obligation.closes_on,
-            modelo=obligation.modelo,
-            ccaa_code=holiday_territory,
-            calendar=holiday_calendar,
-            operation=operation,
-        )
-        adjusted = shift.adjusted_close_date
-        reason = shift.shift_reason
-        holiday_refs = shift.holiday_refs
-        jurisdictions = shift.jurisdictions
-        holiday_coverage = shift.coverage
-    except _DeadlineValidationError as exc:
-        _log.debug(
-            "overview calendar ignored deadline shift validation error",
-            extra={
-                "modelo": obligation.modelo,
-                "period": obligation.period,
-                "error_type": type(exc).__name__,
-            },
-        )
-        adjusted = obligation.closes_on
-        reason = "calendar_unavailable"
-        holiday_refs = ()
-        jurisdictions = ()
-        holiday_coverage = _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    deadline = _effective_filing_deadline(
+        obligation.closes_on,
+        modelo=obligation.modelo,
+        holiday_territory=holiday_territory,
+        operation=operation,
+    )
+    adjusted = deadline.closes_on
+    holiday_coverage = deadline.holiday_coverage
     period = obligation.period
     status = _classify_obligation_status(adjusted, today, due_soon_days)
     evidence = _calendar_entry_filing_evidence(
@@ -961,9 +986,9 @@ def _calendar_entry_from_obligation(
         opens_on=obligation.opens_on,
         closes_on=obligation.closes_on,
         adjusted_closes_on=adjusted,
-        shift_reason=reason,
-        holiday_refs=holiday_refs,
-        jurisdictions=jurisdictions,
+        shift_reason=deadline.shift_reason,
+        holiday_refs=deadline.holiday_refs,
+        jurisdictions=deadline.jurisdictions,
         holiday_coverage=holiday_coverage,
         holiday_territory=(
             holiday_territory
@@ -1067,7 +1092,12 @@ def _entries_and_suppressed_from_schedules(
     coverage_surface_modelos: set[str] = set()
     for schedule in schedules:
         for obligation in schedule.obligations:
-            intersects_range = _entry_intersects_range(obligation, calendar_range)
+            intersects_range = _entry_intersects_range(
+                obligation,
+                calendar_range,
+                holiday_territory=profile.holiday_territory,
+                operation=operation,
+            )
             applicability = _derive_modelo_applicability(
                 profile,
                 obligation.modelo,

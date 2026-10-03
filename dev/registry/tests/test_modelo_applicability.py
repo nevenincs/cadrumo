@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.irpf_regimes import (
     irpf_special_regime_general_token,
     irpf_special_regime_impatriado_token,
 )
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
 from cadrumo.domain.deadlines.models import (

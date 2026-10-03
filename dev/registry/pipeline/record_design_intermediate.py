@@ -147,6 +147,62 @@ class RecordDesignIntermediateAuxiliaryEnvelopeHeaderField(_StrictModel):
     parser_field: RecordDesignIntermediateField
 
 
+def _validate_m390_header_roles(
+    fields: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeaderField, ...],
+) -> None:
+    """Require the declared header roles to retain official source order."""
+    if tuple(item.role for item in fields) != tuple(RecordDesignAuxiliaryEnvelopeHeaderRole):
+        msg = "Modelo 390 auxiliary header roles must retain official source order"
+        raise ValueError(msg)
+
+
+def _validate_m390_header_anchor_geometry(source_fields: tuple[RecordDesignIntermediateField, ...]) -> None:
+    """Require exact source widths and offsets in their official order."""
+    if tuple(field.length for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_LENGTHS:
+        msg = "Modelo 390 auxiliary header field widths must retain official anchors"
+        raise ValueError(msg)
+    if tuple(field.offset for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_OFFSETS:
+        msg = "Modelo 390 auxiliary header offsets must retain official anchors"
+        raise ValueError(msg)
+
+
+def _validate_m390_header_source_coordinates(source_fields: tuple[RecordDesignIntermediateField, ...]) -> None:
+    """Require exact source rows, cells, and ordinals in their official order."""
+    if tuple(field.source_row for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
+        msg = "Modelo 390 auxiliary header source rows must retain official anchors"
+        raise ValueError(msg)
+    if tuple(field.source_cell for field in source_fields) != tuple(
+        f"A{row}" for row in AUXILIARY_ENVELOPE_HEADER_ROWS
+    ):
+        msg = "Modelo 390 auxiliary header source cells must retain official anchors"
+        raise ValueError(msg)
+    if tuple(field.ordinal for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
+        msg = "Modelo 390 auxiliary header ordinals must retain official anchors"
+        raise ValueError(msg)
+
+
+def _validate_m390_header_source_identity(
+    source_fields: tuple[RecordDesignIntermediateField, ...],
+    *,
+    sheet: str,
+    record_identity: str,
+) -> None:
+    """Require every header anchor to come from its declared source sheet."""
+    if any(field.sheet != sheet or field.record_identity != record_identity for field in source_fields):
+        msg = "Modelo 390 auxiliary header anchors must belong to one source sheet"
+        raise ValueError(msg)
+
+
+def _validate_m390_header_extent(
+    source_fields: tuple[RecordDesignIntermediateField, ...],
+    emitted_extent: int,
+) -> None:
+    """Require the closing anchor to end at the fixed 328-byte extent."""
+    if tuple(field.offset + field.length - 1 for field in source_fields)[-1] != emitted_extent:
+        msg = "Modelo 390 auxiliary header extent must end at byte 328"
+        raise ValueError(msg)
+
+
 class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
     """A total-less source-proved M390 header outside fixed-record generation."""
 
@@ -157,36 +213,13 @@ class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
 
     @model_validator(mode="after")
     def _require_exact_m390_header_shape(self) -> RecordDesignIntermediateAuxiliaryEnvelopeHeader:
-        expected_roles = tuple(RecordDesignAuxiliaryEnvelopeHeaderRole)
-        if tuple(item.role for item in self.fields) != expected_roles:
-            msg = "Modelo 390 auxiliary header roles must retain official source order"
-            raise ValueError(msg)
-
+        _validate_m390_header_roles(self.fields)
         source_fields = self.source_fields
-        if tuple(field.length for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_LENGTHS:
-            msg = "Modelo 390 auxiliary header field widths must retain official anchors"
-            raise ValueError(msg)
-        if tuple(field.offset for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_OFFSETS:
-            msg = "Modelo 390 auxiliary header offsets must retain official anchors"
-            raise ValueError(msg)
-        if tuple(field.source_row for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
-            msg = "Modelo 390 auxiliary header source rows must retain official anchors"
-            raise ValueError(msg)
-        if tuple(field.source_cell for field in source_fields) != tuple(
-            f"A{row}" for row in AUXILIARY_ENVELOPE_HEADER_ROWS
-        ):
-            msg = "Modelo 390 auxiliary header source cells must retain official anchors"
-            raise ValueError(msg)
-        if tuple(field.ordinal for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
-            msg = "Modelo 390 auxiliary header ordinals must retain official anchors"
-            raise ValueError(msg)
+        _validate_m390_header_anchor_geometry(source_fields)
+        _validate_m390_header_source_coordinates(source_fields)
         validate_auxiliary_envelope_header_contents(tuple(field.content for field in source_fields))
-        if any(field.sheet != self.sheet or field.record_identity != self.record_identity for field in source_fields):
-            msg = "Modelo 390 auxiliary header anchors must belong to one source sheet"
-            raise ValueError(msg)
-        if tuple(field.offset + field.length - 1 for field in source_fields)[-1] != self.emitted_extent:
-            msg = "Modelo 390 auxiliary header extent must end at byte 328"
-            raise ValueError(msg)
+        _validate_m390_header_source_identity(source_fields, sheet=self.sheet, record_identity=self.record_identity)
+        _validate_m390_header_extent(source_fields, self.emitted_extent)
         return self
 
     @property
@@ -324,6 +357,23 @@ def _build_record_design_intermediate(
     parsed_sheets: tuple[RecordDesignSheet, ...],
 ) -> RecordDesignIntermediate:
     """Project already-parsed official fields without reinterpreting coordinates."""
+    source, design_epoch = _require_parsed_record_design(resolved, parsed_sheets)
+    workbook_format = _workbook_format(resolved.path)
+    source_anchor = _intermediate_source(source, workbook_format=workbook_format, design_epoch=design_epoch)
+    sheets, variable_envelopes, auxiliary_envelope_headers = _project_parsed_sheets(parsed_sheets, workbook_format)
+    return RecordDesignIntermediate(
+        source=source_anchor,
+        sheets=sheets,
+        variable_envelopes=variable_envelopes,
+        auxiliary_envelope_headers=auxiliary_envelope_headers,
+    )
+
+
+def _require_parsed_record_design(
+    resolved: ResolvedRecordDesignBinary,
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+) -> tuple[GeneratedArtifactSource, str]:
+    """Validate source identity and parser completeness before projection."""
     source = resolved.source
     if source.kind != "record_design":
         raise RegistryValidationError(f"source {source.id!r} is not a record-design binary")
@@ -335,34 +385,67 @@ def _build_record_design_intermediate(
         raise RegistryValidationError(f"record-design source {source.id!r} produced no parsed sheets")
     if len({sheet.name for sheet in parsed_sheets}) != len(parsed_sheets):
         raise RegistryValidationError(f"record-design source {source.id!r} produced duplicate sheet identities")
+    return source, source.record_design_epoch
 
-    workbook_format = _workbook_format(resolved.path)
-    source_anchor = RecordDesignIntermediateSource(
+
+def _intermediate_source(
+    source: GeneratedArtifactSource,
+    *,
+    workbook_format: RecordDesignWorkbookFormat,
+    design_epoch: str,
+) -> RecordDesignIntermediateSource:
+    return RecordDesignIntermediateSource(
         source_ref=str(source.id),
         source_sha256=source.sha256,
         workbook_format=workbook_format,
-        design_epoch=source.record_design_epoch,
+        design_epoch=design_epoch,
     )
-    sheets = tuple(
+
+
+def _project_parsed_sheets(
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+    workbook_format: RecordDesignWorkbookFormat,
+) -> tuple[
+    tuple[RecordDesignIntermediateSheet, ...],
+    tuple[RecordDesignIntermediateVariableEnvelope, ...],
+    tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...],
+]:
+    sheets = _project_fixed_sheets(parsed_sheets, workbook_format)
+    variable_envelopes = _project_variable_envelopes(parsed_sheets, workbook_format)
+    auxiliary_envelope_headers = _project_auxiliary_envelope_headers(parsed_sheets, workbook_format)
+    return sheets, variable_envelopes, auxiliary_envelope_headers
+
+
+def _project_fixed_sheets(
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+    workbook_format: RecordDesignWorkbookFormat,
+) -> tuple[RecordDesignIntermediateSheet, ...]:
+    return tuple(
         _intermediate_sheet(sheet, workbook_format=workbook_format)
         for sheet in parsed_sheets
         if sheet.variable_envelope is None and sheet.auxiliary_envelope_header is None
     )
-    variable_envelopes = tuple(
+
+
+def _project_variable_envelopes(
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+    workbook_format: RecordDesignWorkbookFormat,
+) -> tuple[RecordDesignIntermediateVariableEnvelope, ...]:
+    return tuple(
         _intermediate_variable_envelope(sheet.variable_envelope, workbook_format=workbook_format)
         for sheet in parsed_sheets
         if sheet.variable_envelope is not None
     )
-    auxiliary_envelope_headers = tuple(
+
+
+def _project_auxiliary_envelope_headers(
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+    workbook_format: RecordDesignWorkbookFormat,
+) -> tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...]:
+    return tuple(
         _intermediate_auxiliary_envelope_header(sheet.auxiliary_envelope_header, workbook_format=workbook_format)
         for sheet in parsed_sheets
         if sheet.auxiliary_envelope_header is not None
-    )
-    return RecordDesignIntermediate(
-        source=source_anchor,
-        sheets=sheets,
-        variable_envelopes=variable_envelopes,
-        auxiliary_envelope_headers=auxiliary_envelope_headers,
     )
 
 

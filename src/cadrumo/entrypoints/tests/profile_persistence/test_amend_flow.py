@@ -583,7 +583,7 @@ def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos, *, operation:
     _, _, _fr_repo, _, _ = repos
     refreshed_baseline = get_filing_record(
         outcome.baseline.filing_record_id,
-        ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+        ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),
     )
     assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
@@ -699,7 +699,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
     assert new_filing.member_nif == "A00000000"
     refreshed_single_filer = get_filing_record(
         single_filer_filing_id,
-        ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+        ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),
     )
     assert refreshed_single_filer.status is ModeloRecordStatus.VIGENTE
 
@@ -1151,7 +1151,7 @@ def test_amendment_event_and_state_are_both_present_after_success(
     assert (
         get_filing_record(
             baseline.filing_record_id,
-            ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),
         ).status
         is ModeloRecordStatus.SUPERSEDIDO
     )

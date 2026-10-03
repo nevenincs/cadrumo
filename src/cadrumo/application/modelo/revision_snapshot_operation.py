@@ -2,40 +2,22 @@
 
 from __future__ import annotations
 
-import asyncio
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-)
-from ...core.time.clock import now
 from ..operations.access_port import OperationAccessResolver
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.read_capture import capture_read_result
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -127,13 +109,7 @@ class ModeloWorkRevisionSnapshotExecutor:
                 modality=modality,
             )
 
-        async def capture() -> str:
-            projection = await asyncio.to_thread(read)
-            reference = await context.operands.put(projection, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="modelo-revision-snapshot")
+        return await capture_read_result(context, read, task_name="modelo-revision-snapshot")
 
 
 def build_modelo_work_revision_snapshot_definition(factory: VerificationRepositoryBundleFactory) -> OperationDefinition:
@@ -149,19 +125,7 @@ def build_modelo_work_revision_snapshot_definition(factory: VerificationReposito
         ),
         phase_codes=(MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
@@ -171,17 +135,8 @@ def build_modelo_work_revision_snapshot_registration(
     definition: OperationDefinition, *, access_resolver: OperationAccessResolver
 ) -> OperationPublicDefinitionRegistrationV1:
     """Use persisted revision scope and explicit TAX_VALUES disclosure admission."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloWorkRevisionSnapshotRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloWorkRevisionSnapshotProjection,
-        ),
+        public_result_type=ModeloWorkRevisionSnapshotProjection,
         access_resolver=access_resolver,
     )

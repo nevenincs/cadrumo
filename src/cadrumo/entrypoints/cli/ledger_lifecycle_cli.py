@@ -8,26 +8,29 @@ payloads inside :class:`SchemaEnvelope` through
 
 from __future__ import annotations
 
-import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal
+from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
 from ...application.ledger.id_resolution import compute_display_id_width
-from ...application.ledger.llm_review_operation import (
+from ...application.ledger.llm_review_contracts import (
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
-    LedgerLlmOperationResult,
     LedgerLlmReviewProjection,
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
 )
+from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.google_drive_reference import parse_google_drive_folder_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
+from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ._decimal_parsing import parse_decimal_amount
@@ -35,13 +38,14 @@ from ._ledger_support import (
     ledger_validation_bad,
 )
 from .common import bad, emit_envelope
-from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
+from .registered_operation_contracts import (
+    RegisteredOperationCompletion,
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,
-    run_registered_operation,
-    submitted_operation_error,
 )
+from .registered_operation_errors import invalid_completion_error, submitted_operation_error
+from .runtime_profile_binding import bound_profile_client
+from .runtime_registered_operation import run_registered_operation
 
 if TYPE_CHECKING:
     from ...application.ledger.split_operation import LedgerSplitOperationResult
@@ -144,20 +148,12 @@ def ledger_evidence_pull(
     )
 
 
-#: A Drive folder URL, which carries its id after a ``/folders/`` segment
-#: rather than the ``/d/`` one a file link uses. Matched here rather than in
-#: the shared file-id grammar so a single-document pull still refuses a folder
-#: link at the boundary instead of failing later against the media endpoint.
-_DRIVE_FOLDER_URL = re.compile(r"/folders/(?P<id>[A-Za-z0-9_-]{10,})")
-
-
 def _parse_drive_folder_reference(reference: str) -> str:
     """Resolve a Drive folder id/URL/reference to a bare folder id.
 
     A folder id has the same shape as a file id — only the ``in parents``
     query disambiguates the two on the Drive side — so a bare id and a
-    ``?id=`` link resolve through
-    :func:`~adapters.outbound.google.document_link_resolver.parse_drive_file_id`.
+    ``?id=`` link resolve through the core Drive reference grammar.
 
     A folder URL does not. Drive writes it as ``/drive/folders/<id>`` (with an
     optional ``/u/<n>/`` account segment and a ``?usp=sharing`` suffix), and
@@ -168,13 +164,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
     Refuses anything carrying no recognisable Drive id rather than sending an
     unparsed string to the API.
     """
-    from ...adapters.outbound.google.document_link_resolver import parse_drive_file_id
-
-    folder_url = _DRIVE_FOLDER_URL.search(reference.strip())
-    # ``Match.group`` is typed ``str | Any``; the explicit ``str`` keeps the
-    # union honest so the ``None`` check below is a real narrowing rather than
-    # something an assertion would have to paper over.
-    folder_id = str(folder_url.group("id")) if folder_url is not None else parse_drive_file_id(reference)
+    folder_id = parse_google_drive_folder_id(reference)
     if folder_id is None:
         raise bad(
             tr("cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised", reference=reference),
@@ -708,7 +698,7 @@ def _ledger_split_llm(
     """
     from ...application.operations.registry import OperationSchemaIdentityV1
     from ...application.runtime.contracts import RuntimeRefusalCode
-    from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+    from ...core.operations import profile_operation_subject
 
     _validate_split_llm_options(
         child_amount=child_amount,
@@ -782,25 +772,11 @@ def _ledger_split_llm(
     if request.preview:
         preview = applied.preview
         if (
-            reviewed is not None
-            or applied.outcome != "preview"
-            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code is not None
-            or applied.profile_id != client.profile_id
+            _split_preview_receipt_invalid(completed, applied, reviewed, client.profile_id)
             or preview is None
-            or not matches(preview)
-            or applied.transaction_id != preview.suggestion.transaction_id
-            or applied.reviewed_proposal_digest != preview.reviewed_proposal_digest
-            or applied.provenance != preview.suggestion.provenance
+            or _split_preview_proposal_invalid(applied, preview, matches)
         ):
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=completed.terminal_condition,
-                effect=completed.effect,
-                refusal_code=completed.refusal_code,
-            )
+            raise invalid_completion_error(completed)
         suggestion = preview.suggestion
         _render_split_llm_preview(
             ctx,
@@ -812,19 +788,9 @@ def _ledger_split_llm(
     if (
         not apply
         or reviewed is None
-        or applied.outcome != "split"
-        or applied.profile_id != client.profile_id
-        or applied.transaction_id != reviewed.suggestion.transaction_id
-        or applied.reviewed_proposal_digest != reviewed.reviewed_proposal_digest
-        or applied.provenance != reviewed.suggestion.provenance
-        or completed.effect is not OperationEffect.UPDATED
+        or _split_applied_proposal_invalid(completed, applied, reviewed, client.profile_id)
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     _render_split_llm_applied(
         ctx,
         suggestion=reviewed.suggestion,
@@ -892,3 +858,51 @@ __all__ = [
     "ledger_split",
     "ledger_stash",
 ]
+
+
+def _split_preview_receipt_invalid(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    applied: LedgerLlmOperationResult,
+    reviewed: LedgerLlmReviewProjection | None,
+    profile_id: UUID,
+) -> bool:
+    """Require a successful read-only preview without an applied review."""
+    return (
+        reviewed is not None
+        or applied.outcome != "preview"
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or (completed.effect is not OperationEffect.NONE)
+        or (completed.refusal_code is not None)
+        or (applied.profile_id != profile_id)
+    )
+
+
+def _split_preview_proposal_invalid(
+    applied: LedgerLlmOperationResult,
+    preview: LedgerLlmReviewProjection,
+    matches: Callable[[LedgerLlmReviewProjection], bool],
+) -> bool:
+    """Correlate the preview transaction, reviewed digest, and provenance."""
+    return (
+        not matches(preview)
+        or applied.transaction_id != preview.suggestion.transaction_id
+        or applied.reviewed_proposal_digest != preview.reviewed_proposal_digest
+        or (applied.provenance != preview.suggestion.provenance)
+    )
+
+
+def _split_applied_proposal_invalid(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    applied: LedgerLlmOperationResult,
+    reviewed: LedgerLlmReviewProjection,
+    profile_id: UUID,
+) -> bool:
+    """Correlate the committed split with the exact reviewed proposal and mutation effect."""
+    return (
+        applied.outcome != "split"
+        or applied.profile_id != profile_id
+        or applied.transaction_id != reviewed.suggestion.transaction_id
+        or (applied.reviewed_proposal_digest != reviewed.reviewed_proposal_digest)
+        or (applied.provenance != reviewed.suggestion.provenance)
+        or (completed.effect is not OperationEffect.UPDATED)
+    )

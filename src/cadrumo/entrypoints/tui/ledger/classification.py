@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Final, cast, override
 
 from pydantic import ValidationError
@@ -11,14 +11,16 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
 from ....core.decimal.constants import ONE
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.i18n.render import tr
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.model_validation import validate_business_pct_coupling, validate_non_negative_decimal
 from ..components.widgets import ContentDataTable
-from .controller import LedgerWorkspaceController, ledger_copy
+from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -52,12 +54,9 @@ def _optional_decimal(field_name: str, raw: str) -> Decimal | None:
     value = raw.strip()
     if not value:
         return None
-    try:
-        parsed = Decimal(value)
-    except (InvalidOperation, ValueError) as error:
-        raise TransactionValidationError(f"{field_name} must be a decimal") from error
-    if not parsed.is_finite():
-        raise TransactionValidationError(f"{field_name} must be a finite decimal")
+    parsed = try_parse_canonical_decimal(value, max_fraction_digits=2)
+    if parsed is None:
+        raise TransactionValidationError(f"{field_name} must be a decimal")
     if field_name != "business_pct":
         validate_non_negative_decimal(parsed, field_name=field_name)
     return parsed
@@ -85,12 +84,12 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.classification.title"), classes="cadrumo-banner")
+        yield Static(tr("tui.ledger.classification.title"), classes="cadrumo-banner")
         with ledger_workspace_page() as navigation:
             yield navigation
             position, total, short_id = self.controller.classification_target_coordinate()
             yield Static(
-                ledger_copy(
+                tr(
                     "tui.ledger.classification.target",
                     position=position,
                     total=total,
@@ -99,23 +98,23 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                 id="ledger-classification-target",
                 markup=False,
             )
-            yield Static(ledger_copy("tui.ledger.classification.prompt"), markup=False)
+            yield Static(tr("tui.ledger.classification.prompt"), markup=False)
             yield Static(
-                ledger_copy("tui.ledger.classification.boundary"),
+                tr("tui.ledger.classification.boundary"),
                 id="ledger-classification-boundary",
                 markup=False,
             )
             for field_name in CLASSIFICATION_FIELD_NAMES:
-                yield Static(ledger_copy(f"tui.ledger.classification.field.{field_name}"), markup=False)
+                yield Static(tr(f"tui.ledger.classification.field.{field_name}"), markup=False)
                 yield Input(id=_input_id(field_name))
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield Button(
-                ledger_copy("tui.ledger.classification.confirm"),
+                tr("tui.ledger.classification.confirm"),
                 id="ledger-classification-confirm",
                 disabled=True,
             )
-            yield Button(ledger_copy("tui.ledger.classification.cancel"), id="ledger-classification-cancel")
+            yield Button(tr("tui.ledger.classification.cancel"), id="ledger-classification-cancel")
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -124,9 +123,9 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         table = cast("DataTable[str]", self.query_one("#ledger-classifications", DataTable))
         # The rows are classifications to choose from, not states, so the
         # column is named after what the operator is choosing.
-        table.add_column(ledger_copy("tui.ledger.area.classification"))
+        table.add_column(tr("tui.ledger.area.classification"))
         for classification, key in _CHOICES:
-            table.add_row(ledger_copy(key), key=classification.value)
+            table.add_row(tr(key), key=classification.value)
         table.focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -142,7 +141,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             return
         self.selected_classification = BusinessClassification(str(event.row_key.value))
         self._transition(LedgerFlowState.CONFIRMING)
-        self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.classification.confirming"))
+        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.classification.confirming"))
         confirm = self.query_one("#ledger-classification-confirm", Button)
         confirm.disabled = False
         confirm.focus()
@@ -170,7 +169,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         event.button.disabled = True
         self.query_one("#ledger-classification-cancel", Button).disabled = True
         status = self.query_one("#ledger-flow-status", Static)
-        status.update(ledger_copy("tui.ledger.classification.progress"))
+        status.update(tr("tui.ledger.classification.progress"))
         self.run_worker(self._submit(), exclusive=True)
 
     async def _submit(self) -> None:
@@ -186,10 +185,10 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             await self.controller.submit_classification(patch)
         except Exception:
             self._transition(LedgerFlowState.FAILED)
-            status.update(ledger_copy("tui.ledger.classification.failure"))
+            status.update(tr("tui.ledger.classification.failure"))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
-            status.update(ledger_copy("tui.ledger.classification.success"))
+            status.update(tr("tui.ledger.classification.success"))
 
     def _field_value(self, field_name: str) -> str:
         return self.query_one(f"#{_input_id(field_name)}", Input).value
@@ -205,15 +204,26 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             raise InternalInvariantError("classification selection is required before reading the form")
 
         values: dict[str, object] = {"business_classification": selected}
-        decimals = {
+        values.update(self._decimal_patch_values(selected))
+        values.update(self._optional_patch_values())
+        patch = ManualLedgerTransactionPatch.model_validate(values)
+        # The shared patch resolves deduction membership; the screen never
+        # imports calculation registry internals or manufactures tax arithmetic.
+        self._validate_canonical_patch(patch)
+        return patch
+
+    def _decimal_patch_values(self, selected: BusinessClassification) -> dict[str, Decimal]:
+        decimals: dict[str, Decimal | None] = {
             "taxable_base": _optional_decimal("taxable_base", self._field_value("taxable_base")),
             "iva_rate": _validate_iva_rate(_optional_decimal("iva_rate", self._field_value("iva_rate"))),
             "iva_amount": _optional_decimal("iva_amount", self._field_value("iva_amount")),
             "business_pct": _optional_decimal("business_pct", self._field_value("business_pct")),
         }
         validate_business_pct_coupling(selected, decimals["business_pct"])
-        values.update({field_name: value for field_name, value in decimals.items() if value is not None})
+        return {field_name: value for field_name, value in decimals.items() if value is not None}
 
+    def _optional_patch_values(self) -> dict[str, object]:
+        values: dict[str, object] = {}
         category = self._optional_text("iva_category")
         if category is not None:
             values["iva_category"] = IvaCategory(category)
@@ -224,8 +234,10 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             value = self._optional_text(field_name)
             if value is not None:
                 values[field_name] = value
+        return values
 
-        patch = ManualLedgerTransactionPatch.model_validate(values)
+    @staticmethod
+    def _validate_canonical_patch(patch: ManualLedgerTransactionPatch) -> None:
         # The shared patch resolves deduction membership; the screen never
         # imports calculation registry internals or manufactures tax arithmetic.
         if "iva_category" in patch.model_fields_set and not isinstance(patch.iva_category, IvaCategory):
@@ -234,7 +246,6 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             patch.deduction_fact_kind, IvaDeductionFactKind
         ):
             raise InternalInvariantError("classification deduction kind is not canonical")
-        return patch
 
     @override
     def _cancel_flow(self) -> None:

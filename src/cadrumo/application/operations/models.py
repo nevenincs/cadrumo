@@ -127,6 +127,8 @@ class OperationTerminalReceipt(BaseModel):
     refusal_detail_ref: ContentDigest | None = None
     failure_error_code: OperationFailureErrorCode | None = None
     diagnostic_ref: OperationDiagnosticReference | None = None
+    #: Encrypted public detail of the error that stopped a refused or failed executor.
+    error_detail_ref: ContentDigest | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -134,6 +136,11 @@ class OperationTerminalReceipt(BaseModel):
         validate_utc_aware(self.settled_at)
         if self.refusal_detail_ref is not None and self.condition is not OperationTerminalCondition.REFUSED:
             raise ValueError("refusal detail is valid only for a refused operation")
+        if self.error_detail_ref is not None and (
+            self.condition not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
+            or self.refusal_detail_ref is not None
+        ):
+            raise ValueError("error detail is valid only for a refused or failed operation without refusal detail")
         validate_terminal_reference_meaning(
             condition=self.condition,
             result_ref=self.result_ref,
@@ -192,10 +199,53 @@ def _validate_terminal_failure_code(
         from ...core.errors.error_codes import get_registered_error_code_by_code
 
         get_registered_error_code_by_code(failure_error_code)
-    if failure_error_code is not None:
-        from ...core.errors.error_codes import get_registered_error_code_by_code
 
-        get_registered_error_code_by_code(failure_error_code)
+
+def terminal_receipt_matches(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    condition: OperationTerminalCondition,
+    effect: OperationEffect,
+) -> bool:
+    """Return whether ``receipt`` settled this exact target with this condition and effect.
+
+    Receipt validation already fixes which result, refusal and failure references
+    accompany ``condition``. This adds only what the receipt cannot know: the
+    invocation identity, the declared effect and the absence of a failure diagnostic.
+    """
+    return (
+        receipt.identity.definition_id == definition_id
+        and receipt.identity.subject_ref == subject_ref
+        and receipt.condition is condition
+        and receipt.effect is effect
+        and receipt.diagnostic_ref is None
+    )
+
+
+def require_terminal_receipt_match(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    condition: OperationTerminalCondition,
+    effect: OperationEffect,
+    message: str,
+) -> None:
+    """Raise ``ValueError(message)`` unless :func:`terminal_receipt_matches` holds.
+
+    The caller owns ``message`` because each projection names its own result in
+    the refusal it surfaces.
+    """
+    if not terminal_receipt_matches(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=subject_ref,
+        condition=condition,
+        effect=effect,
+    ):
+        raise ValueError(message)
 
 
 def validate_terminal_reference_meaning(
@@ -327,4 +377,6 @@ __all__ = [
     "OperationSnapshot",
     "OperationTerminalReceipt",
     "new_operation_id",
+    "require_terminal_receipt_match",
+    "terminal_receipt_matches",
 ]

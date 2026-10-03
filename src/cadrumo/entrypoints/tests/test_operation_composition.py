@@ -39,6 +39,7 @@ from ...application.operations.composition import (
 from ...application.operations.financial_operand import OperationTransientFinancialOperandDeclaration
 from ...application.operations.models import OperationRequest
 from ...application.operations.observation import OperationObservationService
+from ...application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ...application.operations.projection_services import (
     OperationCancellationService,
     OperationDetachService,
@@ -47,8 +48,6 @@ from ...application.operations.projection_services import (
     OperationWorkspaceRefreshTargetService,
 )
 from ...application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,

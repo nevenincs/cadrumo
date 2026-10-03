@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 import typer
@@ -15,7 +16,7 @@ from ....application.auth.certificate_secret_operation import (
     CertificateSecretMutationProjection,
     CertificateSecretMutationRequest,
 )
-from ....application.auth.certificate_source_operation import (
+from ....application.auth.certificate_source_contracts import (
     CERTIFICATE_SOURCE_CHECK_OPERATION_DEFINITION_ID,
     CERTIFICATE_SOURCE_LIST_OPERATION_DEFINITION_ID,
     CERTIFICATE_SOURCE_REGISTER_OPERATION_DEFINITION_ID,
@@ -38,11 +39,13 @@ from ....application.auth.operator_results import (
     CertificateSourceMutationResult,
     CertificateSourceSecretMutationResult,
 )
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
-from ..runtime_registered_operation import run_registered_operation, submitted_operation_error
+from ..runtime_registered_operation import run_registered_operation
 from ._profile_support import resolve_active_profile_pointer
 
 
@@ -88,21 +91,8 @@ def _run[ProjectionT: BaseModel](
         raise CliRefusedBoundaryError(context={"reason": error.reason.value}) from None
     projection = completed.projection
     resolved_effect = expected_effect(projection) if callable(expected_effect) else expected_effect
-    if (
-        type(projection) is not projection_type
-        or getattr(projection, "profile_id", None) != profile_id
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not resolved_effect
-        or (validate is not None and not validate(projection))
-    ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+    if _certificate_receipt_invalid(completed, projection, projection_type, profile_id, resolved_effect, validate):
+        raise invalid_completion_error(completed) from None
     return projection
 
 
@@ -227,3 +217,22 @@ __all__ = [
     "select_source",
     "set_source_passphrase",
 ]
+
+
+def _certificate_receipt_invalid[ProjectionT: BaseModel](
+    completed: RegisteredOperationCompletion[ProjectionT],
+    projection: ProjectionT,
+    projection_type: type[ProjectionT],
+    profile_id: UUID,
+    resolved_effect: OperationEffect,
+    validate: Callable[[ProjectionT], bool] | None,
+) -> bool:
+    """Validate the exact typed certificate result before any optional content check."""
+    return (
+        type(projection) is not projection_type
+        or cast(object, getattr(projection, "profile_id", None)) != profile_id
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or (completed.refusal_code is not None)
+        or (completed.effect is not resolved_effect)
+        or (validate is not None and (not validate(projection)))
+    )

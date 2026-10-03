@@ -1,0 +1,39 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "216"
+design_epoch = "2024"
+source_ref = "aeat-dr-216-2024"
+source_sha256 = "ebee21da4709d6cd63e42cbd82d8c0592252ce2157c93ac1df9833f1ea42cbf0"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m216-2024-year-yyyy"
+decision_statement = "Ejercicio is the four-digit filing year, subject to the official >= 2024 constraint."
+justification = "The source gives four Num positions for Ejercicio. The lower bound states eligibility rather than formatting; the source-pinned constraint separately enforces that minimum."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 1"

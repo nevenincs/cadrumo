@@ -59,6 +59,7 @@ from .common import (
     resolve_optional_root,
     resolve_pull_year_range,
 )
+from .registered_operation_errors import invalid_completion_error
 
 
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
@@ -161,17 +162,8 @@ def iva_wallet_pull_cmd(
         )
         emit_envelope(ctx, command="app.live.iva_wallet.pull", result=result, lines=_iva_wallet_pull_lines(report))
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
@@ -213,17 +205,8 @@ def iva_wallet_history_cmd(
         lines = _iva_wallet_history_lines(read.report)
         emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=lines)
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
@@ -490,17 +473,8 @@ def iva_wallet_pull_history_cmd(
         )
         emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def iva_wallet_pull_evidence_cmd(
@@ -585,17 +559,8 @@ def iva_wallet_pull_evidence_cmd(
             lines=_iva_remote_state_capture_lines(report),
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
@@ -693,17 +658,8 @@ def filed_list_cmd(
         )
         emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _filed_list_result_and_lines(
@@ -816,17 +772,8 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
             notices=notices,
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
@@ -940,17 +887,8 @@ def filed_pull_all_cmd(
             notices=notices,
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
@@ -1185,17 +1123,8 @@ def _emit_single_filed_pull(
             notices=notices,
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 def _emit_bulk_filed_pull(
@@ -1448,17 +1377,8 @@ def filed_pull_sources_cmd(
             notices=notices,
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
 
 
 # ─────────────────────────────────────────────────────────────────────────

@@ -297,7 +297,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary handoff requires the current calculation pointer to equal the filed revision",
             )
-        revision = self._calculation_repository.load().get(filed_id)
+        revision = self._calculation_repository.load(operation=self._operation).get(filed_id)
         if revision is None:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 f"M303 annual-summary handoff filed calculation revision {filed_id!r} is unavailable",

@@ -6,15 +6,15 @@ from dataclasses import asdict, replace
 
 import pytest
 
-from .._command_target import resolve_deferred_target
-from ..command_schema import command_registration_metadata
-from ..command_spec import (
-    DeferredTarget,
+from .._command_secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
+from .._command_shared_contracts import DeferredTarget
+from .._command_target import resolve_deferred_target
+from ..command_schema import command_registration_metadata
 from ..command_specs import COMMAND_GRAPH
 from ..config.secure_input import MachineSecretPayload
 from ..verb_input_schema import build_verb_input_schemas

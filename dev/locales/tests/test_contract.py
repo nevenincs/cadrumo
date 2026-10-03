@@ -38,7 +38,8 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.operator_surface.tests.contract_locale_fixture import pin_english_locale
 
-from ..manager import LocaleManager, locale_catalogue_source
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 
 __all__ = ["pin_english_locale"]
 

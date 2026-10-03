@@ -53,11 +53,10 @@ from ......domain.modelos.verification_report import (
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
 from ..header import ChipLevel, attention_chips, status_line
-from ..issues import (
+from ..issue_projection import issue_lines
+from ..issue_scale import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
     IssueLevel,
-    WorkbenchIssuesScreen,
-    issue_lines,
     level_counts,
     levels_marked,
     title_text,
@@ -65,6 +64,7 @@ from ..issues import (
     unentered_levels,
     verdict_text,
 )
+from ..issues import WorkbenchIssuesScreen
 from ..screen import ModeloWorkbenchScreen
 from ..sources import BoxNumbers
 from ..vocabulary import BLOCKS_MARK

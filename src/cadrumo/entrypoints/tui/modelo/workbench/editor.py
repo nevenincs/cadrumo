@@ -54,43 +54,33 @@ from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
-from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1, ModeloHelpBoxV1
 from .....application.modelo.edit_parsing import MAX_EDIT_LEXEME_LENGTH
-from .....application.modelo.source_policy import SourceFamily, SourceSurface, source_policy
+from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.value_presentation import LOCALE_NUMBER_FORMATS, format_casilla_value
 from .....application.modelo.work_form_models import (
-    ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
-    ModeloWorkForm,
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from ...components.theme import tokenised
+from . import editor_explanations as _editor_explanations
 from .casilla_list import CasillaListEntry, description_text, stated_value_text, value_text
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target
 from .status_bar import StatusBar
 from .vocabulary import (
-    SOURCE_WORDED_ORIGINS,
     TYPED_EDITABILITIES,
     editability_text,
-    holds_nothing,
-    no_earlier_filing,
-    origin_explanation,
-    origin_source_words_key,
     origin_text,
-    origin_words,
-    set_by_form,
 )
-from .wording import period_words
 
 if TYPE_CHECKING:
-    from .header import ResultView, StatusLine
+    from .header import StatusLine
     from .session import StagedChange
 
 type Parser = Callable[[ModeloFormField, str, OutputLanguage], WorkbenchParseOutcome]
@@ -137,11 +127,6 @@ _CAN_CHANGE_LOCALE_KEYS: Final[Mapping[ModeloFormEditability, str]] = MappingPro
 
 #: What a declaration recorded as filed allows: no change here, and a correction to change it.
 _RECORDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.editor.can_change.recorded"
-
-_CHAIN_JOIN: Final[str] = " → "
-_OTHERS_NAMED: Final[int] = 3
-"""Up to this many other boxes a change reaches are named; past it, they are counted."""
-"""Joins the boxes a change travels through, in the order it reaches them."""
 
 
 def source_surface(field: ModeloFormField) -> SourceSurface:
@@ -195,144 +180,10 @@ def read_only_reason(field: ModeloFormField, language: OutputLanguage, *, record
     return can_change_text(field, language)
 
 
-def _source_labels(field: ModeloFormField) -> tuple[str, ...]:
-    """Name each source feeding ``field`` once, in the order the form lists them."""
-    source = field.source
-    keys = [binding.policy.label_key for binding in field.bindings]
-    if not keys and source is not None and source.source_kind is not None:
-        keys.append(source_policy(source.source_kind).label_key)
-    return tuple(dict.fromkeys(tr(key) for key in keys))
-
-
-def _unreachable_entry(field: ModeloFormField) -> bool:
-    """Whether a box is fed by the filer's own entries, none of which can reach it here, and holds nothing."""
-    source = field.source
-    return (
-        source is not None
-        and source.family is SourceFamily.YOUR_ENTRIES
-        and field.editability not in TYPED_EDITABILITIES
-        and holds_nothing(field.value)
-    )
-
-
-def where_from_text(
-    field: ModeloFormField, *, aeat_imported: date | None = None, language: OutputLanguage | None = None
-) -> str | None:
-    """Say where a sourced value comes from, beyond the kind of place its "Now" line already names.
-
-    The answer names each source that feeds the box, and the earlier
-    declarations a carried value is read from. The kind of place leads only
-    when the "Now" line does not already say it, as for an assumed or a typed
-    value over a source. A value taken from imported AEAT data names only
-    that, with the day it was imported when ``aeat_imported`` gives it, because
-    the sources its binding would otherwise read did not supply it. A box fed
-    by the filer's entries that none of them can reach here, and that holds
-    nothing, names no source: nothing the filer can use puts a value there. A
-    carry with no earlier declaration to carry from names no filing either: it
-    says why the box holds zero, or nothing when the "Now" line has said it.
-    """
-    source = field.source
-    if source is None or _unreachable_entry(field):
-        return None
-    if no_earlier_filing(field):
-        return origin_explanation(field)
-    if source.family is SourceFamily.AEAT_DRAFT and aeat_imported is not None and language is not None:
-        imported = field.model_copy(update={"origin": ModeloFormOrigin.IMPORTED})
-        return origin_words(imported, aeat_imported=aeat_imported, language=language)
-    family_words = tr(origin_source_words_key(ModeloFormOrigin.IMPORTED, source.family))
-    worded = field.origin in SOURCE_WORDED_ORIGINS or set_by_form(field)
-    lines: list[str] = [] if worded else [family_words]
-    if source.family is not SourceFamily.AEAT_DRAFT:
-        labels = _source_labels(field)
-        if labels:
-            lines.append(" · ".join(labels))
-        lines.extend(
-            tr(
-                "tui.modelo.workbench.origin_source.imported.named_filing",
-                modelo=filing.modelo,
-                period=period_words(filing.period),
-            )
-            for filing in source.earlier_filings
-        )
-    return "\n".join(lines or [family_words])
-
-
 def open_area_target(field: ModeloFormField) -> SourceSurface | None:
     """The area the panel can open for the source of ``field``'s value; ``None`` when no area owns it."""
     surface = source_surface(field)
     return surface if surface_target(surface) is not None else None
-
-
-def _label(form: ModeloWorkForm | None, step: ModeloHelpBoxV1) -> str | None:
-    """The form's own name for the box ``step`` passes through; ``None`` when the form does not list it."""
-    if form is None:
-        return None
-    for field in form.fields():
-        address = field.address
-        if isinstance(address, ModeloFormCasillaAddressV1) and address.casilla_id == step.casilla_id:
-            return field.label.text
-    return None
-
-
-def _result_step(form: ModeloWorkForm | None, step: ModeloHelpBoxV1, result: ResultView | None) -> str:
-    """The result box at the chain's end, with what the declaration settles now once it is calculated."""
-    settling = None if form is None else form.result
-    calculated = (
-        form is not None
-        and settling is not None
-        and settling.casilla_id == step.casilla_id
-        and settling.value is not None
-        and form.calculation_revision_id is not None
-    )
-    if calculated and result is not None and not result.failed:
-        if result.settled is not None:
-            words, amount = result.settled
-            now = tr("tui.modelo.workbench.editor.affects.now", amount=amount)
-            return f"{step.box} {words} {now}"
-        return f"{step.box} {result.short_text}"
-    label = _label(form, step)
-    return step.box if label is None else f"{step.box} {label}"
-
-
-def affects_text(
-    card: ModeloCasillaHelpCardV1 | None, form: ModeloWorkForm | None = None, *, result: ResultView | None = None
-) -> str | None:
-    """Say what a change to this box reaches: the chain to the result, or that it does not change it.
-
-    ``card`` is the box's help, ``None`` while it has not been read, when
-    nothing is said: an unread card is never presented as a box that affects
-    nothing. The chain runs along the fewest calculations from this box to the
-    declaration's result, the first box named as the form names it and the
-    result with what it settles now, from ``result``, the header's result for
-    ``form``; the count of further boxes the change also reaches follows it. A
-    box no calculation leads from to the result says so, with the boxes it is
-    used in. Where the form names no result, the boxes this one is used in
-    are listed, and nothing is said when there are none.
-    """
-    if card is None:
-        return None
-    if card.is_result:
-        return tr("tui.modelo.workbench.editor.affects.is_result")
-    reach = card.reach
-    if reach is None:
-        return ", ".join(card.feeds) or None
-    if not reach.path:
-        lines = [tr("tui.modelo.workbench.editor.affects.not_result")]
-        if card.feeds:
-            lines.append(tr("tui.modelo.workbench.help.feeds", boxes=", ".join(card.feeds)))
-        return "\n".join(lines)
-    steps = [step.box for step in reach.path]
-    first = reach.path[0]
-    label = _label(form, first)
-    if label is not None and len(steps) > 1:
-        steps[0] = f"{first.box} {label}"
-    steps[-1] = _result_step(form, reach.path[-1], result)
-    lines = [_CHAIN_JOIN.join(steps)]
-    if reach.others:
-        # A few boxes are named, so the filer can look at them; past that, how many.
-        named = ", ".join(box.box for box in reach.others) if len(reach.others) <= _OTHERS_NAMED else len(reach.others)
-        lines.append(tr("tui.modelo.workbench.editor.affects.others", count=named))
-    return "\n".join(lines)
 
 
 def confirm_lexeme(value: ModeloFormScalar, language: OutputLanguage) -> str | None:
@@ -476,7 +327,7 @@ class CasillaEditorPanel(Vertical):
         With a ``read_only_reason`` the panel explains a box that cannot be
         changed here: it shows the reason, and the way to change it, in place
         of an input, and offers to open the area that owns the value's source.
-        ``affects`` is what :func:`affects_text` says a change reaches, and no
+        ``affects`` is what :func:`.editor_explanations.affects_text` says a change reaches, and no
         "Affects" answer is shown without it. ``status_line``
         is the header's result line, shown first when the host covers it.
         ``recorded`` is the declaration being recorded as filed, whose "Now"
@@ -570,7 +421,11 @@ class CasillaEditorPanel(Vertical):
             blocks.append(
                 self._block("editor-calculation", "tui.modelo.workbench.editor.block.calculation", self._calculation)
             )
-        where = where_from_text(field, aeat_imported=self._aeat_imported, language=self._language)
+        where = _editor_explanations.where_from_text(
+            field,
+            aeat_imported=self._aeat_imported,
+            language=self._language,
+        )
         if where is not None:
             blocks.append(self._block("editor-where", "tui.modelo.workbench.editor.block.where_from", where))
         if self._recorded:
@@ -774,8 +629,8 @@ class CasillaEditorPanel(Vertical):
 class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
     """The box panel in a centred dialog, for a terminal too short to dock it under the list.
 
-    The dialog is only a container: it holds one :class:`CasillaEditorPanel`,
-    built from the same arguments, and closes with whatever the panel decides.
+    The dialog is only a container: it holds one :class:`CasillaEditorPanel`
+    and closes with whatever the panel decides.
     """
 
     SCOPED_CSS: ClassVar[bool] = False
@@ -798,40 +653,10 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         """
     )
 
-    def __init__(
-        self,
-        field: ModeloFormField,
-        *,
-        parse: Parser,
-        language: OutputLanguage,
-        limits: tuple[str, ...] = (),
-        can_clear: bool = False,
-        can_restore: bool = False,
-        read_only_reason: str | None = None,
-        affects: str | None = None,
-        calculation: str | None = None,
-        status_line: StatusLine | None = None,
-        recorded: bool = False,
-        aeat_imported: date | None = None,
-        staged: StagedChange | None = None,
-    ) -> None:
-        """Build the panel the dialog holds; the arguments are the panel's own."""
+    def __init__(self, panel: CasillaEditorPanel) -> None:
+        """Hold the panel the dialog shows."""
         super().__init__()
-        self._panel = CasillaEditorPanel(
-            field,
-            parse=parse,
-            language=language,
-            limits=limits,
-            can_clear=can_clear,
-            can_restore=can_restore,
-            read_only_reason=read_only_reason,
-            affects=affects,
-            calculation=calculation,
-            status_line=status_line,
-            recorded=recorded,
-            aeat_imported=aeat_imported,
-            staged=staged,
-        )
+        self._panel = panel
 
     @property
     def panel(self) -> CasillaEditorPanel:
@@ -874,12 +699,10 @@ __all__ = [
     "EditorDecision",
     "EditorOutcome",
     "Parser",
-    "affects_text",
     "area_words",
     "can_change_text",
     "confirm_lexeme",
     "open_area_target",
     "read_only_reason",
     "source_surface",
-    "where_from_text",
 ]

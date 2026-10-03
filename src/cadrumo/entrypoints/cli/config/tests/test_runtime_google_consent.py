@@ -69,6 +69,7 @@ from .....core.operations import (
     profile_operation_subject,
 )
 from ....cli.errors import CliRefusedBoundaryError
+from .. import google_consent_review
 from .. import runtime_google_consent as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -301,7 +302,7 @@ def test_browser_bridge_checks_terminal_after_review_and_before_exact_apply(
         assert any(isinstance(item, RuntimeOperationReview) for item in client.requests)
         assert not any(isinstance(item, RuntimeOperationManage) for item in client.requests)
 
-    monkeypatch.setattr(bridge, "require_interactive_terminal", terminal)
+    monkeypatch.setattr(google_consent_review, "require_interactive_terminal", terminal)
     result = bridge.login_google_with_runtime(_as_runtime(client), GoogleLoginRequest(profile_id=_PROFILE))
     assert result.operation_id == _OPERATION and result.effect is OperationEffect.UPDATED
     assert isinstance(result.projection.result, GoogleLoginProjection)

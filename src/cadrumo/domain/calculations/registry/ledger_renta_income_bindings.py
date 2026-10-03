@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol
 from pydantic import BaseModel, field_validator, model_validator
 
 from ....core.aggregation import (
-    BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
     LedgerWithholdingDerivation,
@@ -20,15 +19,29 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import (
     UnroutedLedgerQuantity,
+    cash_received_total,
+    casilla_target_matcher,
+    ingresos_integros_total,
     resolve_ledger_family_binding_values,
     unrouted_ledger_family_quantities,
     unsupported_ledger_family_observations,
 )
-from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
-from .errors import RegistryValidationError
+from .binding_selector_utils import provider_member
 from .ids import BindingId
-from .ledger_binding_selector_support import LedgerIncomeFactValue, casilla_id_set, mapping_lacks_fact
+from .ledger_binding_selector_support import (
+    LEDGER_INCOME_FACTS,
+    LedgerIncomeFact,
+    LedgerIncomeFactValue,
+    casilla_id_set,
+    mapping_lacks_fact,
+)
+from .ledger_binding_validation import (
+    ledger_binding_build_diagnostics,
+    ledger_binding_selector,
+    require_ledger_aggregation_op,
+    require_ledger_fact,
+    require_ledger_target_casilla,
+)
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 
 if TYPE_CHECKING:
@@ -119,7 +132,7 @@ class LedgerRentaIncomeProvider(BaseModel):
         if mapping_lacks_fact(value):
             raise ValueError(
                 "ledger_renta_income_aggregation selector requires an explicit 'fact'; "
-                f"accepted facts are {sorted(_RENTA_INCOME_SUPPORTED_FACTS)!r}",
+                f"accepted facts are {sorted(LEDGER_INCOME_FACTS)!r}",
             )
         return value
 
@@ -143,46 +156,21 @@ _RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
 }
 
 
-def _renta_ledger_income_selector(binding: BindingDefinition) -> LedgerRentaIncomeProvider:
-    try:
-        return provider_member(binding, LedgerRentaIncomeProvider)
-    except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector: {exc}",
-        ) from exc
-
-
-# The complete accepted ``fact`` set for this family, shared by the
-# missing-``fact`` refusal message and the build-time invariant so the two can
-# never name different sets. Covers both M130 and M100, which is why the name
-# carries no modelo segment.
-_RENTA_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
-    {"ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "declared_withheld_amount_sum"},
-)
-
-
 def validate_ledger_renta_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
     """Validate a ``ledger_renta_income_aggregation`` binding definition."""
-    if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_income_aggregation source")
-    selector = _renta_ledger_income_selector(binding)
-    allowed = _RENTA_INCOME_CASILLAS_BY_MODELO.get(selector.modelo, frozenset())
-    if selector.target_casilla_id not in allowed:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
-            f"is outside the supported {selector.modelo.value} income casillas {sorted(allowed)!r}",
-        )
-    op = binding_aggregation_op(binding)
-    if op != BindingAggregationOp.SUM:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
-            f"aggregation op 'sum', got {op.value!r}",
-        )
-    if selector.fact not in _RENTA_INCOME_SUPPORTED_FACTS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
-            f"facts {sorted(_RENTA_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
-        )
+    selector = ledger_binding_selector(
+        binding,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        LedgerRentaIncomeProvider,
+    )
+    require_ledger_target_casilla(
+        binding,
+        selector.target_casilla_id,
+        _RENTA_INCOME_CASILLAS_BY_MODELO.get(selector.modelo, frozenset()),
+        scope=f"supported {selector.modelo.value} income casillas",
+    )
+    require_ledger_aggregation_op(binding)
+    require_ledger_fact(binding, selector.fact, LEDGER_INCOME_FACTS)
 
 
 class RentaIncomeObservationProtocol(Protocol):
@@ -241,56 +229,39 @@ class RentaIncomeObservationProtocol(Protocol):
         ...
 
 
-def _renta_income_build_matcher(
-    selector: LedgerRentaIncomeProvider,
-) -> Callable[[RentaIncomeObservationProtocol], bool]:
-    target_casilla_id = selector.target_casilla_id
-
-    def matcher(observation: RentaIncomeObservationProtocol) -> bool:
-        return observation.target_casilla_id == target_casilla_id
-
-    return matcher
-
-
 def _renta_income_aggregate(
     matched: Sequence[RentaIncomeObservationProtocol],
     selector: LedgerRentaIncomeProvider,
 ) -> Decimal:
-    if selector.fact == "ingresos_integros_sum":
-        return sum(
-            (
-                observation.taxable_base_amount
-                if observation.taxable_base_amount is not None
-                else observation.gross_amount
-                for observation in matched
-            ),
-            Decimal("0"),
-        )
-    if selector.fact == "taxable_base_sum":
-        # A row that declares no base contributes nothing: this fact sums
-        # DECLARED bases, and inventing one from cash would fabricate a legal
-        # figure. Written as an explicit ``is not None`` filter rather than
-        # ``or Decimal("0")`` so a genuinely-zero declared base and an absent
-        # one stop sharing a branch.
-        return sum(
-            (observation.taxable_base_amount for observation in matched if observation.taxable_base_amount is not None),
-            Decimal("0"),
-        )
-    if selector.fact == "declared_withheld_amount_sum":
-        # Only a declared figure. An inferred one is reported by the derivation
-        # partition and a refused or substrate-less one is unresolved, so
-        # neither may be folded in here as though it were nothing withheld.
-        return sum(
-            (
-                observation.withheld_amount
-                for observation in matched
-                if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
-            ),
-            Decimal("0"),
-        )
-    # cash_received_sum: the raw bank-credited magnitude, ignoring any declared
-    # base. ``fact`` is a required closed Literal, so this is that member alone.
-    return sum((observation.gross_amount for observation in matched), Decimal("0"))
+    if selector.fact == LedgerIncomeFact.INGRESOS_INTEGROS_SUM:
+        return ingresos_integros_total(matched)
+    if selector.fact == LedgerIncomeFact.TAXABLE_BASE_SUM:
+        return _taxable_base_total(matched)
+    if selector.fact == LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM:
+        return _declared_withholding_total(matched)
+    # ``fact`` is a required closed Literal, so this is cash_received_sum alone.
+    return cash_received_total(matched)
+
+
+def _taxable_base_total(matched: Sequence[RentaIncomeObservationProtocol]) -> Decimal:
+    # Sum DECLARED bases; inventing one from cash would fabricate a legal figure.
+    # Keep is-not-None so a genuinely-zero base remains distinct from absence.
+    return sum(
+        (observation.taxable_base_amount for observation in matched if observation.taxable_base_amount is not None),
+        Decimal("0"),
+    )
+
+
+def _declared_withholding_total(matched: Sequence[RentaIncomeObservationProtocol]) -> Decimal:
+    # Inferred and unresolved amounts are reported separately, never folded into this total.
+    return sum(
+        (
+            observation.withheld_amount
+            for observation in matched
+            if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+        ),
+        Decimal("0"),
+    )
 
 
 def resolve_ledger_renta_income_aggregation_binding_values(
@@ -318,8 +289,8 @@ def resolve_ledger_renta_income_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        parse_selector=_renta_ledger_income_selector,
-        build_matcher=_renta_income_build_matcher,
+        provider_model=LedgerRentaIncomeProvider,
+        build_matcher=casilla_target_matcher,
         aggregate=_renta_income_aggregate,
     )
 
@@ -341,7 +312,7 @@ def unsupported_ledger_renta_income_observations(
     see that function for the shared fail-closed contract (why an unmatched
     observation is a modelling gap, not a legitimate zero). This family's
     own contribution is narrow: the ``target_casilla_id`` match predicate
-    (reused from the resolver's ``_renta_income_build_matcher``) and a
+    (the shared casilla-keyed matcher the resolver also uses) and a
     false-fire guard that excludes an observation whose declarable amount —
     ``max(gross_amount, taxable_base_amount)`` when a base is declared,
     ``gross_amount`` otherwise — is zero. No ``extra_exclusion``.
@@ -359,8 +330,8 @@ def unsupported_ledger_renta_income_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        parse_selector=_renta_ledger_income_selector,
-        build_matcher=_renta_income_build_matcher,
+        provider_model=LedgerRentaIncomeProvider,
+        build_matcher=casilla_target_matcher,
         is_declarable=_renta_income_is_declarable,
     )
 
@@ -372,7 +343,9 @@ def unsupported_ledger_renta_income_observations(
 # and ``taxable_base_sum`` contributes nothing at all (always under-declares).
 # ``cash_received_sum`` and ``declared_withheld_amount_sum`` never read the
 # base, so a base-less row is not an ungrounded contribution for them.
-_RENTA_INCOME_BASE_READING_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+_RENTA_INCOME_BASE_READING_FACTS: frozenset[str] = frozenset(
+    {LedgerIncomeFact.INGRESOS_INTEGROS_SUM, LedgerIncomeFact.TAXABLE_BASE_SUM}
+)
 
 
 class UngroundedRentaIncome(NamedTuple):
@@ -432,11 +405,11 @@ def ungrounded_ledger_renta_income_observations(
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
             continue
-        selector = _renta_ledger_income_selector(binding)
+        selector = provider_member(binding, LedgerRentaIncomeProvider)
         if selector.fact not in _RENTA_INCOME_BASE_READING_FACTS:
             continue
         facts.add(selector.fact)
-        matchers.append(_renta_income_build_matcher(selector))
+        matchers.append(casilla_target_matcher(selector))
     if not matchers:
         return UngroundedRentaIncome(facts=frozenset(), observations=())
     ungrounded = tuple(
@@ -459,15 +432,15 @@ def ungrounded_ledger_renta_income_observations(
 # INDEPENDENT quantity carried on the same observation, not an alternative
 # measure of its income. Nothing else can stand in for it.
 _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
-    "ingresos_integros_sum": (
+    LedgerIncomeFact.INGRESOS_INTEGROS_SUM: (
         "measures the row's income as its declared taxable base, falling back to bank cash; "
         "one of three income measures a revision picks between"
     ),
-    "taxable_base_sum": (
+    LedgerIncomeFact.TAXABLE_BASE_SUM: (
         "measures the same income as the declared taxable base only, contributing nothing for a "
         "base-less row; the stricter sibling of ingresos_integros_sum"
     ),
-    "cash_received_sum": (
+    LedgerIncomeFact.CASH_RECEIVED_SUM: (
         "measures the same income as the raw bank credit, net of retención and possibly "
         "IVA-inclusive; the loosest of the three measures"
     ),
@@ -479,7 +452,7 @@ _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
 #: the safe direction, since forgetting to classify one surfaces an advisory
 #: rather than silently dropping a quantity.
 _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
-    _RENTA_INCOME_SUPPORTED_FACTS,
+    LEDGER_INCOME_FACTS,
     _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
 )
 
@@ -493,7 +466,7 @@ _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_
 # binding at all; a revision that draws none loses the whole credit, and an
 # inferred figure it would have lost is exactly as invisible as a declared one.
 _RENTA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[RentaIncomeObservationProtocol], Decimal]] = {
-    "declared_withheld_amount_sum": lambda observation: observation.withheld_amount,
+    LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM: lambda observation: observation.withheld_amount,
 }
 
 assert_quantity_readers_cover_independent_facts(
@@ -549,8 +522,8 @@ def unrouted_ledger_renta_income_quantities(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        parse_selector=_renta_ledger_income_selector,
-        build_matcher=_renta_income_build_matcher,
+        provider_model=LedgerRentaIncomeProvider,
+        build_matcher=casilla_target_matcher,
         read_fact=lambda selector: selector.fact,
         independent_facts=_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
         readers=_RENTA_INDEPENDENT_QUANTITY_READERS,
@@ -629,22 +602,46 @@ def ledger_renta_withholding_derivation_partition(
         A :class:`WithholdingDerivationPartition`. Every member is empty or zero
         when the revision declares no declared-only retención binding.
     """
+    matchers = _declared_withholding_matchers(revision)
+    if not matchers:
+        return _empty_withholding_partition()
+    consumed = _observations_matching_any(observations, matchers)
+    return _withholding_partition(consumed)
+
+
+def _declared_withholding_matchers(
+    revision: ModeloRevision,
+) -> tuple[Callable[[RentaIncomeObservationProtocol], bool], ...]:
     matchers: list[Callable[[RentaIncomeObservationProtocol], bool]] = []
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
             continue
-        selector = _renta_ledger_income_selector(binding)
-        if selector.fact != "declared_withheld_amount_sum":
+        selector = provider_member(binding, LedgerRentaIncomeProvider)
+        if selector.fact != LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM:
             continue
-        matchers.append(_renta_income_build_matcher(selector))
-    if not matchers:
-        return WithholdingDerivationPartition(
-            declared_total=Decimal("0"),
-            inferred_total=Decimal("0"),
-            inferred_observations=(),
-            unresolved_observations=(),
-        )
-    consumed = tuple(observation for observation in observations if any(matcher(observation) for matcher in matchers))
+        matchers.append(casilla_target_matcher(selector))
+    return tuple(matchers)
+
+
+def _observations_matching_any(
+    observations: Iterable[RentaIncomeObservationProtocol],
+    matchers: tuple[Callable[[RentaIncomeObservationProtocol], bool], ...],
+) -> tuple[RentaIncomeObservationProtocol, ...]:
+    return tuple(observation for observation in observations if any(matcher(observation) for matcher in matchers))
+
+
+def _empty_withholding_partition() -> WithholdingDerivationPartition:
+    return WithholdingDerivationPartition(
+        declared_total=Decimal("0"),
+        inferred_total=Decimal("0"),
+        inferred_observations=(),
+        unresolved_observations=(),
+    )
+
+
+def _withholding_partition(
+    consumed: tuple[RentaIncomeObservationProtocol, ...],
+) -> WithholdingDerivationPartition:
     inferred = tuple(
         observation for observation in consumed if observation.withheld_derivation in _INFERRED_WITHHOLDING_DERIVATIONS
     )
@@ -677,12 +674,9 @@ def validate_ledger_renta_income_aggregation_binding(binding: BindingDefinition)
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_income_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, LedgerRentaIncomeProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(
+    return ledger_binding_build_diagnostics(
         binding,
-        "ledger_renta_income_aggregation",
+        LedgerRentaIncomeProvider,
         validate_ledger_renta_income_aggregation_binding_definition,
     )
 

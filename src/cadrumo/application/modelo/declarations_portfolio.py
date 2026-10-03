@@ -10,6 +10,7 @@ from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from .declaration_summary import DeclarationSummary, DeclarationSummaryState
+from .declaration_targets import declaration_targets
 from .declarations_workspace import (
     DeclarationResultCasillaReaderV1,
     DeclarationsSanitizedLifecycleFactV1,
@@ -146,4 +147,5 @@ def project_declarations_portfolio(
         calculation_revisions=tuple(revisions),
         filings=tuple(filings),
         lifecycle=tuple(lifecycle),
+        creation_targets=declaration_targets(operation),
     )

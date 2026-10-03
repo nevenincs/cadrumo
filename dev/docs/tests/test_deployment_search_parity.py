@@ -54,13 +54,12 @@ import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
-from dev.deploy.docs_static_site import (
-    CANONICAL_DOCS_BASE_URL,
-    MIRROR_DOCS_BASE_URL,
+from dev.deploy.docs_delivery_contracts import CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL
+from dev.deploy.docs_delivery_probe import public_delivery_checks
+from dev.deploy.docs_site_languages import (
     language_build_command,
     language_build_environment,
     localized_languages,
-    public_delivery_checks,
     site_build_environment,
 )
 

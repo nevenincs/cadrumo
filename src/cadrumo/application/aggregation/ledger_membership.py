@@ -43,7 +43,7 @@ from .modelo_bindings import (
 )
 from .modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from .oss_ioss import OssIossLedgerSourceResolver
-from .source_mesh import CalculationSourceContext, ModeloSourceResolver
+from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, ModeloSourceResolver
 
 _log = get_logger(__name__)
 
@@ -138,70 +138,87 @@ def _query_ledger_membership(
         m210_official_tipo_renta_code=target.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=target.m210_gross_income_source_mode,
     )
-    observed: set[str] = set()
-    handled: set[BindingSourceKind] = set()
     try:
-        # Loading the existing investment register is read-only. Calculation's
-        # migration capability is deliberately absent from these ports.
-        investment = (
-            ports.bienes_inversion_repository.load() if BindingSourceKind.LEDGER_IVA_AGGREGATION in selected else None
-        )
-        resolvers: tuple[ModeloSourceResolver, ...] = (
-            LedgerIvaAggregationSourceResolver(
-                transaction_repository=ports.transaction_repository,
-                invoice_catalogue_read_ports=ports.invoice_catalogue_read_ports,
-                prorrata_register_repository=ports.prorrata_register_repository,
-                investment_asset_register=investment,
-                investment_asset_profile_id=work_unit.bucket_id,
-            ),
-            LedgerRentaIncomeAggregationSourceResolver(ports=ports.invoice_catalogue_read_ports),
-            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-                ports=ports.invoice_catalogue_read_ports,
-                prorrata_register_repository=ports.prorrata_register_repository,
-                usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-                activity_asset_history_repository=ports.activity_asset_history_repository,
-            ),
-            LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
-                transaction_repository=ports.transaction_repository,
-                prorrata_register_repository=ports.prorrata_register_repository,
-                activity_asset_history_repository=ports.activity_asset_history_repository,
-            ),
-            LedgerImpatriadoIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),
-            LedgerIrnrIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),
-            OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports),
-        )
-        for resolver in resolvers:
-            owned = frozenset(resolver.owned_sources) & selected
-            if not owned:
-                continue
-            resolution = resolver.resolve(context)
-            handled.update(owned)
-            observed.update(resolution.source_transaction_ids)
-            for diagnostic in resolution.diagnostics:
-                if diagnostic.reason == "storage_degraded":
-                    return LedgerSourceMembership(available=False, ledger_sources_declared=True)
-                # Only existing declarable blockers supply held-back membership;
-                # advisories and legal exclusions do not become new ledger rows.
-                if diagnostic.reason not in {
-                    "source_domain_not_ready",
-                    "iva_selected_scope_evidence_failure",
-                    "unrouted_observation",
-                    "unrouted_declarable_quantity",
-                }:
-                    continue
-                identity = ledger_transaction_ref_identity(diagnostic.source_ref)
-                if identity is not None:
-                    observed.add(identity)
-                elif diagnostic.reason == "source_domain_not_ready":
-                    return LedgerSourceMembership(available=False, ledger_sources_declared=True)
+        return _collect_ledger_membership(context=context, work_unit=work_unit, ports=ports, selected=selected)
     except (CadrumoError, LookupError) as exc:
         _log.debug("ledger membership unavailable error_type=%s", type(exc).__name__)
         return LedgerSourceMembership(available=False, ledger_sources_declared=True)
+
+
+def _collect_ledger_membership(
+    *,
+    context: CalculationSourceContext,
+    work_unit: WorkUnit,
+    ports: LedgerMembershipPorts,
+    selected: frozenset[BindingSourceKind],
+) -> LedgerSourceMembership:
+    # Loading the existing investment register is read-only. Calculation's
+    # migration capability is deliberately absent from these ports.
+    investment = (
+        ports.bienes_inversion_repository.load() if BindingSourceKind.LEDGER_IVA_AGGREGATION in selected else None
+    )
+    resolvers: tuple[ModeloSourceResolver, ...] = (
+        LedgerIvaAggregationSourceResolver(
+            transaction_repository=ports.transaction_repository,
+            invoice_catalogue_read_ports=ports.invoice_catalogue_read_ports,
+            prorrata_register_repository=ports.prorrata_register_repository,
+            investment_asset_register=investment,
+            investment_asset_profile_id=work_unit.bucket_id,
+        ),
+        LedgerRentaIncomeAggregationSourceResolver(ports=ports.invoice_catalogue_read_ports),
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+            ports=ports.invoice_catalogue_read_ports,
+            prorrata_register_repository=ports.prorrata_register_repository,
+            usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+            activity_asset_history_repository=ports.activity_asset_history_repository,
+        ),
+        LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+            transaction_repository=ports.transaction_repository,
+            prorrata_register_repository=ports.prorrata_register_repository,
+            activity_asset_history_repository=ports.activity_asset_history_repository,
+        ),
+        LedgerImpatriadoIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),
+        LedgerIrnrIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),
+        OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports),
+    )
+    observed: set[str] = set()
+    handled: set[BindingSourceKind] = set()
+    for resolver in resolvers:
+        owned = frozenset(resolver.owned_sources) & selected
+        if not owned:
+            continue
+        resolution = resolver.resolve(context)
+        handled.update(owned)
+        observed.update(resolution.source_transaction_ids)
+        for diagnostic in resolution.diagnostics:
+            if not _record_membership_diagnostic(diagnostic, observed):
+                return LedgerSourceMembership(available=False, ledger_sources_declared=True)
     return LedgerSourceMembership(
         observed_transaction_ids=tuple(sorted(observed)),
         available=frozenset(handled) == selected,
         ledger_sources_declared=True,
     )
+
+
+def _record_membership_diagnostic(diagnostic: CalculationSourceDiagnostic, observed: set[str]) -> bool:
+    """Record a held-back identity, returning false when membership is unavailable."""
+    reason = diagnostic.reason
+    if reason == "storage_degraded":
+        return False
+    # Only existing declarable blockers supply held-back membership; advisories
+    # and legal exclusions do not become new ledger rows.
+    if reason not in {
+        "source_domain_not_ready",
+        "iva_selected_scope_evidence_failure",
+        "unrouted_observation",
+        "unrouted_declarable_quantity",
+    }:
+        return True
+    identity = ledger_transaction_ref_identity(diagnostic.source_ref)
+    if identity is not None:
+        observed.add(identity)
+        return True
+    return reason != "source_domain_not_ready"
 
 
 __all__ = [

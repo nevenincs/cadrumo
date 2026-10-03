@@ -225,6 +225,8 @@ aggregation:
         amb origen de valor a la malla de fonts.'
       duplicate_relation_owner: 'Error intern: propietari de relació duplicat a la
         malla de fonts.'
+      duplicate_row_binding_coordinate: 'Error intern: coordenada de fila de l''origen
+        d''un valor de fila duplicada.'
       duplicate_row_binding_owner: 'Error intern: el mateix origen del valor de fila
         té dos propietaris a la malla de fonts.'
       duplicate_row_casilla_coordinate: 'Error intern: coordenada de casella de fila

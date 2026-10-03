@@ -22,6 +22,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
@@ -46,10 +47,11 @@ _PROFILE = UUID("29292929-2929-4292-8292-292929292929")
 
 class _Events:
     def __init__(self) -> None:
+        self.phases: list[str] = []
         self.effects: list[OperationEffect] = []
 
-    async def phase(self, _phase: str) -> None:
-        pass
+    async def phase(self, phase: str) -> None:
+        self.phases.append(phase)
 
     async def effect(self, effect: OperationEffect) -> None:
         self.effects.append(effect)
@@ -202,7 +204,7 @@ def test_both_public_contracts_compile_without_constructing_storage(
 def test_wizard_worker_preserves_noop_and_fences_only_actual_commit(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     creation = in_memory_catalogue_creation_ports()
     request = _wire(_wizard(), intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     for repeat in (False, True):
@@ -249,7 +251,7 @@ def test_wizard_worker_preserves_noop_and_fences_only_actual_commit(
 def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipts(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     payload = _wizard().model_copy(update={"counterparty_name": " ", "taxable_base": "invalid", "series": " "})
     request = _wire(payload, intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     context, events, operands, fence = _context(request, authority_operation)
@@ -323,7 +325,7 @@ def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipt
 def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
     source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nA58818501,Supplier,BOOK-1,2026-05-01,100.00,21,x\nA58818501,Supplier,BOOK-2,invalid,100.00,21,y\n"
     path.write_bytes(source)
@@ -384,7 +386,7 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
 def test_source_substitution_refuses_before_mapping_provider_or_write(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, content: bytes
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "changed.csv"
     path.write_bytes(content)
     request = _wire(
@@ -416,7 +418,7 @@ def test_source_substitution_refuses_before_mapping_provider_or_write(
 def test_actual_save_failure_preserves_definitive_or_uncertain_effect(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, conflict: bool
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     creation = in_memory_catalogue_creation_ports()
     request = _wire(_wizard(), intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     context, events, operands, fence = _context(request, authority_operation)
@@ -450,7 +452,7 @@ def test_actual_save_failure_preserves_definitive_or_uncertain_effect(
 def test_worker_refuses_foreign_active_profile_before_any_capability(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(uuid4()))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(uuid4()))
     request = _wire(_wizard(), intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     context, events, operands, _fence = _context(request, authority_operation)
 
@@ -459,13 +461,13 @@ def test_worker_refuses_foreign_active_profile_before_any_capability(
 
     with pytest.raises(ProfileAccessRefusedError):
         asyncio.run(intake.InvoiceIntakeExecutor(unused).execute(request, context))
-    assert not events.effects and operands.value is None
+    assert not events.phases and not events.effects and operands.value is None
 
 
 def test_correct_digest_header_only_source_keeps_zero_rows_and_no_write(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base\n"
     path = tmp_path / "empty-book.csv"
     path.write_bytes(source)

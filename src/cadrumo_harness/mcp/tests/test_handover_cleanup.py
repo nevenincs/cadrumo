@@ -29,8 +29,8 @@ from cadrumo.application.user_profile.automation_enrollment import (
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter
+from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.tests.test_authentication_handover import _Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -66,7 +66,7 @@ def _admit(monkeypatch: pytest.MonkeyPatch, candidate: _CloseClient) -> None:
         assert isinstance(credential_reference, UUID)
         return cast(RuntimeFrontendClient, candidate)
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", admit)
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
 
 
 @pytest.mark.asyncio
@@ -138,7 +138,7 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
         raise refusal
 
     monkeypatch.setattr(
-        mcp_server,
+        mcp_runtime,
         "open_installed_runtime_client" if without_reference else "open_installed_credential_client",
         refuse_admission,
     )
@@ -231,7 +231,7 @@ async def test_uncertain_reconciliation_retains_failed_fresh_admission_owner(
         await close_async_resources(failed_owner, task_name="test-reconcile-admission-close", primary_error=refusal)
         raise refusal
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", refuse_admission)
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", refuse_admission)
     enrollment = PreparedEnrollment()
     adapter = _adapter(original)
     adapter._enrollment = cast(NativeEnrollmentClient, enrollment)
@@ -335,8 +335,8 @@ async def test_prepare_failure_preserves_denial_and_retains_candidate_for_cleanu
         assert frontend is OperationFrontendProjection.MCP
         return cast(RuntimeFrontendClient, candidate)
 
-    monkeypatch.setattr(mcp_server, "open_installed_runtime_client", open_client)
-    monkeypatch.setattr(mcp_server, "installed_automation_secret_store", lambda: object())
+    monkeypatch.setattr(mcp_runtime, "open_installed_runtime_client", open_client)
+    monkeypatch.setattr(mcp_runtime, "installed_automation_secret_store", lambda: object())
     adapter = _adapter(original)
     try:
         reply = await adapter.call("authorization_prepare", {})

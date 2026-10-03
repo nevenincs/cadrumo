@@ -73,16 +73,18 @@ from .....core.operations import OperationTerminalCondition
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp
+from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
 from ...operations.controller_port import OperationControllerPort
 from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from ..controller import AeatSyncWorkspaceController
 from ..models import (
+    AeatSyncDestinationIdV1,
     AeatSyncNotificationDocumentHandoffV1,
     AeatSyncOperationHandoffV1,
     AeatSyncOperationRequestV1,
 )
-from ..routes import AEAT_SYNC_ROUTES, declared_aeat_sync_destination_ids, resolve_aeat_sync_screen
+from ..routes import AEAT_SYNC_ROUTES, resolve_aeat_sync_screen
 from ..screens import (
     AeatSyncCensusScreen,
     AeatSyncEvidenceComparisonScreen,
@@ -535,7 +537,7 @@ def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invari
 def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
     controller = _controller()
     assert tuple(route.zone for route in AEAT_SYNC_ROUTES) == tuple(AeatSyncWorkspaceZone)
-    assert {route.destination for route in AEAT_SYNC_ROUTES} == declared_aeat_sync_destination_ids()
+    assert {route.destination for route in AEAT_SYNC_ROUTES} == closed_destination_ids(AeatSyncDestinationIdV1)
     assert isinstance(
         resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
         AeatSyncOverviewScreen,

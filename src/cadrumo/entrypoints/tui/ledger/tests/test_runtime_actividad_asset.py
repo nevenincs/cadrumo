@@ -219,7 +219,7 @@ def _install_runtime(
     expire_after_result: bool = False,
     effect: OperationEffect = OperationEffect.NONE,
 ) -> tuple[list[dict[str, object]], _Controller]:
-    from cadrumo.entrypoints.tui.ledger import runtime_actividad_asset as bridge
+    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
 
     status_checks: list[tuple[UUID, UUID]] = []
 

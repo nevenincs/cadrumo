@@ -22,7 +22,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
@@ -33,6 +33,7 @@ from ...core.identity.hex_ids import (
     ModeloEditMutationResultReceiptId,
     WorkUnitId,
 )
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
 from ..operations.registry import OperationSchemaIdentityV1
@@ -46,9 +47,7 @@ class EditModel(BaseModel):
     reach a log.
     """
 
-    model_config = ConfigDict(
-        strict=True, frozen=True, extra="forbid", validate_default=True, hide_input_in_errors=True
-    )
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 
 class ModeloEditMutationFamily(StrEnum):

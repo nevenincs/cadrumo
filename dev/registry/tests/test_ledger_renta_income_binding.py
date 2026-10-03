@@ -50,7 +50,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
-_TAXABLE_BASE_BINDING = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
@@ -179,19 +178,25 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
 
 
 def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
-    """The taxable_base_sum binding sums taxable_base_amount, zeroing undeclared bases.
+    """A taxable_base_sum binding sums taxable_base_amount, zeroing undeclared bases.
 
-    Grounds a fact no existing test asserted end to end through the
-    resolver: ``modelo-130-actividad-economica-ingresos-taxable-base-
-    cumulative`` runs on the same M130 revision as the ``ingresos_integros_
-    sum`` / ``declared_withheld_amount_sum`` bindings already covered above, but no
-    prior test read ITS resolved value (an earlier resolver call exercised
-    it only as an unchecked side effect). An untagged row (no declared
-    base) must contribute zero here — the opposite of ingresos_integros_
-    sum's gross-amount fallback — so a regression collapsing the two facts
-    together is caught.
+    No committed ``ledger_renta_income_aggregation`` binding declares
+    ``taxable_base_sum`` (casilla 01 reads the gross ingresos íntegros), so the
+    fact is exercised through a synthetic sibling of the committed income
+    binding, exactly as ``cash_received_sum`` is below. An untagged row (no
+    declared base) must contribute zero here, the opposite of
+    ingresos_integros_sum's gross-amount fallback, so a regression collapsing
+    the two facts together is caught.
     """
     revision = _modelo_130_snapshot().revision
+    committed_binding = next(binding for binding in revision.bindings if binding.id == _INGRESOS_BINDING)
+    taxable_base_binding = committed_binding.model_copy(
+        update={
+            "id": "test-m130-taxable-base-sum",
+            "provider": committed_binding.provider.model_copy(update={"fact": LedgerIncomeFact.TAXABLE_BASE_SUM}),
+        },
+    )
+    revision = revision.model_copy(update={"bindings": (*revision.bindings, taxable_base_binding)})
     tagged = RentaIncomeObservation(
         transaction_id=_tx("3a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
@@ -218,8 +223,8 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
     tagged_base = tagged.taxable_base_amount
     assert tagged_base is not None
 
-    assert resolved[_TAXABLE_BASE_BINDING] == Decimal("1000.00")
-    assert resolved[_TAXABLE_BASE_BINDING] != tagged_base + untagged.gross_amount, (
+    assert resolved[taxable_base_binding.id] == Decimal("1000.00")
+    assert resolved[taxable_base_binding.id] != tagged_base + untagged.gross_amount, (
         "taxable_base_sum must not fall back to the untagged row's gross_amount"
     )
 
@@ -365,10 +370,9 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
     The complement of the unrouted screen above: this row IS consumed (it
     targets casilla 01, which every committed M130 income binding selects),
     so nothing vanishes — but its contribution rests on bank-credited cash
-    rather than an invoice base imponible. The M130 revision declares BOTH
-    base-reading facts, so the screen must report both: the row folded cash
-    into ``ingresos_integros_sum`` AND contributed nothing to
-    ``taxable_base_sum``.
+    rather than an invoice base imponible. The M130 revision declares one
+    base-reading fact, so the screen must report it: the row folded cash
+    into ``ingresos_integros_sum``.
     """
     revision = _modelo_130_snapshot().revision
 
@@ -394,7 +398,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
     result = ungrounded_ledger_renta_income_observations(revision, (grounded, ungrounded))
 
     assert result.observations == (ungrounded,), "only the substrate-less row is ungrounded"
-    assert result.facts == frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+    assert result.facts == frozenset({"ingresos_integros_sum"})
 
 
 def test_ungrounded_screen_reports_nothing_when_every_row_declares_its_base() -> None:

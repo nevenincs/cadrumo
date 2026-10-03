@@ -343,6 +343,13 @@ class _ResolvedCalculationInputs:
     resolved_text_inputs: Mapping[CasillaId, str]
 
 
+@dataclass(frozen=True, slots=True)
+class _ResolvedDecimalBindingChannels:
+    supplied_bindings: Mapping[BindingId, Decimal]
+    resolved_bindings: Mapping[BindingId, Decimal]
+    resolved_relations: Mapping[RelationId, Decimal]
+
+
 @dataclass(slots=True)
 class _CalculationState:
     """Mutable formula results accumulated in declared evaluation order."""
@@ -433,28 +440,16 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         else date(snapshot.filing_year, 12, 31)
     )
     resolved_date_context.setdefault("filing_period", default_filing_date)
-    empty_bindings: dict[BindingId, Decimal] = {}
-    supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
-    _reject_non_decimal(supplied_bindings, "binding")
-    resolved_relations = relation_values or {}
-    _reject_non_decimal(resolved_relations, "relation")
-    # Relation-prefill values are keyed by the provider binding id after the
-    # schema cut. Keep the dedicated relation channel for source-resolution
-    # diagnostics, but project its numeric values into the canonical binding
-    # channel before initial casilla assembly and formula traversal.
-    supplied_bindings = _merge_relation_values_into_bindings(supplied_bindings, resolved_relations)
-    resolved_bindings = _binding_values_with_absent_by_design_defaults(
-        revision,
-        supplied_bindings,
-        target_period=snapshot.period,
+    decimal_channels = _resolve_decimal_binding_channels(
+        snapshot,
+        revision=revision,
+        binding_values=binding_values,
+        relation_values=relation_values,
+        unresolved_relation_ids=unresolved_relation_ids,
     )
-    # A relation the source resolution reported unresolved has required source
-    # filings that are missing, so its slot is not structurally blank; a relation
-    # id is its binding's id, so the binding channel must not default it either.
-    for unresolved_id in unresolved_relation_ids:
-        if unresolved_id not in supplied_bindings:
-            resolved_bindings.pop(unresolved_id, None)
-    _reject_non_decimal(resolved_bindings, "binding")
+    supplied_bindings = decimal_channels.supplied_bindings
+    resolved_bindings = decimal_channels.resolved_bindings
+    resolved_relations = decimal_channels.resolved_relations
     resolved_enum_bindings = enum_binding_values or {}
     _reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
@@ -479,6 +474,43 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         resolved_date_bindings=resolved_date_bindings,
         resolved_boolean_bindings=resolved_boolean_bindings,
         resolved_text_inputs=resolved_text_inputs,
+    )
+
+
+def _resolve_decimal_binding_channels(
+    snapshot: RegistrySnapshot,
+    *,
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    unresolved_relation_ids: tuple[RelationId, ...],
+) -> _ResolvedDecimalBindingChannels:
+    empty_bindings: dict[BindingId, Decimal] = {}
+    supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
+    _reject_non_decimal(supplied_bindings, "binding")
+    resolved_relations = relation_values or {}
+    _reject_non_decimal(resolved_relations, "relation")
+    # Relation-prefill values are keyed by the provider binding id after the
+    # schema cut. Keep the dedicated relation channel for source-resolution
+    # diagnostics, but project its numeric values into the canonical binding
+    # channel before initial casilla assembly and formula traversal.
+    supplied_bindings = _merge_relation_values_into_bindings(supplied_bindings, resolved_relations)
+    resolved_bindings = _binding_values_with_absent_by_design_defaults(
+        revision,
+        supplied_bindings,
+        target_period=snapshot.period,
+    )
+    # A relation the source resolution reported unresolved has required source
+    # filings that are missing, so its slot is not structurally blank; a relation
+    # id is its binding's id, so the binding channel must not default it either.
+    for unresolved_id in unresolved_relation_ids:
+        if unresolved_id not in supplied_bindings:
+            resolved_bindings.pop(unresolved_id, None)
+    _reject_non_decimal(resolved_bindings, "binding")
+    return _ResolvedDecimalBindingChannels(
+        supplied_bindings=supplied_bindings,
+        resolved_bindings=resolved_bindings,
+        resolved_relations=resolved_relations,
     )
 
 

@@ -18,7 +18,6 @@ identity; rendered text and envelopes stay in the run directory.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import secrets
 from collections.abc import Mapping, Sequence
@@ -28,6 +27,7 @@ from pathlib import Path
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
+from cadrumo.core.hashing import sha256_file
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     assert_installed_product_origin,
@@ -122,6 +122,17 @@ def tui_row_key(modelo: str, filing_year: int, period: str) -> str:
     return f"{modelo}|{filing_year}|{period}"
 
 
+def _calendar_text_statements(text: str) -> dict[tuple[str, str], dict[str, str]]:
+    statements: dict[tuple[str, str], dict[str, str]] = {}
+    for line in text.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 4 or not parts[3].startswith("opens="):
+            continue
+        fields = dict(part.split("=", 1) for part in parts[3:] if "=" in part)
+        statements[(parts[0], parts[1])] = fields
+    return statements
+
+
 def parse_cli_calendar(document: Mapping[str, Any], text: str) -> dict[str, CliCalendarRow]:
     """Join the JSON rows with their localized text statements by natural address."""
     result = document.get("result")
@@ -131,13 +142,7 @@ def parse_cli_calendar(document: Mapping[str, Any], text: str) -> dict[str, CliC
     aeat_observable = not any(
         isinstance(notice, dict) and notice.get("code") == _NO_AEAT_HISTORY_NOTICE for notice in notices
     )
-    statements: dict[tuple[str, str], dict[str, str]] = {}
-    for line in text.splitlines():
-        parts = line.split("\t")
-        if len(parts) < 4 or not parts[3].startswith("opens="):
-            continue
-        fields = dict(part.split("=", 1) for part in parts[3:] if "=" in part)
-        statements[(parts[0], parts[1])] = fields
+    statements = _calendar_text_statements(text)
     rows: dict[str, CliCalendarRow] = {}
     for entry in result["entries"]:
         if not isinstance(entry, dict):
@@ -245,20 +250,20 @@ def compare_rows(
 def _product_labels() -> dict[str, str]:
     """Translate every state token the calendar detail can render, through the installed catalogue."""
     from cadrumo.application.overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
-    from cadrumo.entrypoints.tui.declarations.controller import declarations_copy
+    from cadrumo.core.i18n.render import tr
 
     labels = {
-        "none": declarations_copy("tui.declarations.calendar.none"),
-        "receipt.verified": declarations_copy("tui.declarations.calendar.justificante.verified"),
-        "receipt.not_verified": declarations_copy("tui.declarations.calendar.justificante.not_verified"),
-        "receipt.unknown": declarations_copy("tui.declarations.calendar.justificante.unknown"),
-        "aeat.unknown": declarations_copy("tui.declarations.calendar.aeat.unknown"),
-        "local.unknown": declarations_copy("tui.declarations.calendar.local.unknown"),
+        "none": tr("tui.declarations.calendar.none"),
+        "receipt.verified": tr("tui.declarations.calendar.justificante.verified"),
+        "receipt.not_verified": tr("tui.declarations.calendar.justificante.not_verified"),
+        "receipt.unknown": tr("tui.declarations.calendar.justificante.unknown"),
+        "aeat.unknown": tr("tui.declarations.calendar.aeat.unknown"),
+        "local.unknown": tr("tui.declarations.calendar.local.unknown"),
     }
     for local in OverviewLocalFilingState:
-        labels[f"local.{local.value}"] = declarations_copy(f"tui.declarations.calendar.local.{local.value}")
+        labels[f"local.{local.value}"] = tr(f"tui.declarations.calendar.local.{local.value}")
     for aeat in OverviewAeatSubmissionState:
-        labels[f"aeat.{aeat.value}"] = declarations_copy(f"tui.declarations.calendar.aeat.{aeat.value}")
+        labels[f"aeat.{aeat.value}"] = tr(f"tui.declarations.calendar.aeat.{aeat.value}")
     return labels
 
 
@@ -517,6 +522,17 @@ def _scenario(name: str, comparisons: list[dict[str, object]], **extra: object) 
     }
 
 
+def _calendar_product_hash(documents: tuple[dict[str, Any], ...]) -> Any:
+    product_hashes = {document["product_init_sha256"] for document in documents}
+    if len(product_hashes) != 1:
+        raise CalendarParityError("installed TUI children imported different products")
+    return product_hashes.pop()
+
+
+def _calendar_evaluation_dates(row_sets: tuple[dict[str, CliCalendarRow], ...]) -> list[str]:
+    return sorted({row.evaluated_on for rows in row_sets for row in rows.values()})
+
+
 def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[str, object]:
     """Run the four store scenarios and compare every calendar row the two frontends state."""
     cli_executable = args.cli.resolve(strict=True)
@@ -555,7 +571,7 @@ def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[st
     completed: list[dict[str, object]] = []
     progress["completed_scenarios"] = completed
     progress["source_commit"] = args.source_commit
-    progress["wheel_sha256"] = hashlib.sha256(args.wheel.read_bytes()).hexdigest()
+    progress["wheel_sha256"] = sha256_file(args.wheel)
     progress["authority_generation"] = authority_generation(authority_root)
     progress["calendar_window"] = {"from": window.from_date.isoformat(), "to": window.to_date.isoformat()}
 
@@ -599,11 +615,9 @@ def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[st
         cli_authentication=t2c_authentication,
     )
 
-    product_hashes = {document["product_init_sha256"] for document in (tui_only, c2t_tui, t2c_tui)}
-    if len(product_hashes) != 1:
-        raise CalendarParityError("installed TUI children imported different products")
+    product_hash = _calendar_product_hash((tui_only, c2t_tui, t2c_tui))
     scenarios = [independent, cli_to_tui, tui_to_cli]
-    evaluation_dates = {row.evaluated_on for rows in (cli_rows, c2t_rows, t2c_rows) for row in rows.values()}
+    evaluation_dates = _calendar_evaluation_dates((cli_rows, c2t_rows, t2c_rows))
     coverage_states = sorted({row.holidays_text for row in cli_rows.values()})
     return {
         "schema_version": _SCHEMA,
@@ -612,12 +626,12 @@ def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[st
         "brief_revision": _BRIEF_REVISION,
         "source_commit": args.source_commit,
         "wheel_filename": args.wheel.name,
-        "wheel_sha256": hashlib.sha256(args.wheel.read_bytes()).hexdigest(),
+        "wheel_sha256": sha256_file(args.wheel),
         "authority_generation": authority_generation(authority_root),
         "product_origin": "site-packages",
         "product_init_path": t2c_tui["product_init_path"],
-        "product_init_sha256": product_hashes.pop(),
-        "evaluation_date": sorted(evaluation_dates),
+        "product_init_sha256": product_hash,
+        "evaluation_date": evaluation_dates,
         "calendar_window": {"from": window.from_date.isoformat(), "to": window.to_date.isoformat()},
         "profile_admission": "public_cli_profile_create",
         "compared_fields": list(COMPARED_FIELDS),

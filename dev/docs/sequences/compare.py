@@ -51,6 +51,7 @@ from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_
 
 from .errors import SequenceGoldenMismatchError
 from .golden_store import (
+    GoldenFrame,
     SequenceGolden,
     mask_host_conditional_details,
     masked_envelope_values,
@@ -59,7 +60,7 @@ from .golden_store import (
     refresh_invocation,
 )
 from .runner import FrameExecution, SequenceTranscript, _resolve_json_path
-from .schema import FrameKind, ParsedSequence
+from .schema import ExpectAssertion, ExpectLiteral, FrameKind, ParsedSequence
 
 __all__ = [
     "assert_transcript_matches_golden",
@@ -119,96 +120,7 @@ def compare_transcript_to_golden(
     live_masked_values = masked_envelope_values(transcript)
 
     for index, (expected, actual) in enumerate(zip(golden.frames, transcript.frames, strict=True)):
-        at = _frame_locator(page, golden.sequence_id, index, actual)
-
-        if expected.kind is not actual.kind:
-            problems.append(f"{at}: frame kind changed from {expected.kind.value!r} to {actual.kind.value!r}")
-
-        if expected.argv != actual.argv:
-            problems.append(
-                f"{at}: executed argv diverged from the golden (golden: {' '.join(expected.argv)})",
-            )
-
-        if expected.exit_code != actual.exit_code:
-            problems.append(f"{at}: exit code {actual.exit_code}, golden expects {expected.exit_code}")
-
-        if expected.captures != actual.captured:
-            golden_view = {item.name: item.value for item in expected.captures}
-            live_view = {item.name: item.value for item in actual.captured}
-            problems.append(f"{at}: captured values diverged — golden {golden_view!r}, live {live_view!r}")
-
-        # A setup golden stores no output to compare. When a frame changed to or
-        # from setup, the kind problem above already names it; an output diff
-        # against the other side's absent streams would only bury it.
-        if FrameKind.SETUP in (expected.kind, actual.kind):
-            continue
-
-        # Envelope tier: golden and live must agree on whether a JSON envelope
-        # exists and on which stream carried it (a success envelope moving to
-        # a stderr error document — or vice versa — is a behavioural change).
-        if expected.envelope is not None:
-            if actual.envelope is None:
-                problems.append(
-                    f"{at}: the golden expects a JSON envelope (on {expected.envelope_source}) "
-                    f"but the live output carries none "
-                    f"(stdout starts: {actual.output[:120]!r})",
-                )
-            else:
-                if expected.envelope_source != actual.envelope_source:
-                    problems.append(
-                        f"{at}: the envelope moved streams — golden on "
-                        f"{expected.envelope_source}, live on {actual.envelope_source}",
-                    )
-                # The golden's envelope was path-normalised at build time; the
-                # live envelope carries THIS run's raw sandbox/checkout paths, so
-                # tokenise it the same value-anchored way before the central field
-                # mask — otherwise a path leaking into a string value (config
-                # check's storage-root / corpus-path detail) diverges every run.
-                live_envelope = normalise_document_paths(
-                    actual.envelope,
-                    storage_root=transcript.storage_root,
-                    workdir=transcript.workdir,
-                )
-                # Same platform-conditional carve-out the text tier applies, at
-                # the structural tier: each side's own detail is masked, so the
-                # row's id and verdict stay under exact comparison while the
-                # sentence describing the HOST drops out of both.
-                masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
-                masked_actual = mask_host_conditional_details(mask_document(live_envelope))
-                if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
-                    problems.append(f"{at}: masking returned a non-document, so the envelopes cannot be compared")
-                elif canonicalise(masked_expected) != canonicalise(masked_actual):
-                    diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
-                    problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
-        elif actual.envelope is not None:
-            problems.append(
-                f"{at}: the golden expects no JSON envelope but the live output now carries "
-                f"one on {actual.envelope_source}",
-            )
-
-        # Text tier: each stream that did not carry the envelope compares by
-        # exact equality after the declared narrow normalisation (the golden
-        # stores normalised text; the live side normalises with THIS run's
-        # sandbox paths and masked ids). ``None`` reads as the empty stream.
-        def _normalised_live(raw: str) -> str:
-            return normalise_text_output(
-                raw,
-                storage_root=transcript.storage_root,
-                workdir=transcript.workdir,
-                masked_values=live_masked_values,
-            )
-
-        if actual.envelope_source != "stdout" and expected.envelope_source != "stdout":
-            live_text = _normalised_live(actual.output)
-            expected_text = expected.text if expected.text is not None else ""
-            if live_text != expected_text:
-                problems.append(f"{at}: stdout text diverged:\n{_unified_diff(expected_text, live_text)}")
-
-        if actual.envelope_source != "stderr" and expected.envelope_source != "stderr":
-            live_stderr = _normalised_live(actual.stderr)
-            expected_stderr = expected.stderr_text if expected.stderr_text is not None else ""
-            if live_stderr != expected_stderr:
-                problems.append(f"{at}: stderr text diverged:\n{_unified_diff(expected_stderr, live_stderr)}")
+        _compare_frame(index, expected, actual, page, transcript, golden, live_masked_values, problems)
 
     return tuple(problems)
 
@@ -241,38 +153,7 @@ def evaluate_expectations(
     for index, (frame, execution) in enumerate(zip(executed, transcript.frames, strict=True)):
         at = _frame_locator(page, sequence.sequence_id, index, execution)
         for assertion in frame.expects:
-            expected = assertion.expected
-            if isinstance(expected, str) and expected.startswith("{") and expected.endswith("}"):
-                capture_name = expected[1:-1]
-                if capture_name in transcript.captures:
-                    expected = transcript.captures[capture_name]
-            rendered = json.dumps(expected)
-            if assertion.json_path == _EXIT_CODE_PATH:
-                if execution.exit_code != expected:
-                    problems.append(
-                        f"{at}: @expect {_EXIT_CODE_PATH} == {rendered} failed — live exit "
-                        f"code is {execution.exit_code}",
-                    )
-                continue
-            if execution.envelope is None:
-                problems.append(
-                    f"{at}: @expect {assertion.json_path} == {rendered} cannot be evaluated — "
-                    "the live output is not a JSON document (invoke the command with "
-                    "'--format json')",
-                )
-                continue
-            found, value = _resolve_json_path(execution.envelope, assertion.json_path)
-            if not found:
-                problems.append(
-                    f"{at}: @expect path {assertion.json_path!r} is missing from the live "
-                    f"envelope (top-level keys: {', '.join(sorted(execution.envelope))})",
-                )
-                continue
-            if value != expected:
-                problems.append(
-                    f"{at}: @expect {assertion.json_path} == {rendered} failed — live value "
-                    f"is {json.dumps(value, default=str)}",
-                )
+            _evaluate_assertion(assertion, execution, transcript, at, problems)
     return tuple(problems)
 
 
@@ -317,3 +198,169 @@ def assert_transcript_matches_golden(
             problems,
             remedy=refresh_invocation(sequence_id=sequence.sequence_id),
         )
+
+
+def _compare_frame(
+    index: int,
+    expected: GoldenFrame,
+    actual: FrameExecution,
+    page: str,
+    transcript: SequenceTranscript,
+    golden: SequenceGolden,
+    live_masked_values: frozenset[str],
+    problems: list[str],
+) -> None:
+    """Compare frame."""
+    at = _frame_locator(page, golden.sequence_id, index, actual)
+
+    if expected.kind is not actual.kind:
+        problems.append(f"{at}: frame kind changed from {expected.kind.value!r} to {actual.kind.value!r}")
+
+    if expected.argv != actual.argv:
+        problems.append(
+            f"{at}: executed argv diverged from the golden (golden: {' '.join(expected.argv)})",
+        )
+
+    if expected.exit_code != actual.exit_code:
+        problems.append(f"{at}: exit code {actual.exit_code}, golden expects {expected.exit_code}")
+
+    if expected.captures != actual.captured:
+        golden_view = {item.name: item.value for item in expected.captures}
+        live_view = {item.name: item.value for item in actual.captured}
+        problems.append(f"{at}: captured values diverged — golden {golden_view!r}, live {live_view!r}")
+
+    # A setup golden stores no output to compare. When a frame changed to or
+    # from setup, the kind problem above already names it; an output diff
+    # against the other side's absent streams would only bury it.
+    if FrameKind.SETUP in (expected.kind, actual.kind):
+        return
+
+    # Envelope tier: golden and live must agree on whether a JSON envelope
+    # exists and on which stream carried it (a success envelope moving to
+    # a stderr error document — or vice versa — is a behavioural change).
+    _compare_envelope(expected, actual, at, transcript, problems)
+
+    # Text tier: each stream that did not carry the envelope compares by
+    # exact equality after the declared narrow normalisation (the golden
+    # stores normalised text; the live side normalises with THIS run's
+    # sandbox paths and masked ids). ``None`` reads as the empty stream.
+    _compare_text_streams(expected, actual, at, transcript, live_masked_values, problems)
+
+
+def _compare_envelope(
+    expected: GoldenFrame, actual: FrameExecution, at: str, transcript: SequenceTranscript, problems: list[str]
+) -> None:
+    """Compare envelope."""
+    if expected.envelope is not None:
+        if actual.envelope is None:
+            problems.append(
+                f"{at}: the golden expects a JSON envelope (on {expected.envelope_source}) "
+                f"but the live output carries none "
+                f"(stdout starts: {actual.output[:120]!r})",
+            )
+        else:
+            if expected.envelope_source != actual.envelope_source:
+                problems.append(
+                    f"{at}: the envelope moved streams — golden on "
+                    f"{expected.envelope_source}, live on {actual.envelope_source}",
+                )
+            # The golden's envelope was path-normalised at build time; the
+            # live envelope carries THIS run's raw sandbox/checkout paths, so
+            # tokenise it the same value-anchored way before the central field
+            # mask — otherwise a path leaking into a string value (config
+            # check's storage-root / corpus-path detail) diverges every run.
+            live_envelope = normalise_document_paths(
+                actual.envelope,
+                storage_root=transcript.storage_root,
+                workdir=transcript.workdir,
+            )
+            # Same platform-conditional carve-out the text tier applies, at
+            # the structural tier: each side's own detail is masked, so the
+            # row's id and verdict stay under exact comparison while the
+            # sentence describing the HOST drops out of both.
+            masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
+            masked_actual = mask_host_conditional_details(mask_document(live_envelope))
+            if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
+                problems.append(f"{at}: masking returned a non-document, so the envelopes cannot be compared")
+            elif canonicalise(masked_expected) != canonicalise(masked_actual):
+                diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
+                problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
+    elif actual.envelope is not None:
+        problems.append(
+            f"{at}: the golden expects no JSON envelope but the live output now carries "
+            f"one on {actual.envelope_source}",
+        )
+
+
+def _compare_text_streams(
+    expected: GoldenFrame,
+    actual: FrameExecution,
+    at: str,
+    transcript: SequenceTranscript,
+    live_masked_values: frozenset[str],
+    problems: list[str],
+) -> None:
+    """Compare text streams."""
+
+    def _normalised_live(raw: str) -> str:
+        return normalise_text_output(
+            raw,
+            storage_root=transcript.storage_root,
+            workdir=transcript.workdir,
+            masked_values=live_masked_values,
+        )
+
+    if actual.envelope_source != "stdout" and expected.envelope_source != "stdout":
+        live_text = _normalised_live(actual.output)
+        expected_text = expected.text if expected.text is not None else ""
+        if live_text != expected_text:
+            problems.append(f"{at}: stdout text diverged:\n{_unified_diff(expected_text, live_text)}")
+
+    if actual.envelope_source != "stderr" and expected.envelope_source != "stderr":
+        live_stderr = _normalised_live(actual.stderr)
+        expected_stderr = expected.stderr_text if expected.stderr_text is not None else ""
+        if live_stderr != expected_stderr:
+            problems.append(f"{at}: stderr text diverged:\n{_unified_diff(expected_stderr, live_stderr)}")
+
+
+def _evaluate_assertion(
+    assertion: ExpectAssertion, execution: FrameExecution, transcript: SequenceTranscript, at: str, problems: list[str]
+) -> None:
+    """Evaluate assertion."""
+    expected = _resolved_expect_literal(assertion, transcript)
+    rendered = json.dumps(expected)
+    if assertion.json_path == _EXIT_CODE_PATH:
+        if execution.exit_code != expected:
+            problems.append(
+                f"{at}: @expect {_EXIT_CODE_PATH} == {rendered} failed — live exit code is {execution.exit_code}",
+            )
+        return
+    if execution.envelope is None:
+        problems.append(
+            f"{at}: @expect {assertion.json_path} == {rendered} cannot be evaluated — "
+            "the live output is not a JSON document (invoke the command with "
+            "'--format json')",
+        )
+        return
+    found, value = _resolve_json_path(execution.envelope, assertion.json_path)
+    if not found:
+        problems.append(
+            f"{at}: @expect path {assertion.json_path!r} is missing from the live "
+            f"envelope (top-level keys: {', '.join(sorted(execution.envelope))})",
+        )
+        return
+    if value != expected:
+        problems.append(
+            f"{at}: @expect {assertion.json_path} == {rendered} failed — live value "
+            f"is {json.dumps(value, default=str)}",
+        )
+
+
+def _resolved_expect_literal(assertion: ExpectAssertion, transcript: SequenceTranscript) -> ExpectLiteral:
+    """Resolved expect literal."""
+    expected = assertion.expected
+    if isinstance(expected, str) and expected.startswith("{") and expected.endswith("}"):
+        capture_name = expected[1:-1]
+        if capture_name in transcript.captures:
+            expected = transcript.captures[capture_name]
+    return expected

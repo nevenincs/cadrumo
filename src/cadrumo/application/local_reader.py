@@ -17,6 +17,7 @@ reads that record and never probes unless asked.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
@@ -342,6 +343,35 @@ def select_role_model(role: ModelRole, settings: Settings, *, explicit: str | No
     return select_model_for_role(role, settings=settings, override=configured)
 
 
+def _role_selection_target(
+    role: ModelRole,
+    selection: ModelSelection,
+    settings: Settings,
+    served: dict[str, list[ModelRole]],
+    requirements: dict[str, int | None],
+    refusals: list[RoleModelTarget],
+) -> None:
+    model = selection.runtime_id
+    if not selection.selected or model is None:
+        refusals.append(
+            RoleModelTarget(
+                roles=(role,),
+                selection_facts=selection.facts,
+                selection_verdict=selection.precondition_verdict,
+            )
+        )
+        return
+    key = next((known for known in served if runtime_model_names_match(known, model)), model)
+    served.setdefault(key, []).append(role)
+    if requirements.get(key) is None:
+        assessable = selection.assessable_load
+        requirements[key] = assessable[1] if assessable is not None else _requirement_for(role, model, settings)
+
+
+def _selected_roles(roles: Iterable[ModelRole] | None) -> tuple[ModelRole, ...]:
+    return tuple(ModelRole) if roles is None else tuple(roles)
+
+
 def role_model_targets(
     roles: Iterable[ModelRole] | None = None,
     settings: Settings | None = None,
@@ -358,23 +388,9 @@ def role_model_targets(
     served: dict[str, list[ModelRole]] = {}
     requirements: dict[str, int | None] = {}
     refusals: list[RoleModelTarget] = []
-    for role in tuple(ModelRole) if roles is None else tuple(roles):
+    for role in _selected_roles(roles):
         selection = select_role_model(role, resolved, explicit=explicit_model)
-        model = selection.runtime_id
-        if not selection.selected or model is None:
-            refusals.append(
-                RoleModelTarget(
-                    roles=(role,),
-                    selection_facts=selection.facts,
-                    selection_verdict=selection.precondition_verdict,
-                )
-            )
-            continue
-        key = next((known for known in served if runtime_model_names_match(known, model)), model)
-        served.setdefault(key, []).append(role)
-        if requirements.get(key) is None:
-            assessable = selection.assessable_load
-            requirements[key] = assessable[1] if assessable is not None else _requirement_for(role, model, resolved)
+        _role_selection_target(role, selection, resolved, served, requirements, refusals)
     targets = tuple(
         RoleModelTarget(model=model, roles=tuple(roles_served), requirement_bytes=requirements.get(model))
         for model, roles_served in served.items()
@@ -523,12 +539,106 @@ _FITNESS_FAILURE: Mapping[RoleFitnessState, ProvisioningPreconditionCondition] =
 }
 
 
+@dataclass(frozen=True, slots=True)
+class _RoleRuntimeStatus:
+    model: str | None
+    installed: bool | None
+    resident: bool | None
+    load_admitted: bool | None
+    contention_causes: tuple[ContentionCause, ...]
+    failed_condition_id: str | None
+    ready: bool
+
+
 def _fresh_fitness_state(outcome: RoleFitnessOutcome) -> tuple[RoleFitnessState, str | None]:
     verdict = outcome.precondition_verdict
     failed = verdict.failed_condition_id if verdict is not None else None
     if not outcome.settled:
         return RoleFitnessState.NOT_VERIFIED, failed
     return RoleFitnessState(outcome.verdict.value), failed
+
+
+def _role_load_admission(
+    role: ModelRole,
+    model: str | None,
+    installed: bool | None,
+    resident: bool | None,
+    *,
+    settings: Settings,
+    residents: tuple[RuntimeResident, ...] | None,
+    assess_load: bool,
+) -> tuple[bool | None, tuple[ContentionCause, ...]]:
+    if not assess_load or model is None or not installed or resident:
+        return None, ()
+    requirement = _requirement_for(role, model, settings)
+    if requirement is None:
+        return None, ()
+    snapshot = assess_model_load_contention(
+        model,
+        requirement,
+        residents=residents,
+        residents_measured=residents is not None,
+        settings=settings,
+    )
+    return snapshot.admitted, snapshot.causes
+
+
+def _role_runtime_status(
+    role: ModelRole,
+    *,
+    settings: Settings,
+    inventory: tuple[InstalledModel, ...] | None,
+    residents: tuple[RuntimeResident, ...] | None,
+    assess_load: bool,
+) -> _RoleRuntimeStatus:
+    probe = probe_local_reader(role, settings, installed=inventory) if inventory is not None else None
+    model = configured_role_model(role, settings)
+    installed = None if model is None else _present(model, None if inventory is None else _names(inventory))
+    resident = None if model is None else _present(model, None if residents is None else _names(residents))
+    admitted, causes = _role_load_admission(
+        role,
+        model,
+        installed,
+        resident,
+        settings=settings,
+        residents=residents,
+        assess_load=assess_load,
+    )
+    if probe is not None and probe.precondition_verdict is not None:
+        failed = probe.precondition_verdict.failed_condition_id
+    elif probe is None:
+        failed = ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+    else:
+        failed = None
+    return _RoleRuntimeStatus(
+        model=model,
+        installed=installed,
+        resident=resident,
+        load_admitted=admitted,
+        contention_causes=causes,
+        failed_condition_id=failed,
+        ready=probe is not None and probe.available,
+    )
+
+
+def _current_role_fitness(
+    role: ModelRole,
+    model: str,
+    *,
+    settings: Settings,
+    inventory: tuple[InstalledModel, ...] | None,
+    text_probe: TextExtractionFitnessProbe | None,
+) -> tuple[RoleFitnessState | None, str | None] | None:
+    if text_probe is not None:
+        outcome = probe_role_fitness(role, model, settings, text_probe=text_probe)
+        return None if outcome is None else _fresh_fitness_state(outcome)
+    digest = next(
+        (entry.digest for entry in inventory or () if runtime_model_names_match(model, entry.name)),
+        None,
+    )
+    state = recorded_role_fitness(role, model, digest, settings)
+    failed = _FITNESS_FAILURE[state].value if state is not None and state is not RoleFitnessState.FIT else None
+    return state, failed
 
 
 def _role_status(
@@ -540,60 +650,72 @@ def _role_status(
     assess_load: bool,
     text_probe: TextExtractionFitnessProbe | None,
 ) -> LocalReaderRoleStatus:
-    probe = probe_local_reader(role, settings, installed=inventory) if inventory is not None else None
-    model = configured_role_model(role, settings)
-    installed = None if model is None else _present(model, None if inventory is None else _names(inventory))
-    resident = None if model is None else _present(model, None if residents is None else _names(residents))
-    admitted: bool | None = None
-    causes: tuple[ContentionCause, ...] = ()
-    if assess_load and model is not None and installed and not resident:
-        requirement = _requirement_for(role, model, settings)
-        if requirement is not None:
-            snapshot = assess_model_load_contention(
-                model,
-                requirement,
-                residents=residents,
-                residents_measured=residents is not None,
-                settings=settings,
-            )
-            admitted = snapshot.admitted
-            causes = snapshot.causes
-    failed = None
-    if probe is not None and probe.precondition_verdict is not None:
-        failed = probe.precondition_verdict.failed_condition_id
-    elif probe is None:
-        failed = ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-    ready = probe is not None and probe.available
+    runtime = _role_runtime_status(
+        role,
+        settings=settings,
+        inventory=inventory,
+        residents=residents,
+        assess_load=assess_load,
+    )
     state: RoleFitnessState | None = None
-    if ready and model is not None and role in FITNESS_PROBED_ROLES:
-        if text_probe is not None:
-            outcome = probe_role_fitness(role, model, settings, text_probe=text_probe)
-            if outcome is not None:
-                state, fresh_failure = _fresh_fitness_state(outcome)
-                failed = fresh_failure
-        else:
-            digest = next(
-                (entry.digest for entry in inventory or () if runtime_model_names_match(model, entry.name)),
-                None,
-            )
-            state = recorded_role_fitness(role, model, digest, settings)
-            if state is not None and state is not RoleFitnessState.FIT:
-                failed = _FITNESS_FAILURE[state].value
+    failure = runtime.failed_condition_id
+    ready = runtime.ready
+    if ready and runtime.model is not None and role in FITNESS_PROBED_ROLES:
+        fitness = _current_role_fitness(
+            role,
+            runtime.model,
+            settings=settings,
+            inventory=inventory,
+            text_probe=text_probe,
+        )
+        if fitness is not None:
+            state, failure = fitness
         if state is not None and state is not RoleFitnessState.FIT:
             ready = False
     fit = None if state is None or state is RoleFitnessState.NOT_VERIFIED else state is RoleFitnessState.FIT
     return LocalReaderRoleStatus(
         role=role,
-        model=model,
-        installed=installed,
-        resident=resident,
-        load_admitted=admitted,
-        contention_causes=causes,
+        model=runtime.model,
+        installed=runtime.installed,
+        resident=runtime.resident,
+        load_admitted=runtime.load_admitted,
+        contention_causes=runtime.contention_causes,
         fitness=state,
         fit_for_role=fit,
         ready=ready,
-        failed_condition_id=failed,
+        failed_condition_id=failure,
     )
+
+
+def _runtime_models(
+    settings: Settings,
+    *,
+    reachable: bool,
+) -> tuple[tuple[InstalledModel, ...] | None, tuple[RuntimeResident, ...] | None]:
+    if not reachable:
+        return None, None
+    return read_installed_models(settings), read_runtime_residents(settings)
+
+
+def _include_extraction_roles(
+    by_role: dict[ModelRole, LocalReaderRoleStatus],
+    *,
+    settings: Settings,
+    inventory: tuple[InstalledModel, ...] | None,
+    residents: tuple[RuntimeResident, ...] | None,
+    text_probe: TextExtractionFitnessProbe | None,
+) -> None:
+    for role in EXTRACTION_READER_ROLES:
+        if role in by_role:
+            continue
+        by_role[role] = _role_status(
+            role,
+            settings=settings,
+            inventory=inventory,
+            residents=residents,
+            assess_load=False,
+            text_probe=text_probe,
+        )
 
 
 def read_local_reader_status(
@@ -617,9 +739,8 @@ def read_local_reader_status(
     """
     resolved = settings if settings is not None else load_settings()
     host = probe_runtime_host(resolved) if which is None else probe_runtime_host(resolved, which=which)
-    inventory = read_installed_models(resolved) if host.reachable else None
-    residents = read_runtime_residents(resolved) if host.reachable else None
-    selected_roles = tuple(ModelRole) if roles is None else tuple(roles)
+    inventory, residents = _runtime_models(resolved, reachable=host.reachable)
+    selected_roles = _selected_roles(roles)
     role_rows = tuple(
         _role_status(
             role,
@@ -632,16 +753,13 @@ def read_local_reader_status(
         for role in selected_roles
     )
     by_role = {row.role: row for row in role_rows}
-    for role in EXTRACTION_READER_ROLES:
-        if role not in by_role:
-            by_role[role] = _role_status(
-                role,
-                settings=resolved,
-                inventory=inventory,
-                residents=residents,
-                assess_load=False,
-                text_probe=text_probe,
-            )
+    _include_extraction_roles(
+        by_role,
+        settings=resolved,
+        inventory=inventory,
+        residents=residents,
+        text_probe=text_probe,
+    )
     extraction_ready = host.reachable and all(by_role[role].ready for role in EXTRACTION_READER_ROLES)
     text_row = by_role[ModelRole.TEXT_EXTRACTION]
     return LocalReaderStatus(

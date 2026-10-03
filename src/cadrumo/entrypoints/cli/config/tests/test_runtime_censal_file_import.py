@@ -22,7 +22,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.config import runtime_censal_file_import
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli.runtime_registered_operation import RegisteredOperationCompletion
+from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE_ID = UUID("bb000000-0000-4000-8000-0000000000bb")

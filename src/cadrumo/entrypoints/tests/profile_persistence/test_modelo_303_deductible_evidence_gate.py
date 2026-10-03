@@ -176,6 +176,7 @@ def _verification_ports(
 
 def _filing_ports(
     *,
+    operation: PinnedAuthorityOperation,
     wu_repo: WorkUnitCatalogueRepository,
     cr_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -184,7 +185,7 @@ def _filing_ports(
 ) -> FilingActionPorts:
     """Compose the complete filing bundle over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=filing_repo,
@@ -784,6 +785,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 actor="operator",
                 workflow_profile=workflow_profile(),
                 ports=_filing_ports(
+                    operation=operation,
                     wu_repo=wu_repo,
                     cr_repo=cr_repo,
                     filing_repo=filing_repo,
@@ -1030,6 +1032,7 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
             actor="operator",
             workflow_profile=workflow_profile(),
             ports=_filing_ports(
+                operation=operation,
                 wu_repo=wu_repo,
                 cr_repo=cr_repo,
                 filing_repo=filing_repo,

@@ -8,16 +8,15 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .dependency_contract import requirement_name, wheel_metadata
 from .lane_verification_core import (
     install_wheel,
     relative_manifest_path,
     require_executable,
-    requirement_name,
     resolve_work_dir,
     run_checked,
     run_checked_marker,
     venv_python_path,
-    wheel_metadata,
     write_smoke_manifest,
 )
 from .proof_ledger import record_proof

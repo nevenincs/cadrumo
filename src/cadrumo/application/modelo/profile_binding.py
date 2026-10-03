@@ -51,7 +51,7 @@ from pydantic import BaseModel
 from ...core.aggregation import BindingSourceKind, BindingTypedEnumKind, CalculationSourceLineageRole
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.hashing import sha256_hex
+from ...core.hashing import prefixed_digest
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -59,7 +59,9 @@ from ...domain.calculations.registry.binding_value_contract import BindingValueC
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.iva_schema_vocabulary import m303_tax_territory_state_attribution_ratio
+from ...domain.calculations.registry.m303_schema_vocabulary import (
+    m303_tax_territory_state_attribution_ratio,
+)
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.rental_reduction import require_rental_reduction_art232_tier
 from ...domain.calculations.registry.runtime_graph import (
@@ -168,8 +170,7 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     if profile_record is None:
         return None
     payload = profile_record.model_dump_json() if isinstance(profile_record, BaseModel) else repr(profile_record)
-    digest = sha256_hex(payload.encode(UTF_8_ENCODING))
-    return f"sha256:{digest}"
+    return prefixed_digest(payload.encode(UTF_8_ENCODING))
 
 
 def inject_ordinary_work_maritime_facts(fact_index: dict[str, UserProfileFactValue]) -> None:

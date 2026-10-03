@@ -302,7 +302,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
                 workflow_profile=_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 ports=replace(
-                    build_filing_action_ports(bucket_id=bucket_id),
+                    build_filing_action_ports(bucket_id=bucket_id, operation=operation),
                     work_unit_repository=WorkUnitCatalogueRepository(),
                     calculation_repository=CalculationRevisionCatalogueRepository(),
                     filing_repository=ModeloRecordCatalogueRepository(),

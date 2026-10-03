@@ -25,7 +25,6 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosurePermission,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.access_policy import operation_scope_refusal
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalFieldIntent,
@@ -36,6 +35,7 @@ from cadrumo.application.user_profile.censal_operation import (
     build_censal_operation_registration,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

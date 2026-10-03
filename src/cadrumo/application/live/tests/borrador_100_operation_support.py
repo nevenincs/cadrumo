@@ -40,7 +40,7 @@ from ...user_profile.access_contracts import (
     SessionState,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.access_policy import evaluate_operation_access
+from ...user_profile.operation_access_policy import evaluate_operation_access
 from ..borrador_100 import Borrador100Snapshot
 from ..borrador_100_operation_ports import (
     Borrador100ImportObservation,

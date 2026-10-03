@@ -51,6 +51,7 @@ __all__ = [
     "SourceReference",
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
+    "date_within_validity_window",
     "source_window_applies_across",
 ]
 
@@ -311,7 +312,12 @@ class RegistryValidityWindow(RegistryModel):
 
     def contains_date(self, coordinate: date) -> bool:
         """Return whether ``coordinate`` falls inside this inclusive window."""
-        return coordinate >= self.valid_from and (self.valid_to is None or coordinate <= self.valid_to)
+        return date_within_validity_window(coordinate, valid_from=self.valid_from, valid_to=self.valid_to)
+
+
+def date_within_validity_window(coordinate: date, *, valid_from: date, valid_to: date | None) -> bool:
+    """Return whether a date is in the inclusive-lower, optional-inclusive-upper window."""
+    return coordinate >= valid_from and (valid_to is None or coordinate <= valid_to)
 
 
 class RegistryTemporalBounds(RegistryModel):

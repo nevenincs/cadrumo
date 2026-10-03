@@ -27,7 +27,7 @@ from hashlib import sha256
 from itertools import pairwise
 from pathlib import Path
 from statistics import median
-from typing import Final, Protocol, runtime_checkable
+from typing import Final, Protocol, cast, runtime_checkable
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -65,6 +65,20 @@ _TEXT_RUN = re.compile(
     r'\s+x="(?P<x>[-\d.]+)"\s+y="(?P<y>[-\d.]+)"'
     r'\s+textLength="(?P<length>[\d.]+)"[^>]*>(?P<content>[^<]*)</text>',
 )
+
+
+def _terminal_background(bands: list[_Band], markup: str) -> str:
+    """Terminal background."""
+    coverage: dict[str, int] = {}
+    for band in bands:
+        coverage[band.colour] = coverage.get(band.colour, 0) + band.columns * band.rows
+    if coverage:
+        background = max(coverage.items(), key=lambda entry: entry[1])[0]
+    else:
+        chrome = _CHROME.search(markup)
+        background = chrome.group("colour") if chrome is not None else "#000000"
+    # Census keys and the named regex colour group both carry strings.
+    return cast("str", background)
 
 
 class RasterError(RuntimeError):
@@ -340,14 +354,7 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
     # every cell that carries no explicit background band show through as a
     # dark bar -- which on the light appearance reads as a mystery black
     # element that exists nowhere in the terminal.
-    coverage: dict[str, int] = {}
-    for band in bands:
-        coverage[band.colour] = coverage.get(band.colour, 0) + band.columns * band.rows
-    if coverage:
-        background = max(coverage.items(), key=lambda entry: entry[1])[0]
-    else:
-        chrome = _CHROME.search(markup)
-        background = chrome["colour"] if chrome is not None else "#000000"
+    background = _terminal_background(bands, markup)
 
     image = Image.new("RGB", (columns * cell_width, rows * cell_height), background)
     draw = ImageDraw.Draw(image)
@@ -365,34 +372,7 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
     glyph, baseline_offset, glyph_pixels = _fitted_font(cell_width, cell_height)
     missing: set[str] = set()
     for run in runs:
-        for offset, character in enumerate(run.text):
-            if not character.strip():
-                continue
-
-            # Block elements are drawn as geometry, never as glyphs. The font
-            # is sized so its ADVANCE fits the cell, which leaves every glyph
-            # a little smaller than the cell it occupies -- invisible for
-            # letters, and ruinous for the block characters that are supposed
-            # to tile seamlessly. Textual draws button edges and scrollbars
-            # out of these, so glyph-rendered blocks produced a brick-wall
-            # pattern along edges that are solid in a real terminal.
-            fraction = _BLOCK_FRACTIONS.get(character)
-            if fraction is not None:
-                _fill_block(draw, run.column + offset, run.row, cell_width, cell_height, fraction, run.colour)
-                continue
-
-            if _is_missing(glyph, glyph_pixels, character):
-                missing.add(character)
-            position = ((run.column + offset) * cell_width, run.row * cell_height + baseline_offset)
-            draw.text(position, character, font=glyph, fill=run.colour)
-            if run.bold:
-                # The pinned family ships a regular face only, so weight is
-                # synthesised the way a terminal without a bold face does it:
-                # the glyph again, one pixel across. A stroke outline was the
-                # obvious alternative and is wrong at this size -- it thickens
-                # every edge including the inside of counters, and turns small
-                # text into blobs rather than making it read as heavier.
-                draw.text((position[0] + 1, position[1]), character, font=glyph, fill=run.colour)
+        _paint_text_run(run, draw, cell_width, cell_height, glyph, baseline_offset, glyph_pixels, missing)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     image.save(destination, optimize=True)
@@ -400,3 +380,44 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
 
 
 __all__ = ["DEFAULT_CELL_HEIGHT", "FONT_PATH", "FONT_SHA256", "RasterError", "RasterResult", "rasterise"]
+
+
+def _paint_text_run(
+    run: _Run,
+    draw: ImageDraw.ImageDraw,
+    cell_width: int,
+    cell_height: int,
+    glyph: ImageFont.FreeTypeFont,
+    baseline_offset: int,
+    glyph_pixels: int,
+    missing: set[str],
+) -> None:
+    """Paint text run."""
+    for offset, character in enumerate(run.text):
+        if not character.strip():
+            continue
+
+        # Block elements are drawn as geometry, never as glyphs. The font
+        # is sized so its ADVANCE fits the cell, which leaves every glyph
+        # a little smaller than the cell it occupies -- invisible for
+        # letters, and ruinous for the block characters that are supposed
+        # to tile seamlessly. Textual draws button edges and scrollbars
+        # out of these, so glyph-rendered blocks produced a brick-wall
+        # pattern along edges that are solid in a real terminal.
+        fraction = _BLOCK_FRACTIONS.get(character)
+        if fraction is not None:
+            _fill_block(draw, run.column + offset, run.row, cell_width, cell_height, fraction, run.colour)
+            continue
+
+        if _is_missing(glyph, glyph_pixels, character):
+            missing.add(character)
+        position = ((run.column + offset) * cell_width, run.row * cell_height + baseline_offset)
+        draw.text(position, character, font=glyph, fill=run.colour)
+        if run.bold:
+            # The pinned family ships a regular face only, so weight is
+            # synthesised the way a terminal without a bold face does it:
+            # the glyph again, one pixel across. A stroke outline was the
+            # obvious alternative and is wrong at this size -- it thickens
+            # every edge including the inside of counters, and turns small
+            # text into blobs rather than making it read as heavier.
+            draw.text((position[0] + 1, position[1]), character, font=glyph, fill=run.colour)

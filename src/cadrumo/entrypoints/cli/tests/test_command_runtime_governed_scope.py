@@ -25,19 +25,17 @@ from ....domain.calculations.registry.governed_fact_scope import (
     outside_governed_fact_validation,
 )
 from .._command_runtime import GOVERNED_FACT_SCOPE_CAPABILITIES, build_command_app, runs_in_governed_fact_scope
-from ..command_spec import (
+from .._command_shared_contracts import (
     Capability,
-    CommandSpec,
-    CommandSpecGraph,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     PerformanceClass,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
 )
+from ..command_graph import CommandSpecGraph
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

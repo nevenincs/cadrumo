@@ -19,8 +19,10 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
+from ....core.hex import Hex64Str
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from .election import (
@@ -29,6 +31,8 @@ from .election import (
     AmortizationMethod,
     DigitOrder,
     LowValueElection,
+    require_euro_cents,
+    require_free_depreciation_facts,
 )
 from .errors import ActividadAssetIncompleteError, ActividadAssetUnsupportedError, ActividadAssetValidationError
 from .lifecycle import ActivityAssetRevision, AssetKind, OpeningHistoryStatus
@@ -45,7 +49,6 @@ _RATE_METHODS: frozenset[AmortizationMethod] = frozenset(
 _FROM_START_METHODS: frozenset[AmortizationMethod] = frozenset(
     {AmortizationMethod.CONSTANT_PERCENTAGE, AmortizationMethod.SUM_OF_DIGITS},
 )
-_HEX64 = r"^[0-9a-f]{64}$"
 
 type _Cumulative = Callable[[_ChargeContext, date], Decimal]
 """Exact method amortization from in-service up to a date."""
@@ -92,7 +95,7 @@ class ScheduleAuthority(BaseModel):
     tax_year: FilingYear
     asset_kind: AssetKind
     method: AmortizationMethod
-    election_fingerprint: str = Field(pattern=_HEX64)
+    election_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     annual_rate: Decimal | None = None
@@ -122,9 +125,9 @@ class ScheduleAuthority(BaseModel):
     )
     @classmethod
     def _require_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)):
-            raise ValueError("schedule authority amounts must be positive Decimal amounts rounded to euro cents")
-        return value
+        if value is None:
+            return value
+        return require_euro_cents(value, allow_zero=False, label="schedule authority amount")
 
     @model_validator(mode="after")
     def _validate_method_shape(self) -> Self:
@@ -163,14 +166,14 @@ class ScheduledAmortizationCharge(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    asset_revision_id: str = Field(pattern=_HEX64)
+    asset_revision_id: Hex64Str
     tax_year: FilingYear
     covered_from: date
     covered_until: date
     service_days: int = Field(ge=0)
     calendar_days: int = Field(ge=365, le=366)
     amount: Decimal
-    schedule_fingerprint: str = Field(pattern=_HEX64)
+    schedule_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
@@ -182,18 +185,14 @@ class ScheduledAmortizationCharge(BaseModel):
     @field_validator("amount")
     @classmethod
     def _require_cents_amount(cls, value: Decimal) -> Decimal:
-        if not value.is_finite() or value < Decimal("0") or value != round_to_cents(value):
-            raise ValueError("amount must be a non-negative Decimal rounded to euro cents")
-        return value
+        return require_euro_cents(value, allow_zero=True)
 
     @field_validator("free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
     @classmethod
     def _require_optional_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)):
-            raise ValueError(
-                "free-depreciation schedule amounts must be positive Decimal amounts rounded to euro cents",
-            )
-        return value
+        if value is None:
+            return value
+        return require_euro_cents(value, allow_zero=False, label="free-depreciation schedule amount")
 
     @model_validator(mode="after")
     def _validate_interval(self) -> Self:
@@ -201,17 +200,16 @@ class ScheduledAmortizationCharge(BaseModel):
             raise ValueError("covered_until must be after covered_from")
         if self.calendar_days != calendar_days_in_tax_year(self.tax_year):
             raise ValueError("calendar_days must match the tax year's actual day count")
-        low_value_facts = (
-            self.free_depreciation_election_reference,
-            self.free_depreciation_new_material_evidence_reference,
-            self.free_depreciation_unit_acquisition_value,
-            self.free_depreciation_annual_cap,
+        require_free_depreciation_facts(
+            self.method,
+            (
+                self.free_depreciation_election_reference,
+                self.free_depreciation_new_material_evidence_reference,
+                self.free_depreciation_unit_acquisition_value,
+                self.free_depreciation_annual_cap,
+            ),
+            subject="schedule",
         )
-        if self.method is AmortizationMethod.LOW_VALUE_FREE:
-            if any(value is None for value in low_value_facts):
-                raise ValueError("free-depreciation schedule requires election and annual-cap provenance")
-        elif any(value is not None for value in low_value_facts):
-            raise ValueError("only the low-value method carries free-depreciation election facts")
         return self
 
 
@@ -225,37 +223,25 @@ def schedule_charge(
     requested_free_amount: Decimal | None = None,
 ) -> ScheduledAmortizationCharge:
     """Forecast a filing-grade cents charge for a half-open covered interval."""
-    if authority.asset_kind is not revision.asset_kind:
-        raise ActividadAssetValidationError("schedule authority asset kind does not match asset revision")
-    if authority.election_fingerprint != revision.amortization.fingerprint:
-        raise ActividadAssetValidationError("schedule authority was resolved for a different amortization election")
-    if revision.opening_history.status is OpeningHistoryStatus.MISSING:
-        raise ActividadAssetIncompleteError("opening amortization history is missing")
-    if covered_until <= covered_from:
-        raise ActividadAssetValidationError("covered interval must be half-open and non-empty")
-    require_method_continuity(authority.method, authority.election_fingerprint, history)
-    require_opening_method(revision, authority.method)
-    _require_free_amount_shape(authority.method, requested_free_amount)
-
+    _validate_charge_scope(
+        revision,
+        authority,
+        covered_from=covered_from,
+        covered_until=covered_until,
+        history=history,
+        requested_free_amount=requested_free_amount,
+    )
     year_start = date(authority.tax_year, 1, 1)
     year_end = date(authority.tax_year + 1, 1, 1)
-    if not year_start <= covered_from < covered_until <= year_end:
-        raise ActividadAssetValidationError("covered interval must stay inside the authority's tax year")
-    opening_amount = revision.opening_history.accumulated_amount
-    if opening_amount is None:  # defensive: status validation proves unreachable
-        raise ActividadAssetIncompleteError("known opening amortization history lacks an amount")
-    amortizable_basis = revision.amortizable_basis()
-    pending_at_year_start = amortizable_basis - opening_amount - history.accumulated_before_tax_year
-    remaining_base = pending_at_year_start - history.accumulated_in_tax_year
-    if remaining_base < Decimal("0"):
-        raise ActividadAssetValidationError("opening and effective claims exceed the lawful amortizable basis")
-
-    window_start = max(revision.in_service_date, year_start)
-    window_end = min(revision.out_of_service_date or year_end, year_end, _amortization_end(revision, authority))
-    interval_start = max(covered_from, window_start)
-    interval_end = min(covered_until, window_end)
-    if interval_end <= interval_start:
-        raise ActividadAssetUnsupportedError("covered interval has no amortizable in-service days in the tax year")
+    opening_amount, amortizable_basis, pending_at_year_start, remaining_base = _charge_bases(revision, history)
+    interval_start, interval_end = _charge_interval(
+        revision,
+        authority,
+        covered_from=covered_from,
+        covered_until=covered_until,
+        year_start=year_start,
+        year_end=year_end,
+    )
 
     context = _ChargeContext(
         revision=revision,
@@ -317,6 +303,65 @@ class _ChargeContext:
     interval_end: date
 
 
+def _validate_charge_scope(
+    revision: ActivityAssetRevision,
+    authority: ScheduleAuthority,
+    *,
+    covered_from: date,
+    covered_until: date,
+    history: AssetScheduleHistory,
+    requested_free_amount: Decimal | None,
+) -> None:
+    if authority.asset_kind is not revision.asset_kind:
+        raise ActividadAssetValidationError("schedule authority asset kind does not match asset revision")
+    if authority.election_fingerprint != revision.amortization.fingerprint:
+        raise ActividadAssetValidationError("schedule authority was resolved for a different amortization election")
+    if revision.opening_history.status is OpeningHistoryStatus.MISSING:
+        raise ActividadAssetIncompleteError("opening amortization history is missing")
+    if covered_until <= covered_from:
+        raise ActividadAssetValidationError("covered interval must be half-open and non-empty")
+    require_method_continuity(authority.method, authority.election_fingerprint, history)
+    require_opening_method(revision, authority.method)
+    _require_free_amount_shape(authority.method, requested_free_amount)
+    year_start = date(authority.tax_year, 1, 1)
+    year_end = date(authority.tax_year + 1, 1, 1)
+    if not year_start <= covered_from < covered_until <= year_end:
+        raise ActividadAssetValidationError("covered interval must stay inside the authority's tax year")
+
+
+def _charge_bases(
+    revision: ActivityAssetRevision,
+    history: AssetScheduleHistory,
+) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+    opening_amount = revision.opening_history.accumulated_amount
+    if opening_amount is None:  # defensive: status validation proves unreachable
+        raise ActividadAssetIncompleteError("known opening amortization history lacks an amount")
+    amortizable_basis = revision.amortizable_basis()
+    pending_at_year_start = amortizable_basis - opening_amount - history.accumulated_before_tax_year
+    remaining_base = pending_at_year_start - history.accumulated_in_tax_year
+    if remaining_base < Decimal("0"):
+        raise ActividadAssetValidationError("opening and effective claims exceed the lawful amortizable basis")
+    return opening_amount, amortizable_basis, pending_at_year_start, remaining_base
+
+
+def _charge_interval(
+    revision: ActivityAssetRevision,
+    authority: ScheduleAuthority,
+    *,
+    covered_from: date,
+    covered_until: date,
+    year_start: date,
+    year_end: date,
+) -> tuple[date, date]:
+    window_start = max(revision.in_service_date, year_start)
+    window_end = min(revision.out_of_service_date or year_end, year_end, _amortization_end(revision, authority))
+    interval_start = max(covered_from, window_start)
+    interval_end = min(covered_until, window_end)
+    if interval_end <= interval_start:
+        raise ActividadAssetUnsupportedError("covered interval has no amortizable in-service days in the tax year")
+    return interval_start, interval_end
+
+
 def require_method_continuity(
     method: AmortizationMethod,
     election_fingerprint: str,
@@ -356,6 +401,25 @@ def require_opening_method(revision: ActivityAssetRevision, method: Amortization
             "a non-zero opening amount must attest the same from-start method before constant percentage or "
             "sum of digits can continue it (RIS arts. 5.1 and 6.1)",
         )
+
+
+def parse_requested_free_amount(raw: str | None) -> Decimal | None:
+    """Read an operator-typed elected free-depreciation amount.
+
+    ``None`` elects no amount; whether a blank form field means ``None`` is the
+    frontend's decision. Present text must follow the canonical decimal grammar;
+    sign and cent precision stay with the schedule's own shape check, so every
+    frontend reports them the same way.
+
+    Raises:
+        ActividadAssetValidationError: When present text is not a canonical decimal.
+    """
+    if raw is None:
+        return None
+    parsed = try_parse_canonical_decimal(raw)
+    if parsed is None:
+        raise ActividadAssetValidationError("free-depreciation amount must be a decimal euro amount")
+    return parsed
 
 
 def _require_free_amount_shape(method: AmortizationMethod, requested_free_amount: Decimal | None) -> None:

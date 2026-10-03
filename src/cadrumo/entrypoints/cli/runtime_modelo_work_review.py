@@ -13,15 +13,12 @@ from ...application.modelo.work_review_operation import (
     ModeloWorkReviewRequest,
     ModeloWorkReviewSnapshot,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.modelos.work_unit import WorkUnit
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,23 +44,27 @@ def read_modelo_work_review(ctx: typer.Context, *, unit: WorkUnit) -> ModeloWork
     )
     projection = completed.projection
     review = projection.review
-    if (
-        projection.profile_id != client.profile_id
-        or review.bucket_id != unit.bucket_id
-        or review.work_unit_id != unit.work_unit_id
-        or review.modelo != str(unit.modelo)
-        or review.filing_year != unit.filing_year
-        or review.period.to_period() != unit.period
-        or review.registry_revision_id != unit.revision_id
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.NONE
-    ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+    if _work_review_receipt_invalid(completed, projection, unit, client.profile_id):
+        raise invalid_completion_error(completed)
     return ModeloWorkReviewed(completion=completed, review=review)
+
+
+def _work_review_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloWorkReviewProjection],
+    projection: ModeloWorkReviewProjection,
+    unit: WorkUnit,
+    profile_id: UUID,
+) -> bool:
+    """Require the selected work snapshot before accepting the read receipt."""
+    return (
+        projection.profile_id != profile_id
+        or projection.review.bucket_id != unit.bucket_id
+        or projection.review.work_unit_id != unit.work_unit_id
+        or (projection.review.modelo != str(unit.modelo))
+        or (projection.review.filing_year != unit.filing_year)
+        or (projection.review.period.to_period() != unit.period)
+        or (projection.review.registry_revision_id != unit.revision_id)
+        or (completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
+        or (completed.refusal_code is not None)
+        or (completed.effect is not OperationEffect.NONE)
+    )

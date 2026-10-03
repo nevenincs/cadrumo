@@ -13,22 +13,17 @@ from pydantic import BaseModel, Field, NonNegativeInt, ValidationError, model_va
 from ...core.aggregation import BindingSourceKind
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.invoices.models import InvoiceCatalogue
 from ..aggregation.invoice_retencion import (
+    InvoiceRetencionProjectionDefect,
     InvoiceWithholdingCapture,
+    InvoiceWithholdingDefectsError,
     InvoiceWithholdingEvidenceError,
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
@@ -58,22 +53,15 @@ from ..invoices.catalogue_lifecycle import resolve_catalogue_invoice
 from ..invoices.catalogue_selection import InvoiceLookupRefusedError
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -84,6 +72,10 @@ from .invoice_withholding_capture_public import PublicInvoiceWithholdingCommand,
 
 MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID = "modelo.aggregate.capture_received_invoice_retencion"
 MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE = "REFUSED_INVOICE_WITHHOLDING_EVIDENCE"
+MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE = "REFUSED_INVOICE_WITHHOLDING_DEFECTS"
+MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES = frozenset(
+    {MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE, MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE}
+)
 
 _PREPARE_PHASE = "modelo-invoice-withholding-capture.prepare"
 _COMMIT_PHASE = "modelo-invoice-withholding-capture.commit"
@@ -163,7 +155,7 @@ class ModeloInvoiceWithholdingWindowBaseline(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     scope_token: str = Field(min_length=1, max_length=256)
-    generation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    generation_id: Hex64Str
 
 
 class ModeloInvoiceWithholdingGenerationAudit(BaseModel):
@@ -171,7 +163,7 @@ class ModeloInvoiceWithholdingGenerationAudit(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    parent_generation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    parent_generation_id: Hex64Str
     mode: WithholdingMutationMode
     supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
 
@@ -187,7 +179,12 @@ class ModeloInvoiceWithholdingWindow(BaseModel):
 
 
 class ModeloInvoiceWithholdingCaptureProjection(BaseModel):
-    """Closed CLI-safe aggregate summary or bounded refusal outcome."""
+    """Closed CLI-safe aggregate summary or bounded refusal outcome.
+
+    ``refusal_defects`` names every defect that keeps the invoice's retención
+    out of capture, as stable untranslated tokens in the projection's sweep
+    order; a frontend renders their explanations in the operator's language.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -201,6 +198,11 @@ class ModeloInvoiceWithholdingCaptureProjection(BaseModel):
     result_row_count: NonNegativeInt | None = None
     withholding_window: ModeloInvoiceWithholdingWindow | None = None
     refusal_reason: _SAFE_REFUSAL_REASON | None = None
+    refusal_defects: tuple[InvoiceRetencionProjectionDefect, ...] | None = Field(
+        default=None,
+        min_length=1,
+        max_length=len(InvoiceRetencionProjectionDefect),
+    )
 
     @model_validator(mode="after")
     def _outcome_shape(self) -> Self:
@@ -212,11 +214,26 @@ class ModeloInvoiceWithholdingCaptureProjection(BaseModel):
             self.withholding_window,
         )
         if self.outcome == "captured":
-            if self.refusal_reason is not None or any(value is None for value in captured_fields):
+            if (
+                self.refusal_reason is not None
+                or self.refusal_defects is not None
+                or any(value is None for value in captured_fields)
+            ):
                 raise ValueError("captured result requires aggregate and withholding-window summary fields")
         elif self.refusal_reason is None or any(value is not None for value in captured_fields):
             raise ValueError("refused result requires only a bounded refusal reason")
+        elif self.refusal_defects is not None and len(set(self.refusal_defects)) != len(self.refusal_defects):
+            raise ValueError("refused result repeats an invoice withholding defect")
         return self
+
+    @property
+    def refusal_code(self) -> str | None:
+        """Return the registered refusal code this refused outcome settles under."""
+        if self.outcome != "refused":
+            return None
+        if self.refusal_defects is not None:
+            return MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE
+        return MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE
 
 
 class ModeloInvoiceWithholdingCaptureReport(BaseModel):
@@ -274,11 +291,15 @@ def _bounded_reason(error: Exception) -> str:
     return candidate
 
 
+_DEFECTS_REFUSAL_REASON = "invoice_withholding_defects"
+
+
 def _capture_refusal(
     *,
     profile_id: UUID,
     command: PublicInvoiceWithholdingCommand,
     reason: str,
+    defects: tuple[InvoiceRetencionProjectionDefect, ...] | None = None,
 ) -> ModeloInvoiceWithholdingCaptureProjection:
     return ModeloInvoiceWithholdingCaptureProjection(
         outcome="refused",
@@ -286,6 +307,7 @@ def _capture_refusal(
         modelo=command.modelo,
         period=command.period,
         refusal_reason=reason,
+        refusal_defects=defects,
     )
 
 
@@ -311,17 +333,12 @@ def project_modelo_invoice_withholding_capture_result(
             report.local_write_performed
             or receipt.condition is not OperationTerminalCondition.REFUSED
             or receipt.effect is not OperationEffect.NONE
-            or receipt.refusal_ref != MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE
+            or receipt.refusal_ref != projection.refusal_code
             or receipt.refusal_detail_ref is None
-            or receipt.result_ref is not None
         ):
             raise ValueError("invoice-withholding refusal contradicts its terminal receipt")
-    elif (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.effect is not (OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE)
+    elif receipt.condition is not OperationTerminalCondition.SUCCEEDED or receipt.effect is not (
+        OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE
     ):
         raise ValueError("invoice-withholding capture contradicts its terminal receipt")
     if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
@@ -344,20 +361,16 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         """Capture one allocation and publish only its bounded aggregate summary."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PREPARE_PHASE)
         operation = context.authority_operation
         try:
             prepared = await asyncio.to_thread(self._prepare, payload, profile_id, operation)
+        except InvoiceWithholdingDefectsError as error:
+            return await self._refuse(payload, context, _DEFECTS_REFUSAL_REASON, defects=error.defects)
         except (
             InvoiceLookupRefusedError,
             InvoiceWithholdingEvidenceError,
@@ -507,32 +520,35 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
         reason: str,
+        *,
+        defects: tuple[InvoiceRetencionProjectionDefect, ...] | None = None,
     ) -> OperationRefusalEvidence:
         async with context.cancellation.irreversible_section():
             if require_active_bucket_id() != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             await context.events.effect(OperationEffect.NONE)
-            return await self._record_refusal(payload, context, reason)
+            return await self._record_refusal(payload, context, reason, defects=defects)
 
     async def _record_refusal(
         self,
         payload: ModeloInvoiceWithholdingCaptureRequest,
         context: OperationExecutorContext,
         reason: str,
+        *,
+        defects: tuple[InvoiceRetencionProjectionDefect, ...] | None = None,
     ) -> OperationRefusalEvidence:
-        detail = ModeloInvoiceWithholdingCaptureReport(
-            projection=_capture_refusal(
-                profile_id=payload.profile_id,
-                command=payload.command,
-                reason=reason,
-            ),
-            local_write_performed=False,
+        projection = _capture_refusal(
+            profile_id=payload.profile_id,
+            command=payload.command,
+            reason=reason,
+            defects=defects,
         )
+        detail = ModeloInvoiceWithholdingCaptureReport(projection=projection, local_write_performed=False)
         detail_ref = await context.operands.put(detail, written_at=now())
-        return OperationRefusalEvidence(
-            refusal_code=MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE,
-            detail_ref=detail_ref,
-        )
+        refusal_code = projection.refusal_code
+        if refusal_code is None:
+            raise AssertionError("a refused projection always settles under a registered refusal code")
+        return OperationRefusalEvidence(refusal_code=refusal_code, detail_ref=detail_ref)
 
 
 @dataclass(frozen=True, slots=True)
@@ -558,28 +574,10 @@ def build_modelo_invoice_withholding_capture_definition(
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {
-                OperationFrontendProjection.CLI,
-                OperationFrontendProjection.TUI,
-                OperationFrontendProjection.MCP,
-            }
-        ),
-        refusal_detail_codes=frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        refusal_detail_codes=MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES,
     )
 
 
@@ -623,7 +621,7 @@ def build_modelo_invoice_withholding_capture_registration(
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=definition.definition_id + ".result",
-            schema_version=1,
+            schema_version=2,
             model_type=ModeloInvoiceWithholdingCaptureProjection,
         ),
         result_projector=project_modelo_invoice_withholding_capture_result,
@@ -634,6 +632,8 @@ def build_modelo_invoice_withholding_capture_registration(
 __all__ = [
     "MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID",
     "MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE",
+    "MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES",
+    "MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE",
     "ModeloInvoiceWithholdingCaptureExecutor",
     "ModeloInvoiceWithholdingCapturePorts",
     "ModeloInvoiceWithholdingCapturePortsFactory",

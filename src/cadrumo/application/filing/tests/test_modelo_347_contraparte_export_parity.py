@@ -31,7 +31,11 @@ from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
+from ....domain.calculations.registry.invoice_bindings import (
+    InvoiceObservation,
+    resolve_invoice_binding_row_values,
+    resolve_invoice_binding_values,
+)
 from ....domain.calculations.registry.m347_threshold import (
     m347_threshold_decimal,
     resolve_m347_clave_c_declaration_threshold,
@@ -473,3 +477,68 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
 
     assert set(countries_by_row.values()) == {"ES", "US"}
     assert len(countries_by_row) == 2, "each counterparty must resolve its OWN pais-codigo row"
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_id: str) -> None:
+    """Type 1 positions 136-144 and 145-160 summarise the type 2 records actually emitted.
+
+    Both designs: the count is the number of declarado records, a declarado
+    counted once per record it appears in, and the amount is the signed sum of
+    those records' annual amounts. One counterparty with a sale and a purchase
+    is two records; a clave C beneficiary above its own lower floor is one; a
+    counterparty under the general floor emits nothing and adds nothing.
+    """
+    revision = _revision(revision_id)
+    above_general = (_m347_threshold() + Decimal("1000.00")).quantize(Decimal("0.01"))
+    above_clave_c = (_m347_clave_c_threshold() + Decimal("50.00")).quantize(Decimal("0.01"))
+    observations = (
+        _observation(
+            invoice_id="sale",
+            party_tax_id="B11111112",
+            party_legal_name="Contraparte Uno SL",
+            transaction_date=date(2025, 3, 1),
+            total=str(above_general),
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+        _observation(
+            invoice_id="purchase",
+            party_tax_id="B11111112",
+            party_legal_name="Contraparte Uno SL",
+            transaction_date=date(2025, 6, 1),
+            total="200.00",
+            operation_clave="A",
+        ),
+        _observation(
+            invoice_id="collection",
+            party_tax_id="A22222224",
+            party_legal_name="Beneficiario Dos SA",
+            transaction_date=date(2025, 9, 1),
+            total=str(above_clave_c),
+            operation_clave="C",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+        _observation(
+            invoice_id="below",
+            party_tax_id="B33333336",
+            party_legal_name="Contraparte Tres SL",
+            transaction_date=date(2025, 10, 1),
+            total="1000.00",
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+    )
+
+    totals = resolve_invoice_binding_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
+    importe_binding = next(bid for (bid, _row) in rows if bid.endswith("-row-importe"))
+    emitted = [value for (bid, _row), value in rows.items() if bid == importe_binding]
+    assert all(isinstance(value, Decimal) for value in emitted)
+
+    assert len(emitted) == 3
+    assert totals["modelo-347-declarante-numero-personas-entidades"] == Decimal(len(emitted))
+    assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == sum(emitted, Decimal("0"))
+    assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == (
+        above_general + Decimal("200.00") + above_clave_c
+    )

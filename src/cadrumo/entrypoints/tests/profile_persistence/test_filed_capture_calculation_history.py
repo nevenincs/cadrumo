@@ -1078,7 +1078,11 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert history.source_observation_key == f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}"
 
         listed = list_iva_compensation_history(
-            ports=compose_live_state(output_root=tmp_path, bucket_id=_SESSION_BUCKET_ID).iva_remote_state_port,
+            ports=compose_live_state(
+                output_root=tmp_path,
+                bucket_id=_SESSION_BUCKET_ID,
+                operation=_FILED_OPERATION_STACK.enter_context(bundled_indexed_authority().operation()),
+            ).iva_remote_state_port,
         )
         assert listed.row_count == 1
         assert not hasattr(listed.rows[0], "taxpayer_nif")
@@ -1173,7 +1177,11 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
             ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
         history = list_iva_compensation_history(
-            ports=compose_live_state(output_root=tmp_path, bucket_id=_SESSION_BUCKET_ID).iva_remote_state_port,
+            ports=compose_live_state(
+                output_root=tmp_path,
+                bucket_id=_SESSION_BUCKET_ID,
+                operation=_FILED_OPERATION_STACK.enter_context(bundled_indexed_authority().operation()),
+            ).iva_remote_state_port,
             as_of_year=2026,
         )
 

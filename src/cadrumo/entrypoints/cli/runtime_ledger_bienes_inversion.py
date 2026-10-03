@@ -21,7 +21,6 @@ from ...application.bienes_inversion.registered_operation import (
     BienInversionRecordProjection,
 )
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._bienes_inversion_payloads import (
@@ -31,12 +30,10 @@ from ._bienes_inversion_payloads import (
     BienInversionRecordPayload,
 )
 from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
@@ -68,24 +65,8 @@ def _run[ProjectionT: BaseModel](
     )
     projection_profile_id = getattr(completed.projection, "profile_id", None)
     if projection_profile_id != client.profile_id:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return completed
-
-
-def _invalid_result[ResultT: BaseModel](completed: RegisteredOperationCompletion[ResultT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _raise_refusal(
@@ -97,7 +78,7 @@ def _raise_refusal(
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code != refusal.code
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     context = {
         "operation_id": str(completed.operation_id),
         "terminal_condition": completed.terminal_condition.value,
@@ -116,7 +97,7 @@ def _raise_refusal(
     elif refusal.code == BIENES_INVERSION_VALIDATION_REFUSAL_CODE:
         message = "errors.refused.refused_profile_bienes_inversion_validation"
     else:
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     raise CliRefusedBoundaryError(translated_message=message, context=context)
 
 
@@ -159,7 +140,7 @@ def read_bienes_inversion_register(
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code is not None
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     result = BienesInversionListResult(
         bucket_id=str(profile_id),
         rows=[_record_payload(row) for row in projection.rows],
@@ -209,7 +190,7 @@ def declare_bien_inversion(
     projection = completed.projection
     if projection.outcome == "refused":
         if projection.refusal is None:
-            _invalid_result(completed)
+            raise invalid_completion_error(completed)
         _raise_refusal(completed, projection.refusal)
     if (
         projection.outcome != "declared"
@@ -219,7 +200,7 @@ def declare_bien_inversion(
         or completed.effect is not OperationEffect.UPDATED
         or completed.refusal_code is not None
     ):
-        _invalid_result(completed)
+        raise invalid_completion_error(completed)
     result = BienesInversionDeclareResult(
         bucket_id=str(profile_id),
         record=_record_payload(projection.record),

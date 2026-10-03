@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import math
 import time
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from uuid import UUID, uuid4
-
-from pydantic import ValidationError
 
 from ...application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
@@ -29,6 +26,7 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationId
 from ...application.operations.registry import OperationPublicDefinitionContractV1
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import bounded_deadline_after, remaining_budget
 from ...application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationControl,
@@ -36,8 +34,6 @@ from ...application.runtime.operation_access import (
     RuntimeOperationObserved,
     RuntimeOperationProjected,
     RuntimeOperationResult,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
 )
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode
@@ -49,7 +45,8 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError, frontend_failure_code
+from .operation_settlement import PinnedConnection, submit_operation
 from .profile_mutations import ProfileMutationRunError
 
 
@@ -65,13 +62,6 @@ def _wipe_buffers(buffers: tuple[object, ...]) -> None:
     for buffer in buffers:
         if isinstance(buffer, bytearray):
             buffer[:] = bytes(len(buffer))
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
 
 
 def _secret_document(current: bytearray, replacement: bytearray, confirmation: bytearray) -> bytearray:
@@ -99,7 +89,7 @@ def _observe(
     *,
     deadline: float,
 ) -> OperationObservationSuccessV1:
-    _remaining(deadline)
+    remaining_budget(deadline)
     reply = client.operation(
         RuntimeOperationObserve(
             request_id=uuid4(),
@@ -146,7 +136,7 @@ def _settled(
             if projection.effect is not OperationEffect.UPDATED:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             return observed
-        time.sleep(min(0.02, _remaining(deadline)))
+        time.sleep(min(0.02, remaining_budget(deadline)))
 
 
 def _fresh_result(
@@ -207,7 +197,7 @@ def _read_with_replacement(
     deadline: float,
 ) -> ProfilePassphraseRotationOutcome:
     while True:
-        _remaining(deadline)
+        remaining_budget(deadline)
         reader = fresh_client()
         if reader is original:
             raise RuntimeFrontendRefusedError(AccessDenialCode.CONNECTION_MISMATCH.value)
@@ -215,7 +205,7 @@ def _read_with_replacement(
             if reader.profile_id != original.profile_id or reader.frontend is not original.frontend:
                 raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
             try:
-                reader.login_password(bytearray(replacement), timeout=min(20.0, _remaining(deadline)))
+                reader.login_password(bytearray(replacement), timeout=min(20.0, remaining_budget(deadline)))
             except RuntimeFrontendRefusedError as error:
                 # Only an old host still retiring may defer fresh admission.
                 # A rejected password is never retried or treated as success.
@@ -225,7 +215,7 @@ def _read_with_replacement(
                 if reader.session_id == original_session:
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 return _fresh_result(reader, operation_id, contract, deadline=deadline)
-        time.sleep(min(0.05, _remaining(deadline)))
+        time.sleep(min(0.05, remaining_budget(deadline)))
 
 
 def run_profile_password_rotation(
@@ -248,9 +238,7 @@ def run_profile_password_rotation(
     try:
         if not all(isinstance(value, bytearray) for value in buffers):
             raise TypeError("password rotation requires mutable credential buffers")
-        if not math.isfinite(timeout) or not 0 < timeout <= 120:
-            raise ValueError("password rotation timeout must be finite and at most 120 seconds")
-        deadline = time.monotonic() + timeout
+        deadline = bounded_deadline_after(timeout, subject="password rotation")
         contract = client.contract(PROFILE_ROTATION_OPERATION_DEFINITION_ID, deadline=deadline)
         if (
             contract.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
@@ -258,22 +246,17 @@ def run_profile_password_rotation(
             or contract.result_schema.schema_id != PROFILE_ROTATION_RESULT_SCHEMA_ID
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        original_session = client.session_id
+        pinned = PinnedConnection.of(client)
+        original_session = pinned.session_id
         payload = ProfilePassphraseRotationOperationRequest(profile_id=client.profile_id)
-        submitted = client.operation(
-            RuntimeOperationSubmit(
-                request_id=uuid4(),
-                profile_id=client.profile_id,
-                session_id=original_session,
-                definition_id=contract.definition_id,
-                subject_ref=profile_operation_subject(str(client.profile_id)),
-                payload_json=payload.model_dump_json(),
-                idempotency_key=None,
-            ),
+        submitted = submit_operation(
+            client,
+            pinned,
+            definition_id=contract.definition_id,
+            subject_ref=profile_operation_subject(str(client.profile_id)),
+            payload_json=payload.model_dump_json(),
             deadline=deadline,
         )
-        if not isinstance(submitted, RuntimeOperationSubmitted):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         operation_id = submitted.receipt.operation_id
         requirement = submitted.receipt.secret_requirement
         if (
@@ -285,7 +268,7 @@ def run_profile_password_rotation(
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         secret = _secret_document(current_passphrase, new_passphrase, new_passphrase_confirmation)
         try:
-            delivered = client.submit_secret(requirement, secret, timeout=_remaining(deadline))
+            delivered = client.submit_secret(requirement, secret, timeout=remaining_budget(deadline))
         finally:
             secret[:] = bytes(len(secret))
         if delivered.operation_id != operation_id:
@@ -326,15 +309,7 @@ def run_profile_password_rotation(
     except Exception as error:
         if operation_id is None:
             raise
-        code = (
-            error.reason
-            if isinstance(error, RuntimeFrontendRefusedError)
-            else error.reason.value
-            if isinstance(error, RuntimeRefusalError)
-            else RuntimeRefusalCode.INVALID_FRAME.value
-            if isinstance(error, ValidationError)
-            else RuntimeRefusalCode.UNAVAILABLE.value
-        )
+        code = frontend_failure_code(error)
         failure = ProfileMutationRunError(operation_id=operation_id, code=code)
     finally:
         _wipe_buffers(buffers)

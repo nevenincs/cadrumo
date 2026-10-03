@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from textual.app import App
 
 from ...core.errors.hierarchy import CadrumoError
-from .runtime_management import RuntimeManagementCleanup
+from .runtime_management_cleanup import RuntimeManagementCleanup
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType

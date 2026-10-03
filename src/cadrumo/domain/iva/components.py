@@ -8,29 +8,33 @@ catalogue.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Literal, Self, override
 
 from pydantic import Field, ValidationInfo, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.time.clock import today_madrid
-from ...core.type_guards import is_object_list, is_object_mapping, is_str_keyed_dict
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...core.type_guards import is_object_mapping
 from ..calculations.registry.governed_fact_scope import (
     GovernedFactSource,
     governed_facts_in_scope,
 )
 from ..calculations.registry.iva_category_catalogue import (
-    IvaCategoryCatalogue,
     resolve_iva_category_catalogue,
 )
-from ..calculations.registry.schema_base import DateAxis
+from ._component_fact_projection import (
+    _component_vocabulary_from_entries,
+    _cuota_settlement_catalogue_from_entries,
+    _resolve_component_catalogue_entries,
+)
+from ._component_row_projection import (
+    _category_projection_from_entries,
+    _project_component_catalogue,
+)
 from .classification import InvoiceKind
 from .errors import IvaValidationError
 from .schema import (
@@ -519,104 +523,6 @@ CategoryProjectionName = Literal[
     "cash_accounting_excluded",
 ]
 
-_CATEGORY_PROJECTION_NAMES = frozenset(
-    {
-        "cuota_less_m303",
-        "m303_base_out_of_scope",
-        "evidence_exempt",
-        "no_printed_tax",
-        "cash_accounting_excluded",
-    },
-)
-
-_CUOTA_SETTLEMENT_ORDER_KEY = "cuota_settlement.order"
-_CUOTA_SETTLEMENT_NO_SETTLEMENT_KEY = "cuota_settlement.no_settlement"
-_CUOTA_SETTLEMENT_PREFIX = "cuota_settlement."
-_COMPONENT_PRESENCE_ORDER_KEY = "component_presence.order"
-_RETENCION_EXPECTATION_ORDER_KEY = "retencion_expectation.order"
-_RETENCION_ROLE_ORDER_KEY = "retencion_role.order"
-_KIND_APPLICABILITY_ORDER_KEY = "kind_applicability.order"
-
-
-def _resolve_component_catalogue_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> dict[str, str]:
-    """Resolve and type-check the raw 0084 mapping entries once."""
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="iva-category-component-catalogue",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise IvaValidationError("IVA component catalogue must resolve as a mapping fact")
-
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise IvaValidationError("IVA component mapping entries must be string-to-string")
-        if entry.key in entries:
-            raise IvaValidationError(f"duplicate IVA component mapping key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return entries
-
-
-def _cuota_settlement_catalogue_from_entries(
-    entries: Mapping[str, str],
-) -> IvaCuotaSettlementCatalogue:
-    """Project the explicit cuota-settlement membership in fact 0084."""
-    order_text = entries.get(_CUOTA_SETTLEMENT_ORDER_KEY)
-    if order_text is None or not order_text.strip():
-        raise IvaValidationError(
-            f"IVA component mapping is missing {_CUOTA_SETTLEMENT_ORDER_KEY!r}",
-        )
-    raw_tokens = tuple(token.strip() for token in order_text.split(",") if token.strip())
-    if not raw_tokens or len(set(raw_tokens)) != len(raw_tokens):
-        raise IvaValidationError("IVA cuota-settlement membership must contain unique non-empty tokens")
-
-    no_settlement_value = entries.get(_CUOTA_SETTLEMENT_NO_SETTLEMENT_KEY)
-    if no_settlement_value is None or not no_settlement_value.strip():
-        raise IvaValidationError(
-            f"IVA component mapping is missing {_CUOTA_SETTLEMENT_NO_SETTLEMENT_KEY!r}",
-        )
-    no_settlement_token = IvaCuotaSettlement(no_settlement_value.strip())
-
-    definitions: list[IvaCuotaSettlementDefinition] = []
-    for raw_token in raw_tokens:
-        token = IvaCuotaSettlement(raw_token)
-        prefix = f"{_CUOTA_SETTLEMENT_PREFIX}{raw_token}"
-        declared_value = entries.get(f"{prefix}.value")
-        if declared_value is None or not declared_value.strip():
-            raise IvaValidationError(f"IVA component mapping is missing {prefix + '.value'!r}")
-        if declared_value.strip() != raw_token:
-            raise IvaValidationError(
-                f"IVA cuota-settlement token {raw_token!r} declares mismatched value {declared_value!r}",
-            )
-        description = entries.get(f"{prefix}.description")
-        legal_ref = entries.get(f"{prefix}.legal_ref")
-        if description is None or not description.strip() or legal_ref is None or not legal_ref.strip():
-            raise IvaValidationError(f"IVA component mapping is missing semantics for {raw_token!r}")
-        definitions.append(
-            IvaCuotaSettlementDefinition(
-                token=token,
-                description=description.strip(),
-                legal_ref=legal_ref.strip(),
-            ),
-        )
-
-    catalogue = IvaCuotaSettlementCatalogue(
-        definitions=tuple(definitions),
-        no_settlement_token=no_settlement_token,
-    )
-    if no_settlement_token not in catalogue.all_settlements:
-        raise IvaValidationError(
-            "IVA component mapping no-settlement token is not declared in cuota-settlement order",
-        )
-    return catalogue
-
 
 def registry_cuota_settlement_catalogue(
     *,
@@ -637,17 +543,6 @@ def registry_cuota_settlement_catalogue(
     return _cuota_settlement_catalogue_from_entries(entries)
 
 
-def _ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
-    """Return the validated row-key order declared by fact 0084."""
-    order_text = entries.get("catalogue_order")
-    if order_text is None or not order_text.strip():
-        raise IvaValidationError("IVA component mapping is missing 'catalogue_order'")
-    ordered_keys = tuple(token.strip() for token in order_text.split(",") if token.strip())
-    if len(set(ordered_keys)) != len(ordered_keys):
-        raise IvaValidationError("IVA component catalogue order contains duplicate rows")
-    return ordered_keys
-
-
 def _component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
     entries: Mapping[str, str],
     *,
@@ -666,71 +561,6 @@ def _component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
         missing = sorted(observed - set(raw_tokens))
         raise IvaValidationError(f"{label} rows use undeclared tokens {missing!r}")
     return frozenset(token_type.from_registry(raw_token) for raw_token in raw_tokens)
-
-
-def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaComponentVocabulary:
-    """Project the four explicit component-axis memberships from fact 0084."""
-    observed: dict[str, set[str]] = {
-        "applicability": set(),
-        "retencion_role": set(),
-        "base": set(),
-        "cuota": set(),
-        "recargo": set(),
-        "retencion": set(),
-    }
-    for row_key in _ordered_component_rows(entries):
-        raw_row = entries.get(f"row.{row_key}")
-        if raw_row is None:
-            raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
-        try:
-            decoded: object = json.loads(raw_row)
-        except json.JSONDecodeError as exc:
-            raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
-        if not is_str_keyed_dict(decoded):
-            raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
-        for field in observed:
-            value = decoded.get(field)
-            if not isinstance(value, str) or not value.strip():
-                raise IvaValidationError(f"IVA component row {row_key!r} is missing {field!r}")
-            observed[field].add(value.strip())
-    return IvaComponentVocabulary(
-        component_presence=frozenset(
-            _component_axis_membership(
-                entries,
-                key=_COMPONENT_PRESENCE_ORDER_KEY,
-                token_type=IvaComponentPresence,
-                observed=observed["base"] | observed["cuota"] | observed["recargo"],
-                label="IVA component-presence",
-            ),
-        ),
-        retencion_expectation=frozenset(
-            _component_axis_membership(
-                entries,
-                key=_RETENCION_EXPECTATION_ORDER_KEY,
-                token_type=IvaRetencionExpectation,
-                observed=observed["retencion"],
-                label="IVA retención-expectation",
-            ),
-        ),
-        retencion_role=frozenset(
-            _component_axis_membership(
-                entries,
-                key=_RETENCION_ROLE_ORDER_KEY,
-                token_type=IvaRetencionRole,
-                observed=observed["retencion_role"],
-                label="IVA retención-role",
-            ),
-        ),
-        kind_applicability=frozenset(
-            _component_axis_membership(
-                entries,
-                key=_KIND_APPLICABILITY_ORDER_KEY,
-                token_type=IvaKindApplicability,
-                observed=observed["applicability"],
-                label="IVA kind-applicability",
-            ),
-        ),
-    )
 
 
 def registry_component_vocabulary(
@@ -791,45 +621,6 @@ def registry_kind_applicability_token(
     ).require_kind_applicability(value)
 
 
-def _category_projection_from_entries(
-    entries: Mapping[str, str],
-    projection: CategoryProjectionName,
-    category_catalogue: IvaCategoryCatalogue,
-) -> frozenset[IvaCategory]:
-    """Project one explicit category membership mapping from fact 0084."""
-    if projection not in _CATEGORY_PROJECTION_NAMES:
-        raise IvaValidationError(f"unknown IVA category projection {projection!r}")
-    raw_members = entries.get(f"category_projection.{projection}")
-    if raw_members is None or not raw_members.strip():
-        raise IvaValidationError(
-            f"IVA component catalogue is missing category projection {projection!r}",
-        )
-    member_values = tuple(token.strip() for token in raw_members.split(","))
-    if any(not token for token in member_values):
-        raise IvaValidationError(f"IVA category projection {projection!r} contains an empty member")
-    if len(set(member_values)) != len(member_values):
-        raise IvaValidationError(f"IVA category projection {projection!r} contains duplicate members")
-    try:
-        members = frozenset(category_catalogue.require(token) for token in member_values)
-    except ValueError as exc:
-        raise IvaValidationError(
-            f"IVA category projection {projection!r} contains an unknown category",
-        ) from exc
-
-    declared_categories: set[str] = set()
-    for row_key in _ordered_component_rows(entries):
-        category_text, separator, kind_text = row_key.partition("|")
-        if not separator or not category_text or not kind_text:
-            raise IvaValidationError(f"invalid IVA component catalogue row key {row_key!r}")
-        declared_categories.add(category_text)
-    undeclared = sorted(member.value for member in members if member.value not in declared_categories)
-    if undeclared:
-        raise IvaValidationError(
-            f"IVA category projection {projection!r} names categories without component rows: {undeclared!r}",
-        )
-    return members
-
-
 def registry_category_projection(
     projection: CategoryProjectionName,
     *,
@@ -857,83 +648,6 @@ def registry_category_projection(
         projection,
         resolve_iva_category_catalogue(effective_date=selected_date, authority=authority),
     )
-
-
-def _project_component_catalogue(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> ComponentCatalogue:
-    """Project the selected registry mapping fact into typed component rows."""
-    entries = _resolve_component_catalogue_entries(effective_date=effective_date, authority=authority)
-    category_catalogue = resolve_iva_category_catalogue(effective_date=effective_date, authority=authority)
-    ordered_keys = _ordered_component_rows(entries)
-    component_vocabulary = _component_vocabulary_from_entries(entries)
-    cuota_settlement_catalogue = _cuota_settlement_catalogue_from_entries(entries)
-
-    # Keep the conversion helper as the narrow mechanical boundary. The helper
-    # is imported lazily because it imports this module for the row model.
-    from ._component_rows import component_row_from_registry
-
-    projected: dict[tuple[IvaCategory, InvoiceKind], IvaCategoryComponents] = {}
-    for row_key in ordered_keys:
-        category_text, separator, kind_text = row_key.partition("|")
-        if not separator or not category_text or not kind_text:
-            raise IvaValidationError(f"invalid IVA component catalogue row key {row_key!r}")
-        try:
-            category = category_catalogue.require(category_text)
-            kind = InvoiceKind(kind_text)
-        except ValueError as exc:
-            raise IvaValidationError(f"unknown IVA component catalogue row key {row_key!r}") from exc
-        raw_row = entries.get(f"row.{row_key}")
-        if raw_row is None:
-            raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
-        try:
-            decoded: object = json.loads(raw_row)
-        except json.JSONDecodeError as exc:
-            raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
-        if not is_str_keyed_dict(decoded):
-            raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
-        if "cuota_settlement" not in decoded:
-            raise IvaValidationError(f"IVA component row {row_key!r} is missing cuota settlement")
-        decoded = dict(decoded)
-        decoded.pop("label", None)
-        decoded.pop("fact_ids", None)
-        decoded["category"] = category
-        decoded["kind"] = kind
-        for grounding_field in ("cuota_grounding", "recargo_grounding", "retencion_grounding"):
-            raw_grounding = decoded.get(grounding_field)
-            try:
-                decoded[grounding_field] = IvaGroundingConfidence(raw_grounding)
-            except (TypeError, ValueError) as exc:
-                raise IvaValidationError(
-                    f"IVA component row {row_key!r} has invalid {grounding_field}",
-                ) from exc
-        for reference_field in ("legal_refs", "pending_legal_refs"):
-            raw_references = decoded.get(reference_field, ())
-            if not is_object_list(raw_references) or any(not isinstance(item, str) for item in raw_references):
-                raise IvaValidationError(
-                    f"IVA component row {row_key!r} has invalid {reference_field}",
-                )
-            decoded[reference_field] = tuple(raw_references)
-        decoded["applicability"] = component_vocabulary.require_kind_applicability(decoded["applicability"])
-        decoded["retencion_role"] = component_vocabulary.require_retencion_role(decoded["retencion_role"])
-        decoded["base"] = component_vocabulary.require_component_presence(decoded["base"])
-        decoded["cuota"] = component_vocabulary.require_component_presence(decoded["cuota"])
-        decoded["recargo"] = component_vocabulary.require_component_presence(decoded["recargo"])
-        decoded["retencion"] = component_vocabulary.require_retencion_expectation(decoded["retencion"])
-        decoded["cuota_settlement"] = cuota_settlement_catalogue.require(decoded["cuota_settlement"])
-        row = component_row_from_registry(
-            decoded,
-            cuota_settlement_no_token=cuota_settlement_catalogue.no_settlement_token,
-            component_vocabulary=component_vocabulary,
-        )
-        if row.category != category or row.kind is not kind:
-            raise IvaValidationError(
-                f"IVA component row {row_key!r} disagrees with its catalogue key",
-            )
-        projected[(category, kind)] = row
-    return MappingProxyType(projected)
 
 
 def registry_component_catalogue(

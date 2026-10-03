@@ -24,7 +24,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....domain.transactions.enums import BusinessClassification
 from .. import runtime_ledger_classify as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

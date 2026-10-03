@@ -17,6 +17,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...core.decimal.coercion import coerce_decimal
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -254,7 +255,7 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     silent.
     """
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
-    if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) != 0:
+    if scope is None or AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, scope.casilla_id) != 0:
         return ()
     facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
     if facts is None:
@@ -325,7 +326,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
-    if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) == 0:
+    if scope is None or AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, scope.casilla_id) == 0:
         return ()
     facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
     if facts is None or not second_entitled_filer_indicated(facts):
@@ -522,7 +523,7 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
-    if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) == 0:
+    if scope is None or AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, scope.casilla_id) == 0:
         return ()
     facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
     if facts is None:
@@ -822,7 +823,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     )
     if context is None:
         return ()
-    if casilla_values.get(context.casilla_id, Decimal("0")) != 0:
+    if AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, context.casilla_id) != 0:
         return ()
     affected = [
         index

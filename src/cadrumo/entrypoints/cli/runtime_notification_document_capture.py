@@ -12,15 +12,11 @@ from ...application.live.notification_document_capture_operation import (
     NotificationDocumentCapturePublicResultV1,
     NotificationDocumentCaptureRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,18 +25,6 @@ class NotificationDocumentCapture:
 
     completion: RegisteredOperationCompletion[NotificationDocumentCapturePublicResultV1]
     projection: NotificationDocumentCapturePublicResultV1
-
-
-def _invalid_frame(
-    completed: RegisteredOperationCompletion[NotificationDocumentCapturePublicResultV1],
-) -> CliRefusedBoundaryError:
-    return submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def capture_notification_document_for_cli(
@@ -68,17 +52,25 @@ def capture_notification_document_for_cli(
             raise ValueError("notification-document capture projection has an invalid type")
         if projection.bucket_id != str(profile_id) or projection.certificado_id != request.certificado_id:
             raise ValueError("notification-document capture result does not match its submitted scope")
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or (completed.effect is OperationEffect.NONE and not projection.already_in_custody)
-            or (completed.effect is OperationEffect.UPDATED and projection.already_in_custody)
-            or completed.effect not in (OperationEffect.UPDATED, OperationEffect.NONE)
-        ):
+        if _notification_document_receipt_invalid(completed, projection):
             raise ValueError("notification-document capture result disagrees with its settled receipt")
     except Exception:
-        raise _invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
     return NotificationDocumentCapture(completion=completed, projection=projection)
 
 
 __all__ = ["NotificationDocumentCapture", "capture_notification_document_for_cli"]
+
+
+def _notification_document_receipt_invalid(
+    completed: RegisteredOperationCompletion[NotificationDocumentCapturePublicResultV1],
+    projection: NotificationDocumentCapturePublicResultV1,
+) -> bool:
+    """Require an exact updated-or-idempotent receipt consistent with document custody."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or (completed.effect is OperationEffect.NONE and (not projection.already_in_custody))
+        or (completed.effect is OperationEffect.UPDATED and projection.already_in_custody)
+        or (completed.effect not in (OperationEffect.UPDATED, OperationEffect.NONE))
+    )

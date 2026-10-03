@@ -141,7 +141,7 @@ def test_three_year_filed_history_repository_projects_compensation_lots(
             repository.save_period(_history_state_from_filed_observation(observation, operation=operation))
 
         reloaded = IvaCompensationHistoryRepository().list_periods()
-        report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=2026)
+        report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=2026, operation=operation)
 
     assert tuple(state.source_observation_key for state in reloaded) == (
         "303:2024:4T:20243034T000001",

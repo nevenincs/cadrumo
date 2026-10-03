@@ -10,7 +10,6 @@ from uuid import UUID
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     NonNegativeInt,
     StringConstraints,
@@ -22,7 +21,7 @@ from ...core.aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
-from ...core.hex import HEX_PATTERN_64
+from ...core.hex import Hex64Str
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.aeat_expediente import (
     AEAT_EXPEDIENTE_ID_MAX_LENGTH,
@@ -35,37 +34,27 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.modelo import Modelo
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ..calculations.observations_repository import ObservationSourceKind
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES, OperationCapabilities
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -76,7 +65,6 @@ JUSTIFICANTE_LIST_DEFINITION_ID = "live.justificante.list"
 JUSTIFICANTE_SHOW_DEFINITION_ID = "live.justificante.show"
 _LIST_PHASES = ("justificante-list.read", "justificante-list.result")
 _SHOW_PHASES = ("justificante-show.read", "justificante-show.result")
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 _SnapshotIdPrefix = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
 ]
@@ -105,12 +93,12 @@ class JustificanteShowRequest(CredentialFreeOperationRequest):
 class JustificanteSnapshotSummaryPublicV1(BaseModel):
     """Allowlisted summary fields already present in the list command result."""
 
-    model_config = _PUBLIC_CONFIG
-    snapshot_id: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
+    model_config = STRICT_FROZEN_CONFIG
+    snapshot_id: Hex64Str
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=FILING_YEAR_MIN, le=FILING_YEAR_MAX)
     period: str = Field(min_length=1, max_length=16)
-    pdf_sha256: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
+    pdf_sha256: ContentDigest
     state: str = Field(min_length=1, max_length=16)
     captured_at: datetime
 
@@ -118,7 +106,7 @@ class JustificanteSnapshotSummaryPublicV1(BaseModel):
 class JustificanteListOperationReport(BaseModel):
     """Private encrypted list operand scoped to the operation's profile."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: str = Field(min_length=1, max_length=128)
     rows: tuple[JustificanteSnapshotSummaryPublicV1, ...]
 
@@ -126,14 +114,14 @@ class JustificanteListOperationReport(BaseModel):
 class JustificanteShowOperationReport(BaseModel):
     """Keep the full stored capture inside encrypted operation custody."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     snapshot: JustificanteCaptureSnapshot
 
 
 class JustificanteListPublicResultV1(BaseModel):
     """Closed active-capture inventory for an authorized whole-profile read."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: str = Field(min_length=1, max_length=128)
     count: NonNegativeInt
     rows: tuple[JustificanteSnapshotSummaryPublicV1, ...]
@@ -148,9 +136,9 @@ class JustificanteListPublicResultV1(BaseModel):
 class JustificanteShowPublicResultV1(BaseModel):
     """Bounded detail projection that never returns the stored PDF body."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     bucket_id: str = Field(min_length=1, max_length=128)
-    snapshot_id: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
+    snapshot_id: Hex64Str
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=FILING_YEAR_MIN, le=FILING_YEAR_MAX)
     period: str = Field(min_length=1, max_length=16)
@@ -164,7 +152,7 @@ class JustificanteShowPublicResultV1(BaseModel):
         max_length=AEAT_CSV_MAX_LENGTH,
         pattern=rf"^[A-Z0-9]{{{AEAT_CSV_MIN_LENGTH},{AEAT_CSV_MAX_LENGTH}}}$",
     )
-    pdf_sha256: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
+    pdf_sha256: ContentDigest
     source_kind: str = Field(min_length=1, max_length=64)
     state: str = Field(min_length=1, max_length=16)
     captured_at: datetime
@@ -178,17 +166,6 @@ def _exact_bucket(profile_id: UUID, subject_ref: str) -> str:
     if require_active_bucket_id() != bucket_id or subject_ref != profile_operation_subject(bucket_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return bucket_id
-
-
-def _check_identity[Payload: BaseModel](
-    request: OperationRequest[Payload], context: OperationExecutorContext, definition_id: str
-) -> None:
-    if (
-        request.definition_id != definition_id
-        or context.identity.definition_id != definition_id
-        or context.identity.subject_ref != request.subject_ref
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def _summary(snapshot: JustificanteCaptureSnapshot) -> JustificanteSnapshotSummaryPublicV1:
@@ -226,7 +203,9 @@ class JustificanteListExecutor:
         self, request: OperationRequest[JustificanteListRequest], context: OperationExecutorContext
     ) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, JUSTIFICANTE_LIST_DEFINITION_ID)
+        if request.definition_id != JUSTIFICANTE_LIST_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_LIST_PHASES[0])
 
         def read() -> JustificanteListOperationReport:
@@ -256,7 +235,9 @@ class JustificanteShowExecutor:
         self, request: OperationRequest[JustificanteShowRequest], context: OperationExecutorContext
     ) -> str:
         bucket_id = _exact_bucket(request.payload.profile_id, request.subject_ref)
-        _check_identity(request, context, JUSTIFICANTE_SHOW_DEFINITION_ID)
+        if request.definition_id != JUSTIFICANTE_SHOW_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, request.payload.profile_id)
         await context.events.phase(_SHOW_PHASES[0])
 
         def read() -> JustificanteShowOperationReport:
@@ -273,19 +254,7 @@ class JustificanteShowExecutor:
 
 
 def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-        sensitive_input=OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
+    return RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 
 
 def build_justificante_list_definition(
@@ -305,9 +274,7 @@ def build_justificante_list_definition(
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -328,31 +295,25 @@ def build_justificante_show_definition(
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
-def _validate_receipt(receipt: OperationTerminalReceipt, *, definition_id: str, bucket_id: str) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(bucket_id)
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-    ):
-        raise ValueError("justificante read result contradicts its terminal receipt")
+_RECEIPT_CONTRADICTION = "justificante read result contradicts its terminal receipt"
 
 
 def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     if type(result) is not JustificanteListOperationReport:
         raise ValueError("invalid justificante list report")
     report = JustificanteListOperationReport.model_validate(result, strict=True)
-    _validate_receipt(receipt, definition_id=JUSTIFICANTE_LIST_DEFINITION_ID, bucket_id=str(report.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=JUSTIFICANTE_LIST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(report.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     return JustificanteListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
 
 
@@ -361,7 +322,14 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("invalid justificante show report")
     report = JustificanteShowOperationReport.model_validate(result, strict=True)
     snapshot = report.snapshot
-    _validate_receipt(receipt, definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID, bucket_id=str(snapshot.bucket_id))
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=JUSTIFICANTE_SHOW_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(snapshot.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
+    )
     return JustificanteShowPublicResultV1(
         bucket_id=_BUCKET_ID.validate_python(str(snapshot.bucket_id), strict=True),
         snapshot_id=_SNAPSHOT_ID.validate_python(str(snapshot.snapshot_id), strict=True),
@@ -406,14 +374,9 @@ def build_justificante_list_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the list request to its profile-scoped closed projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=JustificanteListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=JustificanteListPublicResultV1
-        ),
+        public_result_type=JustificanteListPublicResultV1,
         result_projector=_project_list,
         access_resolver=resolve_justificante_list_access,
     )
@@ -423,14 +386,9 @@ def build_justificante_show_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the detail request to its profile-scoped closed projection."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=JustificanteShowRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=JustificanteShowPublicResultV1
-        ),
+        public_result_type=JustificanteShowPublicResultV1,
         result_projector=_project_show,
         access_resolver=resolve_justificante_show_access,
     )

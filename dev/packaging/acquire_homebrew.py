@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import UTF_8
 
 from .acquire_common import (
@@ -47,9 +48,7 @@ _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install
 # The formula ships the root as its stable archive and both data distributions
 # as named resources; every one is a source distribution in the cohort.
 _FORMULA_SOURCE_TO_COHORT: Final[dict[str, str]] = {
-    "cadrumo": "cadrumo-sdist",
-    "cadrumo-data-manuals": "cadrumo-data-manuals-sdist",
-    "cadrumo-data-official": "cadrumo-data-official-sdist",
+    distribution: f"{distribution}-sdist" for distribution in PRODUCT_IDENTITY.cohort_distributions
 }
 
 
@@ -121,6 +120,16 @@ def _run(brew: Path, arguments: list[str], *, cwd: Path, log: Path, timeout: flo
         newline="\n",
     )
     return completed
+
+
+def _homebrew_formula(info: CommandResult, qualified: str) -> dict[str, Any]:
+    if info.returncode != 0:
+        raise AcquisitionError(f"brew info failed for {qualified}: {info.stderr.strip()[:200]}")
+    document = json.loads(info.stdout)
+    formulae = document.get("formulae") if isinstance(document, dict) else None
+    if not isinstance(formulae, list) or not formulae:
+        raise AcquisitionError(f"brew info returned no formula object for {qualified}")
+    return formulae[0]
 
 
 def run_homebrew_acquisition(
@@ -202,13 +211,7 @@ def run_homebrew_acquisition(
         log=logs / "brew-info.log",
         timeout=timeout_seconds,
     )
-    if info.returncode != 0:
-        raise AcquisitionError(f"brew info failed for {qualified}: {info.stderr.strip()[:200]}")
-    document = json.loads(info.stdout)
-    formulae = document.get("formulae") if isinstance(document, dict) else None
-    if not isinstance(formulae, list) or not formulae:
-        raise AcquisitionError(f"brew info returned no formula object for {qualified}")
-    verified_digests = verify_homebrew_formula_digests(formulae[0], cohort)
+    verified_digests = verify_homebrew_formula_digests(_homebrew_formula(info, qualified), cohort)
 
     prefix = _run(
         brew,

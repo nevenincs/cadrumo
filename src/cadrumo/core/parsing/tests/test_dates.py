@@ -21,7 +21,13 @@ from datetime import date
 
 import pytest
 
-from ..dates import _date_shape, parse_ddmmyyyy_date, parse_iso8601_date
+from ..dates import (
+    _date_shape,
+    parse_ddmmyyyy_date,
+    parse_iso8601_date,
+    require_iso8601_date,
+    require_iso8601_date_unless_blank,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -123,3 +129,24 @@ def test_date_shape_classes_every_character_without_carrying_it() -> None:
     # Accented letters are letters; an unclassed character is neither.
     assert _date_shape("año1") == "AAA9"
     assert _date_shape("1997_01") == "9999?99"
+
+
+@pytest.mark.parametrize(
+    "raw", ["20260115", "2026-W03-4", "2026W034", "2026-015", "2026-1-15", "", "   ", "2026-02-30"]
+)
+def test_strict_iso_date_refuses_every_shape_but_the_extended_calendar_date(raw: str) -> None:
+    with pytest.raises(ValueError, match="expected YYYY-MM-DD"):
+        require_iso8601_date(raw)
+
+
+def test_strict_iso_date_accepts_the_extended_calendar_date_with_surrounding_space() -> None:
+    assert require_iso8601_date(" 2026-01-15 ") == date(2026, 1, 15)
+
+
+def test_optional_strict_iso_date_keeps_blank_absent_and_refuses_lenient_shapes() -> None:
+    assert require_iso8601_date_unless_blank(None) is None
+    assert require_iso8601_date_unless_blank("  ") is None
+    assert require_iso8601_date_unless_blank("2026-01-15") == date(2026, 1, 15)
+    for raw in ("20260115", "2026-W03-4"):
+        with pytest.raises(ValueError, match="expected YYYY-MM-DD"):
+            require_iso8601_date_unless_blank(raw)

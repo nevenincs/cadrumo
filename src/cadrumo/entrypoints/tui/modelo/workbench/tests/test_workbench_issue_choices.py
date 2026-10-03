@@ -24,7 +24,9 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
-from ..issues import ConfirmAssumedValues, WorkbenchIssuesScreen, issue_lines
+from ..issue_projection import issue_lines
+from ..issue_scale import ConfirmAssumedValues
+from ..issues import WorkbenchIssuesScreen
 from ..sources import OpenSourceSurface
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields

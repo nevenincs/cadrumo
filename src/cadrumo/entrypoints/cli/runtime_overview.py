@@ -7,21 +7,15 @@ from uuid import UUID
 
 import typer
 
-from ...application.overview.read_operation import (
-    OVERVIEW_READ_DEFINITION_IDS,
-    OverviewReadPayload,
-    OverviewReadProjection,
-    OverviewReadRequest,
-)
-from ...application.runtime.contracts import RuntimeRefusalCode
+from ...application.overview.read_payload import OverviewReadPayload
+from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, OverviewReadRequest
+from ...application.overview.read_result import OverviewReadProjection
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,13 +50,7 @@ def read_overview(ctx: typer.Context, *, request: OverviewReadRequest) -> Overvi
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code is not None
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return OverviewReadCompletion(completion=completed, payload=projection.payload)
 
 

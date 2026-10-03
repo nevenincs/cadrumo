@@ -117,35 +117,14 @@ def invoice_draft_extraction_ports(
     def resolve_evidence_input(
         bucket_id: str, evidence_id: str | None, attachment_id: str | None, settings: Settings
     ) -> EvidenceInput:
-        store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
-        if evidence_id is not None:
-            reference = classify_evidence_reference(
-                evidence_id,
-                bucket_id=bucket_id,
-                evidence_records=PurchaseInvoiceEvidenceService(ports=evidence_ports).list_all(bucket_id=bucket_id),
-                invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
-            )
-            if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
-                raise refuse_unresolved_evidence_reference(evidence_id)
-            if reference.record is None:
-                raise refuse_reference_without_document_bytes(evidence_id)
-            return resolve_purchase_invoice_evidence_input(reference.record, store=store, ports=evidence_input_ports)
-        if attachment_id is None:
-            raise PurchaseInvoiceEvidenceInputError(translated_message="errors.refused.refused_ledger_evidence_input")
-        return resolve_attachment_evidence_input(attachment_id, store=store, ports=evidence_input_ports)
-
-    def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
-        try:
-            return translate_parsed_einvoice(parse_einvoice_document(data))
-        except EInvoiceXmlParseError as exc:
-            raise StructuredInvoiceReadError() from exc
-
-    def require_llm_consent_token(consent_token: EvidenceConsentProof | None) -> EvidenceConsentToken | None:
-        if consent_token is None:
-            return None
-        if not isinstance(consent_token, EvidenceConsentToken):
-            raise TypeError("LLM readers require the canonical EvidenceConsentToken")
-        return consent_token
+        return _invoice_resolve_evidence_input(
+            bucket_id,
+            evidence_id,
+            attachment_id,
+            settings,
+            evidence_ports=evidence_ports,
+            evidence_input_ports=evidence_input_ports,
+        )
 
     def read_text(
         transcription: DocumentTranscription,
@@ -154,58 +133,19 @@ def invoice_draft_extraction_ports(
         consent_token: EvidenceConsentProof | None,
         authority_values: object,
     ) -> InvoiceDraft:
-        if before_read is not None:
-            before_read()
-        try:
-            if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
-                raise TypeError("text reader requires resolved invoice extraction authority values")
-            from ..domain.calculations.registry.authority import bundled_indexed_authority
-
-            with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
-                if provider is None:
-                    return extract_invoice_fields_from_text(
-                        transcription,
-                        operation=pinned,
-                        authority_values=authority_values,
-                    )
-                return TextInvoiceFieldExtractor(
-                    provider=provider,
-                    model=settings.cadrumo_llm_cloud_text_model,
-                    operation=pinned,
-                    settings=settings,
-                    authority_values=authority_values,
-                    consent_token=require_llm_consent_token(consent_token),
-                    client=(
-                        None
-                        if consent_ledger is None
-                        else LLMClient(
-                            settings=settings,
-                            caller="cadrumo.adapters.outbound.llm.evidence_draft_text",
-                            prompt_id="ledger-invoice-text-extract",
-                            consent_ledger=consent_ledger,
-                        )
-                    ),
-                ).extract(transcription=transcription)
-        except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
-            raise InvoiceDraftReaderUnavailableError(exc) from exc
-        except LLMContentionError as exc:
-            raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
-        except LLMBusyError as exc:
-            raise InvoiceDraftReaderBusyRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
+        return _invoice_read_text(
+            transcription,
+            settings,
+            provider,
+            consent_token,
+            authority_values,
+            consent_ledger=consent_ledger,
+            operation=operation,
+            before_read=before_read,
+        )
 
     def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
-        if before_read is not None:
-            before_read()
-        try:
-            return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
-        except Exception:
-            return None
-
-    def rasterise_pdf(data: bytes) -> tuple[str, ...]:
-        try:
-            return tuple(rasterise_pdf_pages_to_base64_png(data))
-        except LLMPdfRasterisationError as exc:
-            raise InvoiceDraftReaderUnavailableError(exc) from exc
+        return _invoice_propose_supply_nature(transcription, settings, before_read=before_read)
 
     def transcribe_vision(
         images: tuple[VisionImage, ...],
@@ -214,60 +154,191 @@ def invoice_draft_extraction_ports(
         provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
-        if before_read is not None:
-            before_read()
-        try:
-            inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
-            if provider is None:
-                return transcribe_document_images(
-                    inputs, source_content_sha256=source_content_sha256, settings=settings
-                )
-            return LocalVisionDocumentTranscriber(
-                provider=provider,
-                model=settings.cadrumo_llm_cloud_vision_model,
-                settings=settings,
-                consent_token=require_llm_consent_token(consent_token),
-                client=(
-                    None
-                    if consent_ledger is None
-                    else LLMClient(
-                        settings=settings.model_copy(
-                            update={"cadrumo_llm_default_timeout_s": settings.cadrumo_llm_vision_read_timeout_s}
-                        ),
-                        caller="cadrumo.adapters.outbound.llm.evidence_vision_transcription",
-                        prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
-                        consent_ledger=consent_ledger,
-                    )
-                ),
-            ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
-        except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
-            raise InvoiceDraftReaderUnavailableError(exc) from exc
-
-    def consent_binding_error(facts: dict[str, object]) -> Exception:
-        typed_facts: dict[str, str | int | bool] = {
-            key: value if isinstance(value, (str, int, bool)) else str(value) for key, value in facts.items()
-        }
-        return LLMConsentError(
-            translated_message="llm.evidence.consent.binding_mismatch",
-            context=facts,
-            precondition_verdict=llm_no_recovery_verdict(
-                LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
-                facts=typed_facts,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            ),
+        return _invoice_transcribe_vision(
+            images,
+            source_content_sha256,
+            settings,
+            provider,
+            consent_token,
+            consent_ledger=consent_ledger,
+            before_read=before_read,
         )
 
     return InvoiceDraftExtractionPorts(
         resolve_evidence_input=resolve_evidence_input,
         evidence_input_ports=evidence_input_ports,
         text_layer_ports=evidence_text_layer_ports(),
-        parse_structured_invoice=parse_structured_invoice,
+        parse_structured_invoice=_invoice_parse_structured_invoice,
         read_text=read_text,
         propose_supply_nature=propose_supply_nature,
-        rasterise_pdf=rasterise_pdf,
+        rasterise_pdf=_invoice_rasterise_pdf,
         transcribe_vision=transcribe_vision,
-        consent_binding_error=consent_binding_error,
+        consent_binding_error=_invoice_consent_binding_error,
     )
 
 
 __all__ = ["evidence_text_layer_ports", "invoice_draft_extraction_ports"]
+
+
+def _invoice_resolve_evidence_input(
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    settings: Settings,
+    *,
+    evidence_ports: LedgerEvidencePorts,
+    evidence_input_ports: EvidenceInputPorts,
+) -> EvidenceInput:
+    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
+    if evidence_id is not None:
+        reference = classify_evidence_reference(
+            evidence_id,
+            bucket_id=bucket_id,
+            evidence_records=PurchaseInvoiceEvidenceService(ports=evidence_ports).list_all(bucket_id=bucket_id),
+            invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
+        )
+        if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
+            raise refuse_unresolved_evidence_reference(evidence_id)
+        if reference.record is None:
+            raise refuse_reference_without_document_bytes(evidence_id)
+        return resolve_purchase_invoice_evidence_input(reference.record, store=store, ports=evidence_input_ports)
+    if attachment_id is None:
+        raise PurchaseInvoiceEvidenceInputError(translated_message="errors.refused.refused_ledger_evidence_input")
+    return resolve_attachment_evidence_input(attachment_id, store=store, ports=evidence_input_ports)
+
+
+def _invoice_parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
+    try:
+        return translate_parsed_einvoice(parse_einvoice_document(data))
+    except EInvoiceXmlParseError as exc:
+        raise StructuredInvoiceReadError() from exc
+
+
+def _invoice_require_llm_consent_token(consent_token: EvidenceConsentProof | None) -> EvidenceConsentToken | None:
+    if consent_token is None:
+        return None
+    if not isinstance(consent_token, EvidenceConsentToken):
+        raise TypeError("LLM readers require the canonical EvidenceConsentToken")
+    return consent_token
+
+
+def _invoice_read_text(
+    transcription: DocumentTranscription,
+    settings: Settings,
+    provider: LLMProvider | None,
+    consent_token: EvidenceConsentProof | None,
+    authority_values: object,
+    *,
+    consent_ledger: EvidenceConsentLedger | None,
+    operation: PinnedAuthorityOperation | None,
+    before_read: Callable[[], None] | None,
+) -> InvoiceDraft:
+    if before_read is not None:
+        before_read()
+    try:
+        if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
+            raise TypeError("text reader requires resolved invoice extraction authority values")
+        from ..domain.calculations.registry.authority import bundled_indexed_authority
+
+        with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
+            if provider is None:
+                return extract_invoice_fields_from_text(
+                    transcription,
+                    operation=pinned,
+                    authority_values=authority_values,
+                )
+            return TextInvoiceFieldExtractor(
+                provider=provider,
+                model=settings.cadrumo_llm_cloud_text_model,
+                operation=pinned,
+                settings=settings,
+                authority_values=authority_values,
+                consent_token=_invoice_require_llm_consent_token(consent_token),
+                client=(
+                    None
+                    if consent_ledger is None
+                    else LLMClient(
+                        settings=settings,
+                        caller="cadrumo.adapters.outbound.llm.evidence_draft_text",
+                        prompt_id="ledger-invoice-text-extract",
+                        consent_ledger=consent_ledger,
+                    )
+                ),
+            ).extract(transcription=transcription)
+    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+        raise InvoiceDraftReaderUnavailableError(exc) from exc
+    except LLMContentionError as exc:
+        raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
+    except LLMBusyError as exc:
+        raise InvoiceDraftReaderBusyRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
+
+
+def _invoice_propose_supply_nature(
+    transcription: DocumentTranscription, settings: Settings, *, before_read: Callable[[], None] | None
+) -> SupplyNature | None:
+    if before_read is not None:
+        before_read()
+    try:
+        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
+    except Exception:
+        return None
+
+
+def _invoice_rasterise_pdf(data: bytes) -> tuple[str, ...]:
+    try:
+        return tuple(rasterise_pdf_pages_to_base64_png(data))
+    except LLMPdfRasterisationError as exc:
+        raise InvoiceDraftReaderUnavailableError(exc) from exc
+
+
+def _invoice_transcribe_vision(
+    images: tuple[VisionImage, ...],
+    source_content_sha256: str,
+    settings: Settings,
+    provider: LLMProvider | None,
+    consent_token: EvidenceConsentProof | None,
+    *,
+    consent_ledger: EvidenceConsentLedger | None,
+    before_read: Callable[[], None] | None,
+) -> DocumentTranscription:
+    if before_read is not None:
+        before_read()
+    try:
+        inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
+        if provider is None:
+            return transcribe_document_images(inputs, source_content_sha256=source_content_sha256, settings=settings)
+        return LocalVisionDocumentTranscriber(
+            provider=provider,
+            model=settings.cadrumo_llm_cloud_vision_model,
+            settings=settings,
+            consent_token=_invoice_require_llm_consent_token(consent_token),
+            client=(
+                None
+                if consent_ledger is None
+                else LLMClient(
+                    settings=settings.model_copy(
+                        update={"cadrumo_llm_default_timeout_s": settings.cadrumo_llm_vision_read_timeout_s}
+                    ),
+                    caller="cadrumo.adapters.outbound.llm.evidence_vision_transcription",
+                    prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
+                    consent_ledger=consent_ledger,
+                )
+            ),
+        ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
+    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+        raise InvoiceDraftReaderUnavailableError(exc) from exc
+
+
+def _invoice_consent_binding_error(facts: dict[str, object]) -> Exception:
+    typed_facts: dict[str, str | int | bool] = {
+        key: value if isinstance(value, (str, int, bool)) else str(value) for key, value in facts.items()
+    }
+    return LLMConsentError(
+        translated_message="llm.evidence.consent.binding_mismatch",
+        context=facts,
+        precondition_verdict=llm_no_recovery_verdict(
+            LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
+            facts=typed_facts,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        ),
+    )

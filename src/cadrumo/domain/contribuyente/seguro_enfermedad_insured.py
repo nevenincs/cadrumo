@@ -94,15 +94,10 @@ def _resolve_seguro_enfermedad_registry_declarations(
         raise ValueError("insurance scalar declarations must be integral")
     disability_minimum_grade = resolved_grade.payload.value
     insured_child_maximum_age = resolved_age.payload.value
-    applicability: dict[str, str] = {}
-    for entry in resolved_applicability.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("insurance applicability entries must be string-to-string")
-        applicability[entry.key] = entry.value
     declarations = _SeguroEnfermedadRegistryDeclarations(
         disability_minimum_grade=disability_minimum_grade,
         insured_child_maximum_age=insured_child_maximum_age,
-        applicability=MappingProxyType(applicability),
+        applicability=_insurance_applicability(resolved_applicability),
     )
     declarations.required("insured_population.taxpayer")
     declarations.required("insured_population.spouse")
@@ -111,6 +106,16 @@ def _resolve_seguro_enfermedad_registry_declarations(
     declarations.required("coverage_limb.discapacidad")
     declarations.required("coverage_limb.general")
     return declarations
+
+
+def _insurance_applicability(resolved: ResolvedMappingFact) -> Mapping[str, str]:
+    """Return the closed string mapping declared for insurance applicability."""
+    applicability: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("insurance applicability entries must be string-to-string")
+        applicability[entry.key] = entry.value
+    return MappingProxyType(applicability)
 
 
 class SeguroEnfermedadInsuredCounts(BaseModel):

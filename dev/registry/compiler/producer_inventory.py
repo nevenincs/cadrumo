@@ -16,6 +16,7 @@ from pydantic import BeforeValidator
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, SourceRefId
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import coerce_enum_member
@@ -266,7 +267,7 @@ def producer_inventory(revision: ModeloRevision) -> CasillaProducerInventory:
         formulas_by_id.setdefault(formula.id, []).append(formula)
 
     formula_declarations_by_casilla: dict[CasillaId, list[FormulaId]] = {}
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     computed_casilla_ids: set[CasillaId] = set()
     producer_kind_by_casilla: dict[CasillaId, CasillaProducerKind] = {}
     producer_reason_by_casilla: dict[CasillaId, str] = {}

@@ -328,6 +328,16 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
     )
 
 
+def _assert_prepared_source_unchanged(root: Path, source_files: tuple[str, ...], expected_source_digest: str) -> None:
+    final_source_files = repository_files(root)
+    final_source_digest = content_digest(root, final_source_files)
+    if final_source_files != source_files or final_source_digest != expected_source_digest:
+        raise SystemExit(
+            "prepared release source drifted while assembling the cohort: "
+            f"expected {expected_source_digest}, got {final_source_digest}",
+        )
+
+
 def build_from_clean_source(
     *,
     clean_root: Path,
@@ -449,13 +459,7 @@ def build_from_clean_source(
             f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
         )
     if use_prepared_source:
-        final_source_files = repository_files(root)
-        final_source_digest = content_digest(root, final_source_files)
-        if final_source_files != source_files or final_source_digest != expected_source_digest:
-            raise SystemExit(
-                "prepared release source drifted while assembling the cohort: "
-                f"expected {expected_source_digest}, got {final_source_digest}",
-            )
+        _assert_prepared_source_unchanged(root, source_files, expected_source_digest)
     return _complete_release_cohort(
         output=output,
         manifest_path=manifest_path,

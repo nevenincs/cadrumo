@@ -12,12 +12,10 @@ from ...application.ledger.allocate_operation import (
     LedgerAllocateOperationResult,
     LedgerAllocateRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.transactions.enums import BusinessClassification
-from ...domain.transactions.model_validation import classification_for_business_share
+from ...core.operations import profile_operation_subject
+from .ledger_allocate_correlation import correlate_ledger_allocation
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_ledger_allocate(
@@ -52,46 +50,7 @@ def run_ledger_allocate(
         timeout=120,
     )
     projection = completed.projection
-    expected_classification = classification_for_business_share(business_pct)
-    expected_share = display_decimal(business_pct) if expected_classification is BusinessClassification.MIXED else None
-    expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
-    expected_usage_ratio_id = (
-        None
-        if expected_classification is not BusinessClassification.MIXED or usage_ratio_id is None
-        else usage_ratio_id.strip() or None
+    correlate_ledger_allocation(
+        completed, client.profile_id, business_pct, transaction_id, category_id, usage_ratio_id, prorrata_reference
     )
-    expected_prorrata_reference = (
-        None
-        if expected_classification is BusinessClassification.PERSONAL or prorrata_reference is None
-        else prorrata_reference.strip() or None
-    )
-    expected_category_id = (
-        None
-        if expected_classification is BusinessClassification.PERSONAL or category_id is None
-        else category_id.strip()
-    )
-    prefix = transaction_id.strip().lower()
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or projection.profile_id != client.profile_id
-        or not projection.transaction.transaction_id.startswith(prefix)
-        or projection.transaction.business_classification != expected_classification.value
-        or projection.transaction.business_pct != expected_share
-        or (category_id is not None and projection.transaction.category_id != expected_category_id)
-        or (usage_ratio_id is not None and projection.transaction.usage_ratio_id != expected_usage_ratio_id)
-        or (prorrata_reference is not None and projection.transaction.prorrata_reference != expected_prorrata_reference)
-    )
-    if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
     return projection
-
-
-__all__ = ["run_ledger_allocate"]

@@ -105,6 +105,18 @@ _SKIP_DIRS = frozenset(
 _MAX_DEPTH = 4
 
 
+def _render_dependency_verdict(report: Report, lines: list[str]) -> None:
+    """Render dependency verdict."""
+    if report.exit_code == EXIT_OK:
+        suppressed = len(report.findings)
+        tail = f" ({suppressed} suppressed)" if suppressed else ""
+        lines.append(f"PASS: no unaccepted advisories{tail}.")
+    else:
+        plural = "y" if len(report.blocking) == 1 else "ies"
+        expired = f", {len(report.expired)} expired suppression(s)" if report.expired else ""
+        lines.append(f"FAIL: {len(report.blocking)} unaccepted advisor{plural}{expired}.")
+
+
 class AuditError(Exception):
     """The audit could not be completed. Never a pass."""
 
@@ -188,16 +200,7 @@ def _read_package_lock(path: Path) -> list[Coordinate]:
             if name and version and not entry.get("link"):
                 out.append(Coordinate("npm", name, version, rel))
     else:  # lockfileVersion 1
-
-        def recurse(deps: dict[str, Any]) -> None:
-            for name, entry in deps.items():
-                if isinstance(entry, dict) and entry.get("version"):
-                    out.append(Coordinate("npm", name, entry["version"], rel))
-                    nested = entry.get("dependencies")
-                    if isinstance(nested, dict):
-                        recurse(nested)
-
-        recurse(data.get("dependencies") or {})
+        _read_legacy_npm_dependencies(data.get("dependencies") or {}, rel, out)
     return out
 
 
@@ -505,33 +508,7 @@ def build_report(
     seen_ids: set[str] = set()
 
     for identifier in sorted(hits):
-        if identifier in seen_ids:
-            continue
-        detail = describe_fn(identifier)
-        aliases = list(detail.get("aliases") or [])
-        seen_ids.add(identifier)
-        seen_ids.update(aliases)
-        covering = None
-        for key in (identifier, *aliases):
-            if key in live:
-                covering = live[key]
-                used.add(key)
-                break
-        merged: set[Coordinate] = set()
-        for key in (identifier, *aliases):
-            merged |= hits.get(key, set())
-        affected = sorted(merged)
-        report.findings.append(
-            Finding(
-                id=identifier,
-                aliases=aliases,
-                summary=detail.get("summary", ""),
-                severity=detail.get("severity", ""),
-                packages=[f"{c.name} {c.version}" for c in affected],
-                surfaces=sorted({c.surface for c in affected}),
-                suppressed_by=covering,
-            )
-        )
+        _append_advisory_finding(identifier, hits, live, used, seen_ids, report, describe_fn)
 
     report.stale = sorted((s for s in live.values() if s.id not in used), key=lambda s: s.id)
     return report
@@ -551,16 +528,7 @@ def render(report: Report) -> str:
         lines.append(f"  probe: {probe} (injected via --extra-package)")
 
     for finding in report.findings:
-        mark = "SUPPRESSED" if finding.suppressed_by else "FINDING"
-        alias = f" ({', '.join(finding.aliases)})" if finding.aliases else ""
-        lines.append(f"  {mark:11s} {finding.id}{alias} [{'/'.join(finding.surfaces)}]")
-        lines.append(f"      packages: {', '.join(finding.packages)}")
-        if finding.summary:
-            lines.append(f"      {finding.summary}")
-        if finding.suppressed_by:
-            lines.append(
-                f"      accepted until {finding.suppressed_by.expires.isoformat()}: {finding.suppressed_by.reason}"
-            )
+        _render_dependency_finding(finding, lines)
 
     for suppression in report.expired:
         lines.append(
@@ -570,14 +538,7 @@ def render(report: Report) -> str:
     for suppression in report.stale:
         lines.append(f"  stale       {suppression.id} matches nothing in the tree; delete its allowlist entry.")
 
-    if report.exit_code == EXIT_OK:
-        suppressed = len(report.findings)
-        tail = f" ({suppressed} suppressed)" if suppressed else ""
-        lines.append(f"PASS: no unaccepted advisories{tail}.")
-    else:
-        plural = "y" if len(report.blocking) == 1 else "ies"
-        expired = f", {len(report.expired)} expired suppression(s)" if report.expired else ""
-        lines.append(f"FAIL: {len(report.blocking)} unaccepted advisor{plural}{expired}.")
+    _render_dependency_verdict(report, lines)
     return "\n".join(lines)
 
 
@@ -665,6 +626,76 @@ def main(argv: list[str] | None = None) -> int:
         if artifact:
             print(f"report: {artifact}")
     return report.exit_code
+
+
+def _render_dependency_finding(finding: Finding, lines: list[str]) -> None:
+    """Render dependency finding."""
+    mark = "SUPPRESSED" if finding.suppressed_by else "FINDING"
+    alias = f" ({', '.join(finding.aliases)})" if finding.aliases else ""
+    lines.append(f"  {mark:11s} {finding.id}{alias} [{'/'.join(finding.surfaces)}]")
+    lines.append(f"      packages: {', '.join(finding.packages)}")
+    if finding.summary:
+        lines.append(f"      {finding.summary}")
+    if finding.suppressed_by:
+        lines.append(
+            f"      accepted until {finding.suppressed_by.expires.isoformat()}: {finding.suppressed_by.reason}"
+        )
+
+
+def _append_advisory_finding(
+    identifier: str,
+    hits: dict[str, set[Coordinate]],
+    live: dict[str, Suppression],
+    used: set[str],
+    seen_ids: set[str],
+    report: Report,
+    describe_fn: Any,
+) -> None:
+    """Append advisory finding."""
+    if identifier in seen_ids:
+        return
+    detail = describe_fn(identifier)
+    aliases = list(detail.get("aliases") or [])
+    seen_ids.add(identifier)
+    seen_ids.update(aliases)
+    covering = None
+    covering = _covering_suppression(identifier, aliases, live, used)
+    merged: set[Coordinate] = set()
+    for key in (identifier, *aliases):
+        merged |= hits.get(key, set())
+    affected = sorted(merged)
+    report.findings.append(
+        Finding(
+            id=identifier,
+            aliases=aliases,
+            summary=detail.get("summary", ""),
+            severity=detail.get("severity", ""),
+            packages=[f"{c.name} {c.version}" for c in affected],
+            surfaces=sorted({c.surface for c in affected}),
+            suppressed_by=covering,
+        )
+    )
+
+
+def _covering_suppression(
+    identifier: str, aliases: list[str], live: dict[str, Suppression], used: set[str]
+) -> Suppression | None:
+    """Select and mark the first live suppression across the advisory and its aliases."""
+    for key in (identifier, *aliases):
+        if key in live:
+            used.add(key)
+            return live[key]
+    return None
+
+
+def _read_legacy_npm_dependencies(deps: dict[str, Any], rel: str, out: list[Coordinate]) -> None:
+    """Read each pinned legacy npm dependency before recursing into its children."""
+    for name, entry in deps.items():
+        if isinstance(entry, dict) and entry.get("version"):
+            out.append(Coordinate("npm", name, entry["version"], rel))
+            nested = entry.get("dependencies")
+            if isinstance(nested, dict):
+                _read_legacy_npm_dependencies(nested, rel, out)
 
 
 if __name__ == "__main__":

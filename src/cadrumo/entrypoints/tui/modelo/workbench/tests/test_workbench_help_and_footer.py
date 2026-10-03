@@ -40,6 +40,7 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ....components.cell_text import wrap_words
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1
 from ..casilla_list import CasillaList
@@ -49,7 +50,6 @@ from ..issues import WorkbenchIssuesScreen
 from ..progress import fit_next_line
 from ..screen import ModeloWorkbenchScreen
 from ..sources import OpenSourceSurface, surface_target
-from ..wording import wrap_words
 from .declaration_states import recorded_as_filed, with_findings
 from .editor_panel import open_panel
 from .sectioned_form import sectioned_form

@@ -10,6 +10,8 @@ from shutil import rmtree
 from typing import Literal
 
 import pytest
+import rtoml
+from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -17,25 +19,14 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from .._export_tree import RenderedExportTree
-from .._tree_publication import (
-    GeneratedExportPublicationJournal,
-    GeneratedExportTransactionPaths,
-    GeneratedExportTreePublicationContext,
-    GeneratedExportTreeTargetStateReceipt,
-    PublishedGeneratedExportTree,
-    export_provenance_file_sha256,
-    load_generated_export_publication_journal,
-    publish_validated_generated_export_tree,
-    recover_interrupted_publication,
-    stage_verified_candidate_package,
-    verify_generated_export_package,
-    write_generated_export_publication_journal,
-)
+from .._form_layout_companion import prepare_generated_form_layout_companion
+from .._tree_publication import publish_validated_generated_export_tree
 from .._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
     validate_generated_export_tree,
 )
+from ..candidate_staging import bootstrap_layout_supersession_fingerprint
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
@@ -43,8 +34,25 @@ from ..export_fragment_provenance import (
 )
 from ..joined_record_design import JoinedRecordDesign
 from ..render_check import RevisionRenderInputs
-from ..render_profile import RenderProfile, RenderProfileSourceEvidence
+from ..render_profile_evidence import RenderProfileSourceEvidence
+from ..render_profile_model import RenderProfile
 from ..semantic_map import SemanticMap
+from ..tree_publication_artifacts import stage_verified_candidate_package, verify_generated_export_package
+from ..tree_publication_contracts import (
+    GeneratedExportPublicationJournal,
+    GeneratedExportSupersession,
+    GeneratedExportTransactionPaths,
+    GeneratedExportTreePublicationContext,
+    GeneratedExportTreeTargetStateReceipt,
+    PublishedGeneratedExportTree,
+    export_provenance_file_sha256,
+)
+from ..tree_publication_journal import (
+    load_generated_export_publication_journal,
+    write_generated_export_publication_journal,
+)
+from ..tree_publication_recovery import recover_interrupted_publication
+from ..tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_render_profile,
@@ -136,6 +144,161 @@ def _publish(
         render_profile=render_profile,
         render_profile_source_evidence=render_evidence,
     )
+
+
+def _supersession_publication_inputs(
+    tmp_path: Path,
+    *,
+    extra_manual_layout: bool = False,
+) -> tuple[GeneratedExportTreePublicationContext, JoinedRecordDesign, SemanticMap, RenderedExportTree, Path, str]:
+    """Build a pinned, zero-construct-reference manual layout replacement fixture."""
+    context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
+        tmp_path,
+        existing_export=False,
+    )
+    prepare_generated_form_layout_companion(context.validation, temporary_root=context.temporary_root)
+
+    target_revision_root = context.target_export_root.parent
+    manual_layout_document = rendered.layout.model_dump(mode="json", exclude_none=True)
+    records = manual_layout_document.pop("records")
+    manual_layout_document["id"] = "manual-layout-fixture"
+    # TOML requires parent scalar values to precede nested record tables.
+    manual_layout = {**manual_layout_document, "records": records}
+    declarations = [manual_layout]
+    if extra_manual_layout:
+        unreviewed_layout = dict(manual_layout)
+        unreviewed_layout["id"] = "unreviewed-layout-fixture"
+        declarations.append(unreviewed_layout)
+    manual_root = target_revision_root / "export_layouts"
+    manual_root.mkdir()
+    (manual_root / "0001-manual-layout.toml").write_text(
+        rtoml.dumps(
+            {"revisions": {ISOLATED_TREE.revision: {"export_layouts": declarations}}},
+            pretty=True,
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    unrelated_fragment = manual_root / "0099-unrelated-comment.toml"
+    unrelated_fragment.write_text(
+        f'[revisions."{ISOLATED_TREE.revision}"]\n'
+        "export_layouts = []\n"
+        "# Retained fragment with no loader-visible layout declaration.\n",
+        encoding="utf-8",
+    )
+    unrelated_revision_member = target_revision_root / "revision.toml"
+    unrelated_revision_member.write_bytes(
+        unrelated_revision_member.read_bytes() + b"\n# unrelated revision metadata retained by bundle cutover\n",
+    )
+
+    source_sha256 = bootstrap_layout_supersession_fingerprint(target_revision_root)
+    context = dataclasses.replace(
+        context,
+        expected_target_state=GeneratedExportTreeTargetStateReceipt.observe(
+            context.target_export_root,
+            supersession_source_sha256=source_sha256,
+        ),
+        supersession=GeneratedExportSupersession(
+            superseded_layout_id="manual-layout-fixture",
+            generated_layout_id=str(rendered.layout.id),
+            expected_construct_references=0,
+            source_state_sha256=source_sha256,
+        ),
+    )
+    return context, joined, semantic_map, rendered, candidate_export_root, "manual-layout-fixture"
+
+
+def _bundle_transaction_siblings(context: GeneratedExportTreePublicationContext) -> tuple[Path, ...]:
+    paths = GeneratedExportTransactionPaths.for_context(context)
+    return tuple(
+        sorted(
+            (
+                *paths.transaction_root.glob(f"{paths.bundle_backup_prefix}*"),
+                *paths.transaction_root.glob(f"{paths.bundle_staging_prefix}*"),
+            ),
+        ),
+    )
+
+
+def test_new_sidecars_retain_old_lock_and_refuse_a_legacy_journal(tmp_path: Path) -> None:
+    """The relocated transaction namespace preserves legacy sidecars and refuses old journals."""
+    target_root = tmp_path / "registry" / "aeat"
+    target_root.mkdir(parents=True)
+    paths = GeneratedExportTransactionPaths(target_root.resolve(), ISOLATED_TREE.modelo, ISOLATED_TREE.revision)
+
+    assert not recover_interrupted_supersession_bundle(
+        target_root=target_root,
+        modelo=ISOLATED_TREE.modelo,
+        revision=ISOLATED_TREE.revision,
+    )
+    legacy_lock_sidecar = paths.legacy_lock_identity.with_name(f"{paths.legacy_lock_identity.name}.lock")
+    assert legacy_lock_sidecar.exists()
+    assert not paths.legacy_journal.exists()
+    assert not paths.journal.exists()
+
+    paths.legacy_journal.write_bytes(b"{}\n")
+    with pytest.raises(RegistryValidationError, match="requires recovery at its original location"):
+        recover_interrupted_supersession_bundle(
+            target_root=target_root,
+            modelo=ISOLATED_TREE.modelo,
+            revision=ISOLATED_TREE.revision,
+        )
+    assert paths.legacy_journal.read_bytes() == b"{}\n"
+    assert not paths.journal.exists()
+
+
+@pytest.mark.parametrize(
+    ("modelo", "revision"),
+    (
+        ("../184", "2025"),
+        ("C:\\184", "2025"),
+        ("184", "../escape"),
+        ("184", r"..\escape"),
+        ("184", ".."),
+        ("184", r"c:drive-relative"),
+        ("184", r"C:\absolute"),
+    ),
+)
+def test_supersession_recovery_rejects_unsafe_ids_before_filesystem_access(
+    tmp_path: Path,
+    modelo: str,
+    revision: str,
+) -> None:
+    """Raw recovery IDs cannot form filesystem paths before schema validation."""
+    target_root = tmp_path / "not-created" / "registry" / "aeat"
+
+    with pytest.raises(RegistryValidationError, match="valid ModeloId and path-safe RevisionId"):
+        recover_interrupted_supersession_bundle(
+            target_root=target_root,
+            modelo=modelo,
+            revision=revision,
+        )
+
+    assert not target_root.parent.parent.exists()
+
+
+@pytest.mark.parametrize(
+    ("modelo", "revision_id"),
+    (
+        ("../184", "2025"),
+        ("184", "../escape"),
+        ("184", r"..\escape"),
+        ("184", ".."),
+        ("184", r"c:drive-relative"),
+    ),
+)
+def test_publication_journal_rejects_non_registry_path_identities(modelo: str, revision_id: str) -> None:
+    """A loaded journal cannot smuggle path components into recovery target construction."""
+    with pytest.raises(ValidationError):
+        GeneratedExportPublicationJournal(
+            schema_version=1,
+            state="intent",
+            modelo=modelo,
+            revision_id=revision_id,
+            candidate_export="candidate",
+            backup_export="backup",
+            candidate_manifest_sha256="a" * 64,
+        )
 
 
 def _validate(
@@ -414,6 +577,222 @@ def test_publication_creates_missing_export_without_touching_revision_authority(
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(revision_root) == before_authority
     assert not _rollback_siblings(context.target_export_root)
+
+
+def test_zero_reference_supersession_retires_only_the_pinned_layout_and_installs_its_form_bundle(
+    tmp_path: Path,
+) -> None:
+    """A zero-reference legacy layout can retire atomically while unrelated fragments survive."""
+    context, joined, semantic_map, rendered, _candidate_export_root, manual_layout_id = (
+        _supersession_publication_inputs(tmp_path)
+    )
+    target_revision_root = context.target_export_root.parent
+    unrelated_fragment = target_revision_root / "export_layouts" / "0099-unrelated-comment.toml"
+    unrelated_bytes = unrelated_fragment.read_bytes()
+    unrelated_member = target_revision_root / "revision.toml"
+    unrelated_member_bytes = unrelated_member.read_bytes()
+    candidate_form_root = (
+        context.validation.registry_root
+        / "modelos"
+        / ISOLATED_TREE.modelo
+        / "revisions"
+        / ISOLATED_TREE.revision
+        / "form_layouts"
+    )
+    expected_form_bytes = _tree_bytes(candidate_form_root)
+
+    published = _publish(context, joined, semantic_map, rendered)
+
+    loaded = load_modelo_directory(target_revision_root.parent.parent)
+    revision = loaded.revisions[ISOLATED_TREE.revision]
+    assert published.export_root == context.target_export_root
+    assert tuple(str(layout.id) for layout in revision.export_layouts) == (str(rendered.layout.id),)
+    assert manual_layout_id not in {str(layout.id) for layout in revision.export_layouts}
+    assert not (target_revision_root / "export_layouts" / "0001-manual-layout.toml").exists()
+    assert unrelated_fragment.read_bytes() == unrelated_bytes
+    assert unrelated_member.read_bytes() == unrelated_member_bytes
+    assert _tree_bytes(target_revision_root / "form_layouts") == expected_form_bytes
+    assert not _bundle_transaction_siblings(context)
+    transaction_paths = GeneratedExportTransactionPaths.for_context(context)
+    assert transaction_paths.journal.parent == context.target_root.parent
+    assert transaction_paths.lock_identity.parent == context.target_root.parent
+    assert not transaction_paths.journal.exists()
+
+
+def test_supersession_refuses_an_unreviewed_second_manual_layout_before_live_writes(tmp_path: Path) -> None:
+    """A reviewed pin cannot silently retire a second manual layout in the same revision."""
+    context, joined, semantic_map, rendered, candidate_export_root, _manual_layout_id = (
+        _supersession_publication_inputs(tmp_path, extra_manual_layout=True)
+    )
+    before_revision = _tree_bytes(context.target_export_root.parent)
+    before_candidate = _tree_bytes(candidate_export_root)
+
+    with pytest.raises(RegistryValidationError, match="expected exactly manual layout"):
+        _publish(context, joined, semantic_map, rendered)
+
+    assert _tree_bytes(context.target_export_root.parent) == before_revision
+    assert _tree_bytes(candidate_export_root) == before_candidate
+    assert not _bundle_transaction_siblings(context)
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
+
+
+def test_supersession_source_pin_covers_unowned_casilla_edits_after_the_receipt(tmp_path: Path) -> None:
+    """A casilla edit after the read-only receipt is preserved and refuses publication."""
+    context, joined, semantic_map, rendered, candidate_export_root, _manual_layout_id = (
+        _supersession_publication_inputs(tmp_path)
+    )
+    revision_root = context.target_export_root.parent
+    casilla_fragment = next((revision_root / "casillas").glob("*.toml"))
+    casilla_fragment.write_bytes(casilla_fragment.read_bytes() + b"\n# concurrent unowned edit\n")
+    before_revision = _tree_bytes(revision_root)
+    before_candidate = _tree_bytes(candidate_export_root)
+
+    with pytest.raises(RegistryValidationError, match="supersession source changed after check"):
+        _publish(context, joined, semantic_map, rendered)
+
+    assert _tree_bytes(revision_root) == before_revision
+    assert _tree_bytes(candidate_export_root) == before_candidate
+    assert not context.target_export_root.exists()
+    assert not _bundle_transaction_siblings(context)
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
+
+
+def test_supersession_rechecks_casillas_after_copy_and_restores_a_racing_edit(tmp_path: Path) -> None:
+    """A casilla edit racing the source rename is restored with the old revision."""
+    context, joined, semantic_map, rendered, _candidate_export_root, _manual_layout_id = (
+        _supersession_publication_inputs(tmp_path)
+    )
+    target_revision_root = context.target_export_root.parent
+    casilla_fragment = next((target_revision_root / "casillas").glob("*.toml"))
+    original_bytes = casilla_fragment.read_bytes()
+    paths = GeneratedExportTransactionPaths.for_context(context)
+    original_replace = context.replace_export_directory
+    changed = False
+
+    def edit_before_source_rename(source: Path, destination: Path) -> None:
+        nonlocal changed
+        if source == target_revision_root and destination.name.startswith(paths.bundle_backup_prefix) and not changed:
+            casilla_fragment.write_bytes(original_bytes + b"\n# concurrent unowned edit\n")
+            changed = True
+        original_replace(source, destination)
+
+    context = dataclasses.replace(context, replace_export_directory=edit_before_source_rename)
+
+    with pytest.raises(RegistryValidationError, match="source changed during cutover"):
+        _publish(context, joined, semantic_map, rendered)
+
+    assert changed
+    assert target_revision_root.is_dir()
+    assert (target_revision_root / "casillas" / casilla_fragment.name).read_bytes() == (
+        original_bytes + b"\n# concurrent unowned edit\n"
+    )
+    assert not context.target_export_root.exists()
+    assert not _bundle_transaction_siblings(context)
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
+
+
+def test_supersession_failure_preserves_candidate_until_recovery_restores_old_revision(tmp_path: Path) -> None:
+    """A failed rollback leaves a journaled candidate that recovery can safely undo."""
+    context, joined, semantic_map, rendered, _candidate_export_root, _manual_layout_id = (
+        _supersession_publication_inputs(tmp_path)
+    )
+    target_revision_root = context.target_export_root.parent
+    original_revision = _tree_bytes(target_revision_root)
+    paths = GeneratedExportTransactionPaths.for_context(context)
+    original_replace = context.replace_export_directory
+    blocked_rollback = False
+
+    def refuse_one_rollback(source: Path, destination: Path) -> None:
+        nonlocal blocked_rollback
+        if source == target_revision_root and destination.name.startswith(paths.bundle_staging_prefix):
+            blocked_rollback = True
+            raise OSError(17, "injected rollback interruption")
+        original_replace(source, destination)
+
+    def fail_live_validation() -> None:
+        raise RegistryValidationError("injected live-root validation failure")
+
+    context = dataclasses.replace(
+        context,
+        replace_export_directory=refuse_one_rollback,
+        final_live_validator=fail_live_validation,
+    )
+
+    with pytest.raises(RegistryValidationError, match="transaction state was preserved for recovery"):
+        _publish(context, joined, semantic_map, rendered)
+
+    assert blocked_rollback
+    journal_path = paths.journal
+    journal = load_generated_export_publication_journal(journal_path)
+    assert journal.state == "candidate_live"
+    assert bootstrap_layout_supersession_fingerprint(target_revision_root) == journal.candidate_revision_sha256
+    assert {path.name for path in _bundle_transaction_siblings(context)} == {Path(journal.backup_export).name}
+
+    assert not recover_interrupted_supersession_bundle(
+        target_root=context.target_root,
+        modelo=ISOLATED_TREE.modelo,
+        revision=ISOLATED_TREE.revision,
+    )
+
+    assert _tree_bytes(target_revision_root) == original_revision
+    assert not journal_path.exists()
+    assert not _bundle_transaction_siblings(context)
+
+
+def test_committed_supersession_cleanup_failure_keeps_candidate_and_recovers_partial_backup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cleanup starts only after commit; recovery finishes a partially removed backup."""
+    from .. import tree_publication_supersession as publication_module
+
+    context, joined, semantic_map, rendered, _candidate_export_root, _manual_layout_id = (
+        _supersession_publication_inputs(tmp_path)
+    )
+    target_revision_root = context.target_export_root.parent
+    paths = GeneratedExportTransactionPaths.for_context(context)
+    original_cleanup = publication_module._delete_opaque_transaction_tree_allow_partial
+    interrupted_backups: list[Path] = []
+
+    def remove_one_member_then_fail(
+        path: Path,
+        *,
+        target_root: Path,
+        prefix: str,
+        subject: str,
+    ) -> None:
+        if path.name.startswith(paths.bundle_backup_prefix):
+            member = next(iter(scan_directory(path, recursive=True, select=DirectoryEntryKind.FILES)))
+            member.unlink()
+            interrupted_backups.append(path)
+            raise RegistryValidationError("injected committed cleanup failure")
+        original_cleanup(path, target_root=target_root, prefix=prefix, subject=subject)
+
+    monkeypatch.setattr(
+        publication_module,
+        "_delete_opaque_transaction_tree_allow_partial",
+        remove_one_member_then_fail,
+    )
+    with pytest.raises(RegistryValidationError, match="injected committed cleanup failure"):
+        _publish(context, joined, semantic_map, rendered)
+
+    journal = load_generated_export_publication_journal(paths.journal)
+    assert journal.state == "committed"
+    assert journal.cleanup_started is True
+    assert interrupted_backups == [Path(journal.backup_export)]
+    committed_revision = _tree_bytes(target_revision_root)
+    assert not (target_revision_root / "export_layouts" / "0001-manual-layout.toml").exists()
+
+    monkeypatch.setattr(publication_module, "_delete_opaque_transaction_tree_allow_partial", original_cleanup)
+    assert recover_interrupted_supersession_bundle(
+        target_root=context.target_root,
+        modelo=ISOLATED_TREE.modelo,
+        revision=ISOLATED_TREE.revision,
+    )
+
+    assert _tree_bytes(target_revision_root) == committed_revision
+    assert not paths.journal.exists()
+    assert not _bundle_transaction_siblings(context)
 
 
 @pytest.mark.parametrize("defect", ("missing", "extra"))

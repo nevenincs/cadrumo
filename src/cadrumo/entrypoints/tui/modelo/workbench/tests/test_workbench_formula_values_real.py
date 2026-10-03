@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from decimal import Decimal
-from typing import Any, cast
 
 import pytest
 from rich.cells import cell_len
@@ -14,7 +13,6 @@ from ......adapters.persistence.profile.modelos_verification_reports import Veri
 from ......application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ......application.modelo.work_form_models import address_key
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -30,10 +28,10 @@ from ......domain.modelos.verification_report import (
 from ......domain.modelos.verification_repository import upsert_verification_report
 from .....tests.modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
 from ....components.host import ScreenHostApp
-from ...lifecycle import ModeloWorkspaceLifecycleDoor
+from ....tests.modelo_workbench_session import application_workbench
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
 from ..header import blocking_count, deadline_view, fit_identity
-from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
+from ..installed import InstalledModeloWorkbench
 from ..issues import WorkbenchIssuesScreen
 from ..screen import ModeloWorkbenchScreen
 
@@ -82,35 +80,7 @@ def calculated(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledMo
         )
         reports.save(upsert_verification_report(catalogue, report))
 
-        def door(calculation_revision_id: str | None, verification_report_id: str | None):
-            return ModeloWorkspaceLifecycleDoor(
-                services=cast(Any, object()),
-                work_unit_id=unit.work_unit_id,
-                calculation_revision_id=calculation_revision_id,
-                verification_report_id=verification_report_id,
-                edit_admission=work.admit,
-                edit_renewal=work.renew,
-            )
-
-        yield InstalledModeloWorkbench(
-            bucket_id=unit.bucket_id,
-            declaration=DeclarationsWorkspaceDeclarationRefV1(
-                work_unit_id=unit.work_unit_id,
-                modelo=unit.modelo,
-                filing_year=unit.filing_year,
-                period=unit.period,
-                state=unit.state,
-                has_current_calculation=True,
-                has_current_filing=False,
-            ),
-            operation=work.operation,
-            repositories=WorkbenchRepositories(
-                work_units=work.ports.work_unit_repository,
-                calculations=work.ports.calculation_repository,
-                verifications=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
-            ),
-            door=door,
-        )
+        yield application_workbench(work.work_unit, operation=work.operation)
 
 
 @pytest.mark.asyncio

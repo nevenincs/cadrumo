@@ -17,20 +17,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ..core.async_cleanup import await_cancellation_complete
-from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.identity.digest import ContentDigest
 from ..core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ..core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..core.telemetry.consent import telemetry_emit_permitted
 from ..core.telemetry.emit import TelemetrySink
 from ..core.telemetry.schema import TelemetryEventPayload
@@ -60,35 +51,37 @@ from .diagnostics_run_health import (
     list_recent_runs,
 )
 from .diagnostics_telemetry import TelemetryFlushPreview, build_telemetry_flush_preview, flush_telemetry
-from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from .operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from .operations.access_resolution import (
+    RESUMABLE_READ_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+    require_declared_frontend_and_action,
+    require_period_independent_replay_or_authority,
 )
-from .operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from .operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES, OperationCapabilities
+from .operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
+)
+from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
+from .operations.profile_guard import require_operation_profile
 from .operations.public_scalar import PublicDecimal
+from .operations.read_capture import capture_read_result
 from .operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from .user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
     Availability,
     DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from .user_profile.access_errors import ProfileAccessRefusedError
 
@@ -97,9 +90,6 @@ DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID = "diagnostics.telemetry.flu
 type DiagnosticsReadKind = Literal["run_health", "runs", "latency", "errors", "llm_usage"]
 _READ_FRONTENDS = frozenset(OperationFrontendProjection)
 _FLUSH_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_READ_ACTIONS = frozenset(
-    {AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME, AccessAction.OBSERVE, AccessAction.RESULT}
-)
 
 
 class _ReportFilters(TypedDict):
@@ -484,18 +474,6 @@ class DiagnosticsTelemetryFlushExecutionResult(BaseModel):
     projection: DiagnosticsTelemetryFlushProjection
 
 
-def _require_profile[T: BaseModel](
-    request: OperationRequest[T], context: OperationExecutorContext, profile_id: UUID
-) -> None:
-    if (
-        request.subject_ref != profile_operation_subject(str(profile_id))
-        or context.identity.definition_id != request.definition_id
-        or context.identity.subject_ref != request.subject_ref
-        or require_active_bucket_id() != str(profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-
 class DiagnosticsReadExecutor:
     """Run existing report services inside immutable exact-profile custody."""
 
@@ -510,11 +488,11 @@ class DiagnosticsReadExecutor:
         payload = request.payload
         if request.definition_id != DIAGNOSTICS_READ_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        _require_profile(request, context, payload.profile_id)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase("diagnostics.read.execute")
 
         def read() -> DiagnosticsReadExecutionResult:
-            _require_profile(request, context, payload.profile_id)
+            require_operation_profile(request, context, payload.profile_id)
             operation = context.authority_operation
             ports = self._factory(profile_id=payload.profile_id, operation=operation)
             if ports.profile_id != payload.profile_id or ports.operation is not operation:
@@ -545,13 +523,7 @@ class DiagnosticsReadExecutor:
                 )
             return DiagnosticsReadExecutionResult(projection=DiagnosticsReadProjection.model_validate(values))
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="diagnostics-read-settlement")
+        return await capture_read_result(context, read, task_name="diagnostics-read-settlement")
 
 
 def _flush_settings(ports: DiagnosticsTelemetryFlushPorts, payload: DiagnosticsTelemetryFlushRequest) -> Settings:
@@ -602,7 +574,7 @@ class DiagnosticsTelemetryFlushExecutor:
         payload = request.payload
         if request.definition_id != DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        _require_profile(request, context, payload.profile_id)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase("diagnostics.telemetry.flush.prepare")
         operation = context.authority_operation
         ports = self._factory(profile_id=payload.profile_id, operation=operation)
@@ -613,7 +585,7 @@ class DiagnosticsTelemetryFlushExecutor:
 
         async def authorize_dispatch() -> Settings:
             async with context.cancellation.irreversible_section():
-                _require_profile(request, context, payload.profile_id)
+                require_operation_profile(request, context, payload.profile_id)
                 current = _flush_settings(ports, payload)
                 if (
                     telemetry_emit_permitted(current, acknowledged=payload.acknowledged)
@@ -631,7 +603,7 @@ class DiagnosticsTelemetryFlushExecutor:
             return asyncio.run_coroutine_threadsafe(authorize_dispatch(), loop).result()
 
         def flush() -> DiagnosticsTelemetryFlushExecutionResult:
-            _require_profile(request, context, payload.profile_id)
+            require_operation_profile(request, context, payload.profile_id)
             settings = _flush_settings(ports, payload)
             if payload.dry_run:
                 preview = build_telemetry_flush_preview(
@@ -690,74 +662,28 @@ def _resolve_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     frontends = _FLUSH_FRONTENDS if flush else _READ_FRONTENDS
-    actions = _READ_ACTIONS
+    actions = RESUMABLE_READ_ACTIONS
     if isinstance(payload, DiagnosticsTelemetryFlushRequest) and not payload.dry_run:
         actions = actions | frozenset({AccessAction.COMMIT})
-    if context.frontend not in frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in actions:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    admitted = context.admitted_request
-    if admitted is not None and context.action not in {AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME}:
-        if (
-            admitted.profile_id != payload.profile_id
-            or admitted.definition_id != expected
-            or admitted.destination_id != context.destination_id
-            or admitted.frontend is not context.frontend
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods
-            or not admitted.period_independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    elif context.authority_operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action is AccessAction.OBSERVE:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != expected + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=schema.schema_id,
-                    category=DisclosureCategory.PROFILE_VALUES,
-                ),
-            )
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=expected,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=expected,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=actions,
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    require_declared_frontend_and_action(context, frontends=frontends, actions=actions)
+    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=frozenset({AccessAction.OBSERVE}),
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=expected + ".result",
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=expected,
+        actions=actions,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=True,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
     )
 
 
@@ -775,32 +701,20 @@ def resolve_diagnostics_telemetry_flush_access(
     return _resolve_access(request, context, flush=True)
 
 
-def _require_receipt(
-    receipt: OperationTerminalReceipt, *, definition_id: str, profile_id: UUID, effect: OperationEffect
-) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("diagnostics result differs from its settled exact-profile receipt")
+_RECEIPT_CONTRADICTION = "diagnostics result differs from its settled exact-profile receipt"
 
 
 def project_diagnostics_read_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release one complete typed report only after exact destination authorization."""
     if type(result) is not DiagnosticsReadExecutionResult:
         raise ValueError("invalid diagnostics read result")
-    _require_receipt(
+    require_terminal_receipt_match(
         receipt,
         definition_id=DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
-        profile_id=result.projection.profile_id,
+        subject_ref=profile_operation_subject(str(result.projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
     )
     return DiagnosticsReadProjection.model_validate_json(result.projection.model_dump_json(), strict=True)
 
@@ -812,29 +726,19 @@ def project_diagnostics_telemetry_flush_result(result: BaseModel, receipt: Opera
     projection = DiagnosticsTelemetryFlushProjection.model_validate_json(
         result.projection.model_dump_json(), strict=True
     )
-    _require_receipt(
+    require_terminal_receipt_match(
         receipt,
         definition_id=DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
-        profile_id=projection.profile_id,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UNKNOWN if projection.sent else OperationEffect.NONE,
+        message=_RECEIPT_CONTRADICTION,
     )
     return projection
 
 
 def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.NONE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
+    return RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
 
 
 def build_diagnostics_read_definition(factory: DiagnosticsReadPortsFactory) -> OperationDefinition:
@@ -860,18 +764,9 @@ def build_diagnostics_read_registration(definition: OperationDefinition) -> Oper
     """Enroll closed request/report schemas and reviewed destination consent."""
     if definition.definition_id != DIAGNOSTICS_READ_OPERATION_DEFINITION_ID:
         raise ValueError("unexpected diagnostics read definition")
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=DiagnosticsReadRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=DiagnosticsReadProjection,
-        ),
+        public_result_type=DiagnosticsReadProjection,
         result_projector=project_diagnostics_read_result,
         access_resolver=resolve_diagnostics_read_access,
     )
@@ -906,18 +801,9 @@ def build_diagnostics_telemetry_flush_registration(
     """Enroll complete telemetry preview and exact-profile effect authority."""
     if definition.definition_id != DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID:
         raise ValueError("unexpected diagnostics telemetry definition")
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=DiagnosticsTelemetryFlushRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=DiagnosticsTelemetryFlushProjection,
-        ),
+        public_result_type=DiagnosticsTelemetryFlushProjection,
         result_projector=project_diagnostics_telemetry_flush_result,
         access_resolver=resolve_diagnostics_telemetry_flush_access,
     )

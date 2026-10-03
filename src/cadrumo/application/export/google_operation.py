@@ -15,22 +15,14 @@ from collections.abc import Callable
 from typing import Protocol, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.capabilities import ServiceCapability
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operations import (
-    EFFECTS_WITHOUT_PARTIAL_COMMIT,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-)
+from ...core.operations import OperationEffect, OperationInteractionKind
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.period import Period
 from ...core.time.clock import now
@@ -41,20 +33,12 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..calculations.relation_prefill import resolve_relations_from_local_store
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -76,7 +60,6 @@ _GOOGLE_SHEETS_EXPORT_PHASES = (
     GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
     GOOGLE_SHEETS_EXPORT_PHASE_SETTLEMENT,
 )
-_PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 type GoogleSnapshotResolver = Callable[[ModeloId, Period], RegistrySnapshot]
 type GoogleExportPlanBuilder = Callable[..., SheetExportPlan]
@@ -113,7 +96,7 @@ class GoogleSheetsExportSubjectMismatchError(CadrumoError):
 class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):
     """Immutable target for one active-profile Google Sheets export."""
 
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
     modelo: ModeloId
@@ -457,23 +440,9 @@ def build_google_sheets_export_operation_definition(
         ),
         phase_codes=_GOOGLE_SHEETS_EXPORT_PHASES,
         interaction_kinds=frozenset[OperationInteractionKind](),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

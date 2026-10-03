@@ -894,19 +894,68 @@ def storage_tree_targets(
     """
     targets: list[Path] = []
     for location in _ROOT_LOCATIONS:
-        if location.settings_field is None:
-            continue
-        is_explicit = location.settings_field in settings.model_fields_set
-        if (is_explicit and not include_explicit) or (not is_explicit and not include_derived):
-            continue
-        if not is_explicit and derived_groupings is not None and location.grouping not in derived_groupings:
-            continue
-        value = getattr(settings, location.settings_field, None)
-        if value is None:
-            continue
-        candidate = Path(value)
-        targets.append(candidate.parent if location.node_kind is StorageNodeKind.FILE else candidate)
+        target = _storage_tree_target(
+            location,
+            settings,
+            include_explicit=include_explicit,
+            include_derived=include_derived,
+            derived_groupings=derived_groupings,
+        )
+        if target is not None:
+            targets.append(target)
     return tuple(targets)
+
+
+def _storage_tree_target(
+    location: StorageLocation,
+    settings: Settings,
+    *,
+    include_explicit: bool,
+    include_derived: bool,
+    derived_groupings: frozenset[StorageGrouping] | None,
+) -> Path | None:
+    field = location.settings_field
+    if field is None:
+        return None
+    if not _storage_location_is_selected(
+        location,
+        settings,
+        field=field,
+        include_explicit=include_explicit,
+        include_derived=include_derived,
+        derived_groupings=derived_groupings,
+    ):
+        return None
+    value = getattr(settings, field, None)
+    if value is None:
+        return None
+    candidate = Path(value)
+    return candidate.parent if location.node_kind is StorageNodeKind.FILE else candidate
+
+
+def _storage_location_is_selected(
+    location: StorageLocation,
+    settings: Settings,
+    *,
+    field: str,
+    include_explicit: bool,
+    include_derived: bool,
+    derived_groupings: frozenset[StorageGrouping] | None,
+) -> bool:
+    if field in settings.model_fields_set:
+        return include_explicit
+    if not include_derived:
+        return False
+    return _matches_derived_grouping(location, derived_groupings)
+
+
+def _matches_derived_grouping(
+    location: StorageLocation,
+    derived_groupings: frozenset[StorageGrouping] | None,
+) -> bool:
+    if derived_groupings is None:
+        return True
+    return location.grouping in derived_groupings
 
 
 def _effective_settings(settings: Settings | None) -> Settings:

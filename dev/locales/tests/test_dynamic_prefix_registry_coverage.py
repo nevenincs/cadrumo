@@ -57,7 +57,9 @@ from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._paths import SRC_DIR
 from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..fstring_registry import get_registered_keys
-from ..manager import LocaleManager, LocaleNode, locale_catalogue_source
+from ..locale_nodes import LocaleNode
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 from ..wizard_translation_audit import wizard_descriptor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -243,7 +245,8 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_list import DeclarationListGroup, declaration_list_rows
     from cadrumo.application.overview.coverage import CoverageAdviceReason
-    from cadrumo.entrypoints.tui.declarations.grouped import DECLARATION_GROUP_LOCALE_KEYS, GroupedDeclarationsScreen
+    from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
+    from cadrumo.entrypoints.tui.declarations.portfolio_rendering import DECLARATION_GROUP_LOCALE_KEYS
     from cadrumo.entrypoints.tui.declarations.row_words import row_lines
 
     producer = ast.parse(inspect.getsource(declaration_list_rows))
@@ -262,7 +265,10 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
             and isinstance(node.args[3].value, str)
         ):
             states.add(node.args[3].value)
-    renderer = ast.parse(inspect.getsource(row_lines))
+    renderer_module = inspect.getmodule(row_lines)
+    assert renderer_module is not None
+    renderer = ast.parse(inspect.getsource(renderer_module))
+    renderer_functions = {node.name: node for node in renderer.body if isinstance(node, ast.FunctionDef)}
     next_choices: set[str] = set()
 
     def choice_values(expression: ast.expr) -> set[str]:
@@ -293,6 +299,18 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
             and isinstance(node.value, ast.IfExp)
         ):
             next_choices.update(choice_values(node.value))
+        if (
+            isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "key" for t in node.targets)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+            and node.value.func.id in renderer_functions
+        ):
+            factory = renderer_functions[node.value.func.id]
+            for statement in ast.walk(factory):
+                if isinstance(statement, ast.Return):
+                    assert statement.value is not None
+                    next_choices.update(choice_values(statement.value))
     assert states and next_choices, "the actual state and action producers must remain discoverable"
     screen_module = inspect.getmodule(GroupedDeclarationsScreen)
     assert screen_module is not None
@@ -329,11 +347,11 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
 
 def test_declaration_list_enrolment_keeps_open_reason_namespaces_unbounded() -> None:
     """Bounded feature copy must not admit arbitrary optional reason codes."""
-    from .._signal import _dynamic_key_families
+    from ..signal_discovery import dynamic_key_families
 
     bounded = {f"tui.declarations.list.{family}.*" for family in ("advice", "filter", "sort", "state", "next")}
     open_reasons = {prefix + ".*" for prefix in OPEN_ENDED_NAMESPACES}
-    finite, unresolved = _dynamic_key_families(bounded | open_reasons)
+    finite, unresolved = dynamic_key_families(bounded | open_reasons)
     assert set(finite) == bounded
     assert set(unresolved) == open_reasons
 
@@ -1055,7 +1073,7 @@ def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> 
     """
     import ast
 
-    from .._ast_scanner import _TRANSLATION_KEY_KWARGS
+    from .._ast_key_policy import _TRANSLATION_KEY_KWARGS
 
     def _names_the_translation_key_type(annotation: ast.expr | None) -> bool:
         if isinstance(annotation, ast.Name):
@@ -1248,7 +1266,8 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
     """
     import ast
 
-    from .._ast_scanner import _flow_confirmed_local_key_names, scan_source_text
+    from .._ast_key_flows import _flow_confirmed_local_key_names
+    from .._ast_scanner import scan_source_text
 
     source = chr(10).join(
         (

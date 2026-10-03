@@ -146,6 +146,7 @@ def seed_activity_asset(
             tax_year=2025,
         ),
         taxpayer_workforce=lambda: (),
+        legal_reference=operation.legal_reference,
     )
     claim: AmortizationClaim | None = None
     if include_claim:
@@ -243,6 +244,7 @@ def assert_activity_asset_conformance_result(
                 excluding_claim_id=payload.supersedes_claim_id,
             ),
             taxpayer_workforce=lambda: (),
+            legal_reference=operation.legal_reference,
             requested_free_amount=(
                 Decimal(payload.requested_free_amount.decimal) if payload.requested_free_amount is not None else None
             ),

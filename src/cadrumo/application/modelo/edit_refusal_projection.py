@@ -1,18 +1,23 @@
-"""Apply-specific calculation prerequisites retained only for the submitting session.
+"""Apply-specific calculation prerequisites held only inside the profile worker.
 
 The operation journal retains its registered refusal family, never these
-addresses. A TUI session may register the exact renewed baseline before
-starting its operation and consume this bounded projection once afterwards.
+addresses. The worker that ran a refused Apply retains the prerequisite it
+named, bounded and in memory only, and hands it out once to a read that names
+the same operation, work unit, renewed baseline and calculation head.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from threading import Lock
+from typing import Final
 
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.ids import BindingId
-from .edit_models import ModeloEditBaselineV1
+
+_RETAINED_LIMIT: Final[int] = 16
+"""Refused Applies whose prerequisite stays readable; older ones are forgotten first."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,46 +36,39 @@ type ModeloEditPrerequisiteObserver = Callable[[ModeloEditCalculationPrerequisit
 
 
 class ModeloEditRefusalProjectionStore:
-    """Bounded private memory owned and cleared by one installed session."""
+    """Bounded private memory of the prerequisites refused Applies named in this worker."""
 
     def __init__(self) -> None:
-        """Start without any submitted operation or diagnostic."""
-        self._expected: dict[str, tuple[str, str, str | None]] = {}
+        """Start without any retained diagnostic."""
+        self._lock = Lock()
         self._prerequisites: dict[str, ModeloEditCalculationPrerequisiteV1] = {}
 
-    def expect(self, operation_id: str, baseline: ModeloEditBaselineV1) -> None:
-        """Bind delivery to the actual renewed baseline used by this Apply."""
-        if len(self._expected) >= 16:
-            oldest = next(iter(self._expected))
-            self._expected.pop(oldest)
-            self._prerequisites.pop(oldest, None)
-        self._expected[operation_id] = (
-            str(baseline.work_unit_id),
-            str(baseline.baseline_id),
-            baseline.current_calculation_revision_id,
-        )
-        self._prerequisites.pop(operation_id, None)
-
-    def observe(self, prerequisite: ModeloEditCalculationPrerequisiteV1) -> None:
-        """Retain only the registered operation's exact baseline and work coordinate."""
-        expected = (prerequisite.work_unit_id, prerequisite.baseline_id, prerequisite.calculation_revision_id)
-        if self._expected.get(prerequisite.operation_id) == expected:
+    def retain(self, prerequisite: ModeloEditCalculationPrerequisiteV1) -> None:
+        """Keep one refused Apply's prerequisite, forgetting the oldest beyond the bound."""
+        with self._lock:
+            self._prerequisites.pop(prerequisite.operation_id, None)
+            if len(self._prerequisites) >= _RETAINED_LIMIT:
+                self._prerequisites.pop(next(iter(self._prerequisites)))
             self._prerequisites[prerequisite.operation_id] = prerequisite
 
     def take(
-        self, operation_id: str, *, work_unit_id: str, calculation_revision_id: str | None
+        self,
+        operation_id: str,
+        *,
+        work_unit_id: str,
+        baseline_id: str,
+        calculation_revision_id: str | None,
     ) -> ModeloEditCalculationPrerequisiteV1 | None:
-        """Consume once; discard stale, successful or canceled operation context too."""
-        expected = self._expected.pop(operation_id, None)
-        prerequisite = self._prerequisites.pop(operation_id, None)
-        if expected is None or expected[0] != work_unit_id or expected[2] != calculation_revision_id:
+        """Consume once; a read naming any other coordinate discards it unread."""
+        with self._lock:
+            prerequisite = self._prerequisites.pop(operation_id, None)
+        if prerequisite is None or (
+            prerequisite.work_unit_id,
+            prerequisite.baseline_id,
+            prerequisite.calculation_revision_id,
+        ) != (work_unit_id, baseline_id, calculation_revision_id):
             return None
         return prerequisite
-
-    def clear(self) -> None:
-        """Drop all private delivery context when the session closes."""
-        self._expected.clear()
-        self._prerequisites.clear()
 
 
 __all__ = [

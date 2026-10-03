@@ -408,7 +408,9 @@ def _compare_with_pending(context: _Context, *, pending: ModeloRecord) -> _Compa
                 },
             ),
         )
-    revision = context.ports.calculation_repository.load().get(pending.calculation_revision_id)
+    revision = context.ports.calculation_repository.load(operation=context.operation).get(
+        pending.calculation_revision_id
+    )
     if entry.casilla_values is not None:
         snapshot, filed = reject_unknown_import_casillas(
             modelo=entry.modelo,
@@ -671,6 +673,7 @@ def _record_aeat_content(
         now=context.now,
         work_unit_repository=context.ports.work_lifecycle.work_unit_repository,
         calculation_repository=context.ports.calculation_repository,
+        operation=context.operation,
         justificante_repository=context.ports.justificante_repository,
     )
     revision = draft.revision

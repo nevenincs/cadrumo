@@ -300,31 +300,25 @@ class InvoiceWithholdingCapture(BaseModel):
     catalogue_read_revision_id: str
 
 
-def build_invoice_withholding_capture(
+def _validate_invoice_capture_coordinates(
     invoice: Invoice,
     *,
-    catalogue_revision_id: str,
     request: InvoiceWithholdingEvidenceRequest,
     applicable_year: int,
     cadence: WithholdingFilerCadence,
-) -> InvoiceWithholdingCapture:
-    """Derive one producer command from the current canonical invoice revision.
-
-    This is deliberately the sole invoice-to-withholding translation.  It
-    refuses missing catalogue facts rather than accepting caller substitutes
-    for a liability limit, source revision, recognition coordinate, or
-    recipient identity.  ``cadence`` is the filer's canonical schedule for
-    ``applicable_year``; a recognition quarter it does not assign is refused.
-
-    The invoice is routed through :func:`project_received_invoice_retencion`,
-    so the liability figures come from the one projection and an unroutable
-    invoice is refused with every defect that projection found.
-    """
+) -> None:
     if request.invoice_id != invoice.invoice_id:
         raise InvoiceWithholdingEvidenceError("invoice_identity_mismatch")
     if cadence.filing_year != applicable_year:
         raise InvoiceWithholdingEvidenceError("filer_cadence_year_mismatch")
-    projection = project_received_invoice_retencion(invoice, scheme=request.scheme)
+
+
+def _invoice_withholding_liability(
+    invoice: Invoice,
+    *,
+    scheme: RetencionScheme,
+) -> tuple[Decimal, Decimal, Decimal, str]:
+    projection = project_received_invoice_retencion(invoice, scheme=scheme)
     if projection.observation is None:
         raise InvoiceWithholdingDefectsError(projection.defects)
     base = projection.observation.taxable_base
@@ -337,7 +331,15 @@ def build_invoice_withholding_capture(
         raise InvoiceWithholdingEvidenceError("contradictory_invoice_settlement")
     if invoice.counterparty_tax_id is None:
         raise InvoiceWithholdingEvidenceError("missing_counterparty_tax_id")
-    evidence = WithholdingRecognitionEvidence(
+    return base, withholding, settlement, invoice.counterparty_tax_id
+
+
+def _invoice_capture_recognition_evidence(
+    request: InvoiceWithholdingEvidenceRequest,
+    *,
+    applicable_year: int,
+) -> WithholdingRecognitionEvidence:
+    return WithholdingRecognitionEvidence(
         applicable_year=applicable_year,
         recipient_tax_status=request.recipient_tax_status,
         recipient_tax_regime=request.recipient_tax_regime,
@@ -360,6 +362,36 @@ def build_invoice_withholding_capture(
             else None
         ),
     )
+
+
+def build_invoice_withholding_capture(
+    invoice: Invoice,
+    *,
+    catalogue_revision_id: str,
+    request: InvoiceWithholdingEvidenceRequest,
+    applicable_year: int,
+    cadence: WithholdingFilerCadence,
+) -> InvoiceWithholdingCapture:
+    """Derive one producer command from the current canonical invoice revision.
+
+    This is deliberately the sole invoice-to-withholding translation.  It
+    refuses missing catalogue facts rather than accepting caller substitutes
+    for a liability limit, source revision, recognition coordinate, or
+    recipient identity.  ``cadence`` is the filer's canonical schedule for
+    ``applicable_year``; a recognition quarter it does not assign is refused.
+
+    The invoice is routed through :func:`project_received_invoice_retencion`,
+    so the liability figures come from the one projection and an unroutable
+    invoice is refused with every defect that projection found.
+    """
+    _validate_invoice_capture_coordinates(
+        invoice,
+        request=request,
+        applicable_year=applicable_year,
+        cadence=cadence,
+    )
+    base, withholding, settlement, perceptor_nif = _invoice_withholding_liability(invoice, scheme=request.scheme)
+    evidence = _invoice_capture_recognition_evidence(request, applicable_year=applicable_year)
     # The catalogue revision proves this invoice was read consistently from the
     # encrypted singleton.  It is deliberately not the source revision: that
     # singleton changes for unrelated invoices, and using it as the allocation
@@ -371,7 +403,7 @@ def build_invoice_withholding_capture(
             "base": str(base),
             "withholding": str(withholding),
             "settlement": str(settlement),
-            "perceptor_nif": invoice.counterparty_tax_id,
+            "perceptor_nif": perceptor_nif,
         }
     )
     command = WithholdingEvidenceCaptureCommand(
@@ -379,7 +411,7 @@ def build_invoice_withholding_capture(
         source_object_id=invoice.invoice_id,
         source_revision_id=source_revision_id,
         allocation_id=request.allocation_id,
-        perceptor_nif=invoice.counterparty_tax_id,
+        perceptor_nif=perceptor_nif,
         perceptor_name=invoice.counterparty_name,
         scheme=request.scheme,
         taxable_base=request.allocated_base,

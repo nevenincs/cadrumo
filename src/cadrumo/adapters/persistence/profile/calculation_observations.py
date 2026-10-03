@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from cadrumo.application.calculations.m303_carry_ingress import normalize_m303_carry_observation_envelope
 from cadrumo.application.calculations.observations_repository import (
@@ -56,7 +56,7 @@ from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconc
 
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
-from ..storage.errors import SecureObjectRowIdentityError, StorageError
+from ..storage.errors import STORED_RECORD_FAILURES, SecureObjectRowIdentityError
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -72,7 +72,7 @@ def _translate_storage_failure[T](operation: str, callback: Callable[[], T]) -> 
         return callback()
     except PersistenceDegradationError:
         raise
-    except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+    except STORED_RECORD_FAILURES as exc:
         raise PersistenceDegradationError(operation) from exc
 
 
@@ -352,7 +352,7 @@ class CalculationObservationRepository:
                     yield payload
         except PersistenceDegradationError:
             raise
-        except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+        except STORED_RECORD_FAILURES as exc:
             raise PersistenceDegradationError("calculation_observation_iter_modelo") from exc
 
     def iter_layers(self) -> Iterator[ObservationLayers]:
@@ -361,7 +361,7 @@ class CalculationObservationRepository:
             yield from self._layers.iter_records()
         except PersistenceDegradationError:
             raise
-        except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
+        except STORED_RECORD_FAILURES as exc:
             raise PersistenceDegradationError("calculation_observation_iter_records") from exc
 
     def iter_records(self) -> Iterator[ObservationEnvelopePayload]:

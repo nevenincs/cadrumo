@@ -11,7 +11,9 @@ import typer
 
 from ...application.modelo.query_read_operation import (
     ModeloBindingOverride,
+    ModeloBindingRowV1,
     ModeloBindingsListRequest,
+    ModeloBindingsResolveProjection,
     ModeloBindingsResolveRequest,
     ModeloRequiresRequest,
 )
@@ -512,50 +514,12 @@ def bindings_list(
             or error.context.get("reason") != "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
         ):
             raise
-        try:
-            catalogue = read_modelo_bindings_list(
-                ctx,
-                ModeloBindingsListRequest(profile_id=profile_id, catalogue_only=True),
-                expected_authority_generation=operation.generation.logical_generation,
-            )
-        except CliRefusedBoundaryError:
-            raise error from None
-        if modelo not in catalogue.known_modelos:
-            raise typer.BadParameter(
-                f"modelo {modelo!r} is not in the calculation registry. Accepted: {', '.join(catalogue.known_modelos)}."
-            ) from error
+        _translate_unknown_binding_modelo(ctx, profile_id, modelo, operation, error)
         raise
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in projection.bindings:
-        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
-        encoded_options = tuple(
-            BindingEncodedOptionPayload.model_validate(item.model_dump()) for item in row.encoded_options
-        )
-        merged_rows.append(
-            BindingListRowPayload(
-                modelo=row.modelo,
-                revision=row.revision,
-                filing_year=row.filing_year,
-                period=row.period,
-                binding_id=row.binding_id,
-                source=row.source,
-                readiness=readiness,
-                typed_enum=row.typed_enum,
-                input_channel=row.input_channel,
-                borrador_capable=row.borrador_capable,
-                legal_refs=row.legal_refs,
-                source_refs=row.source_refs,
-                relation_inputs=row.relation_inputs,
-                encoded_options=encoded_options,
-            )
-        )
-        text_rows.append(
-            f"{row.modelo}\t{row.revision}\t{row.period or '-'}\t{row.binding_id}\t"
-            f"{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
-            f"{row.borrador_capable}"
-        )
-        text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
+        _append_binding_list_row(row, merged_rows, text_rows)
     if missing:
         text_rows.extend(discovery_rendering.binding_relation_guidance_lines(projection.bindings))
     result = ModeloBindingsListResult(
@@ -616,33 +580,9 @@ def bindings_resolve(
             or error.context.get("reason") != "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
         ):
             raise
-        try:
-            listing = read_modelo_bindings_list(
-                ctx,
-                ModeloBindingsListRequest(
-                    profile_id=profile_id,
-                    modelo=modelo,
-                    year=year,
-                    period_code=period,
-                    as_of=resolved_as_of,
-                ),
-                expected_authority_generation=operation.generation.logical_generation,
-            )
-        except CliRefusedBoundaryError:
-            raise error from None
-        known_ids = {row.binding_id for row in listing.bindings}
-        unknown_keys = sorted(set(overrides) - known_ids)
-        if unknown_keys:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.bindings.unknown_keys",
-                    keys=unknown_keys,
-                    code=modelo,
-                    revision=listing.bindings[0].revision if listing.bindings else "",
-                    period=period,
-                    suggestion=", ".join(sorted(known_ids)),
-                )
-            ) from error
+        _translate_unknown_binding_overrides(
+            ctx, profile_id, modelo, year, period, resolved_as_of, overrides, operation, error
+        )
         raise
     result = ModeloBindingsPreviewResult(
         authority_generation=report.authority_generation,
@@ -652,24 +592,7 @@ def bindings_resolve(
         period=report.period,
         override_count=report.override_count,
         binding_count=report.binding_count,
-        bindings=[
-            BindingPreviewRowPayload(
-                binding_id=row.binding_id,
-                source=row.source,
-                readiness=tr(
-                    CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)]
-                ),
-                typed_enum=row.typed_enum,
-                override=row.override,
-                legal_refs=row.legal_refs,
-                source_refs=row.source_refs,
-                relation_inputs=row.relation_inputs,
-                encoded_options=tuple(
-                    BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
-                ),
-            )
-            for row in report.bindings
-        ],
+        bindings=_binding_preview_rows(report),
     )
     lines = [
         "operation\tregistry.modelo.bindings.resolve",
@@ -683,25 +606,7 @@ def bindings_resolve(
         "binding_id\tsource\treadiness\toverride",
     ]
     for row in report.bindings:
-        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
-        lines.append(
-            "\t".join(
-                (
-                    row.binding_id,
-                    row.source,
-                    readiness,
-                    row.override or "-",
-                )
-            )
-        )
-        lines.extend(
-            binding_encoded_option_lines(
-                row.binding_id,
-                tuple(
-                    BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
-                ),
-            )
-        )
+        _append_binding_preview_text(row, lines)
     emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 
@@ -771,3 +676,143 @@ def support_matrix(ctx: typer.Context) -> None:
             f"{discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
         )
     emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
+
+
+def _append_binding_list_row(
+    row: ModeloBindingRowV1, merged_rows: list[BindingListRowPayload], text_rows: list[str]
+) -> None:
+    """Append one grounded row and its encoded-option text in registry order."""
+    readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
+    encoded_options = tuple(
+        BindingEncodedOptionPayload.model_validate(item.model_dump()) for item in row.encoded_options
+    )
+    merged_rows.append(
+        BindingListRowPayload(
+            modelo=row.modelo,
+            revision=row.revision,
+            filing_year=row.filing_year,
+            period=row.period,
+            binding_id=row.binding_id,
+            source=row.source,
+            readiness=readiness,
+            typed_enum=row.typed_enum,
+            input_channel=row.input_channel,
+            borrador_capable=row.borrador_capable,
+            legal_refs=row.legal_refs,
+            source_refs=row.source_refs,
+            relation_inputs=row.relation_inputs,
+            encoded_options=encoded_options,
+        )
+    )
+    text_rows.append(
+        f"{row.modelo}\t{row.revision}\t{row.period or '-'}\t{row.binding_id}\t"
+        f"{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
+        f"{row.borrador_capable}"
+    )
+    text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
+
+
+def _translate_unknown_binding_modelo(
+    ctx: typer.Context,
+    profile_id: UUID,
+    modelo: str,
+    operation: PinnedAuthorityOperation,
+    error: CliRefusedBoundaryError,
+) -> None:
+    """Translate an unknown model only after the registered catalogue confirms it."""
+    try:
+        catalogue = read_modelo_bindings_list(
+            ctx,
+            ModeloBindingsListRequest(profile_id=profile_id, catalogue_only=True),
+            expected_authority_generation=operation.generation.logical_generation,
+        )
+    except CliRefusedBoundaryError:
+        raise error from None
+    if modelo not in catalogue.known_modelos:
+        raise typer.BadParameter(
+            f"modelo {modelo!r} is not in the calculation registry. Accepted: {', '.join(catalogue.known_modelos)}."
+        ) from error
+
+
+def _translate_unknown_binding_overrides(
+    ctx: typer.Context,
+    profile_id: UUID,
+    modelo: str,
+    year: int,
+    period: str,
+    resolved_as_of: date | None,
+    overrides: dict[str, str],
+    operation: PinnedAuthorityOperation,
+    error: CliRefusedBoundaryError,
+) -> None:
+    """Translate unknown override keys against the same pinned registry scope."""
+    try:
+        listing = read_modelo_bindings_list(
+            ctx,
+            ModeloBindingsListRequest(
+                profile_id=profile_id,
+                modelo=modelo,
+                year=year,
+                period_code=period,
+                as_of=resolved_as_of,
+            ),
+            expected_authority_generation=operation.generation.logical_generation,
+        )
+    except CliRefusedBoundaryError:
+        raise error from None
+    known_ids = {row.binding_id for row in listing.bindings}
+    unknown_keys = sorted(set(overrides) - known_ids)
+    if unknown_keys:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.bindings.unknown_keys",
+                keys=unknown_keys,
+                code=modelo,
+                revision=listing.bindings[0].revision if listing.bindings else "",
+                period=period,
+                suggestion=", ".join(sorted(known_ids)),
+            )
+        ) from error
+
+
+def _binding_preview_rows(report: ModeloBindingsResolveProjection) -> list[BindingPreviewRowPayload]:
+    """Project every grounded preview row without changing its order or options."""
+    return [
+        BindingPreviewRowPayload(
+            binding_id=row.binding_id,
+            source=row.source,
+            readiness=tr(
+                CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)]
+            ),
+            typed_enum=row.typed_enum,
+            override=row.override,
+            legal_refs=row.legal_refs,
+            source_refs=row.source_refs,
+            relation_inputs=row.relation_inputs,
+            encoded_options=tuple(
+                BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
+            ),
+        )
+        for row in report.bindings
+    ]
+
+
+def _append_binding_preview_text(row: ModeloBindingRowV1, lines: list[str]) -> None:
+    """Append the established readiness, override, and encoded-option rows."""
+    readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
+    lines.append(
+        "\t".join(
+            (
+                row.binding_id,
+                row.source,
+                readiness,
+                row.override or "-",
+            )
+        )
+    )
+    lines.extend(
+        binding_encoded_option_lines(
+            row.binding_id,
+            tuple(BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options),
+        )
+    )

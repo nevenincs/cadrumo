@@ -3,6 +3,18 @@ from __future__ import annotations
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
+    FLAG_VALUE,
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
 from ._modelo_nonwork_command_spec_policies import (
     _CALCULATION_WRITE,
     _MODEL_HANDOFF,
@@ -20,20 +32,7 @@ from ._modelo_nonwork_common_command_parameters import (
     _required_text_option,
     _required_whole_number_option,
 )
-from .command_spec import (
-    FLAG_VALUE,
-    CommandSpec,
-    DeferredTarget,
-    InvocationSpec,
-    LazyBinding,
-    OptionSpec,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
+from .command_spec import CommandSpec, InvocationSpec
 
 MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

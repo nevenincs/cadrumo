@@ -19,7 +19,8 @@ from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 
 if TYPE_CHECKING:
-    from .schema import ModeloRevision
+    from .binding_selector_utils import BindingExportSelector
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "BindingConsumerKind",
@@ -27,8 +28,18 @@ __all__ = [
     "binding_consumers",
     "bound_casilla_binding_ids",
     "casillas_by_binding",
+    "revision_bindings_by_id",
     "sole_bound_casilla",
 ]
+
+
+def revision_bindings_by_id(revision: ModeloRevision) -> dict[BindingId, BindingDefinition]:
+    """Return the revision's binding declarations keyed by their id.
+
+    Revision identity validation already refuses a duplicate registry id, so the
+    index is lossless.
+    """
+    return {binding.id: binding for binding in revision.bindings}
 
 
 def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ...]:
@@ -154,10 +165,18 @@ def _record_export_consumers(
     silently dropped from the index -- the export validators own that refusal
     and report it -- so it simply earns no export consumer here.
     """
-    from .binding_selector_utils import binding_export_selector
-
     if not revision.export_layouts:
         return
+    record_names = _record_export_field_consumers(revision, record)
+    if not record_names:
+        return
+    _record_export_binding_consumers(revision, record_names, record)
+
+
+def _record_export_field_consumers(
+    revision: ModeloRevision,
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> dict[str, list[str]]:
     record_names: dict[str, list[str]] = {}
     for layout in revision.export_layouts:
         for export_record in layout.records:
@@ -166,14 +185,29 @@ def _record_export_consumers(
             for field in export_record.fields:
                 if field.binding is not None:
                     record(field.binding, BindingConsumerKind.EXPORT_FIELD, f"{export_record.id}.{field.id}")
-    if not record_names:
-        return
+    return record_names
+
+
+def _record_export_binding_consumers(
+    revision: ModeloRevision,
+    record_names: Mapping[str, list[str]],
+    record: Callable[[BindingId, BindingConsumerKind, str], None],
+) -> None:
     for binding in revision.bindings:
-        try:
-            selector = binding_export_selector(binding, revision=revision)
-        except RegistryValidationError:
-            continue
+        selector = _binding_export_selector_or_none(binding, revision)
         if selector is None:
             continue
         for owner in record_names.get(selector.record, ()):
             record(binding.id, BindingConsumerKind.EXPORT_BINDING_RECORD, owner)
+
+
+def _binding_export_selector_or_none(
+    binding: BindingDefinition,
+    revision: ModeloRevision,
+) -> BindingExportSelector | None:
+    from .binding_selector_utils import binding_export_selector
+
+    try:
+        return binding_export_selector(binding, revision=revision)
+    except RegistryValidationError:
+        return None

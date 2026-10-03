@@ -24,7 +24,8 @@ from cadrumo.application.runtime.contracts import (
     RuntimeShutdownIncompleteError,
 )
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
-from cadrumo.application.user_profile.automation_administration import ApprovalSession, AutomationAdministrationService
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
+from cadrumo.application.user_profile.automation_approval_session import ApprovalSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.identity.digest import ContentDigest
 

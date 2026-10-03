@@ -40,14 +40,15 @@ from ....components.host import ScreenHostApp
 from ....tests.frame import screen_text
 from ..casilla_list import CasillaList, CasillaListEntry
 from ..editor import (
+    CasillaEditorPanel,
     CasillaEditorScreen,
     EditorDecision,
     EditorOutcome,
     can_change_text,
     open_area_target,
     read_only_reason,
-    where_from_text,
 )
+from ..editor_explanations import where_from_text
 from ..ports import WorkbenchChangeKind
 from ..sources import OpenSourceSurface
 from ..wording import period_words
@@ -108,14 +109,16 @@ def _editor(
     status_line: str | None = None,
 ) -> CasillaEditorScreen:
     return CasillaEditorScreen(
-        field,
-        parse=FakeActions().parse,
-        language=OutputLanguage(language),
-        can_clear=can_clear,
-        can_restore=can_restore,
-        read_only_reason=reason,
-        affects=affects,
-        status_line=None if status_line is None else status_line_of(status_line),
+        CasillaEditorPanel(
+            field,
+            parse=FakeActions().parse,
+            language=OutputLanguage(language),
+            can_clear=can_clear,
+            can_restore=can_restore,
+            read_only_reason=reason,
+            affects=affects,
+            status_line=None if status_line is None else status_line_of(status_line),
+        )
     )
 
 
@@ -656,7 +659,9 @@ async def test_on_a_filed_declaration_the_panel_and_the_row_say_what_a_box_holds
     with override_settings(cadrumo_output_language="en"):
         reason = read_only_reason(field, OutputLanguage.EN, recorded=True)
         filed = CasillaEditorScreen(
-            field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason, recorded=True
+            CasillaEditorPanel(
+                field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason, recorded=True
+            )
         )
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
             await _settle(pilot)

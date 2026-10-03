@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal, Protocol
@@ -9,14 +10,19 @@ from typing import Literal, Protocol
 from pydantic import BaseModel
 from textual.screen import Screen
 
-from ....application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
+from ....application.modelo.declaration_targets import DeclarationTarget
+from ....application.modelo.declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
+)
 from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceCalculationRevisionRefV1,
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceFilingRefV1,
+    DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
 )
-from ....application.operator_actions.models import DeclaredNextAction
+from ....application.operator_actions.models import ActionReference, DeclaredNextAction
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
 
@@ -106,12 +112,34 @@ class ModeloWorkCreateHandoffV1(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class DeclarationsWorkspaceWiringV1:
+    """The declared read actions and injected handoffs a Declarations workspace is bound to."""
+
+    work_action: ActionReference
+    revisions_action: ActionReference
+    filing_action: ActionReference
+    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None
+    revision_handoff: RevisionHandoffV1 | None = None
+    filing_handoff: FilingHandoffV1 | None = None
+    calendar_projection: DeclarationsCalendarProjectionV1 | None = None
+    calendar_entry_handoff: CalendarEntryHandoffV1 | None = None
+    calendar_entry_can_open: Callable[[DeclarationsCalendarEntryRefV1], bool] | None = None
+    calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None
+    work_create_handoff: ModeloWorkCreateHandoffV1 | None = None
+    creation_targets: tuple[DeclarationTarget, ...] = ()
+    refresh_data: (
+        Callable[[], tuple[DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None]] | None
+    ) = None
+
+
 __all__ = [
     "CalendarEntryHandoffV1",
     "CalendarRecoveryHandoffV1",
     "DeclarationsCalendarScopeV1",
     "DeclarationsDestinationIdV1",
     "DeclarationsRouteTargetV1",
+    "DeclarationsWorkspaceWiringV1",
     "FilingHandoffV1",
     "ModeloWorkCreateHandoffV1",
     "ModeloWorkCreateResultV1",

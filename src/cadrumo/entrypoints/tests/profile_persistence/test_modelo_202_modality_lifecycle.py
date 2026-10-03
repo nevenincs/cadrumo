@@ -128,6 +128,7 @@ def _verification_ports(
 
 def _filing_ports(
     *,
+    operation: PinnedAuthorityOperation,
     work_repo: WorkUnitCatalogueRepository,
     calc_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -135,7 +136,7 @@ def _filing_ports(
 ) -> FilingActionPorts:
     """Compose the complete filing bundle over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -475,6 +476,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
                 actor="operator-test",
                 workflow_profile=profile,
                 ports=_filing_ports(
+                    operation=operation,
                     work_repo=work_repo,
                     calc_repo=calc_repo,
                     filing_repo=filing_repo,
@@ -549,6 +551,7 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(
                 actor="operator-test",
                 workflow_profile=workflow_profile(Decimal("500000")),
                 ports=_filing_ports(
+                    operation=operation,
                     work_repo=work_repo,
                     calc_repo=calc_repo,
                     filing_repo=filing_repo,

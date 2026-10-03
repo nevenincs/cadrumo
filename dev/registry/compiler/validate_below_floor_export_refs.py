@@ -34,9 +34,9 @@ import logging
 from pathlib import Path
 from typing import Final
 
-import rtoml
-
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import read_toml
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
 from ..pipeline.generated_tree_dispositions import (
@@ -68,7 +68,10 @@ def declared_supported_filing_years_floor(*, registry_root: Path | None = None) 
     and so this check stays usable on an isolated registry copy.
     """
     root = bundled_path("registry", "aeat") if registry_root is None else registry_root
-    declaration = rtoml.load(root / SUPPORTED_FILING_YEARS_DECLARATION)
+    declaration = read_toml(
+        root / SUPPORTED_FILING_YEARS_DECLARATION,
+        error_factory=lambda detail: RegistryValidationError(f"supported filing years declaration: {detail}"),
+    )
     catalogue = SupportedFilingYearsCatalogue.model_validate(declaration["supported_filing_years"])
     return catalogue.floor
 

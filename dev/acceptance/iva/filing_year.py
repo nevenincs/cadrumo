@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
@@ -74,7 +75,7 @@ def require_journey_year(*, authority_root: Path, year: int, coordinates: Iterab
     requested = tuple(dict.fromkeys(coordinates))
     if not requested:
         raise IvaFilingYearUnsupportedError("a journey must name at least one modelo coordinate to admit a year")
-    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / "authority.current.json")
+    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME)
     selected: list[tuple[str, str, str]] = []
     try:
         with authority.operation() as operation:

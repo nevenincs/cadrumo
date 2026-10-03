@@ -20,11 +20,8 @@ from cadrumo.application.runtime.management_status import (
 )
 from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
 from cadrumo.entrypoints.tui import runtime_management
-from cadrumo.entrypoints.tui.runtime_management import (
-    RuntimeManagementCleanup,
-    RuntimeManagementScreen,
-    RuntimeStopConfirmationScreen,
-)
+from cadrumo.entrypoints.tui.runtime_management import RuntimeManagementScreen, RuntimeStopConfirmationScreen
+from cadrumo.entrypoints.tui.runtime_management_cleanup import RuntimeManagementCleanup
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection

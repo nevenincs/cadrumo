@@ -44,6 +44,7 @@ from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.ids import (
     BindingId,
     ParameterId,
@@ -456,7 +457,7 @@ def _layout_bindings(
     """
     binding_cells: dict[BindingId, SheetCellAddress] = {}
     binding_rows: list[_BindingRow] = []
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     entradas_row = entradas_row_start
     for binding_id in _referenced_bindings(revision):
         if binding_id not in bindings_by_id:

@@ -43,6 +43,7 @@ words run out of room, shortens the words rather than wrapping.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -56,8 +57,9 @@ from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
+from ...components.cell_text import ellipsize
 from .header import blocking_count, confirm_count, missing_findings
-from .issues import blocks_marked
+from .issue_scale import blocks_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 from .wording import date_text, day_text
@@ -113,7 +115,6 @@ _PENDING_STYLE: Final[str] = "dim"
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
 _DATED_ACTIONS: Final[frozenset[NextAction]] = frozenset({NextAction.EXPORT_AGAIN, NextAction.RECORD_AFTER_FILE})
 """Next actions that name the day the latest file was created."""
-_ELLIPSIS: Final[str] = "…"
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,28 +179,13 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     blocking = blocking_count(form)
     awaiting = _awaiting_the_check(form)
     clean = staged == 0
-    filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
-        WorkbenchStep.FILL: clean and filled,
-        WorkbenchStep.CALCULATE: clean
-        and form.calculation_revision_id is not None
-        and (filed or not form.calculation_out_of_date),
-        WorkbenchStep.REVIEW: clean and (filed or (verified and blocked == 0 and blocking == 0)),
+        WorkbenchStep.FILL: clean and _filling_is_done(filed, verified, to_fill, assumed),
+        WorkbenchStep.CALCULATE: clean and _calculation_is_done(form, filed),
+        WorkbenchStep.REVIEW: clean and _review_is_done(filed, verified, blocked, blocking),
         WorkbenchStep.FILE: clean and filed,
     }
-    steps: list[StepState] = []
-    current_found = False
-    for step in WorkbenchStep:
-        if done[step]:
-            steps.append(StepState(step, StepStatus.DONE))
-        elif not current_found:
-            current_found = True
-            is_blocked = step is WorkbenchStep.REVIEW and (
-                blocked > 0 or blocking > awaiting or form.verification is VerificationCompletenessStatus.BLOCKED
-            )
-            steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
-        else:
-            steps.append(StepState(step, StepStatus.PENDING))
+    steps = _step_states(done, blocked=blocked, blocking=blocking, awaiting=awaiting, form=form)
     action, count, findings_lead = _next(
         form,
         staged=staged,
@@ -214,7 +200,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     )
     recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
     return WorkbenchProgress(
-        steps=tuple(steps),
+        steps=steps,
         next_action=action,
         count=count,
         recorded_at=recorded_at,
@@ -223,6 +209,42 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         file_created_at=None if form.last_export is None else form.last_export.exported_at,
         findings_lead=findings_lead,
     )
+
+
+def _filling_is_done(filed: bool, verified: bool, to_fill: int, assumed: int) -> bool:
+    return filed or ((verified or to_fill == 0) and assumed == 0)
+
+
+def _calculation_is_done(form: ModeloWorkForm, filed: bool) -> bool:
+    return form.calculation_revision_id is not None and (filed or not form.calculation_out_of_date)
+
+
+def _review_is_done(filed: bool, verified: bool, blocked: int, blocking: int) -> bool:
+    return filed or (verified and blocked == 0 and blocking == 0)
+
+
+def _step_states(
+    done: Mapping[WorkbenchStep, bool],
+    *,
+    blocked: int,
+    blocking: int,
+    awaiting: int,
+    form: ModeloWorkForm,
+) -> tuple[StepState, ...]:
+    steps: list[StepState] = []
+    current_found = False
+    for step in WorkbenchStep:
+        if done[step]:
+            steps.append(StepState(step, StepStatus.DONE))
+        elif not current_found:
+            current_found = True
+            is_blocked = step is WorkbenchStep.REVIEW and (
+                blocked > 0 or blocking > awaiting or form.verification is VerificationCompletenessStatus.BLOCKED
+            )
+            steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
+        else:
+            steps.append(StepState(step, StepStatus.PENDING))
+    return tuple(steps)
 
 
 def _next(
@@ -238,6 +260,38 @@ def _next(
     verified: bool,
     filed: bool,
 ) -> tuple[NextAction, int, bool]:
+    early = _next_before_review(
+        form,
+        staged=staged,
+        to_fill=to_fill,
+        unboxed=unboxed,
+        assumed=assumed,
+        verified=verified,
+        filed=filed,
+    )
+    if early is not None:
+        return early
+    return _next_after_review(
+        form,
+        unboxed=unboxed,
+        to_fill=to_fill,
+        blocked=blocked,
+        blocking=blocking,
+        awaiting=awaiting,
+        verified=verified,
+    )
+
+
+def _next_before_review(
+    form: ModeloWorkForm,
+    *,
+    staged: int,
+    to_fill: int,
+    unboxed: int,
+    assumed: int,
+    verified: bool,
+    filed: bool,
+) -> tuple[NextAction, int, bool] | None:
     if staged:
         return NextAction.APPLY, staged, False
     if filed:
@@ -249,27 +303,60 @@ def _next(
     if assumed:
         # The count is the header's: the assumed boxes, the only values a filer confirms.
         return NextAction.CONFIRM, confirm_count(form), False
-    if verified and not blocking:
-        export = form.last_export
-        if export is None:
-            return NextAction.EXPORT, 0, False
-        return (NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN), 0, False
+    return None
+
+
+def _next_after_review(
+    form: ModeloWorkForm,
+    *,
+    unboxed: int,
+    to_fill: int,
+    blocked: int,
+    blocking: int,
+    awaiting: int,
+    verified: bool,
+) -> tuple[NextAction, int, bool]:
+    file_action = _ready_file_action(form, verified=verified, blocking=blocking)
+    if file_action is not None:
+        return file_action
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0, False
-    if awaiting and awaiting == blocking and not blocked:
+    if _check_is_next(awaiting, blocking, blocked):
         # Only the check can say whether what blocks stands, and it also judges
         # whether the values still missing are ones the declaration needs.
         return NextAction.VERIFY, 0, False
-    if unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED):
+    if _only_unboxed_values_remain(form, unboxed=unboxed, blocked=blocked, blocking=blocking):
         # Only values are missing, so the step is filling them in, counted as the
         # header's missing chip counts them; findings name them, so they lead there.
         return NextAction.FILL, to_fill + unboxed, True
-    if blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS:
+    if _filing_still_needs_resolution(form, blocked=blocked, blocking=blocking, unboxed=unboxed):
         # The header's chips count what blocks filing and the missing values
         # only a finding names; boxes the check marked stand in only when no
         # finding is left to count.
         return NextAction.RESOLVE, (blocking + unboxed) or blocked, False
     return NextAction.VERIFY, 0, False
+
+
+def _ready_file_action(form: ModeloWorkForm, *, verified: bool, blocking: int) -> tuple[NextAction, int, bool] | None:
+    if not verified or blocking:
+        return None
+    export = form.last_export
+    if export is None:
+        return NextAction.EXPORT, 0, False
+    action = NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN
+    return action, 0, False
+
+
+def _check_is_next(awaiting: int, blocking: int, blocked: int) -> bool:
+    return bool(awaiting and awaiting == blocking and not blocked)
+
+
+def _only_unboxed_values_remain(form: ModeloWorkForm, *, unboxed: int, blocked: int, blocking: int) -> bool:
+    return bool(unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED))
+
+
+def _filing_still_needs_resolution(form: ModeloWorkForm, *, blocked: int, blocking: int, unboxed: int) -> bool:
+    return bool(blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS)
 
 
 def _awaiting_the_check(form: ModeloWorkForm) -> int:
@@ -320,17 +407,6 @@ def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> s
     return tr(f"tui.modelo.workbench.next.{action.value}", count=progress.count)
 
 
-def _shortened(text: str, room: int) -> str:
-    if cell_len(text) <= room:
-        return text
-    kept = ""
-    for character in text:
-        if cell_len(kept + character + _ELLIPSIS) > room:
-            break
-        kept += character
-    return kept.rstrip() + _ELLIPSIS
-
-
 def fit_next_line(action: str, key: str, width: int) -> str:
     """The next-action line in at most ``width`` cells: the one action and its key.
 
@@ -338,12 +414,12 @@ def fit_next_line(action: str, key: str, width: int) -> str:
     ellipsis, before the line is allowed to wrap.
     """
     if not key:
-        return action if cell_len(action) <= width else _shortened(action, width)
+        return action if cell_len(action) <= width else ellipsize(action, width)
     line = tr(_NEXT_LINE_LOCALE_KEY, action=action, key=key)
     if cell_len(line) <= width:
         return line
     frame = cell_len(tr(_NEXT_LINE_LOCALE_KEY, action="", key=key))
-    return tr(_NEXT_LINE_LOCALE_KEY, action=_shortened(action, max(width - frame, 1)), key=key)
+    return tr(_NEXT_LINE_LOCALE_KEY, action=ellipsize(action, max(width - frame, 1)), key=key)
 
 
 __all__ = [

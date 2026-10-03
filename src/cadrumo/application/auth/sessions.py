@@ -39,7 +39,7 @@ from ...core.identity.tax_id import (
 )
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.utc import validate_utc_aware
+from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
@@ -573,10 +573,7 @@ def session_metadata_datetime(value: object, *, field: str) -> datetime:
     if isinstance(value, datetime):
         return value
     if isinstance(value, str):
-        text = value.strip()
-        if text.endswith("Z"):
-            text = f"{text[:-1]}+00:00"
-        parsed = datetime.fromisoformat(text)
+        parsed = parse_iso_datetime(value.strip())
         validate_utc_aware(parsed)
         return parsed
     raise SessionDeserializationError(

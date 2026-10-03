@@ -276,7 +276,10 @@ def _require_exact_generation_target(
         )
 
 
-def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxiliaryEnvelopeHeader) -> None:
+def _require_header_roles(
+    header: RecordDesignIntermediateAuxiliaryEnvelopeHeader,
+    fields: tuple[RecordDesignIntermediateField, ...],
+) -> None:
     expected_roles = (
         "opening_tag",
         "modelo",
@@ -292,19 +295,27 @@ def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxili
         "post_developer_reserved",
         "auxiliary_closing_tag",
     )
-    fields = header.source_fields
     if tuple(item.role.value for item in header.fields) != expected_roles or len(fields) != 13:
         raise RegistryValidationError("Modelo 390 auxiliary header requires its thirteen exact source roles")
+
+
+def _require_header_extent(fields: tuple[RecordDesignIntermediateField, ...]) -> None:
     if any(field.offset + field.length != next_field.offset for field, next_field in pairwise(fields)):
         raise RegistryValidationError("Modelo 390 auxiliary header source anchors must be contiguous")
     if fields[0].offset != 1 or fields[-1].offset + fields[-1].length - 1 != 328:
         raise RegistryValidationError("Modelo 390 auxiliary header source anchors must occupy positions 1 through 328")
+
+
+def _require_header_source_coordinates(fields: tuple[RecordDesignIntermediateField, ...]) -> None:
     if tuple(field.source_row for field in fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
         raise RegistryValidationError("Modelo 390 auxiliary header source rows must retain their exact anchors")
     if tuple(field.source_cell for field in fields) != tuple(f"A{row}" for row in AUXILIARY_ENVELOPE_HEADER_ROWS):
         raise RegistryValidationError("Modelo 390 auxiliary header source cells must retain their exact anchors")
     if tuple(field.ordinal for field in fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
         raise RegistryValidationError("Modelo 390 auxiliary header ordinals must retain their exact anchors")
+
+
+def _require_header_literals(fields: tuple[RecordDesignIntermediateField, ...]) -> None:
     expected_contents = (
         'Constante "<T"',
         'Constante "390"',
@@ -322,6 +333,14 @@ def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxili
     )
     if tuple(field.content for field in fields) != expected_contents:
         raise RegistryValidationError("Modelo 390 auxiliary header literals conflict with the official source anchors")
+
+
+def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxiliaryEnvelopeHeader) -> None:
+    fields = header.source_fields
+    _require_header_roles(header, fields)
+    _require_header_extent(fields)
+    _require_header_source_coordinates(fields)
+    _require_header_literals(fields)
 
 
 def _render_header_field(

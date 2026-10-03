@@ -26,18 +26,19 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import (
-    OrderRestoration,
-    _plan,
+from ..edition_delta_equivalence import (
     _prove_chain,
+)
+from ..edition_delta_order_restoration import (
+    OrderRestoration,
     _prove_order_restoration,
-    _write_edition,
     _write_order_restorations,
     declared_order_restorations,
-    main,
-    migrate_modelo,
 )
-from ..edition_family_delta import collapse_keyed_families
+from ..edition_delta_migration import main, migrate_modelo
+from ..edition_delta_planning import _plan
+from ..edition_delta_writer import _write_edition
+from ..edition_family_delta_collapse import collapse_keyed_families
 from ..edition_round_trip import RoundTripReport, copy_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

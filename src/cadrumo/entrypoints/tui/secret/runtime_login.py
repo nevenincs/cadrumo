@@ -21,8 +21,7 @@ from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....application.runtime.profile_access import RuntimeProfileStatus
-from ....application.user_profile.access_contracts import AuthorityState
+from ....application.runtime.profile_access import RuntimeProfileStatus, status_admits_session
 from ....application.user_profile.login_interaction import ProfileLoginChoice
 from ....application.user_profile.login_session import ProfileReceiptRefusedError
 from ....core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
@@ -36,7 +35,7 @@ from .automation_requester import RuntimeAutomationRequesterScreen
 from .credentials import CREDENTIAL_PANEL_CSS
 
 if TYPE_CHECKING:
-    from ..runtime_management import RuntimeManagementCleanup
+    from ..runtime_management_cleanup import RuntimeManagementCleanup
 
 type RuntimeRequesterFactory = Callable[[UUID], RuntimeAutomationRequesterScreen]
 
@@ -566,24 +565,15 @@ class RuntimeLoginScreen(TypedAppAccess, Screen[RuntimeLoginHandoff | None]):
                 return
             access = status.status
             if (
-                not access.connected
-                or not access.credential_authenticated
-                or not access.profile_bound
-                or access.denial is not None
-                or access.profile_id != profile_id
-                or access.session_id is None
-                or access.session_id != client.session_id
-                or access.session_expires_at is None
-                or access.session_expires_at <= now()
-                or (
-                    method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}
-                    and (
-                        not access.grant_valid
-                        or access.grant_state is not AuthorityState.ACTIVE
-                        or access.grant_expires_at is None
-                        or access.grant_expires_at <= now()
-                    )
+                access.session_id is None
+                or not status_admits_session(
+                    access,
+                    profile_id=profile_id,
+                    session_id=access.session_id,
+                    at=now(),
+                    requires_automation_grant=method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE},
                 )
+                or access.session_id != client.session_id
             ):
                 self._status_refused()
                 return

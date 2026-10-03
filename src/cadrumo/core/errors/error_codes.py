@@ -9,8 +9,9 @@ human-readable and machine-readable stderr payloads that downstream tools
 consume; :func:`build_error_envelope` constructs the underlying
 :class:`ErrorEnvelope`.
 
-Secret-looking context keys (matching :data:`_SECRET_FIELD_PATTERN`) are
-redacted before they ever reach stderr — see :func:`scrub_error_context`.
+Secret-looking context keys are classified by
+:func:`core.redaction.rules.is_sensitive_redaction_key` and redacted before they
+ever reach stderr — see :func:`scrub_error_context`.
 Non-secret context values are also passed through
 :func:`core.redaction.rules.redact_for_log` so NIF, URL, and bearer-token
 shapes share the same rule vocabulary as logs and observability.
@@ -19,7 +20,6 @@ shapes share the same rule vocabulary as logs and observability.
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
@@ -32,11 +32,6 @@ from pydantic import BaseModel, ConfigDict
 
 if TYPE_CHECKING:
     from ..json_contract import Notice, ResolvedPreconditionAction
-
-_SECRET_FIELD_PATTERN = re.compile(
-    r"(credential|token|secret|pkcs12|passphrase|password|cookie|bearer)",
-    re.IGNORECASE,
-)
 
 # Context keys that are internal implementation detail and must not be
 # surfaced in user-facing error output (text mode or JSON envelope).
@@ -327,34 +322,41 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
                 f"even after deferred-bind drain; ensure it is declared in the error-code registry.",
             )
         code = resolved
-    from .hierarchy import PublicErrorProjectionError
-
-    if isinstance(error, PublicErrorProjectionError):
-        return get_registered_error_code_by_code(error.public_error_code)
     return code
 
 
 def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] | None:
     """Redact secret-looking keys and strip internal keys from ``context``.
 
-    Keys matching :data:`_SECRET_FIELD_PATTERN` are replaced with
-    ``"<redacted>"``. Keys in :data:`_INTERNAL_CONTEXT_KEYS` are
-    dropped entirely — they are implementation detail (e.g. widget
-    prompt identifiers) and must not appear in operator-facing output.
+    Keys classified by :func:`is_sensitive_redaction_key` are replaced with
+    ``"<redacted>"``. Keys in :data:`_INTERNAL_CONTEXT_KEYS` are dropped
+    entirely — they are implementation detail (e.g. widget prompt identifiers)
+    and must not appear in operator-facing output.
     """
     if not context:
         return None
-    from ..redaction.rules import redact_for_log
+    from ..redaction.rules import is_sensitive_redaction_key, redact_for_log
 
     scrubbed: dict[str, str] = {}
     for key, value in sorted(context.items()):
         if key in _INTERNAL_CONTEXT_KEYS:
             continue
-        if _SECRET_FIELD_PATTERN.search(key):
+        if is_sensitive_redaction_key(key):
             scrubbed[key] = "<redacted>"
         else:
             scrubbed[key] = redact_for_log(_stringify_context_value(value))
     return scrubbed or None
+
+
+def public_error_context(error: BaseException) -> dict[str, str] | None:
+    """Return the scrubbed context the error envelope would emit for ``error``.
+
+    The same merge of ``context`` and public attributes, and the same
+    redaction, as :func:`build_error_envelope`, so a process that records the
+    context for another process to render discloses nothing the envelope would
+    not have disclosed itself.
+    """
+    return scrub_error_context(_merge_error_context(error, None))
 
 
 def build_error_envelope(
@@ -640,6 +642,7 @@ __all__ = [
     "get_error_exit_code",
     "get_registered_error_code",
     "get_registered_error_code_by_code",
+    "public_error_context",
     "register",
     "render_error_json",
     "render_error_text",

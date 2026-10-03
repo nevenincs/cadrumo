@@ -15,7 +15,11 @@ from ...application.aggregation.invoice_retencion import (
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
 from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
-from ...application.modelo.aggregate_operation import ModeloAggregateProjection
+from ...application.modelo.aggregate_operation import (
+    ModeloAggregateGenerationAudit,
+    ModeloAggregateProjection,
+    ModeloAggregateWindow,
+)
 from ...application.modelo.invoice_withholding_capture_operation import ModeloInvoiceWithholdingCaptureProjection
 from ...core.aggregation import RetencionClave
 from ...core.i18n.render import tr
@@ -102,11 +106,7 @@ def _aggregate_operation_result(projection: ModeloAggregateProjection) -> Modelo
     ):
         raise ValueError("registered modelo aggregate omitted its summary fields")
     window = projection.withholding_window
-    if projection.modelo in _PERIODIC_WINDOW_MODELOS:
-        if window is None:
-            raise ValueError("registered modelo aggregate omitted its withholding-window readback")
-    elif window is not None:
-        raise ValueError("registered modelo aggregate returned an unexpected withholding window")
+    _require_aggregate_window(projection, window)
     audit = None if window is None else window.generation_audit
     return ModeloAggregateResult(
         modelo=ModeloCode(projection.modelo),
@@ -124,26 +124,7 @@ def _aggregate_operation_result(projection: ModeloAggregateProjection) -> Modelo
             )
             for row in projection.clave_breakdown
         ],
-        withholding_window=(
-            None
-            if window is None
-            else WithholdingWindowReadbackPayload(
-                baseline=WithholdingWindowBaselinePayload(
-                    scope_token=window.baseline.scope_token,
-                    generation_id=window.baseline.generation_id,
-                ),
-                generation=window.generation,
-                generation_audit=(
-                    None
-                    if audit is None
-                    else WithholdingGenerationAuditPayload(
-                        parent_generation_id=audit.parent_generation_id,
-                        mode=audit.mode,
-                        supersedes_generation_id=audit.supersedes_generation_id,
-                    )
-                ),
-            )
-        ),
+        withholding_window=_aggregate_window_payload(window, audit),
     )
 
 
@@ -337,3 +318,35 @@ def aggregate_modelo(
         notices = _calculation_rows_absent_notices(aggregate_projection)
     lines = _aggregate_output_lines(aggregate_result, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)
+
+
+def _require_aggregate_window(projection: ModeloAggregateProjection, window: ModeloAggregateWindow | None) -> None:
+    """Require a window exactly for the established periodic withholding models."""
+    if projection.modelo in _PERIODIC_WINDOW_MODELOS:
+        if window is None:
+            raise ValueError("registered modelo aggregate omitted its withholding-window readback")
+    elif window is not None:
+        raise ValueError("registered modelo aggregate returned an unexpected withholding window")
+
+
+def _aggregate_window_payload(
+    window: ModeloAggregateWindow | None, audit: ModeloAggregateGenerationAudit | None
+) -> WithholdingWindowReadbackPayload | None:
+    """Project the existing baseline and optional generation audit fields."""
+    return (
+        None
+        if window is None
+        else WithholdingWindowReadbackPayload(
+            baseline=WithholdingWindowBaselinePayload(
+                scope_token=window.baseline.scope_token, generation_id=window.baseline.generation_id
+            ),
+            generation=window.generation,
+            generation_audit=None
+            if audit is None
+            else WithholdingGenerationAuditPayload(
+                parent_generation_id=audit.parent_generation_id,
+                mode=audit.mode,
+                supersedes_generation_id=audit.supersedes_generation_id,
+            ),
+        )
+    )

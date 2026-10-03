@@ -7,6 +7,7 @@ from typing import ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
+from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable
 from .controller import (
@@ -14,7 +15,6 @@ from .controller import (
     LedgerTransactionDetailRequested,
     LedgerWorkspaceController,
     LedgerWorkspaceScreen,
-    ledger_copy,
     review_status_label,
 )
 from .models import LedgerEntryRowV1
@@ -37,7 +37,7 @@ def _selected_row_key(table: DataTable[str]) -> str | None:
 def _add_entry_columns(table: ContentDataTable[str], columns: tuple[tuple[str, str, int], ...]) -> None:
     """Recreate the visible columns with the same translated header floors."""
     for name, key, size in columns:
-        header = ledger_copy(key)
+        header = tr(key)
         table.add_column(header, key=name, width=max(size, len(header)))
 
 
@@ -107,12 +107,12 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.entries.title"), classes="cadrumo-banner")
+        yield Static(tr("tui.ledger.entries.title"), classes="cadrumo-banner")
         with ledger_workspace_page() as navigation:
             yield navigation
             yield ContentDataTable[str](id="ledger-entries", cursor_type="row", zebra_stripes=True)
             if self.controller.record_doors is not None:
-                yield Button(ledger_copy("tui.ledger.records.open_transaction"), id="ledger-open-transaction")
+                yield Button(tr("tui.ledger.records.open_transaction"), id="ledger-open-transaction")
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
@@ -128,7 +128,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         if not table.row_count:
             # An empty ledger is a state, not a refusal: it gets the muted line,
             # and the warning line stays free for a navigation refusal.
-            self.query_one("#ledger-empty", Static).update(ledger_copy("tui.ledger.entries.empty"))
+            self.query_one("#ledger-empty", Static).update(tr("tui.ledger.entries.empty"))
         navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
         restore_transaction_focus(
             navigation=navigation,
@@ -146,7 +146,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
             # budgeting the authored width alone under-counts every column
             # whose translated heading is longer and overflows the last one.
             # Two cells of padding per column, plus one for the scrollbar.
-            cost = max(column[2], len(ledger_copy(column[1]))) + 2
+            cost = max(column[2], len(tr(column[1]))) + 2
             if used + cost > width - 1:
                 break
             taken.append(column)
@@ -200,7 +200,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         if event.button.id == "ledger-open-transaction":
             transaction_id = self.selected_transaction_id or self.controller.restored_transaction_id()
             if transaction_id is None:
-                self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.selection_required"))
+                self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.selection_required"))
                 return
             self.post_message(LedgerTransactionDetailRequested(transaction_id))
 

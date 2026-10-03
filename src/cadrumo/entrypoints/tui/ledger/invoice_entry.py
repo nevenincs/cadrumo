@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import ClassVar, Final, cast, override
 
 from pydantic import ValidationError
@@ -11,12 +11,15 @@ from textual.app import ComposeResult
 from textual.widgets import Button, Input, Select, Static
 
 from ....core.aggregation import IntracomOperationType
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.i18n.render import tr
+from ....core.parsing.dates import require_iso8601_date_unless_blank
 from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ..account import AccountSessionExpiredError
-from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController, ledger_copy
+from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -101,20 +104,146 @@ _CLASS_LOCALE_KEYS: Final[dict[LedgerInvoiceClassChoice, str]] = {
 
 
 def _field_label(name: str) -> str:
-    return ledger_copy(_FIELD_LOCALE_KEYS[name])
+    return tr(_FIELD_LOCALE_KEYS[name])
 
 
 def _line_field_label(name: str) -> str:
-    return ledger_copy(_LINE_FIELD_LOCALE_KEYS[name])
+    return tr(_LINE_FIELD_LOCALE_KEYS[name])
 
 
 def _line_input_id(name: str) -> str:
     return f"ledger-invoice-line-{name.replace('_', '-')}"
 
 
+def _line_required_problems(values: dict[str, str]) -> list[str]:
+    return [
+        tr("tui.ledger.invoice.problem.required", field=_line_field_label(name))
+        for name, required in _LINE_FIELDS
+        if required and not values[name]
+    ]
+
+
+def _line_amounts(values: dict[str, str]) -> tuple[dict[str, Decimal], list[str]]:
+    numbers: dict[str, Decimal] = {}
+    problems: list[str] = []
+    for name in ("quantity", "unit_price", "subtotal", "iva_amount"):
+        if not values[name]:
+            continue
+        # Unit price and quantity may carry sub-cent precision.
+        parsed = try_parse_canonical_decimal(values[name])
+        if parsed is None:
+            problems.append(tr("tui.ledger.invoice.problem.amount", field=_line_field_label(name)))
+        else:
+            numbers[name] = parsed
+    return numbers, problems
+
+
+def _parsed_invoice_line(values: dict[str, str]) -> tuple[LedgerInvoiceLineEntryV1 | None, tuple[str, ...]]:
+    problems = _line_required_problems(values)
+    numbers, amount_problems = _line_amounts(values)
+    problems.extend(amount_problems)
+    if problems:
+        return None, tuple(problems)
+    try:
+        line = LedgerInvoiceLineEntryV1(
+            description=values["description"],
+            quantity=numbers["quantity"],
+            unit_price=numbers["unit_price"],
+            subtotal=numbers["subtotal"],
+            iva_rate=values["iva_rate"],
+            iva_amount=numbers["iva_amount"],
+            spending_category_id=values["spending_category_id"] or None,
+            oss_rate_kind=values["oss_rate_kind"] or None,
+        )
+    except (CadrumoError, ValidationError) as error:
+        return None, (door_refusal_text(error),)
+    return line, ()
+
+
+def _required_entry_problems(values: dict[str, str], lines: list[LedgerInvoiceLineEntryV1]) -> list[str]:
+    problems = [
+        tr("tui.ledger.invoice.problem.required", field=_field_label(name))
+        for name, required in _TEXT_FIELDS
+        if required and not values[name]
+    ]
+    if lines and (values["taxable_base"] or values["iva_rate"]):
+        problems.append(tr("tui.ledger.invoice.problem.lines_and_base"))
+    if not lines and not values["taxable_base"]:
+        problems.append(tr("tui.ledger.invoice.problem.base_or_lines"))
+    return problems
+
+
+def _entry_day(values: dict[str, str], name: str) -> tuple[date | None, str | None]:
+    try:
+        return require_iso8601_date_unless_blank(values[name]), None
+    except ValueError:
+        return None, tr("tui.ledger.invoice.problem.date", field=_field_label(name))
+
+
+def _entry_dates(values: dict[str, str]) -> tuple[date | None, date | None, list[str]]:
+    issued, issued_problem = _entry_day(values, "invoice_date")
+    operation_date, operation_problem = _entry_day(values, "operation_date")
+    problems = [problem for problem in (issued_problem, operation_problem) if problem is not None]
+    return issued, operation_date, problems
+
+
+def _entry_amount(values: dict[str, str], name: str) -> tuple[Decimal | None, str | None]:
+    raw = values[name]
+    if not raw:
+        return None, None
+    parsed = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if parsed is None:
+        return None, tr("tui.ledger.invoice.problem.amount", field=_field_label(name))
+    return parsed, None
+
+
+def _entry_amounts(values: dict[str, str]) -> tuple[dict[str, Decimal | None], list[str]]:
+    parsed: dict[str, Decimal | None] = {}
+    problems: list[str] = []
+    for name in ("taxable_base", "iva_rate", "retention_rate", "retention_amount", "recargo_amount"):
+        parsed[name], problem = _entry_amount(values, name)
+        if problem is not None:
+            problems.append(problem)
+    return parsed, problems
+
+
+def _build_invoice_entry(
+    values: dict[str, str],
+    lines: list[LedgerInvoiceLineEntryV1],
+    issued: date,
+    operation_date: date | None,
+    amounts: dict[str, Decimal | None],
+    kind: InvoiceKind,
+    invoice_class: LedgerInvoiceClassChoice,
+    operation_type_value: object,
+) -> LedgerInvoiceEntryV1:
+    return LedgerInvoiceEntryV1(
+        kind=kind,
+        counterparty_name=values["counterparty_name"],
+        counterparty_nif=values["counterparty_nif"] or None,
+        country_code=values["country_code"].upper(),
+        invoice_number=values["invoice_number"],
+        invoice_date=issued,
+        taxable_base=amounts["taxable_base"],
+        iva_rate=amounts["iva_rate"],
+        lines=tuple(lines),
+        operation_type=IntracomOperationType(operation_type_value) if isinstance(operation_type_value, str) else None,
+        operation_date=operation_date,
+        recargo_amount=amounts["recargo_amount"],
+        rectifies_invoice_number=values["rectifies_invoice_number"] or None,
+        iva_category=IvaCategory(values["iva_category"]) if values["iva_category"] else None,
+        currency=values["currency"].upper(),
+        retention_rate=amounts["retention_rate"],
+        retention_amount=amounts["retention_amount"],
+        invoice_class=invoice_class,
+        series=values["series"] or None,
+        notes=values["notes"],
+    )
+
+
 def invoice_line_row(index: int, line: InvoiceLine | LedgerInvoiceLineEntryV1) -> str:
     """Render one invoice line as its numbered row, for entry review and the detail view alike."""
-    return ledger_copy(
+    return tr(
         "tui.ledger.invoice.line.row",
         index=str(index),
         description=line.description,
@@ -124,6 +253,56 @@ def invoice_line_row(index: int, line: InvoiceLine | LedgerInvoiceLineEntryV1) -
         rate=str(line.iva_rate),
         amount=format(line.iva_amount, "f"),
     )
+
+
+def _operation_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
+    if entry.operation_type is not None or entry.operation_date is not None:
+        return tr(
+            "tui.ledger.invoice.summary.operation",
+            code="-" if entry.operation_type is None else entry.operation_type.value,
+            date="-" if entry.operation_date is None else entry.operation_date.isoformat(),
+        )
+    return None
+
+
+def _recargo_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
+    if entry.recargo_amount is not None:
+        return tr(
+            "tui.ledger.invoice.summary.recargo",
+            amount=format(entry.recargo_amount, "f"),
+            currency=entry.currency,
+        )
+    return None
+
+
+def _rectifies_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
+    if entry.rectifies_invoice_number is not None:
+        return tr("tui.ledger.invoice.summary.rectifies", number=entry.rectifies_invoice_number)
+    return None
+
+
+def _retention_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
+    if entry.retention_rate is not None or entry.retention_amount is not None:
+        return tr(
+            "tui.ledger.invoice.summary.retention",
+            rate="-" if entry.retention_rate is None else format(entry.retention_rate, "f"),
+            amount="-" if entry.retention_amount is None else format(entry.retention_amount, "f"),
+        )
+    return None
+
+
+def _supplemental_summary_lines(entry: LedgerInvoiceEntryV1) -> list[str]:
+    lines: list[str] = []
+    for render_line in (
+        _operation_summary_line,
+        _recargo_summary_line,
+        _rectifies_summary_line,
+        _retention_summary_line,
+    ):
+        line = render_line(entry)
+        if line is not None:
+            lines.append(line)
+    return lines
 
 
 class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
@@ -146,53 +325,49 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.invoice.title"), classes="cadrumo-banner")
+        yield Static(tr("tui.ledger.invoice.title"), classes="cadrumo-banner")
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(ledger_copy("tui.ledger.invoice.prompt"), markup=False)
+            yield Static(tr("tui.ledger.invoice.prompt"), markup=False)
             yield Static(_field_label("kind"), markup=False)
             yield Select[str](
-                tuple((ledger_copy(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
+                tuple((tr(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
                 value=InvoiceKind.RECEIVED.value,
                 allow_blank=False,
                 id="ledger-invoice-kind",
             )
             for name, required in _TEXT_FIELDS:
                 label = _field_label(name)
-                yield Static(
-                    label if required else ledger_copy("tui.ledger.invoice.optional", label=label), markup=False
-                )
+                yield Static(label if required else tr("tui.ledger.invoice.optional", label=label), markup=False)
                 yield Input(value=_DEFAULTS.get(name, ""), id=f"ledger-invoice-{name.replace('_', '-')}")
-            yield Static(ledger_copy("tui.ledger.invoice.optional", label=_field_label("operation_type")), markup=False)
+            yield Static(tr("tui.ledger.invoice.optional", label=_field_label("operation_type")), markup=False)
             yield Select[str](
                 tuple((key.value, key.value) for key in IntracomOperationType),
-                prompt=ledger_copy("tui.ledger.invoice.operation_type_none"),
+                prompt=tr("tui.ledger.invoice.operation_type_none"),
                 allow_blank=True,
                 id="ledger-invoice-operation-type",
             )
             yield Static(_field_label("invoice_class"), markup=False)
             yield Select[str](
-                tuple((ledger_copy(_CLASS_LOCALE_KEYS[choice]), choice.value) for choice in LedgerInvoiceClassChoice),
+                tuple((tr(_CLASS_LOCALE_KEYS[choice]), choice.value) for choice in LedgerInvoiceClassChoice),
                 value=LedgerInvoiceClassChoice.ORDINARIA.value,
                 allow_blank=False,
                 id="ledger-invoice-class",
             )
-            yield Static(ledger_copy("tui.ledger.invoice.line.heading"), markup=False)
+            yield Static(tr("tui.ledger.invoice.line.heading"), markup=False)
             for name, required in _LINE_FIELDS:
                 label = _line_field_label(name)
-                yield Static(
-                    label if required else ledger_copy("tui.ledger.invoice.optional", label=label), markup=False
-                )
+                yield Static(label if required else tr("tui.ledger.invoice.optional", label=label), markup=False)
                 yield Input(id=_line_input_id(name))
-            yield Button(ledger_copy("tui.ledger.invoice.line.add"), id="ledger-invoice-line-add")
-            yield Button(ledger_copy("tui.ledger.invoice.line.remove"), id="ledger-invoice-line-remove", disabled=True)
-            yield Static(ledger_copy("tui.ledger.invoice.line.none"), id="ledger-invoice-lines", markup=False)
-            yield Button(ledger_copy("tui.ledger.invoice.review"), id="ledger-invoice-review", variant="primary")
+            yield Button(tr("tui.ledger.invoice.line.add"), id="ledger-invoice-line-add")
+            yield Button(tr("tui.ledger.invoice.line.remove"), id="ledger-invoice-line-remove", disabled=True)
+            yield Static(tr("tui.ledger.invoice.line.none"), id="ledger-invoice-lines", markup=False)
+            yield Button(tr("tui.ledger.invoice.review"), id="ledger-invoice-review", variant="primary")
             yield Static("", id="ledger-invoice-summary", markup=False)
             yield Static("", id="ledger-flow-status", markup=False)
-            yield Button(ledger_copy("tui.ledger.invoice.confirm"), id="ledger-invoice-confirm", disabled=True)
-            yield Button(ledger_copy("tui.ledger.invoice.cancel"), id="ledger-invoice-cancel")
-            yield Button(ledger_copy("tui.ledger.invoice.again"), id="ledger-invoice-again")
+            yield Button(tr("tui.ledger.invoice.confirm"), id="ledger-invoice-confirm", disabled=True)
+            yield Button(tr("tui.ledger.invoice.cancel"), id="ledger-invoice-cancel")
+            yield Button(tr("tui.ledger.invoice.again"), id="ledger-invoice-again")
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -206,7 +381,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
     def _render_lines(self) -> None:
         listing = self.query_one("#ledger-invoice-lines", Static)
         if not self.lines:
-            listing.update(ledger_copy("tui.ledger.invoice.line.none"))
+            listing.update(tr("tui.ledger.invoice.line.none"))
         else:
             listing.update("\n".join(invoice_line_row(index, line) for index, line in enumerate(self.lines, start=1)))
         self.query_one("#ledger-invoice-line-remove", Button).disabled = not self.lines
@@ -214,38 +389,9 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
     def _add_line(self) -> tuple[str, ...]:
         """Append the typed line with its numbers parsed, or name every field that cannot be read."""
         values = {name: self.query_one(f"#{_line_input_id(name)}", Input).value.strip() for name, _ in _LINE_FIELDS}
-        problems = [
-            ledger_copy("tui.ledger.invoice.problem.required", field=_line_field_label(name))
-            for name, required in _LINE_FIELDS
-            if required and not values[name]
-        ]
-        numbers: dict[str, Decimal] = {}
-        for name in ("quantity", "unit_price", "subtotal", "iva_amount"):
-            if not values[name]:
-                continue
-            try:
-                parsed = Decimal(values[name])
-            except InvalidOperation:
-                parsed = None
-            if parsed is None or not parsed.is_finite():
-                problems.append(ledger_copy("tui.ledger.invoice.problem.amount", field=_line_field_label(name)))
-            else:
-                numbers[name] = parsed
-        if problems:
-            return tuple(problems)
-        try:
-            line = LedgerInvoiceLineEntryV1(
-                description=values["description"],
-                quantity=numbers["quantity"],
-                unit_price=numbers["unit_price"],
-                subtotal=numbers["subtotal"],
-                iva_rate=values["iva_rate"],
-                iva_amount=numbers["iva_amount"],
-                spending_category_id=values["spending_category_id"] or None,
-                oss_rate_kind=values["oss_rate_kind"] or None,
-            )
-        except (CadrumoError, ValidationError) as error:
-            return (door_refusal_text(error),)
+        line, problems = _parsed_invoice_line(values)
+        if line is None:
+            return problems
         self.lines.append(line)
         for name, _required in _LINE_FIELDS:
             self.query_one(f"#{_line_input_id(name)}", Input).value = ""
@@ -254,49 +400,12 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
 
     def _read_entry(self) -> tuple[LedgerInvoiceEntryV1 | None, tuple[str, ...]]:
         """Parse the form, naming every field that cannot be read rather than only the first."""
-        problems: list[str] = []
         values = {name: self._text(name) for name, _required in _TEXT_FIELDS}
-        for name, required in _TEXT_FIELDS:
-            if required and not values[name]:
-                problems.append(ledger_copy("tui.ledger.invoice.problem.required", field=_field_label(name)))
-        # An invoice is entered either by its lines or by one base and rate,
-        # never both: the writer would refuse the pair as two truths for one
-        # line set, and neither would be the one printed on the invoice.
-        if self.lines and (values["taxable_base"] or values["iva_rate"]):
-            problems.append(ledger_copy("tui.ledger.invoice.problem.lines_and_base"))
-        if not self.lines and not values["taxable_base"]:
-            problems.append(ledger_copy("tui.ledger.invoice.problem.base_or_lines"))
-
-        def amount(name: str) -> Decimal | None:
-            raw = values[name]
-            if not raw:
-                return None
-            try:
-                parsed = Decimal(raw)
-            except InvalidOperation:
-                problems.append(ledger_copy("tui.ledger.invoice.problem.amount", field=_field_label(name)))
-                return None
-            if not parsed.is_finite():
-                problems.append(ledger_copy("tui.ledger.invoice.problem.amount", field=_field_label(name)))
-                return None
-            return parsed
-
-        def day(name: str) -> date | None:
-            if not values[name]:
-                return None
-            try:
-                return date.fromisoformat(values[name])
-            except ValueError:
-                problems.append(ledger_copy("tui.ledger.invoice.problem.date", field=_field_label(name)))
-                return None
-
-        issued = day("invoice_date")
-        operation_date = day("operation_date")
-        base = amount("taxable_base")
-        iva_rate = amount("iva_rate")
-        retention_rate = amount("retention_rate")
-        retention_amount = amount("retention_amount")
-        recargo_amount = amount("recargo_amount")
+        problems = _required_entry_problems(values, self.lines)
+        issued, operation_date, date_problems = _entry_dates(values)
+        problems.extend(date_problems)
+        amounts, amount_problems = _entry_amounts(values)
+        problems.extend(amount_problems)
         if problems or issued is None:
             return None, tuple(problems)
         kind = InvoiceKind(str(cast("Select[str]", self.query_one("#ledger-invoice-kind", Select)).value))
@@ -305,29 +414,15 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         )
         operation_type_value = cast("Select[str]", self.query_one("#ledger-invoice-operation-type", Select)).value
         try:
-            entry = LedgerInvoiceEntryV1(
-                kind=kind,
-                counterparty_name=values["counterparty_name"],
-                counterparty_nif=values["counterparty_nif"] or None,
-                country_code=values["country_code"].upper(),
-                invoice_number=values["invoice_number"],
-                invoice_date=issued,
-                taxable_base=base,
-                iva_rate=iva_rate,
-                lines=tuple(self.lines),
-                operation_type=(
-                    IntracomOperationType(operation_type_value) if isinstance(operation_type_value, str) else None
-                ),
-                operation_date=operation_date,
-                recargo_amount=recargo_amount,
-                rectifies_invoice_number=values["rectifies_invoice_number"] or None,
-                iva_category=IvaCategory(values["iva_category"]) if values["iva_category"] else None,
-                currency=values["currency"].upper(),
-                retention_rate=retention_rate,
-                retention_amount=retention_amount,
-                invoice_class=invoice_class,
-                series=values["series"] or None,
-                notes=values["notes"],
+            entry = _build_invoice_entry(
+                values,
+                self.lines,
+                issued,
+                operation_date,
+                amounts,
+                kind,
+                invoice_class,
+                operation_type_value,
             )
         except (CadrumoError, ValidationError) as error:
             return None, (door_refusal_text(error),)
@@ -335,13 +430,13 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
 
     def _summary(self, entry: LedgerInvoiceEntryV1) -> str:
         lines = [
-            ledger_copy(
+            tr(
                 "tui.ledger.invoice.summary.identity",
-                kind=ledger_copy(_KIND_LOCALE_KEYS[entry.kind]),
+                kind=tr(_KIND_LOCALE_KEYS[entry.kind]),
                 number=entry.invoice_number,
                 date=entry.invoice_date.isoformat(),
             ),
-            ledger_copy(
+            tr(
                 "tui.ledger.invoice.summary.counterparty",
                 name=entry.counterparty_name,
                 nif=entry.counterparty_nif or "-",
@@ -352,39 +447,14 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             lines.extend(invoice_line_row(index, line) for index, line in enumerate(entry.lines, start=1))
         else:
             lines.append(
-                ledger_copy(
+                tr(
                     "tui.ledger.invoice.summary.amounts",
                     base="-" if entry.taxable_base is None else format(entry.taxable_base, "f"),
                     rate="-" if entry.iva_rate is None else format(entry.iva_rate, "f"),
                     currency=entry.currency,
                 )
             )
-        if entry.operation_type is not None or entry.operation_date is not None:
-            lines.append(
-                ledger_copy(
-                    "tui.ledger.invoice.summary.operation",
-                    code="-" if entry.operation_type is None else entry.operation_type.value,
-                    date="-" if entry.operation_date is None else entry.operation_date.isoformat(),
-                )
-            )
-        if entry.recargo_amount is not None:
-            lines.append(
-                ledger_copy(
-                    "tui.ledger.invoice.summary.recargo",
-                    amount=format(entry.recargo_amount, "f"),
-                    currency=entry.currency,
-                )
-            )
-        if entry.rectifies_invoice_number is not None:
-            lines.append(ledger_copy("tui.ledger.invoice.summary.rectifies", number=entry.rectifies_invoice_number))
-        if entry.retention_rate is not None or entry.retention_amount is not None:
-            lines.append(
-                ledger_copy(
-                    "tui.ledger.invoice.summary.retention",
-                    rate="-" if entry.retention_rate is None else format(entry.retention_rate, "f"),
-                    amount="-" if entry.retention_amount is None else format(entry.retention_amount, "f"),
-                )
-            )
+        lines.extend(_supplemental_summary_lines(entry))
         return "\n".join(lines)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -406,7 +476,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#ledger-invoice-summary", Static).update(self._summary(entry))
                 self._lock_form()
                 self._transition(LedgerFlowState.CONFIRMING)
-                self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.invoice.confirming"))
+                self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoice.confirming"))
                 confirm = self.query_one("#ledger-invoice-confirm", Button)
                 confirm.disabled = False
                 confirm.focus()
@@ -416,7 +486,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 self._transition(LedgerFlowState.SUBMITTING)
                 event.button.disabled = True
                 self.query_one("#ledger-invoice-cancel", Button).disabled = True
-                self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.invoice.progress"))
+                self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoice.progress"))
                 self.run_worker(self._submit(), exclusive=True)
             case "ledger-invoice-again" if self.flow_state in {
                 LedgerFlowState.SUCCEEDED,
@@ -446,15 +516,15 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         except AccountSessionExpiredError as error:
             self._clear_private_form()
             self._transition(LedgerFlowState.FAILED)
-            status.update(ledger_copy("tui.ledger.invoice.failure"))
+            status.update(tr("tui.ledger.invoice.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         except (CadrumoError, ValidationError) as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(ledger_copy("tui.ledger.invoice.failure"))
+            status.update(tr("tui.ledger.invoice.failure"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
-            recorded = ledger_copy(
+            recorded = tr(
                 "tui.ledger.invoice.success",
                 number=result.invoice_number,
                 base=format(result.base_total, "f"),
@@ -464,7 +534,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             )
             if result.euro_value_pending:
                 recorded = "\n".join(
-                    (recorded, ledger_copy("tui.ledger.invoice.euro_rate_unavailable", currency=result.currency))
+                    (recorded, tr("tui.ledger.invoice.euro_rate_unavailable", currency=result.currency))
                 )
             status.update(recorded)
         again = self.query_one("#ledger-invoice-again", Button)
@@ -487,7 +557,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         self.entry = None
         self._transition(LedgerFlowState.CANCELLED)
         self._lock_form()
-        self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.invoice.cancelled"))
+        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoice.cancelled"))
         self.query_one("#ledger-invoice-confirm", Button).disabled = True
         self.query_one("#ledger-invoice-cancel", Button).disabled = True
         again = self.query_one("#ledger-invoice-again", Button)

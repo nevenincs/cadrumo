@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
+from typing import Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -22,6 +23,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -34,10 +36,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -94,7 +95,12 @@ class NotificationDocumentCapturePublicResultV1(NotificationDocumentViewPublicRe
     already_in_custody: bool
 
 
-NotificationDocumentCaptureCompositionFactory = Callable[[], NotificationsCaptureComposition]
+class NotificationDocumentCaptureCompositionFactory(Protocol):
+    """Compose notification-document dependencies under their held authority operation."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> NotificationsCaptureComposition:
+        """Return the exact worker-local notification composition."""
+        ...
 
 
 def _require_exact_profile(profile_id: UUID, subject_ref: str) -> str:
@@ -158,7 +164,7 @@ class NotificationDocumentCaptureExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
+        composition = self._composition_factory(operation=context.authority_operation)
         service = self._document_service_factory()
         browser_resources = self._browser_resources_factory()
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)

@@ -18,6 +18,7 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
@@ -455,7 +456,11 @@ def work_plazo_lines_from_posture(posture: ModeloWorkDeadlinePosture | None) -> 
     if posture is None:
         return []
 
-    out: list[str] = [f"plazo_closes_on\t{posture.closes_on.isoformat()}"]
+    out: list[str] = [
+        f"plazo_closes_on\t{posture.closes_on.isoformat()}",
+        f"plazo_nominal_closes_on\t{posture.nominal_closes_on.isoformat()}",
+        f"plazo_holiday_coverage\t{posture.holiday_coverage.value}",
+    ]
     if posture.days_remaining is not None:
         out.append(
             tr(
@@ -526,6 +531,8 @@ def _work_unit_deadline_output_from_posture(
         )
     deadline_payload = WorkDeadlinePosturePayload(
         closes_on=posture.closes_on,
+        nominal_closes_on=posture.nominal_closes_on,
+        holiday_coverage=posture.holiday_coverage,
         days_remaining=posture.days_remaining,
         days_overdue=posture.days_overdue,
         conditional_recargo_preview=preview_payload,
@@ -543,6 +550,8 @@ def _work_unit_deadline_output_from_posture(
     )
     context: dict[str, str] = {
         "closes_on": posture.closes_on.isoformat(),
+        "nominal_closes_on": posture.nominal_closes_on.isoformat(),
+        "holiday_coverage": posture.holiday_coverage.value,
         "days_overdue": str(posture.days_overdue),
         "article_27_assessment_status": "unassessed",
     }
@@ -632,35 +641,7 @@ def calculation_revision_payload(
     """
     if include_result_summary and work_unit is None:
         raise TypeError("calculation revision payload requires its selected work unit for result summary")
-    observations = tuple(
-        ObservationPayload(
-            casilla_id=obs.casilla_id,
-            value=str(obs.value),
-            formula_id=obs.formula_id,
-            op=obs.op,
-            operand_refs=tuple(obs.operand_refs),
-            operand_casilla_refs=tuple(obs.operand_casilla_refs),
-            operand_values=tuple(str(v) for v in obs.operand_values),
-            legal_refs=tuple(obs.legal_refs),
-            source_refs=tuple(obs.source_refs),
-            absent_by_design=obs.absent_by_design,
-        )
-        for obs in visible_calculation_observations(rev, operation=operation)
-    )
-    source_provenance = tuple(
-        SourceProvenancePayload(
-            resolver_id=ref.resolver_id,
-            resolved_binding_source=ref.resolved_binding_source,
-            contributor_source_kind=ref.contributor_source_kind,
-            contributor_binding_source=ref.contributor_binding_source,
-            lineage_role=ref.lineage_role,
-            source_ref=ref.source_ref,
-            parent_source_ref=ref.parent_source_ref,
-            fingerprint=ref.fingerprint,
-            dependency_treatment=ref.dependency_treatment,
-        )
-        for ref in rev.source_provenance
-    )
+    observations, source_provenance = _calculation_revision_evidence(rev, operation)
     return CalculationRevisionPayload(
         calculation_revision_id=rev.calculation_revision_id,
         work_unit_id=rev.work_unit_id,
@@ -684,11 +665,11 @@ def calculation_revision_payload(
         input_values_by_casilla_id=dict(rev.input_values_by_casilla_id),
         created_at=rev.created_at.isoformat(),
         updated_at=rev.updated_at.isoformat(),
-        verified_at=rev.verified_at.isoformat() if rev.verified_at else None,
+        verified_at=_optional_revision_timestamp(rev.verified_at),
         verified_by=rev.verified_by,
-        filed_at=rev.filed_at.isoformat() if rev.filed_at else None,
+        filed_at=_optional_revision_timestamp(rev.filed_at),
         filed_by=rev.filed_by,
-        superseded_at=rev.superseded_at.isoformat() if rev.superseded_at else None,
+        superseded_at=_optional_revision_timestamp(rev.superseded_at),
     )
 
 
@@ -1227,3 +1208,44 @@ def verification_report_lines(
 def _render_verification_finding_message(finding: ModeloVerificationFinding) -> str:
     """Render one persisted locale key and its typed facts at the CLI boundary."""
     return tr(finding.message_locale_key, **finding.message_facts)
+
+
+def _calculation_revision_evidence(
+    rev: CalculationRevision, operation: PinnedAuthorityOperation
+) -> tuple[tuple[ObservationPayload, ...], tuple[SourceProvenancePayload, ...]]:
+    """Project visible observations followed by their ordered source provenance."""
+    observations = tuple(
+        ObservationPayload(
+            casilla_id=obs.casilla_id,
+            value=str(obs.value),
+            formula_id=obs.formula_id,
+            op=obs.op,
+            operand_refs=tuple(obs.operand_refs),
+            operand_casilla_refs=tuple(obs.operand_casilla_refs),
+            operand_values=tuple(str(v) for v in obs.operand_values),
+            legal_refs=tuple(obs.legal_refs),
+            source_refs=tuple(obs.source_refs),
+            absent_by_design=obs.absent_by_design,
+        )
+        for obs in visible_calculation_observations(rev, operation=operation)
+    )
+    source_provenance = tuple(
+        SourceProvenancePayload(
+            resolver_id=ref.resolver_id,
+            resolved_binding_source=ref.resolved_binding_source,
+            contributor_source_kind=ref.contributor_source_kind,
+            contributor_binding_source=ref.contributor_binding_source,
+            lineage_role=ref.lineage_role,
+            source_ref=ref.source_ref,
+            parent_source_ref=ref.parent_source_ref,
+            fingerprint=ref.fingerprint,
+            dependency_treatment=ref.dependency_treatment,
+        )
+        for ref in rev.source_provenance
+    )
+    return observations, source_provenance
+
+
+def _optional_revision_timestamp(value: datetime | None) -> str | None:
+    """Keep the established ISO spelling of a present revision timestamp."""
+    return value.isoformat() if value else None

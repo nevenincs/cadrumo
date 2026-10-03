@@ -10,8 +10,10 @@ import zipfile
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
+
+from .command_spec_attestation import _artifact_command_projection, _projection_digest
 from .hashing import sha256_path
-from .python_cohort import _artifact_command_projection, _projection_digest
 
 
 def add_test_source_archive(directory: Path, artifacts: dict[str, str], digests: dict[str, str]) -> Path:
@@ -147,11 +149,11 @@ def make_minimal_test_python_cohort(
     directory.mkdir(parents=True, exist_ok=True)
     artifacts: dict[str, str] = {}
     digests: dict[str, str] = {}
-    for distribution in ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"):
+    for distribution in PRODUCT_IDENTITY.cohort_distributions:
         normalized = distribution.replace("-", "_")
         requires = (
-            (f"cadrumo-data-manuals=={version}", f"cadrumo-data-official=={version}")
-            if distribution == "cadrumo"
+            tuple(f"{companion}=={version}" for companion in PRODUCT_IDENTITY.companion_distributions)
+            if distribution == PRODUCT_IDENTITY.distribution
             else ()
         )
         metadata = "\n".join(

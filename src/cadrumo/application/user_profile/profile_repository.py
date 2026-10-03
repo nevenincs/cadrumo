@@ -12,6 +12,7 @@ from pathlib import Path
 from uuid import UUID
 
 from ...core.paths import effective_storage_root
+from ...core.time.utc import parse_iso_datetime
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .aggregate import CommittedProfileView, UnlockedProfileFactSummary
 from .custody_ports import (
@@ -100,7 +101,7 @@ def _load_current_custody_state(
 
 
 def _published_at(material: ProfileCustodyPasswordMaterialPort) -> datetime:
-    return datetime.fromisoformat(material.commit.published_at.replace("Z", "+00:00")).astimezone(UTC)
+    return parse_iso_datetime(material.commit.published_at).astimezone(UTC)
 
 
 class CommittedProfileRepository:

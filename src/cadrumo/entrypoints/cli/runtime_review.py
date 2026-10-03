@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
@@ -20,27 +19,15 @@ from ...application.review.read_operation import (
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context) -> RuntimeFrontendClient:
     """Return only the invocation client bound to the immutable active profile."""
     return require_profile_client(ctx, expected_profile_id=UUID(active_bucket_id_or_refuse()))
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _submit[ProjectionT: BaseModel](
@@ -84,7 +71,7 @@ def _require_success[ProjectionT: BaseModel](
         or getattr(projection, "profile_id", None) != profile_id
         or getattr(projection, "request", None) != request
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 

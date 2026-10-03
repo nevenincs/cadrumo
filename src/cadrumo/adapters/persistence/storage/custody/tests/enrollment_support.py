@@ -33,7 +33,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.automation_administration import AutomationAdministrationService
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,

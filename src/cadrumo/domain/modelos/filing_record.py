@@ -28,7 +28,6 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Iterator, Mapping
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self, override
@@ -45,7 +44,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, Work
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.utc import UtcInstant
+from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_guards import is_object_list_or_tuple
 from ..filing_evidence import FilingEvidenceReference
 from .codes import ModeloCode
@@ -238,7 +237,7 @@ class IvaSettlementPaymentEvidence(BaseModel):
     @pydantic_validation_boundary
     def _restore_persisted_effective_at(cls, value: object) -> object:
         """Restore UTC instants from the encrypted JSON envelope."""
-        return datetime.fromisoformat(value.replace("Z", "+00:00")) if isinstance(value, str) else value
+        return parse_iso_datetime(value) if isinstance(value, str) else value
 
 
 class IvaSettlementSnapshot(BaseModel):
@@ -342,36 +341,59 @@ def _require_payment_evidence_total(snapshot: IvaSettlementSnapshot) -> None:
 
 def _require_refund_state(snapshot: IvaSettlementSnapshot) -> None:
     """Require independent approval and payment evidence for a refund lifecycle."""
-    requested = snapshot.refund_requested_amount
-    approved = snapshot.refund_approved_amount
-    paid = snapshot.refund_paid_amount
-    approval_evidenced = snapshot.refund_approval_evidence_reference is not None
-    payment_evidenced = snapshot.refund_payment_evidence_reference is not None
-    if approved > requested or paid > approved:
-        raise ModeloValidationError("refund amounts must satisfy paid <= approved <= requested")
+    _require_refund_amount_order(snapshot)
     if snapshot.refund_state is IvaSettlementRefundState.NOT_REQUESTED:
-        if (
-            requested != Decimal("0")
-            or approved != Decimal("0")
-            or paid != Decimal("0")
-            or approval_evidenced
-            or payment_evidenced
-        ):
-            raise ModeloValidationError("not_requested refund must not carry amounts or evidence")
+        _require_not_requested_refund(snapshot)
         return
-    if requested <= Decimal("0"):
+    if snapshot.refund_requested_amount <= Decimal("0"):
         raise ModeloValidationError(f"{snapshot.refund_state.value} refund requires a positive requested amount")
     if snapshot.refund_state is IvaSettlementRefundState.REQUESTED:
-        if approved != Decimal("0") or paid != Decimal("0") or approval_evidenced or payment_evidenced:
-            raise ModeloValidationError("requested refund must not carry approval or payment evidence")
+        _require_requested_refund(snapshot)
         return
-    if approved <= Decimal("0") or not approval_evidenced:
+    if snapshot.refund_approved_amount <= Decimal("0") or snapshot.refund_approval_evidence_reference is None:
         raise ModeloValidationError("approved refund requires positive approved amount and approval evidence")
     if snapshot.refund_state is IvaSettlementRefundState.APPROVED:
-        if paid != Decimal("0") or payment_evidenced:
-            raise ModeloValidationError("approved refund must not carry payment evidence")
+        _require_approved_refund(snapshot)
         return
-    if paid <= Decimal("0") or not payment_evidenced:
+    _require_paid_refund(snapshot)
+
+
+def _require_refund_amount_order(snapshot: IvaSettlementSnapshot) -> None:
+    if (
+        snapshot.refund_approved_amount > snapshot.refund_requested_amount
+        or snapshot.refund_paid_amount > snapshot.refund_approved_amount
+    ):
+        raise ModeloValidationError("refund amounts must satisfy paid <= approved <= requested")
+
+
+def _require_not_requested_refund(snapshot: IvaSettlementSnapshot) -> None:
+    if (
+        snapshot.refund_requested_amount != Decimal("0")
+        or snapshot.refund_approved_amount != Decimal("0")
+        or snapshot.refund_paid_amount != Decimal("0")
+        or snapshot.refund_approval_evidence_reference is not None
+        or snapshot.refund_payment_evidence_reference is not None
+    ):
+        raise ModeloValidationError("not_requested refund must not carry amounts or evidence")
+
+
+def _require_requested_refund(snapshot: IvaSettlementSnapshot) -> None:
+    if (
+        snapshot.refund_approved_amount != Decimal("0")
+        or snapshot.refund_paid_amount != Decimal("0")
+        or snapshot.refund_approval_evidence_reference is not None
+        or snapshot.refund_payment_evidence_reference is not None
+    ):
+        raise ModeloValidationError("requested refund must not carry approval or payment evidence")
+
+
+def _require_approved_refund(snapshot: IvaSettlementSnapshot) -> None:
+    if snapshot.refund_paid_amount != Decimal("0") or snapshot.refund_payment_evidence_reference is not None:
+        raise ModeloValidationError("approved refund must not carry payment evidence")
+
+
+def _require_paid_refund(snapshot: IvaSettlementSnapshot) -> None:
+    if snapshot.refund_paid_amount <= Decimal("0") or snapshot.refund_payment_evidence_reference is None:
         raise ModeloValidationError("paid refund requires positive paid amount and payment evidence")
 
 
@@ -585,18 +607,34 @@ def _require_filing_record_identity(record: ModeloRecord) -> None:
 def _require_external_evidence_state(record: ModeloRecord) -> None:
     """Require origin, confirmation, evidence and register reference to agree."""
     confirmed = record.confirmation is AeatConfirmationState.CONFIRMADA
+    _require_aeat_origin_confirmation(record, confirmed=confirmed)
+    _require_external_evidence_for_confirmation(record, confirmed=confirmed)
+    _require_register_reference_for_confirmation(record, confirmed=confirmed)
+    _require_retired_record_not_current(record)
+
+
+def _require_aeat_origin_confirmation(record: ModeloRecord, *, confirmed: bool) -> None:
     if record.origin is FilingOrigin.AEAT and not confirmed:
         raise ModeloValidationError("AEAT-origin filing record must be confirmed")
+
+
+def _require_external_evidence_for_confirmation(record: ModeloRecord, *, confirmed: bool) -> None:
     if confirmed and record.external_evidence is None:
         raise ModeloValidationError("confirmed filing record must carry external evidence")
     if record.external_evidence is not None and not confirmed:
         raise ModeloValidationError(
             f"{record.confirmation.value} filing record must not carry external evidence",
         )
+
+
+def _require_register_reference_for_confirmation(record: ModeloRecord, *, confirmed: bool) -> None:
     if record.aeat_register is not None and not confirmed:
         raise ModeloValidationError(
             f"{record.confirmation.value} filing record must not carry an AEAT register reference",
         )
+
+
+def _require_retired_record_not_current(record: ModeloRecord) -> None:
     if record.is_retired and record.status is ModeloRecordStatus.VIGENTE:
         raise ModeloValidationError(f"{record.confirmation.value} filing record cannot be in force")
 

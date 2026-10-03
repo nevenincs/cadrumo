@@ -8,33 +8,17 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -82,15 +66,11 @@ class RecoveryStatusExecutor:
     async def execute(self, request: OperationRequest[RecoveryStatusRequest], context: OperationExecutorContext) -> str:
         """Persist the allowlisted result in encrypted operation operands."""
         profile_id = request.payload.profile_id
-        if (
-            type(request.payload) is not RecoveryStatusRequest
-            or request.definition_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(str(profile_id))
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != str(profile_id)
-        ):
+        if type(request.payload) is not RecoveryStatusRequest:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if request.definition_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, profile_id)
         await context.events.phase(RECOVERY_STATUS_OPERATION_DEFINITION_ID)
 
         async def read_and_publish() -> str:
@@ -108,37 +88,9 @@ def resolve_recovery_status_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require explicit operation and disclosure permission for the exact profile."""
-    payload = request.payload
-    if (
-        type(payload) is not RecoveryStatusRequest
-        or request.definition_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID
-        or context.contract.definition_id != request.definition_id
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if context.frontend not in _FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in _ACTIONS:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    disclosure = None
-    if context.action is AccessAction.OBSERVE:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
+    payload = _validated_recovery_request(request, context)
+    _require_recovery_access(context)
+    disclosure = _recovery_disclosure(context)
     return ResolvedOperationAccess(
         request=OperationAccessRequest(
             profile_id=payload.profile_id,
@@ -165,22 +117,78 @@ def resolve_recovery_status_access(
     )
 
 
+def _validated_recovery_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> RecoveryStatusRequest:
+    payload = request.payload
+    if (
+        type(payload) is not RecoveryStatusRequest
+        or request.definition_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID
+        or context.contract.definition_id != request.definition_id
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
+        str(payload.profile_id)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _require_recovery_access(context: OperationAccessContext) -> None:
+    if context.frontend not in _FRONTENDS:
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+    if context.action not in _ACTIONS:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def _recovery_disclosure(context: OperationAccessContext) -> DisclosurePermission | None:
+    disclosure = None
+    if context.action is AccessAction.OBSERVE:
+        disclosure = DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+            category=DisclosureCategory.OPERATION_METADATA,
+        )
+    elif context.action is AccessAction.RESULT:
+        schema = context.contract.result_schema
+        if schema is None or schema.schema_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID + ".result":
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        disclosure = DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=schema.schema_id,
+            category=DisclosureCategory.PROFILE_VALUES,
+        )
+    return disclosure
+
+
 def project_recovery_status_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> RecoveryStatusProjection:
     """Validate the typed result against a successful read-only terminal receipt."""
     if (
         type(result) is not RecoveryStatusResult
-        or receipt.identity.definition_id != RECOVERY_STATUS_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(result.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        or not _receipt_matches_recovery_result(result, receipt)
+        or not _receipt_is_read_only_success(receipt)
     ):
         raise ValueError("recovery status contradicts its terminal receipt")
     return RecoveryStatusProjection.model_validate_json(result.model_dump_json(), strict=True)
+
+
+def _receipt_matches_recovery_result(result: RecoveryStatusResult, receipt: OperationTerminalReceipt) -> bool:
+    return (
+        receipt.identity.definition_id == RECOVERY_STATUS_OPERATION_DEFINITION_ID
+        and receipt.identity.subject_ref == profile_operation_subject(str(result.profile_id))
+    )
+
+
+def _receipt_is_read_only_success(receipt: OperationTerminalReceipt) -> bool:
+    return (
+        receipt.condition is OperationTerminalCondition.SUCCEEDED
+        and receipt.effect is OperationEffect.NONE
+        and receipt.result_ref is not None
+        and receipt.refusal_ref is None
+        and receipt.refusal_detail_ref is None
+        and receipt.failure_error_code is None
+        and receipt.diagnostic_ref is None
+    )
 
 
 def build_recovery_status_definition() -> OperationDefinition:
@@ -196,19 +204,7 @@ def build_recovery_status_definition() -> OperationDefinition:
         ),
         phase_codes=(RECOVERY_STATUS_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=_FRONTENDS,
     )

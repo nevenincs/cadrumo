@@ -91,21 +91,7 @@ def assess_run_directories(root: Path, *, now: float | None = None) -> tuple[Run
     except OSError:
         return ()
     for date_directory in date_directories:
-        if is_link_like(date_directory) or not date_directory.is_dir():
-            continue
-        try:
-            runs = scan_directory(date_directory, require_root=True)
-        except OSError:
-            continue
-        for run in runs:
-            if is_link_like(run) or not run.is_dir():
-                continue
-            if (run / "run.json").is_file():
-                verdicts.append(RunVerdict(run, True, "completed run output, which nothing reads back"))
-                continue
-            verdict = _owned_verdict(run, reference)
-            if verdict is not None:
-                verdicts.append(verdict)
+        _assess_run_date_directory(date_directory, reference, verdicts)
     return tuple(verdicts)
 
 
@@ -159,3 +145,22 @@ def reclaim_run_directories(verdicts: tuple[RunVerdict, ...]) -> int:
         if not verdict.directory.exists():
             removed += 1
     return removed
+
+
+def _assess_run_date_directory(date_directory: Path, reference: float, verdicts: list[RunVerdict]) -> None:
+    """Assess run date directory."""
+    if is_link_like(date_directory) or not date_directory.is_dir():
+        return
+    try:
+        runs = scan_directory(date_directory, require_root=True)
+    except OSError:
+        return
+    for run in runs:
+        if is_link_like(run) or not run.is_dir():
+            continue
+        if (run / "run.json").is_file():
+            verdicts.append(RunVerdict(run, True, "completed run output, which nothing reads back"))
+            continue
+        verdict = _owned_verdict(run, reference)
+        if verdict is not None:
+            verdicts.append(verdict)

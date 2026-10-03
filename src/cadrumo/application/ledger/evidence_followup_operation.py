@@ -16,17 +16,10 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
@@ -35,19 +28,11 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -72,7 +57,11 @@ from .extraction_draft_store import (
     bind_extraction_draft_repository_factory,
     load_extraction_drafts,
 )
-from .invoice_evidence_operation_dtos import ConfirmationBlockerProjectionV1, InvoiceDraftProjectionV1
+from .invoice_evidence_operation_dtos import (
+    ConfirmationBlockerProjectionV1,
+    InvoiceDraftProjectionV1,
+    LabelReadingFallbackProjectionV1,
+)
 from .invoice_extraction_authority import default_invoice_extraction_period
 from .party_attribution import party_attribution_advisory
 from .read_access import resolve_ledger_read_access
@@ -200,6 +189,7 @@ class ConsentedDispatchProjection(BaseModel):
 
     @field_validator("recorded_at")
     @classmethod
+    @pydantic_validation_boundary
     def _recorded_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -220,6 +210,7 @@ class CloudDerivedArtefactProjection(BaseModel):
 
     @field_validator("drafted_at")
     @classmethod
+    @pydantic_validation_boundary
     def _drafted_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -282,6 +273,7 @@ class EvidenceReviewQueueRowProjection(BaseModel):
 
     @field_validator("drafted_at")
     @classmethod
+    @pydantic_validation_boundary
     def _drafted_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -356,7 +348,12 @@ class LedgerEvidenceReviewListProjection(BaseModel):
 
 
 class LedgerEvidenceReviewViewProjection(BaseModel):
-    """Full canonical draft plus every finding and advisory needed for review."""
+    """Full canonical draft plus every finding and advisory needed for review.
+
+    ``label_reading_fallback`` is read off the stored record, not the draft: the
+    draft store moves it there when it writes, so the draft a review loads never
+    carries it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -364,12 +361,14 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     extractor: _ShortText
     drafted_at: datetime
     draft: InvoiceDraftProjectionV1
+    label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
     blockers: _BlockerRows = ()
     party_attribution_advisory: PartyAttributionAdvisoryProjection | None = None
     country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | None = None
 
     @field_validator("drafted_at")
     @classmethod
+    @pydantic_validation_boundary
     def _drafted_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -857,6 +856,11 @@ class LedgerEvidenceReviewViewExecutor:
                 extractor=stored.extractor,
                 drafted_at=stored.drafted_at,
                 draft=projected_draft,
+                label_reading_fallback=(
+                    None
+                    if (fallback := stored.label_reading_fallback) is None
+                    else LabelReadingFallbackProjectionV1.from_fallback(fallback)
+                ),
                 blockers=tuple(
                     ConfirmationBlockerProjectionV1.from_blocker(row) for row in confirmation_blockers(draft)
                 ),
@@ -894,19 +898,7 @@ def _build_definition(
         ),
         phase_codes=(definition_id,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
@@ -1067,6 +1059,7 @@ def _registration(
     *,
     request_type: type[BaseModel],
     result_type: type[BaseModel],
+    result_schema_version: int = 1,
     projector: Callable[[BaseModel, OperationTerminalReceipt], BaseModel],
 ) -> OperationPublicDefinitionRegistrationV1:
     return OperationPublicDefinitionRegistrationV1.compose(
@@ -1078,7 +1071,7 @@ def _registration(
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=definition.definition_id + ".result",
-            schema_version=1,
+            schema_version=result_schema_version,
             model_type=result_type,
         ),
         result_projector=projector,
@@ -1134,6 +1127,7 @@ def build_ledger_evidence_followup_registrations(
             by_id[expected[4]],
             request_type=LedgerEvidenceReviewViewRequest,
             result_type=LedgerEvidenceReviewViewProjection,
+            result_schema_version=2,
             projector=_project_review_view,
         ),
     )

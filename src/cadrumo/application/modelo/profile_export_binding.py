@@ -28,7 +28,7 @@ from decimal import Decimal
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.ids import BindingId
@@ -119,7 +119,7 @@ def resolve_profile_text_casilla_inputs(
     Returns:
         The resolved text values and the required casillas left empty.
     """
-    bindings = {binding.id: binding for binding in revision.bindings}
+    bindings = revision_bindings_by_id(revision)
     text_casilla_ids = text_family_casilla_ids(revision.casillas)
     values: dict[CasillaId, str] = {}
     gaps: list[ProfileTextCasillaGap] = []
@@ -205,7 +205,7 @@ def profile_text_casilla_gap_diagnostics(
         the casilla's and the binding's own grounding.
     """
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    bindings = {binding.id: binding for binding in revision.bindings}
+    bindings = revision_bindings_by_id(revision)
     diagnostics: list[CalculationSourceDiagnostic] = []
     for gap in resolve_profile_text_casilla_inputs(revision, fact_index).gaps:
         if gap.casilla_id in supplied_casilla_ids:

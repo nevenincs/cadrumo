@@ -106,26 +106,8 @@ class KeyedFamilySpec:
 
     def __post_init__(self) -> None:
         """Reject an internally contradictory policy at import time."""
-        if not self.section:
-            raise ValueError("a family specification needs a section")
-        if not self.storage_identity:
-            raise ValueError(f"family {self.section!r} needs a storage identity")
-        if not set(self.casilla_identity_fields).issubset(self.identity_fields):
-            raise ValueError(f"casilla identity fields must be identity fields: {self.section!r}")
-        if self.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not self.identity:
-            raise ValueError(f"inherited family {self.section!r} needs an identity")
-        if self.period_scoped and self.inheritance is not FamilyInheritanceMode.KEYED:
-            raise ValueError(f"only keyed families may be period-scoped: {self.section!r}")
-        if self.drop_eligible and self.inheritance not in {
-            FamilyInheritanceMode.CASILLA,
-            FamilyInheritanceMode.KEYED,
-        }:
-            raise ValueError(f"only inherited families may be droppable: {self.section!r}")
-        if self.restatable and self.inheritance not in {
-            FamilyInheritanceMode.CASILLA,
-            FamilyInheritanceMode.KEYED,
-        }:
-            raise ValueError(f"only inherited families may be restatable: {self.section!r}")
+        _validate_family_spec_identity(self)
+        _validate_family_spec_policy(self)
 
     @property
     def inherited(self) -> bool:
@@ -136,6 +118,27 @@ class KeyedFamilySpec:
     def keyed(self) -> bool:
         """Whether the generic identity union, rather than casilla merge, applies."""
         return self.inheritance is FamilyInheritanceMode.KEYED
+
+
+def _validate_family_spec_identity(spec: KeyedFamilySpec) -> None:
+    if not spec.section:
+        raise ValueError("a family specification needs a section")
+    if not spec.storage_identity:
+        raise ValueError(f"family {spec.section!r} needs a storage identity")
+    if not set(spec.casilla_identity_fields).issubset(spec.identity_fields):
+        raise ValueError(f"casilla identity fields must be identity fields: {spec.section!r}")
+    if spec.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not spec.identity:
+        raise ValueError(f"inherited family {spec.section!r} needs an identity")
+
+
+def _validate_family_spec_policy(spec: KeyedFamilySpec) -> None:
+    inherited_modes = {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED}
+    if spec.period_scoped and spec.inheritance is not FamilyInheritanceMode.KEYED:
+        raise ValueError(f"only keyed families may be period-scoped: {spec.section!r}")
+    if spec.drop_eligible and spec.inheritance not in inherited_modes:
+        raise ValueError(f"only inherited families may be droppable: {spec.section!r}")
+    if spec.restatable and spec.inheritance not in inherited_modes:
+        raise ValueError(f"only inherited families may be restatable: {spec.section!r}")
 
 
 CASILLAS_FAMILY: Final[str] = "casillas"

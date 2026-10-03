@@ -38,7 +38,6 @@ def _calculated(operation: PinnedAuthorityOperation, income: str, expenses: str)
             "18": Decimal(0),
         },
         binding_values={
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal(income) - Decimal(expenses),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal(0),
         },

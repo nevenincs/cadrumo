@@ -22,7 +22,8 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 from ...compiler.loader import load_catalogue_file
 from ...maintenance_support import resolve_record_design_binary
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
-from .. import _export_tree, render_profile, render_profile_eligibility
+from .. import export_field_derivation as _field_derivation
+from .. import render_profile, render_profile_eligibility, render_profile_source_reader
 from ..joined_record_design import (
     JoinedRecordDesign,
     JoinedRecordDesignField,
@@ -34,28 +35,23 @@ from ..record_design_intermediate import (
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from ..render_profile import (
-    OfficialSourceEvidence,
-    RenderProfile,
-    RenderProfileAnchor,
-    RenderProfileDesignIdentity,
-    RenderProfileFragment,
-    RenderProfileSourceEvidence,
-    RenderProfileSourceEvidenceEntry,
-    ReviewedPolicyDecision,
-    SingletonNumericRule,
-    Width17MembershipRule,
-    load_and_validate_render_profile,
-    load_render_profile,
-    load_render_profile_source_evidence,
-    render_profile_digest,
-    validate_render_profile,
-    validate_render_profile_authority,
-)
+from ..render_profile import load_and_validate_render_profile, render_profile_digest, validate_render_profile
+from ..render_profile_authority import validate_render_profile_authority
 from ..render_profile_eligibility import (
     _is_source_reserved_field,
     project_render_profile_eligibility,
 )
+from ..render_profile_evidence import (
+    OfficialSourceEvidence,
+    RenderProfileSourceEvidence,
+    RenderProfileSourceEvidenceEntry,
+    ReviewedPolicyDecision,
+)
+from ..render_profile_loading import _WIDTH_17_TYPE_ORDER, load_render_profile
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
+from ..render_profile_rules import RenderProfileFragment, SingletonNumericRule, Width17MembershipRule
+from ..render_profile_source_reader import load_render_profile_source_evidence
 from ..semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -337,7 +333,7 @@ def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
         assert "ExportRenderProfile" not in path.read_text(encoding="utf-8")
 
     assert class_homes == {
-        "RenderProfile": ["render_profile.py"],
+        "RenderProfile": ["render_profile_model.py"],
         "ExportTreeTransportProfile": ["_export_tree.py"],
     }
 
@@ -726,7 +722,7 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
         },
     )
 
-    derivation = _export_tree._profile_singleton_derivation(
+    derivation = _field_derivation._profile_singleton_derivation(
         joined,
         rule,
         export_record_id="reviewed-record",
@@ -738,7 +734,7 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
     assert derivation.field.date_format == date_format
     expected_allowed_values = allowed_values or None if policy is ExportValuePolicy.ENUMERATED_DIGITS else None
     assert derivation.field.allowed_values == expected_allowed_values
-    assert set(_export_tree._SINGLETON_POLICY_SHAPES) == set(ExportValuePolicy)
+    assert set(_field_derivation._SINGLETON_POLICY_SHAPES) == set(ExportValuePolicy)
 
 
 def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drift(tmp_path: Path) -> None:
@@ -1233,10 +1229,14 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
     }
     assert local_imports == {
-        "pydantic_error_detail",
         "joined_record_design",
-        "record_design_intermediate",
+        "render_profile_authority",
+        "render_profile_evidence",
         "render_profile_eligibility",
+        "render_profile_loading",
+        "render_profile_model",
+        "render_profile_model_base",
+        "render_profile_validation",
     }
     eligibility_module = ast.parse(inspect.getsource(render_profile_eligibility))
     eligibility_imports = {
@@ -1250,20 +1250,48 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         "compiler.record_design_pdf_rows",
         "record_design_intermediate",
         "source_defects",
+        "year_constraints",
     }
-    source_loader = next(
+    source_reader = ast.parse(inspect.getsource(render_profile_source_reader))
+    source_guard = next(
         node
-        for node in module.body
-        if isinstance(node, ast.FunctionDef) and node.name == "load_render_profile_source_evidence"
+        for node in source_reader.body
+        if isinstance(node, ast.FunctionDef) and node.name == "_require_render_profile_source_binary"
     )
+    guard_statements = source_guard.body
+    link_guard_index = next(
+        index
+        for index, statement in enumerate(guard_statements)
+        if isinstance(statement, ast.If)
+        and any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "is_link_like"
+            for node in ast.walk(statement.test)
+        )
+    )
+    hash_index = next(
+        index
+        for index, statement in enumerate(guard_statements)
+        if isinstance(statement, ast.Assign)
+        and any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "sha256_file"
+            for node in ast.walk(statement.value)
+        )
+    )
+    assert link_guard_index < hash_index
     assert any(
         isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
-        and node.func.id == "is_link_like"
-        and len(node.args) == 1
+        and node.func.id == "_require_render_profile_source_binary"
+        and len(node.args) == 2
         and isinstance(node.args[0], ast.Name)
         and node.args[0].id == "source_path"
-        for node in ast.walk(source_loader)
+        for node in ast.walk(
+            next(
+                node
+                for node in source_reader.body
+                if isinstance(node, ast.FunctionDef) and node.name == "load_render_profile_source_evidence"
+            ),
+        )
     )
 
 
@@ -1486,8 +1514,8 @@ def test_width_17_type_order_covers_every_declared_aeat_type() -> None:
     as though the rule had never been authored. Nothing else fails when that
     happens, which is why this is asserted rather than left to review.
     """
-    declared = set(get_args(render_profile.Width17MembershipRule.model_fields["aeat_type"].annotation))
-    ordered = set(render_profile._WIDTH_17_TYPE_ORDER)
+    declared = set(get_args(Width17MembershipRule.model_fields["aeat_type"].annotation))
+    ordered = set(_WIDTH_17_TYPE_ORDER)
     assert ordered == declared, (
         f"width-17 emit order {sorted(ordered)} does not cover the declared aeat_type set "
         f"{sorted(declared)}; a type admitted by the model but missing from the order is "

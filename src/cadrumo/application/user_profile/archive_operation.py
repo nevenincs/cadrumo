@@ -8,6 +8,7 @@ Neither portable recovery nor mirror output grants renewed automation authority.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated, Self
 from uuid import UUID
@@ -15,7 +16,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -28,8 +28,17 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+    HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_declared_frontend_and_action,
+    require_period_independent_replay_or_authority,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -38,28 +47,24 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from .access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from .access_errors import ProfileAccessRefusedError
-from .archive_operation_ports import ProfileArchiveOperationPortsFactory, ProfileArchivePushReport
+from .archive_operation_ports import (
+    ProfileArchiveOperationPorts,
+    ProfileArchiveOperationPortsFactory,
+    ProfileArchivePushReport,
+)
 from .bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportReconcileFailure
 from .capsule_archive import ProfileCapsuleArchiveReceipt
 
@@ -67,9 +72,6 @@ PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID = "profile.archive.export"
 PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID = "profile.archive.push"
 PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID = "profile.archive.reconcile"
 _FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_ACTIONS = frozenset(
-    {AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME, AccessAction.OBSERVE, AccessAction.RESULT}
-)
 
 
 class ProfileArchiveExportRequest(BaseModel):
@@ -174,16 +176,120 @@ class ProfileArchiveReconcileExecutionResult(BaseModel):
     projection: ProfileArchiveReconcileProjection
 
 
-def _require_profile[T: BaseModel](
-    request: OperationRequest[T], context: OperationExecutorContext, profile_id: UUID
-) -> None:
-    if (
-        request.subject_ref != profile_operation_subject(str(profile_id))
-        or context.identity.definition_id != request.definition_id
-        or context.identity.subject_ref != request.subject_ref
-        or require_active_bucket_id() != str(profile_id)
+type _ProfileArchiveRequest = ProfileArchiveExportRequest | ProfileArchivePushRequest | ProfileArchiveReconcileRequest
+type _ProfileArchiveExecutionResult = (
+    ProfileArchiveExportExecutionResult | ProfileArchivePushExecutionResult | ProfileArchiveReconcileExecutionResult
+)
+
+
+def _archive_request_payload[T: BaseModel](
+    expected: str,
+    request: OperationRequest[T],
+    context: OperationExecutorContext,
+) -> _ProfileArchiveRequest:
+    payload = request.payload
+    expected_type = {
+        PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID: ProfileArchiveExportRequest,
+        PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID: ProfileArchivePushRequest,
+        PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID: ProfileArchiveReconcileRequest,
+    }[expected]
+    if request.definition_id != expected or type(payload) is not expected_type:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if not isinstance(
+        payload, (ProfileArchiveExportRequest, ProfileArchivePushRequest, ProfileArchiveReconcileRequest)
     ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    require_operation_profile(request, context, payload.profile_id)
+    return payload
+
+
+def _archive_operation_ports(
+    factory: ProfileArchiveOperationPortsFactory,
+    payload: _ProfileArchiveRequest,
+    operation: PinnedAuthorityOperation,
+) -> ProfileArchiveOperationPorts:
+    ports = factory(profile_id=payload.profile_id, operation=operation)
+    if ports.profile_id != payload.profile_id or ports.operation is not operation:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return ports
+
+
+def _execute_archive_work[T: BaseModel](
+    *,
+    payload: _ProfileArchiveRequest,
+    request: OperationRequest[T],
+    context: OperationExecutorContext,
+    ports: ProfileArchiveOperationPorts,
+    tracker: LedgerCommitAttemptTracker,
+    before_handoff: Callable[[], None],
+) -> _ProfileArchiveExecutionResult:
+    require_operation_profile(request, context, payload.profile_id)
+    if isinstance(payload, ProfileArchiveExportRequest):
+        receipt = ports.export(payload.target, write=tracker.call_writer)
+        snapshot = ProfileArchiveExportReceiptSnapshot.model_validate(receipt.model_dump())
+        return ProfileArchiveExportExecutionResult(
+            projection=ProfileArchiveExportProjection(profile_id=payload.profile_id, receipt=snapshot)
+        )
+    if isinstance(payload, ProfileArchivePushRequest):
+        report = ports.push(
+            namespace_filter=payload.namespace_filter,
+            limit=payload.limit,
+            dry_run=payload.dry_run,
+            before_handoff=before_handoff,
+        )
+        return ProfileArchivePushExecutionResult(
+            projection=ProfileArchivePushProjection(profile_id=payload.profile_id, report=report)
+        )
+    outcome = ports.reconcile(write=tracker.call_writer)
+    if any(row.profile_id != str(ports.profile_id) for row in outcome.reconciled):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return ProfileArchiveReconcileExecutionResult(
+        projection=ProfileArchiveReconcileProjection(
+            profile_id=payload.profile_id,
+            reconciled=tuple(
+                ArchiveReconciledExport(operation_id=row.operation_id, destination=row.destination, purpose=row.purpose)
+                for row in outcome.reconciled
+            ),
+            failed=outcome.failures,
+        )
+    )
+
+
+def _archive_effect(
+    *,
+    handoff: bool,
+    tracker: LedgerCommitAttemptTracker,
+    failures: bool = False,
+) -> OperationEffect:
+    if handoff or tracker.has_uncertain_write:
+        return OperationEffect.UNKNOWN
+    if tracker.confirmed_write:
+        return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
+    return OperationEffect.NONE
+
+
+async def _settle_archive_work(
+    *,
+    payload: _ProfileArchiveRequest,
+    context: OperationExecutorContext,
+    tracker: LedgerCommitAttemptTracker,
+    expected: str,
+    work: Callable[[], _ProfileArchiveExecutionResult],
+    effect: Callable[[bool], OperationEffect],
+) -> str:
+    try:
+        if isinstance(payload, ProfileArchivePushRequest):
+            result = await asyncio.to_thread(work)
+        else:
+            result = await run_with_ledger_commit_fence(work, tracker=tracker, context=context, task_name=expected)
+    except BaseException:
+        await context.events.effect(effect(isinstance(payload, ProfileArchiveReconcileRequest)))
+        raise
+    if isinstance(result, ProfileArchiveExportExecutionResult) and not tracker.confirmed_write:
+        raise ValueError("sealed archive receipt lacks an actual writer receipt")
+    failures = isinstance(result, ProfileArchiveReconcileExecutionResult) and bool(result.projection.failed)
+    await context.events.effect(effect(failures))
+    return await context.operands.put(result, written_at=now())
 
 
 async def _execute[T: BaseModel](
@@ -192,26 +298,10 @@ async def _execute[T: BaseModel](
     context: OperationExecutorContext,
     expected: str,
 ) -> str:
-    payload = request.payload
-    expected_type = {
-        PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID: ProfileArchiveExportRequest,
-        PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID: ProfileArchivePushRequest,
-        PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID: ProfileArchiveReconcileRequest,
-    }[expected]
-    if (
-        request.definition_id != expected
-        or type(payload) is not expected_type
-        or not isinstance(
-            payload, (ProfileArchiveExportRequest, ProfileArchivePushRequest, ProfileArchiveReconcileRequest)
-        )
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    _require_profile(request, context, payload.profile_id)
+    payload = _archive_request_payload(expected, request, context)
     await context.events.phase(expected)
     operation = context.authority_operation
-    ports = factory(profile_id=payload.profile_id, operation=operation)
-    if ports.profile_id != payload.profile_id or ports.operation is not operation:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    ports = _archive_operation_ports(factory, payload, operation)
     tracker = LedgerCommitAttemptTracker()
     handoff = False
     loop = asyncio.get_running_loop()
@@ -219,7 +309,7 @@ async def _execute[T: BaseModel](
     async def authorize_handoff() -> None:
         nonlocal handoff
         async with context.cancellation.irreversible_section():
-            _require_profile(request, context, payload.profile_id)
+            require_operation_profile(request, context, payload.profile_id)
             handoff = True
             await context.events.effect(OperationEffect.UNKNOWN)
 
@@ -228,65 +318,28 @@ async def _execute[T: BaseModel](
             raise ValueError("provider handoff is unavailable for an archive preview")
         asyncio.run_coroutine_threadsafe(authorize_handoff(), loop).result()
 
-    def work() -> (
-        ProfileArchiveExportExecutionResult | ProfileArchivePushExecutionResult | ProfileArchiveReconcileExecutionResult
-    ):
-        _require_profile(request, context, payload.profile_id)
-        if isinstance(payload, ProfileArchiveExportRequest):
-            receipt = ports.export(payload.target, write=tracker.call_writer)
-            return ProfileArchiveExportExecutionResult(
-                projection=ProfileArchiveExportProjection(
-                    profile_id=payload.profile_id,
-                    receipt=ProfileArchiveExportReceiptSnapshot.model_validate(receipt.model_dump()),
-                )
-            )
-        if isinstance(payload, ProfileArchivePushRequest):
-            report = ports.push(
-                namespace_filter=payload.namespace_filter,
-                limit=payload.limit,
-                dry_run=payload.dry_run,
-                before_handoff=before_handoff,
-            )
-            return ProfileArchivePushExecutionResult(
-                projection=ProfileArchivePushProjection(profile_id=payload.profile_id, report=report)
-            )
-        outcome = ports.reconcile(write=tracker.call_writer)
-        if any(row.profile_id != str(ports.profile_id) for row in outcome.reconciled):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        return ProfileArchiveReconcileExecutionResult(
-            projection=ProfileArchiveReconcileProjection(
-                profile_id=payload.profile_id,
-                reconciled=tuple(
-                    ArchiveReconciledExport(
-                        operation_id=row.operation_id, destination=row.destination, purpose=row.purpose
-                    )
-                    for row in outcome.reconciled
-                ),
-                failed=outcome.failures,
-            )
+    def work() -> _ProfileArchiveExecutionResult:
+        return _execute_archive_work(
+            payload=payload,
+            request=request,
+            context=context,
+            ports=ports,
+            tracker=tracker,
+            before_handoff=before_handoff,
         )
 
-    def effect(*, failures: bool = False) -> OperationEffect:
-        if handoff or tracker.has_uncertain_write:
-            return OperationEffect.UNKNOWN
-        if tracker.confirmed_write:
-            return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
-        return OperationEffect.NONE
+    def effect(failures: bool = False) -> OperationEffect:
+        return _archive_effect(handoff=handoff, tracker=tracker, failures=failures)
 
     async def settle() -> str:
-        try:
-            if isinstance(payload, ProfileArchivePushRequest):
-                result = await asyncio.to_thread(work)
-            else:
-                result = await run_with_ledger_commit_fence(work, tracker=tracker, context=context, task_name=expected)
-        except BaseException:
-            await context.events.effect(effect(failures=isinstance(payload, ProfileArchiveReconcileRequest)))
-            raise
-        if isinstance(result, ProfileArchiveExportExecutionResult) and not tracker.confirmed_write:
-            raise ValueError("sealed archive receipt lacks an actual writer receipt")
-        failures = isinstance(result, ProfileArchiveReconcileExecutionResult) and bool(result.projection.failed)
-        await context.events.effect(effect(failures=failures))
-        return await context.operands.put(result, written_at=now())
+        return await _settle_archive_work(
+            payload=payload,
+            context=context,
+            tracker=tracker,
+            expected=expected,
+            work=work,
+            effect=effect,
+        )
 
     return await await_cancellation_complete(settle(), task_name=expected + ".settlement")
 
@@ -362,73 +415,64 @@ def resolve_profile_archive_operation_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     frontends = _FRONTENDS
-    if context.frontend not in frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    actions = _ACTIONS | frozenset({AccessAction.COMMIT}) if mutation else _ACTIONS
-    if context.action not in actions:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    admitted = context.admitted_request
-    if admitted is not None and context.action not in {AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME}:
-        if (
-            admitted.profile_id != payload.profile_id
-            or admitted.definition_id != expected
-            or admitted.destination_id != context.destination_id
-            or admitted.frontend is not context.frontend
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods
-            or not admitted.period_independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    elif context.authority_operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action is AccessAction.OBSERVE:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != expected + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=schema.schema_id,
-                category=category,
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=expected,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=expected,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=actions,
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            requires_human=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    access_profile = (
+        HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+        if mutation
+        else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     )
+    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
+    return bind_operation_access_profile(
+        context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
+    )
+
+
+def _profile_archive_push_effects(
+    projection: ProfileArchivePushProjection, receipt: OperationTerminalReceipt
+) -> frozenset[OperationEffect]:
+    report = projection.report
+    if receipt.effect is OperationEffect.NONE and (
+        report.pushed_by_namespace
+        or report.manifest_pushed_by_namespace
+        or report.failed_objects
+        or report.degraded_manifests
+        or report.cleanup_failed_objects
+    ):
+        raise ValueError("mirror provider outcomes require an admitted handoff receipt")
+    return (
+        frozenset({OperationEffect.NONE})
+        if report.dry_run
+        else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+    )
+
+
+def _profile_archive_reconcile_effects(
+    projection: ProfileArchiveReconcileProjection, receipt: OperationTerminalReceipt
+) -> frozenset[OperationEffect]:
+    if (
+        (receipt.effect is OperationEffect.NONE and projection.reconciled)
+        or (receipt.effect is OperationEffect.UPDATED and projection.failed)
+        or (receipt.effect is OperationEffect.PARTIAL and not projection.failed)
+    ):
+        raise ValueError("reconciliation outcomes disagree with their settled effect")
+    return frozenset(OperationEffect)
+
+
+def _require_archive_terminal_scope(
+    *,
+    receipt: OperationTerminalReceipt,
+    expected: str,
+    projection: ProfileArchiveExportProjection | ProfileArchivePushProjection | ProfileArchiveReconcileProjection,
+    effects: frozenset[OperationEffect],
+) -> None:
+    if (
+        receipt.identity.definition_id != expected
+        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
+        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
+        or receipt.effect not in effects
+        or receipt.diagnostic_ref is not None
+    ):
+        raise ValueError("archive result differs from its exact-purpose terminal receipt")
 
 
 def project_profile_archive_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -442,43 +486,14 @@ def project_profile_archive_operation_result(result: BaseModel, receipt: Operati
     elif type(result) is ProfileArchivePushExecutionResult:
         expected = PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID
         projection = result.projection
-        effects = (
-            frozenset({OperationEffect.NONE})
-            if projection.report.dry_run
-            else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-        )
-        if receipt.effect is OperationEffect.NONE and (
-            projection.report.pushed_by_namespace
-            or projection.report.manifest_pushed_by_namespace
-            or projection.report.failed_objects
-            or projection.report.degraded_manifests
-            or projection.report.cleanup_failed_objects
-        ):
-            raise ValueError("mirror provider outcomes require an admitted handoff receipt")
+        effects = _profile_archive_push_effects(projection, receipt)
     elif type(result) is ProfileArchiveReconcileExecutionResult:
         expected = PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID
         projection = result.projection
-        effects = frozenset(OperationEffect)
-        if (
-            (receipt.effect is OperationEffect.NONE and projection.reconciled)
-            or (receipt.effect is OperationEffect.UPDATED and projection.failed)
-            or (receipt.effect is OperationEffect.PARTIAL and not projection.failed)
-        ):
-            raise ValueError("reconciliation outcomes disagree with their settled effect")
+        effects = _profile_archive_reconcile_effects(projection, receipt)
     else:
         raise ValueError("invalid archive execution result")
-    if (
-        receipt.identity.definition_id != expected
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect not in effects
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("archive result differs from its exact-purpose terminal receipt")
+    _require_archive_terminal_scope(receipt=receipt, expected=expected, projection=projection, effects=effects)
     return type(projection).model_validate_json(projection.model_dump_json(), strict=True)
 
 
@@ -568,18 +583,9 @@ def build_profile_archive_operation_registrations(
     if len(definitions) != len(models) or {row.definition_id for row in definitions} != set(models):
         raise ValueError("incomplete archive operation family")
     return tuple(
-        OperationPublicDefinitionRegistrationV1.compose(
+        OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition,
-            request_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".request",
-                schema_version=1,
-                model_type=models[definition.definition_id][0],
-            ),
-            result_schema=OperationSchemaBindingV1.bind(
-                schema_id=definition.definition_id + ".result",
-                schema_version=1,
-                model_type=models[definition.definition_id][1],
-            ),
+            public_result_type=models[definition.definition_id][1],
             result_projector=project_profile_archive_operation_result,
             access_resolver=resolve_profile_archive_operation_access,
         )

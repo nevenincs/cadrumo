@@ -16,8 +16,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
+from ..calculations.registry.facts.payloads import MappingFactPayload
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.facts.schema import FactSelector, MappingFactPayload
+from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaCatalogueError, IvaValidationError
 
@@ -120,19 +121,31 @@ def recargo_rate_for_applied_rate(
 
     Returns:
         The paired recargo rate, which may legitimately be zero. ``None`` when
-        the table models no pairing for that rate on that date -- an unmodelled
+        the authority publishes no pairing for that rate on that date -- an unmodelled
         combination, which callers must not read as "no recargo applies".
 
     """
+    record = recargo_rate_record_for_applied_rate(applied_rate, on_date, operation=operation)
+    return None if record is None else record.recargo_rate
+
+
+def recargo_rate_record_for_applied_rate(
+    applied_rate: Decimal,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> RecargoRateRecord | None:
+    """Return the dated pairing record, or ``None`` when no candidate exists.
+
+    A candidate resolves through the exact governed-fact selector, preserving
+    overlap refusal and the selected window's legal provenance. A published
+    zero-rate pairing remains a record with ``recargo_rate == 0``; it is not
+    confused with the no-candidate ``None`` result.
+    """
     if not _recargo_fact_candidate_exists(applied_rate, on_date, operation=operation):
         return None
-    return recargo_rate_record_from_fact(
-        resolve_recargo_rate_for_applied_rate(
-            applied_rate,
-            on_date,
-            operation=operation,
-        ),
-    ).recargo_rate
+    resolved = resolve_recargo_rate_for_applied_rate(applied_rate, on_date, operation=operation)
+    return recargo_rate_record_from_fact(resolved)
 
 
 def resolve_recargo_rate_for_applied_rate(
@@ -197,6 +210,7 @@ __all__ = [
     "RecargoRateRecord",
     "load_recargo_rate_table",
     "recargo_rate_for_applied_rate",
+    "recargo_rate_record_for_applied_rate",
     "recargo_rate_record_from_fact",
     "resolve_recargo_rate_for_applied_rate",
 ]

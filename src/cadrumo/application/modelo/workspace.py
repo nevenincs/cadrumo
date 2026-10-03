@@ -53,9 +53,9 @@ from ...domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
     RegistrySnapshot,
-    SchemaFamilyDispositionDeclaration,
 )
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+from ...domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef

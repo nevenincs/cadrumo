@@ -32,7 +32,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.iva_schema_vocabulary import (
+from ...domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_simplificado_token,
     require_iva_regime,
 )

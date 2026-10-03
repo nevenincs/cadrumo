@@ -30,12 +30,13 @@ from .schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    SchemaFamilyDispositionDeclaration,
 )
 from .schema_base import CorpusTierField, RegistryModel, RegistrySourceKind
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
+from .schema_overrides import SchemaFamilyDispositionDeclaration
 from .schema_references import SourceReference, source_window_applies_across
+from .schema_surfaces import CasillaDefinition
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 
 __all__ = [
@@ -287,7 +288,13 @@ class RegistryRevisionInspection(RegistryModel):
         selected_sources = {
             source_ref: sources[source_ref] for source_ref in sorted(selected_source_ids) if source_ref in sources
         }
-        revision_casillas = casillas_by_id(revision)
+        (
+            revision_casillas,
+            casilla_sections,
+            casilla_localization_keys,
+            casilla_continuity,
+            casilla_export_refs,
+        ) = _casilla_inspection_projection(revision)
         return cls(
             modelo_id=modelo.id,
             revision_id=revision.id,
@@ -299,26 +306,10 @@ class RegistryRevisionInspection(RegistryModel):
             source_ref_ids=frozenset(selected_source_ids),
             legal_ref_ids=frozenset(selected_legal_ids),
             casilla_ids=frozenset(revision_casillas),
-            casilla_sections=MappingProxyType(
-                {casilla_id: tuple(casilla.section) for casilla_id, casilla in revision_casillas.items()}
-            ),
-            casilla_localization_keys=MappingProxyType(
-                {casilla_id: tuple(casilla.localization_keys) for casilla_id, casilla in revision_casillas.items()}
-            ),
-            casilla_continuity=MappingProxyType(
-                {
-                    casilla_id: casilla.continuidad_id
-                    for casilla_id, casilla in revision_casillas.items()
-                    if casilla.continuidad_id is not None
-                }
-            ),
-            casilla_export_refs=MappingProxyType(
-                {
-                    casilla_id: tuple(casilla.export_refs)
-                    for casilla_id, casilla in revision_casillas.items()
-                    if casilla.export_refs
-                }
-            ),
+            casilla_sections=casilla_sections,
+            casilla_localization_keys=casilla_localization_keys,
+            casilla_continuity=casilla_continuity,
+            casilla_export_refs=casilla_export_refs,
             binding_ids=frozenset(binding.id for binding in revision.bindings),
             projection_endpoints=revision.projection_endpoints,
             formulas=revision.formulas,
@@ -335,6 +326,45 @@ class RegistryRevisionInspection(RegistryModel):
         _validate_source_catalogue_keys(self)
         _validate_selected_source_union(self)
         return self
+
+
+def _casilla_inspection_projection(
+    revision: ModeloRevision,
+) -> tuple[
+    dict[CasillaId, CasillaDefinition],
+    Mapping[CasillaId, tuple[str, ...]],
+    Mapping[CasillaId, tuple[str, ...]],
+    Mapping[CasillaId, ContinuidadId],
+    Mapping[CasillaId, tuple[ExportFieldId, ...]],
+]:
+    revision_casillas = casillas_by_id(revision)
+    casilla_sections = MappingProxyType(
+        {casilla_id: tuple(casilla.section) for casilla_id, casilla in revision_casillas.items()}
+    )
+    casilla_localization_keys = MappingProxyType(
+        {casilla_id: tuple(casilla.localization_keys) for casilla_id, casilla in revision_casillas.items()}
+    )
+    casilla_continuity = MappingProxyType(
+        {
+            casilla_id: casilla.continuidad_id
+            for casilla_id, casilla in revision_casillas.items()
+            if casilla.continuidad_id is not None
+        }
+    )
+    casilla_export_refs = MappingProxyType(
+        {
+            casilla_id: tuple(casilla.export_refs)
+            for casilla_id, casilla in revision_casillas.items()
+            if casilla.export_refs
+        }
+    )
+    return (
+        revision_casillas,
+        casilla_sections,
+        casilla_localization_keys,
+        casilla_continuity,
+        casilla_export_refs,
+    )
 
 
 def _validate_revision_source_refs(inspection: RegistryRevisionInspection) -> None:

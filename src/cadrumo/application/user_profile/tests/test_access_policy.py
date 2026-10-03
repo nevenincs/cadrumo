@@ -50,17 +50,14 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.access_policy import (
-    evaluate_operation_access,
-    intersect_scopes,
-    scope_is_subset,
-)
+from cadrumo.application.user_profile.access_policy import intersect_scopes, scope_is_subset
 from cadrumo.application.user_profile.access_projections import (
     project_access_session,
     project_access_status,
     project_api_key,
     project_automation_grant,
 )
+from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.operations import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     build_user_profile_operation_definitions,

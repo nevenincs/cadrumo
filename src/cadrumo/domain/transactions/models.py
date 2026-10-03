@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
@@ -41,7 +41,7 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
-from ..calculations.registry.iva_schema_vocabulary import require_iva_exemption_article
+from ..calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from ..calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 from ..calculations.registry.prorrata_vocabulary import require_input_classification
 from ..identifiers import canonical_decimal_string
@@ -202,6 +202,83 @@ def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     if not isinstance(raw, RawTransaction):
         raise TransactionValidationError("raw is required before transaction_id can be derived")
     return derive_transaction_id(raw)
+
+
+def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
+    raw = info.data.get("raw")
+    if isinstance(raw, RawTransaction):
+        return raw.value_date or raw.booked_date
+    return None
+
+
+def _translate_registry_enum_error(resolve: Callable[[], object]) -> object:
+    try:
+        return resolve()
+    except RegistryValidationError as exc:
+        raise TransactionValidationError(str(exc)) from exc
+
+
+def _coerce_concepto_ingreso_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, ConceptoIngreso):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    if effective_date is None:
+        raise TransactionValidationError(
+            "concepto_ingreso requires the transaction's effective date for registry resolution",
+        )
+    return _translate_registry_enum_error(lambda: require_concepto_ingreso(value, effective_date=effective_date))
+
+
+def _coerce_deduction_fact_kind_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, IvaDeductionFactKind):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    return _translate_registry_enum_error(
+        lambda: require_iva_deduction_fact_kind(value, effective_date=effective_date),
+    )
+
+
+def _coerce_input_classification_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, InputClassification):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    if effective_date is None:
+        raise TransactionValidationError(
+            "input_classification requires the transaction's effective date for registry resolution",
+        )
+    return _translate_registry_enum_error(lambda: require_input_classification(value, effective_date=effective_date))
+
+
+def _coerce_counterparty_identification_state_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, EUMemberState):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    return _translate_registry_enum_error(lambda: require_eu_member_state(value, effective_date=effective_date))
+
+
+def _coerce_transaction_enum_field(value: object, info: core_schema.ValidationInfo) -> object:
+    field_name = info.field_name
+    if field_name == "concepto_ingreso":
+        return _coerce_concepto_ingreso_field(value, info)
+    if field_name == "deduction_fact_kind":
+        return _coerce_deduction_fact_kind_field(value, info)
+    if field_name == "input_classification":
+        return _coerce_input_classification_field(value, info)
+    if field_name == "counterparty_identification_state":
+        return _coerce_counterparty_identification_state_field(value, info)
+    if not isinstance(value, str):
+        return value
+    enum_by_field: dict[str, type] = {
+        "direction": TransactionDirection,
+        "business_classification": BusinessClassification,
+        "lifecycle_state": TransactionLifecycleState,
+        "iva_category": IvaCategory,
+        "exemption_article": IvaExemptionArticle,
+        "cash_accounting_treatment": IvaCashAccountingTreatment,
+        "art_104_tres_exclusion": Art104TresExclusion,
+        "tipo_actividad": TipoActividad,
+    }
+    return enum_by_field[field_name or ""](value)
 
 
 class Transaction(BaseModel):
@@ -540,71 +617,7 @@ class Transaction(BaseModel):
         carries no re-entrancy risk. No-op for an already-typed enum member
         or ``None``.
         """
-        if info.field_name == "concepto_ingreso":
-            if value is None or isinstance(value, ConceptoIngreso):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            if effective_date is None:
-                raise TransactionValidationError(
-                    "concepto_ingreso requires the transaction's effective date for registry resolution",
-                )
-            try:
-                return require_concepto_ingreso(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if info.field_name == "deduction_fact_kind":
-            if value is None or isinstance(value, IvaDeductionFactKind):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            try:
-                return require_iva_deduction_fact_kind(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if info.field_name == "input_classification":
-            if value is None or isinstance(value, InputClassification):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            if effective_date is None:
-                raise TransactionValidationError(
-                    "input_classification requires the transaction's effective date for registry resolution",
-                )
-            try:
-                return require_input_classification(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if info.field_name == "counterparty_identification_state":
-            if value is None or isinstance(value, EUMemberState):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            try:
-                return require_eu_member_state(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if not isinstance(value, str):
-            return value
-        enum_by_field: dict[str, type] = {
-            "direction": TransactionDirection,
-            "business_classification": BusinessClassification,
-            "lifecycle_state": TransactionLifecycleState,
-            "iva_category": IvaCategory,
-            "exemption_article": IvaExemptionArticle,
-            "cash_accounting_treatment": IvaCashAccountingTreatment,
-            "art_104_tres_exclusion": Art104TresExclusion,
-            "tipo_actividad": TipoActividad,
-        }
-        return enum_by_field[info.field_name or ""](value)
+        return _coerce_transaction_enum_field(value, info)
 
     @field_validator("operation_date", mode="before")
     @classmethod

@@ -25,22 +25,18 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
 
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ._export_tree import RenderedExportTree, render_complete_export_tree
 from ._form_layout_companion import prepare_generated_form_layout_companion
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
-from ._tree_publication import (
-    GeneratedExportTreePublicationContext,
-    GeneratedExportTreeTargetStateReceipt,
-    publish_validated_generated_export_tree,
-)
+from ._tree_publication import publish_validated_generated_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from .authority_publication import (
     authority_database_currency,
@@ -54,6 +50,7 @@ from .candidate_staging import (
     generated_export_bootstrap_target,
     stage_continuity_metadata,
     stage_generated_export_candidate,
+    validate_bootstrap_manual_export_layout_supersession,
     write_complete_edition,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
@@ -66,6 +63,12 @@ from .render_check import (
     revision_render_inputs,
 )
 from .source_defects import source_defects_for
+from .tree_publication_contracts import (
+    GeneratedExportSupersession,
+    GeneratedExportTreePublicationContext,
+    GeneratedExportTreeTargetStateReceipt,
+)
+from .tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
 
 app = typer.Typer(
     name="pipeline",
@@ -198,6 +201,7 @@ class PreparedGeneratedTreeInvocation:
     target_root: Path
     target_export_root: Path
     published_modelo_root: Path | None
+    supersession: GeneratedExportSupersession | None = None
 
 
 def reviewed_bootstrap_target(
@@ -225,8 +229,14 @@ def prepare_generated_tree_invocation(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> PreparedGeneratedTreeInvocation:
     """Stage one narrow candidate and derive its render inputs from authority."""
-    authority = compiled_bundled_authority() if authority is None else authority
     target_root = bundled_path("registry", "aeat")
+    if authority is None:
+        recover_interrupted_supersession_bundle(
+            target_root=target_root,
+            modelo=invocation.modelo,
+            revision=invocation.revision,
+        )
+        authority = compiled_bundled_authority()
     target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     source = next(
         (item for ref, item in authority.catalogues.sources.items() if str(ref) == invocation.source_ref),
@@ -234,10 +244,25 @@ def prepare_generated_tree_invocation(
     )
     bootstrap = None
     bootstrap_target: GeneratedExportBootstrapTarget | None = None
+    supersession: GeneratedExportSupersession | None = None
     if not target_export_root.exists():
         if source is None:
             raise ValueError(f"no source {invocation.source_ref!r} exists for bootstrap target selection")
         bootstrap_target = reviewed_bootstrap_target(invocation, source_sha256=source.sha256)
+        if bootstrap_target.supersedes_layout_id is not None:
+            source_modelo_root = target_root / "modelos" / invocation.modelo
+            source_state_sha256 = validate_bootstrap_manual_export_layout_supersession(
+                source_modelo_root,
+                revision=invocation.revision,
+                superseded_layout_id=bootstrap_target.supersedes_layout_id,
+                expected_references=bootstrap_target.superseded_construct_references,
+            )
+            supersession = GeneratedExportSupersession(
+                superseded_layout_id=bootstrap_target.supersedes_layout_id,
+                generated_layout_id=bootstrap_target.layout_id,
+                expected_construct_references=bootstrap_target.superseded_construct_references,
+                source_state_sha256=source_state_sha256,
+            )
         bootstrap = GeneratedExportBootstrapTransport(
             layout_id=bootstrap_target.layout_id,
             line_ending=bootstrap_target.line_ending,
@@ -274,6 +299,7 @@ def prepare_generated_tree_invocation(
         ),
         filing_year=invocation.filing_year,
         period=invocation.period,
+        scope_authority=authority,
         supporting_modelos=supporting_modelos(invocation.modelo),
         continuity_metadata_modelo_root=stage_continuity_metadata(
             target_root / "modelos" / invocation.modelo,
@@ -289,6 +315,7 @@ def prepare_generated_tree_invocation(
         target_root=target_root,
         target_export_root=target_export_root,
         published_modelo_root=stage_published_modelo(root, modelo=invocation.modelo, revision=invocation.revision),
+        supersession=supersession,
     )
 
 
@@ -366,7 +393,8 @@ def stage_isolated_edition(
     locale where the row has no text of its own, so every staged label resolves
     to exactly what the live edition resolves.
     """
-    from dev.locales.manager import LocaleManager, discover_locale_codes
+    from dev.locales.locale_yaml import discover_locale_codes
+    from dev.locales.manager import LocaleManager
 
     edition = materialise_edition(source_modelo_root, revision)
     shutil.copytree(source_modelo_root, staged_root)
@@ -460,7 +488,12 @@ def check_prepared_invocation(
     case keeps an owed tree from deadlocking the publisher while preserving the
     same pre-cutover validation boundary publication uses.
     """
-    target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+    target_state = GeneratedExportTreeTargetStateReceipt.observe(
+        prepared.target_export_root,
+        supersession_source_sha256=(
+            None if prepared.supersession is None else prepared.supersession.source_state_sha256
+        ),
+    )
     if not prepared.target_export_root.exists():
         rendered = _render_candidate(prepared)
         validate_generated_export_tree(
@@ -508,6 +541,8 @@ def publish_prepared_invocation(
             target_root=prepared.target_root,
             target_export_root=prepared.target_export_root,
             expected_target_state=target_state,
+            supersession=prepared.supersession,
+            final_live_validator=lambda: _validate_final_live_target(prepared),
         ),
         joined=prepared.inputs.joined,
         semantic_map=prepared.inputs.semantic_map,
@@ -515,6 +550,29 @@ def publish_prepared_invocation(
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
+
+
+def _validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
+    """Compile the complete live registry and prove the named export is current before commit."""
+    authority = compile_validated_authority(
+        prepared.target_root,
+        bundled_path(),
+        verify_evidence_bytes=True,
+        complete_validation=True,
+    )
+    fact = target_currentness(
+        prepared.invocation.modelo,
+        prepared.invocation.revision,
+        prepared.invocation.source_ref,
+        prepared.invocation.filing_year,
+        prepared.invocation.period,
+        authority=authority,
+    )
+    if fact.state is not TargetCurrentnessState.CURRENT:
+        raise RegistryValidationError(
+            "generated target failed live-root currentness after cutover: "
+            f"state={fact.state.value}; detail={fact.detail}",
+        )
 
 
 def require_republication_eligibility(

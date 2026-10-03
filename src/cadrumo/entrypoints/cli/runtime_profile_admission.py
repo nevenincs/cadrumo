@@ -158,21 +158,7 @@ def activate_runtime_profile(
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_missing_target")
         raise no_active_profile_refusal()
     if credential_reference is not None:
-        if root_selection is not None:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.profile_credential_ref_conflict"
-            )
-        if method is not ProfileAuthenticationMethod.API_KEY:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.profile_credential_ref_requires_api_key"
-            )
-        client = asyncio.run(
-            open_installed_credential_client(
-                profile_id=UUID(bucket_id),
-                credential_reference=credential_reference,
-                frontend=OperationFrontendProjection.CLI,
-            )
-        )
+        client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method)
     else:
         client = asyncio.run(
             open_installed_runtime_client(profile_id=UUID(bucket_id), frontend=OperationFrontendProjection.CLI)
@@ -215,3 +201,26 @@ def activate_runtime_recovery(
     except BaseException:
         client.close()
         raise
+
+
+def _open_profile_credential_client(
+    bucket_id: str,
+    credential_reference: UUID,
+    root_selection: ProfileSecretSelection | None,
+    method: ProfileAuthenticationMethod,
+) -> RuntimeFrontendClient:
+    """Refuse conflicting credential inputs before opening the installed credential connection."""
+    if root_selection is not None:
+        raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_credential_ref_conflict")
+    if method is not ProfileAuthenticationMethod.API_KEY:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.profile_credential_ref_requires_api_key"
+        )
+    client = asyncio.run(
+        open_installed_credential_client(
+            profile_id=UUID(bucket_id),
+            credential_reference=credential_reference,
+            frontend=OperationFrontendProjection.CLI,
+        )
+    )
+    return client

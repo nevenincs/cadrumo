@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 
 from ...application.modelo.taxation_comparison_operation import (
@@ -9,12 +11,14 @@ from ...application.modelo.taxation_comparison_operation import (
     ModeloTaxationComparisonProjection,
     ModeloTaxationComparisonRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.modelos.work_unit import WorkUnit
 from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_modelo_metadata import read_modelo_work_unit
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def compare_modelo_taxation(
@@ -58,25 +62,30 @@ def compare_modelo_taxation(
             translated_message="errors.refused.refused_taxation_comparison", context=exc.context
         ) from None
     projection = completed.projection
-    if (
-        not isinstance(projection, ModeloTaxationComparisonProjection)
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.NONE
-        or projection.profile_id != client.profile_id
-        or projection.work_unit_id != unit.work_unit_id
-        or projection.filing_year != unit.filing_year
-        or projection.revision != str(unit.revision_id)
-        or projection.modelo != str(unit.modelo)
+    if not isinstance(projection, ModeloTaxationComparisonProjection) or _taxation_comparison_receipt_invalid(
+        completed, projection, client.profile_id, unit
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 
 __all__ = ["compare_modelo_taxation"]
+
+
+def _taxation_comparison_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloTaxationComparisonProjection],
+    projection: ModeloTaxationComparisonProjection,
+    profile_id: UUID,
+    unit: WorkUnit,
+) -> bool:
+    """Correlate the successful comparison with the exact selected profile and work coordinates."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or (completed.effect is not OperationEffect.NONE)
+        or (projection.profile_id != profile_id)
+        or (projection.work_unit_id != unit.work_unit_id)
+        or (projection.filing_year != unit.filing_year)
+        or (projection.revision != str(unit.revision_id))
+        or (projection.modelo != str(unit.modelo))
+    )

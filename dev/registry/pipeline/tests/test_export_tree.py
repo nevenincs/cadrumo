@@ -38,6 +38,7 @@ from ...author_family_identities import derive_projection_endpoint_id
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from .. import _export_tree
+from .. import export_field_derivation as _field_derivation
 from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
@@ -53,15 +54,10 @@ from ..record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
 )
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileAnchor,
-    RenderProfileDesignIdentity,
-    RenderProfileSourceEvidence,
-    ReviewedPolicyDecision,
-    SingletonNumericRule,
-    Width17MembershipRule,
-)
+from ..render_profile_evidence import RenderProfileSourceEvidence, ReviewedPolicyDecision
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
+from ..render_profile_rules import SingletonNumericRule, Width17MembershipRule
 from ..semantic_map import SemanticMap
 from ._generated_tree_test_support import bundled_revision_inspection, isolated_authorities
 
@@ -1320,15 +1316,15 @@ def test_note_governed_numeric_enumeration_retains_the_period_specific_closed_do
         .fields[1]
     )
 
-    annotated_derivation = _export_tree._numeric_derivation(
+    annotated_derivation = _field_derivation._numeric_derivation(
         annotated,
         export_record_id="generated-record-type-2",
     )
-    unannotated_derivation = _export_tree._numeric_derivation(
+    unannotated_derivation = _field_derivation._numeric_derivation(
         unannotated,
         export_record_id="generated-record-type-2",
     )
-    incomplete_note_pair_derivation = _export_tree._numeric_derivation(
+    incomplete_note_pair_derivation = _field_derivation._numeric_derivation(
         incomplete_note_pair,
         export_record_id="generated-record-type-2",
     )
@@ -1508,14 +1504,14 @@ def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, o
 
 def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alternative() -> None:
     """M184 2025 prints the constant before a merged explanatory sentence."""
-    labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
+    labelled = _field_derivation._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
         'Constante "E". rentas. Declaración anual.',
     )
 
     assert labelled is not None
     assert labelled.group("literal") == "E"
-    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
-    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
+    assert _field_derivation._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
+    assert _field_derivation._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
 
 
 def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_constant() -> None:
@@ -1524,10 +1520,10 @@ def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_cons
         "Constante «F» ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES» "
         'Sólo para claves de percepción "1" ó "2" (posiciones 100-101 del tipo de registro 2).'
     )
-    folded = official_content.translate(_export_tree._OFFICIAL_QUOTE_FOLD)
+    folded = official_content.translate(_field_derivation._OFFICIAL_QUOTE_FOLD)
 
-    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
-    labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
+    assert _field_derivation._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
+    labelled = _field_derivation._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
     assert labelled is not None
     assert labelled.group("literal") == "F"
 
@@ -1727,7 +1723,9 @@ def test_dash_numeric_enumeration_reads_labels_and_refuses_ranges(
     expected: tuple[str, ...],
 ) -> None:
     """The dash-enumeration reader admits AEAT's label spellings, never a range."""
-    values = tuple(match.group("value") for match in _export_tree._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
+    values = tuple(
+        match.group("value") for match in _field_derivation._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content)
+    )
 
     assert values == expected
 
@@ -1740,7 +1738,7 @@ def test_bare_record_tag_is_recognised_without_a_constante_label() -> None:
     pattern keys on the tag's SHAPE, so admitting them cannot turn an arbitrary
     unlabelled cell into a mandated literal.
     """
-    matcher = _export_tree._OFFICIAL_BARE_RECORD_TAG_RE
+    matcher = _field_derivation._OFFICIAL_BARE_RECORD_TAG_RE
 
     assert matcher.fullmatch("</T35301000>") is not None
     assert matcher.fullmatch("<T32201000>") is not None
@@ -1761,7 +1759,7 @@ def test_width_17_sign_policies_cover_every_declared_policy() -> None:
     false. Adding a policy must break here rather than in a filed amount.
     """
     declared = set(get_args(Width17MembershipRule.model_fields["sign_policy"].annotation))
-    handled = {_export_tree._WIDTH_17_SIGNED_POLICY, _export_tree._WIDTH_17_UNSIGNED_POLICY}
+    handled = {_field_derivation._WIDTH_17_SIGNED_POLICY, _field_derivation._WIDTH_17_UNSIGNED_POLICY}
     assert handled == declared, (
         f"width-17 sign policies handled by the derivation {sorted(handled)} do not match the "
         f"declared set {sorted(declared)}; an unhandled policy renders as unsigned decimal"
@@ -1853,7 +1851,7 @@ def _joined_fields_by_aeat_type(modelo: str) -> dict[str, JoinedRecordDesignFiel
 @pytest.mark.unit
 def test_an_unsigned_official_type_derives_an_unsigned_slot() -> None:
     """`Num` is numerico SIN signo, and it must still render without refusal."""
-    from .._export_tree import _derive_sign_from_official_type
+    from ..export_field_derivation import _derive_sign_from_official_type
 
     unsigned = _joined_fields_by_aeat_type("390")["Num"]
 
@@ -1870,7 +1868,7 @@ def test_a_signed_official_type_derives_a_signed_slot() -> None:
     reserves no byte -- the marker displaces the leading digit when the value is
     negative -- and the derivation reads that grounding rather than refusing.
     """
-    from .._export_tree import _derive_sign_from_official_type
+    from ..export_field_derivation import _derive_sign_from_official_type
 
     signed = _joined_fields_by_aeat_type("390")["N"]
 
@@ -1890,7 +1888,7 @@ def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier
     unconditional; it is read as a requirement for natural persons only. A
     wording nobody has adjudicated is neither, and stays unclaimed.
     """
-    from .._export_tree import _is_required, _qualified_requirement
+    from ..export_field_schema import _is_required, _qualified_requirement
 
     assert _is_required(None) is False
     assert _is_required("Obligatorio") is True

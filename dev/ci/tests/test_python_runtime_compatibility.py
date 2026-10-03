@@ -10,8 +10,14 @@ from pathlib import Path
 import pytest
 
 from dev.packaging.command_execution import CommandResult
+from dev.packaging.evidence import artifact_map_digest
 
 from .. import python_runtime_compatibility as compatibility
+from .. import (
+    runtime_probe_checks,
+    runtime_probe_contracts,
+    runtime_probe_installation,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -31,16 +37,18 @@ def _command_result(*, returncode: int, stderr: str = "", stdout: str = "") -> C
     )
 
 
-def _focused_test(name: str = "fixture-test", *, status: str = "passed") -> compatibility.FocusedTestEvidence:
+def _focused_test(name: str = "fixture-test", *, status: str = "passed") -> runtime_probe_contracts.FocusedTestEvidence:
     """Build one valid focused-test evidence entry for schema fixtures."""
-    return compatibility.FocusedTestEvidence(
+    return runtime_probe_contracts.FocusedTestEvidence(
         name=name,
         status=status,
-        command=compatibility.CommandEvidence.from_result(_command_result(returncode=0)),
+        command=runtime_probe_contracts.CommandEvidence.from_result(_command_result(returncode=0)),
     )
 
 
-def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "resolved") -> compatibility.ProbeEvidence:
+def _evidence(
+    *, mode: str, status: str = "passed", dependency_status: str = "resolved"
+) -> runtime_probe_contracts.ProbeEvidence:
     """Build a minimal valid evidence row without invoking a package installer."""
     digest = hashlib.sha256(b"fixture").hexdigest()
     artifact_digests = {"cadrumo": digest}
@@ -54,7 +62,7 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
                 "wheelhouse_runtime": "3.14",
             }
         )
-    return compatibility.ProbeEvidence(
+    return runtime_probe_contracts.ProbeEvidence(
         schema="cadrumo.python-runtime-compatibility.v1",
         runtime={
             "id": "cp314",
@@ -69,7 +77,7 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
         status=status,
         stability="stable",
         lock_sha256=digest,
-        artifact_sha256=compatibility.artifact_map_digest(artifact_digests),
+        artifact_sha256=artifact_map_digest(artifact_digests),
         artifact_digests=artifact_digests,
         source_digest="a" * 64,
         cohort_manifest_sha256=digest if mode == "binary" else None,
@@ -120,23 +128,23 @@ def test_passing_evidence_requires_focused_runtime_tests() -> None:
     payload = _evidence(mode="source").to_dict()
     payload["focused_tests"] = ()
 
-    with pytest.raises(compatibility.CompatibilityProbeError, match="must include focused runtime tests"):
-        compatibility.ProbeEvidence(**payload)
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="must include focused runtime tests"):
+        runtime_probe_contracts.ProbeEvidence(**payload)
 
 
 def test_passing_binary_evidence_requires_wheelhouse_binding() -> None:
     """A binary green row cannot launder a product-only artifact digest."""
     payload = _evidence(mode="binary").to_dict()
     payload["artifact_digests"] = {"cadrumo": hashlib.sha256(b"fixture").hexdigest()}
-    payload["artifact_sha256"] = compatibility.artifact_map_digest(payload["artifact_digests"])
+    payload["artifact_sha256"] = artifact_map_digest(payload["artifact_digests"])
 
-    with pytest.raises(compatibility.CompatibilityProbeError, match="runtime wheelhouse bytes"):
-        compatibility.ProbeEvidence(**payload)
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="runtime wheelhouse bytes"):
+        runtime_probe_contracts.ProbeEvidence(**payload)
 
 
 def test_evidence_rejects_skipped_dependency_outcome() -> None:
     """Missing or unexecuted dependency proof cannot be represented as a skip."""
-    with pytest.raises(compatibility.CompatibilityProbeError, match="cannot be skipped"):
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="cannot be skipped"):
         _evidence(mode="binary", status="failed", dependency_status="skipped")
 
 
@@ -148,7 +156,7 @@ def test_binary_missing_wheel_is_a_failed_attributable_outcome(tmp_path: Path, m
     captured: dict[str, object] = {}
 
     monkeypatch.setattr(
-        compatibility,
+        runtime_probe_installation,
         "run_command",
         lambda *args, **kwargs: (
             captured.update(argv=args[0], environment=kwargs["environment"])
@@ -161,20 +169,20 @@ def test_binary_missing_wheel_is_a_failed_attributable_outcome(tmp_path: Path, m
     monkeypatch.setenv("UV_INDEX_URL", "https://attacker.invalid/simple")
     monkeypatch.setenv("PIP_FIND_LINKS", "https://attacker.invalid/wheels")
 
-    commands, status, detail = compatibility._install(
+    commands, status, detail = runtime_probe_installation._install(
         "uv",
         repo_root=tmp_path,
         work_dir=tmp_path,
         venv=tmp_path / "venv",
         artifacts=(("cadrumo", artifact),),
-        mode=compatibility.ProbeMode.BINARY,
+        mode=runtime_probe_contracts.ProbeMode.BINARY,
         wheelhouse_dir=wheelhouse,
         wheelhouse_manifest=manifest,
         wheelhouse_platform="windows-x86-64",
     )
 
     assert commands[0].exit_status == 1
-    assert status is compatibility.PythonRuntimeDependencyStatus.MISSING_WHEEL
+    assert status is runtime_probe_contracts.PythonRuntimeDependencyStatus.MISSING_WHEEL
     assert detail and "wheel" in detail.lower()
     assert status.value != "skipped"
     argv = captured["argv"]
@@ -195,14 +203,14 @@ def test_binary_install_refuses_to_run_without_a_sealed_wheelhouse(tmp_path: Pat
     artifact = tmp_path / "cadrumo-0.2.2-py3-none-any.whl"
     artifact.write_bytes(b"wheel fixture")
 
-    with pytest.raises(compatibility.CompatibilityProbeError, match="extracted sealed runtime wheelhouse"):
-        compatibility._install(
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="extracted sealed runtime wheelhouse"):
+        runtime_probe_installation._install(
             "uv",
             repo_root=tmp_path,
             work_dir=tmp_path,
             venv=tmp_path / "venv",
             artifacts=(("cadrumo", artifact),),
-            mode=compatibility.ProbeMode.BINARY,
+            mode=runtime_probe_contracts.ProbeMode.BINARY,
         )
 
 
@@ -211,8 +219,8 @@ def test_binary_install_refuses_drifted_wheelhouse_bytes(tmp_path: Path) -> None
     wheelhouse, manifest = _wheelhouse_fixture(tmp_path)
     (wheelhouse / "native_dependency-1.0.0-py3-none-any.whl").write_bytes(b"substituted")
 
-    with pytest.raises(compatibility.CompatibilityProbeError, match="wheel bytes drifted"):
-        compatibility._binary_wheel_targets(
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="wheel bytes drifted"):
+        runtime_probe_installation._binary_wheel_targets(
             wheelhouse,
             manifest,
             platform_target="windows-x86-64",
@@ -225,7 +233,7 @@ def test_binary_selection_uses_observed_runtime_minor() -> None:
     fourteen = {"python": "3.14", "status": "ready"}
     manifest = {"runtimes": {"3.13": thirteen, "3.14": fourteen}}
 
-    selected_minor, selected = compatibility._select_runtime_wheelhouse(
+    selected_minor, selected = runtime_probe_installation._select_runtime_wheelhouse(
         manifest,
         {"python": "3.14.7"},
     )
@@ -253,8 +261,8 @@ def test_binary_selection_attributes_advisory_missing_wheels() -> None:
         }
     }
 
-    with pytest.raises(compatibility.CompatibilityProbeError, match="pydantic-core") as failure:
-        compatibility._select_runtime_wheelhouse(manifest, {"python": "3.15.0b4"})
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="pydantic-core") as failure:
+        runtime_probe_installation._select_runtime_wheelhouse(manifest, {"python": "3.15.0b4"})
 
     assert failure.value.category == "missing-wheel"
 
@@ -264,12 +272,15 @@ def test_binary_selection_attributes_advisory_missing_wheels() -> None:
     (
         (
             "No compatible wheel was found for native dependency",
-            compatibility.PythonRuntimeDependencyStatus.MISSING_WHEEL,
+            runtime_probe_contracts.PythonRuntimeDependencyStatus.MISSING_WHEEL,
         ),
-        ("wheel metadata verification failed after download", compatibility.PythonRuntimeDependencyStatus.FAILED),
+        (
+            "wheel metadata verification failed after download",
+            runtime_probe_contracts.PythonRuntimeDependencyStatus.FAILED,
+        ),
         (
             "the local wheel was installed but its hash did not verify",
-            compatibility.PythonRuntimeDependencyStatus.FAILED,
+            runtime_probe_contracts.PythonRuntimeDependencyStatus.FAILED,
         ),
     ),
 )
@@ -277,25 +288,25 @@ def test_binary_install_failure_taxonomy_is_not_triggered_by_the_word_wheel(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     stderr: str,
-    expected: compatibility.PythonRuntimeDependencyStatus,
+    expected: runtime_probe_contracts.PythonRuntimeDependencyStatus,
 ) -> None:
     """Only resolver diagnostics, not arbitrary wheel prose, mean missing-wheel."""
     artifact = tmp_path / "cadrumo-0.2.2-py3-none-any.whl"
     artifact.write_bytes(b"wheel fixture")
     monkeypatch.setattr(
-        compatibility,
+        runtime_probe_installation,
         "run_command",
         lambda *_args, **_kwargs: _command_result(returncode=1, stderr=stderr),
     )
-    monkeypatch.setattr(compatibility, "_binary_wheel_targets", lambda *_args, **_kwargs: ())
+    monkeypatch.setattr(runtime_probe_installation, "_binary_wheel_targets", lambda *_args, **_kwargs: ())
 
-    _commands, status, _detail = compatibility._install(
+    _commands, status, _detail = runtime_probe_installation._install(
         "uv",
         repo_root=tmp_path,
         work_dir=tmp_path,
         venv=tmp_path / "venv",
         artifacts=(("cadrumo", artifact),),
-        mode=compatibility.ProbeMode.BINARY,
+        mode=runtime_probe_contracts.ProbeMode.BINARY,
         wheelhouse_dir=tmp_path,
         wheelhouse_manifest={},
         wheelhouse_platform="linux-x86-64",
@@ -312,8 +323,8 @@ def test_focused_runtime_tests_are_target_interpreter_commands(tmp_path: Path, m
         calls.append(argv)
         return _command_result(returncode=0, stdout="usage: cadrumo-mcp\n")
 
-    monkeypatch.setattr(compatibility, "run_command", fake_run)
-    tests, commands, failure = compatibility._focused_runtime_tests(tmp_path / "venv", work_dir=tmp_path)
+    monkeypatch.setattr(runtime_probe_checks, "run_command", fake_run)
+    tests, commands, failure = runtime_probe_checks._focused_runtime_tests(tmp_path / "venv", work_dir=tmp_path)
 
     assert failure is None
     assert [test.name for test in tests] == ["installed-cadrumo-mcp-help"]
@@ -326,7 +337,7 @@ def test_binary_mode_requires_a_cohort_and_returns_failed_evidence(tmp_path: Pat
     """A binary row without a sealed cohort is an explicit failed row."""
     (tmp_path / "uv.lock").write_text("requires-python = '>=3.13'\n", encoding="utf-8")
     evidence = compatibility.run_probe(
-        mode=compatibility.ProbeMode.BINARY,
+        mode=runtime_probe_contracts.ProbeMode.BINARY,
         python="3.13",
         runtime_id="cp313",
         repo_root=tmp_path,
@@ -348,6 +359,6 @@ def test_lock_and_artifact_digests_are_required_lowercase_sha256() -> None:
     digest = hashlib.sha256(b"fixture").hexdigest()
     payload = _evidence(mode="source").to_dict()
     payload["lock_sha256"] = "not-a-digest"
-    with pytest.raises(compatibility.CompatibilityProbeError, match="lock_sha256"):
-        compatibility.ProbeEvidence(**payload)
+    with pytest.raises(runtime_probe_contracts.CompatibilityProbeError, match="lock_sha256"):
+        runtime_probe_contracts.ProbeEvidence(**payload)
     assert len(digest) == 64

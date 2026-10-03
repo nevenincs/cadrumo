@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
@@ -37,7 +36,7 @@ from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
-from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import ModeloValidationError
@@ -264,13 +263,6 @@ class VerificationReport(BaseModel):
     run_at: UtcInstant
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
-
-    @field_validator("run_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _run_at_is_utc(cls, value: datetime) -> datetime:
-        """Reject naive and non-UTC verification instants at the model boundary."""
-        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

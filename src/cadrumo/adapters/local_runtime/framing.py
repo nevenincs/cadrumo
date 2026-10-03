@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
-import math
 import struct
 import time
 from collections.abc import Callable, Generator
@@ -34,6 +33,7 @@ from ...application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
+from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.enrollment_access import (
     EnrollmentCredentialBinding,
     RuntimeEnrollmentClientReply,
@@ -87,13 +87,17 @@ from ...application.runtime.submission_payload import (
 )
 from ...application.runtime.transport import RuntimeStatusRequest, RuntimeTransportStatus
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
-from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.async_cleanup import AsyncResourceCleanupError, attach_async_cleanup_error
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 
 MAXIMUM_FRAME_BYTES = 64 * 1024
 MAXIMUM_SECRET_BYTES = 64 * 1024
 _DOCUMENT = b"J"
 _SECRET = b"S"
+
+type _SecretBearingRequest = (
+    RuntimeProfileLogin | RuntimeProfileResume | RuntimeOperationSecret | RuntimeEnrollmentSubmit
+)
 
 
 class RuntimeTransportResource(Protocol):
@@ -151,11 +155,11 @@ def close_runtime_transport_after_failure(
         cleanup_error = AsyncResourceCleanupError(
             (owner,), (cleanup_failure,), retry_task_name="runtime-transport-cleanup", close_attempts=1
         )
-        previous = error.__dict__.get("async_cleanup_error")
-        if isinstance(previous, AsyncResourceCleanupError):
-            cleanup_error = previous.merged_with(cleanup_error)
-        error.__dict__["async_cleanup_error"] = cleanup_error
-        error.add_note("Transport cleanup also failed; retry through the attached async_cleanup_error")
+        attach_async_cleanup_error(
+            error,
+            cleanup_error,
+            note="Transport cleanup also failed; retry through the attached async_cleanup_error",
+        )
 
 
 def _read_frame_payload(channel: RuntimeByteChannel, *, kind: bytes, deadline: float) -> bytes:
@@ -390,9 +394,7 @@ class VerifiedRuntimeConnection:
     def _exchange(self, *, deadline: float, secret: bytearray | None = None) -> Generator[None]:
         """Include queueing in the total budget without closing another caller's exchange."""
         try:
-            remaining = deadline - time.monotonic()
-            if not math.isfinite(remaining) or remaining <= 0:
-                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            remaining = remaining_budget(deadline)
             if not self._exchange_lock.acquire(timeout=remaining):
                 raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
             try:
@@ -477,6 +479,23 @@ class VerifiedRuntimeConnection:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         self._connection_id = connection
 
+    def _deliver_secret(
+        self, request: _SecretBearingRequest, secret: bytearray, *, deadline: float
+    ) -> tuple[RuntimeSecretReady, RuntimeReply] | RuntimeAccessRefusal:
+        """Send one request, then its secret only after the peer's correlated readiness.
+
+        A refusal before readiness is returned without consuming the secret.
+        Otherwise the readiness document and the peer's final reply come back.
+        """
+        write_document(self._channel, request, deadline=deadline)
+        ready = self._reply(request.request_id, deadline=deadline).root
+        if isinstance(ready, RuntimeAccessRefusal):
+            return ready
+        if not isinstance(ready, RuntimeSecretReady):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        self.send_secret(secret, deadline=deadline)
+        return ready, self._reply(request.request_id, deadline=deadline)
+
     def login(
         self, request: RuntimeProfileLogin, secret: bytearray, *, deadline: float
     ) -> RuntimeProfileStatus | RuntimeAccessRefusal:
@@ -485,14 +504,11 @@ class VerifiedRuntimeConnection:
             try:
                 if self._closed:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                ready = self._reply(request.request_id, deadline=deadline).root
-                if isinstance(ready, RuntimeAccessRefusal):
-                    return ready
-                if not isinstance(ready, RuntimeSecretReady):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                self.send_secret(secret, deadline=deadline)
-                result = self._reply(request.request_id, deadline=deadline).root
+                delivered = self._deliver_secret(request, secret, deadline=deadline)
+                if isinstance(delivered, RuntimeAccessRefusal):
+                    return delivered
+                ready, reply_document = delivered
+                result = reply_document.root
                 if (
                     not isinstance(result, (RuntimeProfileStatus, RuntimeAccessRefusal))
                     or result.connection_id != ready.connection_id
@@ -570,14 +586,11 @@ class VerifiedRuntimeConnection:
             try:
                 if self._closed:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                ready = self._reply(request.request_id, deadline=deadline).root
-                if isinstance(ready, RuntimeAccessRefusal):
-                    return ready
-                if not isinstance(ready, RuntimeSecretReady):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                self.send_secret(password, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
+                delivered = self._deliver_secret(request, password, deadline=deadline)
+                if isinstance(delivered, RuntimeAccessRefusal):
+                    return delivered
+                _, reply_document = delivered
+                reply = reply_document.root
                 if not isinstance(reply, RuntimeProfileResumed | RuntimeAccessRefusal):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 if isinstance(reply, RuntimeProfileResumed) and (
@@ -623,14 +636,11 @@ class VerifiedRuntimeConnection:
             try:
                 if self._closed:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                ready = self._reply(request.request_id, deadline=deadline).root
-                if isinstance(ready, RuntimeAccessRefusal):
-                    return ready
-                if not isinstance(ready, RuntimeSecretReady):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                self.send_secret(secret, deadline=deadline)
-                result = self._reply(request.request_id, deadline=deadline).root
+                delivered = self._deliver_secret(request, secret, deadline=deadline)
+                if isinstance(delivered, RuntimeAccessRefusal):
+                    return delivered
+                _, reply_document = delivered
+                result = reply_document.root
                 if not isinstance(result, RuntimeOperationAcknowledged | RuntimeAccessRefusal):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 if isinstance(result, RuntimeOperationAcknowledged) and (
@@ -674,14 +684,11 @@ class VerifiedRuntimeConnection:
             try:
                 if self._closed:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                ready = self._reply(request.request_id, deadline=deadline).root
-                if isinstance(ready, RuntimeAccessRefusal):
-                    return ready
-                if not isinstance(ready, RuntimeSecretReady):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                self.send_secret(proposal, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
+                delivered = self._deliver_secret(request, proposal, deadline=deadline)
+                if isinstance(delivered, RuntimeAccessRefusal):
+                    return delivered
+                _, reply_document = delivered
+                reply = reply_document.root
                 if not isinstance(reply, RuntimeEnrollmentRecorded | RuntimeAccessRefusal):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 if isinstance(reply, RuntimeEnrollmentRecorded) and (

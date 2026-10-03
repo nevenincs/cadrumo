@@ -13,12 +13,12 @@ from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceFilingRefV1,
     DeclarationsWorkspaceLifecycleRefV1,
 )
+from ....core.i18n.render import tr
 from ....domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, FilingOrigin
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     DeclarationsWorkspaceController,
     DeclarationsWorkspaceScreen,
-    declarations_copy,
     evidence_label,
     filing_state_label,
     natural_address,
@@ -45,16 +45,16 @@ _DECLARATION_KIND_LOCALE_KEYS: Final[Mapping[FilingDeclarationKind, str]] = {
 
 def _lifecycle_label(row: DeclarationsWorkspaceLifecycleRefV1) -> str:
     """Render sanitized lifecycle meaning without exposing its transport token."""
-    return declarations_copy(f"tui.declarations.lifecycle.{row.kind.value}")
+    return tr(f"tui.declarations.lifecycle.{row.kind.value}")
 
 
 def _configure_filing_table(table: DataTable[str]) -> None:
     """Declare the fixed filing-history columns from the authored catalogue."""
-    table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration", width=16)
-    table.add_column(declarations_copy("tui.declarations.column.when"), key="when", width=20)
-    table.add_column(declarations_copy("tui.declarations.column.local_filing"), key="local", width=13)
-    table.add_column(declarations_copy("tui.declarations.column.aeat_confirmation"), key="confirmation", width=10)
-    table.add_column(declarations_copy("tui.declarations.column.aeat_evidence"), key="evidence", width=10)
+    table.add_column(tr("tui.declarations.column.declaration"), key="declaration", width=16)
+    table.add_column(tr("tui.declarations.column.when"), key="when", width=20)
+    table.add_column(tr("tui.declarations.column.local_filing"), key="local", width=13)
+    table.add_column(tr("tui.declarations.column.aeat_confirmation"), key="confirmation", width=10)
+    table.add_column(tr("tui.declarations.column.aeat_evidence"), key="evidence", width=10)
 
 
 def _add_lifecycle_row(
@@ -63,7 +63,7 @@ def _add_lifecycle_row(
     lifecycle: DeclarationsWorkspaceLifecycleRefV1,
 ) -> None:
     """Project one sanitized lifecycle fact into the shared history table."""
-    not_applicable = declarations_copy("tui.declarations.value.not_applicable")
+    not_applicable = tr("tui.declarations.value.not_applicable")
     table.add_row(
         natural_address(lifecycle.modelo, lifecycle.filing_year, lifecycle.period),
         timestamp_label(occurred_at),
@@ -84,7 +84,7 @@ def _add_filing_row(
         natural_address(filing.modelo, filing.filing_year, filing.period),
         timestamp_label(occurred_at),
         filing_state_label(filing.local_status),
-        declarations_copy(_CONFIRMATION_LOCALE_KEYS[filing.confirmation]),
+        tr(_CONFIRMATION_LOCALE_KEYS[filing.confirmation]),
         evidence_label(filing.evidence_kind),
         key=f"filing:{filing.filing_record_id}",
     )
@@ -92,14 +92,12 @@ def _add_filing_row(
 
 def _chain_detail(filing: DeclarationsWorkspaceFilingRefV1) -> str:
     """Describe where a chain entry came from, what kind it is and whether it corrects another."""
-    return declarations_copy(
+    return tr(
         "tui.declarations.filing_history.chain_detail",
-        origin=declarations_copy(_ORIGIN_LOCALE_KEYS[filing.origin]),
-        kind=declarations_copy(_DECLARATION_KIND_LOCALE_KEYS[filing.declaration_kind]),
-        confirmation=declarations_copy(_CONFIRMATION_LOCALE_KEYS[filing.confirmation]),
-        amends=declarations_copy(
-            "tui.declarations.value.yes" if filing.amends_prior_entry else "tui.declarations.value.no"
-        ),
+        origin=tr(_ORIGIN_LOCALE_KEYS[filing.origin]),
+        kind=tr(_DECLARATION_KIND_LOCALE_KEYS[filing.declaration_kind]),
+        confirmation=tr(_CONFIRMATION_LOCALE_KEYS[filing.confirmation]),
+        amends=tr("tui.declarations.value.yes" if filing.amends_prior_entry else "tui.declarations.value.no"),
     )
 
 
@@ -141,10 +139,10 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(declarations_copy("tui.declarations.filing_history.title"), classes="cadrumo-banner", markup=False)
+        yield Static(tr("tui.declarations.filing_history.title"), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(declarations_copy("tui.declarations.filing_history.axes"), markup=False)
+            yield Static(tr("tui.declarations.filing_history.axes"), markup=False)
             yield ContentDataTable[str](id="declarations-filings", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-filing-chain", markup=False)
             yield Static(id="declarations-empty", classes="declarations-empty", markup=False)

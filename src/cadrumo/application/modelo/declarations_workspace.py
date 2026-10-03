@@ -46,6 +46,7 @@ from ...domain.modelos.filing_record import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from .declaration_summary import DeclarationSummary
+from .declaration_targets import DeclarationTarget
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -292,6 +293,8 @@ class DeclarationsWorkspaceProjectionV1(BaseModel):
     calculation_revisions: tuple[DeclarationsWorkspaceCalculationRevisionRefV1, ...]
     filings: tuple[DeclarationsWorkspaceFilingRefV1, ...]
     lifecycle: tuple[DeclarationsWorkspaceLifecycleRefV1, ...]
+    #: The natural filing coordinates the new-declaration picker offers, from the pinned authority.
+    creation_targets: tuple[DeclarationTarget, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -9,9 +9,8 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .dependency_contract import validate_frozen_exports
 from .lane_verification_core import (
-    _configured_corpus_binary_suffixes,
-    _is_corpus_source_binary,
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
@@ -20,8 +19,6 @@ from .lane_verification_core import (
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
-    source_data_paths,
-    validate_frozen_exports,
     venv_python_path,
     write_smoke_manifest,
 )
@@ -31,6 +28,7 @@ from .python_cohort import (
     install_targets,
     load_python_cohort,
 )
+from .source_data_contract import _configured_corpus_binary_suffixes, _is_corpus_source_binary, source_data_paths
 
 
 def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:

@@ -83,15 +83,15 @@ from cadrumo.application.user_profile.censal_operation import (
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo.entrypoints.cli import runtime_profile_binding, runtime_registered_operation
+from cadrumo.entrypoints.cli import registered_operation_deadlines, registered_operation_errors, runtime_profile_binding
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError, emit_error_and_exit
-from cadrumo.entrypoints.cli.runtime_profile_binding import bind_profile_client, bound_profile_client
-from cadrumo.entrypoints.cli.runtime_registered_operation import (
+from cadrumo.entrypoints.cli.registered_operation_contracts import (
     RegisteredOperationCompletion,
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,
-    run_registered_operation,
 )
+from cadrumo.entrypoints.cli.runtime_profile_binding import bind_profile_client, bound_profile_client
+from cadrumo.entrypoints.cli.runtime_registered_operation import run_registered_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
@@ -433,7 +433,7 @@ def test_review_callback_cancellation_is_exact_and_expired_deadline_prevents_con
     assert not any(isinstance(item, RuntimeOperationManage) for item in wire.requests)
 
     clock = [100.0]
-    monkeypatch.setattr(runtime_registered_operation.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(registered_operation_deadlines.time, "monotonic", lambda: clock[0])
 
     def expire(_: CensalReviewProjectionV1) -> Literal["apply", "reject"] | None:
         clock[0] += 6
@@ -587,7 +587,7 @@ def test_rendered_cli_exit_exposes_unsettled_typed_cause_but_keeps_successful_ex
 ) -> None:
     channel = ReleaseFaultChannel(close_failures=close_failures)
     client = FramingFaultClient(channel)
-    primary = runtime_registered_operation.submitted_operation_error(
+    primary = registered_operation_errors.submitted_operation_error(
         _OPERATION, RuntimeRefusalCode.INVALID_FRAME.value, terminal_condition=None, effect=OperationEffect.UNKNOWN
     )
     rendered: typer.Exit | None = None
@@ -669,7 +669,7 @@ async def test_bound_cli_release_bridge_start_failure_retains_actual_owner_and_p
     primary = (
         asyncio.CancelledError()
         if body == "cancel"
-        else runtime_registered_operation.submitted_operation_error(
+        else registered_operation_errors.submitted_operation_error(
             _OPERATION, RuntimeRefusalCode.INVALID_FRAME.value, terminal_condition=None, effect=OperationEffect.UNKNOWN
         )
     )

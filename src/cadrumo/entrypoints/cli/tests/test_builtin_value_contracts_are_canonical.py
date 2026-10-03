@@ -15,12 +15,13 @@ value while still looking correct at its call site.
 from __future__ import annotations
 
 import ast
+import inspect
 from pathlib import Path
 from typing import Final
 
 import pytest
 
-from ..command_spec import (
+from .._command_shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
@@ -32,6 +33,7 @@ from ..command_spec import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLI_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+_CANONICAL_OWNER: Final[Path] = Path(inspect.getfile(ValueContract)).resolve()
 #: The declared value types that have a canonical contract. `Path` is here for
 #: the same reason the builtins are: the contract is immutable and identical
 #: wherever it is constructed.
@@ -77,26 +79,35 @@ def test_the_three_canonical_contracts_stay_distinguishable() -> None:
 
 
 def test_no_cli_module_declares_its_own_builtin_value_contract() -> None:
-    """`command_spec` is the only module that may construct these.
+    """The defining value-contract owner is the only module that may construct these.
 
     A module-local copy is a duplicate definition, which the architecture
     boundaries forbid, and it is how the drift described in this module's
     docstring gets in.
     """
-    modules = [path for path in _CLI_ROOT.rglob("*.py") if "tests" not in path.parts and path.name != "command_spec.py"]
-
-    assert len(modules) > 50, (
-        f"only {len(modules)} CLI modules were enumerated; the scan collapsed, so an empty "
-        "result below would mean 'nothing was searched' rather than 'no duplicates exist'"
-    )
+    modules = [path for path in _CLI_ROOT.rglob("*.py") if "tests" not in path.parts]
+    assert _CANONICAL_OWNER in modules
+    assert set(_defines_builtin_value_contract(_CANONICAL_OWNER)) == {
+        "TEXT_VALUE",
+        "WHOLE_NUMBER_VALUE",
+        "FLAG_VALUE",
+        "PATH_VALUE",
+    }
 
     offenders = {
         path.relative_to(_CLI_ROOT).as_posix(): names
         for path in modules
-        if (names := _defines_builtin_value_contract(path))
+        if path != _CANONICAL_OWNER and (names := _defines_builtin_value_contract(path))
     }
 
     assert offenders == {}, (
         "module(s) declare their own builtin ValueContract instead of importing the "
-        f"canonical one from command_spec: {offenders}"
+        f"canonical one from {_CANONICAL_OWNER.name}: {offenders}"
     )
+
+
+def test_builtin_contract_detector_recognizes_duplicate_definition(tmp_path: Path) -> None:
+    """A copied immutable contract is detected outside the shared owner."""
+    duplicate = tmp_path / "copied_contract.py"
+    duplicate.write_text('DUPLICATE_TEXT = ValueContract(DeferredTarget("builtins", "str"))\n', encoding="utf-8")
+    assert _defines_builtin_value_contract(duplicate) == ["DUPLICATE_TEXT"]

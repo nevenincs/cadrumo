@@ -32,12 +32,12 @@ from ._tree_validation import (
 from .export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
-    loader_semantic_drift,
-    normalised_loader_semantics,
     verify_export_fragment_provenance_manifest,
 )
+from .export_fragment_provenance_projection import loader_semantic_drift, normalised_loader_semantics
 from .joined_record_design import JoinedRecordDesign
-from .render_profile import RenderProfile, RenderProfileSourceEvidence
+from .render_profile_evidence import RenderProfileSourceEvidence
+from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .source_defects import SourceDefectDeclaration
 from .tree_paths import contains, require_existing_non_link

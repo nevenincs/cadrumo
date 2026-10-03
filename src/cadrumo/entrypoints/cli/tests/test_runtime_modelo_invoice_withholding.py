@@ -10,7 +10,11 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ....application.aggregation.invoice_retencion import (
+    InvoiceRetencionProjectionDefect,
+    InvoiceWithholdingDefectsError,
+    InvoiceWithholdingEvidenceRequest,
+)
 from ....application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
 from ....application.aggregation.withholding_recognition import (
     WithholdingIncomeKind,
@@ -20,6 +24,7 @@ from ....application.aggregation.withholding_recognition import (
 from ....application.modelo.invoice_withholding_capture_operation import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE,
+    MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE,
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,
 )
@@ -33,7 +38,7 @@ from .. import _modelo_aggregate_cli as aggregate_cli
 from .. import runtime_modelo_invoice_withholding as bridge
 from .._modelo_payloads import ModeloAggregateResult
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -78,6 +83,7 @@ def _projection(
     outcome: str = "captured",
     profile_id: UUID = _PROFILE,
     refusal_reason: str | None = None,
+    refusal_defects: tuple[InvoiceRetencionProjectionDefect, ...] | None = None,
 ) -> ModeloInvoiceWithholdingCaptureProjection:
     captured = outcome == "captured"
     return ModeloInvoiceWithholdingCaptureProjection.model_construct(
@@ -91,6 +97,7 @@ def _projection(
         result_row_count=1 if captured else None,
         withholding_window=_window() if captured else None,
         refusal_reason=refusal_reason,
+        refusal_defects=refusal_defects,
     )
 
 
@@ -144,7 +151,8 @@ def test_bridge_submits_the_command_to_its_bound_profile_and_accepts_idempotent_
     assert options["definition_id"] == MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
     assert options["result_type"] is ModeloInvoiceWithholdingCaptureProjection
-    assert options["request_version"] == options["result_version"] == 1
+    assert options["request_version"] == 1
+    assert options["result_version"] == 2
     assert options["allow_refusal_detail"] is True
 
 
@@ -167,7 +175,40 @@ def test_bridge_renders_only_a_correlated_registered_domain_refusal(
         _read()
 
 
-@pytest.mark.parametrize("mismatch", ["profile", "period", "terminal", "refusal_code", "effect"])
+def test_bridge_raises_every_invoice_defect_as_the_registered_defects_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The worker's defect tokens become the registered error, so each defect is explained, not flattened."""
+    defects = (
+        InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,
+        InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,
+    )
+    _bind(
+        monkeypatch,
+        RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=_projection(
+                outcome="refused", refusal_reason="invoice_withholding_defects", refusal_defects=defects
+            ),
+            effect=OperationEffect.NONE,
+            terminal_condition=OperationTerminalCondition.REFUSED,
+            refusal_code=MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE,
+        ),
+    )
+
+    with pytest.raises(InvoiceWithholdingDefectsError) as refused:
+        _read()
+
+    assert refused.value.defects == defects
+    assert refused.value.refusal_code == "not_a_retenedor_liability,no_retencion_declared"
+    assert refused.value.context is not None
+    assert refused.value.context["defect_reasons"]
+
+
+@pytest.mark.parametrize(
+    "mismatch",
+    ["profile", "period", "terminal", "refusal_code", "effect", "defects_code", "captured_defects"],
+)
 def test_bridge_rejects_a_projection_or_receipt_that_disagrees_with_the_capture(
     monkeypatch: pytest.MonkeyPatch,
     mismatch: str,
@@ -186,6 +227,20 @@ def test_bridge_rejects_a_projection_or_receipt_that_disagrees_with_the_capture(
         refusal_code = RuntimeRefusalCode.UNAVAILABLE.value
     elif mismatch == "effect":
         effect = OperationEffect.UNKNOWN
+    elif mismatch == "defects_code":
+        # Defects must settle under their own registered code, never the generic evidence one.
+        projection = _projection(
+            outcome="refused",
+            refusal_reason="invoice_withholding_defects",
+            refusal_defects=(InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,),
+        )
+        condition = OperationTerminalCondition.REFUSED
+        effect = OperationEffect.NONE
+        refusal_code = MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE
+    elif mismatch == "captured_defects":
+        projection = _projection().model_copy(
+            update={"refusal_defects": (InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,)}
+        )
     _bind(
         monkeypatch,
         RegisteredOperationCompletion(

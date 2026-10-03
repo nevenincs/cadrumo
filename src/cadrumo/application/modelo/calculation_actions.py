@@ -2153,7 +2153,7 @@ def list_calculation_revisions(
     Each element is a :class:`CalculationRevision`.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
-    catalogue = ports.calculation_repository.load()
+    catalogue = ports.calculation_repository.load(operation=ports.operation)
     revisions = tuple(
         revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
     )

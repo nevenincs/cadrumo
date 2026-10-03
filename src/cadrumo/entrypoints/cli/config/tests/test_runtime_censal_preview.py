@@ -20,7 +20,7 @@ from cadrumo.application.user_profile.censal_preview_operation import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.entrypoints.cli.config import runtime_censal_preview
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli.runtime_registered_operation import RegisteredOperationCompletion
+from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
@@ -78,10 +78,12 @@ def _install_bridge(
     return ctx, client, baseline, captured, projection
 
 
+@pytest.mark.parametrize("effect", [OperationEffect.NONE, OperationEffect.UPDATED])
 def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
     monkeypatch: pytest.MonkeyPatch,
+    effect: OperationEffect,
 ) -> None:
-    ctx, client, baseline, captured, projection = _install_bridge(monkeypatch)
+    ctx, client, baseline, captured, projection = _install_bridge(monkeypatch, effect=effect)
 
     preview = runtime_censal_preview.preview_censal_with_runtime(ctx)
 
@@ -105,7 +107,7 @@ def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
     ("projection_profile_id", "effect"),
     [
         (_FOREIGN_PROFILE_ID, OperationEffect.NONE),
-        (_PROFILE_ID, OperationEffect.UPDATED),
+        (_PROFILE_ID, OperationEffect.UNKNOWN),
     ],
 )
 def test_preview_bridge_refuses_profile_or_effect_mismatch_with_operation_identity(

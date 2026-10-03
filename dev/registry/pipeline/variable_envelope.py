@@ -115,7 +115,8 @@ def compile_auxiliary_envelope_header_definition(
 #: The relative closing identifier every standard design prints, as its own
 #: source content: ``</T`` + modelo + discriminant + year + period + record type.
 #:
-#: TWO official spellings, both admitted. Most designs print the year and period
+#: Official year placeholders AAAA and EEEE, or a concrete four-digit exercise.
+#: Most designs print the year and period
 #: as the literal ``AAAAPP`` placeholders (``"</T3080AAAAPP0000>"``); Modelos 151
 #: and 200 print their own exercise concretely instead
 #: (``"</T151020230A0000>"``), exactly as they do in the composed opening tag.
@@ -124,7 +125,7 @@ def compile_auxiliary_envelope_header_definition(
 #: asserted is everything the grammar fixes: the tag, the modelo, the
 #: discriminant, the record type, and the exact eighteen-byte width.
 _CLOSER_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"</T(?P<modelo>\d{3})(?P<discriminant>.)(?:AAAA|\d{4})(?:PP|..)(?P<record_type>0000>)"$',
+    r'^"</T(?P<modelo>\d{3})(?P<discriminant>.)(?:AAAA|EEEE|\d{4})(?:PP|..)(?P<record_type>0000>)"$',
 )
 _CLOSER_EXTENT: Final[int] = 18
 
@@ -299,8 +300,14 @@ def _require_source_content(
     parser_field: RecordDesignIntermediateField,
 ) -> None:
     """Prove one prefix row's official content against the shared grammar."""
+    # Some workbooks label the same quoted literal explicitly. Removing only
+    # that label still compares the complete quoted cell, so alternatives and
+    # qualifications cannot inherit a constant's reading.
+    content = parser_field.content
+    if content is not None:
+        content = content.removeprefix("Constante ")
     if role is FilingEnvelopePrefixRole.MODELO:
-        if parser_field.content != f'"{modelo}"':
+        if content != f'"{modelo}"':
             raise RegistryValidationError(
                 f"variable envelope modelo row carries {parser_field.content!r}, not the reviewed "
                 f"design modelo {modelo!r}",
@@ -317,7 +324,7 @@ def _require_source_content(
             )
         return
     expected = _PREFIX_LITERAL_BY_ROLE.get(role)
-    if expected is not None and parser_field.content != expected:
+    if expected is not None and content != expected:
         raise RegistryValidationError(
             f"variable envelope {role.value} conflicts with exact official content: "
             f"expected={expected!r}, actual={parser_field.content!r}",

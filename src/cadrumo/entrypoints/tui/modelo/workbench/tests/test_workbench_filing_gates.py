@@ -41,7 +41,9 @@ from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NA
 from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
 from ..header import attention_chips, blocking_count
-from ..issues import IssueLevel, WorkbenchIssuesScreen, issue_lines
+from ..issue_projection import issue_lines
+from ..issue_scale import IssueLevel
+from ..issues import WorkbenchIssuesScreen
 from ..progress import NextAction, next_action_text, workbench_progress
 from ..review import EditReviewScreen, ReviewNote
 from ..screen import ModeloWorkbenchScreen

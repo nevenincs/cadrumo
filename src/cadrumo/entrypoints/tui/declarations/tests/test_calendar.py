@@ -17,12 +17,13 @@ from .....application.modelo.declarations_calendar import (
 from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
 from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..calendar import DeclarationsCalendarScreen
-from ..controller import calendar_focus_key, declarations_copy
+from ..controller import calendar_focus_key
 from ..models import DeclarationsCalendarScopeV1
 from .calendar_fixtures import calendar_controller, calendar_projection
 
@@ -163,7 +164,7 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
         table.focus()
         await pilot.press("enter")
         notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-        assert notice == declarations_copy("tui.declarations.refusal.handoff")
+        assert notice == tr("tui.declarations.refusal.handoff")
         await pilot.press("escape")
         await pilot.pause()
         assert app.return_value is None
@@ -273,16 +274,16 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
             await pilot.press("enter")
             await pilot.pause()
             modal = app.screen
-            assert str(modal.query_one("#btn-confirm-accept", Button).label) == declarations_copy(
+            assert str(modal.query_one("#btn-confirm-accept", Button).label) == tr(
                 "tui.declarations.calendar.recovery.confirm"
             )
-            assert str(modal.query_one("#btn-confirm-cancel", Button).label) == declarations_copy(
+            assert str(modal.query_one("#btn-confirm-cancel", Button).label) == tr(
                 "tui.declarations.calendar.recovery.cancel"
             )
             await pilot.click("#btn-confirm-accept")
             await pilot.pause()
             notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
-            assert declarations_copy("tui.declarations.calendar.recovery.failure") in notice
+            assert tr("tui.declarations.calendar.recovery.failure") in notice
             assert "host-secret" not in notice
 
 
@@ -361,7 +362,7 @@ async def test_real_locales_change_copy_but_not_natural_semantics(locale: Output
             from ...modelo.workbench.wording import period_words
 
             assert "Modelo 130 · " + period_words(screen.controller.projection.entries[0].period) in rendered
-            assert declarations_copy("tui.declarations.list.not_openable.help") in rendered
+            assert tr("tui.declarations.list.not_openable.help") in rendered
             assert "tui.declarations" not in rendered
             assert "not_observed" not in rendered
 

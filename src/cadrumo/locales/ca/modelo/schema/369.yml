@@ -3965,9 +3965,9 @@ modelo:
               field:
                 title: Model 369 - Esquema Importació (règim especial IOSS)
           field:
-            label: Modelo 369 - Esquema Importacion (IOSS) - règim especial ventas
-              a distancia de béns importados (LIVA art 163 quinvicies a octovicies).
-              Mensual per HAC/610/2021 art 2(c)/(d).
+            label: Model 369 - Règim d'importació (IOSS) - règim especial de vendes
+              a distància de béns importats (LIVA art. 163 quinvicies a octovicies).
+              Mensual segons l'HAC/610/2021 art. 2(c)/(d).
         esquema-union:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

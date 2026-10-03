@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 
 from ...application.ledger.remove_operation import (
     LEDGER_REMOVE_OPERATION_DEFINITION_ID,
     LedgerRemoveOperationResult,
+    LedgerRemoveReportProjection,
     LedgerRemoveRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_ledger_remove(
@@ -47,26 +51,32 @@ def run_ledger_remove(
     expected_actor = actor.strip()
     prefix = transaction_id.strip().lower()
     invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or completed.projection.profile_id != client.profile_id
-        or str(report.bucket_id) != str(client.profile_id)
+        invalid_ledger_remove_receipt(completed, report, client.profile_id, expected_effect)
         or not report.transaction_id.startswith(prefix)
         or report.dry_run is not dry_run
-        or report.reason != reason.strip()
-        or report.actor != expected_actor
-        or (not dry_run and not report.removed)
+        or (report.reason != reason.strip())
+        or (report.actor != expected_actor)
+        or (not dry_run and (not report.removed))
     )
     if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return completed.projection
 
 
 __all__ = ["run_ledger_remove"]
+
+
+def invalid_ledger_remove_receipt(
+    completed: RegisteredOperationCompletion[LedgerRemoveOperationResult],
+    report: LedgerRemoveReportProjection,
+    profile_id: UUID,
+    expected_effect: OperationEffect,
+) -> bool:
+    """Invalid ledger remove receipt."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or (completed.projection.profile_id != profile_id)
+        or (str(report.bucket_id) != str(profile_id))
+    )

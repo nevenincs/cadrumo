@@ -7,9 +7,10 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
 from dev.quality.unread_inputs import report_unread
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo"
+PACKAGE_ROOT = Path(__file__).resolve().parents[3] / PRODUCT_PACKAGE
 REGISTRY_PACKAGE_ROOT = PACKAGE_ROOT / "domain" / "calculations" / "registry"
 
 
@@ -72,7 +73,7 @@ def _candidate_modules(package_root: Path, registry_root: Path) -> Iterator[Path
     registry = registry_root.resolve()
     for path in sorted(package_root.rglob("*.py")):
         resolved = path.resolve()
-        if resolved.is_relative_to(registry) or "tests" in path.parts or path.name == "conftest.py":
+        if resolved.is_relative_to(registry) or not is_production_source(path, root=package_root):
             continue
         yield path
 

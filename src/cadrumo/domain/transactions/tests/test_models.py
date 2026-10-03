@@ -18,6 +18,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation, bundled
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..errors import TransactionValidationError
 from ..lineage_models import ClassificationHistoryEntry, DecisionProvenance
 from ..models import (
     OutOfWindowTransactionIndexEntry,
@@ -805,6 +806,23 @@ def test_decision_provenance_rejects_bare_dict_payload() -> None:
     del payload["provenance"]["decided_at"]
     with pytest.raises(ValidationError):
         ClassificationHistoryEntry.model_validate(payload)
+
+
+def test_decision_provenance_preserves_non_string_key_refusal_cause() -> None:
+    payload: dict[object, object] = {
+        "decided_by": "manual",
+        "decided_at": datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+        1: "non-string key",
+    }
+
+    with pytest.raises(ValidationError) as exc_info:
+        DecisionProvenance.model_validate(payload)
+
+    boundary_error = exc_info.value.errors()[0].get("ctx", {}).get("error")
+    assert isinstance(boundary_error, ValueError)
+    assert isinstance(boundary_error.__cause__, TransactionValidationError)
+    assert str(boundary_error.__cause__) == "transaction payload keys must be strings"
+    assert isinstance(boundary_error.__cause__.__cause__, ValidationError)
 
 
 # ---------------------------------------------------------------------------

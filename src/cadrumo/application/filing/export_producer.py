@@ -8,7 +8,7 @@ from datetime import date
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...domain.calculations.registry.iva_schema_vocabulary import (
+from ...domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_export_code,
     m303_tax_territory_exclusively_foral_mark,
     m303_tax_territory_is_foral,

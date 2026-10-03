@@ -13,12 +13,14 @@ from ....application.auth.operation_definitions import (
 )
 from ....application.auth.operator_results import AuthLoginResult
 from ....application.auth.session_acquire_operation_access import AuthSessionAcquireOperationProjection
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.auth_provider import AuthProviderKind
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import require_profile_client
-from ..runtime_registered_operation import run_registered_operation, submitted_operation_error
+from ..runtime_registered_operation import run_registered_operation
 from ._profile_support import resolve_active_profile_pointer
 
 
@@ -55,22 +57,28 @@ def run_auth_login(
     except RuntimeRefusalError as error:
         raise CliRefusedBoundaryError(context={"reason": error.reason.value}) from None
     projection = completed.projection
-    if (
-        type(projection) is not AuthSessionAcquireOperationProjection
-        or projection.profile_id != profile_id
+    if type(projection) is not AuthSessionAcquireOperationProjection or _auth_login_receipt_invalid(
+        completed, projection, profile_id, fresh, provider_kind
+    ):
+        raise invalid_completion_error(completed) from None
+    return projection.result
+
+
+def _auth_login_receipt_invalid(
+    completed: RegisteredOperationCompletion[AuthSessionAcquireOperationProjection],
+    projection: AuthSessionAcquireOperationProjection,
+    profile_id: UUID,
+    fresh: bool,
+    provider_kind: AuthProviderKind | None,
+) -> bool:
+    """Require authenticated provider facts and the exact successful profile receipt."""
+    return (
+        projection.profile_id != profile_id
         or not projection.result.authenticated
         or projection.result.removed_sessions < 0
-        or projection.result.fresh != fresh
+        or (projection.result.fresh != fresh)
         or (provider_kind is not None and projection.result.provider != provider_kind.value)
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
-    ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
-    return projection.result
+        or (completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
+        or (completed.refusal_code is not None)
+        or (completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED})
+    )

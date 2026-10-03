@@ -9,18 +9,10 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_2,
 )
 from ._app_ledger_command_spec_support import _option_from_application_contract
-from .app_ledger_invoice_common_command_parameters import (
-    INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
-    INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
-    INVOICE_LIFECYCLE_METADATA_OPTIONS,
-    OPTIONAL_IVA_CATEGORY_OPTION,
-)
-from .command_spec import (
-    CommandSpec,
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -28,6 +20,13 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .app_ledger_invoice_common_command_parameters import (
+    INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
+    INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
+    INVOICE_LIFECYCLE_METADATA_OPTIONS,
+    OPTIONAL_IVA_CATEGORY_OPTION,
+)
+from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

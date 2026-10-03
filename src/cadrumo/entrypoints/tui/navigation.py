@@ -11,7 +11,7 @@ import inspect
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
+from typing import Final, Literal, Protocol, Self, cast, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 from textual.screen import Screen
@@ -25,6 +25,7 @@ from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
+from .destination_alias import closed_destination_ids
 
 type TuiDestinationIdV1 = Literal[
     "workbench.home",
@@ -221,7 +222,7 @@ class TuiDestinationRouteV1:
 
 def declared_destination_ids() -> frozenset[str]:
     """Return the destination set from the closed type alias."""
-    return frozenset(argument for argument in get_args(TuiDestinationIdV1.__value__) if isinstance(argument, str))
+    return closed_destination_ids(TuiDestinationIdV1)
 
 
 TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (

@@ -37,7 +37,7 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from .. import _modelo_reconcile_cli as handler
 from .. import runtime_modelo_reconciliation_import as bridge
 from .._payloads_modelo_reconcile import ModeloReconcileResult
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

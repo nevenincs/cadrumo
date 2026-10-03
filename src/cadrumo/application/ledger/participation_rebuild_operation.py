@@ -31,10 +31,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -87,7 +86,7 @@ class LedgerParticipationRebuildExecutor:
         await context.events.phase(LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID)
 
         def rebuild() -> LedgerParticipationRebuildProjection:
-            ports = self._ports(bucket_id=bucket_id)
+            ports = self._ports(bucket_id=bucket_id, operation=context.authority_operation)
             if (
                 ports.calculation_repository.bucket_id != bucket_id
                 or ports.work_unit_repository.bucket_id != bucket_id

@@ -25,8 +25,6 @@ from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 from .. import installed_tui_child as installed_child_module
 from ..installed_tui_child import (
     InstalledTuiChildError,
-    _public_surface_diagnostic,
-    _wait_for_selector,
     admitted_session_autopilot,
     is_installed_product_origin,
     open_profile_manager_field,
@@ -226,16 +224,14 @@ def test_child_uses_app_root_selectors_and_reports_value_free_surface_ids() -> N
     app = _App()
     pilot = _Pilot(app)
 
-    asyncio.run(_wait_for_selector(pilot, "#home-agenda", polls=1))
+    asyncio.run(wait_for_public_selector(pilot, "#home-agenda", polls=1))
 
     assert app.queries == ["#home-agenda"]
-    assert _public_surface_diagnostic(pilot) == {
+    assert public_surface_diagnostic(pilot) == {
         "current_screen_class": "_Screen",
         "current_screen_id": "root-shell",
         "mounted_widget_ids": ["field-passphrase", "home-agenda"],
     }
-    assert public_surface_diagnostic is _public_surface_diagnostic
-    assert wait_for_public_selector is _wait_for_selector
 
 
 def test_shared_failure_writer_drops_non_public_diagnostic_values(tmp_path: Path) -> None:

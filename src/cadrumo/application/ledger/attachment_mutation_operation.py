@@ -14,6 +14,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -42,15 +43,13 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..review.filter import LedgerReviewStatus
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
@@ -204,7 +203,7 @@ class _PreparedAttachmentMutation(BaseModel):
 
     profile_id: UUID
     operation_id: LedgerAttachmentOperationId
-    transaction_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    transaction_id: TransactionId
 
 
 class _LedgerAttachmentExecutor:
@@ -605,18 +604,9 @@ def build_ledger_attach_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind attach's closed schemas and exact-profile resolver."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerAttachRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerAttachmentOperationResult,
-        ),
+        public_result_type=LedgerAttachmentOperationResult,
         result_projector=_project_result,
         access_resolver=resolve_ledger_attach_access,
     )
@@ -626,18 +616,9 @@ def build_ledger_detach_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind detach's closed schemas and exact-profile resolver."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerDetachRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerAttachmentOperationResult,
-        ),
+        public_result_type=LedgerAttachmentOperationResult,
         result_projector=_project_result,
         access_resolver=resolve_ledger_detach_access,
     )

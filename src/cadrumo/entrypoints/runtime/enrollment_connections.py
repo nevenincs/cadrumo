@@ -40,7 +40,8 @@ from ...application.runtime.profile_access import RuntimeAccessRefusal, RuntimeS
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, AccessSession, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...application.user_profile.automation_administration import AutomationAdministrationService, enrollment_receipt
+from ...application.user_profile.automation_administration import enrollment_receipt
+from ...application.user_profile.automation_administration_service import AutomationAdministrationService
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import (
     AdministrationFacts,

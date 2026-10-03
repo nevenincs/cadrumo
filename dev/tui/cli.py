@@ -16,8 +16,6 @@ frame is a cached statement about a tree that existed earlier.
 from __future__ import annotations
 
 import json
-import shutil
-import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -29,14 +27,11 @@ from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
     DEFAULT_RUN_NAME,
     RUNS_DIR,
-    SCRATCH_DIR,
     FailedFrame,
-    FrameFailureKind,
     InterfaceRecord,
     Manifest,
     ManifestVersionError,
     RenderedFrame,
-    SequenceProvenance,
     SkippedFrame,
     StaleArtifactPurgeRefusedError,
     ThemeName,
@@ -51,21 +46,17 @@ from ._artifacts import (
     snapshot_staging_directory,
     source_fingerprint,
     stage_run_copy,
-    unaccounted_frames,
     write_index,
     write_manifest,
 )
-from ._review_catalogue import ReviewCatalogue
-from ._review_server import (
-    DEFAULT_REVIEW_PORT,
-    ReviewHTTPServer,
-    ReviewState,
-    TailnetUnavailableError,
-    is_wildcard_host,
-    serve,
-    tailnet_node,
-)
-from ._review_store import NoteImageState, ReviewStore, ReviewStoreVersionError, image_state
+from ._console import _echo
+from ._render import _render_scenario, _render_surface, _RenderProgress, _report_render_result, _require_complete_render
+from ._review_catalogue import ReviewCatalogue, RunView
+from ._review_network import TailnetUnavailableError, is_wildcard_host, tailnet_node
+from ._review_server import ReviewHTTPServer, serve
+from ._review_server_contracts import DEFAULT_REVIEW_PORT
+from ._review_state import ReviewState
+from ._review_store import Note, NoteImageState, ReviewStore, ReviewStoreVersionError, image_state
 
 app = typer.Typer(
     name="tui",
@@ -74,6 +65,7 @@ app = typer.Typer(
     add_completion=False,
 )
 
+
 THEMES = tuple(ThemeName)
 """Every appearance a render may be asked for, in declaration order.
 
@@ -81,23 +73,43 @@ Derived from the vocabulary rather than restating it: this tuple used to
 be the only place the two words were written down, and nothing that
 RECORDED a theme consulted it.
 """
+
+
 DEFAULT_RUN = DEFAULT_RUN_NAME
 
 
-def _echo(text: str) -> None:
-    """Write a line as UTF-8 whatever the console code page claims.
+def _choose_render_subjects(
+    surface: list[str] | None,
+    sequence: list[str] | None,
+    available: tuple[_harness.Surface, ...],
+    available_scenarios: tuple[_harness.Scenario, ...],
+) -> tuple[tuple[str, ...], tuple[_harness.Scenario, ...]]:
+    """Choose render subjects."""
+    chosen_surfaces = _resolve_surfaces(surface, available) if surface or not sequence else ()
+    if sequence:
+        chosen_scenarios = _resolve_scenarios(sequence, available_scenarios)
+    else:
+        chosen_scenarios = () if surface else available_scenarios
+    return chosen_surfaces, chosen_scenarios
 
-    Written as bytes rather than through ``print``: a Windows console defaults
-    to cp1252, which mangles the box-drawing and dash characters the harness's
-    own diagnostics are built from -- the same reason the development harness
-    encodes its output by hand.
-    """
-    sys.stdout.buffer.write(text.encode(UTF_8, errors="replace") + b"\n")
-    sys.stdout.buffer.flush()
 
-
-def _relative(path: Path, root: Path) -> str:
-    return path.relative_to(root).as_posix()
+def _note_readings(
+    notes: tuple[Note, ...], view: RunView | None
+) -> list[tuple[Note, NoteImageState, NoteImageState | None]]:
+    """Note readings."""
+    elements = {} if view is None else {element.key: element.digest for element in view.elements}
+    frames = {} if view is None else {frame.key: frame.png_sha256 for frame in view.frames}
+    readings = [
+        (
+            note,
+            image_state(note.element_sha256, elements.get(note.element_key)),
+            None
+            if note.frame_key is None or note.frame_sha256 is None
+            else image_state(note.frame_sha256, frames.get(note.frame_key)),
+        )
+        for note in notes
+    ]
+    return readings
 
 
 @app.command("viewports")
@@ -198,72 +210,6 @@ def _load_manifest(name: str) -> Manifest:
     except (FileNotFoundError, ManifestVersionError) as refusal:
         _echo(str(refusal))
         raise typer.Exit(code=1) from None
-
-
-def _first_refusal_line(detail: str) -> str:
-    """The harness's own one-line reason, out of its multi-line diagnostics."""
-    for line in detail.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("refused:"):
-            return stripped.removeprefix("refused:").strip()
-    return detail.splitlines()[0] if detail else "no diagnostics"
-
-
-def _attempt_frame(
-    surface: str,
-    shape: _viewports.Viewport,
-    *,
-    theme: ThemeName,
-    svg_path: Path,
-    png_path: Path,
-    locale: str | None,
-    workspace: str,
-    cell_height: int,
-    retries: int,
-) -> tuple[_harness.Capture, _raster.RasterResult] | FailedFrame:
-    """Capture and rasterise one frame, retrying only what a retry can fix.
-
-    A CRASHED harness earns another go: the usual cause in a shared worktree
-    is a module caught half-edited by a peer, and the next attempt often finds
-    the tree whole again. A REFUSED harness does not, because the answer came
-    from an application guard that will give the same answer to the same
-    question. Retrying a refusal would multiply the slowest surfaces' cost by
-    the retry count and change nothing.
-    """
-    detail = ""
-    kind = FrameFailureKind.CRASHED
-    made = 0
-    for attempt in range(1, retries + 2):
-        made = attempt
-        try:
-            captured = _harness.capture(
-                surface,
-                shape,
-                theme=theme,
-                svg_path=svg_path,
-                locale=locale,
-                workspace=workspace,
-            )
-            raster = _raster.rasterise(svg_path, png_path, cell_height=cell_height)
-        except _harness.HarnessError as refusal:
-            detail, kind = str(refusal), refusal.kind
-            if refusal.kind is FrameFailureKind.REFUSED:
-                break
-        except _raster.RasterError as unpaintable:
-            detail, kind = str(unpaintable), FrameFailureKind.RASTER
-            break
-        else:
-            return captured, raster
-        if attempt <= retries:
-            _echo(f"    {kind}; retrying ({attempt}/{retries})")
-    return FailedFrame(
-        surface=surface,
-        viewport=shape.name,
-        theme=theme,
-        kind=kind,
-        attempts=made,
-        detail=detail,
-    )
 
 
 def _resolve_viewports(names: list[str] | None) -> tuple[_viewports.Viewport, ...]:
@@ -375,11 +321,7 @@ def render_command(
 
     # Naming either kind narrows the render to what was named; naming neither
     # renders everything, surfaces and scenarios alike.
-    chosen_surfaces = _resolve_surfaces(surface, available) if surface or not sequence else ()
-    if sequence:
-        chosen_scenarios = _resolve_scenarios(sequence, available_scenarios)
-    else:
-        chosen_scenarios = () if surface else available_scenarios
+    chosen_surfaces, chosen_scenarios = _choose_render_subjects(surface, sequence, available, available_scenarios)
     chosen_viewports = _resolve_viewports(viewport)
     chosen_themes = _resolve_themes(theme)
 
@@ -397,76 +339,24 @@ def render_command(
     skipped: list[SkippedFrame] = []
     total = len(chosen_surfaces) * len(chosen_viewports) * len(chosen_themes)
     scenario_surfaces = tuple(page for scenario in chosen_scenarios for page in scenario.pages.values())
-    index = 0
+    progress = _RenderProgress(total=total)
 
     for name in chosen_surfaces:
-        refusal_reason: str | None = None
-        for shape in chosen_viewports:
-            for appearance in chosen_themes:
-                index += 1
-                stem = f"{name}__{shape.name}__{appearance}"
-
-                # A surface that already refused refuses at every geometry: the
-                # guard runs while building the app, before layout. Attempting
-                # the remaining frames costs a cold build per frame on the surfaces
-                # that provision a real encrypted profile, and buys a reviewer
-                # nothing but the same sentence repeated.
-                if refusal_reason is not None and skip_refused:
-                    skipped.append(
-                        SkippedFrame(
-                            surface=name,
-                            viewport=shape.name,
-                            theme=appearance,
-                            reason=f"surface already refused: {refusal_reason}",
-                        ),
-                    )
-                    continue
-
-                _echo(f"[{index}/{total}] {stem}")
-                svg_path = directory / "svg" / f"{stem}.svg"
-                png_path = directory / "png" / f"{stem}.png"
-                text_path = directory / "text" / f"{stem}.txt"
-
-                outcome = _attempt_frame(
-                    name,
-                    shape,
-                    theme=appearance,
-                    svg_path=svg_path,
-                    png_path=png_path,
-                    locale=locale,
-                    workspace=f"visual-inventory-{run}",
-                    cell_height=cell_height,
-                    retries=retries,
-                )
-                if isinstance(outcome, FailedFrame):
-                    _echo(f"    {outcome.kind} after {outcome.attempts} attempt(s)")
-                    failures.append(outcome)
-                    if outcome.kind is FrameFailureKind.REFUSED:
-                        refusal_reason = _first_refusal_line(outcome.detail)
-                    continue
-
-                captured, raster = outcome
-                text_path.parent.mkdir(parents=True, exist_ok=True)
-                text_path.write_text(captured.stable_text + "\n", encoding=UTF_8, newline="\n")
-                frames.append(
-                    RenderedFrame(
-                        surface=name,
-                        viewport=shape.name,
-                        columns=shape.columns,
-                        rows=shape.rows,
-                        orientation=shape.orientation,
-                        theme=appearance,
-                        png=_relative(png_path, directory),
-                        svg=_relative(svg_path, directory),
-                        text=_relative(text_path, directory),
-                        png_sha256=digest(png_path),
-                        text_sha256=digest(text_path),
-                        cell_height=cell_height,
-                        elapsed_ms=captured.elapsed_ms,
-                        geometry_findings=captured.geometry_findings,
-                        missing_glyphs=raster.missing_glyphs,
-                    ),
-                )
+        _render_surface(
+            name,
+            chosen_viewports,
+            chosen_themes,
+            progress,
+            directory,
+            run,
+            locale,
+            cell_height,
+            retries,
+            skip_refused,
+            frames,
+            failures,
+            skipped,
+        )
 
     for scenario in chosen_scenarios:
         _render_scenario(
@@ -501,23 +391,7 @@ def render_command(
         failures=tuple(failures),
         skipped=tuple(skipped),
     )
-    unaccounted = unaccounted_frames(
-        manifest,
-        surfaces=(*chosen_surfaces, *scenario_surfaces),
-        viewports=tuple(view.name for view in chosen_viewports),
-        themes=tuple(chosen_themes),
-    )
-    if unaccounted:
-        raise typer.BadParameter(
-            "the run left frames unaccounted for, which would read as coverage it does not have: "
-            + ", ".join(unaccounted[:5])
-        )
-    if manifest.spans_a_source_change:
-        raise typer.BadParameter(
-            "the TUI source changed while this run was rendering, so its frames come from two "
-            "different builds and no reviewer can tell which is which. Nothing was written. "
-            "Re-run against a settled tree."
-        )
+    _require_complete_render(manifest, chosen_surfaces, scenario_surfaces, chosen_viewports, chosen_themes)
     # Written BEFORE the sweep, not after. The sweep is the only destructive
     # step in a command that takes tens of minutes, and running it
     # first meant any refusal or filesystem error inside it discarded the
@@ -532,145 +406,7 @@ def render_command(
     except StaleArtifactPurgeRefusedError as exc:
         purge_refusal = str(exc)
 
-    _echo("")
-    _echo(f"wrote {len(frames)} frames to {directory}")
-    _echo(f"index: {directory / 'index.md'}")
-    if manifest.uncovered:
-        _echo(f"{len(manifest.uncovered)} interfaces not rendered; see `inventory`")
-    for name in manifest.blocked_surfaces:
-        reason = next(
-            (_first_refusal_line(entry.detail) for entry in failures if entry.surface == name),
-            "no diagnostics",
-        )
-        _echo(f"blocked: {name} produced no frame — {reason}")
-    if discarded:
-        _echo(f"removed {len(discarded)} stale frames left by an earlier run")
-    if purge_refusal is not None:
-        _echo(f"stale frames kept: {purge_refusal}")
-    if skipped:
-        _echo(f"{len(skipped)} frames not attempted behind a refusing surface")
-    if failures:
-        _echo(f"{len(failures)} failed")
-    if failures or purge_refusal is not None:
-        raise typer.Exit(code=1)
-
-
-def _render_scenario(
-    scenario: _harness.Scenario,
-    directory: Path,
-    *,
-    viewports: tuple[_viewports.Viewport, ...],
-    themes: tuple[ThemeName, ...],
-    cell_height: int,
-    retries: int,
-    workspace: str,
-    frames: list[RenderedFrame],
-    failures: list[FailedFrame],
-) -> None:
-    """Render every page of one sequence scenario into the run, recording what failed.
-
-    The harness writes a scenario's SVGs into a staging directory under
-    ``scratch/``, never into the run, so a scenario that dies part way leaves
-    no unclaimed SVG for the stale-frame sweep to meet. Each is moved into the
-    run under the same stem an ordinary frame uses and rasterised the same way.
-    """
-    expected = len(scenario.pages) * len(viewports) * len(themes)
-    _echo(f"[sequence {scenario.name}] {expected} frames: {scenario.summary}")
-    staging = SCRATCH_DIR / f"sequence-{scenario.name}"
-    outcome: (
-        tuple[SequenceProvenance, tuple[_harness.ScenarioCapture, ...], tuple[_harness.ScenarioRefusal, ...]] | None
-    ) = None
-    detail, kind, made = "", FrameFailureKind.CRASHED, 0
-    for attempt in range(1, retries + 2):
-        made = attempt
-        if staging.exists():
-            shutil.rmtree(staging)
-        try:
-            outcome = _harness.capture_scenario(
-                scenario.name,
-                viewports,
-                themes=themes,
-                out_dir=staging,
-                workspace=workspace,
-            )
-            break
-        except _harness.HarnessError as refusal:
-            detail, kind = str(refusal), refusal.kind
-            if refusal.kind is FrameFailureKind.REFUSED:
-                break
-            if attempt <= retries:
-                _echo(f"    {kind}; retrying ({attempt}/{retries})")
-    if outcome is None:
-        _echo(f"    {kind} after {made} attempt(s)")
-        failures.extend(
-            FailedFrame(surface=surface, viewport=shape.name, theme=theme, kind=kind, attempts=made, detail=detail)
-            for surface in scenario.pages.values()
-            for shape in viewports
-            for theme in themes
-        )
-        return
-
-    provenance, captures, refusals = outcome
-    if not provenance.matches_golden:
-        _echo(f"    state DIVERGES from the golden for {provenance.sequence_id}; frames are recorded as such")
-    for refused in refusals:
-        failures.append(
-            FailedFrame(
-                surface=refused.surface,
-                viewport=refused.viewport.name,
-                theme=refused.theme,
-                kind=FrameFailureKind.REFUSED,
-                attempts=1,
-                detail=refused.detail,
-            ),
-        )
-    if refusals:
-        _echo(f"    {len(refusals)} frame(s) refused: the declaration does not offer those pages")
-    for item in captures:
-        captured = item.capture
-        stem = f"{captured.surface}__{captured.viewport.name}__{captured.theme}"
-        svg_path = directory / "svg" / f"{stem}.svg"
-        png_path = directory / "png" / f"{stem}.png"
-        text_path = directory / "text" / f"{stem}.txt"
-        svg_path.parent.mkdir(parents=True, exist_ok=True)
-        captured.svg_path.replace(svg_path)
-        try:
-            raster = _raster.rasterise(svg_path, png_path, cell_height=cell_height)
-        except _raster.RasterError as unpaintable:
-            failures.append(
-                FailedFrame(
-                    surface=captured.surface,
-                    viewport=captured.viewport.name,
-                    theme=captured.theme,
-                    kind=FrameFailureKind.RASTER,
-                    detail=str(unpaintable),
-                ),
-            )
-            continue
-        text_path.parent.mkdir(parents=True, exist_ok=True)
-        text_path.write_text(captured.stable_text + "\n", encoding=UTF_8, newline="\n")
-        frames.append(
-            RenderedFrame(
-                surface=captured.surface,
-                viewport=captured.viewport.name,
-                columns=captured.viewport.columns,
-                rows=captured.viewport.rows,
-                orientation=captured.viewport.orientation,
-                theme=captured.theme,
-                png=_relative(png_path, directory),
-                svg=_relative(svg_path, directory),
-                text=_relative(text_path, directory),
-                png_sha256=digest(png_path),
-                text_sha256=digest(text_path),
-                cell_height=cell_height,
-                elapsed_ms=captured.elapsed_ms,
-                geometry_findings=captured.geometry_findings,
-                missing_glyphs=raster.missing_glyphs,
-                sequence=provenance,
-            ),
-        )
-    shutil.rmtree(staging, ignore_errors=True)
-    _echo(f"    {len(captures)} frames from {provenance.sequence_id} ({provenance.docs_page})")
+    _report_render_result(directory, manifest, frames, failures, skipped, discarded, purge_refusal)
 
 
 @app.command("snapshot")
@@ -827,23 +563,7 @@ def diff_command(
 
     changed = [entry for entry in diffs if entry.change is _diff.Change.CHANGED]
     if highlight and changed:
-        destination_root = candidate_root / "diff" / baseline
-        frames = {frame.key: frame for frame in after.frames}
-        baseline_frames = {frame.key: frame for frame in before.frames}
-        written = 0
-        for entry in changed:
-            stem = entry.key.replace("/", "__")
-            if entry.text_diff:
-                (destination_root / f"{stem}.diff").parent.mkdir(parents=True, exist_ok=True)
-                (destination_root / f"{stem}.diff").write_text(entry.text_diff + "\n", encoding=UTF_8, newline="\n")
-            produced = _diff.write_highlight(
-                baseline_root / baseline_frames[entry.key].png,
-                candidate_root / frames[entry.key].png,
-                destination_root / f"{stem}.png",
-            )
-            written += 1 if produced is not None else 0
-        _echo("")
-        _echo(f"wrote {written} highlight images to {destination_root}")
+        _write_diff_highlights(baseline, baseline_root, candidate_root, before, after, changed)
 
     if changed or any(entry.change is not _diff.Change.UNCHANGED for entry in diffs):
         raise typer.Exit(code=1)
@@ -939,18 +659,7 @@ def notes_command(
     catalogue = ReviewCatalogue(RUNS_DIR, only=run)
     catalogue.refresh()
     view = catalogue.run(run)
-    elements = {} if view is None else {element.key: element.digest for element in view.elements}
-    frames = {} if view is None else {frame.key: frame.png_sha256 for frame in view.frames}
-    readings = [
-        (
-            note,
-            image_state(note.element_sha256, elements.get(note.element_key)),
-            None
-            if note.frame_key is None or note.frame_sha256 is None
-            else image_state(note.frame_sha256, frames.get(note.frame_key)),
-        )
-        for note in notes
-    ]
+    readings = _note_readings(notes, view)
 
     if as_json:
         payload = [
@@ -968,28 +677,61 @@ def notes_command(
         return
     shown_key: str | None = None
     for note, element_state, frame_state in readings:
-        if note.element_key != shown_key:
-            shown_key = note.element_key
-            _echo("")
-            _echo(note.element_key)
-        flags = []
-        if element_state is NoteImageState.CHANGED:
-            flags.append("element re-rendered since")
-        elif element_state is NoteImageState.ABSENT:
-            flags.append(f"no frame of it in run {run!r}")
-        if note.resolved_at is not None:
-            flags.append("resolved")
-        suffix = f"  [{', '.join(flags)}]" if flags else ""
-        _echo(f"  #{note.id} {note.created_at}{suffix}")
-        if note.frame_key is not None:
-            pointed = ""
-            if frame_state is NoteImageState.CHANGED:
-                pointed = " (re-rendered since)"
-            elif frame_state is NoteImageState.ABSENT:
-                pointed = f" (not in run {run!r})"
-            _echo(f"    on {note.frame_key}{pointed}")
-        for line in note.body.splitlines():
-            _echo(f"    {line}")
+        shown_key = _print_review_note(note, element_state, frame_state, run, shown_key)
 
 
-__all__ = ["app"]
+def _print_review_note(
+    note: Note, element_state: NoteImageState, frame_state: NoteImageState | None, run: str, shown_key: str | None
+) -> str:
+    """Print one note and return the last element heading shown."""
+    if note.element_key != shown_key:
+        shown_key = note.element_key
+        _echo("")
+        _echo(note.element_key)
+    flags = []
+    if element_state is NoteImageState.CHANGED:
+        flags.append("element re-rendered since")
+    elif element_state is NoteImageState.ABSENT:
+        flags.append(f"no frame of it in run {run!r}")
+    if note.resolved_at is not None:
+        flags.append("resolved")
+    suffix = f"  [{', '.join(flags)}]" if flags else ""
+    _echo(f"  #{note.id} {note.created_at}{suffix}")
+    if note.frame_key is not None:
+        pointed = ""
+        if frame_state is NoteImageState.CHANGED:
+            pointed = " (re-rendered since)"
+        elif frame_state is NoteImageState.ABSENT:
+            pointed = f" (not in run {run!r})"
+        _echo(f"    on {note.frame_key}{pointed}")
+    for line in note.body.splitlines():
+        _echo(f"    {line}")
+    return note.element_key
+
+
+def _write_diff_highlights(
+    baseline: str,
+    baseline_root: Path,
+    candidate_root: Path,
+    before: Manifest,
+    after: Manifest,
+    changed: list[_diff.FrameDiff],
+) -> None:
+    """Write text differences and pixel highlights for changed frames."""
+    destination_root = candidate_root / "diff" / baseline
+    frames = {frame.key: frame for frame in after.frames}
+    baseline_frames = {frame.key: frame for frame in before.frames}
+    written = 0
+    for entry in changed:
+        stem = entry.key.replace("/", "__")
+        if entry.text_diff:
+            (destination_root / f"{stem}.diff").parent.mkdir(parents=True, exist_ok=True)
+            (destination_root / f"{stem}.diff").write_text(entry.text_diff + "\n", encoding=UTF_8, newline="\n")
+        produced = _diff.write_highlight(
+            baseline_root / baseline_frames[entry.key].png,
+            candidate_root / frames[entry.key].png,
+            destination_root / f"{stem}.png",
+        )
+        written += 1 if produced is not None else 0
+    _echo("")
+    _echo(f"wrote {written} highlight images to {destination_root}")

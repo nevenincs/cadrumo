@@ -24,6 +24,7 @@ from ...application.modelo.operation_definitions import (
 from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.modelos.work_unit import WorkUnit
@@ -34,13 +35,6 @@ from .errors import CliRefusedBoundaryError
 from .runtime_profile_binding import require_profile_client
 
 _TIMEOUT_SECONDS = 120.0
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
 
 
 def _client(ctx: typer.Context, *, expected_profile_id: UUID | None = None) -> RuntimeFrontendClient:
@@ -105,7 +99,7 @@ def _read_unit(
         revision=revision,
         bucket_id=bucket_id,
     )
-    observed = read_modelo_work_metadata(client, request, timeout=_remaining(deadline))
+    observed = read_modelo_work_metadata(client, request, timeout=remaining_budget(deadline))
     return observed.projection.unit.to_work_unit()
 
 
@@ -182,7 +176,7 @@ def rename_modelo_work(
                 observed_updated_at=unit.updated_at,
                 actor=actor or str(client.profile_id),
             ),
-            timeout=_remaining(deadline),
+            timeout=remaining_budget(deadline),
         )
         result = completed.projection
         if not isinstance(result, ModeloWorkRenamePublicResultV2):
@@ -229,7 +223,7 @@ def discard_modelo_work(
                 reason=reason,
                 actor=actor or str(client.profile_id),
             ),
-            timeout=_remaining(deadline),
+            timeout=remaining_budget(deadline),
         )
         result = completed.projection
         if not isinstance(result, ModeloWorkDiscardPublicResultV2):

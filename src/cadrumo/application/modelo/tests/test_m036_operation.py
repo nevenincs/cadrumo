@@ -19,6 +19,7 @@ from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -117,7 +118,7 @@ def _result_access(subject: Subject, registry: OperationRegistry, *, definition_
 
 @pytest.fixture
 def subject(authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch) -> Subject:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(PROFILE_ID))
     monkeypatch.setattr(lifecycle_module, "now", lambda: INSTANT)
     return Subject(authority_operation)
 

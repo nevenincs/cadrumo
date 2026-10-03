@@ -7,15 +7,14 @@ from uuid import UUID
 
 import typer
 
-from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
 from ...application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 from ...application.modelo.quickfile_operation_contracts import (
     QuickfileCalculationInputs,
-    QuickfileProjection,
     QuickfileRequest,
     QuickfileStageSnapshot,
 )
+from ...application.modelo.quickfile_operation_projections import QuickfileProjection
 from ...application.operations.public_period import PublicPeriod
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.external_constants import OutputLanguage
@@ -26,7 +25,11 @@ from ...core.period import Period, PeriodError
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ._app_quickfile_payloads import QuickfileResultPayload, quickfile_stage_message
-from ._modelo_cli_support import parse_work_calculate_wire_specs, unsupported_local_work_period_refusal
+from ._modelo_cli_support import (
+    calculation_overrides,
+    parse_work_calculate_wire_specs,
+    unsupported_local_work_period_refusal,
+)
 from ._modelo_rendering import verification_report_notices
 from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
 from .runtime_profile_binding import bound_profile_client
@@ -98,15 +101,9 @@ def _quickfile_request(
         prior_domiciliation_election=prior_domiciliation_election,
         ordinary_m303_filing_evidence=ordinary_m303_evidence,
         inputs=QuickfileCalculationInputs(
-            casilla_overrides=tuple(
-                ModeloCalculationOverride(key=str(key), value=value) for key, value in casilla_pairs.items()
-            ),
-            binding_overrides=tuple(
-                ModeloCalculationOverride(key=str(key), value=value) for key, value in binding_pairs.items()
-            ),
-            relation_overrides=tuple(
-                ModeloCalculationOverride(key=str(key), value=value) for key, value in relation_pairs.items()
-            ),
+            casilla_overrides=calculation_overrides(casilla_pairs),
+            binding_overrides=calculation_overrides(binding_pairs),
+            relation_overrides=calculation_overrides(relation_pairs),
         ),
         detail_rows=detail_rows,
     )

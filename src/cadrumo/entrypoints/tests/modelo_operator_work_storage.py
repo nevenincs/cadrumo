@@ -15,8 +15,8 @@ evidence for the first calculation.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from contextlib import contextmanager
+from collections.abc import AsyncIterator, Generator
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -100,6 +100,26 @@ class _RecordedEvents:
         self.effects.append(effect)
 
 
+class _CommitSection:
+    """The supervisor's irreversible section, which these direct executor runs never cancel."""
+
+    @asynccontextmanager
+    async def irreversible_section(self) -> AsyncIterator[None]:
+        yield
+
+
+@dataclass(slots=True)
+class _RecordedOperands:
+    """The public results an executor hands the supervisor's operand custody, kept in memory."""
+
+    results: list[BaseModel] = field(default_factory=list)
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        del written_at
+        self.results.append(operand)
+        return content_hash_hex({"operand": len(self.results)})
+
+
 @dataclass(frozen=True, slots=True)
 class _ExecutorContext:
     """The narrow slice of the supervisor context the edit executor reads.
@@ -112,6 +132,8 @@ class _ExecutorContext:
     identity: OperationIdentity
     authority_operation: PinnedAuthorityOperation
     events: _RecordedEvents
+    cancellation: _CommitSection = field(default_factory=_CommitSection)
+    operands: _RecordedOperands = field(default_factory=_RecordedOperands)
 
 
 @dataclass(frozen=True, slots=True)

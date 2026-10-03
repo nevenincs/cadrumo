@@ -130,8 +130,8 @@ def _capture_sequence(
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Parse one command, apply it to the session, and print the frame."""
+def _argument_parser() -> argparse.ArgumentParser:
+    """Build the harness verb and option vocabulary."""
     parser = argparse.ArgumentParser(prog="python -m dev.tui.harness", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -192,68 +192,73 @@ def main(argv: list[str] | None = None) -> int:
         choices=(*sorted(SUPPORTED_OUTPUT_LANGUAGES), "auto"),
         help="a forced language, or 'auto' to drop back to ambient resolution",
     )
+    return parser
 
-    args = parser.parse_args(argv)
 
-    if args.command == "surfaces":
-        for name in sorted(SURFACES):
-            surface = SURFACES[name]
-            mark = " (needs profile)" if surface.needs_profile else ""
-            _emit(f"{name:<14} {surface.summary}{mark}")
-        return 0
+def _show_surfaces() -> int:
+    """Show surfaces."""
+    for name in sorted(SURFACES):
+        surface = SURFACES[name]
+        mark = " (needs profile)" if surface.needs_profile else ""
+        _emit(f"{name:<14} {surface.summary}{mark}")
+    return 0
 
-    if args.command == "coverage":
-        for name in sorted(SURFACES):
-            declared = SURFACES[name].interfaces
+
+def _show_coverage() -> int:
+    """Show coverage."""
+    for name in sorted(SURFACES):
+        declared = SURFACES[name].interfaces
+        if declared:
+            _emit(f"{name} {','.join(declared)}")
+    # Imported only here and below: the scenarios load the documentation
+    # engine and the installed launcher, which every per-frame `open`
+    # would otherwise pay for.
+    from .sequences import SEQUENCE_SCENARIOS, page_interfaces, scenario_pages, scenario_surface
+
+    for name, scenario in sorted(SEQUENCE_SCENARIOS.items()):
+        for page in scenario_pages(scenario):
+            declared = page_interfaces(page)
             if declared:
-                _emit(f"{name} {','.join(declared)}")
-        # Imported only here and below: the scenarios load the documentation
-        # engine and the installed launcher, which every per-frame `open`
-        # would otherwise pay for.
-        from .sequences import SEQUENCE_SCENARIOS, page_interfaces, scenario_pages, scenario_surface
+                _emit(f"{scenario_surface(name, page)} {','.join(declared)}")
+    return 0
 
-        for name, scenario in sorted(SEQUENCE_SCENARIOS.items()):
-            for page in scenario_pages(scenario):
-                declared = page_interfaces(page)
-                if declared:
-                    _emit(f"{scenario_surface(name, page)} {','.join(declared)}")
-        return 0
 
-    if args.command == "sequences":
-        from .sequences import SEQUENCE_SCENARIOS, scenario_pages, scenario_surface
+def _show_sequences() -> int:
+    """Show sequences."""
+    from .sequences import SEQUENCE_SCENARIOS, scenario_pages, scenario_surface
 
-        listing = [
-            {
-                "name": name,
-                "summary": scenario.summary,
-                "pages": {page: scenario_surface(name, page) for page in scenario_pages(scenario)},
-            }
-            for name, scenario in sorted(SEQUENCE_SCENARIOS.items())
-        ]
-        _emit(json.dumps(listing, ensure_ascii=False))
-        return 0
+    listing = [
+        {
+            "name": name,
+            "summary": scenario.summary,
+            "pages": {page: scenario_surface(name, page) for page in scenario_pages(scenario)},
+        }
+        for name, scenario in sorted(SEQUENCE_SCENARIOS.items())
+    ]
+    _emit(json.dumps(listing, ensure_ascii=False))
+    return 0
 
-    if args.command == "sequence":
-        return _capture_sequence(args.scenario, args.size, args.theme or ["dark", "light"], args.page, Path(args.out))
 
-    if args.command == "open":
-        width, _, height = args.size.partition("x")
-        resolve(args.surface)
-        session = Session(
-            surface=args.surface,
-            width=int(width),
-            height=int(height),
-            theme=args.theme,
-            locale=args.locale,
-        )
-        return _attempt(
-            session,
-            refusal_note="the surface did not open",
-            shot=None if args.shot is None else Path(args.shot),
-        )
+def _open_session(args: argparse.Namespace) -> int:
+    """Open session."""
+    width, _, height = args.size.partition("x")
+    resolve(args.surface)
+    session = Session(
+        surface=args.surface,
+        width=int(width),
+        height=int(height),
+        theme=args.theme,
+        locale=args.locale,
+    )
+    return _attempt(
+        session,
+        refusal_note="the surface did not open",
+        shot=None if args.shot is None else Path(args.shot),
+    )
 
-    session = _load()
 
+def _record_gesture(args: argparse.Namespace, session: Session) -> int | None:
+    """Record gesture."""
     match args.command:
         case "press":
             session.gestures.append(Press(keys=tuple(args.keys)))
@@ -273,6 +278,12 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             session.gestures.pop()
             return _attempt(session, refusal_note="the undo was not recorded")
+    return None
+
+
+def _adjust_session(args: argparse.Namespace, session: Session) -> int | None:
+    """Adjust session."""
+    match args.command:
         case "size":
             width, _, height = args.size.partition("x")
             session.width, session.height = int(width), int(height)
@@ -283,6 +294,12 @@ def main(argv: list[str] | None = None) -> int:
         case "locale":
             session.locale = None if args.locale == "auto" else args.locale
             return _attempt(session, refusal_note="the locale change was not recorded")
+    return None
+
+
+def _observe_session(args: argparse.Namespace, session: Session) -> int:
+    """Observe session."""
+    match args.command:
         case "view":
             _show(session)
         case "journal":
@@ -300,8 +317,35 @@ def main(argv: list[str] | None = None) -> int:
             # means the two drifted apart, and refusing beats silent success.
             _emit(f"unknown command: {unknown}")
             return 2
-
     return 0
+
+
+def _dispatch_session(args: argparse.Namespace, session: Session) -> int:
+    """Apply the selected walk gesture, setting, or observation."""
+    recorded = _record_gesture(args, session)
+    if recorded is not None:
+        return recorded
+    adjusted = _adjust_session(args, session)
+    if adjusted is not None:
+        return adjusted
+    return _observe_session(args, session)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Parse one command, apply it to the session, and print the frame."""
+    args = _argument_parser().parse_args(argv)
+    if args.command == "surfaces":
+        return _show_surfaces()
+    if args.command == "coverage":
+        return _show_coverage()
+    if args.command == "sequences":
+        return _show_sequences()
+    if args.command == "sequence":
+        return _capture_sequence(args.scenario, args.size, args.theme or ["dark", "light"], args.page, Path(args.out))
+    if args.command == "open":
+        return _open_session(args)
+    session = _load()
+    return _dispatch_session(args, session)
 
 
 if __name__ == "__main__":

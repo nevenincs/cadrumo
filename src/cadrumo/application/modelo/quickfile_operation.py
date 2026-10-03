@@ -11,7 +11,6 @@ from typing import override
 from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -23,10 +22,18 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -35,16 +42,14 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -53,8 +58,6 @@ from ..user_profile.access_contracts import (
     Availability,
     DisclosureCategory,
     DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import M303FilingEvidenceError
@@ -62,8 +65,9 @@ from .calculate_input import WorkCalculateInputBundle
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
 from .quickfile import QuickfileCommand, QuickfileStage, run_modelo_quickfile
-from .quickfile_operation_contracts import QuickfileProjection, QuickfileRequest
+from .quickfile_operation_contracts import QuickfileRequest
 from .quickfile_operation_ports import QuickfileOperationPorts, QuickfileOperationPortsFactory
+from .quickfile_operation_projections import QuickfileProjection
 
 QUICKFILE_OPERATION_DEFINITION_ID = "modelo.quickfile"
 
@@ -106,16 +110,12 @@ class _Writes(LedgerCommitAttemptTracker):
         return OperationEffect.NONE
 
 
-def _require_profile(request: OperationRequest[QuickfileRequest], context: OperationExecutorContext) -> None:
+def _admit_quickfile_request(request: OperationRequest[QuickfileRequest], context: OperationExecutorContext) -> None:
     payload = request.payload
-    if (
-        request.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
-        or context.identity.definition_id != request.definition_id
-        or context.identity.subject_ref != request.subject_ref
-        or request.subject_ref != profile_operation_subject(str(payload.profile_id))
-        or require_active_bucket_id() != str(payload.profile_id)
-        or (payload.bucket_id is not None and payload.bucket_id != payload.profile_id)
-    ):
+    if request.definition_id != QUICKFILE_OPERATION_DEFINITION_ID:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    require_operation_profile(request, context, payload.profile_id)
+    if payload.bucket_id is not None and payload.bucket_id != payload.profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
@@ -175,8 +175,8 @@ class QuickfileExecutor:
 
     async def execute(self, request: OperationRequest[QuickfileRequest], context: OperationExecutorContext) -> str:
         """Join the canonical synchronous chain and settle all admitted local writes."""
-        _require_profile(request, context)
         payload = request.payload
+        _admit_quickfile_request(request, context)
         writes = _Writes()
         loop = asyncio.get_running_loop()
         admission_failure: BaseException | None = None
@@ -191,7 +191,7 @@ class QuickfileExecutor:
                 # Refresh authority briefly; no readiness, model, provider or
                 # domain preparation runs while this boundary is held.
                 async with context.cancellation.irreversible_section():
-                    _require_profile(request, context)
+                    _admit_quickfile_request(request, context)
             except BaseException as error:
                 admission_failure = error
                 writes.abort()
@@ -238,7 +238,7 @@ class QuickfileExecutor:
                 )
                 if admission_failure is not None:
                     raise admission_failure
-                _require_profile(request, context)
+                _admit_quickfile_request(request, context)
                 if result.modelo != payload.modelo or result.period != payload.period.to_period():
                     raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
                 return QuickfileProjection.from_result(
@@ -271,20 +271,40 @@ def project_quickfile_result(result: BaseModel, receipt: OperationTerminalReceip
     if not isinstance(result, QuickfileExecutionResult) or type(result) is not QuickfileExecutionResult:
         raise ValueError("invalid quickfile result")
     projection = result.projection
+    _require_quickfile_receipt_match(projection, receipt)
+    _require_quickfile_result_size(result)
+    return projection
+
+
+def _require_quickfile_receipt_match(projection: QuickfileProjection, receipt: OperationTerminalReceipt) -> None:
+    _require_quickfile_receipt_target(projection, receipt)
+    _require_quickfile_receipt_terminal(projection, receipt)
+
+
+def _require_quickfile_receipt_target(projection: QuickfileProjection, receipt: OperationTerminalReceipt) -> None:
     if (
         receipt.identity.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
         or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
+    ):
+        raise ValueError("quickfile result contradicts its terminal receipt")
+
+
+def _require_quickfile_receipt_terminal(projection: QuickfileProjection, receipt: OperationTerminalReceipt) -> None:
+    if (
+        receipt.condition is not OperationTerminalCondition.SUCCEEDED
         or receipt.effect is not projection.effect
         or receipt.result_ref is None
         or receipt.refusal_ref is not None
         or receipt.refusal_detail_ref is not None
         or receipt.failure_error_code is not None
         or receipt.diagnostic_ref is not None
-        or len(canonical_json_bytes(result.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
     ):
         raise ValueError("quickfile result contradicts its terminal receipt")
-    return projection
+
+
+def _require_quickfile_result_size(result: QuickfileExecutionResult) -> None:
+    if len(canonical_json_bytes(result.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES:
+        raise ValueError("quickfile result contradicts its terminal receipt")
 
 
 def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> OperationDefinition:
@@ -328,99 +348,77 @@ def build_quickfile_registration(definition: OperationDefinition) -> OperationPu
         raise ValueError("invalid quickfile definition")
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if (
-            request.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
-            or not isinstance(payload, QuickfileRequest)
-            or context.frontend is not OperationFrontendProjection.CLI
-            or context.authority_operation is None
-            or context.contract.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if (
-            payload.profile_id != context.profile_id
-            or request.subject_ref != profile_operation_subject(str(payload.profile_id))
-            or (payload.bucket_id is not None and payload.bucket_id != payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        payload = _quickfile_access_payload(request, context)
         periods = frozenset({payload.period.to_period()})
-        admitted = context.admitted_request
-        if admitted is not None and (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != request.definition_id
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods != periods
-            or admitted.period_independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                DisclosurePermission(
-                    destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-                )
-                for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-            )
-        elif context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=periods,
-                period_independent=False,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.RESULT,
-                        AccessAction.OBSERVE,
-                        AccessAction.COMMIT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                    }
-                ),
-                disclosures=disclosures,
-                periods=periods,
-                allow_period_independent=False,
-                requires_all_periods=False,
-                requires_human=True,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                # Write authority is checked at each admitted transaction seam;
-                # this flag would unconditionally refuse ordinary operation access.
-                transaction_authority_required=False,
-            ),
+        _require_admitted_quickfile_request(request, context, periods)
+        disclosures = operation_disclosures(
+            context,
+            observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+            result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+            result_schema_id=None,
         )
+        return _resolved_quickfile_access(request, context, periods, disclosures)
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=QuickfileRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=QuickfileProjection
-        ),
-        access_resolver=resolve,
+        public_result_type=QuickfileProjection,
         result_projector=project_quickfile_result,
+        access_resolver=resolve,
+    )
+
+
+def _quickfile_access_payload(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> QuickfileRequest:
+    payload = request.payload
+    if (
+        request.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
+        or not isinstance(payload, QuickfileRequest)
+        or context.frontend is not OperationFrontendProjection.CLI
+        or context.authority_operation is None
+        or context.contract.definition_id != QUICKFILE_OPERATION_DEFINITION_ID
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if (
+        payload.profile_id != context.profile_id
+        or request.subject_ref != profile_operation_subject(str(payload.profile_id))
+        or (payload.bucket_id is not None and payload.bucket_id != payload.profile_id)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _require_admitted_quickfile_request(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    periods: frozenset[Period],
+) -> None:
+    admitted = context.admitted_request
+    if admitted is not None and (
+        admitted.profile_id != context.profile_id
+        or admitted.definition_id != request.definition_id
+        or admitted.action is not AccessAction.SUBMIT
+        or admitted.periods != periods
+        or admitted.period_independent
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def _resolved_quickfile_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    periods: frozenset[Period],
+    disclosures: frozenset[DisclosurePermission],
+) -> ResolvedOperationAccess:
+    return bind_operation_access(
+        context,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
+        periods=periods,
+        period_independent=False,
+        requires_all_periods=False,
+        requires_human=True,
+        provider=Availability.NOT_REQUIRED,
     )

@@ -16,8 +16,6 @@ from ....core.money.rounding import round_to_cents
 from .errors import RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
-    ParsedExportPolicyValue,
-    normalize_parsed_export_policy_value,
     policy_defines_absent_slot,
     project_export_value,
     validate_export_wire_value,
@@ -149,6 +147,9 @@ class _ExportField(Protocol):
     @property
     def allowed_values(self) -> tuple[str, ...] | None: ...
 
+    @property
+    def minimum_year(self) -> int | None: ...
+
 
 class _ExportRecord(Protocol):
     """The registry-owned declaration shape needed by the record codec."""
@@ -255,6 +256,7 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
             rendered = _render_absent_slot(field)
         else:
             _require_allowed_value(field, value)
+            _require_minimum_year(field, value)
             rendered = _render_typed_value(field, value)
     if not _is_absent_slot(field, value):
         validate_export_wire_value(field.value_policy, rendered)
@@ -367,60 +369,6 @@ def _require_record_coordinates(field: _ExportField, *, record_id: str) -> tuple
     return field.offset, field.length
 
 
-def parse_fixed_width_export_field(
-    field: _ExportField,
-    raw: str,
-) -> ParsedExportPolicyValue:
-    """Parse and validate one complete exact-width field from wire text."""
-    if field.length is None:
-        raise RegistryValidationError(f"export field {field.id!r} must declare length")
-    if len(raw) != field.length:
-        raise RegistryValidationError(
-            f"export field {field.id!r} expected {field.length} wire characters, got {len(raw)}",
-        )
-    kind = str(getattr(field.kind, "value", field.kind))
-    if kind == "binding" and not field.required and raw == " " * field.length:
-        # A positioned binding-row renderer emits only active bindings for a
-        # logical row.  An explicitly optional inactive binding is therefore
-        # represented by its untouched space fill rather than by the normal
-        # standalone absent-value encoding.  Read-back must recognise that
-        # canonical representation before attempting a numeric parse.
-        # Required bindings intentionally remain subject to normal validation.
-        return None
-    if (
-        kind not in {"filler", "literal"}
-        and not field.required
-        and field.value_policy is not None
-        and not policy_defines_absent_slot(field.value_policy)
-        and raw == _render_absent_slot(field)
-        and (not raw.strip() or _zero_fill_is_only_absence(field))
-    ):
-        # The renderer writes an optional absent slot as its declared fill --
-        # spaces for text, zeros for numbers, as AEAT's designs require --
-        # without policy validation, and parsing reads that same fill back as
-        # absence. A zero fill is a value only where zero is one the field may
-        # carry; otherwise it can mean nothing but the absent slot.
-        return None
-    if kind not in {"filler", "literal"} and _fill_reads_as_absent_text(field, raw):
-        return None
-    validate_export_wire_value(field.value_policy, raw)
-    if kind == "filler":
-        if raw != " " * field.length:
-            raise RegistryValidationError(f"filler export field {field.id!r} contains non-space data")
-        return None
-    if kind == "literal":
-        expected = render_fixed_width_export_field(field, field.literal)
-        if raw != expected:
-            raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
-        return field.literal
-    parsed: ParsedExportPolicyValue = _parse_typed_value(field, raw)
-    _require_allowed_value(field, parsed)
-    parsed = normalize_parsed_export_policy_value(field.value_policy, raw, parsed)
-    if field.value_policy is None and render_fixed_width_export_field(field, parsed) != raw:
-        raise RegistryValidationError(f"export field {field.id!r} contains noncanonical fixed-width data")
-    return parsed
-
-
 def pad_fixed_width_text(
     value: str,
     *,
@@ -522,20 +470,6 @@ def _render_typed_value(field: _ExportField, value: object) -> str:
     return _pad(field, _render_text(field, value))
 
 
-def _parse_typed_value(field: _ExportField, raw: str) -> ParsedExportPolicyValue:
-    """Parse one padded wire value under the field's declared data type."""
-    if field.data_type == "money":
-        return _parse_scaled_numeric(field, raw, scale=2)
-    if field.data_type == "decimal":
-        return _parse_scaled_numeric(field, raw, scale=_require_decimals(field))
-    if field.data_type == "integer":
-        return _parse_integer(field, raw)
-    if field.data_type == "boolean":
-        return _parse_boolean(field, raw)
-    text = _unpad(field, raw)
-    return text if text else None
-
-
 def _render_text(field: _ExportField, value: object) -> str:
     if value is None:
         return ""
@@ -546,20 +480,21 @@ def _render_text(field: _ExportField, value: object) -> str:
     )
 
 
-def _parse_boolean(field: _ExportField, raw: str) -> bool | None:
-    text = _unpad(field, raw)
-    if text == "":
-        return None
-    if text == "X":
-        return True
-    raise RegistryValidationError("boolean export field must contain canonical X or blank wire data")
-
-
 def _coerce_numeric(field: _ExportField, value: object) -> Decimal:
     try:
         return coerce_fixed_width_decimal(value)
     except ValueError as exc:
         raise RegistryValidationError(f"export field {field.id!r} has an invalid numeric value") from exc
+
+
+def _require_minimum_year(field: _ExportField, value: object) -> None:
+    if field.minimum_year is None:
+        return
+    year = _coerce_numeric(field, value)
+    if year < field.minimum_year:
+        raise RegistryValidationError(
+            f"export field {field.id!r} year is below its official minimum {field.minimum_year}",
+        )
 
 
 def _require_allowed_value(field: _ExportField, value: object) -> None:
@@ -586,23 +521,6 @@ def _is_absent_slot(field: _ExportField, value: object) -> bool:
     declared ``0`` and arrives here as a value, not an absence.
     """
     return value is None or value == ""
-
-
-def _fill_reads_as_absent_text(field: _ExportField, raw: str) -> bool:
-    """Whether an optional non-numeric slot holds exactly its declared absent fill.
-
-    Zero is a numeric state only: a text or date field has no zero, so the fill
-    its declaration writes for an absent value -- spaces, or the zeros some
-    designs ask for in an alphanumeric identifier slot -- can only mean that no
-    value was given. Reading a zero fill back as the text ``"0"`` would invent a
-    value the record never carried. A required field has no absent fill, so its
-    wire always carries a value and is parsed as one.
-    """
-    if field.required or field.value_policy is not None:
-        return False
-    if field.data_type in _NUMERIC_DATA_TYPES or field.data_type == "boolean":
-        return False
-    return raw == _render_absent_slot(field)
 
 
 def _zero_fill_is_only_absence(field: _ExportField) -> bool:
@@ -694,72 +612,42 @@ def _render_numeric_digits(field: _ExportField, digits: str, *, negative: bool) 
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
     if field.sign_position is not None:
-        magnitude_width = length - 1
-        if len(digits) > magnitude_width:
-            raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
-        magnitude = digits.rjust(magnitude_width, "0")
-        if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
-            return "0" * length if not digits.strip("0") else "N" + magnitude
-        return ("N" if negative else " ") + magnitude
+        return _render_with_reserved_sign(field, digits, negative=negative, length=length)
     if field.signed:
-        # AEAT states one convention for every diseno de registro, in "Disenos de
-        # registro - breve manual de uso" v.2 (12/12/2022), CAT - Informatica
-        # Tributaria:
-        #
-        #   "Todos los campos numericos se presentaran alineados a la derecha y
-        #    rellenos a ceros por la izquierda, SIN SIGNOS y sin empaquetar."
-        #   "Los campos numericos negativos se presentaran alineados a la derecha
-        #    y rellenos a ceros por la izquierda, PRECEDIDOS DEL CARACTER 'N'."
-        #
-        # So the sign position is NOT reserved. A non-negative value fills the
-        # whole slot with digits, and the 'N' DISPLACES the leading digit when the
-        # value is negative -- which is why the corporate-tax design spells its
-        # amounts "15 enteros (o N + 14) y 2 decimales" on a seventeen-byte slot.
-        # "Sin signos" excludes a blank as much as a '+': a blank belongs to
-        # alphanumeric and alphabetic fields, which pad with blancos, not to these.
-        magnitude_width = length - 1 if negative else length
-        if len(digits) > magnitude_width:
-            raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
-        return ("N" if negative else "") + digits.rjust(magnitude_width, "0")
+        return _render_signed_digits(field, digits, negative=negative, length=length)
     return _pad(field, digits)
 
 
-def _parse_integer(field: _ExportField, raw: str) -> Decimal:
-    negative, digits = _split_numeric_wire(field, raw)
-    value = Decimal(int(digits))
-    return -value if negative else value
+def _render_with_reserved_sign(field: _ExportField, digits: str, *, negative: bool, length: int) -> str:
+    magnitude_width = length - 1
+    if len(digits) > magnitude_width:
+        raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
+    magnitude = digits.rjust(magnitude_width, "0")
+    if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
+        return "0" * length if not digits.strip("0") else "N" + magnitude
+    return ("N" if negative else " ") + magnitude
 
 
-def _parse_scaled_numeric(field: _ExportField, raw: str, *, scale: int) -> Decimal:
-    negative, digits = _split_numeric_wire(field, raw)
-    value = Decimal(int(digits)).scaleb(-scale)
-    return -value if negative else value
-
-
-def _split_numeric_wire(field: _ExportField, raw: str) -> tuple[bool, str]:
-    if field.sign_position is ExportSignPosition.BLANK_OR_N:
-        if raw[:1] not in {"N", " "}:
-            raise RegistryValidationError(f"export field {field.id!r} sign position must hold 'N' or a space")
-        negative, digits = raw[:1] == "N", raw[1:]
-    elif field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
-        # The constant 'N' carries no direction: the value is the magnitude.
-        # An all-zero slot is the design's empty case; the canonical re-render
-        # in the caller refuses an 'N' in front of a zero magnitude.
-        negative, digits = False, raw[1:] if raw[:1] == "N" else raw
-    elif field.signed:
-        # The mirror of the render rule above: a negative slot is 'N' followed by
-        # its digits, and a non-negative slot is digits all the way. Refusing a
-        # digit in the leading position would refuse a correctly formed AEAT
-        # record, because that is exactly what AEAT specifies a non-negative
-        # amount looks like.
-        negative = raw[:1] == "N"
-        digits = raw[1:] if negative else raw
-    else:
-        negative = False
-        digits = _unpad(field, raw)
-    if not digits or not digits.isascii() or not digits.isdigit():
-        raise RegistryValidationError(f"numeric export field {field.id!r} must contain only ASCII digits")
-    return negative, digits
+def _render_signed_digits(field: _ExportField, digits: str, *, negative: bool, length: int) -> str:
+    # AEAT states one convention for every diseno de registro, in "Disenos de
+    # registro - breve manual de uso" v.2 (12/12/2022), CAT - Informatica
+    # Tributaria:
+    #
+    #   "Todos los campos numericos se presentaran alineados a la derecha y
+    #    rellenos a ceros por la izquierda, SIN SIGNOS y sin empaquetar."
+    #   "Los campos numericos negativos se presentaran alineados a la derecha
+    #    y rellenos a ceros por la izquierda, PRECEDIDOS DEL CARACTER 'N'."
+    #
+    # So the sign position is NOT reserved. A non-negative value fills the
+    # whole slot with digits, and the 'N' DISPLACES the leading digit when the
+    # value is negative -- which is why the corporate-tax design spells its
+    # amounts "15 enteros (o N + 14) y 2 decimales" on a seventeen-byte slot.
+    # "Sin signos" excludes a blank as much as a '+': a blank belongs to
+    # alphanumeric and alphabetic fields, which pad with blancos, not to these.
+    magnitude_width = length - 1 if negative else length
+    if len(digits) > magnitude_width:
+        raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
+    return ("N" if negative else "") + digits.rjust(magnitude_width, "0")
 
 
 def _render_boolean(value: object) -> str:
@@ -790,17 +678,6 @@ def _pad(field: _ExportField, value: str) -> str:
         raise RegistryValidationError(f"export field {field.id!r}: {exc}") from exc
 
 
-def _unpad(field: _ExportField, raw: str) -> str:
-    if field.padding is ExportPadding.NONE:
-        return raw.rstrip(" ")
-    if field.padding is ExportPadding.LEFT_ZERO:
-        value = raw.lstrip("0")
-        return value or "0"
-    if field.padding is ExportPadding.LEFT_SPACE:
-        return raw.lstrip(" ")
-    return raw.rstrip(" ")
-
-
 __all__ = [
     "ExportEncoding",
     "ExportEncodingValue",
@@ -810,7 +687,6 @@ __all__ = [
     "ExportPaddingValue",
     "FixedWidthRecordRenderError",
     "pad_fixed_width_text",
-    "parse_fixed_width_export_field",
     "render_fixed_width_export_field",
     "render_fixed_width_export_record_body",
     "validate_fixed_width_shape",

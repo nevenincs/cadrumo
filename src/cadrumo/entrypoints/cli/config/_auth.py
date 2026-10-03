@@ -15,7 +15,8 @@ from ....core.json_contract import strict_round_trip
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion, submitted_operation_error
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import submitted_operation_error
 from .runtime_auth_teardown import run_auth_teardown
 from .status_rendering import precondition_action_lines
 

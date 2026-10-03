@@ -22,6 +22,7 @@ from .....application.user_profile.automation_custody_port import (
     AutomationSecretStore,
     NativeSecretBackend,
 )
+from .....core.base64_codec import b64_decode_canonical
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .automation_crypto import CustodyAutomationKeyIssuer, canonical_record, parse_record
@@ -123,10 +124,8 @@ class NativeClientCredentialStore:
     @staticmethod
     def _credential(envelope: _ClientCredentialEnvelope) -> SecretBytes:
         try:
-            raw = base64.b64decode(envelope.secret_b64, validate=True)
-            if base64.b64encode(raw).decode("ascii") != envelope.secret_b64:
-                raise ValueError
-        except (ValueError, UnicodeError):
+            raw = b64_decode_canonical(envelope.secret_b64)
+        except ValueError:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
         credential = SecretBytes(raw)
         if CustodyAutomationKeyIssuer.verifier(credential)[0] != envelope.key_id:

@@ -22,7 +22,7 @@ from pydantic import (
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
-from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ....core.type_adapters import OBJECT_TUPLE_ADAPTER, STRICT_STR_KEYED_MAPPING_ADAPTER
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId
@@ -50,9 +50,6 @@ __all__ = [
 
 _DISPATCH_TABLE_ENTRIES_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
     list[object] | tuple[object, ...], config=ConfigDict(strict=True)
-)
-_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
-    dict[str, object], config=ConfigDict(strict=True)
 )
 
 
@@ -106,7 +103,7 @@ def _dispatch_table_entry(raw_entry: object) -> tuple[str, object]:
 
 def _string_keyed_mapping(value: object, *, surface: str) -> dict[str, object]:
     try:
-        return _STRING_KEYED_MAPPING_ADAPTER.validate_python(value)
+        return STRICT_STR_KEYED_MAPPING_ADAPTER.validate_python(value)
     except ValidationError as exc:
         if not isinstance(value, Mapping):
             raise RegistryValidationError(f"{surface} must be a table") from exc

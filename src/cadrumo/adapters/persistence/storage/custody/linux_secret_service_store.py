@@ -29,6 +29,7 @@ from .....application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     NativeSecretBackend,
 )
+from .automation_secret_target import require_automation_secret_target
 from .gnome_collection_protection import require_protected_gnome_collection
 
 if TYPE_CHECKING:
@@ -75,16 +76,7 @@ def _body(value: object, length: int) -> tuple[Any, ...]:
 
 
 def _attributes(namespace: str, account: str) -> dict[str, str]:
-    if (
-        not isinstance(namespace, str)
-        or not isinstance(account, str)
-        or not namespace.startswith("cadrumo.automation.")
-        or len(namespace) <= len("cadrumo.automation.")
-        or not account
-        or len(namespace) + len(account) > 1024
-        or any(ord(character) < 32 or ord(character) == 127 for character in namespace + account)
-    ):
-        raise _invalid()
+    require_automation_secret_target(namespace, account)
     if sys.platform != "linux":
         raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
     return {

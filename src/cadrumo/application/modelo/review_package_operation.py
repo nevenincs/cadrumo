@@ -44,11 +44,10 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -260,6 +259,7 @@ class ModeloReviewPackageBuildExecutor:
                         export_ports=self._export_ports_factory(
                             bucket_id=profile_id,
                             m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+                            operation=context.authority_operation,
                         ),
                     )
                     if (

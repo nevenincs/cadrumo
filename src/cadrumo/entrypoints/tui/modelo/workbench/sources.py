@@ -313,6 +313,38 @@ def source_group_kind(field: ModeloFormField) -> SourceGroupKind:
     return SourceGroupKind.UNNAMED
 
 
+def _collect_field_sources(
+    field: ModeloFormField,
+    family: SourceFamily | None,
+    policies: dict[BindingSourceKind, SourcePolicyV1],
+    produced: dict[BindingSourceKind, bool],
+    led: dict[BindingSourceKind, list[ModeloFormField]],
+) -> None:
+    matching = [binding for binding in field.bindings if binding.policy.family is family]
+    for position, binding in enumerate(matching):
+        kind = binding.policy.source_kind
+        policies.setdefault(kind, binding.policy)
+        produced[kind] = produced.get(kind, False) or binding.resolved
+        listed = led.setdefault(kind, [])
+        if position == 0:
+            listed.append(field)
+
+
+def _reading_state(
+    kind: BindingSourceKind,
+    fields: list[ModeloFormField],
+    produced: Mapping[BindingSourceKind, bool],
+    *,
+    calculated: bool,
+) -> SourceState:
+    if fields and all(no_earlier_filing(field) for field in fields):
+        # A carry with no earlier declaration to read produced nothing, whatever zero it resolved to.
+        return SourceState.NONE_FOUND
+    if produced[kind]:
+        return SourceState.PRODUCED
+    return SourceState.NONE_FOUND if calculated else SourceState.NOT_YET
+
+
 def _readings(fields: tuple[ModeloFormField, ...], *, calculated: bool) -> tuple[SourceReading, ...]:
     """Each source of the family a box's value comes from, the boxes it leads for and what it gave.
 
@@ -325,23 +357,10 @@ def _readings(fields: tuple[ModeloFormField, ...], *, calculated: bool) -> tuple
     led: dict[BindingSourceKind, list[ModeloFormField]] = {}
     for field in fields:
         family = value_family(field)
-        matching = [binding for binding in field.bindings if binding.policy.family is family]
-        for position, binding in enumerate(matching):
-            kind = binding.policy.source_kind
-            policies.setdefault(kind, binding.policy)
-            produced[kind] = produced.get(kind, False) or binding.resolved
-            listed = led.setdefault(kind, [])
-            if position == 0:
-                listed.append(field)
+        _collect_field_sources(field, family, policies, produced, led)
     readings = []
     for kind, policy in policies.items():
-        if led[kind] and all(no_earlier_filing(field) for field in led[kind]):
-            # A carry with no earlier declaration to read produced nothing, whatever zero it resolved to.
-            state = SourceState.NONE_FOUND
-        elif produced[kind]:
-            state = SourceState.PRODUCED
-        else:
-            state = SourceState.NONE_FOUND if calculated else SourceState.NOT_YET
+        state = _reading_state(kind, led[kind], produced, calculated=calculated)
         readings.append(
             SourceReading(
                 policy=policy, state=state, fields=tuple(led[kind]), earlier_filings=earlier_filings(led[kind])

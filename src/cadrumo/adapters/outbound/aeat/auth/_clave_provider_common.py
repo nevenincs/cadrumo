@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from .....application.auth.protocols import BrowserContextPort, BrowserSessionPort
 from .....core.config import Settings
+from .....core.remote_authority import canonical_remote_hostname, is_current_aeat_host
 from .browser_lifecycle import close_owned_browser_context, close_owned_browser_session
 
 if TYPE_CHECKING:
@@ -32,6 +34,52 @@ def verification_probe_url(
     if resolved_target_url and target_path in resolved_target_url:
         return resolved_target_url
     return resolved_target_url or selector_url_for(target_path)
+
+
+def is_authenticated_clave_landing(
+    *,
+    landing_url: str,
+    target_path: str,
+    settings: Settings,
+    clave_path_markers: Iterable[str],
+) -> bool:
+    """Return True for a protected AEAT page reached after Cl@ve dispatch.
+
+    The authority is decided by the canonical remote-authority helpers, never
+    by ``urlsplit(...).netloc``: that string still ends in the AEAT suffix when
+    a credential prefix rides in front of it, so
+    ``https://evil@www6.agenciatributaria.gob.es/`` would read as a protected
+    landing. Only the current AEAT apex counts. Each provider supplies the
+    Cl@ve path markers of its own flow, which are still mid-login rather than
+    landed; the auth gate is refused for every provider.
+    """
+    host = canonical_remote_hostname(landing_url)
+    if host is None or not is_current_aeat_host(host):
+        return False
+    path = urlsplit(landing_url).path.casefold()
+    if settings.external_constants().aeat.sede_paths.auth_gate_4033.casefold() in path:
+        return False
+    if any(marker.casefold() in path for marker in clave_path_markers):
+        return False
+    if target_path in landing_url:
+        return True
+    return same_aeat_application_path(landing_path=path, target_path=target_path)
+
+
+def same_aeat_application_path(*, landing_path: str, target_path: str) -> bool:
+    """Return whether a landing path is inside the target's ``wlpl`` or ``sede`` application.
+
+    The first two segments must match; any other root, or fewer than two
+    segments on either side, fails closed.
+    """
+    target_path_only = urlsplit(target_path).path.casefold()
+    landing_parts = tuple(part for part in landing_path.split("/") if part)
+    target_parts = tuple(part for part in target_path_only.split("/") if part)
+    if len(landing_parts) < 2 or len(target_parts) < 2:
+        return False
+    if target_parts[0] in {"wlpl", "sede"}:
+        return landing_parts[:2] == target_parts[:2]
+    return False
 
 
 # KWARGS-ANY-RATIONALE-LOGGER-DUCK-TYPE: callers pass either a stdlib

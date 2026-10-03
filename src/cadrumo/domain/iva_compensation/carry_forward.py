@@ -1,11 +1,12 @@
-"""Pure regulatory IVA-compensation carry-forward logic for Modelo 303.
+"""Regulatory IVA-compensation carry-forward logic for Modelo 303.
 
 This module owns the typed period-state and carry-forward-lot records, the
 FIFO projection that turns filed-period states into source-period lots, and
-the four-year-window expiry policy. All logic here is pure: it depends only on
-:mod:`decimal`, :mod:`datetime`, pydantic, and :data:`STRICT_FROZEN_CONFIG`
-from :mod:`cadrumo.core`. Repositories, port adapters, and orchestration that wire
-these pure pieces to persistence live in the application layer.
+the year-level carry-window review policy. The report requires the caller's
+held authority operation to resolve the governed window for each source period;
+it never opens or discovers authority itself. Repositories, port adapters, and
+orchestration that wire these pieces to persistence live in the application
+layer.
 """
 
 from __future__ import annotations
@@ -28,7 +29,9 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.schema_references import RegistrySnapshotRef
+from .carry_window import resolve_iva_compensation_carry_window_years
 from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -260,6 +263,7 @@ def build_iva_compensation_carry_forward_report(
     states: tuple[IvaCompensationPeriodState, ...],
     *,
     as_of_year: int,
+    operation: PinnedAuthorityOperation,
     opening_balance: Decimal | None = None,
 ) -> IvaCompensationCarryForwardReport:
     """Project filed-period compensation states into source-period lots.
@@ -277,6 +281,13 @@ def build_iva_compensation_carry_forward_report(
     credit would look unapplied. A negative balance is refused by the report's
     own non-negative ``opening_applied_amount``.
 
+    The returned ACTIVE, EXPIRY_REVIEW_DUE, and EXPIRED_REVIEW_REQUIRED states
+    are coarse review indicators based on as_of_year. They do not calculate a
+    filing-date statutory deadline. The governed carry-window fact is resolved
+    for each lot using that lot's period end and the same held operation
+    supplied by the caller. A source period without a calendar span is refused
+    rather than assigned an invented date.
+
     Returns an :class:`IvaCompensationCarryForwardReport`.
     """
     _validate_carry_forward_as_of_year(as_of_year)
@@ -292,7 +303,7 @@ def build_iva_compensation_carry_forward_report(
         opening_applied += from_opening
         unallocated_applied += _allocate_state_application(applied - from_opening, working)
         _append_state_carry_forward_lot(state, working)
-    lots = _materialize_carry_forward_lots(working, as_of_year=as_of_year)
+    lots = _materialize_carry_forward_lots(working, as_of_year=as_of_year, operation=operation)
     return IvaCompensationCarryForwardReport(
         as_of_year=as_of_year,
         lots=lots,
@@ -395,6 +406,7 @@ def _materialize_carry_forward_lots(
     working: list[_WorkingCarryForwardLot],
     *,
     as_of_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaCompensationCarryForwardLot, ...]:
     return tuple(
         IvaCompensationCarryForwardLot(
@@ -407,7 +419,9 @@ def _materialize_carry_forward_lots(
             age_years=max(0, as_of_year - item.source_filing_year),
             expiry_review_state=_expiry_review_state(
                 source_filing_year=item.source_filing_year,
+                source_period=item.source_period,
                 as_of_year=as_of_year,
+                operation=operation,
             ),
             source_observation_key=item.source_observation_key,
         )
@@ -551,12 +565,19 @@ def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
 def _expiry_review_state(
     *,
     source_filing_year: int,
+    source_period: Period,
     as_of_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationExpiryReviewState:
+    """Use the source period's dated authority fact for coarse year review."""
+    carry_window_years = resolve_iva_compensation_carry_window_years(
+        effective_date=source_period.end_date,
+        operation=operation,
+    )
     age_years = max(0, as_of_year - source_filing_year)
-    if age_years > 4:
+    if age_years > carry_window_years:
         return IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
-    if age_years == 4:
+    if age_years == carry_window_years:
         return IvaCompensationExpiryReviewState.EXPIRY_REVIEW_DUE
     return IvaCompensationExpiryReviewState.ACTIVE
 

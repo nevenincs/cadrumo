@@ -89,7 +89,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Self, override
 
 from ...core.registry_token import StrictRegistryToken
-from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
+from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from .classification import InvoiceKind
 from .schema import IvaCategory
 
@@ -142,40 +142,6 @@ def _flow_direction_catalogue() -> IvaFlowDirectionCatalogue:
     return resolve_iva_flow_direction_catalogue()
 
 
-def _recipient_only_reverse_charge_categories(
-    catalogue: IvaCategoryCatalogue,
-) -> frozenset[IvaCategory]:
-    """Return the reverse-charge categories that ignore the invoice direction.
-
-    These route to ``INVERSION_SUJETO_PASIVO`` on EITHER invoice direction,
-    because only the recipient's side exists.
-
-    Both are ACQUISITIONS. The supplier's counterpart of an intra-community
-    acquisition is a different category entirely (an exempt art. 25 supply, or an
-    operation not located in Spain), so no invoice direction can put this taxpayer
-    on the supplying side of one of these. Direction is therefore genuinely
-    irrelevant here, and collapsing it is correct.
-
-    The domestic reverse-charge category is deliberately NOT a member. A domestic
-    art. 84.Uno.2 operation has both of its sides in Spain, so the same category
-    legitimately describes a supply this taxpayer MADE and a purchase it RECEIVED
-    -- and those settle differently. It is handled by direction in
-    :func:`derive_flow_for_classification`.
-    """
-    return frozenset(
-        {
-            catalogue.require("intra_community_acquisition_reverse_charge"),
-            # A B2B service received from an EU supplier sits in the same
-            # position as the goods acquisition above: art. 69.Uno.1.o locates
-            # it in Spain because the recipient is established here, and art.
-            # 84.Uno.2.o makes that recipient the sujeto pasivo. Its supply
-            # counterpart is deliberately absent -- there the operation is not
-            # located in Spain at all, so no Spanish cuota arises to self-assess.
-            catalogue.require("intra_community_service_acquisition_reverse_charge"),
-        },
-    )
-
-
 def derive_flow_for_classification(
     *,
     category: IvaCategory,
@@ -185,8 +151,8 @@ def derive_flow_for_classification(
 
     The mapping is:
 
-    * Recipient-only reverse-charge categories (the intra-community
-      acquisitions in :func:`_recipient_only_reverse_charge_categories`)
+    * Recipient-only reverse-charge categories from the governed category
+      projection
       resolve to :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`
       irrespective of the invoice direction, because their supply
       counterpart is not located in Spain and so raises no Spanish cuota
@@ -217,7 +183,7 @@ def derive_flow_for_classification(
     """
     category_catalogue = resolve_iva_category_catalogue()
     flow_catalogue = _flow_direction_catalogue()
-    if category in _recipient_only_reverse_charge_categories(category_catalogue):
+    if category in category_catalogue.projection("recipient_only_reverse_charge"):
         return flow_catalogue.recipient_reverse_charge_token
     if category == category_catalogue.require("domestic_reverse_charge"):
         if invoice_direction is InvoiceKind.ISSUED:

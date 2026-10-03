@@ -18,14 +18,14 @@ from ...application.modelo.revision_snapshot_operation import (
     ModeloWorkRevisionSnapshotRequest,
 )
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
+from .registered_operation_errors import invalid_completion_error
 from .runtime_modelo_metadata import read_modelo_work_unit
 from .runtime_modelo_verification import select_modelo_work_revision_for_cli
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_modelo_revision_inventory_for_cli(
@@ -71,12 +71,7 @@ def read_modelo_revision_inventory_for_cli(
         or result.work_unit_id_filter != selected_id
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -125,10 +120,5 @@ def read_modelo_revision_snapshot_for_cli(
         or result.calculation.calculation_revision_id != selection.calculation_revision_id
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return result

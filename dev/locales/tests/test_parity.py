@@ -16,7 +16,9 @@ from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from .._registry_scanner import scan_form_layout_heading_keys
 from ..cli import app
 from ..errors import LocaleError
-from ..manager import LocaleManager, LocaleNode, locale_catalogue_source
+from ..locale_nodes import LocaleNode
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

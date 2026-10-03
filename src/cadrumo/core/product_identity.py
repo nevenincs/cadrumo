@@ -34,6 +34,11 @@ class ProductIdentity(NamedTuple):
     companion_distributions: tuple[str, str]
     companion_namespace: str
 
+    @property
+    def cohort_distributions(self) -> tuple[str, ...]:
+        """Every distribution one release publishes together, the product first."""
+        return (self.distribution, *self.companion_distributions)
+
 
 PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     display_name="CADRUMO",

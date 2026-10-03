@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.audit.unreachable_code import ModuleFinding, ModuleReach, UnreachableCodeResult
+from dev.audit.unreachable_models import ModuleFinding, ModuleReach, UnreachableCodeResult
 
 from ..unreachable_module_coverage import evaluate
 

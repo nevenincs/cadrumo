@@ -18,7 +18,7 @@ from decimal import Decimal
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 __all__ = [
@@ -40,9 +40,7 @@ def resolve_m347_counterparty_annual_threshold(
     authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the canonical annual counterparty threshold with provenance."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("M347 threshold requires an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="M347 counterparty threshold")
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_M347_COUNTERPARTY_THRESHOLD_FACT_ID,
@@ -61,9 +59,7 @@ def resolve_m347_clave_c_declaration_threshold(
     authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the distinct clave-C threshold with its statutory provenance."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("M347 threshold requires an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="M347 clave-C threshold")
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_M347_CLAVE_C_THRESHOLD_FACT_ID,

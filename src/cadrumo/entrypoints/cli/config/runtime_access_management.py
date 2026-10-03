@@ -12,10 +12,8 @@ from ....adapters.local_runtime.automation_decision import AutomationDecision, r
 from ....adapters.local_runtime.automation_inventory import read_automation_inventory
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
 from ....application.operations.models import OperationId
-from ....application.user_profile.access_contracts import AccessScope
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_enrollment import (
-    AutomationPeriodProjection,
     AutomationReviewProjection,
     AutomationScopeProjection,
 )
@@ -69,25 +67,6 @@ def _refused(error: RuntimeFrontendRefusedError) -> CliRefusedBoundaryError:
     return CliRefusedBoundaryError(context={"reason": error.reason})
 
 
-def _scope(scope: AccessScope) -> AutomationScopeProjection:
-    """Flatten domain periods only for this CLI's typed public presentation."""
-    return AutomationScopeProjection(
-        operations=tuple(sorted(scope.operations)),
-        actions=tuple(sorted(scope.actions)),
-        disclosures=tuple(
-            sorted(scope.disclosures, key=lambda item: (str(item.destination_id), item.projection_id, item.category))
-        ),
-        periods=None
-        if scope.periods is None
-        else tuple(
-            AutomationPeriodProjection(filing_year=item.filing_year, code=str(item.code))
-            for item in sorted(scope.periods, key=lambda item: (item.filing_year, str(item.code)))
-        ),
-        allow_period_independent=scope.allow_period_independent,
-        allow_delegation=scope.allow_delegation,
-    )
-
-
 def _session_payload(session: PublicAccessSession, *, instant: datetime) -> RuntimeSessionPayload:
     return RuntimeSessionPayload(
         session_id=session.session_id,
@@ -98,7 +77,7 @@ def _session_payload(session: PublicAccessSession, *, instant: datetime) -> Runt
         key_id=session.key_id,
         kind=session.kind,
         state=session.state,
-        scope=_scope(session.scope),
+        scope=AutomationScopeProjection.from_scope(session.scope),
         expires_at=session.expires_at,
         remaining_seconds=max(0, int((session.expires_at - instant).total_seconds())),
     )

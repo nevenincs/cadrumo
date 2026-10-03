@@ -25,7 +25,8 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
 from ..components.widgets import DisclosureGroup
-from ..profile.overview import FieldEditScreen, ProfileManagerScreen, field_help_text
+from ..profile.edit_screens import FieldEditScreen, field_help_text
+from ..profile.overview import ProfileManagerScreen
 from ..profile.setup_journey import ProfileSetupStage
 from .manager_pilot import wait_until_settled
 from .test_manager_screen import _CREDENTIAL_INPUT, _live_overview, _persist

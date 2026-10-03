@@ -4,19 +4,17 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
 
-from .command_spec import (
-    CommandSpec,
+from ._command_parameter_contracts import OptionSpec
+from ._command_shared_contracts import (
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
     translation_key,
 )
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _PROFILE_FREE_READ = ExecutionPolicySpec(
     frozenset({"state-free"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE

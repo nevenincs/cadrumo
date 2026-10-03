@@ -23,7 +23,8 @@ from cadrumo.application.runtime.approval_binding import RuntimeApprovalBinding
 from cadrumo.application.runtime.approval_sessions import APPROVAL_SESSION_LIMIT, RuntimeApprovalSessions
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, AuthorityState
-from cadrumo.application.user_profile.automation_administration import ApprovalSession, AutomationAdministrationService
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
+from cadrumo.application.user_profile.automation_approval_session import ApprovalSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentReceipt, EnrollmentStage
 from cadrumo.core.identity.digest import ContentDigest

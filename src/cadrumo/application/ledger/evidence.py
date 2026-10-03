@@ -428,6 +428,37 @@ def _require_expected_record(
         raise PurchaseInvoiceEvidenceSnapshotConflictError("purchase invoice evidence changed after preflight")
 
 
+def _evidence_not_found_error() -> PurchaseInvoiceEvidenceNotFoundError:
+    return PurchaseInvoiceEvidenceNotFoundError(
+        translated_message="errors.refused.refused_ledger_evidence_not_found",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+            facts={"evidence_record_present": False},
+        ),
+    )
+
+
+def _locate_expected_record(
+    records: list[PurchaseInvoiceEvidence],
+    *,
+    bucket_id: str,
+    evidence_id: str,
+    expected_current: PurchaseInvoiceEvidence | None,
+) -> tuple[int, PurchaseInvoiceEvidence]:
+    """Find the bucket's evidence row, refusing a missing or preflight-stale target."""
+    record_index = next(
+        (index for index, record in enumerate(records) if record.evidence_id == evidence_id),
+        None,
+    )
+    if record_index is None:
+        raise _evidence_not_found_error()
+    record = records[record_index]
+    if record.bucket_id != bucket_id:
+        raise InternalInvariantError("purchase invoice evidence row belongs to another bucket")
+    _require_expected_record(record, evidence_id=evidence_id, expected_current=expected_current)
+    return record_index, record
+
+
 class PurchaseInvoiceEvidenceSnapshotConflictError(Exception):
     """The target evidence row changed after a result-safety preflight."""
 
@@ -754,13 +785,7 @@ class PurchaseInvoiceEvidenceService:
         for record in _load(self._ports, bucket_id):
             if record.evidence_id == evidence_id:
                 return record
-        raise PurchaseInvoiceEvidenceNotFoundError(
-            translated_message="errors.refused.refused_ledger_evidence_not_found",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
-                facts={"evidence_record_present": False},
-            ),
-        )
+        raise _evidence_not_found_error()
 
     def list_all(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
         """Return all evidence records for a bucket in append order.
@@ -817,22 +842,12 @@ class PurchaseInvoiceEvidenceService:
         for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
             snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
             records = list(snapshot)
-            record_index = next(
-                (index for index, record in enumerate(records) if record.evidence_id == evidence_id),
-                None,
+            record_index, current = _locate_expected_record(
+                records,
+                bucket_id=bucket_id,
+                evidence_id=evidence_id,
+                expected_current=expected_current,
             )
-            if record_index is None:
-                raise PurchaseInvoiceEvidenceNotFoundError(
-                    translated_message="errors.refused.refused_ledger_evidence_not_found",
-                    precondition_verdict=ledger_no_recovery_verdict(
-                        LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
-                        facts={"evidence_record_present": False},
-                    ),
-                )
-            current = records[record_index]
-            if current.bucket_id != bucket_id:
-                raise InternalInvariantError("purchase invoice evidence row belongs to another bucket")
-            _require_expected_record(current, evidence_id=evidence_id, expected_current=expected_current)
             updated = prepare_purchase_invoice_evidence_update(current, patch, updated_at=occurred_at)
             records[record_index] = updated
             event = build_bucket_event(
@@ -898,22 +913,12 @@ class PurchaseInvoiceEvidenceService:
         for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
             snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
             records = list(snapshot)
-            record_index = next(
-                (index for index, record in enumerate(records) if record.evidence_id == evidence_id),
-                None,
+            record_index, removed = _locate_expected_record(
+                records,
+                bucket_id=bucket_id,
+                evidence_id=evidence_id,
+                expected_current=expected_current,
             )
-            if record_index is None:
-                raise PurchaseInvoiceEvidenceNotFoundError(
-                    translated_message="errors.refused.refused_ledger_evidence_not_found",
-                    precondition_verdict=ledger_no_recovery_verdict(
-                        LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
-                        facts={"evidence_record_present": False},
-                    ),
-                )
-            removed = records[record_index]
-            if removed.bucket_id != bucket_id:
-                raise InternalInvariantError("purchase invoice evidence row belongs to another bucket")
-            _require_expected_record(removed, evidence_id=evidence_id, expected_current=expected_current)
             records.pop(record_index)
             event = build_bucket_event(
                 bucket_id=bucket_id,

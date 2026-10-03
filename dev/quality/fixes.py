@@ -99,14 +99,7 @@ def repair(paths: Sequence[Path], *, runner: Callable[[Sequence[str]], int] = _r
         print(f"FAIL  {name} could not complete (exit {status})", file=sys.stderr, flush=True)
         return status if status in {TOOL_MISSING, TOOL_BROKEN} else TOOL_BROKEN
     if strict:
-        try:
-            changed = _content_state(paths) != before
-        except OSError as exc:
-            print(f"FAIL  could not read repaired scope: {exc}", file=sys.stderr, flush=True)
-            return TOOL_BROKEN
-        if changed:
-            print("fix-code repaired caller-owned files; commit the result.", file=sys.stderr, flush=True)
-            return DRIFT
+        return _verify_strict_repair(paths, before)
     return OK
 
 
@@ -123,6 +116,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     return repair(paths)
+
+
+def _verify_strict_repair(paths: Sequence[Path], before: str) -> int:
+    """Verify strict repair."""
+    try:
+        changed = _content_state(paths) != before
+    except OSError as exc:
+        print(f"FAIL  could not read repaired scope: {exc}", file=sys.stderr, flush=True)
+        return TOOL_BROKEN
+    if changed:
+        print("fix-code repaired caller-owned files; commit the result.", file=sys.stderr, flush=True)
+        return DRIFT
+    return OK
 
 
 if __name__ == "__main__":

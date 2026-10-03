@@ -30,7 +30,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import derive_work_unit_id
 from .. import runtime_modelo_filing_record_list as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

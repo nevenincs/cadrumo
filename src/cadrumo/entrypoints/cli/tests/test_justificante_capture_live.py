@@ -114,7 +114,7 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
                         _OPERATOR_SCOPE_PORTS,
                         operation,
                     ),
-                    registration_ports=build_justificante_registration_ports(),
+                    registration_ports=build_justificante_registration_ports(operation),
                     verifier=build_justificante_authenticity_verifier(),
                 ),
             )

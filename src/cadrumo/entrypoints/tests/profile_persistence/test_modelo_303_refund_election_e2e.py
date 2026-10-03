@@ -175,7 +175,7 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             operation=operation,
             **kwargs,
         ).record
@@ -410,7 +410,9 @@ def _file_period(
     assert work_unit is not None
     granting = tuple(
         report
-        for report in build_filing_action_ports(bucket_id=_BUCKET_ID).verification_repository.load().reports.values()
+        for report in build_filing_action_ports(bucket_id=_BUCKET_ID, operation=published_authority_operation())
+        .verification_repository.load()
+        .reports.values()
         if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo
     )
     assert len(granting) == 1

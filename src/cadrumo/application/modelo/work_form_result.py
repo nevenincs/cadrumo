@@ -70,21 +70,16 @@ def _declared_type_result(
     modelo: str, result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None], period: Period
 ) -> ModeloFormResult | None:
     """The result by the modelo's declared "tipo de declaración" rule, over the result boxes this revision has."""
-    if not any(str(casilla_id) in values for casilla_id in result_ids):
+    if not _has_declared_result_value(result_ids, values):
         return None
     present = result_ids
-    amounts = {casilla_id: values.get(str(casilla_id)) for casilla_id in present}
-    known = {casilla_id: amount for casilla_id, amount in amounts.items() if amount is not None}
-    nonzero = [casilla_id for casilla_id, amount in known.items() if amount != 0]
-    settling = nonzero[0] if len(nonzero) == 1 else present[0]
+    known = _known_result_values(present, values)
+    settling = _settling_result_casilla(present, known)
     if len(known) != len(present):
-        return ModeloFormResult(casilla_id=settling, box=None, value=None, direction=ModeloFormResultDirection.UNKNOWN)
+        return _unknown_declared_result(settling)
     disposition = derive_result_disposition(modelo, known, period=period)
     value = sum(known.values(), Decimal("0"))
-    direction = ModeloFormResultDirection.UNKNOWN if disposition is None else _DIRECTION_BY_DISPOSITION[disposition]
-    if direction is ModeloFormResultDirection.NIL and value < 0:
-        # "Negativa" covers a zero result and a negative one nothing carries; only the sign tells them apart.
-        direction = ModeloFormResultDirection.NEGATIVE
+    direction = _declared_result_direction(disposition, value)
     return ModeloFormResult(
         casilla_id=settling,
         box=None,
@@ -93,6 +88,33 @@ def _declared_type_result(
         disposition=disposition,
         election_may_change=disposition in _ELECTABLE_DISPOSITIONS,
     )
+
+
+def _has_declared_result_value(result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None]) -> bool:
+    return any(str(casilla_id) in values for casilla_id in result_ids)
+
+
+def _known_result_values(
+    result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None]
+) -> dict[CasillaId, Decimal]:
+    return {casilla_id: amount for casilla_id in result_ids if (amount := values.get(str(casilla_id))) is not None}
+
+
+def _settling_result_casilla(result_ids: tuple[CasillaId, ...], known: Mapping[CasillaId, Decimal]) -> CasillaId:
+    nonzero = [casilla_id for casilla_id, amount in known.items() if amount != 0]
+    return nonzero[0] if len(nonzero) == 1 else result_ids[0]
+
+
+def _unknown_declared_result(casilla_id: CasillaId) -> ModeloFormResult:
+    return ModeloFormResult(casilla_id=casilla_id, box=None, value=None, direction=ModeloFormResultDirection.UNKNOWN)
+
+
+def _declared_result_direction(disposition: ResultDisposition | None, value: Decimal) -> ModeloFormResultDirection:
+    direction = ModeloFormResultDirection.UNKNOWN if disposition is None else _DIRECTION_BY_DISPOSITION[disposition]
+    if direction is ModeloFormResultDirection.NIL and value < 0:
+        # "Negativa" covers a zero result and a negative one nothing carries; only the sign tells them apart.
+        return ModeloFormResultDirection.NEGATIVE
+    return direction
 
 
 def settlement_result(

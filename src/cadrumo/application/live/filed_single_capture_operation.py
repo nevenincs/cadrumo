@@ -35,10 +35,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -213,7 +212,7 @@ class FiledSingleCaptureExecutor:
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
         period = Period.from_year_and_code(payload.year, payload.period) if payload.period is not None else None
-        composition = self._composition_factory(payload.output_root)
+        composition = self._composition_factory(payload.output_root, operation=context.authority_operation)
         resources = self._browser_resources_factory()
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_PHASES[1])

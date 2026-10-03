@@ -113,8 +113,8 @@ review_status = "pending_review"
 # replaced it: that order's article 1 adds the IRUS field at positions 153-165
 # of the tipo 2 record and moves Blancos to 166-250, and its disposicion final
 # unica applies the change first to the June 2024 declaration. The PDF prints
-# every field of the 2024 design except IRUS (its corpus text sidecar, and
-# dev/registry/tests/test_modelo_038_pre_june_2024_edition.py, compare the two).
+# every field of the 2024 design except IRUS; the corpus text sidecar records
+# the comparison of the two designs.
 # applies_from is the update date the index title states; applies_to is the
 # last month before the amendment's first declaration.
 [sources."aeat-dr-038-2012"]

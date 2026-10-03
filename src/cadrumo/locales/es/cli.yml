@@ -3342,7 +3342,7 @@ cli:
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el fichero exportado de tus registros
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
-        (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+        (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
     history:
       help: Muestra la cadena cronológica de eventos de un movimiento
       id_help: Id del movimiento (o prefijo no ambiguo)
@@ -3821,7 +3821,7 @@ cli:
         plazos ya están corriendo.'
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
-      01-12 (meses). Combínelo con --year para elegir el año.'
+      01-12 (meses). Combínalo con --year para elegir el año.'
     pipeline:
       help: 'Muestra la salud del flujo de trabajo entre dominios para un periodo
         de declaración en una sola tabla: estado de clasificación y revisión de tus
@@ -3853,7 +3853,7 @@ cli:
       modelo_help: Identificador de modelo AEAT para el que preparar los datos (p.
         ej. 130, 303, 100).
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
-        (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+        (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
     refused_incomplete_profile: 'El perfil activo no ha respondido a datos de los
       que depende esta proyección: %{requirements}. Complétalos con ''aeat config

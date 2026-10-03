@@ -20,7 +20,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_localization import resolve_modelo_localization
 from ....tests.locales_root_fixture import locales_root_scope
-from ..work_form import _names_only_its_box, _render_box_locators, build_modelo_work_form
+from ..work_form import build_modelo_work_form
+from ..work_form_localization import names_only_its_box, render_box_locator_patterns
 from ..work_form_models import ModeloFormCasillaAddressV1
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 
@@ -32,7 +33,7 @@ _PERIOD = "0A"
 
 
 def _names_only_its_box_of(text: str, modelo: str = _MODELO) -> bool:
-    return _names_only_its_box(text, _render_box_locators(modelo))
+    return names_only_its_box(text, render_box_locator_patterns(modelo))
 
 
 @pytest.mark.parametrize(

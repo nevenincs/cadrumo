@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
+from functools import partial
 from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
@@ -20,6 +21,7 @@ from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
@@ -110,6 +112,10 @@ def _validated_row_binding_index(value: object, *, surface: str) -> str:
     return str(index)
 
 
+def _duplicate_row_binding_index(row_index: str, *, surface: str, binding_id: BindingId) -> ModeloValidationError:
+    return ModeloValidationError(f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}")
+
+
 def canonical_row_binding_values(
     row_binding_values: Mapping[object, object],
     *,
@@ -122,14 +128,16 @@ def canonical_row_binding_values(
         if not isinstance(raw_rows, Mapping):
             raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
         typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
-        rows: dict[str, str] = {}
-        for raw_row_index, raw_value in typed_rows.items():
-            row_index = _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]")
-            if row_index in rows:
-                raise ModeloValidationError(
-                    f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}",
+        rows = index_unique_row_coordinates(
+            (
+                (
+                    _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]"),
+                    str(raw_value).strip(),
                 )
-            rows[row_index] = str(raw_value).strip()
+                for raw_row_index, raw_value in typed_rows.items()
+            ),
+            duplicate=partial(_duplicate_row_binding_index, surface=surface, binding_id=binding_id),
+        )
         if rows:
             canonical[binding_id] = dict(sorted(rows.items(), key=lambda item: int(item[0])))
     return dict(sorted(canonical.items()))

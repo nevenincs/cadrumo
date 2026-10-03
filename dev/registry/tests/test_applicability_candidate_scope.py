@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.applicability import MODELO_APPLICABILITY_RULES
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue, MappingFactPayload
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 
 from ..compiler.authority import compiled_bundled_authority

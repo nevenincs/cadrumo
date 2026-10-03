@@ -53,6 +53,18 @@ __all__ = [
 ]
 
 
+def _spanish_option_help(
+    path: tuple[str, ...], index: int, by_language: dict[OutputLanguage, dict[tuple[str, ...], _CommandPayload]]
+) -> tuple[str, str]:
+    """Spanish option help."""
+    spanish_param = _param_at(by_language[OutputLanguage.ES].get(path), index)
+    spanish_help = spanish_param["help"] if spanish_param is not None else ""
+    spanish_name = ""
+    if spanish_param is not None and spanish_param["option_names"]:
+        spanish_name = spanish_param["option_names"][0]
+    return spanish_help, spanish_name
+
+
 class _ParamPayload(TypedDict):
     """One command parameter as emitted by the language-pinned walk subprocess."""
 
@@ -437,11 +449,7 @@ def _option_help_map(
     option's first surface name when its help is empty; a non-Spanish
     language contributes only when its help text differs from the Spanish.
     """
-    spanish_param = _param_at(by_language[OutputLanguage.ES].get(path), index)
-    spanish_help = spanish_param["help"] if spanish_param is not None else ""
-    spanish_name = ""
-    if spanish_param is not None and spanish_param["option_names"]:
-        spanish_name = spanish_param["option_names"][0]
+    spanish_help, spanish_name = _spanish_option_help(path, index, by_language)
     descriptions: dict[OutputLanguage, str] = {OutputLanguage.ES: spanish_help or spanish_name or "option"}
     for language, indexed in by_language.items():
         if language is OutputLanguage.ES:

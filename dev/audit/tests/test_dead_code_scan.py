@@ -16,7 +16,13 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
-from ..dead_code import DeadCodeOutcome, offered_module_population, run_dead_code_scan
+from ..dead_code import (
+    MINIMUM_OFFERED_MODULES,
+    DeadCodeOutcome,
+    offered_module_population,
+    run_dead_code_scan,
+    vulture_command,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -161,3 +167,51 @@ def test_an_emptied_production_tree_refuses_though_one_target_file_survives(tmp_
     assert result.is_green is False
     assert "1 Python module(s)" in result.reason
     assert "timeout" not in result.reason
+
+
+def _populated_tree(root: Path) -> Path:
+    """Build a tree that clears the population floor and holds one dead import."""
+    package = root / "src" / "cadrumo"
+    package.mkdir(parents=True)
+    for index in range(MINIMUM_OFFERED_MODULES):
+        (package / f"module_{index:05d}.py").write_text("", encoding="utf-8")
+    (package / "dead.py").write_text("import os\n", encoding="utf-8")
+    whitelist = root / "dev" / "audit"
+    whitelist.mkdir(parents=True)
+    (whitelist / "vulture_whitelist.py").write_text("", encoding="utf-8")
+    # No pyproject.toml: vulture falls back to its defaults when the configured
+    # file is absent, and a manifest here would make ``uv run`` adopt this
+    # directory as a project instead of the synced environment.
+    return package
+
+
+def test_a_module_vulture_cannot_parse_makes_the_scan_unavailable(tmp_path: Path) -> None:
+    """A skipped module must not let the remaining findings pose as the whole list.
+
+    vulture reports an unparseable module on stderr, leaves it out, and still
+    exits 3 when the other modules hold findings. The same tree is scanned
+    before and after the one unparseable module is added, so the change in
+    outcome is attributable to that module alone.
+    """
+    package = _populated_tree(tmp_path)
+
+    complete = run_dead_code_scan(tmp_path)
+
+    assert complete.outcome is DeadCodeOutcome.FINDINGS, complete.reason
+    assert [(finding.path, finding.message) for finding in complete.findings] == [
+        ("src/cadrumo/dead.py", "unused import 'os'"),
+    ]
+
+    (package / "broken.py").write_text("x = 1_\n", encoding="utf-8")
+
+    raw = run_command(vulture_command(), errors="replace", cwd=tmp_path)
+    assert raw.returncode == 3, raw.stderr
+    assert "dead.py:1: unused import 'os'" in raw.stdout
+
+    partial = run_dead_code_scan(tmp_path)
+
+    assert partial.outcome is DeadCodeOutcome.ERROR
+    assert partial.is_green is False
+    assert partial.findings == ()
+    assert "skipped 1 module(s)" in partial.reason
+    assert "src/cadrumo/broken.py (invalid decimal literal" in partial.reason

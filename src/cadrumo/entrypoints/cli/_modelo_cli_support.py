@@ -27,6 +27,7 @@ from ...application.modelo.calculate_input import (
 )
 from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.calculation_actions import get_calculation_revision
+from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
 from ...application.modelo.operation_definitions import ModeloDetailRowWireV1
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
@@ -457,6 +458,11 @@ def parse_work_calculate_wire_specs(
         dict(parse_relation_override(spec) for spec in (relation or ())),
         tuple(parse_calculation_wire_row_spec(spec) for spec in (row or ())),
     )
+
+
+def calculation_overrides(pairs: Mapping[str, str]) -> tuple[ModeloCalculationOverride, ...]:
+    """Carry parsed override tokens into the calculation request in their declared order."""
+    return tuple(ModeloCalculationOverride(key=key, value=value) for key, value in pairs.items())
 
 
 def optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:

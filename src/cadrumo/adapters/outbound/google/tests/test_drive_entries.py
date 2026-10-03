@@ -36,12 +36,30 @@ from ..calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 from ..drive_entries import (
     OWNERSHIP_KEY,
     OWNERSHIP_VALUE,
+    DriveOwnership,
     build_owned_entry_query,
-    escape_drive_query_name,
+    classify_drive_ownership,
     require_drive_entry_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+@pytest.mark.parametrize(
+    ("app_properties", "expected"),
+    [
+        ({OWNERSHIP_KEY: OWNERSHIP_VALUE}, DriveOwnership.OWNED),
+        ({OWNERSHIP_KEY: OWNERSHIP_VALUE, "other": "kept"}, DriveOwnership.OWNED),
+        ({}, DriveOwnership.UNMARKED),
+        ({OWNERSHIP_KEY: "someone-else"}, DriveOwnership.FOREIGN),
+        ({"unrelated": "value"}, DriveOwnership.FOREIGN),
+    ],
+)
+def test_ownership_classification_adopts_marked_and_unmarked_but_not_foreign(
+    app_properties: dict[str, str], expected: DriveOwnership
+) -> None:
+    assert classify_drive_ownership(app_properties) is expected
+
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
@@ -141,17 +159,17 @@ def _owned(entry_id: str | None, name: str = "target") -> dict[str, Any]:
 
 
 def test_apostrophe_in_name_is_escaped_into_the_query_literal() -> None:
-    """A name containing an apostrophe must not close the query literal early."""
-    assert escape_drive_query_name("va'ult") == "va\\'ult"
     query = build_owned_entry_query(parent_id="root", name="va'ult", mime_type=_FOLDER_MIME)
     assert "name = 'va\\'ult'" in query
     assert "name = 'va'ult'" not in query
 
 
-def test_backslash_is_escaped_before_the_apostrophe_escape() -> None:
-    """The backslash replacement must run first so it cannot double-escape."""
-    assert escape_drive_query_name("a\\b") == "a\\\\b"
-    assert escape_drive_query_name("a\\'b") == "a\\\\\\'b"
+def test_query_builder_escapes_parent_id_name_and_mime_literals() -> None:
+    query = build_owned_entry_query(parent_id="root'\\id", name="va'ult", mime_type="mime'type")
+
+    assert query == (
+        "'root\\'\\\\id' in parents and name = 'va\\'ult' and mimeType = 'mime\\'type' and trashed = false"
+    )
 
 
 def test_folder_lookup_escapes_the_configured_name_on_the_real_call_path() -> None:

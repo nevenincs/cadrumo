@@ -8,7 +8,7 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.application.modelo.mcp_query_operation.ModeloBindingValueContractUnsupportedError",
+        "cadrumo.application.modelo.mcp_query_contracts.ModeloBindingValueContractUnsupportedError",
         ErrorCode(
             code="REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED",
             category=ErrorCategory.REFUSED,
@@ -18,7 +18,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.mcp_query_operation.ModeloBindingValueInvalidError",
+        "cadrumo.application.modelo.mcp_query_contracts.ModeloBindingValueInvalidError",
         ErrorCode(
             code="REFUSED_MODELO_BINDING_VALUE_INVALID",
             category=ErrorCategory.REFUSED,
@@ -328,7 +328,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.edit_parsing.ModeloEditParseRefusedError",
+        "cadrumo.application.modelo.edit_parse_errors.ModeloEditParseRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EDIT_PARSE",
             category=ErrorCategory.REFUSED,
@@ -368,7 +368,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_form.ModeloWorkFormLayoutError",
+        "cadrumo.application.modelo.work_form_errors.ModeloWorkFormLayoutError",
         ErrorCode(
             code="INTERNAL_MODELO_WORK_FORM_LAYOUT",
             category=ErrorCategory.INTERNAL,

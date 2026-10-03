@@ -24,6 +24,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva_compensation.balance import CompensationExpiryYear, IvaWalletBalanceReport
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -39,10 +40,10 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -152,9 +153,10 @@ def _profile_history_repository(
     factory: ModeloIvaWalletSeedPortsFactory,
     *,
     profile_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationHistoryRepositoryProtocol:
     """Build the existing wallet port bundle for the requested profile only."""
-    ports = factory(bucket_id=profile_id)
+    ports = factory(bucket_id=profile_id, operation=operation)
     if ports.work_unit_repository.bucket_id != profile_id or ports.calculation_repository.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return ports.iva_compensation_history_repository
@@ -175,16 +177,12 @@ class ModeloIvaWalletBalanceExecutor:
         """Capture one bounded balance projection and report no domain effect."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        repository = _profile_history_repository(self._factory, profile_id=profile_id)
+        require_operation_profile(request, context, payload.profile_id)
+        repository = _profile_history_repository(
+            self._factory, profile_id=profile_id, operation=context.authority_operation
+        )
 
         async def capture() -> str:
             await context.events.phase(_READ_PHASE)
@@ -196,6 +194,7 @@ class ModeloIvaWalletBalanceExecutor:
                     return query_iva_wallet_balance(
                         as_of_year=payload.as_of_year,
                         repository=repository,
+                        operation=context.authority_operation,
                     )
 
             report = await asyncio.to_thread(read_report)

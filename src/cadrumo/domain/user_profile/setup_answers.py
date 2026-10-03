@@ -41,7 +41,7 @@ from ..calculations.registry.entity_type import require_entity_type, require_leg
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import require_irpf_income_category
 from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
-from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
 from ..calculations.registry.situacion_familiar_catalogue import require_situacion_familiar
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..contribuyente.ccaa import CCAA

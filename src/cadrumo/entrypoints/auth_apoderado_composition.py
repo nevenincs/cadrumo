@@ -6,7 +6,7 @@ from uuid import UUID
 
 from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from ..adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-from ..application.auth.apoderado_operation import ApoderadoOperationPorts
+from ..application.auth.apoderado_execution import ApoderadoOperationPorts
 from ..application.auth.diagnostic_report_operation import AuthDiagnosticReportPorts
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError

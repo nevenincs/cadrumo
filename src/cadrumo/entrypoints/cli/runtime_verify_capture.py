@@ -13,12 +13,13 @@ from ...application.live.verify_capture_operation import (
     VerifyCapturePublicResultV1,
     VerifyCaptureRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_verify_capture_for_cli(
@@ -49,25 +50,31 @@ def read_verify_capture_for_cli(
         projection = completed.projection
         if not isinstance(projection, VerifyCapturePublicResultV1):
             raise ValueError("verify capture projection has an invalid type")
-        if (
-            projection.bucket_id != str(profile_id)
-            or projection.surface is not surface
-            or tax_id_identity_token(projection.nif) != tax_id_identity_token(nif)
-            or projection.expected != expected
-            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or completed.effect not in {OperationEffect.UPDATED, OperationEffect.NONE}
-        ):
+        if _verify_capture_receipt_invalid(completed, projection, profile_id, surface, nif, expected):
             raise ValueError("verify capture result disagrees with its submitted scope or receipt")
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return projection
 
 
 __all__ = ["read_verify_capture_for_cli"]
+
+
+def _verify_capture_receipt_invalid(
+    completed: RegisteredOperationCompletion[VerifyCapturePublicResultV1],
+    projection: VerifyCapturePublicResultV1,
+    profile_id: UUID,
+    surface: VerifySurface,
+    nif: str,
+    expected: IdentityCheckVerdictValue | None,
+) -> bool:
+    """Correlate normalized taxpayer identity and surface with an updated-or-idempotent receipt."""
+    return (
+        projection.bucket_id != str(profile_id)
+        or projection.surface is not surface
+        or tax_id_identity_token(projection.nif) != tax_id_identity_token(nif)
+        or (projection.expected != expected)
+        or (completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED)
+        or (completed.refusal_code is not None)
+        or (completed.effect not in {OperationEffect.UPDATED, OperationEffect.NONE})
+    )

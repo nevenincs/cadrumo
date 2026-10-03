@@ -14,7 +14,8 @@ from uuid import UUID
 from pydantic import SecretBytes
 
 from ...core.identity.digest import ContentDigest
-from .automation_administration import ApprovalSession, AutomationAdministrationService
+from .automation_administration_service import AutomationAdministrationService
+from .automation_approval_session import ApprovalSession
 from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .automation_enrollment import AutomationInventory, EnrollmentProposal, EnrollmentTransition
 

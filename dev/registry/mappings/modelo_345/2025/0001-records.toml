@@ -1,0 +1,737 @@
+schema_version = 1
+fragment_id = 'records'
+modelo = '345'
+design_epoch = '2025'
+source_ref = 'aeat-dr-345-2025'
+source_sha256 = 'fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd'
+
+[[records]]
+sheet = 'PDF record design'
+record_identity = 'PDF record design'
+export_record_id = 'modelo-345-declarante'
+record_type = 'declarante'
+required = true
+
+[[records]]
+sheet = 'Tipo 2 - Registro De Declarados'
+record_identity = 'Tipo 2 - Registro De Declarados'
+export_record_id = 'modelo-345-declarado'
+record_type = 'declarado'
+required = true
+
+[[entries]]
+export_field_id = 'modelo-345-t1-record-type'
+kind = 'literal'
+literal = '1'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 25
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-modelo'
+kind = 'literal'
+literal = '345'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 27
+record_identity = 'PDF record design'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-ejercicio'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-4',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 29
+record_identity = 'PDF record design'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-nif-declarante'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-2',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 32
+record_identity = 'PDF record design'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-razon-social'
+kind = 'casilla'
+casilla_id = 'declarante-razon-social'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-2',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 50
+record_identity = 'PDF record design'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-tipo-soporte'
+kind = 'literal'
+literal = 'T'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-5',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 55
+record_identity = 'PDF record design'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-persona-relacion-telefono'
+kind = 'header'
+producer_key = 'contact_person.phone'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 61
+record_identity = 'PDF record design'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t1-persona-relacion-nombre'
+kind = 'header'
+producer_key = 'contact_person.full_name'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 63
+record_identity = 'PDF record design'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t1-numero-identificativo'
+kind = 'casilla'
+casilla_id = 'numero-identificativo-declaracion'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 67
+record_identity = 'PDF record design'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-complementaria-sustitutiva'
+kind = 'casilla'
+casilla_id = 'declaracion-complementaria-sustitutiva'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 81
+record_identity = 'PDF record design'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-numero-identificativo-anterior'
+kind = 'casilla'
+casilla_id = 'numero-identificativo-anterior'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 101
+record_identity = 'PDF record design'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-total-declarados'
+kind = 'casilla'
+casilla_id = 'total-declarados'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 117
+record_identity = 'PDF record design'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-345-t1-importe-total-aportaciones-entero'
+kind = 'casilla'
+casilla_id = 'importe-total-aportaciones'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 141
+record_identity = 'PDF record design'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t1-importe-total-aportaciones-decimal'
+kind = 'casilla'
+casilla_id = 'importe-total-aportaciones'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 144
+record_identity = 'PDF record design'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t1-blancos'
+kind = 'filler'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 147
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-record-type'
+kind = 'literal'
+literal = '2'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 165
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-modelo'
+kind = 'literal'
+literal = '345'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 167
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-ejercicio'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-4',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 169
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-nif-declarante'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-2',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 172
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-nif-declarado'
+kind = 'casilla'
+casilla_id = 'declarado-nif'
+legal_refs = [
+    'orden-hfp-823-2022:art-2',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 175
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-representante-legal-nif'
+kind = 'casilla'
+casilla_id = 'representante-legal-nif'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 203
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-nombre-declarado'
+kind = 'casilla'
+casilla_id = 'declarado-nombre'
+legal_refs = [
+    'orden-hfp-823-2022:art-2',
+    'orden-hfp-823-2022:art-3',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 212
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '7'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-anio-nacimiento'
+kind = 'casilla'
+casilla_id = 'anio-nacimiento'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 223
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-codigo-provincia'
+kind = 'casilla'
+casilla_id = 'codigo-provincia'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 226
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-clave'
+kind = 'casilla'
+casilla_id = 'clave'
+legal_refs = [
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-528-2023:art-unico',
+    'orden-hac-1504-2024:art-octavo',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2024-amendment-hac-1504',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 277
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-subclave'
+kind = 'casilla'
+casilla_id = 'subclave'
+legal_refs = [
+    'orden-hfp-528-2023:art-unico',
+    'orden-hfp-1397-2023:art-sexto',
+    'orden-hac-1504-2024:art-octavo',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2023-amendment-hfp-1397',
+    'boe-modelo-345-2024-amendment-hac-1504',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 587
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-beneficiario-nif'
+kind = 'casilla'
+casilla_id = 'beneficiario-nif'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 834
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-importe-entero'
+kind = 'casilla'
+casilla_id = 'importe'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 877
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-importe-decimal'
+kind = 'casilla'
+casilla_id = 'importe'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 879
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-plan-pensiones-denominacion'
+kind = 'casilla'
+casilla_id = 'plan-pensiones-denominacion'
+legal_refs = [
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-528-2023:art-unico',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 893
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-fondo-pensiones-numero-registro'
+kind = 'casilla'
+casilla_id = 'fondo-pensiones-numero-registro'
+legal_refs = [
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-528-2023:art-unico',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 898
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-fondo-pensiones-nif'
+kind = 'casilla'
+casilla_id = 'fondo-pensiones-nif'
+legal_refs = [
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-528-2023:art-unico',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 904
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-datos-adicionales-d'
+kind = 'casilla'
+casilla_id = 'entidad-aseguradora-nif'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 908
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '15'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-pias-fecha-primera-prima'
+kind = 'casilla'
+casilla_id = 'pias-fecha-primera-prima'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 927
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-pias-importe-acumulado'
+kind = 'casilla'
+casilla_id = 'pias-importe-acumulado'
+legal_refs = ['orden-hfp-823-2022:art-3']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 938
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-datos-adicionales-m'
+kind = 'casilla'
+casilla_id = 'datos-adicionales-clave-m'
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 958
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '17'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-rendimientos-superiores-60000'
+kind = 'casilla'
+casilla_id = 'rendimientos-trabajo-superiores-60000'
+legal_refs = [
+    'orden-hfp-528-2023:art-unico',
+    'orden-hac-1504-2024:art-octavo',
+    'orden-hac-1430-2025:art-septimo',
+]
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2024-amendment-hac-1504',
+    'boe-modelo-345-2025-amendment-hac-1430',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 1001
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '18'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-empleador-nif'
+kind = 'casilla'
+casilla_id = 'empleador-nif'
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 1027
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-empleador-nombre'
+kind = 'casilla'
+casilla_id = 'empleador-nombre'
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 1051
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-345-t2-devoluciones-excesos'
+kind = 'casilla'
+casilla_id = 'devoluciones-excesos'
+legal_refs = ['orden-hfp-528-2023:art-unico']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-528',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 1059
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '20'
+
+[[entries]]
+export_field_id = 'modelo-345-t2-blancos'
+kind = 'filler'
+legal_refs = ['orden-hfp-823-2022:art-1']
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-base-order',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarados'
+source_row = 1084
+record_identity = 'Tipo 2 - Registro De Declarados'
+ordinal = '21'

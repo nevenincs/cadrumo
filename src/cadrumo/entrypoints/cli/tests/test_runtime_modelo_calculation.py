@@ -15,6 +15,7 @@ from cadrumo.application.modelo.calculation_request_fields import (
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     Modelo349RectificacionRowWireV1,
+    ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateRequest,
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
@@ -103,6 +104,7 @@ def test_private_rows_over_old_frame_limit_retain_operation_id_after_control_los
     request = ModeloWorkCalculateRequest(
         work_unit_id="b" * 64,
         actor="operator",
+        caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
         inputs=ModeloCalculationInputFieldsV1(casilla_overrides=overrides),
     )
     assert len(request.model_dump_json()) > 60_000
@@ -123,6 +125,7 @@ def test_over_limit_private_rows_refuse_before_transport_or_exception_echo() -> 
     request = ModeloWorkCalculateRequest(
         work_unit_id="b" * 64,
         actor="operator",
+        caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
         inputs=ModeloCalculationInputFieldsV1(casilla_overrides=overrides),
     )
     assert len(request.model_dump_json().encode("utf-8")) > SUBMISSION_PAYLOAD_MAX_BYTES

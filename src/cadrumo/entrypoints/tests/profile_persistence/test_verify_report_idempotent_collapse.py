@@ -58,12 +58,12 @@ def _verification_repositories_for_test(repos: Repos):
     )
 
 
-def _filing_ports_for_test(repos: Repos):
+def _filing_ports_for_test(repos: Repos, *, operation: PinnedAuthorityOperation):
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     bucket_id = wu_repo.bucket_id
     assert bucket_id is not None
     return replace(
-        build_filing_action_ports(bucket_id=bucket_id),
+        build_filing_action_ports(bucket_id=bucket_id, operation=operation),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
@@ -156,7 +156,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
         # the last-seen run_at (T3 from the upsert), not two accumulated rows.
         stored = list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            ports=_filing_ports_for_test(repos),
+            ports=_filing_ports_for_test(repos, operation=_authority_operation_for_test),
             operation=_authority_operation_for_test,
         )
         assert len(stored) == 1
@@ -199,7 +199,7 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
         assert by_b.verification_report_id != by_a.verification_report_id
         stored = list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            ports=_filing_ports_for_test(repos),
+            ports=_filing_ports_for_test(repos, operation=_authority_operation_for_test),
             operation=_authority_operation_for_test,
         )
         assert len(stored) == 2

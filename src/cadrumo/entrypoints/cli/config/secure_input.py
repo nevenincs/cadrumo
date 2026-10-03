@@ -11,7 +11,7 @@ Both machine channels read at most :data:`_MAX_SECRETS_BYTES` and validate the
 parsed object against a strict ``extra="forbid"`` pydantic model whose secret
 fields are :class:`~pydantic.SecretStr`, so a missing/extra field refuses and the
 values never render in a repr. Parsing rejects a repeated object key at any
-nesting depth (see :func:`_reject_duplicate_object_keys`) rather than silently
+nesting depth (see :func:`~cadrumo.core.hashing.reject_duplicate_json_members`) rather than silently
 resolving it to its last occurrence, so the strict-parse contract is total: a
 collision can never slip past ``extra="forbid"`` by being resolved before
 pydantic sees the mapping. This module carries the passphrase channel for the
@@ -54,6 +54,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import reject_duplicate_json_members
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.tty import stdin_is_tty
 
@@ -155,27 +156,6 @@ def clear_staged_machine_secret_payloads() -> None:
     _STAGED_MACHINE_SECRET_PAYLOADS.set(None)
 
 
-def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    """Build a JSON object from ``pairs``, refusing a repeated key.
-
-    Installed as :func:`json.loads`'s ``object_pairs_hook`` so it runs for
-    every object the decoder builds, including nested ones. Plain
-    :func:`json.loads` silently keeps the LAST occurrence of a duplicate key,
-    which resolves the collision before the strict ``extra="forbid"`` model can
-    ever observe it — a payload assembled from concatenated fragments or a
-    templating bug could then silently rewrap the secret store under a value
-    the caller never intended. The raised message names only the offending
-    KEY (a static field name, e.g. ``"recovery_code"``), never a payload
-    value, so no secret can reach it.
-    """
-    seen: set[str] = set()
-    for key, _value in pairs:
-        if key in seen:
-            raise ValueError(f"duplicate key in secrets-stdin payload: {key!r}")
-        seen.add(key)
-    return dict(pairs)
-
-
 def validate_secrets_payload[SecretsModelT: BaseModel](
     raw: bytes | bytearray,
     model: type[SecretsModelT],
@@ -200,7 +180,7 @@ def validate_secrets_payload[SecretsModelT: BaseModel](
     expected_fields = ", ".join(model.model_fields)
     try:
         decoded = raw.decode(UTF_8_ENCODING)
-        payload = json.loads(decoded, object_pairs_hook=_reject_duplicate_object_keys)
+        payload = json.loads(decoded, object_pairs_hook=reject_duplicate_json_members)
     except (ValueError, UnicodeDecodeError) as exc:
         raise _CliRefusedBoundaryError(
             translated_message=invalid_json_key,

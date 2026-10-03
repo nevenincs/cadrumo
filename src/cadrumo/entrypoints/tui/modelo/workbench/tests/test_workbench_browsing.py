@@ -27,7 +27,7 @@ from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList, CasillaListEntry
 from ..navigator import looks_like_identifier, presented_form, section_title
 from ..screen import ModeloWorkbenchScreen
-from ..search import WorkbenchSearchPanel, folded
+from ..search import SearchEntry, WorkbenchSearchPanel, search
 from ..sorting import SortOrder
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
@@ -104,8 +104,19 @@ def test_a_section_is_named_by_its_heading_its_official_heading_its_boxes_or_its
     assert by_official.disclosure is ModeloFormTextDisclosure.OFFICIAL_SPANISH
 
 
-def test_search_folds_case_and_accents() -> None:
-    assert folded("Liquidación ÚNICA") == "liquidacion unica"
+@pytest.mark.parametrize("query", ["Liquidación ÚNICA", "liquidacion unica", "LIQUIDACIÓN", "  única  "])
+def test_search_folds_case_and_accents(query: str) -> None:
+    entry = SearchEntry(
+        key=("page", "0100"),
+        box="0100",
+        label="Liquidación única",
+        description="",
+        page="III. Total",
+        value="",
+        origin="",
+    )
+
+    assert search((entry,), query) == (entry,)
 
 
 @pytest.mark.parametrize(

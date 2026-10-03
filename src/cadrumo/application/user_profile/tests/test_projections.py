@@ -10,7 +10,7 @@ import pytest
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ....domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
-from ....domain.calculations.registry.iva_schema_vocabulary import (
+from ....domain.calculations.registry.iva_regime_vocabulary import (
     default_iva_regime,
     iva_regime_exento_token,
     iva_regime_no_aplica_token,

@@ -17,14 +17,11 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaEvolutionKind,
 )
 
-from ..modelo_casilla_catalogue import (
-    CasillaOccurrence,
-    CollapseVerificationError,
-    ModeloCasillaCatalogue,
-    _segments,
-    load_casilla_values,
-    resume_install,
-)
+from ..casilla_catalogue_install import resume_install
+from ..casilla_catalogue_models import CasillaOccurrence, CollapseVerificationError
+from ..casilla_source_inventory import load_casilla_values
+from ..casilla_text_comparison import _segments
+from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

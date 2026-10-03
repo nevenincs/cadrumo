@@ -22,13 +22,15 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
     authority_component_identity,
+)
+from cadrumo.domain.calculations.registry.authority_cache import retained_object_size
+from cadrumo.domain.calculations.registry.authority_component_codec import (
     decode_authority_component,
     encode_authority_component,
 )
-from cadrumo.domain.calculations.registry.authority_cache import retained_object_size
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DATABASE_FORMAT
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import SnapshotGlobalCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, SnapshotGlobalCatalogues
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory
 
@@ -142,19 +144,45 @@ def _compiled_component(
 
 
 def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledComponent, ...]:
-    profile_schema = artifact.profile_schema
+    components, fact_queries, fact_values = _fact_components(artifact)
+    components.extend(_profile_snapshot_components(artifact, fact_queries, fact_values))
+    components.extend(_runtime_catalogue_components(artifact))
+    components.extend(_reference_components(artifact))
+    components.extend(_modelo_components(artifact, fact_queries, fact_values))
+    components.extend(_evidence_components(artifact))
+    return tuple(
+        sorted(
+            components,
+            key=lambda item: (
+                authority_component_identity(item.query)[0].value,
+                authority_component_identity(item.query)[1],
+            ),
+        )
+    )
+
+
+def _fact_components(
+    artifact: AuthorityArtifact,
+) -> tuple[list[_CompiledComponent], tuple[GovernedFactComponentQuery, ...], tuple[object, ...]]:
     facts = artifact.catalogues.facts.facts
     fact_queries = tuple(GovernedFactComponentQuery(fact_id) for fact_id in sorted(facts))
     fact_values = tuple(facts[query.fact_id] for query in fact_queries)
-    components: list[_CompiledComponent] = [
-        _compiled_component(query, artifact.catalogues.facts.facts[query.fact_id]) for query in fact_queries
-    ]
+    components = [_compiled_component(query, artifact.catalogues.facts.facts[query.fact_id]) for query in fact_queries]
+    return components, fact_queries, fact_values
+
+
+def _profile_snapshot_components(
+    artifact: AuthorityArtifact,
+    fact_queries: tuple[GovernedFactComponentQuery, ...],
+    fact_values: tuple[object, ...],
+) -> list[_CompiledComponent]:
+    profile_schema = artifact.profile_schema
     profile_query = ProfileSchemaComponentQuery(profile_schema.id)
-    components.append(_compiled_component(profile_query, profile_schema))
     snapshot_globals_query = SnapshotGlobalsComponentQuery()
     snapshot_globals = SnapshotGlobalCatalogues.from_catalogues(artifact.catalogues)
     snapshot_globals_payload = encode_authority_component(snapshot_globals_query, snapshot_globals)
-    components.append(
+    return [
+        _compiled_component(profile_query, profile_schema),
         _compiled_component(
             snapshot_globals_query,
             snapshot_globals,
@@ -165,17 +193,35 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
                 fact_queries,
                 fact_values,
             ),
-        )
-    )
+        ),
+    ]
+
+
+def _runtime_catalogue_components(artifact: AuthorityArtifact) -> list[_CompiledComponent]:
+    components: list[_CompiledComponent] = []
     for family in type(artifact.catalogues.runtime).model_fields:
         query = RuntimeCatalogueComponentQuery(family)
         components.append(_compiled_component(query, getattr(artifact.catalogues.runtime, family)))
+    return components
+
+
+def _reference_components(artifact: AuthorityArtifact) -> list[_CompiledComponent]:
+    components: list[_CompiledComponent] = []
     for reference_id, reference in sorted(artifact.catalogues.legal.items()):
         query = ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
         components.append(_compiled_component(query, reference))
     for reference_id, reference in sorted(artifact.catalogues.sources.items()):
         query = ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
         components.append(_compiled_component(query, reference))
+    return components
+
+
+def _modelo_components(
+    artifact: AuthorityArtifact,
+    fact_queries: tuple[GovernedFactComponentQuery, ...],
+    fact_values: tuple[object, ...],
+) -> list[_CompiledComponent]:
+    components: list[_CompiledComponent] = []
     for modelo in sorted(artifact.modelos, key=lambda item: str(item.id)):
         directory_query = ModeloDirectoryComponentQuery(str(modelo.id))
         directory = ModeloRevisionDirectory.from_modelo(
@@ -184,64 +230,112 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
         )
         components.append(_compiled_component(directory_query, directory))
         for revision_id, revision in sorted(modelo.revisions.items(), key=lambda item: str(item[0])):
-            query = ModeloRevisionComponentQuery(str(modelo.id), str(revision_id))
-            base_revision = revision.model_copy(update={"export_layouts": (), "form_layouts": ()})
-            payload = encode_authority_component(query, base_revision)
-            legal_ids, source_ids = collect_snapshot_ref_ids(modelo, base_revision)
-            reference_queries = tuple(
-                ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
-                for reference_id in sorted(legal_ids)
-            ) + tuple(
-                ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
-                for reference_id in sorted(source_ids)
-            )
-            revision_fact_queries = _decoded_fact_dependencies(
-                query,
-                payload,
-                fact_queries,
-                fact_values,
-                support_dependency=directory,
-            )
-            components.append(
-                _compiled_component(
-                    query,
-                    base_revision,
-                    payload=payload,
-                    dependencies=(*revision_fact_queries, directory_query, *reference_queries),
+            components.extend(
+                _revision_components(
+                    modelo, revision_id, revision, directory_query, directory, fact_queries, fact_values
                 )
             )
-            for layout in revision.export_layouts:
-                layout_query = ExportLayoutComponentQuery(str(modelo.id), str(revision_id), str(layout.id))
-                layout_dependencies = tuple(
-                    ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
-                    for reference_id in sorted(set(layout.legal_refs))
-                ) + tuple(
-                    ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
-                    for reference_id in sorted(set(layout.source_refs))
-                )
-                components.append(_compiled_component(layout_query, layout, dependencies=layout_dependencies))
-            for form_layout in revision.form_layouts:
-                form_query = FormLayoutComponentQuery(str(modelo.id), str(revision_id))
-                form_dependencies = tuple(
-                    ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
-                    for reference_id in sorted({item.source_ref for item in form_layout.design_sources})
-                )
-                components.append(_compiled_component(form_query, form_layout, dependencies=form_dependencies))
+    return components
+
+
+def _revision_components(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+    directory_query: ModeloDirectoryComponentQuery,
+    directory: ModeloRevisionDirectory,
+    fact_queries: tuple[GovernedFactComponentQuery, ...],
+    fact_values: tuple[object, ...],
+) -> list[_CompiledComponent]:
+    base = _base_revision_component(
+        modelo, revision_id, revision, directory_query, directory, fact_queries, fact_values
+    )
+    return [
+        base,
+        *_export_layout_components(modelo, revision_id, revision),
+        *_form_layout_components(modelo, revision_id, revision),
+    ]
+
+
+def _base_revision_component(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+    directory_query: ModeloDirectoryComponentQuery,
+    directory: ModeloRevisionDirectory,
+    fact_queries: tuple[GovernedFactComponentQuery, ...],
+    fact_values: tuple[object, ...],
+) -> _CompiledComponent:
+    query = ModeloRevisionComponentQuery(str(modelo.id), str(revision_id))
+    base_revision = revision.model_copy(update={"export_layouts": (), "form_layouts": ()})
+    payload = encode_authority_component(query, base_revision)
+    legal_ids, source_ids = collect_snapshot_ref_ids(modelo, base_revision)
+    reference_queries = tuple(
+        ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
+        for reference_id in sorted(legal_ids)
+    ) + tuple(
+        ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
+        for reference_id in sorted(source_ids)
+    )
+    revision_fact_queries = _decoded_fact_dependencies(
+        query,
+        payload,
+        fact_queries,
+        fact_values,
+        support_dependency=directory,
+    )
+    return _compiled_component(
+        query,
+        base_revision,
+        payload=payload,
+        dependencies=(*revision_fact_queries, directory_query, *reference_queries),
+    )
+
+
+def _export_layout_components(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+) -> list[_CompiledComponent]:
+    components: list[_CompiledComponent] = []
+    for layout in revision.export_layouts:
+        layout_query = ExportLayoutComponentQuery(str(modelo.id), str(revision_id), str(layout.id))
+        layout_dependencies = tuple(
+            ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
+            for reference_id in sorted(set(layout.legal_refs))
+        ) + tuple(
+            ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
+            for reference_id in sorted(set(layout.source_refs))
+        )
+        components.append(_compiled_component(layout_query, layout, dependencies=layout_dependencies))
+    return components
+
+
+def _form_layout_components(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+) -> list[_CompiledComponent]:
+    components: list[_CompiledComponent] = []
+    for form_layout in revision.form_layouts:
+        form_query = FormLayoutComponentQuery(str(modelo.id), str(revision_id))
+        form_dependencies = tuple(
+            ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
+            for reference_id in sorted({item.source_ref for item in form_layout.design_sources})
+        )
+        components.append(_compiled_component(form_query, form_layout, dependencies=form_dependencies))
+    return components
+
+
+def _evidence_components(artifact: AuthorityArtifact) -> list[_CompiledComponent]:
+    components: list[_CompiledComponent] = []
     for item in artifact.evidence.legal:
         query = EvidenceComponentQuery(item.legal_reference_id, AuthorityComponentKind.LEGAL_EVIDENCE)
         components.append(_compiled_component(query, item))
     for item in artifact.evidence.sources:
         query = EvidenceComponentQuery(item.source_reference_id, AuthorityComponentKind.SOURCE_EVIDENCE)
         components.append(_compiled_component(query, item))
-    return tuple(
-        sorted(
-            components,
-            key=lambda item: (
-                authority_component_identity(item.query)[0].value,
-                authority_component_identity(item.query)[1],
-            ),
-        )
-    )
+    return components
 
 
 def _decoded_fact_dependencies(

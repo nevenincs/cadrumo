@@ -231,18 +231,7 @@ class ReviewCatalogue:
 
     def _scan_run(self, directory: Path, previous: _RunScan | None) -> _RunScan:
         known = {frame.stem: frame for frame in previous.view.frames} if previous else {}
-        frames: list[CatalogueFrame] = []
-        unrecognised: list[str] = []
-        for entry in _files(directory / "png", _PNG_SUFFIX):
-            stem = entry.name.removesuffix(_PNG_SUFFIX)
-            identity = parse_stem(stem)
-            if identity is None:
-                unrecognised.append(entry.name)
-                continue
-            frame = self._frame(directory.name, stem, identity, entry, known.get(stem))
-            if frame is not None:
-                frames.append(frame)
-        frames.sort(key=_frame_order)
+        frames, unrecognised = self._scan_run_frames(directory, known)
         texts = frozenset(entry.name.removesuffix(_TEXT_SUFFIX) for entry in _files(directory / "text", _TEXT_SUFFIX))
 
         manifest, manifest_error, manifest_modified_ns = self._manifest(directory, previous)
@@ -265,6 +254,24 @@ class ReviewCatalogue:
             records=records,
         )
         return _RunScan(view=view, manifest_modified_ns=manifest_modified_ns)
+
+    def _scan_run_frames(
+        self, directory: Path, known: dict[str, CatalogueFrame]
+    ) -> tuple[list[CatalogueFrame], list[str]]:
+        """Read and order the settled frame population of a run."""
+        frames: list[CatalogueFrame] = []
+        unrecognised: list[str] = []
+        for entry in _files(directory / "png", _PNG_SUFFIX):
+            stem = entry.name.removesuffix(_PNG_SUFFIX)
+            identity = parse_stem(stem)
+            if identity is None:
+                unrecognised.append(entry.name)
+                continue
+            frame = self._frame(directory.name, stem, identity, entry, known.get(stem))
+            if frame is not None:
+                frames.append(frame)
+        frames.sort(key=_frame_order)
+        return frames, unrecognised
 
     def _frame(
         self,

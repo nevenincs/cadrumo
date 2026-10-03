@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 from pathlib import Path
-from typing import Never
 from uuid import UUID
 
 import typer
@@ -33,24 +32,10 @@ from ...application.modelo.review_package_exchange_operation import (
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client, require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](
-    completed: RegisteredOperationCompletion[ProjectionT],
-) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context, bucket_id: str | None) -> RuntimeFrontendClient:
@@ -104,7 +89,7 @@ def _correlate[ProjectionT: BaseModel](
         or getattr(projection, "profile_id", None) != profile_id
         or getattr(projection, "effect", None) is not completed.effect
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -131,7 +116,7 @@ def run_review_package_sign(
         or projection.signature_path != str(request.output)
         or projection.bucket_id != str(client.profile_id)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -168,7 +153,7 @@ def run_review_package_counter_sign(
         or projection.bucket_id != str(client.profile_id)
         or projection.note != request.note
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -214,7 +199,7 @@ def run_review_package_encrypt_for_recipient(
             )
         )
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -245,7 +230,7 @@ def run_review_package_decrypt(
         or projection.output_path != str(request.output)
         or projection.bucket_id != str(client.profile_id)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -289,7 +274,7 @@ def run_review_package_encrypt_feedback(
         or projection.has_counter_sign is not (request.receipt is not None)
         or projection.valid_until is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -330,7 +315,7 @@ def run_review_package_import_feedback(
         or projection.attached_to_journal is not (projection.counter_signature_verified is True)
         or (projection.attached_to_journal and projection.effect is not OperationEffect.UPDATED)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 

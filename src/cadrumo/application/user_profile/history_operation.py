@@ -4,48 +4,27 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Annotated, Protocol, Self
-from uuid import UUID
+from typing import Protocol
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
-from ...core.time.utc import UtcInstant
-from ...domain.buckets.event import BucketEventType, bucket_event_order_key
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..bucket_event_projection import BucketEventProjection
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from .access_contracts import (
     AccessAction,
@@ -57,71 +36,14 @@ from .access_contracts import (
     OperationAccessRequest,
 )
 from .access_errors import ProfileAccessRefusedError
+from .history_contracts import (
+    ProfileHistoryExecutionResult,
+    ProfileHistoryProjection,
+    ProfileHistoryRequest,
+    event_matches_profile_history_request,
+)
 
 PROFILE_HISTORY_OPERATION_DEFINITION_ID = "profile.history"
-_FilterValue = Annotated[str, Field(min_length=1, max_length=4096)]
-
-
-class ProfileHistoryRequest(BaseModel):
-    """An explicit profile target and the existing CLI's inclusive history filters."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    event_types: tuple[BucketEventType, ...] | None = None
-    since: UtcInstant | None = None
-    until: UtcInstant | None = None
-    object_id: _FilterValue | None = None
-    actor: _FilterValue | None = None
-
-    @model_validator(mode="after")
-    def _valid_range(self) -> Self:
-        if self.since is not None and self.until is not None and self.since > self.until:
-            raise ValueError("profile history since is after until")
-        return self
-
-
-class ProfileHistoryProjection(BaseModel):
-    """Every canonical event field and the exact filters used to select it."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    event_types: tuple[BucketEventType, ...] | None = None
-    since: UtcInstant | None = None
-    until: UtcInstant | None = None
-    object_id: _FilterValue | None = None
-    actor: _FilterValue | None = None
-    event_count: int = Field(ge=0)
-    events: tuple[BucketEventProjection, ...]
-
-    @model_validator(mode="after")
-    def _exact_filtered_history(self) -> Self:
-        if self.since is not None and self.until is not None and self.since > self.until:
-            raise ValueError("profile history since is after until")
-        if self.event_count != len(self.events) or len({event.event_id for event in self.events}) != len(self.events):
-            raise ValueError("profile history count or event identities differ")
-        if tuple(sorted(self.events, key=lambda event: bucket_event_order_key(event.to_event()))) != self.events:
-            raise ValueError("profile history events are not in canonical order")
-        for event in self.events:
-            if (
-                event.bucket_id != self.profile_id
-                or (self.event_types is not None and event.event_type not in self.event_types)
-                or (self.since is not None and event.occurred_at < self.since)
-                or (self.until is not None and event.occurred_at > self.until)
-                or (self.object_id is not None and event.object_id != self.object_id)
-                or (self.actor is not None and event.actor != self.actor)
-            ):
-                raise ValueError("profile history event does not match its profile or filters")
-        return self
-
-
-class ProfileHistoryExecutionResult(BaseModel):
-    """Private encrypted operand retained until the current result release."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    projection: ProfileHistoryProjection
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,11 +63,45 @@ class ProfileHistoryReadPortsFactory(Protocol):
         ...
 
 
+def _read_profile_history(
+    factory: ProfileHistoryReadPortsFactory,
+    payload: ProfileHistoryRequest,
+    operation: PinnedAuthorityOperation,
+) -> ProfileHistoryExecutionResult:
+    """Load and filter the exact bucket's complete history under the pinned authority."""
+    bucket_id = str(payload.profile_id)
+    ports = factory(bucket_id=bucket_id, operation=operation)
+    if ports.bucket_id != bucket_id or ports.operation is not operation:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    events = tuple(
+        event
+        for event in ports.event_repository.load().for_bucket(bucket_id, event_types=payload.event_types)
+        if event_matches_profile_history_request(event, payload)
+    )
+    return ProfileHistoryExecutionResult(
+        projection=ProfileHistoryProjection(
+            profile_id=payload.profile_id,
+            event_types=payload.event_types,
+            since=payload.since,
+            until=payload.until,
+            object_id=payload.object_id,
+            actor=payload.actor,
+            event_count=len(events),
+            events=tuple(BucketEventProjection.from_event(event) for event in events),
+        )
+    )
+
+
 def project_profile_history_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     """Release only an exact profile's successful, effect-free history capture."""
     if type(result) is not ProfileHistoryExecutionResult:
         raise ValueError("invalid private profile history result")
     projection = result.projection
+    _require_profile_history_receipt(projection, receipt)
+    return projection
+
+
+def _require_profile_history_receipt(projection: ProfileHistoryProjection, receipt: OperationTerminalReceipt) -> None:
     if (
         receipt.identity.definition_id != PROFILE_HISTORY_OPERATION_DEFINITION_ID
         or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
@@ -158,7 +114,6 @@ def project_profile_history_result(result: BaseModel, receipt: OperationTerminal
         or receipt.diagnostic_ref is not None
     ):
         raise ValueError("profile history result differs from its terminal receipt")
-    return projection
 
 
 class ProfileHistoryExecutor:
@@ -171,42 +126,13 @@ class ProfileHistoryExecutor:
     async def execute(self, request: OperationRequest[ProfileHistoryRequest], context: OperationExecutorContext) -> str:
         """Store one complete filtered snapshot and record a NONE effect."""
         payload = request.payload
-        bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != PROFILE_HISTORY_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != bucket_id
-        ):
+        if request.definition_id != PROFILE_HISTORY_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(PROFILE_HISTORY_OPERATION_DEFINITION_ID)
 
         def read() -> ProfileHistoryExecutionResult:
-            operation = context.authority_operation
-            ports = self._factory(bucket_id=bucket_id, operation=operation)
-            if ports.bucket_id != bucket_id or ports.operation is not operation:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            events = tuple(
-                event
-                for event in ports.event_repository.load().for_bucket(bucket_id, event_types=payload.event_types)
-                if (payload.since is None or event.occurred_at >= payload.since)
-                and (payload.until is None or event.occurred_at <= payload.until)
-                and (payload.object_id is None or event.object_id == payload.object_id)
-                and (payload.actor is None or event.actor == payload.actor)
-            )
-            return ProfileHistoryExecutionResult(
-                projection=ProfileHistoryProjection(
-                    profile_id=payload.profile_id,
-                    event_types=payload.event_types,
-                    since=payload.since,
-                    until=payload.until,
-                    object_id=payload.object_id,
-                    actor=payload.actor,
-                    event_count=len(events),
-                    events=tuple(BucketEventProjection.from_event(event) for event in events),
-                )
-            )
+            return _read_profile_history(self._factory, payload, context.authority_operation)
 
         async def capture() -> str:
             result = await asyncio.to_thread(read)
@@ -230,19 +156,7 @@ def build_profile_history_definition(factory: ProfileHistoryReadPortsFactory) ->
         ),
         phase_codes=(PROFILE_HISTORY_OPERATION_DEFINITION_ID,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -250,14 +164,9 @@ def build_profile_history_definition(factory: ProfileHistoryReadPortsFactory) ->
 
 def build_profile_history_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind strict public schemas to exact-profile whole-history admission."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=ProfileHistoryRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=ProfileHistoryProjection
-        ),
+        public_result_type=ProfileHistoryProjection,
         result_projector=project_profile_history_result,
         access_resolver=resolve_profile_history_access,
     )
@@ -267,6 +176,15 @@ def resolve_profile_history_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require one profile, all periods, and result disclosure to this destination."""
+    _validated_profile_history_request(request, context)
+    _require_admitted_profile_history_request(request, context)
+    disclosures = _profile_history_disclosures(context)
+    return _resolved_profile_history_access(request, context, disclosures)
+
+
+def _validated_profile_history_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> ProfileHistoryRequest:
     payload = request.payload
     if request.definition_id != PROFILE_HISTORY_OPERATION_DEFINITION_ID or type(payload) is not ProfileHistoryRequest:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -274,6 +192,12 @@ def resolve_profile_history_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _require_admitted_profile_history_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> None:
     admitted = context.admitted_request
     if admitted is not None and context.action in {
         AccessAction.OBSERVE,
@@ -292,9 +216,11 @@ def resolve_profile_history_access(
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     elif context.authority_operation is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosures = frozenset[DisclosurePermission]()
+
+
+def _profile_history_disclosures(context: OperationAccessContext) -> frozenset[DisclosurePermission]:
     if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosures = frozenset(
+        return frozenset(
             (
                 DisclosurePermission(
                     destination_id=context.destination_id,
@@ -303,11 +229,11 @@ def resolve_profile_history_access(
                 ),
             )
         )
-    elif context.action is AccessAction.RESULT:
+    if context.action is AccessAction.RESULT:
         schema = context.contract.result_schema
         if schema is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
+        return frozenset(
             DisclosurePermission(
                 destination_id=context.destination_id,
                 projection_id=schema.schema_id,
@@ -315,6 +241,14 @@ def resolve_profile_history_access(
             )
             for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
         )
+    return frozenset()
+
+
+def _resolved_profile_history_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    disclosures: frozenset[DisclosurePermission],
+) -> ResolvedOperationAccess:
     return ResolvedOperationAccess(
         request=OperationAccessRequest(
             profile_id=context.profile_id,
@@ -353,12 +287,9 @@ def resolve_profile_history_access(
 
 __all__ = [
     "PROFILE_HISTORY_OPERATION_DEFINITION_ID",
-    "ProfileHistoryExecutionResult",
     "ProfileHistoryExecutor",
-    "ProfileHistoryProjection",
     "ProfileHistoryReadPorts",
     "ProfileHistoryReadPortsFactory",
-    "ProfileHistoryRequest",
     "build_profile_history_definition",
     "build_profile_history_registration",
     "project_profile_history_result",

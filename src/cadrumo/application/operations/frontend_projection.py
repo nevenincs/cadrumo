@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -30,8 +31,6 @@ from .models import (
 )
 from .registry import OperationPublicDefinitionContractV1, OperationSchemaIdentityV1
 
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
-
 type OperationPublicPendingInteractionV1 = Annotated[
     OperationNoPendingInteractionV1 | OperationReviewAvailableInteractionV1 | OperationUnsupportedInteractionV1,
     Field(discriminator="disposition"),
@@ -41,7 +40,7 @@ type OperationPublicPendingInteractionV1 = Annotated[
 class OperationPublicProgressV1(BaseModel):
     """Renderer-neutral progress state anchored to an operation event."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
@@ -60,14 +59,14 @@ class OperationPublicProgressV1(BaseModel):
 class OperationNoPendingInteractionV1(BaseModel):
     """Explicit public marker for an operation with no pending interaction."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["none"] = "none"
 
 
 class OperationReviewProjectionReferenceV1(BaseModel):
     """Safe REVIEW identity; deliberately excludes every response credential."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     operation_id: OperationId
     interaction_id: OperationInteractionId
@@ -87,7 +86,7 @@ class OperationReviewProjectionReferenceV1(BaseModel):
 class OperationReviewAvailableInteractionV1(BaseModel):
     """Safe public description of an operation awaiting REVIEW."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     disposition: Literal["review_available"] = "review_available"
     operation_id: OperationId
@@ -117,7 +116,7 @@ class OperationReviewAvailableInteractionV1(BaseModel):
 class OperationUnsupportedInteractionV1(BaseModel):
     """Public marker for a pending interaction the frontend cannot perform."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     disposition: Literal["unsupported"] = "unsupported"
     interaction_kind: Literal[OperationInteractionKind.INPUT, OperationInteractionKind.CHOICE]
@@ -138,7 +137,7 @@ class OperationUnsupportedInteractionV1(BaseModel):
 class OperationPublicProjectionV1(BaseModel):
     """Current anchored operation state with no persistence or frontend types."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     observation_version: Literal[1] = 1
     operation_id: OperationId

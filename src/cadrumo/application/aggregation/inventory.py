@@ -106,23 +106,68 @@ def _resolve_inventory_binding_template(
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> _InventoryBindingTemplate | CalculationSourceResolution:
     """Validate selector shape, filing coordinate, and the complete operation cohort."""
+    typed_bindings = _typed_inventory_bindings(
+        bindings,
+        binding_ids=binding_ids,
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
+    if isinstance(typed_bindings, CalculationSourceResolution):
+        return typed_bindings
+    coordinate_refusal = _inventory_coordinate_refusal(
+        typed_bindings,
+        binding_ids=binding_ids,
+        filing_year=filing_year,
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
+    if coordinate_refusal is not None:
+        return coordinate_refusal
+    bindings_by_operation = _inventory_bindings_by_operation(
+        typed_bindings,
+        binding_ids=binding_ids,
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
+    if isinstance(bindings_by_operation, CalculationSourceResolution):
+        return bindings_by_operation
+    return _InventoryBindingTemplate(by_operation=bindings_by_operation)
+
+
+def _typed_inventory_bindings(
+    bindings: tuple[BindingDefinition, ...],
+    *,
+    binding_ids: tuple[str, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> list[tuple[BindingDefinition, InventoryProvider]] | CalculationSourceResolution:
     typed_bindings = [
         (binding, binding.provider) for binding in bindings if isinstance(binding.provider, InventoryProvider)
     ]
-    if len(typed_bindings) != len(bindings):
-        return CalculationSourceResolution(
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-            unresolved_binding_ids=binding_ids,
-            diagnostics=(
-                _diagnostic(
-                    reason="unresolved_derived_binding",
-                    state="selector_unreadable",
-                    message="one or more bindings do not carry the canonical inventory row template",
-                ),
+    if len(typed_bindings) == len(bindings):
+        return typed_bindings
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=binding_ids,
+        diagnostics=(
+            _diagnostic(
+                reason="unresolved_derived_binding",
+                state="selector_unreadable",
+                message="one or more bindings do not carry the canonical inventory row template",
             ),
-        )
+        ),
+    )
 
+
+def _inventory_coordinate_refusal(
+    typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
+    *,
+    binding_ids: tuple[str, ...],
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution | None:
     # The declaration carries no authored year: it states timeless intent and the
     # filing context supplies the coordinate. The year guard is therefore a guard
     # on the temporal selector -- an inventory row template must rest on the
@@ -141,14 +186,23 @@ def _resolve_inventory_binding_template(
         applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=filing_year)
     except RegistryValidationError:
         applicable_filing_year = None
-    if applicable_filing_year != filing_year:
-        return _template_refusal_resolution(
-            binding_ids,
-            "inventory row template is not applicable for the filing year",
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-        )
+    if applicable_filing_year == filing_year:
+        return None
+    return _template_refusal_resolution(
+        binding_ids,
+        "inventory row template is not applicable for the filing year",
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
 
+
+def _inventory_bindings_by_operation(
+    typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
+    *,
+    binding_ids: tuple[str, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> dict[str, BindingDefinition] | CalculationSourceResolution:
     bindings_by_operation: dict[str, BindingDefinition] = {}
     for binding, selector in typed_bindings:
         operation = selector.row_field
@@ -160,14 +214,16 @@ def _resolve_inventory_binding_template(
                 owned_sources=owned_sources,
             )
         bindings_by_operation[operation] = binding
-    if set(bindings_by_operation) != set(_CANONICAL_OPERATIONS) or len(bindings) != len(_CANONICAL_OPERATIONS):
-        return _template_refusal_resolution(
-            binding_ids,
-            "inventory row-template cohort must contain each operation once",
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-        )
-    return _InventoryBindingTemplate(by_operation=bindings_by_operation)
+    if set(bindings_by_operation) == set(_CANONICAL_OPERATIONS) and len(bindings_by_operation) == len(
+        _CANONICAL_OPERATIONS
+    ):
+        return bindings_by_operation
+    return _template_refusal_resolution(
+        binding_ids,
+        "inventory row-template cohort must contain each operation once",
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
 
 
 def _load_inventory_ledgers(

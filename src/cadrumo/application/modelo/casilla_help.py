@@ -32,11 +32,9 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections import deque
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Mapping
 from datetime import date
-from decimal import Decimal
-from typing import Final, override
+from typing import Final
 
 from pydantic import BaseModel
 
@@ -47,23 +45,19 @@ from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.ids import BindingId, ParameterId
-from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
-from ...domain.calculations.registry.schema_base import CasillaSignConstraint
-from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_references import LegalReference
-from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
-from .edit_value_grammar import ratio_unit
-from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
-from .settlement_casilla import declaration_result_casillas
-from .source_policy import source_policy
-from .value_presentation import (
-    LOCALE_NUMBER_FORMATS,
-    SCREEN_MINUS_SIGN,
-    VALUE_ABSENT_LOCALE_KEY,
-    format_casilla_value,
-    group_decimal_text,
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from .casilla_help_formula import (
+    ModeloHelpFormulaV1,
+    ModeloHelpQuoteV1,
+    build_casilla_formula_help,
+    constraint_sentences,
 )
+from .casilla_help_reach import ModeloHelpReachV1, build_casilla_help_reach
+from .printed_boxes import snapshot_printed_boxes
+from .source_policy import source_policy
 
 _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "constraint.at_least": "application.modelo.help.constraint.at_least",
@@ -97,18 +91,6 @@ _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
 }
 """Every phrase a help card composes, by the name its builders use."""
 
-_INFIX: Final[Mapping[str, str]] = {
-    "add": " + ",
-    "sum": " + ",
-    "subtract": f" {SCREEN_MINUS_SIGN} ",
-    "multiply": " × ",
-    "divide": " ÷ ",
-    "less_than": " < ",
-    "less_equal": " ≤ ",
-    "greater_than": " > ",
-    "greater_equal": " ≥ ",
-    "equal": " = ",
-}
 _LAW_TYPES: Final[Mapping[str, str]] = {
     "ley": "Ley",
     "lo": "Ley Orgánica",
@@ -128,28 +110,6 @@ _NO_BREAK_SPACE: Final[str] = "\u00a0"
 """Joins a provision's abbreviation to its number, so "art. 71" never wraps between the two."""
 
 
-class ModeloHelpFormulaV1(BaseModel):
-    """A casilla's registry formula as box arithmetic; ``complete`` is false where a rule is not spelled out."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    text: str
-    complete: bool
-    #: The same arithmetic with recorded operands and result; never a new calculation.
-    values_text: str | None = None
-
-
-class ModeloHelpQuoteV1(BaseModel):
-    """Verbatim fragments of one official source, with its attribution."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    fragments: tuple[str, ...]
-    source: str
-    source_url: str
-    retrieved_at: date
-
-
 class ModeloHelpCitationV1(BaseModel):
     """One legal basis, cited from its identifier, with its official link."""
 
@@ -157,31 +117,6 @@ class ModeloHelpCitationV1(BaseModel):
 
     text: str
     permalink: str
-
-
-class ModeloHelpBoxV1(BaseModel):
-    """One box a change passes through, written as the filer reads it ("[07]")."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    casilla_id: CasillaId
-    box: str
-
-
-class ModeloHelpReachV1(BaseModel):
-    """How a change to one casilla travels to the declaration's result through the revision's formulas.
-
-    ``path`` runs from the first printed box the change reaches to the result
-    box, along the fewest formulas; working figures the form does not print
-    are left out of it. It is empty when no formula chain leads from the
-    casilla to the result. ``others`` are the printed boxes the change also
-    reaches that are not on ``path``, in casilla order.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    path: tuple[ModeloHelpBoxV1, ...]
-    others: tuple[ModeloHelpBoxV1, ...]
 
 
 class ModeloCasillaHelpCardV1(BaseModel):
@@ -216,186 +151,6 @@ def _phrase(language: OutputLanguage, name: str, /, **values: object) -> str:
     return template.format(**values) if values else template
 
 
-def _number(value: Decimal, language: OutputLanguage) -> str:
-    text = format(value.normalize(), "f") if value == value.to_integral_value() else format(value, "f")
-    return group_decimal_text(text, language, minus=SCREEN_MINUS_SIGN) or text
-
-
-def _argument_separator(language: OutputLanguage) -> str:
-    return "; " if LOCALE_NUMBER_FORMATS[language].decimal_separator == "," else ", "
-
-
-class _FormulaRenderer:
-    """Render one expression tree as box arithmetic, noting what it could not spell out."""
-
-    def __init__(
-        self,
-        *,
-        box_of: Callable[[CasillaId], str],
-        binding_name: Callable[[BindingId], str],
-        parameter_value: Callable[[ParameterId], Decimal | None],
-        language: OutputLanguage,
-    ) -> None:
-        self.box_of = box_of
-        self.binding_name = binding_name
-        self.parameter_value = parameter_value
-        self.language = language
-        self.complete = True
-
-    def render(self, node: FormulaExpression, *, nested: bool = False) -> str:
-        if node.op is None:
-            return self.leaf(node)
-        op = str(node.op)
-        args = [self.render(arg, nested=True) for arg in node.args]
-        infix = _INFIX.get(op)
-        if infix is not None:
-            text = infix.join(args)
-            return f"({text})" if nested and len(args) > 1 else text
-        separator = _argument_separator(self.language)
-        if op == "percent":
-            return _phrase(self.language, "formula.percent_of", rate=args[1], amount=args[0])
-        if op in {"max", "min"}:
-            return _phrase(self.language, f"formula.{op}", items=separator.join(args))
-        if op == "negate":
-            return f"{SCREEN_MINUS_SIGN}{args[0]}"
-        if op == "copy":
-            return args[0]
-        if op == "clamp":
-            return _phrase(self.language, "formula.clamp", value=args[0], minimum=args[1], maximum=args[2])
-        if op == "if_then_else":
-            return _phrase(self.language, "formula.if_then_else", condition=args[0], then=args[1], otherwise=args[2])
-        if op in {"previous_period_value", "previous_period_sum"}:
-            return _phrase(self.language, "formula.previous_period", value=" + ".join(args))
-        if op == "cross_model_sum":
-            return _phrase(self.language, "formula.other_modelos")
-        if op.startswith("lookup_"):
-            return _phrase(self.language, "formula.table")
-        self.complete = False
-        return _phrase(self.language, "formula.rule")
-
-    def leaf(self, node: FormulaExpression) -> str:
-        if node.casilla_id is not None:
-            return self.box_of(node.casilla_id)
-        if node.binding is not None:
-            return self.binding_name(node.binding)
-        if node.date_binding is not None:
-            return self.binding_name(node.date_binding)
-        if node.literal is not None:
-            return _number(node.literal, self.language)
-        if node.parameter is not None:
-            value = self.parameter_value(node.parameter)
-            if value is None:
-                return _phrase(self.language, "formula.table")
-            return _number(value, self.language)
-        return _phrase(self.language, "formula.table")
-
-
-def _parameter_value(parameter: ParameterDefinition | None, on: date) -> Decimal | None:
-    """Return a scalar parameter's value in force on ``on``, or ``None`` for tables and gaps."""
-    if parameter is None or not parameter.values:
-        return None
-    in_force = [
-        dated
-        for dated in parameter.values
-        if dated.valid_from <= on and (dated.valid_to is None or on <= dated.valid_to)
-    ]
-    return in_force[-1].value if len(in_force) == 1 else None
-
-
-def _formula_values_text(
-    formula: FormulaDefinition,
-    observation: CasillaObservation,
-    *,
-    casillas: Mapping[str, CasillaDefinition],
-    bindings: Mapping[str, BindingDefinition],
-    box_of: Callable[[CasillaId], str],
-    binding_name: Callable[[BindingId], str],
-    language: OutputLanguage,
-) -> str | None:
-    """Substitute the recorded trace, without evaluating the formula or guessing gaps.
-
-    Some table operations record several references for one lookup result;
-    their tuples are not parallel and cannot safely be paired. Repeated
-    references must also agree before they can be substituted by identity.
-    """
-    if len(observation.operand_refs) != len(observation.operand_values):
-        return None
-    values: dict[str, Decimal] = {}
-    for key, value in zip(observation.operand_refs, observation.operand_values, strict=True):
-        if key in values and values[key] != value:
-            return None
-        values[key] = value
-
-    def formatted(key: str, data_type: str, maximum: Decimal | None = None) -> str:
-        value = values.get(key)
-        if value is None:
-            return lookup_translation(VALUE_ABSENT_LOCALE_KEY, locale=language.value) or "?"
-        return format_casilla_value(
-            value, data_type=data_type, language=language, ratio_unit=ratio_unit(data_type, maximum)
-        )
-
-    class ValueRenderer(_FormulaRenderer):
-        """Keep the declared arithmetic and replace its references with traced figures."""
-
-        @override
-        def render(self, node: FormulaExpression, *, nested: bool = False) -> str:
-            if node.op is not None and (str(node.op).startswith("lookup_") or node.op == "cross_model_sum"):
-                self.complete = False
-            if node.op == "percent":
-                amount, rate = (self.render(arg, nested=True) for arg in node.args)
-                return _phrase(language, "formula.percent_of", rate=rate.removesuffix("\u00a0%"), amount=amount)
-            return super().render(node, nested=nested)
-
-        @override
-        def leaf(self, node: FormulaExpression) -> str:
-            if node.casilla_id is not None:
-                casilla = casillas[str(node.casilla_id)]
-                maximum = None if casilla.constraints is None else casilla.constraints.max_value
-                return f"{box_of(node.casilla_id)} {formatted(str(node.casilla_id), str(casilla.data_type), maximum)}"
-            if node.binding is not None:
-                binding = bindings[str(node.binding)]
-                return f"{binding_name(node.binding)} {formatted(str(node.binding), str(binding.value.data_type))}"
-            if node.parameter is not None:
-                value = values.get(str(node.parameter))
-                return super().leaf(node) if value is None else _number(value, language)
-            return super().leaf(node)
-
-    renderer = ValueRenderer(
-        box_of=box_of,
-        binding_name=binding_name,
-        # A parameter not captured by this calculation stays absent, even if
-        # the authority could supply one now.
-        parameter_value=lambda _key: None,
-        language=language,
-    )
-    expression = renderer.render(formula.expression)
-    target = casillas[str(observation.casilla_id)]
-    maximum = None if target.constraints is None else target.constraints.max_value
-    result = format_casilla_value(
-        observation.value,
-        data_type=str(target.data_type),
-        language=language,
-        ratio_unit=ratio_unit(str(target.data_type), maximum),
-    )
-    if not renderer.complete:
-        operands: list[str] = []
-        for key in values:
-            if key in casillas:
-                operands.append(renderer.leaf(FormulaExpression(casilla_id=casillas[key].id)))
-            elif key in bindings:
-                operands.append(renderer.leaf(FormulaExpression(binding=bindings[key].id)))
-            else:
-                # The trace may name a legal parameter or a cross-model relation.
-                # Its numeric value is recorded, its identifier is not a label.
-                operands.append(_number(values[key], language))
-        return (
-            _phrase(language, "formula.recorded_values", values=" · ".join(operands), result=result)
-            if operands
-            else None
-        )
-    return f"{expression} = {result}"
-
-
 def legal_citation_text(reference: LegalReference) -> str:
     """Cite one legal reference from its own identifier, falling back to the official document id."""
     document, _, locator = str(reference.id).partition(":")
@@ -419,37 +174,6 @@ def _article_text(locator: str) -> str:
     return f"{prefix}{_NO_BREAK_SPACE}{number}" if number else prefix
 
 
-def _constraint_sentences(constraints: CasillaConstraints | None, language: OutputLanguage) -> tuple[str, ...]:
-    if constraints is None:
-        return ()
-    sentences: list[str] = []
-    if constraints.sign is CasillaSignConstraint.NON_NEGATIVE:
-        sentences.append(_phrase(language, "constraint.non_negative"))
-    low, high = constraints.min_value, constraints.max_value
-    if low is not None and high is not None:
-        sentences.append(
-            _phrase(language, "constraint.range", minimum=_number(low, language), maximum=_number(high, language))
-        )
-    elif low is not None:
-        sentences.append(_phrase(language, "constraint.at_least", minimum=_number(low, language)))
-    elif high is not None:
-        sentences.append(_phrase(language, "constraint.at_most", maximum=_number(high, language)))
-    shortest, longest = constraints.min_length, constraints.max_length
-    if shortest is not None and shortest == longest:
-        sentences.append(_phrase(language, "constraint.exact_length", length=shortest))
-    elif shortest is not None and longest is not None:
-        sentences.append(_phrase(language, "constraint.length", minimum=shortest, maximum=longest))
-    elif shortest is not None:
-        sentences.append(_phrase(language, "constraint.min_length", minimum=shortest))
-    elif longest is not None:
-        sentences.append(_phrase(language, "constraint.max_length", maximum=longest))
-    if constraints.enum:
-        sentences.append(_phrase(language, "constraint.choices", choices=", ".join(constraints.enum)))
-    if constraints.pattern is not None:
-        sentences.append(_phrase(language, "constraint.format"))
-    return tuple(sentences)
-
-
 def _bound_by(casilla: CasillaDefinition) -> tuple[BindingId, ...]:
     return tuple(binding_id for binding_id in (casilla.binding, *casilla.alternate_bindings) if binding_id is not None)
 
@@ -460,79 +184,33 @@ def _origin_sentence(binding: BindingDefinition | None, language: OutputLanguage
     return lookup_translation(source_policy(binding.source).origin_sentence_key, locale=language.value)
 
 
-def _uses(formula: FormulaDefinition) -> set[str]:
-    found: set[str] = set()
-    pending = [formula.expression]
-    while pending:
-        node = pending.pop()
-        if node.casilla_id is not None:
-            found.add(str(node.casilla_id))
-        pending.extend(node.args)
-    return found
+def _require_help_casilla(
+    casilla_id: CasillaId, *, snapshot: RegistrySnapshot, casillas: Mapping[str, CasillaDefinition]
+) -> CasillaDefinition:
+    casilla = casillas.get(str(casilla_id))
+    if casilla is None:
+        raise KeyError(f"casilla {casilla_id!r} is not defined by revision {snapshot.revision.id!r}")
+    return casilla
 
 
-def _dependents(formulas: Iterable[FormulaDefinition]) -> dict[str, frozenset[str]]:
-    """Each casilla's direct dependents: the casillas whose formula reads it."""
-    graph: dict[str, set[str]] = {}
-    for formula in formulas:
-        target = str(formula.target_casilla_id)
-        for used in _uses(formula):
-            if used != target:
-                graph.setdefault(used, set()).add(target)
-    return {used: frozenset(targets) for used, targets in graph.items()}
+def _legal_basis(casilla: CasillaDefinition, operation: PinnedAuthorityOperation) -> tuple[ModeloHelpCitationV1, ...]:
+    return tuple(
+        ModeloHelpCitationV1(text=legal_citation_text(reference), permalink=str(reference.permalink))
+        for reference in (operation.legal_reference(ref_id) for ref_id in casilla.legal_refs)
+    )
 
 
-def _reach(
-    start: str,
+def _origin_sentences(
+    casilla: CasillaDefinition,
     *,
-    graph: Mapping[str, frozenset[str]],
-    results: frozenset[str],
-    casillas: Mapping[str, CasillaDefinition],
-    boxes: PrintedBoxes,
-    box_text: Callable[[str], str],
-) -> ModeloHelpReachV1:
-    """Walk every casilla a change to ``start`` reaches, keeping the fewest-formula route to a result box.
-
-    Among routes of equal length the one through printed boxes, then the
-    lowest casilla ids, is kept, so the same revision always gives the same
-    chain.
-    """
-
-    def order(key: str) -> tuple[bool, str]:
-        return (not boxes.prints(key), key)
-
-    parents: dict[str, str] = {}
-    reached: set[str] = {start}
-    queue: deque[str] = deque([start])
-    found: str | None = None
-    while queue:
-        node = queue.popleft()
-        for following in sorted(graph.get(node, frozenset()), key=order):
-            if following in reached:
-                continue
-            reached.add(following)
-            parents[following] = node
-            if found is None and following in results:
-                found = following
-            queue.append(following)
-    route: list[str] = []
-    step = found
-    while step is not None and step != start:
-        route.append(step)
-        step = parents.get(step)
-    route.reverse()
-    path = tuple(
-        ModeloHelpBoxV1(casilla_id=casillas[key].id, box=box_text(key))
-        for key in route
-        if key in results or boxes.prints(key)
+    bindings: Mapping[str, BindingDefinition],
+    language: OutputLanguage,
+) -> tuple[str, ...]:
+    return tuple(
+        text
+        for text in (_origin_sentence(bindings.get(str(binding_id)), language) for binding_id in _bound_by(casilla))
+        if text is not None
     )
-    on_path = set(route)
-    others = tuple(
-        ModeloHelpBoxV1(casilla_id=casillas[key].id, box=box_text(key))
-        for key in sorted(reached)
-        if key != start and key not in on_path and boxes.prints(key)
-    )
-    return ModeloHelpReachV1(path=path, others=others)
 
 
 def build_casilla_help_card(
@@ -559,9 +237,7 @@ def build_casilla_help_card(
             The pinned registry snapshot supplying the selected modelo revision.
     """
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
-    casilla = casillas.get(str(casilla_id))
-    if casilla is None:
-        raise KeyError(f"casilla {casilla_id!r} is not defined by revision {snapshot.revision.id!r}")
+    casilla = _require_help_casilla(casilla_id, snapshot=snapshot, casillas=casillas)
     formulas = {str(item.id): item for item in snapshot.revision.formulas}
     parameters = {str(item.id): item for item in snapshot.revision.parameters}
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
@@ -582,64 +258,31 @@ def build_casilla_help_card(
         name = lookup_translation(source_policy(binding.source).label_key, locale=language.value)
         return name or _phrase(language, "formula.table")
 
-    formula_card: ModeloHelpFormulaV1 | None = None
-    quotes: list[ModeloHelpQuoteV1] = []
-    formula = None if casilla.formula is None else formulas.get(str(casilla.formula))
-    if formula is not None:
-        renderer = _FormulaRenderer(
-            box_of=box_of,
-            binding_name=binding_name,
-            parameter_value=lambda parameter_id: _parameter_value(parameters.get(str(parameter_id)), on),
-            language=language,
-        )
-        text = f"{box_of(casilla.id)} = {renderer.render(formula.expression)}"
-        values_text = None
-        if observation is not None and observation.casilla_id == casilla.id and observation.formula_id == formula.id:
-            values_text = _formula_values_text(
-                formula,
-                observation,
-                casillas=casillas,
-                bindings=bindings,
-                box_of=box_of,
-                binding_name=binding_name,
-                language=language,
-            )
-        formula_card = ModeloHelpFormulaV1(text=text, complete=renderer.complete, values_text=values_text)
-        for citation in formula.source_citations:
-            source = operation.source_reference(citation.source_ref)
-            quotes.append(
-                ModeloHelpQuoteV1(
-                    fragments=tuple(citation.required_text),
-                    source=_phrase(language, f"source_kind.{source.kind.value}"),
-                    source_url=str(source.source_url),
-                    retrieved_at=source.retrieved_at,
-                )
-            )
-    legal_basis = tuple(
-        ModeloHelpCitationV1(text=legal_citation_text(reference), permalink=str(reference.permalink))
-        for reference in (operation.legal_reference(ref_id) for ref_id in casilla.legal_refs)
+    formula_card, quotes = build_casilla_formula_help(
+        casilla,
+        formulas=formulas,
+        parameters=parameters,
+        casillas=casillas,
+        bindings=bindings,
+        operation=operation,
+        language=language,
+        on=on,
+        box_of=box_of,
+        binding_name=binding_name,
+        observation=observation,
+        phrase=_phrase,
     )
-    origins = tuple(
-        text
-        for text in (_origin_sentence(bindings.get(str(binding_id)), language) for binding_id in _bound_by(casilla))
-        if text is not None
-    )
-    graph = _dependents(snapshot.revision.formulas)
-    feeds = tuple(sorted({box_text(target) for target in graph.get(str(casilla.id), frozenset())}))
-    selected = declaration_result_casillas(str(snapshot.modelo.id), snapshot.revision)
-    results = frozenset[str]() if selected is None else frozenset(str(item) for item in selected.casilla_ids)
-    is_result = str(casilla.id) in results
-    reach = (
-        None
-        if is_result or not results
-        else _reach(str(casilla.id), graph=graph, results=results, casillas=casillas, boxes=boxes, box_text=box_text)
+    legal_basis = _legal_basis(casilla, operation)
+    origins = _origin_sentences(casilla, bindings=bindings, language=language)
+    feeds, is_result, reach = build_casilla_help_reach(
+        casilla, snapshot=snapshot, casillas=casillas, boxes=boxes, box_text=box_text
     )
     return ModeloCasillaHelpCardV1(
         casilla_id=casilla.id,
         formula=formula_card,
         quotes=tuple(quotes),
         legal_basis=legal_basis,
-        constraints=_constraint_sentences(casilla.constraints, language),
+        constraints=constraint_sentences(casilla.constraints, language, phrase=_phrase),
         origins=origins,
         feeds=feeds,
         reach=reach,
@@ -650,11 +293,7 @@ def build_casilla_help_card(
 __all__ = [
     "CasillaHelpCatalogueError",
     "ModeloCasillaHelpCardV1",
-    "ModeloHelpBoxV1",
     "ModeloHelpCitationV1",
-    "ModeloHelpFormulaV1",
-    "ModeloHelpQuoteV1",
-    "ModeloHelpReachV1",
     "build_casilla_help_card",
     "legal_citation_text",
 ]

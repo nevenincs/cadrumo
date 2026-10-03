@@ -40,7 +40,7 @@ from .....application.user_profile.recovery_custody import profile_recovery_stat
 from .....core.bucket_pointer import require_active_bucket_id
 from .....core.i18n.render import tr
 from ... import command_specs as _command_specs
-from ...command_spec import ArgumentSpec
+from ..._command_parameter_contracts import ArgumentSpec
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.scripted_registration_channels import scripted_registration_descriptors
 from ...verb_input_schema import build_verb_input_schemas, project_recovery_handoff_contract

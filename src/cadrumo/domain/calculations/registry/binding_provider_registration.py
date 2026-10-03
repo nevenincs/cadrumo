@@ -71,6 +71,7 @@ from .invoice_bindings import (
 )
 from .irnr_ledger_bindings import LedgerIrnrIncomeProvider, validate_ledger_irnr_income_aggregation_binding
 from .iva_compensation_annual_partition_bindings import IvaCompensationAnnualPartitionProvider
+from .ledger_binding_validation import LEDGER_AGGREGATION_OPS
 from .ledger_impatriado_bindings import (
     LedgerImpatriadoIncomeProvider,
     validate_ledger_impatriado_income_aggregation_binding,
@@ -330,7 +331,9 @@ def _ledger_aggregation(
     output: ProviderOutputShape = "scalar",
 ) -> BindingProviderRegistration:
     channels = _MONEY_CHANNELS if output == "scalar" else _MONEY_CHANNELS | _ROW_CHANNELS
-    ops = _FOLD_OPS if output == "scalar" else _FOLD_OPS | _ROW_OPS
+    # Ledger resolvers fold matched rows with a sum and never read the declared
+    # operator, so admitting ``copy`` here would register a sum under another name.
+    ops = LEDGER_AGGREGATION_OPS if output == "scalar" else LEDGER_AGGREGATION_OPS | _ROW_OPS
     return _filing_grade(
         kind,
         provider_model,
@@ -938,6 +941,19 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
     """
     registration = registration_for(binding.source)
     diagnostics: list[str] = []
+    _append_channel_diagnostic(binding, registration, diagnostics)
+    _append_aggregation_diagnostic(binding, registration, diagnostics)
+    _append_operation_channel_diagnostics(binding, diagnostics)
+    _append_row_grouping_diagnostics(binding, registration, diagnostics)
+    _append_terminal_origin_diagnostics(binding, registration, diagnostics)
+    return tuple(diagnostics)
+
+
+def _append_channel_diagnostic(
+    binding: BindingDefinition,
+    registration: BindingProviderRegistration,
+    diagnostics: list[str],
+) -> None:
     channel = binding.value.channel
     if channel not in registration.permitted_value_channels:
         permitted = ", ".join(sorted(member.value for member in registration.permitted_value_channels))
@@ -945,6 +961,13 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
             f"binding {binding.id!r}: provider {registration.kind.value!r} does not produce the "
             f"{channel.value!r} value channel (permitted: {permitted})",
         )
+
+
+def _append_aggregation_diagnostic(
+    binding: BindingDefinition,
+    registration: BindingProviderRegistration,
+    diagnostics: list[str],
+) -> None:
     aggregation = binding.aggregation
     if aggregation is not None and aggregation.op not in registration.permitted_aggregation_ops:
         permitted = ", ".join(sorted(member.value for member in registration.permitted_aggregation_ops))
@@ -952,7 +975,11 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
             f"binding {binding.id!r}: provider {registration.kind.value!r} does not support the "
             f"{aggregation.op.value!r} aggregation operation (permitted: {permitted})",
         )
+
+
+def _append_operation_channel_diagnostics(binding: BindingDefinition, diagnostics: list[str]) -> None:
     op = binding_aggregation_op(binding)
+    channel = binding.value.channel
     if op is BindingAggregationOp.ROWS and channel is not BindingValueChannel.ROW_SET:
         diagnostics.append(
             f"binding {binding.id!r}: the {BindingAggregationOp.ROWS.value!r} aggregation operation "
@@ -963,6 +990,14 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
             f"binding {binding.id!r}: the {BindingValueChannel.ROW_SET.value!r} value channel "
             f"requires the {BindingAggregationOp.ROWS.value!r} aggregation operation, not {op.value!r}",
         )
+
+
+def _append_row_grouping_diagnostics(
+    binding: BindingDefinition,
+    registration: BindingProviderRegistration,
+    diagnostics: list[str],
+) -> None:
+    channel = binding.value.channel
     expected_grouping = registration.row_grouping
     declared_grouping = binding.value.row_grouping
     if channel is BindingValueChannel.ROW_SET:
@@ -985,6 +1020,13 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
                 f"binding {binding.id!r}: provider {registration.kind.value!r} must use row grouping "
                 f"{expected_grouping.value!r}, not {declared_grouping.value!r}",
             )
+
+
+def _append_terminal_origin_diagnostics(
+    binding: BindingDefinition,
+    registration: BindingProviderRegistration,
+    diagnostics: list[str],
+) -> None:
     for expectation in binding.terminal_origins:
         if expectation.source_class not in registration.permitted_terminal_origins:
             permitted = ", ".join(sorted(member.value for member in registration.permitted_terminal_origins))
@@ -992,4 +1034,3 @@ def validate_binding_against_registration(binding: BindingDefinition) -> tuple[s
                 f"binding {binding.id!r}: provider {registration.kind.value!r} cannot rest on terminal origin "
                 f"{expectation.source_class.value!r} (permitted: {permitted})",
             )
-    return tuple(diagnostics)

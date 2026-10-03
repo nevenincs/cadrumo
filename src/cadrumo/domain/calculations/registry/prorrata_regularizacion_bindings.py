@@ -18,6 +18,7 @@ __all__ = [
     "ProrrataRegularizacionOutput",
     "ProrrataRegularizacionOutputValue",
     "ProrrataRegularizacionProvider",
+    "prorrata_definitive_percentage_source_casilla_id",
     "prorrata_source_casilla_ids",
 ]
 
@@ -56,13 +57,28 @@ ProrrataRegularizacionOutputValue = Literal[
 """The same vocabulary for a strict model field."""
 
 
+_PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID: CasillaId = "iva.prorrata-porcentaje"
 _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
     "iva.cuota-deducible-total",
     "iva.prorrata-volumen-con-derecho",
     "iva.prorrata-volumen-total",
-    "iva.prorrata-porcentaje",
+    _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID,
 )
 _PRORRATA_REGULARIZACION_SOURCE_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+
+
+def prorrata_definitive_percentage_source_casilla_id(
+    bindings: Iterable[_BindingWithProvider],
+) -> CasillaId | None:
+    """Return the definitive-percentage source named by a typed provider."""
+    for binding in bindings:
+        provider = binding.provider
+        if (
+            isinstance(provider, ProrrataRegularizacionProvider)
+            and _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID in provider.source_casilla_ids
+        ):
+            return _PRORRATA_DEFINITIVE_PERCENTAGE_SOURCE_ID
+    return None
 
 
 class ProrrataRegularizacionProvider(BaseModel):

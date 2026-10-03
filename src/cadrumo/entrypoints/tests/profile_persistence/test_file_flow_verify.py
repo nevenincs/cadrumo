@@ -377,7 +377,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     with bundled_indexed_authority().operation() as operation:
         persisted = get_verification_report(
             report.verification_report_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
     assert persisted.granted_verificado_completo is True
@@ -452,7 +452,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     with bundled_indexed_authority().operation() as operation:
         persisted = get_verification_report(
             report.verification_report_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
     assert persisted.granted_verificado_completo is False
@@ -542,7 +542,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
             r.verification_report_id
             for r in list_verification_reports(
                 calculation_revision_id=revision.calculation_revision_id,
-                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
                 operation=operation,
             )
         )
@@ -571,7 +571,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
             r.verification_report_id
             for r in list_verification_reports(
                 calculation_revision_id=revision.calculation_revision_id,
-                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
                 operation=operation,
             )
         )
@@ -679,14 +679,14 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
     with bundled_indexed_authority().operation() as operation:
         listed = list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
         assert tuple(r.verification_report_id for r in listed) == (report.verification_report_id,)
 
         fetched = get_verification_report(
             report.verification_report_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
         assert fetched.verification_report_id == report.verification_report_id
@@ -694,7 +694,7 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
         with pytest.raises(VerificationReportNotFoundError) as excinfo:
             get_verification_report(
                 "0" * 64,
-                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
                 operation=operation,
             )
     assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"

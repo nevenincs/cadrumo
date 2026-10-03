@@ -564,6 +564,7 @@ def _prepare_external_import_values[CasillaKey](
 def _prepare_external_import_revision(
     *,
     repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     work_unit_id: str,
     registry_snapshot_ref: RegistrySnapshotRef,
     input_values_by_casilla_id: dict[CasillaId, str],
@@ -586,7 +587,7 @@ def _prepare_external_import_revision(
         m303_regimen_simplificado_annual_summary_handoff=None,
         source_provenance=(),
     )
-    revisions, revisions_revision_id = repository.load_revisioned()
+    revisions, revisions_revision_id = repository.load_revisioned(operation=operation)
     if revision_id in revisions:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_duplicate_revision",
@@ -799,7 +800,8 @@ def import_external_filing_evidence[CasillaKey](
     ports = FilingReconciliationPorts(
         filing_repository=fr_repo,
         calculation_repository=(
-            calculation_repository or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id)
+            calculation_repository
+            or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id, operation=operation)
         ),
         work_lifecycle=WorkLifecyclePorts(
             work_unit_repository=wu_repo,
@@ -859,6 +861,7 @@ def prepare_external_filing_revision[CasillaKey](
     now: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> ExternalFilingRevisionDraft:
     """Validate external filing content and stage its presented revision in memory.
@@ -892,6 +895,7 @@ def prepare_external_filing_revision[CasillaKey](
     # concurrent writer's entry.
     revisions, revisions_revision_id, revision = _prepare_external_import_revision(
         repository=calculation_repository,
+        operation=operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
         input_values_by_casilla_id=input_values_by_casilla_id,

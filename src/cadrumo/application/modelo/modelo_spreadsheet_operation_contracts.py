@@ -10,34 +10,27 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.hex import HEX_PATTERN_64
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.detail_record_bindings import (
-    AtributionMemberObservation,
-    Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
-)
-from ...domain.calculations.registry.donativo_bindings import DonativoDonorObservation
-from ...domain.calculations.registry.gasto193_bindings import Gasto193Observation
 from ...domain.calculations.registry.ids import (
-    BindingId,
-    FormulaId,
-    LegalRefId,
     ModeloId,
-    RelationId,
     RevisionId,
-    SourceRefId,
 )
-from ...domain.calculations.registry.withholding296_bindings import Withholding296Observation
-from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..operations.public_period import PublicPeriod
 from ..storage.calc_sheets.parity_harness import OperatorInputScenario
-from ..storage.calc_sheets.records import SheetRelationProvenanceValue
 from ..storage.calc_sheets.workbook_export import SheetWorkbookMaterializer, WorkbookPlanBuilder
+from .modelo_spreadsheet_operation_projections import (
+    ModeloSpreadsheetCalculateProjection,
+    ModeloSpreadsheetExportProjection,
+    ModeloSpreadsheetProjection,
+    ModeloSpreadsheetPullProjection,
+    ModeloSpreadsheetVerifyProjection,
+    SpreadsheetCalculateFacts,
+    SpreadsheetPullFacts,
+    SpreadsheetVerifyFacts,
+)
 
 MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID = "modelo.spreadsheet.export"
 MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID = "modelo.spreadsheet.pull"
@@ -51,290 +44,9 @@ class ModeloSpreadsheetRowIngressRefusedError(CoreValidationError):
 
 
 _PathText = Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
-_Hex64 = Annotated[str, Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)]
 _Text = Annotated[str, Field(max_length=4096)]
 _Handle = Annotated[str, Field(min_length=1, max_length=4096)]
 _Count = Annotated[int, Field(ge=0)]
-MAX_MODELO_SPREADSHEET_ROWS = 65_536
-
-
-class SpreadsheetWithholdingObservation(BaseModel):
-    """Closed wire fields of the canonical WithholdingObservation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    source_allocation_id: _Text
-    perceptor_tax_id: _Text
-    perceptor_legal_name: _Text
-    country_code: _Text | None
-    transaction_date: _Text
-    clave: _Text
-    subclave: _Text
-    percibido_dinerario: _Text
-    percibido_especie: _Text
-    retencion_practicada: _Text
-    ingreso_a_cuenta: _Text
-    province_code: _Text | None
-    territorial_deduction_clave: int | None
-    perceptor_birth_year: int | None
-    perceptor_situacion_familiar: int | None
-    representative_tax_id: _Text | None
-    spouse_or_unit_titular_tax_id: _Text | None
-    disability_clave: int | None
-    contract_relation_clave: int | None
-    unit_convivencia_titular_clave: int | None
-    geographic_mobility_clave: int | None
-    ingreso_a_cuenta_repercutido: _Text
-    accrual_year: int | None
-    reducciones_aplicables: _Text
-    gastos_deducibles: _Text
-    pension_compensatoria: _Text
-    anualidades_alimentos: _Text
-    descendants_under_3_total: int | None
-    descendants_under_3_whole: int | None
-    descendants_rest_total: int | None
-    descendants_rest_whole: int | None
-    descendants_disabled_33_65_total: int | None
-    descendants_disabled_33_65_whole: int | None
-    descendants_disabled_mobility_total: int | None
-    descendants_disabled_mobility_whole: int | None
-    descendants_disabled_65_plus_total: int | None
-    descendants_disabled_65_plus_whole: int | None
-    ascendants_under_75_total: int | None
-    ascendants_under_75_whole: int | None
-    ascendants_75_plus_total: int | None
-    ascendants_75_plus_whole: int | None
-    ascendants_disabled_33_65_total: int | None
-    ascendants_disabled_33_65_whole: int | None
-    ascendants_disabled_mobility_total: int | None
-    ascendants_disabled_mobility_whole: int | None
-    ascendants_disabled_65_plus_total: int | None
-    ascendants_disabled_65_plus_whole: int | None
-    first_child_compute: int | None
-    second_child_compute: int | None
-    third_child_compute: int | None
-    housing_loan_communication_clave: int | None
-    incapacity_cash_perception: _Text
-    incapacity_cash_withholding: _Text
-    incapacity_kind_value: _Text
-    incapacity_kind_ingreso_a_cuenta: _Text
-    incapacity_kind_repercutido: _Text
-    complemento_infancia_clave: int | None
-    foral_retention_estatal: _Text
-    foral_retention_navarra: _Text
-    foral_retention_araba: _Text
-    foral_retention_gipuzkoa: _Text
-    foral_retention_bizkaia: _Text
-    emerging_stock_excess_clave: int | None
-    startup_fund_rendimientos_clave: int | None
-    pension_prestacion_jubilacion: int | None
-    pension_prestacion_viudedad: int | None
-    pension_prestacion_incapacidad: int | None
-    pension_prestacion_no_contributiva: int | None
-    pension_prestacion_resto: int | None
-    perceptor_mediador_flag: _Text | None
-    clave_codigo: int | None
-    codigo_emisor: _Text | None
-    naturaleza: _Text | None
-    pago: int | None
-    tipo_codigo: _Text | None
-    codigo_cuenta: _Text | None
-    pendiente_flag: _Text | None
-    tipo_percepcion: int | None
-    reducciones: _Text
-    base_retenciones: _Text
-    porcentaje_retencion: _Text
-    penalizaciones: _Text
-    isin_code: _Text | None
-    naturaleza_declarante: _Text | None
-    fecha_inicio_prestamo: _Text | None
-    fecha_vencimiento_prestamo: _Text | None
-    compensaciones: _Text
-    garantias: _Text
-    nif_pagador_anterior: _Text | None
-    fecha_devengo: _Text | None
-    clave_mercado: _Text | None
-    numero_orden: int | None
-
-
-class SpreadsheetRelatedPartyOperationObservation(BaseModel):
-    """Closed wire fields of the canonical RelatedPartyOperationObservation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    counterparty_tax_id: _Text
-    counterparty_legal_name: _Text
-    country_code: _Text
-    transaction_date: _Text
-    operation_kind_code: _Text
-    transfer_pricing_method_code: _Text
-    amount: _Text
-
-
-class SpreadsheetModelo720RowObservation(BaseModel):
-    """Closed wire fields of the canonical Modelo720RowObservation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    asset_class_code: _Text
-    country_code: _Text
-    currency_code: _Text
-    asset_identifier: _Text
-    acquisition_date: _Text
-    valuation_amount: _Text
-
-
-class SpreadsheetAtributionMemberObservation(BaseModel):
-    """Closed wire fields of the canonical AtributionMemberObservation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    member_tax_id: _Text
-    member_legal_name: _Text
-    country_code: _Text | None
-    transaction_date: _Text
-    share_percentage: _Text
-    base_imponible_assigned: _Text
-    clave: _Text
-    subclave: _Text | None
-    codigo_provincia: _Text | None
-    miembro_a_31_diciembre: _Text | None
-    dias_miembro: int | None
-    domicilio_fiscal: _Text | None
-    naturaleza_inmueble: _Text | None
-    situacion_inmueble: _Text | None
-    referencia_catastral: _Text | None
-    clave_declarado: _Text | None
-    porcentaje_titularidad_inmueble: _Text | None
-    dias_arrendamiento: int | None
-    reduccion: _Text | None
-    rendimiento_neto_previo_eo: _Text | None
-    rendimiento_neto_minorado_agricola_eo: _Text | None
-
-
-class SpreadsheetRefundOperationObservation(BaseModel):
-    """Closed wire fields of the canonical RefundOperationObservation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    member_state_code: _Text
-    operation_kind_code: _Text
-    operation_date: _Text
-    supplier_tax_id: _Text
-    refund_amount: _Text
-
-
-class SpreadsheetDonativoDonorObservation(BaseModel):
-    """Closed wire fields of the canonical DonativoDonorObservation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    donor_tax_id: _Text
-    donor_legal_name: _Text
-    country_code: _Text
-    transaction_date: _Text
-    amount_donated: _Text
-    deduction_percentage: _Text
-    is_recurrent: bool
-
-
-class SpreadsheetGasto193Observation(BaseModel):
-    """Closed wire fields of the canonical Gasto193Observation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    contributor_tax_id: _Text
-    contributor_legal_name: _Text
-    representative_tax_id: _Text | None
-    transaction_date: _Text
-    importe_gastos: _Text
-
-
-class SpreadsheetWithholding296Observation(BaseModel):
-    """Closed wire fields of the canonical Withholding296Observation; no copied business policy."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    source_id: _Text
-    perceptor_tax_id: _Text
-    representative_tax_id: _Text | None
-    persona_juridica_flag: _Text | None
-    perceptor_legal_name: _Text
-    codigo_bic: _Text | None
-    fecha_devengo: _Text | None
-    naturaleza: _Text
-    clave: _Text
-    subclave: _Text
-    base_retenciones: _Text
-    porcentaje_retencion: _Text
-    retencion_practicada: _Text
-    perceptor_mediador_flag: _Text | None
-    codigo: _Text | None
-    codigo_emisor: _Text | None
-    pago: int | None
-    tipo_codigo: _Text | None
-    codigo_cuenta: _Text | None
-    pendiente_flag: _Text | None
-    accrual_year: int | None
-    fecha_inicio_prestamo: _Text | None
-    fecha_vencimiento_prestamo: _Text | None
-    compensaciones: _Text
-    garantias: _Text
-    otros_importes: _Text
-    direccion_perceptor: _Text | None
-    ingreso_a_cuenta_repercutido: _Text
-    nif_pagador_anterior: _Text | None
-    procedimiento_especial_flag: _Text | None
-    clave_mercado: _Text | None
-    codigo_lei: _Text | None
-    nif_pais_residencia: _Text | None
-    fecha_nacimiento: _Text | None
-    ciudad_nacimiento: _Text | None
-    codigo_pais: _Text | None
-    pais_residencia_fiscal: _Text | None
-    transaction_date: _Text
-
-
-type SpreadsheetAssembledObservation = (
-    SpreadsheetWithholdingObservation
-    | SpreadsheetRelatedPartyOperationObservation
-    | SpreadsheetModelo720RowObservation
-    | SpreadsheetAtributionMemberObservation
-    | SpreadsheetRefundOperationObservation
-    | SpreadsheetDonativoDonorObservation
-    | SpreadsheetGasto193Observation
-    | SpreadsheetWithholding296Observation
-)
-
-type CanonicalSpreadsheetAssembledObservation = (
-    WithholdingObservation
-    | RelatedPartyOperationObservation
-    | Modelo720RowObservation
-    | AtributionMemberObservation
-    | RefundOperationObservation
-    | DonativoDonorObservation
-    | Gasto193Observation
-    | Withholding296Observation
-)
-
-
-def project_modelo_spreadsheet_observation(
-    observation: CanonicalSpreadsheetAssembledObservation,
-) -> SpreadsheetAssembledObservation:
-    """Losslessly project an already-validated canonical row into its closed wire type."""
-    models = (
-        (WithholdingObservation, SpreadsheetWithholdingObservation),
-        (RelatedPartyOperationObservation, SpreadsheetRelatedPartyOperationObservation),
-        (Modelo720RowObservation, SpreadsheetModelo720RowObservation),
-        (AtributionMemberObservation, SpreadsheetAtributionMemberObservation),
-        (RefundOperationObservation, SpreadsheetRefundOperationObservation),
-        (DonativoDonorObservation, SpreadsheetDonativoDonorObservation),
-        (Gasto193Observation, SpreadsheetGasto193Observation),
-        (Withholding296Observation, SpreadsheetWithholding296Observation),
-    )
-    for canonical_type, wire_type in models:
-        if type(observation) is canonical_type:
-            return wire_type.model_validate(observation.model_dump(mode="json"), strict=True)
-    raise TypeError("unsupported canonical spreadsheet observation")
 
 
 class ModeloSpreadsheetRequest(BaseModel):
@@ -377,7 +89,7 @@ class ModeloSpreadsheetVerifyRequest(ModeloSpreadsheetRequest):
     """Optional immutable source reference for the existing parity scenario."""
 
     scenario_path: _PathText | None = None
-    scenario_sha256: _Hex64 | None = None
+    scenario_sha256: Hex64Str | None = None
 
     @model_validator(mode="after")
     def _scenario_reference(self) -> Self:
@@ -386,206 +98,6 @@ class ModeloSpreadsheetVerifyRequest(ModeloSpreadsheetRequest):
         if self.scenario_path is not None and not Path(self.scenario_path).is_absolute():
             raise ValueError("spreadsheet scenario path must be absolute")
         return self
-
-
-class ModeloSpreadsheetProjection(BaseModel):
-    """Encrypted renderer-neutral result with its owning profile coordinate."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    modelo: ModeloId
-    revision: RevisionId
-    period: PublicPeriod
-
-
-class ModeloSpreadsheetExportProjection(ModeloSpreadsheetProjection):
-    """The same existing workbook publication receipt and coverage facts."""
-
-    output_path: _PathText
-    byte_size: _Count
-    sha256: _Hex64
-    tab_names: Annotated[tuple[_Text, ...], Field(min_length=1, max_length=128)]
-    casilla_count: _Count
-    prefill_relations: bool
-
-
-class SpreadsheetPullMetadata(BaseModel):
-    """Every identity stamp already exposed by the canonical pull surface."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    modelo_id: _Text
-    revision_id: RevisionId
-    filing_year: int
-    period: _Text
-    engine_version: _Text
-    registry_sha: _Text
-    exported_at: _Text | None = None
-
-
-class SpreadsheetOperatorEdit(BaseModel):
-    """Populated casilla row, preserving the existing textual scalar projection."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    casilla_id: CasillaId
-    label: _Text
-    value: _Text | None = None
-
-
-class SpreadsheetBindingEdit(BaseModel):
-    """One numeric or enum binding cell."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    binding: BindingId
-    value: _Text | None = None
-
-
-class SpreadsheetRelationEdit(BaseModel):
-    """Preserve all existing relation provenance beside its textual value."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    relation: RelationId
-    value: _Text | None = None
-    provenance: SheetRelationProvenanceValue | None = None
-    source_modelo: ModeloId | None = None
-    source_filing_year: int | None = None
-    source_periods: tuple[str, ...] = ()
-    source_casilla_ids: tuple[CasillaId, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
-    resolved_at: _Text | None = None
-
-
-class SpreadsheetRowSetCell(SpreadsheetBindingEdit):
-    """A populated row cell retaining its exact declared row coordinate."""
-
-    row_index: Annotated[int, Field(ge=1)]
-
-
-class SpreadsheetRowSet(BaseModel):
-    """One populated canonical worksheet grouping."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    grouping: _Handle
-    cells: Annotated[tuple[SpreadsheetRowSetCell, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-
-
-class SpreadsheetAssembledGrouping(BaseModel):
-    """The canonical assembler's existing JSON observations, without persistence."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    grouping: _Handle
-    source_kind: _Handle
-    observation_count: _Count
-    observations: Annotated[tuple[SpreadsheetAssembledObservation, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-
-    @model_validator(mode="after")
-    def _complete_observations(self) -> Self:
-        if self.observation_count != len(self.observations):
-            raise ValueError("assembled observation count disagrees with its rows")
-        return self
-
-
-class SpreadsheetReadFacts(BaseModel):
-    """Read facts common to the existing pull and calculate projections."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    spreadsheet_id: _Handle
-    cells_read: _Count
-    operator_edits_populated: _Count
-    binding_edits_populated: _Count
-    relation_edits_populated: _Count
-
-
-class SpreadsheetPullFacts(SpreadsheetReadFacts):
-    """Normalized inbound facts, not an adapter object or a new ingress algorithm."""
-
-    metadata_match: Literal["matches", "stale", "missing"]
-    metadata: SpreadsheetPullMetadata
-    operator_edits_total: _Count
-    operator_edits: Annotated[tuple[SpreadsheetOperatorEdit, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-    binding_edits: Annotated[tuple[SpreadsheetBindingEdit, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-    relation_edits: Annotated[tuple[SpreadsheetRelationEdit, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-    row_set_edits_populated: _Count
-    row_set_cells_populated: _Count
-    row_set_edits: Annotated[tuple[SpreadsheetRowSet, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-    assembled_groupings: Annotated[
-        tuple[SpreadsheetAssembledGrouping, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)
-    ]
-    assembled_observation_count: _Count
-
-    @model_validator(mode="after")
-    def _complete_counts(self) -> Self:
-        if (
-            self.operator_edits_populated != len(self.operator_edits)
-            or self.operator_edits_total < self.operator_edits_populated
-            or self.binding_edits_populated != len(self.binding_edits)
-            or self.relation_edits_populated != len(self.relation_edits)
-            or self.row_set_edits_populated != len(self.row_set_edits)
-            or self.row_set_cells_populated != sum(len(row.cells) for row in self.row_set_edits)
-            or self.assembled_observation_count != sum(row.observation_count for row in self.assembled_groupings)
-        ):
-            raise ValueError("spreadsheet pull counts disagree with their complete rows")
-        return self
-
-
-class SpreadsheetComputedCasilla(BaseModel):
-    """Exactly the calculated value and grounding fields already disclosed."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    casilla_id: CasillaId
-    value: _Text
-    formula_id: FormulaId | None = None
-    legal_refs: tuple[LegalRefId, ...]
-    source_refs: tuple[SourceRefId, ...]
-
-
-class SpreadsheetCalculateFacts(SpreadsheetReadFacts):
-    """Canonical computation facts from a matching remote workbook."""
-
-    metadata_match: Literal["matches"]
-    computed: Annotated[tuple[SpreadsheetComputedCasilla, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-
-
-class ModeloSpreadsheetPullProjection(ModeloSpreadsheetProjection, SpreadsheetPullFacts):
-    """Complete current pull disclosure, bound to its registered profile."""
-
-
-class ModeloSpreadsheetCalculateProjection(ModeloSpreadsheetProjection, SpreadsheetCalculateFacts):
-    """Complete current calculation disclosure, with no local filing write."""
-
-
-class SpreadsheetVerifyDivergence(BaseModel):
-    """Existing three-way divergence row; absent oracle values stay absent."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    casilla_id: CasillaId
-    label: _Text
-    local: _Text | None = None
-    sheets: _Text | None = None
-    aeat: _Text | None = None
-
-
-class SpreadsheetVerifyFacts(BaseModel):
-    """Canonical report projection plus private transport write acknowledgement."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    spreadsheet_id: _Handle
-    spreadsheet_url: _Handle
-    verdict: Literal["all_match", "divergence", "inconclusive"]
-    aeat_oracle_present: bool
-    computed_count: _Count
-    divergence_count: _Count
-    divergences: Annotated[tuple[SpreadsheetVerifyDivergence, ...], Field(max_length=MAX_MODELO_SPREADSHEET_ROWS)]
-
-    @model_validator(mode="after")
-    def _complete_divergences(self) -> Self:
-        if self.divergence_count != len(self.divergences):
-            raise ValueError("parity divergence count disagrees with its complete rows")
-        return self
-
-
-class ModeloSpreadsheetVerifyProjection(ModeloSpreadsheetProjection, SpreadsheetVerifyFacts):
-    """Current parity result, without disclosing provider write counters."""
 
 
 class SpreadsheetOutputPathRefusal(BaseModel):
@@ -657,6 +169,15 @@ type SpreadsheetRefusal = (
 )
 
 
+def spreadsheet_refusal_code(detail: SpreadsheetRefusal) -> str:
+    """Return the registered refusal code for its closed explanation type."""
+    if isinstance(detail, SpreadsheetOutputPathRefusal):
+        return "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
+    if isinstance(detail, SpreadsheetRowIngressRefusal):
+        return MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE
+    return "REFUSED_OUTBOUND_STORAGE_CONFLICT"
+
+
 class ModeloSpreadsheetOutcome(ModeloSpreadsheetProjection):
     """Receipt-correlated successful report or deliberately retained refusal facts."""
 
@@ -670,23 +191,10 @@ class ModeloSpreadsheetOutcome(ModeloSpreadsheetProjection):
     @model_validator(mode="after")
     def _complete_outcome(self) -> Self:
         result = self.report()
-        if self.outcome == "succeeded":
-            if (
-                self.refusal is not None
-                or result is None
-                or (
-                    result.profile_id != self.profile_id
-                    or result.modelo != self.modelo
-                    or result.revision != self.revision
-                    or result.period != self.period
-                )
-            ):
-                raise ValueError("spreadsheet success coordinates are inconsistent")
-        elif self.refusal is None or result is not None:
-            raise ValueError("spreadsheet refusal is incomplete")
-        if isinstance(self.refusal, SpreadsheetSnapshotMismatchRefusal) and (
-            self.refusal.snapshot_modelo != self.modelo or self.refusal.snapshot_revision != self.revision
-        ):
+        outcome_error = _outcome_result_error(self, result)
+        if outcome_error is not None:
+            raise ValueError(outcome_error)
+        if not _snapshot_refusal_matches(self):
             raise ValueError("spreadsheet refusal names another authority snapshot")
         return self
 
@@ -737,6 +245,54 @@ class ModeloSpreadsheetVerifyOutcome(ModeloSpreadsheetOutcome):
     def report(self) -> ModeloSpreadsheetVerifyProjection | None:
         """Return the existing canonical parity harness report."""
         return self.result
+
+
+def _outcome_result_error(outcome: ModeloSpreadsheetOutcome, result: ModeloSpreadsheetProjection | None) -> str | None:
+    if outcome.outcome == "succeeded":
+        if (
+            outcome.refusal is not None
+            or result is None
+            or result.profile_id != outcome.profile_id
+            or result.modelo != outcome.modelo
+            or result.revision != outcome.revision
+            or result.period != outcome.period
+        ):
+            return "spreadsheet success coordinates are inconsistent"
+        return None
+    return "spreadsheet refusal is incomplete" if outcome.refusal is None or result is not None else None
+
+
+def _snapshot_refusal_matches(outcome: ModeloSpreadsheetOutcome) -> bool:
+    detail = outcome.refusal
+    return not isinstance(detail, SpreadsheetSnapshotMismatchRefusal) or (
+        detail.snapshot_modelo == outcome.modelo and detail.snapshot_revision == outcome.revision
+    )
+
+
+MODELO_SPREADSHEET_OPERATION_CONTRACTS: dict[
+    str, tuple[type[ModeloSpreadsheetRequest], type[ModeloSpreadsheetProjection], type[ModeloSpreadsheetOutcome]]
+] = {
+    MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID: (
+        ModeloSpreadsheetExportRequest,
+        ModeloSpreadsheetExportProjection,
+        ModeloSpreadsheetExportOutcome,
+    ),
+    MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID: (
+        ModeloSpreadsheetPullRequest,
+        ModeloSpreadsheetPullProjection,
+        ModeloSpreadsheetPullOutcome,
+    ),
+    MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID: (
+        ModeloSpreadsheetCalculateRequest,
+        ModeloSpreadsheetCalculateProjection,
+        ModeloSpreadsheetCalculateOutcome,
+    ),
+    MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID: (
+        ModeloSpreadsheetVerifyRequest,
+        ModeloSpreadsheetVerifyProjection,
+        ModeloSpreadsheetVerifyOutcome,
+    ),
+}
 
 
 class ModeloSpreadsheetExecutionResult(BaseModel):
@@ -821,63 +377,35 @@ class ModeloSpreadsheetOperationPortsFactory(Protocol):
 
 
 __all__ = [
-    "MAX_MODELO_SPREADSHEET_ROWS",
     "MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID",
     "MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID",
+    "MODELO_SPREADSHEET_OPERATION_CONTRACTS",
     "MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID",
     "MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE",
     "MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID",
-    "CanonicalSpreadsheetAssembledObservation",
     "ModeloSpreadsheetCalculateOutcome",
-    "ModeloSpreadsheetCalculateProjection",
     "ModeloSpreadsheetCalculateRequest",
     "ModeloSpreadsheetExecutionResult",
     "ModeloSpreadsheetExportOutcome",
-    "ModeloSpreadsheetExportProjection",
     "ModeloSpreadsheetExportRequest",
     "ModeloSpreadsheetOperationPorts",
     "ModeloSpreadsheetOperationPortsFactory",
     "ModeloSpreadsheetOutcome",
-    "ModeloSpreadsheetProjection",
     "ModeloSpreadsheetPullOutcome",
-    "ModeloSpreadsheetPullProjection",
     "ModeloSpreadsheetPullRequest",
     "ModeloSpreadsheetRequest",
     "ModeloSpreadsheetRowIngressRefusedError",
     "ModeloSpreadsheetVerifyOutcome",
-    "ModeloSpreadsheetVerifyProjection",
     "ModeloSpreadsheetVerifyRequest",
-    "SpreadsheetAssembledGrouping",
-    "SpreadsheetAssembledObservation",
-    "SpreadsheetAtributionMemberObservation",
-    "SpreadsheetBindingEdit",
-    "SpreadsheetCalculateFacts",
     "SpreadsheetCalculatePort",
-    "SpreadsheetComputedCasilla",
-    "SpreadsheetDonativoDonorObservation",
-    "SpreadsheetGasto193Observation",
-    "SpreadsheetModelo720RowObservation",
     "SpreadsheetMutationHandoff",
-    "SpreadsheetOperatorEdit",
     "SpreadsheetOutputPathRefusal",
     "SpreadsheetProviderAdmission",
-    "SpreadsheetPullFacts",
-    "SpreadsheetPullMetadata",
     "SpreadsheetPullPort",
-    "SpreadsheetReadFacts",
-    "SpreadsheetRefundOperationObservation",
     "SpreadsheetRefusal",
-    "SpreadsheetRelatedPartyOperationObservation",
-    "SpreadsheetRelationEdit",
     "SpreadsheetRowIngressRefusal",
-    "SpreadsheetRowSet",
-    "SpreadsheetRowSetCell",
     "SpreadsheetSnapshotMismatchRefusal",
     "SpreadsheetVerifyAcknowledgement",
-    "SpreadsheetVerifyDivergence",
-    "SpreadsheetVerifyFacts",
     "SpreadsheetVerifyPort",
-    "SpreadsheetWithholding296Observation",
-    "SpreadsheetWithholdingObservation",
-    "project_modelo_spreadsheet_observation",
+    "spreadsheet_refusal_code",
 ]

@@ -28,7 +28,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 
 _RETENTION_FLOOR_FACT_ID = "lgt-tax-record-retention-floor-years"
@@ -40,11 +40,7 @@ def retention_floor_years(
     authority: GovernedFactSource | None = None,
 ) -> int:
     """Resolve the dated retention scalar through the registry authority."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "retention-floor resolution requires an explicit authority operation or scope",
-        )
+    authority = require_governed_fact_authority(authority, subject="retention-floor resolution")
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_RETENTION_FLOOR_FACT_ID,

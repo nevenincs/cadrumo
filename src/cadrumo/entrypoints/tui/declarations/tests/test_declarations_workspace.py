@@ -37,6 +37,7 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.modelos.calculation_revision import (
@@ -60,9 +61,10 @@ from ...components.host import ScreenHostApp
 from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import DeclarationsWorkspaceController, declarations_copy
+from ..controller import DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
 from ..models import (
+    DeclarationsWorkspaceWiringV1,
     FilingHandoffV1,
     ModeloWorkCreateHandoffV1,
     ModeloWorkCreateResultV1,
@@ -109,7 +111,7 @@ _EXPECTED = {
         "Presentació registrada",
     ),
     OutputLanguage.HU: (
-        "Az Ön bevallásai",
+        "A bevallásaid",
         "Korábbi számítások",
         "Benyújtási előzmények",
         "A helyi benyújtási állapot, az AEAT-megerősítés és a megfigyelt AEAT-állapot külön tények.",
@@ -312,14 +314,16 @@ def _controller(
     return DeclarationsWorkspaceController(
         context or TuiScreenContextV1(destination="workbench.declarations"),
         projection,
-        work_action=_action("operator.modelo.work.list"),
-        revisions_action=_action("operator.modelo.work.revisions"),
-        filing_action=_action("operator.modelo.filing_record.list"),
-        modelo_workspace_factory=modelo_workspace_factory,
-        revision_handoff=revision_handoff,
-        filing_handoff=filing_handoff,
-        work_create_handoff=work_create_handoff,
-        creation_targets=creation_targets,
+        DeclarationsWorkspaceWiringV1(
+            work_action=_action("operator.modelo.work.list"),
+            revisions_action=_action("operator.modelo.work.revisions"),
+            filing_action=_action("operator.modelo.filing_record.list"),
+            modelo_workspace_factory=modelo_workspace_factory,
+            revision_handoff=revision_handoff,
+            filing_handoff=filing_handoff,
+            work_create_handoff=work_create_handoff,
+            creation_targets=creation_targets,
+        ),
     )
 
 
@@ -393,7 +397,7 @@ async def test_declarations_create_selects_only_supported_targets_and_reopens_ex
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
         assert "Modelo 111" in notice
         assert "2025" in notice
-        assert declarations_copy("tui.declarations.work_create.reused", address="")[:10] in notice
+        assert tr("tui.declarations.work_create.reused", address="")[:10] in notice
 
 
 @pytest.mark.asyncio
@@ -458,9 +462,7 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
         await pilot.app.workers.wait_for_complete()
         await pilot.pause()
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
-    assert notice == declarations_copy(
-        "tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason"
-    )
+    assert notice == tr("tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason")
     assert "--allow-not-applicable" not in notice
 
 
@@ -487,17 +489,21 @@ def test_closed_routes_and_factory_require_exact_catalogue_actions(
     )
     factory = declarations_screen_factory(
         _projection(authority_operation),
-        work_action=_action("operator.modelo.work.list"),
-        revisions_action=_action("operator.modelo.work.revisions"),
-        filing_action=_action("operator.modelo.filing_record.list"),
+        DeclarationsWorkspaceWiringV1(
+            work_action=_action("operator.modelo.work.list"),
+            revisions_action=_action("operator.modelo.work.revisions"),
+            filing_action=_action("operator.modelo.filing_record.list"),
+        ),
     )
     assert isinstance(factory(TuiScreenContextV1(destination="workbench.declarations")), DeclarationsOverviewScreen)
     with pytest.raises(ValueError, match="another application door"):
         declarations_screen_factory(
             _projection(authority_operation),
-            work_action=_action("operator.modelo.work.revisions"),
-            revisions_action=_action("operator.modelo.work.revisions"),
-            filing_action=_action("operator.modelo.filing_record.list"),
+            DeclarationsWorkspaceWiringV1(
+                work_action=_action("operator.modelo.work.revisions"),
+                revisions_action=_action("operator.modelo.work.revisions"),
+                filing_action=_action("operator.modelo.filing_record.list"),
+            ),
         )
 
 
@@ -589,7 +595,7 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
     app = ScreenHostApp[None](empty)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
-        assert declarations_copy("tui.declarations.list.empty") in _copy(empty)
+        assert tr("tui.declarations.list.empty") in _copy(empty)
     screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
@@ -597,7 +603,7 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
         table = screen.query_one("#declarations-list", DataTable)
         _select_declaration(table, screen.controller.projection.declarations[0].work_unit_id)
         await pilot.press("enter")
-        assert declarations_copy("tui.declarations.refusal.handoff") in _copy(screen)
+        assert tr("tui.declarations.refusal.handoff") in _copy(screen)
 
 
 class _ModeloChild(Screen[None]):
@@ -686,8 +692,8 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         assert len(set(rows)) == 3
         assert all("03/09/2026" in row[1] and "UTC" in row[1] for row in rows)
         assert {row[-2:] for row in rows} == {
-            (declarations_copy("tui.declarations.value.yes"), declarations_copy("tui.declarations.value.yes")),
-            (declarations_copy("tui.declarations.value.no"), declarations_copy("tui.declarations.value.no")),
+            (tr("tui.declarations.value.yes"), tr("tui.declarations.value.yes")),
+            (tr("tui.declarations.value.no"), tr("tui.declarations.value.no")),
         }
         drafts = tuple(row for row in projection.calculation_revisions if not row.is_current and not row.is_filed)
         assert len(drafts) == 2
@@ -713,9 +719,9 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         filing_key = f"filing:{projection.filings[0].filing_record_id}"
         row = tuple(str(cell) for cell in table.get_row(filing_key))
         assert row[1] == "03/09/2026 10:00 UTC"
-        assert row[2] == declarations_copy("tui.declarations.filing_state.vigente")
-        assert row[3] == declarations_copy("tui.declarations.confirmation.confirmada")
-        assert row[4] == declarations_copy("tui.declarations.evidence.aeat_justificante_pdf")
+        assert row[2] == tr("tui.declarations.filing_state.vigente")
+        assert row[3] == tr("tui.declarations.confirmation.confirmada")
+        assert row[4] == tr("tui.declarations.evidence.aeat_justificante_pdf")
 
 
 @pytest.mark.asyncio
@@ -800,8 +806,8 @@ async def test_initial_grouped_controls_remain_visible_above_the_scrolling_atten
                 assert control.region.y >= screen.query_one(".cadrumo-banner", Static).region.bottom
                 assert control.region.bottom <= page.region.y
             initial_regions = (search.region, context.region)
-            assert declarations_copy("tui.declarations.list.filter.all") in str(context.render())
-            assert declarations_copy("tui.declarations.list.sort.deadline") in str(context.render())
+            assert tr("tui.declarations.list.filter.all") in str(context.render())
+            assert tr("tui.declarations.list.sort.deadline") in str(context.render())
             assert page.max_scroll_y > 0
             page.scroll_end(animate=False)
             await pilot.pause()
@@ -879,7 +885,7 @@ async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration
             assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
             await pilot.press("f")
             assert local_keys() == ()
-            assert declarations_copy("tui.declarations.list.filter.attention") in _copy(screen)
+            assert tr("tui.declarations.list.filter.attention") in _copy(screen)
             for _ in range(4):
                 await pilot.press("f")
             assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Never
 
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...application.ledger.evidence_ingestion_operation import (
@@ -20,17 +19,14 @@ from ...application.ledger.evidence_ingestion_operation import (
     LedgerEvidencePullProjection,
     LedgerEvidencePullRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.iva.classification import InvoiceKind
 from ._ledger_support import ledger_validation_bad
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_ledger_evidence_batch(
@@ -62,7 +58,7 @@ def run_ledger_evidence_batch(
         or projection.direction is not direction
         or projection.effect not in {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL}
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -102,7 +98,7 @@ def run_ledger_evidence_pull(
         or projection.effect is not OperationEffect.UPDATED
         or projection.write_count < 1
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -130,7 +126,7 @@ def run_ledger_evidence_pull_all(
         or projection.folder_id != folder
         or projection.effect not in {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL}
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -160,21 +156,10 @@ def _submit[
         or completed.effect is not completed.projection.effect
         or completed.projection.profile_id != client.profile_id
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     if isinstance(request, LedgerEvidencePullRequest) and completed.effect is not OperationEffect.UPDATED:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    """Reject any worker receipt or projection that disagrees with the request."""
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 __all__ = [

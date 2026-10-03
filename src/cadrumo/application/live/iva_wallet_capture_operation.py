@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -24,6 +23,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -36,10 +36,9 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -101,7 +100,12 @@ class IvaWalletCaptureComposition(Protocol):
         ...
 
 
-IvaWalletCaptureCompositionFactory = Callable[[], IvaWalletCaptureComposition]
+class IvaWalletCaptureCompositionFactory(Protocol):
+    """Compose the wallet capture bundle under its held authority operation."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> IvaWalletCaptureComposition:
+        """Return the exact worker-local wallet composition."""
+        ...
 
 
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
@@ -150,7 +154,7 @@ class IvaWalletCaptureExecutor:
         period = Period.from_year_and_code(payload.target_year, payload.target_period)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
+        composition = self._composition_factory(operation=context.authority_operation)
         resources = self._browser_resources_factory()
         context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
         await context.events.phase(_PHASES[1])

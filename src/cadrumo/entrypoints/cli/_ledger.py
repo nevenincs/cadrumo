@@ -18,7 +18,8 @@ from __future__ import annotations
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger.add_operation import LedgerAddOperationResult
+from ...application.ledger.classify_operation import LedgerClassifyOperationResult
+from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult
 from ...application.ledger.models import (
     ManualLedgerTransactionPatch,
 )
@@ -145,20 +146,7 @@ def _manual_add_notices(
             )
         )
         extra_lines.append(inert_message)
-    if result.advisory_sector_unmatched:
-        sector_id = result.advisory_sector_id
-        if sector_id is None:
-            raise RuntimeError("ledger add unmatched-sector advisory omitted its sector")
-        unmatched_message = tr("cli.ledger.add.sector_unmatched", sector_id=sector_id)
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="ledger.add.sector_unmatched",
-                message=unmatched_message,
-                context={"sector_id": sector_id},
-            )
-        )
-        extra_lines.append(unmatched_message)
+    _append_unmatched_sector_notice(result, notices, extra_lines)
     return notices, extra_lines
 
 
@@ -612,49 +600,7 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
-    if result.outcome == "validation_error":
-        if result.validation_kind == "m210_incoming_only":
-            raise bad(tr("cli.ledger.classify.m210_incoming_only"))
-        if result.validation_kind == "m210_required_options":
-            raise bad(tr("cli.ledger.classify.m210_required_options"))
-        details = "; ".join(result.validation_messages)
-        raise bad(
-            tr(
-                "cli.ledger.errors.command_input_invalid",
-                details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
-            ),
-        )
-    transaction = result.transaction
-    review_status = result.review_status
-    if transaction is None or review_status is None:
-        from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    from ._ledger_payloads import LedgerClassifySingleResult, TransactionPayload
-
-    transaction_payload = TransactionPayload.model_validate(transaction.model_dump(mode="json"))
-    output_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": str(result.profile_id),
-            "transaction_id": transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    emit_envelope(
-        ctx,
-        command="ledger.classify",
-        result=output_result,
-        lines=[
-            *([tr("cli.ledger.classify.reaffirmed")] if reaffirm else []),
-            f"{tr('cli.ledger.labels.id')}\t{transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
-    )
+    _emit_single_classification(ctx, result, reaffirm)
 
 
 def ledger_allocate(
@@ -759,3 +705,70 @@ def ledger_link(
         result=LedgerLinkResult.model_validate(payload),
         lines=lines,
     )
+
+
+def _emit_single_classification(ctx: typer.Context, result: LedgerClassifyOperationResult, reaffirm: bool) -> None:
+    """Refuse an incomplete result before emitting its settled classification."""
+    if result.outcome == "validation_error":
+        if result.validation_kind == "m210_incoming_only":
+            raise bad(tr("cli.ledger.classify.m210_incoming_only"))
+        if result.validation_kind == "m210_required_options":
+            raise bad(tr("cli.ledger.classify.m210_required_options"))
+        details = "; ".join(result.validation_messages)
+        raise bad(
+            tr(
+                "cli.ledger.errors.command_input_invalid",
+                details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
+            ),
+        )
+    transaction = result.transaction
+    review_status = result.review_status
+    if transaction is None or review_status is None:
+        from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    from ._ledger_payloads import LedgerClassifySingleResult, TransactionPayload
+
+    transaction_payload = TransactionPayload.model_validate(transaction.model_dump(mode="json"))
+    output_result = LedgerClassifySingleResult.model_validate(
+        {
+            "bucket_id": str(result.profile_id),
+            "transaction_id": transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        },
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.classify",
+        result=output_result,
+        lines=[
+            *([tr("cli.ledger.classify.reaffirmed")] if reaffirm else []),
+            f"{tr('cli.ledger.labels.id')}\t{transaction.transaction_id}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+        ],
+    )
+
+
+def _append_unmatched_sector_notice(
+    result: LedgerAddOperationResult, notices: list[Notice], extra_lines: list[str]
+) -> None:
+    """Append the unmatched-sector advisory after the add and inert-input notices."""
+    if result.advisory_sector_unmatched:
+        sector_id = result.advisory_sector_id
+        if sector_id is None:
+            raise RuntimeError("ledger add unmatched-sector advisory omitted its sector")
+        unmatched_message = tr("cli.ledger.add.sector_unmatched", sector_id=sector_id)
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.add.sector_unmatched",
+                message=unmatched_message,
+                context={"sector_id": sector_id},
+            )
+        )
+        extra_lines.append(unmatched_message)

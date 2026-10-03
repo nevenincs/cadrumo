@@ -40,7 +40,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_spec import OptionSpec, ParameterSpec
+from .._command_parameter_contracts import OptionSpec, ParameterSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

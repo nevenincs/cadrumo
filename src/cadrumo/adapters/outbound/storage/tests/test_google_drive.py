@@ -179,6 +179,10 @@ def test_vault_resolution_follows_page_token_to_an_owned_folder() -> None:
         assert provider._resolve_vault_folder() == "vault-id"
 
     assert len(endpoint.requested_queries) == 2
+    assert parse_qs(endpoint.requested_queries[0])["q"] == [
+        "'drive-root' in parents and name='cadrumo-vault' "
+        "and mimeType='application/vnd.google-apps.folder' and trashed=false"
+    ]
     assert parse_qs(endpoint.requested_queries[1])["pageToken"] == ["vault-page-two"]
 
 
@@ -242,7 +246,50 @@ def test_namespace_resolution_follows_page_token_to_an_owned_folder() -> None:
         assert provider._resolve_namespace_folder("ledger_transaction", create=False) == "namespace-id"
 
     assert len(endpoint.requested_queries) == 3
+    assert parse_qs(endpoint.requested_queries[2])["q"] == [
+        "'vault-id' in parents and name='ledger_transaction' "
+        "and mimeType='application/vnd.google-apps.folder' and trashed=false"
+    ]
     assert parse_qs(endpoint.requested_queries[2])["pageToken"] == ["namespace-page-two"]
+
+
+def test_iter_objects_escapes_configured_query_values_at_the_provider_boundary() -> None:
+    root_folder_id = "drive'\\root"
+    vault_folder_name = "cad'\\vault"
+    namespace = "ledger'archive"
+    app_properties = {"cadrumo_vault_app": "cadrumo"}
+    with drive_files_list_endpoint(
+        pages=(
+            {
+                "files": [
+                    {
+                        "id": "vault-id",
+                        "name": vault_folder_name,
+                        "mimeType": "application/vnd.google-apps.folder",
+                        "appProperties": app_properties,
+                    }
+                ]
+            },
+            {"files": [{"id": "namespace-id", "name": namespace, "appProperties": app_properties}]},
+            {"files": []},
+        )
+    ) as endpoint:
+        provider = GoogleDriveProvider(
+            credentials=unused_google_credentials(),
+            root_folder_id=root_folder_id,
+            vault_folder_name=vault_folder_name,
+        )
+        provider._service = endpoint.service
+
+        assert list(provider.iter_objects(namespace)) == []
+
+    assert [parse_qs(query)["q"][0] for query in endpoint.requested_queries] == [
+        "'drive\\'\\\\root' in parents and name='cad\\'\\\\vault' "
+        "and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        "'vault-id' in parents and name='ledger\\'archive' "
+        "and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        "'namespace-id' in parents and trashed=false",
+    ]
 
 
 def test_file_resolution_follows_page_token_to_a_matching_owned_object() -> None:

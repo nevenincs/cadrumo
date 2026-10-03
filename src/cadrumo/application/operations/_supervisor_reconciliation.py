@@ -21,6 +21,7 @@ from .models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from .operation_definition import OperationDefinition
 from .owner import OperationResumableExecutor
 from .persistence.events import OperationReconciliationEvent
 from .persistence.journal import OperationPersistedSnapshot
@@ -31,7 +32,7 @@ from .persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from .registry import OperationDefinition, OperationReconciliationPolicy
+from .registry import OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess
 
 if TYPE_CHECKING:

@@ -46,7 +46,7 @@ from .....core.i18n.render import tr
 from ...components.theme import tokenised
 from .bulk_confirm import TickBox
 from .dialog_width import fit_dialog_width
-from .issues import blocks_marked
+from .issue_scale import blocks_marked
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
 from .sources import BOX_LIST_LINES
@@ -209,6 +209,13 @@ def change_line(change: StagedChange) -> str:
     )
 
 
+def _displacing_count(changes: tuple[StagedChange, ...]) -> int:
+    return sum(
+        change.kind is WorkbenchChangeKind.SET and change.displaces in {Displacement.SOURCE, Displacement.CALCULATION}
+        for change in changes
+    )
+
+
 class EditReviewScreen(ModalScreen[ReviewDecision | None]):
     """The mandatory review of staged changes."""
 
@@ -321,12 +328,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
 
     @override
     def compose(self) -> ComposeResult:
-        displacing = sum(
-            1
-            for change in self._changes
-            if change.kind is WorkbenchChangeKind.SET
-            and change.displaces in {Displacement.SOURCE, Displacement.CALCULATION}
-        )
+        displacing = _displacing_count(self._changes)
         with Container(id="review-backdrop"), Vertical(id="review-panel"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="review-status")

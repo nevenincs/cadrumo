@@ -7,28 +7,27 @@ from typing import Final
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_spec import (
-    FLAG_VALUE,
-    PATH_VALUE,
-    TEXT_VALUE,
-    WHOLE_NUMBER_VALUE,
-    ArgumentSpec,
-    CommandSpec,
-    DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
-    LazyBinding,
+from .._command_parameter_contracts import ArgumentSpec, OptionSpec
+from .._command_secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
-    OptionSpec,
+)
+from .._command_shared_contracts import (
+    FLAG_VALUE,
+    PATH_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
+    DeferredTarget,
+    LazyBinding,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from ..command_spec import translation_key as _key
+from .._command_shared_contracts import translation_key as _key
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import (
     AEAT_SESSION_WRITE,

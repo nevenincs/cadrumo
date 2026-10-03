@@ -52,11 +52,14 @@ from ....core.config import load_settings
 from ....core.config_integration_fields import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
+from ....core.external_constants import GOOGLE_DRIVE_FOLDER_MIME_TYPE
+from ....core.google_drive_query import escape_google_drive_query_literal
+from ....core.google_http_error import google_http_status, google_quota_marker
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.type_guards import is_object_dict, is_object_list, is_object_mapping, is_str_keyed_dict
-from ..google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
+from ..google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE, DriveOwnership, classify_drive_ownership
 from ._google_drive_metadata import (
     DriveStoragePreconditionCondition,
     drive_external_verdict,
@@ -80,7 +83,6 @@ from .errors import (
 )
 from .records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
-_FOLDER_MIME = "application/vnd.google-apps.folder"
 _FILE_EXTENSION = ".bin"
 _PROBE_NAMESPACE = "_probe"
 # Drive `appProperties` ownership marker. The provider stamps this key
@@ -148,9 +150,20 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
     The lazy-import guard makes this callable without ``google-api-python-client``
     installed, which is important for unit tests that inject fakes.
     """
-    status = getattr(getattr(error, "resp", None), "status", None)
+    status = google_http_status(error)
     detail = "drive request failed"
     context = {"action": action, "status": str(status) if status is not None else "unknown"}
+    if status == 429 or (status == 403 and google_quota_marker(error) is not None):
+        return OutboundStorageQuotaError(
+            detail,
+            context=context,
+            translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
+            precondition_verdict=drive_external_verdict(
+                DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
+                facts={"operation": action, "status": context["status"], "quota_available": False},
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        )
     if status in (401, 403):
         return OutboundStoragePermissionError(
             detail,
@@ -184,18 +197,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),
         )
-    if status == 429:
-        return OutboundStorageQuotaError(
-            detail,
-            context=context,
-            translated_message="adapters.outbound.storage.google_drive.errors.request_failed",
-            precondition_verdict=drive_external_verdict(
-                DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
-                facts={"operation": action, "status": context["status"], "quota_available": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
-    if status is not None and 500 <= int(status) < 600:
+    if status is not None and 500 <= status < 600:
         return OutboundStorageUnavailableError(
             detail,
             context=context,
@@ -414,7 +416,7 @@ class GoogleDriveProvider:
         except OutboundStorageError:
             raise
         except Exception as exc:
-            status = getattr(getattr(exc, "resp", None), "status", None)
+            status = google_http_status(exc)
             _LOG.debug(
                 "Google Drive request failed during %s with status=%s error_type=%s",
                 action,
@@ -470,7 +472,7 @@ class GoogleDriveProvider:
         """Create an owned folder and return the raw Drive response."""
         body = {
             "name": name,
-            "mimeType": _FOLDER_MIME,
+            "mimeType": GOOGLE_DRIVE_FOLDER_MIME_TYPE,
             "parents": [parent_id],
             "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
         }
@@ -491,10 +493,13 @@ class GoogleDriveProvider:
         if self._vault_folder_id is not None:
             return self._vault_folder_id
         service = self._get_service()
+        safe_root_folder_id = escape_google_drive_query_literal(self._root_folder_id)
+        safe_vault_folder_name = escape_google_drive_query_literal(self._vault_folder_name)
+        safe_folder_mime = escape_google_drive_query_literal(GOOGLE_DRIVE_FOLDER_MIME_TYPE)
         query = (
-            f"'{self._root_folder_id}' in parents "
-            f"and name='{self._vault_folder_name}' "
-            f"and mimeType='{_FOLDER_MIME}' "
+            f"'{safe_root_folder_id}' in parents "
+            f"and name='{safe_vault_folder_name}' "
+            f"and mimeType='{safe_folder_mime}' "
             f"and trashed=false"
         )
         entry = self._first_drive_entry(
@@ -505,7 +510,7 @@ class GoogleDriveProvider:
             action="resolve_vault_folder",
         )
         if entry is not None:
-            if entry.get("mimeType") != _FOLDER_MIME:
+            if entry.get("mimeType") != GOOGLE_DRIVE_FOLDER_MIME_TYPE:
                 raise OutboundStorageValidationError(
                     "configured Drive root contains a vault-name entry that is not a folder",
                     context={"root_folder_id": self._root_folder_id, "vault_folder_name": self._vault_folder_name},
@@ -563,10 +568,10 @@ class GoogleDriveProvider:
         """
         raw_properties = entry.get("appProperties")
         existing: dict[str, object] = raw_properties if is_str_keyed_dict(raw_properties) else {}
-        existing_value = existing.get(OWNERSHIP_KEY)
-        if existing_value == OWNERSHIP_VALUE:
+        ownership = classify_drive_ownership(existing)
+        if ownership is DriveOwnership.OWNED:
             return
-        if not existing:
+        if ownership is DriveOwnership.UNMARKED:
             # Probably a folder we created in a prior session before
             # ownership marking landed. Stamp it now.
             service = self._get_service()
@@ -607,7 +612,13 @@ class GoogleDriveProvider:
             return cached
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
-        query = f"'{vault_id}' in parents and name='{namespace}' and mimeType='{_FOLDER_MIME}' and trashed=false"
+        safe_vault_id = escape_google_drive_query_literal(vault_id)
+        safe_namespace = escape_google_drive_query_literal(namespace)
+        safe_folder_mime = escape_google_drive_query_literal(GOOGLE_DRIVE_FOLDER_MIME_TYPE)
+        query = (
+            f"'{safe_vault_id}' in parents and name='{safe_namespace}' "
+            f"and mimeType='{safe_folder_mime}' and trashed=false"
+        )
         action = f"resolve_namespace_{namespace}"
         entry = self._first_drive_entry(
             service,
@@ -664,7 +675,9 @@ class GoogleDriveProvider:
         """
         service = self._get_service()
         prefix = provider_object_hmac_prefix(object_key_hmac)
-        query = f"'{namespace_folder_id}' in parents and name contains '{prefix}--' and trashed=false"
+        safe_namespace_folder_id = escape_google_drive_query_literal(namespace_folder_id)
+        safe_name_prefix = escape_google_drive_query_literal(f"{prefix}--")
+        query = f"'{safe_namespace_folder_id}' in parents and name contains '{safe_name_prefix}' and trashed=false"
         page_token: str | None = None
         seen_tokens: set[str] = set()
         while True:
@@ -906,7 +919,7 @@ class GoogleDriveProvider:
         except OutboundStorageError:
             raise
         except Exception as exc:
-            status = getattr(getattr(exc, "resp", None), "status", None)
+            status = google_http_status(exc)
             _LOG.debug(
                 "Google Drive media request failed with status=%s error_type=%s",
                 str(status) if status is not None else "unknown",
@@ -1020,7 +1033,9 @@ class GoogleDriveProvider:
         """
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
-        query = f"'{vault_id}' in parents and mimeType='{_FOLDER_MIME}' and trashed=false"
+        safe_vault_id = escape_google_drive_query_literal(vault_id)
+        safe_folder_mime = escape_google_drive_query_literal(GOOGLE_DRIVE_FOLDER_MIME_TYPE)
+        query = f"'{safe_vault_id}' in parents and mimeType='{safe_folder_mime}' and trashed=false"
         page_token: str | None = None
         seen_tokens: set[str] = set()
         while True:
@@ -1080,7 +1095,8 @@ class GoogleDriveProvider:
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             )
-        query = f"'{namespace_folder_id}' in parents and trashed=false"
+        safe_namespace_folder_id = escape_google_drive_query_literal(namespace_folder_id)
+        query = f"'{safe_namespace_folder_id}' in parents and trashed=false"
         page_token: str | None = None
         seen_tokens: set[str] = set()
         while True:
@@ -1179,7 +1195,7 @@ class GoogleDriveProvider:
                 root_folder_present=False,
                 detail=f"root_folder_id {self._root_folder_id!r} is trashed or malformed",
             )
-        if root_check.get("mimeType") != _FOLDER_MIME:
+        if root_check.get("mimeType") != GOOGLE_DRIVE_FOLDER_MIME_TYPE:
             return ProviderProbeReport(
                 provider_kind=ProviderKind.GOOGLE_DRIVE,
                 reachable=True,

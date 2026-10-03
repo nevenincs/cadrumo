@@ -52,6 +52,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations.row_coordinate import index_unique_row_coordinates
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.modelos.calculation_revision import (
     empty_row_casilla_provenance,
@@ -90,6 +91,42 @@ class SourceMeshError(CoreValidationError):
 
     def __init__(self, message_key: str) -> None:
         super().__init__(message_key, translated_message=message_key)
+
+
+def _list_form_rows(items: tuple[object, ...]) -> list[dict[str, object]] | None:
+    """Return a row channel's list-form entries, or ``None`` when one is not a mapping.
+
+    ``None`` hands the raw items back to field validation, which then rejects them
+    with the channel's own type error.
+    """
+    if not all(isinstance(item, Mapping) for item in items):
+        return None
+    return [STR_KEYED_MAPPING_ADAPTER.validate_python(item) for item in items]
+
+
+def _list_form_row_binding_value(row: Mapping[str, object]) -> object:
+    row_value = row.get("value")
+    if row.get("value_kind") != "decimal":
+        return row_value
+    decimal_value = coerce_decimal(row_value)
+    if decimal_value is None:
+        raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
+    return decimal_value
+
+
+def _list_form_row_casilla_value(row: Mapping[str, object]) -> Decimal:
+    row_value = coerce_decimal(row.get("value"))
+    if row_value is None:
+        raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_value_invalid")
+    return row_value
+
+
+def _duplicate_row_binding_coordinate(_coordinate: object) -> SourceMeshError:
+    return SourceMeshError("aggregation.source_mesh.errors.duplicate_row_binding_coordinate")
+
+
+def _duplicate_row_casilla_coordinate(_coordinate: object) -> SourceMeshError:
+    return SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
 
 
 CalculationSourceDiagnosticReason = Literal[
@@ -970,18 +1007,13 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            row_value = row.get("value")
-            if row.get("value_kind") == "decimal":
-                row_value = coerce_decimal(row_value)
-                if row_value is None:
-                    raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
-            normalized[(row.get("binding_id"), row.get("row_index"))] = row_value
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (((row.get("binding_id"), row.get("row_index")), _list_form_row_binding_value(row)) for row in rows),
+            duplicate=_duplicate_row_binding_coordinate,
+        )
 
     @field_validator("row_binding_values")
     @classmethod
@@ -1006,18 +1038,24 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            normalized[(row.get("binding_id"), row.get("row_index"))] = {
-                "source_kind": row.get("source_kind"),
-                "source_row_identity": row.get("source_row_identity"),
-                "fingerprint": row.get("fingerprint"),
-                "row_set_grouping": row.get("row_set_grouping"),
-            }
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (
+                (
+                    (row.get("binding_id"), row.get("row_index")),
+                    {
+                        "source_kind": row.get("source_kind"),
+                        "source_row_identity": row.get("source_row_identity"),
+                        "fingerprint": row.get("fingerprint"),
+                        "row_set_grouping": row.get("row_set_grouping"),
+                    },
+                )
+                for row in rows
+            ),
+            duplicate=_duplicate_row_binding_coordinate,
+        )
 
     @field_validator("row_source_identities")
     @classmethod
@@ -1042,19 +1080,13 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            key = (row.get("casilla_id"), row.get("row_index"))
-            if key in normalized:
-                raise SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
-            row_value = coerce_decimal(row.get("value"))
-            if row_value is None:
-                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_value_invalid")
-            normalized[key] = row_value
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (((row.get("casilla_id"), row.get("row_index")), _list_form_row_casilla_value(row)) for row in rows),
+            duplicate=_duplicate_row_casilla_coordinate,
+        )
 
     @field_validator("row_casilla_values")
     @classmethod
@@ -1076,22 +1108,25 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            key = (row.get("casilla_id"), row.get("row_index"))
-            if key in normalized:
-                raise SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
-            normalized[key] = {
-                "source_binding_id": row.get("source_binding_id"),
-                "source_row_index": row.get("source_row_index"),
-                "source_identity": row.get("source_identity"),
-                "materialization_rule_id": row.get("materialization_rule_id"),
-                "materialization_rule_version": row.get("materialization_rule_version"),
-            }
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (
+                (
+                    (row.get("casilla_id"), row.get("row_index")),
+                    {
+                        "source_binding_id": row.get("source_binding_id"),
+                        "source_row_index": row.get("source_row_index"),
+                        "source_identity": row.get("source_identity"),
+                        "materialization_rule_id": row.get("materialization_rule_id"),
+                        "materialization_rule_version": row.get("materialization_rule_version"),
+                    },
+                )
+                for row in rows
+            ),
+            duplicate=_duplicate_row_casilla_coordinate,
+        )
 
     @field_validator("row_casilla_provenance")
     @classmethod

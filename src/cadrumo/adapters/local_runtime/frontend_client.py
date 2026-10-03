@@ -41,6 +41,7 @@ from ...application.runtime.access_management import (
     RuntimeSessionInventoryReply,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import deadline_after, remaining_budget
 from ...application.runtime.enrollment_access import (
     RuntimeEnrollmentPrepare,
     RuntimeEnrollmentPrepared,
@@ -111,6 +112,22 @@ class RuntimeFrontendRefusedError(CadrumoError):
         super().__init__(code)
 
 
+def frontend_failure_code(error: Exception) -> str:
+    """Return the public code for a failed frontend exchange.
+
+    Typed runtime and application refusals keep their own code, a reply that
+    fails its contract is an invalid frame, and any other failure leaves the
+    runtime unavailable without exposing its private diagnostic.
+    """
+    if isinstance(error, RuntimeFrontendRefusedError):
+        return error.reason
+    if isinstance(error, RuntimeRefusalError):
+        return error.reason.value
+    if isinstance(error, ValidationError):
+        return RuntimeRefusalCode.INVALID_FRAME.value
+    return RuntimeRefusalCode.UNAVAILABLE.value
+
+
 @dataclass(frozen=True, slots=True)
 class ProfileViewCollection:
     """Only complete page streams from one exact encrypted profile revision."""
@@ -129,19 +146,6 @@ class ProfileViewCollection:
         if kind not in self.page_kinds:
             raise ValueError("profile view stream was not requested")
         return tuple(item for page in self.pages if page.page_kind is kind for item in page.items)
-
-
-def _deadline(timeout: float) -> float:
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return time.monotonic() + timeout
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
 
 
 class RuntimeFrontendClient:
@@ -283,7 +287,7 @@ class RuntimeFrontendClient:
                 }
             )
             reply = self._reply(
-                self._connection.login(request, secret, deadline=_deadline(timeout)), RuntimeProfileStatus
+                self._connection.login(request, secret, deadline=deadline_after(timeout)), RuntimeProfileStatus
             )
             status = reply.status
             if (
@@ -337,7 +341,7 @@ class RuntimeFrontendClient:
                         requirement=requirement,
                     ),
                     secret,
-                    deadline=_deadline(timeout),
+                    deadline=deadline_after(timeout),
                 ),
                 RuntimeOperationAcknowledged,
             )
@@ -353,7 +357,7 @@ class RuntimeFrontendClient:
                 RuntimeSessionRequest(
                     action=action, request_id=uuid4(), profile_id=self.profile_id, session_id=session_id
                 ),
-                deadline=_deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             RuntimeProfileStatus,
         )
@@ -392,7 +396,7 @@ class RuntimeFrontendClient:
                 RuntimeSessionRequest(
                     action="session_lock", request_id=uuid4(), profile_id=self.profile_id, session_id=session_id
                 ),
-                deadline=_deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             RuntimeSessionsLocked,
         )
@@ -413,7 +417,7 @@ class RuntimeFrontendClient:
                     session_id=session_id,
                     target_session_id=target_session_id,
                 ),
-                deadline=_deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             RuntimeSessionsLocked,
         )
@@ -425,7 +429,7 @@ class RuntimeFrontendClient:
         """Read only this session's authorized exact-profile public inventory."""
         request = RuntimeSessionInventory(request_id=uuid4(), profile_id=self.profile_id, session_id=self._session())
         reply = self._reply(
-            self._connection.session_inventory(request, deadline=_deadline(timeout)), RuntimeSessionInventoryReply
+            self._connection.session_inventory(request, deadline=deadline_after(timeout)), RuntimeSessionInventoryReply
         )
         return reply.sessions
 
@@ -441,7 +445,7 @@ class RuntimeFrontendClient:
             target_id=target_id,
         )
         reply = self._reply(
-            self._connection.deny_automation(request, deadline=_deadline(timeout)), RuntimeAutomationDenied
+            self._connection.deny_automation(request, deadline=deadline_after(timeout)), RuntimeAutomationDenied
         )
         if kind is AutomationDenialKind.PROFILE_LOCK:
             self._session_id = None
@@ -455,7 +459,7 @@ class RuntimeFrontendClient:
             if self._connection_purpose != "fresh" or self._session_id is not None:
                 raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
             self._connection_purpose = "recovery"
-            deadline = _deadline(timeout)
+            deadline = deadline_after(timeout)
             prepared = self._reply(
                 self._connection.recovery_prepare(
                     RuntimeProfileRecoveryPrepare(
@@ -489,7 +493,7 @@ class RuntimeFrontendClient:
         prepared = self._reply(
             self._connection.enrollment_prepare(
                 RuntimeEnrollmentPrepare(request_id=uuid4(), profile_id=self.profile_id, frontend=self.frontend),
-                deadline=_deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             RuntimeEnrollmentPrepared,
         )
@@ -514,7 +518,7 @@ class RuntimeFrontendClient:
                     frontend=self.frontend,
                     session_id=self._session(),
                 ),
-                deadline=_deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             RuntimeEnrollmentPrepared,
         )
@@ -533,7 +537,7 @@ class RuntimeFrontendClient:
             enrollment_request_id=request_id,
         )
         reply = self._reply(
-            self._connection.enrollment_inspect(request, deadline=_deadline(timeout)), RuntimeEnrollmentRecorded
+            self._connection.enrollment_inspect(request, deadline=deadline_after(timeout)), RuntimeEnrollmentRecorded
         )
         if reply.receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -688,7 +692,7 @@ class RuntimeFrontendClient:
         """Read one bounded public result page under this connection's current authority."""
         if not math.isfinite(deadline):
             raise ValueError("result deadline must be finite")
-        _remaining(deadline)
+        remaining_budget(deadline)
         reply = self._reply(
             self.operation(
                 RuntimeOperationResultPage(
@@ -714,7 +718,7 @@ class RuntimeFrontendClient:
             released.decode()
         except ValueError:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
-        _remaining(deadline)
+        remaining_budget(deadline)
         return released
 
     def read_result_document(
@@ -726,7 +730,7 @@ class RuntimeFrontendClient:
         guard on every request. No cache, reference or digest grants access.
         A refusal, changed document or total deadline discards partial output.
         """
-        timeout_deadline = _deadline(timeout)
+        timeout_deadline = deadline_after(timeout)
         if deadline is not None and not math.isfinite(deadline):
             raise ValueError("result deadline must be finite")
         deadline = timeout_deadline if deadline is None else min(timeout_deadline, deadline)
@@ -735,7 +739,7 @@ class RuntimeFrontendClient:
         total: int | None = None
         try:
             while total is None or len(collected) < total:
-                _remaining(deadline)
+                remaining_budget(deadline)
                 page = self.read_result_page(
                     result, ProjectionPageRequest(offset=len(collected), expected_digest=digest), deadline=deadline
                 )
@@ -754,7 +758,7 @@ class RuntimeFrontendClient:
             )
             if canonical_json_bytes(document) != encoded:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            _remaining(deadline)
+            remaining_budget(deadline)
             return document
         except (ValueError, TypeError, RecursionError):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
@@ -781,14 +785,14 @@ class RuntimeFrontendClient:
             raise ValueError("request distinct profile view streams and at most 512 pages")
         if (expected_revision is None) != (expected_content_digest is None):
             raise ValueError("profile view revision and digest pin must be paired")
-        deadline = _deadline(timeout)
+        deadline = deadline_after(timeout)
         contract = self.contract(PROFILE_VIEW_OPERATION_DEFINITION_ID, deadline=deadline)
         pages: list[ProfileViewOperationProjection] = []
         pin: tuple[int, ContentDigest, ProfileSetupState, int, bool] | None = None
         for kind in page_kinds:
             cursor = 0
             while True:
-                _remaining(deadline)
+                remaining_budget(deadline)
                 if len(pages) >= max_pages:
                     raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
                 request = ProfileViewOperationRequest(
@@ -803,12 +807,12 @@ class RuntimeFrontendClient:
                 operation_id = self.submit(request, deadline=deadline)
                 self.start(operation_id, deadline=deadline)
                 while True:
-                    _remaining(deadline)
+                    remaining_budget(deadline)
                     observed = self.observe(operation_id, deadline=deadline)
                     projection = observed.projection
                     if projection.lifecycle is OperationLifecycle.TERMINAL:
                         break
-                    time.sleep(min(0.02, _remaining(deadline)))
+                    time.sleep(min(0.02, remaining_budget(deadline)))
                 if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
                     if projection.terminal_condition is None:
                         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -860,4 +864,9 @@ class RuntimeFrontendClient:
         )
 
 
-__all__ = ["ProfileViewCollection", "RuntimeFrontendClient", "RuntimeFrontendRefusedError"]
+__all__ = [
+    "ProfileViewCollection",
+    "RuntimeFrontendClient",
+    "RuntimeFrontendRefusedError",
+    "frontend_failure_code",
+]

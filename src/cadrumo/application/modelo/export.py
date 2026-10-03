@@ -52,7 +52,7 @@ from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.filing_year import FilingYear
-from ...core.hashing import sha256_hex
+from ...core.hashing import prefixed_digest
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
@@ -492,7 +492,7 @@ def _stamps_development_mock_identity(export_layout: ExportLayoutDefinition) -> 
 
 
 def _sha256_ref(value: str) -> str:
-    return f"sha256:{sha256_hex(value.encode('utf-8'))}"
+    return prefixed_digest(value.encode("utf-8"))
 
 
 def _export_sink(command: ModeloExportCommand) -> LocalFileExportSink:

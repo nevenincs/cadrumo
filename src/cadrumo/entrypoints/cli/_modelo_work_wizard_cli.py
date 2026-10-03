@@ -25,7 +25,6 @@ from ...application.modelo.work_wizard import (
     ModeloWorkWizardStep,
     open_modelo_work_wizard_from_steps,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
 from ...core.i18n.render import output_language as current_output_language
@@ -37,10 +36,10 @@ from ._modelo_rendering import source_diagnostic_notice, source_diagnostic_notic
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from .common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
 from .errors import CliRefusedBoundaryError
+from .registered_operation_errors import invalid_completion_error
 from .runtime_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
 from .runtime_modelo_metadata import read_modelo_work_unit
 from .runtime_modelo_work_wizard import read_modelo_work_wizard_context, run_modelo_work_wizard_attempt
-from .runtime_registered_operation import submitted_operation_error
 
 _MAX_MISSING_INPUT_RETRIES = 12
 
@@ -101,12 +100,7 @@ def _drive_wizard_calculation(
             try:
                 _emit_wizard_result(ctx, outcome.result, tuple(prompted), language=language)
             except ValidationError as error:
-                raise submitted_operation_error(
-                    completed.operation_id,
-                    RuntimeRefusalCode.INVALID_FRAME.value,
-                    terminal_condition=OperationTerminalCondition.SUCCEEDED,
-                    effect=completed.effect,
-                ) from error
+                raise invalid_completion_error(completed) from error
             return
         if attempt + 1 == _MAX_MISSING_INPUT_RETRIES:
             failure = modelo_work_wizard_retry_exhausted_precondition(

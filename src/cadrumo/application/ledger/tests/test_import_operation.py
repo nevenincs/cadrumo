@@ -156,7 +156,7 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
             stored.append(result)
             return "secure-result-reference"
 
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
     monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
     context = SimpleNamespace(

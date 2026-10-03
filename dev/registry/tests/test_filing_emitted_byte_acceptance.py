@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.closure_models import RegistryClosureLimb
 from ..conformance.filing_export_coverage import compose_filing_export_coverage
-from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
+from ..filing_export_proof_authority import canonical_two_channel_filing_export_proof_authority
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
