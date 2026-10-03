@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c29b0720ce7daa56461d6019fd1951ecce54b2cfbe8f88e27edff5a330bc093'
+body_hash: 'sha256:a5c0e7c7cbb7233ac209cb4fbc426d1805e814999c58e12c42a9d746cc68060b'
 related:
   - "[[2026-10-02-binding-consumer-closure-plan]]"
 ---
@@ -276,6 +276,24 @@ related:
 - `S07` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
 - `S07` `verify:` `pytest 210 runtime + work form + IRNR binding set against generation ff975936 (58 passed)` -> `pass`
 - `S07` `verify:` `check-bindings 210 findings` -> `pass`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S07` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S07` `M` `src/cadrumo/application/modelo/projection.py`
+- `S07` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
+- `S07` `M` `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`
+- `S07` `M` `src/cadrumo/domain/contribuyente/family_profile.py`
+- `S07` `M` `src/cadrumo/domain/contribuyente/descendant_facts.py`
+- `S07` `D` `src/cadrumo/adapters/persistence/profile/tests/test_descendientes_count_desync_advisory.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_guarderia_monthly_reaches_the_calculate_path.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_derived_binding_advisory.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_100_descendiente_entry_surface.py`
+- `S07` `verify:` `pytest batch J non-CLI set against verification build 942fd998 (232 passed)` -> `pass`
+- `S07` `verify:` `pytest domain contribuyente (495 passed)` -> `pass`
+- `S07` `verify:` `inspect_authoring_candidate publication_valid` -> `pass`
 
 ## Notes
 
@@ -302,3 +320,5 @@ related:
 - `S05` Intentional filing-value correction, not equivalence-preserving: casilla 04 iva-349-declarante-importe-rectificaciones now sums the rectified bases (fact `base_sum)` instead of rectification deltas, per aeat-dr-349-2020-current type 1 pos. 171-185 over type 2 pos. 153-165 and aeat-modelo-349-instructions casilla 04 ('base imponible rectificada').
 - `S05` Blocker fix on the publication path: the candidate compiler's parent-lifetime watcher held a blocking stdin read that deadlocked numpy/OpenBLAS DLL init on Windows; it now polls the pipe with PeekNamedPipe. Authority republished as logical generation 752c482a91b9.
 - `S07` 210 batch I implemented as an application handoff instead of the planned bound casilla: binding casilla `[5]` made the default manual mode stop prompting for it and dropped it from the filer-required set used by verification (silent under-declaration risk). `[5]` stays manual; m210-ledger-irnr-rendimientos-integros declares `non_calculation/application_calculation_handoff` (130 retenciones precedent) and the ledger IRNR resolver writes its ES-only value to `[5]` in ledger mode, replacing the all-jurisdiction fold redirect. TRLIRNR arts. 13.1 and 24; aeat-dr-210-2022 casilla `[5].`
+- `S07` Batch J committed as 49feac35c0. CLI tests in the set fail with `REFUSED_LOCAL_RUNTIME` `runtime_unavailable,` including untouched modelo 130 cases, while the `local_runtime` lane is mid-edit: environmental, not J. `test_registry_contract` reads the published profile schema and passes only after the next publish (two publishes refused: Codex registry lane changed inputs mid-validation).
+- `S07` Scope additions forced by the retirement: count-desync advisory retired (its premise, a binding reading the stored count, no longer exists); anualidades injector routed through `renta_family_profile_from_facts` to keep the by-index birth-date refusal; `descendientes_guarderia_count` and `gastos_guarderia_reales` removed as unused.
