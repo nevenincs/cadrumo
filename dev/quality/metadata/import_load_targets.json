@@ -2131,6 +2131,7 @@
         "cadrumo.domain.filing.validator",
         "cadrumo.domain.filing_evidence",
         "cadrumo.domain.foreign_assets",
+        "cadrumo.domain.foreign_assets.record_join",
         "cadrumo.domain.foreign_assets.register",
         "cadrumo.domain.foreign_assets.valuation",
         "cadrumo.domain.identifiers",

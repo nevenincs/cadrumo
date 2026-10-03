@@ -149,6 +149,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.foreign_assets.record_join.ForeignAssetRecordJoinRefusedError",
+        ErrorCode(
+            code="REFUSED_FOREIGN_ASSET_RECORD_JOIN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_foreign_asset_record_join",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.foreign_assets.valuation.ForeignAssetValuationRefusedError",
         ErrorCode(
             code="REFUSED_FOREIGN_ASSET_VALUATION",

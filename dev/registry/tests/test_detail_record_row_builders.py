@@ -26,6 +26,14 @@ from cadrumo.domain.calculations.registry.detail_record_bindings import (
     resolve_foreign_asset_binding_row_values,
 )
 from cadrumo.domain.currency.service import CurrencyNormalizationService
+from cadrumo.domain.foreign_assets.record_join import Modelo720Record
+from cadrumo.domain.foreign_assets.register import (
+    ForeignAssetDeclarationEntry,
+    ForeignAssetRegisterEntry,
+    M720AssetIdentifier,
+    M720DeclarantCondition,
+    M720IdentifierScheme,
+)
 from cadrumo.domain.foreign_assets.valuation import M720ValuationEvent
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
@@ -45,7 +53,7 @@ def _valued(
     identifier: str,
     acquired: date,
     valuation: str,
-) -> Modelo720ValuedRow:
+) -> Modelo720Record:
     observation = Modelo720RowObservation(
         source_id=source_id,
         asset_ref="m720a_" + source_id.encode().hex().ljust(32, "0"),
@@ -58,14 +66,36 @@ def _valued(
         valuation_event=M720ValuationEvent.YEAR_END,
     )
     valuation_eur = CurrencyNormalizationService().normalize(observation.native_amount, date(2025, 12, 31))
-    return Modelo720ValuedRow(observation=observation, valuation=valuation_eur)
+    return Modelo720Record(
+        row=Modelo720ValuedRow(observation=observation, valuation=valuation_eur),
+        asset=ForeignAssetRegisterEntry(
+            asset_ref=observation.asset_ref,
+            asset_class=asset_class,
+            subclave=1,
+            country_code=country,
+            identifier=M720AssetIdentifier(
+                scheme=(
+                    M720IdentifierScheme.ACCOUNT_CODE
+                    if asset_class is M720AssetClassCode.CUENTA
+                    else M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY
+                ),
+                value=identifier,
+            ),
+            description="synthetic asset",
+        ),
+        declaration=ForeignAssetDeclarationEntry(
+            asset_ref=observation.asset_ref,
+            condition=M720DeclarantCondition.TITULAR,
+            participation_pct=Decimal("100.00"),
+        ),
+    )
 
 
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
     revision = next(m for m in _modelos() if m.id == "720").revisions["2013-y-siguientes"]
     rows = (
         _valued("a1", M720AssetClassCode.CUENTA, "DE", "DE-bank-001", date(2022, 6, 1), "60000"),
-        _valued("a2", M720AssetClassCode.VALOR, "CH", "CH-stocks-001", date(2020, 1, 1), "120000"),
+        _valued("a2", M720AssetClassCode.VALOR, "CH", "ZCH", date(2020, 1, 1), "120000"),
         _valued("a3", M720AssetClassCode.CUENTA, "CH", "CH-bank-001", date(2021, 3, 15), "80000"),
     )
 

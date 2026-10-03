@@ -1062,6 +1062,9 @@ errors:
     refused_flow_submit: A vezetett folyamat elutasította a beküldést.
     refused_flow_unsupported_console: A vezetett folyamat nem futtatható, mert ez
       a konzol nem tud interaktív kérdéseket megjeleníteni.
+    refused_foreign_asset_record_join: Egy 720-as modell szerinti vagyonelem nincs
+      nyilvántartva, eltér a nyilvántartási bejegyzésétől, vagy nincs rögzítve a jogállásod
+      és a részesedésed. Számítás előtt vedd nyilvántartásba és rögzítsd a vagyonelemet.
     refused_foreign_asset_valuation: Egy 720-as modell szerinti értékelést nem sikerült
       euróra átváltani a jogszabályi árfolyamnapon. Ellenőrizd a vagyonelem pénznemét
       és értékelési dátumát.

@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
 )
+from cadrumo.adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -206,6 +207,10 @@ def calculation_ports_for_test(
                 objects=objects,
             ),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(
+                bucket_id=normalized_bucket_id,
+                objects=objects,
+            ),
+            foreign_asset_register_repository=ForeignAssetRegisterRepository(
                 bucket_id=normalized_bucket_id,
                 objects=objects,
             ),

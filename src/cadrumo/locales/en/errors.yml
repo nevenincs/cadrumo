@@ -1046,6 +1046,9 @@ errors:
     refused_flow_submit: The guided flow refused the submission.
     refused_flow_unsupported_console: The guided flow cannot run because this console
       cannot host interactive questions.
+    refused_foreign_asset_record_join: A Modelo 720 asset is not registered, disagrees
+      with its register entry, or has no declaration of your condition and share.
+      Register and declare the asset before calculating.
     refused_foreign_asset_valuation: A Modelo 720 valuation could not be converted
       to euros at its legal rate date. Check the asset's currency and valuation date.
     refused_google_impersonation: IAM refused to mint an impersonated token for the

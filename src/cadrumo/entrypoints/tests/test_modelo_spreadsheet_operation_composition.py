@@ -81,7 +81,7 @@ def test_complete_pull_assembly_preserves_every_populated_block_and_observation(
     rows = (_foreign_asset(row_index=1), _foreign_asset(row_index=2), RowSetEdit(grouping="per_foreign_asset"))
     pulled = _pull(snapshot, rows)
     facts = _pull_facts(pulled, snapshot, assemble_observations=True)
-    assert facts.row_set_edits_populated == 2 and facts.row_set_cells_populated == 12
+    assert facts.row_set_edits_populated == 2 and facts.row_set_cells_populated == 16
     assert facts.assembled_observation_count == 2
     assert tuple(row.observations[0].source_id for row in facts.assembled_groupings) == (
         "detalle:per_foreign_asset:row-1",

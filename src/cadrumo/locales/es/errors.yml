@@ -1130,6 +1130,9 @@ errors:
     refused_flow_submit: El flujo guiado rechazó el envío.
     refused_flow_unsupported_console: El flujo guiado no puede ejecutarse porque esta
       consola no puede mostrar preguntas interactivas.
+    refused_foreign_asset_record_join: Un bien del modelo 720 no está registrado,
+      no coincide con su entrada del registro o no tiene declarada tu condición y
+      participación. Registra y declara el bien antes de calcular.
     refused_foreign_asset_valuation: No se pudo convertir a euros una valoración del
       modelo 720 en su fecha de cambio legal. Revisa la divisa y la fecha de valoración
       del bien.

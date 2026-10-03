@@ -34,11 +34,20 @@ from ....core.aggregation import (
     RetencionScheme,
 )
 from ....core.errors.error_codes import get_registered_error_code
+from ....core.foreign_asset_obligation import MODELO_720_FOREIGN_ASSET_CLASS_CODES, M720AssetClassCode
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.foreign_assets.register import (
+    ForeignAssetDeclarationEntry,
+    ForeignAssetRegister,
+    ForeignAssetRegisterEntry,
+    M720AssetIdentifier,
+    M720DeclarantCondition,
+    M720IdentifierScheme,
+)
 from ....domain.foreign_assets.valuation import M720ValuationEvent
 from .._preconditions import AggregationPreconditionCondition
 from ..counterpart import (
@@ -167,6 +176,45 @@ def _asset_obs(
 
 def _asset_ref(label: str) -> str:
     return "m720a_" + hashlib.sha256(label.encode("utf-8")).hexdigest()[:32]
+
+
+_SCHEMES = {
+    "C": M720IdentifierScheme.ACCOUNT_CODE,
+    "V": M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY,
+    "I": M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY,
+}
+
+
+def _register_for(observations: tuple[ForeignAssetIngestObservation, ...]) -> ForeignAssetRegister:
+    """Register and declare, as sole holder, every asset of a declarable 720 class the lots name."""
+    assets = []
+    for observation in observations:
+        code = MODELO_720_FOREIGN_ASSET_CLASS_CODES[observation.asset_class]
+        scheme = _SCHEMES.get(code.value, M720IdentifierScheme.NONE)
+        if scheme is M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY and not observation.asset_external_id.startswith("Z"):
+            continue  # below its block floor in these fixtures, so never joined
+        assets.append(
+            ForeignAssetRegisterEntry(
+                asset_ref=observation.asset_ref,
+                asset_class=code,
+                subclave=None if code is M720AssetClassCode.INSTITUCION_INVERSION_COLECTIVA else 1,
+                country_code=observation.country,
+                identifier=M720AssetIdentifier(
+                    scheme=scheme,
+                    value="" if scheme is M720IdentifierScheme.NONE else observation.asset_external_id,
+                ),
+                description="synthetic asset",
+            ),
+        )
+    return ForeignAssetRegister(
+        assets=tuple(assets),
+        declarations=tuple(
+            ForeignAssetDeclarationEntry(
+                asset_ref=asset.asset_ref, condition=M720DeclarantCondition.TITULAR, participation_pct=Decimal("100.00")
+            )
+            for asset in assets
+        ),
+    )
 
 
 def _m720_row(index: int, *, label: str, asset_class: str, country: str, valuation: str, acquired: str) -> dict:
@@ -390,7 +438,9 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
             period=_P_2025_ANNUAL,
             revision=snapshot.revision,
         )
-        resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+        resolution = ForeignAssetsAggregationSourceResolver(
+            observations=observations, register_loader=lambda: _register_for(observations)
+        ).resolve(context)
 
         assert service_result.aggregation == expected_aggregation
         assert dict(resolution.row_binding_values) == {
@@ -416,7 +466,7 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_id="tx-security-li",
                 asset_class=ForeignAssetClass.SECURITY,
-                asset_external_id="LI-SECURITY-001",
+                asset_external_id="ZLI",
                 country="LI",
                 valuation="30000.00",
                 acquisition_date="2020-01-15",
@@ -450,7 +500,9 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
             period=_P_2025_ANNUAL,
             revision=snapshot.revision,
         )
-        resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+        resolution = ForeignAssetsAggregationSourceResolver(
+            observations=observations, register_loader=lambda: _register_for(observations)
+        ).resolve(context)
 
         assert service_result.aggregation == expected_aggregation
         assert declarable_asset_classes_720(expected_aggregation) == frozenset(
@@ -463,9 +515,7 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
             **_m720_row(
                 1, label="CH-INSURANCE-001", asset_class="S", country="CH", valuation="25000.00", acquired="2021-02-20"
             ),
-            **_m720_row(
-                2, label="LI-SECURITY-001", asset_class="V", country="LI", valuation="30000.00", acquired="2020-01-15"
-            ),
+            **_m720_row(2, label="ZLI", asset_class="V", country="LI", valuation="30000.00", acquired="2020-01-15"),
         }
         assert resolution.binding_values == {}
         assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)

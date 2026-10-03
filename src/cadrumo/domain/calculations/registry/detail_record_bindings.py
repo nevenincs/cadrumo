@@ -32,12 +32,14 @@ from .ids import BindingId
 from .schema_exports import ExportFieldDataType
 
 if TYPE_CHECKING:
+    from ...foreign_assets.record_join import Modelo720Record
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "AtributionMemberObservation",
     "Modelo720RowObservation",
     "Modelo720ValuedRow",
+    "foreign_asset_record_order",
     "foreign_asset_row_order",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
@@ -98,6 +100,11 @@ _ForeignAssetRowField = Literal[
     "valuation_event",
     "valuation_event_date",
     "acquisition_date",
+    "identifier_scheme",
+    "subclave",
+    "declarant_condition",
+    "titularidad_detail",
+    "participation_pct",
 ]
 
 
@@ -255,22 +262,25 @@ def _resolve_foreign_asset_rows(
 
 def resolve_foreign_asset_binding_row_values(
     revision: ModeloRevision,
-    observations: Iterable[Modelo720ValuedRow],
+    records: Iterable[Modelo720Record],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer foreign-asset bindings into per-row indexed values.
 
     Args:
         revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
-        observations: Euro-valued modelo 720 lots to group into rows.
+        records: Joined type 2 records, one per lot and declared condition; row
+            indexes follow the record key, never an input position.
     """
-    available = tuple(observations)
+    available = tuple(records)
     members, cohort_classes = _foreign_asset_binding_members(revision)
     if not members:
         return {}
     # All bindings in a cohort share the same asset_classes filter.
     sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
     class_filter = set(sample_classes)
-    filtered = tuple(row for row in available if not class_filter or row.observation.asset_class_code in class_filter)
+    filtered = tuple(
+        record for record in available if not class_filter or record.row.observation.asset_class_code in class_filter
+    )
     rows = _build_foreign_asset_rows(filtered)
     return _resolve_foreign_asset_rows(members, rows)
 
@@ -287,12 +297,19 @@ def foreign_asset_row_order(row: Modelo720ValuedRow) -> tuple[str, str, str, str
     )
 
 
+def foreign_asset_record_order(record: Modelo720Record) -> tuple[str, str, str, str, str, str]:
+    """Return the deterministic row order of a type 2 record: its lot, then the declarant condition."""
+    return (*foreign_asset_row_order(record.row), record.declaration.condition.value)
+
+
 def _build_foreign_asset_rows(
-    valued_rows: tuple[Modelo720ValuedRow, ...],
+    records: tuple[Modelo720Record, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     rows: list[Mapping[str, Decimal | str]] = []
-    for row in sorted(valued_rows, key=foreign_asset_row_order):
+    for record in sorted(records, key=foreign_asset_record_order):
+        row = record.row
         obs = row.observation
+        declaration = record.declaration
         event_date = obs.valuation_event_date
         rows.append(
             {
@@ -305,6 +322,12 @@ def _build_foreign_asset_rows(
                 "valuation_event": obs.valuation_event,
                 "valuation_event_date": event_date.isoformat() if event_date is not None else "",
                 "acquisition_date": obs.acquisition_date.isoformat(),
+                "identifier_scheme": record.asset.identifier.scheme,
+                # Position 103 is zero for a class without subclaves (I).
+                "subclave": str(record.asset.subclave) if record.asset.subclave is not None else "0",
+                "declarant_condition": declaration.condition,
+                "titularidad_detail": declaration.titularidad_detail or "",
+                "participation_pct": declaration.participation_pct,
             },
         )
     return tuple(rows)

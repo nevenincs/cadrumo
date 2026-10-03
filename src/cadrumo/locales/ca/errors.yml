@@ -1137,6 +1137,9 @@ errors:
     refused_flow_submit: El flux guiat ha rebutjat l'enviament.
     refused_flow_unsupported_console: El flux guiat no es pot executar perquè aquesta
       consola no pot mostrar preguntes interactives.
+    refused_foreign_asset_record_join: Un bé del model 720 no està registrat, no coincideix
+      amb la seva entrada del registre o no té declarada la teva condició i participació.
+      Registra i declara el bé abans de calcular.
     refused_foreign_asset_valuation: No s'ha pogut convertir a euros una valoració
       del model 720 en la seva data de canvi legal. Revisa la divisa i la data de
       valoració del bé.

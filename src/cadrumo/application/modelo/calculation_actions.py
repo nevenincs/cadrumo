@@ -962,13 +962,14 @@ def resolve_bucket_source_mesh(
                     ports=ports.invoice_source_ports,
                 )
             ),
-            # Modelo 720 foreign assets (foreign_asset). This resolver is
-            # repository-free: callers pass typed observations explicitly when a
-            # calculation should include M720 asset rows.
+            # Modelo 720 foreign assets (foreign_asset). Callers pass the typed
+            # lots explicitly; the resolver joins them to the bucket's encrypted
+            # foreign-asset register, read once per Modelo 720 resolution.
             resolve_declared(
                 ForeignAssetsAggregationSourceResolver(
                     observations=foreign_asset_observations,
                     row_observations=foreign_asset_row_observations,
+                    register_loader=ports.foreign_asset_register_repository.load,
                 )
             ),
             # Modelo 184 attribution members are declared on the attribution-entity

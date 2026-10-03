@@ -21,7 +21,7 @@ only the four canonical source-kind values ``ledger_transaction``,
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from typing import ClassVar
 
@@ -57,7 +57,7 @@ from ...domain.calculations.registry.binding_terminal_origin import TerminalOrig
 from ...domain.calculations.registry.detail_record_bindings import (
     Modelo720RowObservation,
     Modelo720ValuedRow,
-    foreign_asset_row_order,
+    foreign_asset_record_order,
     resolve_foreign_asset_binding_row_values,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -66,7 +66,8 @@ from ...domain.calculations.registry.foreign_asset_obligation_catalogue import (
 )
 from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.currency.service import ExchangeRateProvider
-from ...domain.foreign_assets.register import M720AssetRef
+from ...domain.foreign_assets.record_join import Modelo720Record, join_modelo_720_records
+from ...domain.foreign_assets.register import ForeignAssetRegister, M720AssetRef
 from ...domain.foreign_assets.valuation import M720ValuationEvent
 from ..foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
@@ -77,6 +78,7 @@ from ..foreign_assets.valuation import value_modelo_720_rows
 from ._grouping import assert_rollup_totals_match, group_observations
 from .source_mesh import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -380,8 +382,13 @@ class ForeignAssetsAggregationSourceResolver:
     ``aggregate_foreign_assets_720`` shape-C surface: callers supply typed
     ledger-side observations and worksheet rows, the resolver values both
     through the host-composed rate port, applies the obligation-block
-    thresholds to their union, then validates the declarable rows against the
-    live M720 registry row-producer bindings.
+    thresholds to their union, joins the declarable lots to the declarant's
+    foreign-asset register, and validates the resulting type 2 records against
+    the live M720 registry row-producer bindings.
+
+    ``register_loader`` is read once per Modelo 720 resolution; without one the
+    register is empty, so any declarable lot refuses as unregistered rather than
+    reaching a row without its declarant condition.
     """
 
     resolver_id: ClassVar[str] = "foreign_assets_aggregation"
@@ -393,11 +400,13 @@ class ForeignAssetsAggregationSourceResolver:
         observations: Iterable[ForeignAssetIngestObservation] = (),
         row_observations: Iterable[Modelo720RowObservation] = (),
         rate_provider: ExchangeRateProvider | None = None,
+        register_loader: Callable[[], ForeignAssetRegister] = ForeignAssetRegister,
     ) -> None:
         """Bind typed observations for one foreign-assets resolution pass."""
         self._observations = tuple(observations)
         self._row_observations = tuple(row_observations)
         self._rate_provider = rate_provider
+        self._register_loader = register_loader
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the owned foreign-assets bindings for the calculation context."""
@@ -416,18 +425,24 @@ class ForeignAssetsAggregationSourceResolver:
             revision=context.revision,
             filing_date=context.period.end_date,
         )
-        declarable = _declarable_valued_rows(valued, thresholds=thresholds)
+        declarable, declarable_groups = _declarable_valued_rows(valued, thresholds=thresholds)
+        register = self._register_loader()
+        records = join_modelo_720_records(declarable, register)
         declared_source_ids = {row.observation.source_id for row in declarable}
         return _row_resolution(
             context,
-            declarable,
+            records,
+            diagnostics=_declaration_advisories(register, declarable, declarable_groups),
             worksheet_source_ids={row.source_id for row in self._row_observations},
+            # One transaction may evidence several lots; it is one contributor.
             source_transaction_ids=tuple(
                 sorted(
-                    observation.source_object_id
-                    for observation, row in zip(self._observations, ledger_rows, strict=True)
-                    if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
-                    and row.source_id in declared_source_ids
+                    {
+                        observation.source_object_id
+                        for observation, row in zip(self._observations, ledger_rows, strict=True)
+                        if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
+                        and row.source_id in declared_source_ids
+                    },
                 ),
             ),
         )
@@ -452,18 +467,22 @@ def _refuse_ledger_worksheet_collision(
         )
 
 
+def _obligation_group_by_code() -> dict[M720AssetClassCode, ForeignAssetObligationGroup]:
+    catalogue = resolve_foreign_asset_obligation_catalogue()
+    return {
+        code: catalogue.group_for_asset_class(asset_class)
+        for asset_class, code in MODELO_720_FOREIGN_ASSET_CLASS_CODES.items()
+    }
+
+
 def _declarable_valued_rows(
     valued: Iterable[Modelo720ValuedRow],
     *,
     thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold],
-) -> tuple[Modelo720ValuedRow, ...]:
-    """Keep the lots whose obligation block exceeds its declaration floor in euros."""
+) -> tuple[tuple[Modelo720ValuedRow, ...], frozenset[ForeignAssetObligationGroup]]:
+    """Keep the lots whose obligation block exceeds its declaration floor in euros, and name those blocks."""
     rows = tuple(valued)
-    catalogue = resolve_foreign_asset_obligation_catalogue()
-    group_by_code = {
-        code: catalogue.group_for_asset_class(asset_class)
-        for asset_class, code in MODELO_720_FOREIGN_ASSET_CLASS_CODES.items()
-    }
+    group_by_code = _obligation_group_by_code()
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     for row in rows:
         group = group_by_code[row.observation.asset_class_code]
@@ -471,10 +490,52 @@ def _declarable_valued_rows(
     unsupported = sorted(str(group) for group in set(group_totals) - set(thresholds))
     if unsupported:
         raise ValueError(f"obligation groups {unsupported!r}: no Modelo 720 declaration threshold")
-    declarable_groups = {
+    declarable_groups = frozenset(
         group for group, total in group_totals.items() if total > thresholds[group].initial_declaration_floor_eur
-    }
-    return tuple(row for row in rows if group_by_code[row.observation.asset_class_code] in declarable_groups)
+    )
+    declarable = tuple(row for row in rows if group_by_code[row.observation.asset_class_code] in declarable_groups)
+    return declarable, declarable_groups
+
+
+def _declaration_advisories(
+    register: ForeignAssetRegister,
+    declarable: tuple[Modelo720ValuedRow, ...],
+    declarable_groups: frozenset[ForeignAssetObligationGroup],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report every declared asset that forms no type 2 record this ejercicio.
+
+    A declaration whose asset has no lot in a declarable block leaves its
+    source-owned fields without a value; one in a block under its floor is not
+    exported. Both stay visible rather than vanishing from the declaration.
+    """
+    group_by_code = _obligation_group_by_code()
+    with_lot = {row.observation.asset_ref for row in declarable}
+    advisories: list[CalculationSourceDiagnostic] = []
+    for asset_ref in sorted({declaration.asset_ref for declaration in register.declarations} - with_lot):
+        asset = register.asset(asset_ref)
+        if group_by_code[asset.asset_class] in declarable_groups:
+            message = (
+                f"Modelo 720 asset {asset_ref} is declared but has no valuation for this ejercicio; "
+                "its type 2 record cannot be completed"
+            )
+            remedy = "Record the asset's valuation, or its extinction, through the ledger or the worksheet."
+        else:
+            message = (
+                f"Modelo 720 asset {asset_ref} is declared in an obligation block under its declaration floor; "
+                "it is not exported"
+            )
+            remedy = None
+        advisories.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.FOREIGN_ASSET.value,
+                resolver_id=ForeignAssetsAggregationSourceResolver.resolver_id,
+                source_ref=f"foreign_asset_register:{asset_ref}",
+                message=message,
+                remedy=remedy,
+            ),
+        )
+    return tuple(advisories)
 
 
 def _registry_observation_from_foreign_asset(
@@ -507,18 +568,20 @@ def _asset_class_code(asset_class: ForeignAssetClass) -> M720AssetClassCode:
 
 def _row_resolution(
     context: CalculationSourceContext,
-    valued: tuple[Modelo720ValuedRow, ...],
+    records: tuple[Modelo720Record, ...],
     *,
+    diagnostics: tuple[CalculationSourceDiagnostic, ...],
     worksheet_source_ids: set[str],
     source_transaction_ids: tuple[str, ...],
 ) -> CalculationSourceResolution:
-    """Carry declarable lots through M720's established resolver.
+    """Carry joined type 2 records through M720's established resolver.
 
-    Each row identity is fingerprinted over the euro valuation, so the rate,
-    rate date and rate source travel with the row. Worksheet rows keep their
-    primary provenance; ledger-side rows carry their transaction ids.
+    Each row identity is the record key and is fingerprinted over the whole
+    record, so the rate, rate date, rate source and the declaration travel with
+    the row. Worksheet rows keep their primary provenance; ledger-side rows
+    carry their transaction ids.
     """
-    row_binding_values = resolve_foreign_asset_binding_row_values(context.revision, valued)
+    row_binding_values = resolve_foreign_asset_binding_row_values(context.revision, records)
     row_bindings = tuple(
         binding for binding in context.revision.bindings if binding.source is BindingSourceKind.FOREIGN_ASSET
     )
@@ -528,15 +591,15 @@ def _row_resolution(
     if len(groupings) != 1:
         raise ValueError("Modelo 720 foreign-asset row bindings must declare one row-set grouping")
     grouping = next(iter(groupings))
-    ordered = tuple(sorted(valued, key=foreign_asset_row_order))
+    ordered = tuple(sorted(records, key=foreign_asset_record_order))
     row_source_identities = {
         (binding.id, row_index): RowSourceIdentity(
             source_kind=BindingSourceKind.FOREIGN_ASSET,
-            source_row_identity=row.observation.source_id,
-            fingerprint=content_hash_hex(row.model_dump(mode="json")),
+            source_row_identity=record.source_row_identity,
+            fingerprint=content_hash_hex(record.model_dump(mode="json")),
             row_set_grouping=grouping,
         )
-        for row_index, row in enumerate(ordered, start=1)
+        for row_index, record in enumerate(ordered, start=1)
         for binding in row_bindings
     }
     provenance = tuple(
@@ -546,13 +609,13 @@ def _row_resolution(
             contributor_source_kind=BindingSourceKind.FOREIGN_ASSET.value,
             contributor_binding_source=BindingSourceKind.FOREIGN_ASSET,
             lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref=f"worksheet:{row.observation.source_id}",
+            source_ref=f"worksheet:{record.source_row_identity}",
             parent_source_ref=None,
             terminal_origin=TerminalOriginClass.DETAIL_RECORD,
-            fingerprint=content_hash_hex(row.model_dump(mode="json")),
+            fingerprint=content_hash_hex(record.model_dump(mode="json")),
         )
-        for row in ordered
-        if row.observation.source_id in worksheet_source_ids
+        for record in ordered
+        if record.row.observation.source_id in worksheet_source_ids
     )
     return CalculationSourceResolution(
         resolver_id=ForeignAssetsAggregationSourceResolver.resolver_id,
@@ -561,6 +624,7 @@ def _row_resolution(
         row_source_identities=row_source_identities,
         source_transaction_ids=source_transaction_ids,
         provenance=provenance,
+        diagnostics=diagnostics,
     )
 
 

@@ -116,6 +116,7 @@ def _source_mesh_ports(
         invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repository),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id, objects=objects),
         bienes_inversion_repository=bienes_repository,
+        foreign_asset_register_repository=ports.foreign_asset_register_repository,
         inventory_repository=ports.inventory_repository,
         observation_repository=CalculationObservationRepository(objects=objects),
         percepciones_observation_ports=PercepcionObservationPorts(

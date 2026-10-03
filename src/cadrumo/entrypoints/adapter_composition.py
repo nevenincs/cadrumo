@@ -1041,6 +1041,7 @@ def build_calculation_action_ports(
         migrate_stored_relation_overrides_to_binding_ids,
     )
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+    from ..adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -1129,6 +1130,10 @@ def build_calculation_action_ports(
             objects=objects,
         ),
         bienes_inversion_repository=bienes_inversion_repository,
+        foreign_asset_register_repository=ForeignAssetRegisterRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
         inventory_repository=InventoryLedgerRepository(objects=objects),
         observation_repository=CalculationObservationRepository(objects=objects),
         percepciones_observation_ports=PercepcionObservationPorts(
