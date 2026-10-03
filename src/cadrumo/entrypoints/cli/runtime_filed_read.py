@@ -24,6 +24,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_deadlines import provider_login_settlement_seconds
 from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
 from .runtime_registered_operation import run_registered_operation
@@ -167,6 +168,7 @@ def read_filed_list_for_cli(
         request_version=1,
         result_version=1,
         timeout=120,
+        settlement_timeout=provider_login_settlement_seconds(after_login=120),
     )
     try:
         projection = completed.projection
@@ -193,6 +195,7 @@ def read_filed_discover_for_cli(ctx: typer.Context) -> FiledDiscoverRead:
         request_version=1,
         result_version=1,
         timeout=120,
+        settlement_timeout=provider_login_settlement_seconds(after_login=120),
     )
     try:
         projection = completed.projection

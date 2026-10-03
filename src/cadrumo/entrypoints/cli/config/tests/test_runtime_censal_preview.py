@@ -21,6 +21,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.entrypoints.cli.config import runtime_censal_preview
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo.entrypoints.cli.registered_operation_deadlines import provider_login_settlement_seconds
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
@@ -100,6 +101,7 @@ def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
         "request_version": 1,
         "result_version": 1,
         "timeout": 120,
+        "settlement_timeout": provider_login_settlement_seconds(after_login=120),
     }
 
 

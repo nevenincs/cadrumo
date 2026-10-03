@@ -20,6 +20,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from .. import runtime_notification_document_capture as bridge
 from ..errors import CliRefusedBoundaryError
 from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_deadlines import provider_login_settlement_seconds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -117,6 +118,7 @@ def test_capture_submits_exact_profile_and_certificado_and_accepts_matching_rece
                 "request_version": 1,
                 "result_version": 1,
                 "timeout": 120,
+                "settlement_timeout": provider_login_settlement_seconds(after_login=120),
             },
         ),
     ]
