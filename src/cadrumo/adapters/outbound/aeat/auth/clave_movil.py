@@ -1011,7 +1011,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         )
 
         timeout_ms = int(self._settings.cadrumo_clave_movil_timeout_ms)
-        _render_progress_banner(
+        await _render_progress_banner(
             verification_code=verification_code,
             timeout_seconds=timeout_ms // 1000,
             used_non_qr_fallback=use_non_qr,

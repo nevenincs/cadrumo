@@ -174,7 +174,7 @@ def main() -> None:
                 _admit_authority_at_startup()
             except typer.Exit as exit_request:
                 raise SystemExit(exit_request.exit_code) from None
-            from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
+            from ...core.operator_progress import operator_progress_sink
 
             progress_sink = operator_progress_sink(_emit_operator_progress)
         with _metadata_state_isolation(arguments), progress_sink:
@@ -277,8 +277,8 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
                     os.environ[key] = value
 
 
-def _emit_operator_progress(progress: object) -> None:
-    """Write an operator progress banner to stderr, keeping stdout pure."""
+async def _emit_operator_progress(progress: object) -> None:
+    """Write an in-process operator progress banner to stderr, keeping stdout pure."""
     from ...core.operator_progress import OperatorProgress
 
     if not isinstance(progress, OperatorProgress):

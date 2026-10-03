@@ -350,6 +350,7 @@ def _project_event(event: OperationEvent) -> OperationPublicEventV1:
             timestamp=event.timestamp,
             code=event.code,
             notice_code=event.notice_code,
+            display_code=event.display_code,
         )
     if isinstance(event, OperationReconciliationEvent):
         return OperationPublicReconciliationEventV1(

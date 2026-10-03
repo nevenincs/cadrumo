@@ -14,9 +14,6 @@ from ...application.operations.error_detail import (
     OperationErrorDetailV1,
     operation_error_detail_schema,
 )
-from ...application.operations.frontend_projection import (
-    OperationPublicProjectionV1,
-)
 from ...application.operations.frontend_requests import (
     OperationObservationRefusalV1,
     OperationObservationSuccessV1,
@@ -44,7 +41,7 @@ def decode_registered_observation(
     definition_id: str,
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
-) -> OperationPublicProjectionV1:
+) -> OperationObservationSuccessV1:
     """Validate the observed reply and every exact public operation coordinate."""
     if not isinstance(observed, RuntimeOperationObserved):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -60,7 +57,7 @@ def decode_registered_observation(
         or state.definition_contract != contract
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    return state
+    return observed.observation
 
 
 def settled_registered_error_detail(

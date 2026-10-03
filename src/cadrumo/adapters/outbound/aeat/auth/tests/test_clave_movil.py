@@ -15,10 +15,10 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n.render import tr
+from ......core.operator_progress import OperatorProgress, operator_progress_sink
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...operator_progress import operator_progress_sink
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_support import (
     ClaveMovilConfigurationError,
@@ -276,14 +276,28 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
 
 
 def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
-    from ......core.operator_progress import OperatorProgress
-
     captured: list[OperatorProgress] = []
-    _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-    assert captured == []
-    with operator_progress_sink(captured.append):
-        _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-    assert len(captured) == 1
+
+    async def capture(progress: OperatorProgress) -> None:
+        captured.append(progress)
+
+    async def run() -> None:
+        await _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+        assert captured == []
+        with operator_progress_sink(capture):
+            await _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+            await _render_progress_banner(verification_code=None, timeout_seconds=120, used_non_qr_fallback=False)
+            await _render_progress_banner(
+                verification_code="code: 12 34", timeout_seconds=120, used_non_qr_fallback=True
+            )
+
+    _run(run())
+    assert [(progress.notice_code, progress.display_code) for progress in captured] == [
+        ("auth.clave-movil.approval-pending", "YLL"),
+        ("auth.clave-movil.qr-scan-pending", None),
+        # Page text outside the comparison-code shape stays in the log banner only.
+        ("auth.clave-movil.approval-pending", None),
+    ]
     assert "YLL" in captured[0].message
     assert captured[0].timeout_seconds == 120
     assert "Time remaining 2:00" in captured[0].render()
@@ -294,10 +308,12 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth.clave_movil"):
-        _render_progress_banner(
-            verification_code="ABC123",
-            timeout_seconds=120,
-            used_non_qr_fallback=False,
+        _run(
+            _render_progress_banner(
+                verification_code="ABC123",
+                timeout_seconds=120,
+                used_non_qr_fallback=False,
+            )
         )
     captured = capsys.readouterr()
     assert captured.out == ""

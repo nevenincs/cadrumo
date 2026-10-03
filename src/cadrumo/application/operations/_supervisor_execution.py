@@ -22,6 +22,7 @@ from ...core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from ...core.operator_progress import OperatorProgress, operator_progress_sink
 from ..user_profile.access_contracts import AccessAction
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import _supervisor_snapshot
@@ -67,6 +68,25 @@ _log = get_logger(__name__)
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
+
+
+async def _forwarding_operator_progress(
+    context: DefinitionBoundContext,
+    executor: Coroutine[None, None, OperationExecutorResult],
+) -> OperationExecutorResult:
+    """Run ``executor`` with its operator progress journaled as the operation's public notices.
+
+    The executor's adapters run inside the profile worker, where no frontend
+    sink exists; forwarding through the journal is what lets an observing
+    frontend prompt the operator. Only the stable notice code and the typed
+    comparison code cross, so the progress text stays with the emitter's log.
+    """
+
+    async def forward(progress: OperatorProgress) -> None:
+        await context.events.notice(progress.notice_code, display_code=progress.display_code)
+
+    with operator_progress_sink(forward):
+        return await executor
 
 
 async def _stored_error_detail(
@@ -464,7 +484,10 @@ class SupervisorExecutionMixin(SupervisorHost):
         entry = context.snapshot
         await self._request_expired_entry_cancellation(identity, entry)
         executor_task = asyncio.create_task(
-            self._renew_while_executing(identity=identity, executor=executor),
+            self._renew_while_executing(
+                identity=identity,
+                executor=_forwarding_operator_progress(context, executor),
+            ),
             name=f"operation-supervision-{identity.operation_id}",
         )
         self._executor_tasks[identity.operation_id] = executor_task
