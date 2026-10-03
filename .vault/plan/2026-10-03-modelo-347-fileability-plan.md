@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-modelo-347-fileability-adr]]'
 modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:e6742460fabb09d42eacb03c014c0946fb3a6fac73c91e544eea47a6fe1b9f4d'
+body_hash: 'sha256:b1a5d21ef9af38e8414d1000096c05f4702742ecb37bed9cd380f8e1cbc05d24'
 ---
 
 # `modelo-347-fileability` plan
@@ -45,6 +45,8 @@ Produce the type 2 rows on the live path through the existing row builder and re
 - [ ] `P02.S05` - Feed type 1 positions 136-144 and 145-160 from export fields naming the existing summary bindings, delete the two manual casillas and move their consumers to the bindings; `dev/registry/mappings/modelo_347/, src/cadrumo/_data/registry/aeat/modelos/347/revisions/`.
 - [ ] `P02.S06` - Extend the contraparte row builder key with typed per-row facts for metalico, criterio de caja, inversion del sujeto pasivo, seguro, arrendamiento and transmisiones, and render casilla fields per row; `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py, src/cadrumo/application/invoices/source_resolver.py, src/cadrumo/application/filing/`.
 - [ ] `P02.S07` - Make the inmueble record repeat from the referencia catastral family and project non-resident and EU-operator rows as the diseno requires; `dev/registry/mappings/modelo_347/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`.
+- [ ] `P02.S15` - Emit no 347 inmueble record when no business-premises lease data exists and advise landlords with leases, through the renderer's existing record-suppression rule; `src/cadrumo/application/filing/, dev/registry/mappings/modelo_347/`.
+- [ ] `P02.S16` - Add a landlord-lease data family on issued rental invoices (tenant, referencia catastral, situacion) and feed the repeating 347 inmueble record and type 1 positions 161 and 170 from it; `src/cadrumo/application/invoices/, src/cadrumo/domain/calculations/registry/detail_record_bindings.py, dev/registry/mappings/modelo_347/`.
 
 ### Phase `P03` - Operation scoping and exclusions
 

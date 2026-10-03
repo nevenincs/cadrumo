@@ -5,10 +5,11 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:12408088f52d3cf5727f64af549ee9b5cc682cc8aaee683041f9a3f861e843d7'
+body_hash: 'sha256:dacbd8657201d5c11dfc6be5858b7759953d0489d68221f13e507aa797750b43'
 related:
   - "[[2026-10-03-modelo-347-fileability-audit]]"
   - "[[2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr]]"
+---
 
 # `modelo-347-fileability` adr: `Modelo 347 fileability` | (**status:** `accepted`)
 
@@ -89,3 +90,9 @@ exclusion and the category exclusion keys become available to every modelo. Test
 threshold and the declared goods export change. Reconsider if AEAT publishes guidance resolving the clave D or E
 ambiguities, or a new diseño changes the record grammar. Accepted on the operator's authorization of
 2026-10-03 to make Modelo 347 fileable, fix regressions and implement the gaps without duplicating capability.
+
+**Amendment (2026-10-03).** Discovery during S07 showed the referencia catastral family serves the modelo
+184 attribution members and modelo 180's tenant side, not a landlord's leased premises, so it cannot feed the
+347 inmueble record (RGAT art. 34.1.d). We will emit no inmueble record when no lease data exists, advise
+landlords with business-premises leases, and add a landlord-lease data family on issued rental invoices as a
+follow-on Step that feeds the repeating inmueble record and type 1 positions 161 and 170.
