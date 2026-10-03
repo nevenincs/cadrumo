@@ -78,7 +78,12 @@ from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
     rate_box_coverage_shortfalls,
 )
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 from ...domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
 from ...domain.filing.protocols import CasillaCollection
 from ...domain.filing.schema import ModeloDraft
@@ -265,6 +270,38 @@ def rendered_casilla_ids(
     )
 
 
+def _active_row_field_selector(
+    field: ExportFieldDefinition,
+    *,
+    bindings: Mapping[str, BindingDefinition],
+    active_binding_ids: set[str],
+) -> str | None:
+    if field.binding is None or str(field.binding) not in active_binding_ids:
+        return None
+    binding = bindings.get(str(field.binding))
+    if binding is None or binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
+        return None
+    selector = binding_row_set_selector(binding)
+    return selector.row_field if selector is not None else None
+
+
+def _record_rendered_row_binding_casillas(
+    record: ExportRecordDefinition,
+    *,
+    bindings: Mapping[str, BindingDefinition],
+    active_binding_ids: set[str],
+) -> set[CasillaId]:
+    rendered: set[CasillaId] = set()
+    for field in record.fields:
+        row_field = _active_row_field_selector(field, bindings=bindings, active_binding_ids=active_binding_ids)
+        if row_field is None:
+            continue
+        casilla_id = record.row_field_casilla_ids.get(row_field)
+        if casilla_id is not None:
+            rendered.add(casilla_id)
+    return rendered
+
+
 def _rendered_row_binding_casilla_ids(
     layout: ExportLayoutDefinition,
     *,
@@ -287,24 +324,9 @@ def _rendered_row_binding_casilla_ids(
             prior_domiciliation_election=prior_domiciliation_election,
         ):
             continue
-        for field in record.fields:
-            if field.binding is None or str(field.binding) not in active_binding_ids:
-                continue
-            binding = bindings.get(str(field.binding))
-            if binding is None:
-                continue
-            # Row-field casillas are meaningful only for the registry's typed
-            # row aggregation. Other bindings can share a record field without
-            # naming a row-set projection and must retain their normal scalar
-            # completeness path.
-            if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
-                continue
-            selector = binding_row_set_selector(binding)
-            if (
-                selector is not None
-                and (casilla_id := record.row_field_casilla_ids.get(selector.row_field)) is not None
-            ):
-                rendered.add(casilla_id)
+        rendered.update(
+            _record_rendered_row_binding_casillas(record, bindings=bindings, active_binding_ids=active_binding_ids)
+        )
     return rendered
 
 

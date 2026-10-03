@@ -111,6 +111,69 @@ _HOLDER_CODES: Mapping[str, str] = MappingProxyType(
 _NUMERIC_DICTIONARY_TYPE = re.compile(r"^[NP]\d{2}(?P<scale>\d)$")
 
 
+def _modelo100_render_exclusions(
+    draft: ModeloDraft,
+    entries: tuple[XmlDictionaryEntry, ...],
+    casilla_values: Mapping[CasillaId, object],
+) -> tuple[Mapping[str, str] | None, frozenset[str]]:
+    declarations: Mapping[str, str] | None = (
+        registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
+    )
+    unfiled_paths = frozenset[str]()
+    if draft.modelo == Modelo("100"):
+        if declarations is None:
+            raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
+        unfiled_paths = _modelo_100_unfiled_comunidad_paths(
+            entries,
+            casilla_values,
+            declarations=declarations,
+        )
+    return declarations, unfiled_paths
+
+
+def _write_xml_dictionary_entries(
+    root: ElementTree.Element[str],
+    entries: tuple[XmlDictionaryEntry, ...],
+    *,
+    unfiled_paths: frozenset[str],
+    draft: ModeloDraft,
+    casilla_values: dict[CasillaId, object],
+    headers: Mapping[FilingProducerKey, object],
+    dictionary_values: Mapping[str, object],
+    declarations: Mapping[str, str] | None,
+    element_order: dict[str, tuple[str, ...]],
+) -> None:
+    for entry in entries:
+        if entry.path in unfiled_paths:
+            continue
+        rendered = _xml_dictionary_rendered_value(
+            entry,
+            draft=draft,
+            casilla_values=casilla_values,
+            headers=headers,
+            dictionary_values=dictionary_values,
+            declarations=declarations,
+        )
+        if rendered is None or rendered == "":
+            continue
+        _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+
+
+def _finish_xml_dictionary_root(
+    root: ElementTree.Element[str], draft: ModeloDraft, *, optional_element_paths: frozenset[str]
+) -> None:
+    if draft.modelo == Modelo("100"):
+        _stamp_toma_datos_nif(root, draft)
+        _prune_zero_only_xml_subtrees(root, optional_element_paths=optional_element_paths)
+
+
+def _serialize_xml_dictionary(root: ElementTree.Element[str]) -> bytes:
+    rendered = ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
+    if not isinstance(rendered, bytes):
+        raise FilingExportError(f"the XML dictionary serialiser returned {type(rendered).__name__}, not bytes")
+    return rendered
+
+
 def render_xml_dictionary_layout(
     layout: ExportLayoutDefinition,
     *,
@@ -160,38 +223,20 @@ def render_xml_dictionary_layout(
     )
     _append_declaration_aux(root, layout, aux_version=aux_version)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
-    unfiled_paths = frozenset[str]()
-    if draft.modelo == Modelo("100"):
-        declarations = modelo_100_declarations
-        if declarations is None:
-            raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
-        unfiled_paths = _modelo_100_unfiled_comunidad_paths(
-            entries,
-            casilla_values,
-            declarations=declarations,
-        )
-    for entry in entries:
-        if entry.path in unfiled_paths:
-            continue
-        rendered = _xml_dictionary_rendered_value(
-            entry,
-            draft=draft,
-            casilla_values=casilla_values,
-            headers=headers,
-            dictionary_values=dictionary_values or {},
-            declarations=modelo_100_declarations,
-        )
-        if rendered is None or rendered == "":
-            continue
-        _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
-    if draft.modelo == Modelo("100"):
-        _stamp_toma_datos_nif(root, draft)
-        _prune_zero_only_xml_subtrees(root, optional_element_paths=optional_element_paths)
-    rendered = ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
-    if not isinstance(rendered, bytes):
-        raise FilingExportError(f"the XML dictionary serialiser returned {type(rendered).__name__}, not bytes")
-    return rendered
+    declarations, unfiled_paths = _modelo100_render_exclusions(draft, entries, casilla_values)
+    _write_xml_dictionary_entries(
+        root,
+        entries,
+        unfiled_paths=unfiled_paths,
+        draft=draft,
+        casilla_values=casilla_values,
+        headers=headers,
+        dictionary_values=dictionary_values or {},
+        declarations=declarations,
+        element_order=element_order,
+    )
+    _finish_xml_dictionary_root(root, draft, optional_element_paths=optional_element_paths)
+    return _serialize_xml_dictionary(root)
 
 
 _XML_DICTIONARY_ROOT_TAG = "Declaracion"
@@ -479,30 +524,49 @@ def _record_xsd_child_order(
         return
     order[path] = tuple(str(child.get("name")) for child in children)
     for child in children:
-        child_path = f"{path}/{child.get('name')}"
-        if optional_paths is not None and child.get("minOccurs", "1") == "0":
-            optional_paths.add(child_path)
-        declared_type = child.get("type")
-        if declared_type is None or declared_type not in named_types:
-            _record_xsd_child_order(
-                child_path,
-                child.find(f"{_XSD_NS}complexType"),
-                named_types=named_types,
-                order=order,
-                seen=seen,
-                optional_paths=optional_paths,
-            )
-        elif declared_type not in seen:
-            # A type that reaches itself would recurse without end; its
-            # order is already recorded at the shallower path.
-            _record_xsd_child_order(
-                child_path,
-                named_types[declared_type],
-                named_types=named_types,
-                order=order,
-                seen=seen | {declared_type},
-                optional_paths=optional_paths,
-            )
+        _record_xsd_child(
+            child,
+            path=path,
+            named_types=named_types,
+            order=order,
+            seen=seen,
+            optional_paths=optional_paths,
+        )
+
+
+def _record_xsd_child(
+    child: ElementTree.Element[str],
+    *,
+    path: str,
+    named_types: Mapping[str, ElementTree.Element[str]],
+    order: dict[str, tuple[str, ...]],
+    seen: frozenset[str],
+    optional_paths: set[str] | None,
+) -> None:
+    child_path = f"{path}/{child.get('name')}"
+    if optional_paths is not None and child.get("minOccurs", "1") == "0":
+        optional_paths.add(child_path)
+    declared_type = child.get("type")
+    if declared_type is None or declared_type not in named_types:
+        _record_xsd_child_order(
+            child_path,
+            child.find(f"{_XSD_NS}complexType"),
+            named_types=named_types,
+            order=order,
+            seen=seen,
+            optional_paths=optional_paths,
+        )
+    elif declared_type not in seen:
+        # A type that reaches itself would recurse without end; its
+        # order is already recorded at the shallower path.
+        _record_xsd_child_order(
+            child_path,
+            named_types[declared_type],
+            named_types=named_types,
+            order=order,
+            seen=seen | {declared_type},
+            optional_paths=optional_paths,
+        )
 
 
 def registry_modelo_100_xml_declarations() -> Mapping[str, str]:
@@ -535,6 +599,55 @@ _XML_VALUE_CONVERTERS: Mapping[str, Callable[[str], str]] = MappingProxyType(
 )
 
 
+def _xml_dictionary_raw_value(
+    entry: XmlDictionaryEntry,
+    *,
+    casilla_values: Mapping[CasillaId, object],
+    headers: Mapping[FilingProducerKey, object],
+    dictionary_values: Mapping[str, object],
+) -> object | None:
+    raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
+    if raw is None:
+        return _xml_dictionary_non_casilla_value(entry, headers=headers, dictionary_values=dictionary_values)
+    return raw
+
+
+def _modelo100_sign_routed_value(
+    entry: XmlDictionaryEntry,
+    raw: object,
+    *,
+    draft: ModeloDraft,
+    declarations: Mapping[str, str] | None,
+) -> object | None:
+    if draft.modelo != Modelo("100"):
+        return raw
+    if declarations is None:
+        raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
+    return modelo_100_sign_branch_value(entry, raw, declarations=declarations)
+
+
+def _apply_xml_dictionary_value_converter(
+    entry: XmlDictionaryEntry,
+    rendered: str,
+    declarations: Mapping[str, str] | None,
+) -> str:
+    converter_name = declarations.get(f"xml.converter.{entry.field_id}") if declarations is not None else None
+    if converter_name is None:
+        return rendered
+    converter = _XML_VALUE_CONVERTERS.get(converter_name)
+    if converter is None:
+        raise FilingExportValidationError(f"registry-selected XML converter {converter_name!r} is not available")
+    try:
+        converted = converter(rendered)
+        if not isinstance(converted, str):
+            raise FilingExportValidationError(
+                f"registry-selected XML converter {converter_name!r} returned a non-string value"
+            )
+        return converted
+    except ValueError as exc:
+        raise FilingExportValidationError(str(exc)) from exc
+
+
 def _xml_dictionary_rendered_value(
     entry: XmlDictionaryEntry,
     *,
@@ -544,35 +657,18 @@ def _xml_dictionary_rendered_value(
     dictionary_values: Mapping[str, object],
     declarations: Mapping[str, str] | None,
 ) -> str | None:
-    raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
-    if raw is None:
-        raw = _xml_dictionary_non_casilla_value(entry, headers=headers, dictionary_values=dictionary_values)
+    raw = _xml_dictionary_raw_value(
+        entry, casilla_values=casilla_values, headers=headers, dictionary_values=dictionary_values
+    )
     if raw is None:
         return None
-    if draft.modelo == Modelo("100"):
-        if declarations is None:
-            raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
-        raw = modelo_100_sign_branch_value(entry, raw, declarations=declarations)
-        if raw is None:
-            return None
-    rendered = format_xml_dictionary_value(entry.data_type, raw)
+    routed = _modelo100_sign_routed_value(entry, raw, draft=draft, declarations=declarations)
+    if routed is None:
+        return None
+    rendered = format_xml_dictionary_value(entry.data_type, routed)
     if draft.modelo == Modelo("100") and entry.field_id in {"DP_APENOM_D", "DP_APENOM_C"}:
         rendered = rendered.upper()
-    converter_name = declarations.get(f"xml.converter.{entry.field_id}") if declarations is not None else None
-    if converter_name is not None:
-        converter = _XML_VALUE_CONVERTERS.get(converter_name)
-        if converter is None:
-            raise FilingExportValidationError(f"registry-selected XML converter {converter_name!r} is not available")
-        try:
-            converted = converter(rendered)
-            if not isinstance(converted, str):
-                raise FilingExportValidationError(
-                    f"registry-selected XML converter {converter_name!r} returned a non-string value"
-                )
-            return converted
-        except ValueError as exc:
-            raise FilingExportValidationError(str(exc)) from exc
-    return rendered
+    return _apply_xml_dictionary_value_converter(entry, rendered, declarations)
 
 
 def _prune_zero_only_xml_subtrees(root: ElementTree.Element[str], *, optional_element_paths: frozenset[str]) -> None:

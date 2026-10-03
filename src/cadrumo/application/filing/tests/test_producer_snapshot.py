@@ -76,11 +76,6 @@ from ...aggregation.m303_arrivals import (
     resolve_m303_prorrata_transition_arrival,
 )
 from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
-from .._record_field_renderer import (
-    complementaria_page_marker,
-    m303_complementaria_marker,
-    m303_no_activity_marker,
-)
 from ..export_producer import filing_producer_values, m303_filing_lexicals, m303_profile_lexicals
 from ..producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
@@ -100,6 +95,11 @@ from ..producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
+)
+from ..record_field_renderer import (
+    complementaria_page_marker,
+    m303_complementaria_marker,
+    m303_no_activity_marker,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

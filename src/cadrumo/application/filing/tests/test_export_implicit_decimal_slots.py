@@ -54,7 +54,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
-from .._record_field_renderer import format_field
+from ..record_field_renderer import format_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

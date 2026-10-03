@@ -1,7 +1,7 @@
 """Every modelo whose layout carries projection fields must have a plan builder.
 
 A projection-kind export field resolves through a preflighted address:
-``_projection_field_value`` (``application/filing/_record_field_renderer.py``) looks the
+``_projection_field_value`` (``application/filing/record_field_renderer.py``) looks the
 value up by ``(record id, occurrence, projection_ref)`` and raises when the record has no
 render context. Those contexts come from a :class:`FilingProjectionPlan`, and
 ``_projection_plan_for_layout`` (``application/filing/export.py``) builds one only for the

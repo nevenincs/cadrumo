@@ -23,8 +23,8 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
-from .._record_field_renderer import format_field, projection_field_value
 from ..export_verification import _mismatched_casilla_ids
+from ..record_field_renderer import format_field, projection_field_value
 from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

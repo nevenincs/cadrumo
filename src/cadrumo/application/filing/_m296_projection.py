@@ -28,11 +28,12 @@ from datetime import date
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
+from ...domain.calculations.registry.facts.payloads import MappingFactEntry
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from .producer_snapshot import FilingProducerSnapshot, Modelo296ProfileFacts
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
@@ -61,18 +62,28 @@ def _registry_m296_projection_catalogue(
     suffix = ".collection"
     collection_by_kind: dict[str, str] = {}
     for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("Modelo 296 projection declarations must be string-to-string")
-        if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
-            continue
-        kind = entry.key[len(prefix) : -len(suffix)]
-        collection = entry.value.strip()
-        if not kind.strip() or not collection or kind in collection_by_kind:
-            raise ValueError(f"duplicate or empty Modelo 296 collection declaration {entry.key!r}")
-        collection_by_kind[kind] = collection
+        _add_m296_collection_declaration(collection_by_kind, entry, prefix=prefix, suffix=suffix)
     if not collection_by_kind:
         raise ValueError("Modelo 296 projection mapping contains no collection declarations")
     return collection_by_kind
+
+
+def _add_m296_collection_declaration(
+    collection_by_kind: dict[str, str],
+    entry: MappingFactEntry,
+    *,
+    prefix: str,
+    suffix: str,
+) -> None:
+    if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+        raise TypeError("Modelo 296 projection declarations must be string-to-string")
+    if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
+        return
+    kind = entry.key[len(prefix) : -len(suffix)]
+    collection = entry.value.strip()
+    if not kind.strip() or not collection or kind in collection_by_kind:
+        raise ValueError(f"duplicate or empty Modelo 296 collection declaration {entry.key!r}")
+    collection_by_kind[kind] = collection
 
 
 def _rows_for(
@@ -125,36 +136,58 @@ def build_m296_filing_projection_plan(
     values: list[FilingProjectionValue] = []
 
     for record in layout.records:
-        refs = tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)
-        if not refs:
-            continue
-        kinds = {ref.projection_kind for ref in refs}
-        if len(kinds) != 1:
-            # Every modelo 296 record is one family. A record mixing two would make "which
-            # collection sets the depth" ambiguous, and silently answering it would be the
-            # same class of guess this module exists to remove.
-            raise ValueError(f"modelo 296 record {record.id!r} mixes projection kinds {sorted(kinds)}")
-        rows = _rows_for(profile, kinds.pop(), collection_by_kind=collection_by_kind)
-        for occurrence, row in enumerate(rows, 1):
-            contexts.append(
-                FilingRecordRenderContext(
-                    registry_snapshot=registry_snapshot,
-                    layout=layout,
-                    record=record,
-                    occurrence=occurrence,
-                ),
-            )
-            values.extend(
-                FilingProjectionValue(
-                    projection_ref=ref,
-                    record_id=record.id,
-                    occurrence=occurrence,
-                    # The reference's field IS the row attribute -- the row types are generated
-                    # from the same enums -- so a missing one is a defect rather than an absent
-                    # value, and getattr without a default is what surfaces it.
-                    value=getattr(row, _m296_field_name(ref)),
-                )
-                for ref in refs
-            )
+        record_contexts, record_values = _m296_record_projection(
+            record,
+            profile=profile,
+            collection_by_kind=collection_by_kind,
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+        )
+        contexts.extend(record_contexts)
+        values.extend(record_values)
 
     return FilingProjectionPlan(contexts=tuple(contexts), values=tuple(values))
+
+
+def _m296_record_projection(
+    record: ExportRecordDefinition,
+    *,
+    profile: object,
+    collection_by_kind: Mapping[str, str],
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    refs = tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)
+    if not refs:
+        return (), ()
+    kinds = {ref.projection_kind for ref in refs}
+    if len(kinds) != 1:
+        # Every modelo 296 record is one family. A record mixing two would make "which
+        # collection sets the depth" ambiguous, and silently answering it would be the
+        # same class of guess this module exists to remove.
+        raise ValueError(f"modelo 296 record {record.id!r} mixes projection kinds {sorted(kinds)}")
+    kind = next(iter(kinds))
+    rows = _rows_for(profile, kind, collection_by_kind=collection_by_kind)
+    contexts = tuple(
+        FilingRecordRenderContext(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            record=record,
+            occurrence=occurrence,
+        )
+        for occurrence, _row in enumerate(rows, 1)
+    )
+    values = tuple(
+        FilingProjectionValue(
+            projection_ref=ref,
+            record_id=record.id,
+            occurrence=occurrence,
+            # The reference's field IS the row attribute -- the row types are generated
+            # from the same enums -- so a missing one is a defect rather than an absent
+            # value, and getattr without a default is what surfaces it.
+            value=getattr(row, _m296_field_name(ref)),
+        )
+        for occurrence, row in enumerate(rows, 1)
+        for ref in refs
+    )
+    return contexts, values

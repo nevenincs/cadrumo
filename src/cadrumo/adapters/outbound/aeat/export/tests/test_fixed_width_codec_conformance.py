@@ -18,7 +18,7 @@ from cadrumo.application.filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from cadrumo.application.filing.record_renderer import render_record
+from cadrumo.application.filing.record_field_renderer import render_record
 from cadrumo.application.filing.record_types import RecordRenderRow
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.directory_scan import scan_directory
@@ -447,7 +447,7 @@ def test_codec_has_one_owner_and_active_consumers_import_its_defining_module() -
     root = Path("src/cadrumo")
     owner = root / "domain/calculations/registry/fixed_width_codec.py"
     consumers = (
-        root / "application/filing/_record_field_renderer.py",
+        root / "application/filing/record_field_renderer.py",
         root / "domain/calculations/registry/export_parse.py",
         root / "adapters/outbound/aeat/export/registry_record_renderer.py",
     )

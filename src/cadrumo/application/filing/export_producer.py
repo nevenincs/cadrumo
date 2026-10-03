@@ -21,7 +21,12 @@ from ...domain.deadlines.models import ModeloIVAProfile
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
-from ...domain.modelos.calculation_revision_m303_evidence import M303InsolvencyFilingSubtype
+from ...domain.modelos.calculation_revision_m303_evidence import (
+    M303Exonerado390FilingEvidence,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
+)
+from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
 from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
 from .producer_snapshot import (
     AmendmentEvidence,
@@ -1143,41 +1148,57 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     transition_applicable = transition.is_applicable
     # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
     final_exonerado = m303_facts.exonerado_390 if is_last_filing_period_of_year(m303_facts.period) else None
+    special_option, special_revocation = _m303_prorrata_election_lexicals(transition, transition_applicable)
+    insolvency_declared, insolvency_date, insolvency_subtype = _m303_insolvency_lexicals(insolvency)
     return M303FilingLexicals(
         joint_return_elected=yes_no(m303_facts.joint_return_elected),
         # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
         # last period; every other filing carries "0" whatever the operator answered.
-        annual_volume_nonzero=(
-            yes_no(m303_facts.annual_volume_nonzero)
-            if final_exonerado is not None
-            and final_exonerado.applicable
-            and m303_facts.annual_volume_nonzero is not None
-            else "0"
-        ),
+        annual_volume_nonzero=_m303_annual_volume_lexical(m303_facts, final_exonerado),
         recipient_of_cash_accounting_operations=yes_no(
             m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
         ),
-        prorrata_special_option=(
-            yes_no(transition.transition == opcion_prorrata_transition()) if transition_applicable else None
-        ),
-        prorrata_special_revocation=(
-            yes_no(transition.transition == revocacion_prorrata_transition()) if transition_applicable else None
-        ),
-        insolvency_declared="1" if insolvency is not None else "2",
-        insolvency_judicial_order_date=(
-            insolvency.judicial_order_date.strftime("%d%m%Y") if insolvency is not None else None
-        ),
-        insolvency_filing_subtype=(
-            {
-                M303InsolvencyFilingSubtype.PRE_ORDER: "1",
-                M303InsolvencyFilingSubtype.POST_ORDER: "2",
-            }[insolvency.subtype]
-            if insolvency is not None
-            else None
-        ),
+        prorrata_special_option=special_option,
+        prorrata_special_revocation=special_revocation,
+        insolvency_declared=insolvency_declared,
+        insolvency_judicial_order_date=insolvency_date,
+        insolvency_filing_subtype=insolvency_subtype,
         exonerado_390_applicable="0" if final_exonerado is None else yes_no(final_exonerado.applicable),
         prorrata_transition_applicable=transition_applicable,
     )
+
+
+def _m303_annual_volume_lexical(
+    m303_facts: M303FilingFacts,
+    final_exonerado: M303Exonerado390FilingEvidence | None,
+) -> str:
+    if final_exonerado is None or not final_exonerado.applicable or m303_facts.annual_volume_nonzero is None:
+        return "0"
+    return yes_no(m303_facts.annual_volume_nonzero)
+
+
+def _m303_prorrata_election_lexicals(
+    transition: M303ProrrataTransitionArrival,
+    applicable: bool,
+) -> tuple[str | None, str | None]:
+    if not applicable:
+        return None, None
+    return (
+        yes_no(transition.transition == opcion_prorrata_transition()),
+        yes_no(transition.transition == revocacion_prorrata_transition()),
+    )
+
+
+def _m303_insolvency_lexicals(
+    insolvency: M303InsolvencyFilingFact | None,
+) -> tuple[str, str | None, str | None]:
+    if insolvency is None:
+        return "2", None, None
+    subtype = {
+        M303InsolvencyFilingSubtype.PRE_ORDER: "1",
+        M303InsolvencyFilingSubtype.POST_ORDER: "2",
+    }[insolvency.subtype]
+    return "1", insolvency.judicial_order_date.strftime("%d%m%Y"), subtype
 
 
 def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:

@@ -1264,24 +1264,12 @@ def build_filing_producer_snapshot(
     as blancos, which is what AEAT's own header rule prescribes.
     """
     safe_model_profile = _without_embedded_accounts(model_profile)
-    selected_account: SelectedFilingAccount | None
-    if elections.result_disposition is ResultDisposition.DOMICILIACION:
-        if charge_account is None:
-            raise FilingProducerSnapshotError("domiciliacion requires a charge account")
-        selected_account = ChargeAccountSelection(role="charge", account=charge_account)
-    elif result_disposition_is_refund(elections.result_disposition):
-        if refund_account is None or refund_account.iban is None:
-            raise FilingProducerSnapshotError("refund disposition requires a refund account")
-        selected_account = RefundAccountSelection(role="refund", account=refund_account)
-    elif nota_three_refund_account:
-        # Modelo 303 Nota 3: the account page carries the refund account even
-        # though the disposition itself is not a refund.
-        if refund_account is None:
-            raise FilingProducerSnapshotError("Nota 3 account page requires a refund account")
-        selected_account = RefundAccountSelection(role="refund", account=refund_account)
-    else:
-        selected_account = None
-
+    selected_account = _select_filing_account(
+        elections,
+        refund_account=refund_account,
+        charge_account=charge_account,
+        nota_three_refund_account=nota_three_refund_account,
+    )
     try:
         return FilingProducerSnapshot(
             modelo=modelo,
@@ -1298,6 +1286,30 @@ def build_filing_producer_snapshot(
         )
     except ValueError as exc:
         raise _registered_snapshot_refusal(exc) or FilingProducerSnapshotError(str(exc)) from exc
+
+
+def _select_filing_account(
+    elections: FilingElectionFacts,
+    *,
+    refund_account: RefundAccount | None,
+    charge_account: ChargeAccount | None,
+    nota_three_refund_account: bool,
+) -> SelectedFilingAccount | None:
+    if elections.result_disposition is ResultDisposition.DOMICILIACION:
+        if charge_account is None:
+            raise FilingProducerSnapshotError("domiciliacion requires a charge account")
+        return ChargeAccountSelection(role="charge", account=charge_account)
+    if result_disposition_is_refund(elections.result_disposition):
+        if refund_account is None or refund_account.iban is None:
+            raise FilingProducerSnapshotError("refund disposition requires a refund account")
+        return RefundAccountSelection(role="refund", account=refund_account)
+    if nota_three_refund_account:
+        # Modelo 303 Nota 3: the account page carries the refund account even
+        # though the disposition itself is not a refund.
+        if refund_account is None:
+            raise FilingProducerSnapshotError("Nota 3 account page requires a refund account")
+        return RefundAccountSelection(role="refund", account=refund_account)
+    return None
 
 
 def _without_embedded_accounts(model_profile: FilingModelProfileFacts) -> FilingModelProfileFacts:

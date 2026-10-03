@@ -21,50 +21,11 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
-from ._record_field_renderer import (
-    complementaria_page_marker,
-    format_field,
-    m303_complementaria_marker,
-    m303_no_activity_marker,
-    projection_field_value,
-)
-from ._record_field_renderer import (
-    render_record as _render_record_fields,
-)
 from .export_parity import did_page_suppressed
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
+from .record_field_renderer import format_field, render_record
 from .record_types import ProjectionAddress, RecordRenderRow, RenderedRecordOccurrence
-
-
-def render_record(
-    record: ExportRecordDefinition,
-    *,
-    draft: ModeloDraft,
-    producer_values: Mapping[FilingProducerKey, object],
-    producer_snapshot: FilingProducerSnapshot,
-    casilla_values: dict[CasillaId, object],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row: RecordRenderRow,
-    render_context: FilingRecordRenderContext | None,
-    projection_values: Mapping[ProjectionAddress, object],
-) -> str:
-    """Render one registry record through the canonical field renderer.
-
-    Core types:
-    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
-    """
-    return _render_record_fields(
-        record,
-        draft=draft,
-        producer_values=producer_values,
-        producer_snapshot=producer_snapshot,
-        casilla_values=casilla_values,
-        binding_values=binding_values,
-        row=row,
-        render_context=render_context,
-        projection_values=projection_values,
-    )
 
 
 def render_layout_records(
@@ -87,6 +48,7 @@ def render_layout_records(
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     occurrences: list[RenderedRecordOccurrence] = []
+    source_digests = {str(ref): source.sha256 for ref, source in registry_snapshot.sources.items()}
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(
             record,
@@ -121,6 +83,7 @@ def render_layout_records(
                         row=row,
                         render_context=context,
                         projection_values=projection_values,
+                        source_digests=source_digests,
                     ),
                 )
             )
@@ -172,6 +135,7 @@ def _render_record_bytes(
     row: RecordRenderRow,
     render_context: FilingRecordRenderContext,
     projection_values: dict[ProjectionAddress, object],
+    source_digests: Mapping[str, str],
 ) -> bytes:
     text = render_record(
         record,
@@ -183,6 +147,7 @@ def _render_record_bytes(
         row=row,
         render_context=render_context,
         projection_values=projection_values,
+        source_digests=source_digests,
     )
     line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
     return f"{text}{line_ending}".encode(record.encoding)
@@ -432,15 +397,7 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
 
 
 __all__ = [
-    "RecordRenderRow",
-    "RenderedRecordOccurrence",
-    "complementaria_page_marker",
-    "format_field",
-    "m303_complementaria_marker",
-    "m303_no_activity_marker",
     "preflight_projection_plan",
-    "projection_field_value",
     "record_render_rows",
     "render_layout_records",
-    "render_record",
 ]

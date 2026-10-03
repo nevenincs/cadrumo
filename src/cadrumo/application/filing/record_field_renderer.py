@@ -17,6 +17,8 @@ from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
+from .m190_context_validation import require_m190_signed_reintegro_context
+from .m280_context_validation import m280_contextual_sign_byte, require_m280_negative_imputation_context
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from .projection import FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow
@@ -33,7 +35,13 @@ def render_record(
     row: RecordRenderRow,
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
+    source_digests: Mapping[str, str] | None = None,
 ) -> str:
+    """Render one registry record, positioned when every field declares an offset.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     if all(field.offset is not None for field in record.fields):
         return _render_positioned_record(
             record,
@@ -45,6 +53,7 @@ def render_record(
             row=row,
             render_context=render_context,
             projection_values=projection_values,
+            source_digests=source_digests,
         )
     return _render_unpositioned_record(
         record,
@@ -99,17 +108,17 @@ def _render_positioned_record(
     row: RecordRenderRow,
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
+    source_digests: Mapping[str, str] | None,
 ) -> str:
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
         if not _field_is_active_for_row(field, row):
             continue
-        offset = field.offset
-        if offset is None:
-            raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
-        rendered = _render_positioned_field(
+        start, rendered = _render_positioned_field_bytes(
+            record,
             field,
+            buffer,
             draft=draft,
             producer_values=producer_values,
             producer_snapshot=producer_snapshot,
@@ -118,13 +127,56 @@ def _render_positioned_record(
             row=row,
             render_context=render_context,
             projection_values=projection_values,
+            source_digests=source_digests,
         )
-        start = offset - 1
         end = start + len(rendered)
         if any(char != " " for char in buffer[start:end]):
             raise FilingExportError(f"export field {field.id!r} overlaps another field")
         buffer[start:end] = rendered
-    return "".join(buffer)
+    wire = "".join(buffer)
+    require_m190_signed_reintegro_context(record, wire, source_digests=source_digests)
+    require_m280_negative_imputation_context(record, wire, source_digests=source_digests)
+    return wire
+
+
+def _render_positioned_field_bytes(
+    record: ExportRecordDefinition,
+    field: ExportFieldDefinition,
+    buffer: list[str],
+    *,
+    draft: ModeloDraft,
+    producer_values: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row: RecordRenderRow,
+    render_context: FilingRecordRenderContext | None,
+    projection_values: Mapping[ProjectionAddress, object],
+    source_digests: Mapping[str, str] | None,
+) -> tuple[int, str]:
+    offset = field.offset
+    if offset is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
+    rendered = _render_positioned_field(
+        field,
+        draft=draft,
+        producer_values=producer_values,
+        producer_snapshot=producer_snapshot,
+        casilla_values=casilla_values,
+        binding_values=binding_values,
+        row=row,
+        render_context=render_context,
+        projection_values=projection_values,
+    )
+    rendered = m280_contextual_sign_byte(
+        record,
+        field,
+        rendered,
+        key_wire=buffer[136] if len(buffer) > 136 else " ",
+        raw_amount=casilla_values.get(field.casilla_id) if field.casilla_id is not None else None,
+        source_digests=source_digests,
+    )
+    return offset - 1, rendered
 
 
 def _render_positioned_field(
@@ -260,6 +312,7 @@ def projection_field_value(
     context: FilingRecordRenderContext | None,
     values: Mapping[ProjectionAddress, object],
 ) -> object:
+    """Return the preflighted projection value one field addresses in its record occurrence."""
     if field.projection_ref is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare projection_ref")
     if context is None:
@@ -417,6 +470,7 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
 
 
 def format_field(field: ExportFieldDefinition, value: object) -> str:
+    """Render one value through the field's fixed-width codec, as a filing export refusal on failure."""
     try:
         return render_fixed_width_export_field(field, value)
     except RegistryValidationError as exc:
@@ -426,7 +480,6 @@ def format_field(field: ExportFieldDefinition, value: object) -> str:
 __all__ = [
     "COMPUTED_VALUE_PRODUCERS",
     "DRAFT_VALUE_PRODUCERS",
-    "RecordRenderRow",
     "complementaria_page_marker",
     "format_field",
     "m303_complementaria_marker",

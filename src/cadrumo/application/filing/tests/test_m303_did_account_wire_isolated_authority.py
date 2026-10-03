@@ -167,11 +167,22 @@ def _m303_2026_snapshot() -> RegistrySnapshot:
     return published_snapshot(Modelo("303").value, filing_year=2026, period="1T")
 
 
-#: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
-#: every role except the composed opening tag, which is the ALTERNATIVE spelling
-#: of the six rows this design prints separately.
-_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = tuple(
-    role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+#: Modelo 303 prints these thirteen declared rows. Other roles in the shared
+#: vocabulary belong to different official envelope families.
+_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = (
+    FilingEnvelopePrefixRole.OPENING_TAG,
+    FilingEnvelopePrefixRole.MODELO,
+    FilingEnvelopePrefixRole.DISCRIMINANT,
+    FilingEnvelopePrefixRole.FILING_YEAR,
+    FilingEnvelopePrefixRole.PERIOD,
+    FilingEnvelopePrefixRole.RECORD_TYPE,
+    FilingEnvelopePrefixRole.AUX_OPENING_TAG,
+    FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+    FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER,
+    FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
+    FilingEnvelopePrefixRole.DEVELOPER_TAX_ID,
+    FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
+    FilingEnvelopePrefixRole.AUX_CLOSING_TAG,
 )
 
 

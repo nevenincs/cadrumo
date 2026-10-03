@@ -645,6 +645,21 @@ def _schema_provider_for_operation(
     each selected model resolves its directory and exactly one revision through
     the operation before the existing snapshot projections run.
     """
+    selected_modelos = _validated_indexed_model_selection(operation, selected_tuple)
+    snapshots = _snapshots_for_selected_models(
+        operation,
+        selected_modelos,
+        filing_year=filing_year,
+        period=period,
+    )
+    _require_snapshots_for_period(snapshots, filing_year=filing_year, period=period)
+    return _schema_provider_from_snapshots(operation, snapshots)
+
+
+def _validated_indexed_model_selection(
+    operation: PinnedAuthorityOperation,
+    selected_tuple: tuple[str, ...] | None,
+) -> tuple[str, ...]:
     if selected_tuple is None:
         raise ModeloBuilderError(
             translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
@@ -656,28 +671,47 @@ def _schema_provider_for_operation(
             translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
             context={"modelos": ", ".join(missing)},
         )
+    return selected_tuple
+
+
+def _snapshots_for_selected_models(
+    operation: PinnedAuthorityOperation,
+    selected_tuple: tuple[str, ...],
+    *,
+    filing_year: int,
+    period: Period,
+) -> dict[str, RegistrySnapshot]:
     snapshots: dict[str, RegistrySnapshot] = {}
     for modelo_id in selected_tuple:
-        try:
-            snapshots[modelo_id] = operation.snapshot(
-                modelo_id,
-                filing_year=filing_year,
-                period=period.registry_token,
-            )
-        except (RegistrySnapshotError, RegistryValidationError) as exc:
-            if _is_below_filing_authority(exc):
-                raise
-            continue
-        except ValueError as exc:
-            raise ModeloBuilderError(
-                translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
-                context={"modelos": modelo_id},
-            ) from exc
+        snapshot = _snapshot_for_operation(
+            operation,
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+        )
+        if snapshot is not None:
+            snapshots[modelo_id] = snapshot
+
+    return snapshots
+
+
+def _require_snapshots_for_period(
+    snapshots: Mapping[str, RegistrySnapshot],
+    *,
+    filing_year: int,
+    period: Period,
+) -> None:
     if not snapshots:
         raise ModeloBuilderError(
             translated_message="application.filing.runtime.errors.registry_empty_for_period",
             context={"filing_year": str(filing_year), "period": period.registry_token},
         )
+
+
+def _schema_provider_from_snapshots(
+    operation: PinnedAuthorityOperation,
+    snapshots: Mapping[str, RegistrySnapshot],
+) -> RegistrySchemaAccessor:
     sources = {source_id: source for snapshot in snapshots.values() for source_id, source in snapshot.sources.items()}
     source_evidence = tuple(operation.source_evidence(source_id) for source_id in sorted(embedded_source_ids(sources)))
     evidence = AuthorityEvidenceProjection(sources=source_evidence)
@@ -688,6 +722,26 @@ def _schema_provider_for_operation(
         sources=sources,
         evidence=evidence,
     )
+
+
+def _snapshot_for_operation(
+    operation: PinnedAuthorityOperation,
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: Period,
+) -> RegistrySnapshot | None:
+    try:
+        return operation.snapshot(modelo_id, filing_year=filing_year, period=period.registry_token)
+    except (RegistrySnapshotError, RegistryValidationError) as exc:
+        if _is_below_filing_authority(exc):
+            raise
+        return None
+    except ValueError as exc:
+        raise ModeloBuilderError(
+            translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
+            context={"modelos": modelo_id},
+        ) from exc
 
 
 def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | None:

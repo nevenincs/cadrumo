@@ -11,6 +11,8 @@ from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.casilla_id import CasillaId
+from ...core.declaracion_idioma import DeclaracionIdioma
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
@@ -56,8 +58,11 @@ _ENVELOPE_PERIOD_TOKENS: Mapping[str, str] = {AD_HOC_PERIOD_CODE: "0A"}
 _ENVELOPE_FILLER_ROLES: frozenset[FilingEnvelopePrefixRole] = frozenset(
     {
         FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+        FilingEnvelopePrefixRole.BETWEEN_LANGUAGE_PROGRAM_FILLER,
         FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
         FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
+        FilingEnvelopePrefixRole.PRE_DECLARANT_FILLER,
+        FilingEnvelopePrefixRole.POST_DECLARANT_FILLER,
     },
 )
 
@@ -90,7 +95,7 @@ class FilingEnvelopeRenderRequest(BaseModel):
     draft: ModeloDraft
     producer_snapshot: FilingProducerSnapshot
     prior_domiciliation_election: PriorDomiciliationElection
-    product_software_identity: AeatProductSoftwareIdentity
+    product_software_identity: AeatProductSoftwareIdentity | None
 
     @property
     def modelo(self) -> Modelo:
@@ -104,6 +109,11 @@ class FilingEnvelopeRenderRequest(BaseModel):
         _validate_envelope_filing_draft(self.draft, snapshot)
         _validate_envelope_filing_snapshot(self.draft, snapshot)
         _validate_envelope_filing_layout(self.layout, snapshot)
+        envelope = self.layout.filing_envelope
+        if envelope is None:
+            raise ValueError("filing-envelope layout must carry its declaration")
+        if (self.product_software_identity is not None) != (envelope.product_identity_requirement is not None):
+            raise ValueError("filing-envelope software identity must match the source-declared prefix requirement")
         _validate_envelope_filing_producer(self.draft, snapshot, self.producer_snapshot)
         policy = filing_envelope_modelo_policy(self.modelo)
         if policy.requiresprior_domiciliation_election and (
@@ -191,11 +201,41 @@ def envelope_period_token(period: Period) -> str:
     return token
 
 
-def envelope_closer_bytes(*, modelo: Modelo, period: Period) -> bytes:
+def _declared_envelope_period_token(
+    period: Period, *, modelo: Modelo, envelope: FilingEnvelopeDefinition | None
+) -> str:
+    """Interpret the exterior quarter only under its exact official 369 envelope."""
+    if period.registry_token not in {"EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"}:
+        return envelope_period_token(period)
+    if (
+        envelope is None
+        or modelo.value != "369"
+        or str(envelope.source_ref) != "aeat-dr-369-2021"
+        or str(envelope.source_sha256) != "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
+        or envelope.record_identity != "T3690 Estruc. gral"
+        or envelope.product_identity_requirement is not None
+        or tuple(field.role for field in envelope.prefix_fields)
+        != (
+            FilingEnvelopePrefixRole.OPENING_TAG,
+            FilingEnvelopePrefixRole.MODELO,
+            FilingEnvelopePrefixRole.DISCRIMINANT,
+            FilingEnvelopePrefixRole.FILING_YEAR,
+            FilingEnvelopePrefixRole.PERIOD,
+            FilingEnvelopePrefixRole.RECORD_TYPE,
+            FilingEnvelopePrefixRole.PRE_DECLARANT_FILLER,
+            FilingEnvelopePrefixRole.DECLARANT_TAX_ID,
+            FilingEnvelopePrefixRole.POST_DECLARANT_FILLER,
+        )
+    ):
+        raise FilingExportValidationError("exterior quarter requires the exact official Modelo 369 envelope")
+    return period.registry_token.removeprefix("EXT-")
+
+
+def envelope_closer_bytes(*, modelo: Modelo, period: Period, envelope: FilingEnvelopeDefinition | None = None) -> bytes:
     """Derive the declared relative closing identifier."""
     discriminant = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.DISCRIMINANT]
     record_type = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]
-    period_token = envelope_period_token(period)
+    period_token = _declared_envelope_period_token(period, modelo=modelo, envelope=envelope)
     closer = f"</T{modelo.value}{discriminant}{period.filing_year:04d}{period_token}{record_type}".encode("ascii")
     if len(closer) != _ENVELOPE_CLOSER_EXTENT:
         raise FilingExportValidationError(
@@ -230,7 +270,7 @@ class FilingEnvelopeRenderResult(BaseModel):
             raise ValueError(
                 f"filing-envelope prefix must retain its declared {self.envelope.prefix_extent}-byte extent"
             )
-        if self.closer != envelope_closer_bytes(modelo=self.modelo, period=self.period):
+        if self.closer != envelope_closer_bytes(modelo=self.modelo, period=self.period, envelope=self.envelope):
             raise ValueError("filing-envelope closer must be derived from the selected modelo and filing period")
         body = b"".join(item.payload for item in self.occurrences)
         if self.payload != self.prefix + body + self.closer:
@@ -272,9 +312,18 @@ def render_declared_prefix(
     prefix_extent: int,
     modelo: Modelo,
     period: Period,
-    product_software_identity: AeatProductSoftwareIdentity,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    declarant_tax_id: str | None = None,
+    envelope: FilingEnvelopeDefinition | None = None,
+    casilla_values: Mapping[CasillaId, object] | None = None,
 ) -> bytes:
     """Render the declared prefix fields to their exact byte extent, or raise."""
+    if any(field.role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID for field in prefix_fields):
+        token = _declared_envelope_period_token(period, modelo=modelo, envelope=envelope)
+        if token not in {"1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13))}:
+            raise FilingExportValidationError(
+                "declarant envelope period is outside the official monthly/quarterly range"
+            )
     prefix = b"".join(
         render_envelope_prefix_field(
             field.role,
@@ -282,6 +331,10 @@ def render_declared_prefix(
             modelo=modelo,
             period=period,
             product_software_identity=product_software_identity,
+            declarant_tax_id=declarant_tax_id,
+            envelope=envelope,
+            casilla_id=field.casilla_id,
+            casilla_values=casilla_values,
         )
         for field in prefix_fields
     )
@@ -290,41 +343,100 @@ def render_declared_prefix(
     return prefix
 
 
-def _envelope_prefix_role_value(
+def _envelope_prefix_structural_value(
     role: FilingEnvelopePrefixRole,
     *,
-    length: int,
     modelo: Modelo,
     period: Period,
-    product_software_identity: AeatProductSoftwareIdentity,
-) -> str:
-    if (literal := _ENVELOPE_GRAMMAR_LITERALS.get(role)) is not None:
-        return literal
-    if role in _ENVELOPE_FILLER_ROLES:
-        return " " * length
+    envelope: FilingEnvelopeDefinition | None,
+) -> str | None:
     match role:
         case FilingEnvelopePrefixRole.MODELO:
             return modelo.value
         case FilingEnvelopePrefixRole.FILING_YEAR:
             return f"{period.filing_year:04d}"
         case FilingEnvelopePrefixRole.PERIOD:
-            return envelope_period_token(period)
+            return _declared_envelope_period_token(period, modelo=modelo, envelope=envelope)
         case FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG:
+            period_token = _declared_envelope_period_token(period, modelo=modelo, envelope=envelope)
             return (
                 f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.OPENING_TAG]}"
                 f"{modelo.value}"
                 f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.DISCRIMINANT]}"
-                f"{period.filing_year:04d}{envelope_period_token(period)}"
+                f"{period.filing_year:04d}{period_token}"
                 f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]}"
             )
-        case FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER:
-            return product_software_identity.program_identifier
-        case FilingEnvelopePrefixRole.DEVELOPER_TAX_ID:
-            return str(product_software_identity.developer_tax_id)
         case _:
-            raise FilingExportValidationError(
-                f"filing-envelope prefix role {role.value!r} has no declared value authority"
-            )
+            return None
+
+
+def _envelope_prefix_identity_value(
+    role: FilingEnvelopePrefixRole,
+    *,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    declarant_tax_id: str | None,
+) -> str | None:
+    if role is FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER:
+        if product_software_identity is None:
+            raise FilingExportValidationError("program identifier requires explicit software identity")
+        return product_software_identity.program_identifier
+    if role is FilingEnvelopePrefixRole.DEVELOPER_TAX_ID:
+        if product_software_identity is None:
+            raise FilingExportValidationError("developer tax ID requires explicit software identity")
+        return str(product_software_identity.developer_tax_id)
+    if role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID:
+        if declarant_tax_id is None:
+            raise FilingExportValidationError("declarant tax ID requires the approved filing subject")
+        return declarant_tax_id
+    return None
+
+
+def _envelope_prefix_language_value(
+    role: FilingEnvelopePrefixRole,
+    *,
+    casilla_id: CasillaId | None,
+    casilla_values: Mapping[CasillaId, object] | None,
+) -> str | None:
+    if role is not FilingEnvelopePrefixRole.LANGUAGE:
+        return None
+    if casilla_id != "decl.idioma" or casilla_values is None:
+        raise FilingExportValidationError("envelope language requires its declared casilla value")
+    value = casilla_values.get(casilla_id)
+    if not isinstance(value, str) or value not in {member.value for member in DeclaracionIdioma}:
+        raise FilingExportValidationError("envelope language must be source-listed E, C, G, or V")
+    return value
+
+
+def _envelope_prefix_role_value(
+    role: FilingEnvelopePrefixRole,
+    *,
+    length: int,
+    modelo: Modelo,
+    period: Period,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    declarant_tax_id: str | None,
+    envelope: FilingEnvelopeDefinition | None,
+    casilla_id: CasillaId | None,
+    casilla_values: Mapping[CasillaId, object] | None,
+) -> str:
+    if (literal := _ENVELOPE_GRAMMAR_LITERALS.get(role)) is not None:
+        return literal
+    if role in _ENVELOPE_FILLER_ROLES:
+        return " " * length
+    structural = _envelope_prefix_structural_value(role, modelo=modelo, period=period, envelope=envelope)
+    if structural is not None:
+        return structural
+    identity = _envelope_prefix_identity_value(
+        role,
+        product_software_identity=product_software_identity,
+        declarant_tax_id=declarant_tax_id,
+    )
+    if identity is not None:
+        return identity
+    language = _envelope_prefix_language_value(role, casilla_id=casilla_id, casilla_values=casilla_values)
+    if language is not None:
+        return language
+    raise FilingExportValidationError(f"filing-envelope prefix role {role.value!r} has no declared value authority")
 
 
 def render_envelope_prefix_field(
@@ -333,7 +445,11 @@ def render_envelope_prefix_field(
     length: int,
     modelo: Modelo,
     period: Period,
-    product_software_identity: AeatProductSoftwareIdentity,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    declarant_tax_id: str | None = None,
+    envelope: FilingEnvelopeDefinition | None = None,
+    casilla_id: CasillaId | None = None,
+    casilla_values: Mapping[CasillaId, object] | None = None,
 ) -> bytes:
     """Render one declared prefix field's ASCII value to its declared byte length, or raise."""
     value = _envelope_prefix_role_value(
@@ -342,6 +458,10 @@ def render_envelope_prefix_field(
         modelo=modelo,
         period=period,
         product_software_identity=product_software_identity,
+        declarant_tax_id=declarant_tax_id,
+        envelope=envelope,
+        casilla_id=casilla_id,
+        casilla_values=casilla_values,
     )
     try:
         payload = value.encode("ascii")
