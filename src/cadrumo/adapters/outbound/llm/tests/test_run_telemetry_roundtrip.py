@@ -8,8 +8,8 @@ shape.
 Anti-tautology: writes two distinct records on different dates with
 non-default caller/provider/model/error-kind values (one success, one
 failure), asserts both records round-trip, that the date-range filter on
-``load_records`` returns only the expected entry, and that ``summarize``
-aggregates duration and outcome correctly across providers.
+``load_records`` returns only the expected entry, with duration and outcome
+preserved across providers.
 """
 
 from __future__ import annotations
@@ -112,8 +112,8 @@ def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> 
     assert only_yesterday == (record_yesterday,)
 
 
-def test_llm_run_telemetry_summarize_aggregates_outcome_and_duration(tmp_path: Path) -> None:
-    """``summarize`` folds duration and success/failure across every provider."""
+def test_llm_run_telemetry_preserves_provider_outcome_and_duration(tmp_path: Path) -> None:
+    """Encrypted rows preserve each provider, outcome and duration."""
     recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
     recorder.record(
         _record(_TODAY, run_id="a", caller="c", provider="claude", duration_ms=1000, succeeded=True),
@@ -125,31 +125,18 @@ def test_llm_run_telemetry_summarize_aggregates_outcome_and_duration(tmp_path: P
         _record(_TODAY, run_id="d", caller="c", provider="codex", duration_ms=500, succeeded=True),
     )
 
-    overall = recorder.summarize(since=date(2000, 1, 1))
-    assert overall.entries == 3
-    assert overall.succeeded == 2
-    assert overall.failed == 1
-    assert overall.min_duration_ms == 500
-    assert overall.max_duration_ms == 3000
-
-    claude_only = recorder.summarize(since=date(2000, 1, 1), provider="claude")
-    assert claude_only.entries == 2
-    assert claude_only.succeeded == 1
-    assert claude_only.failed == 1
-    assert claude_only.min_duration_ms == 1000
-    assert claude_only.max_duration_ms == 3000
+    rows = recorder.load_records(since=date(2000, 1, 1))
+    assert tuple((row.provider, row.duration_ms, row.succeeded, row.error_kind) for row in rows) == (
+        ("claude", 1000, True, ""),
+        ("claude", 3000, False, "X"),
+        ("codex", 500, True, ""),
+    )
 
 
-def test_llm_run_telemetry_summarize_empty_reports_zero_entries(tmp_path: Path) -> None:
-    """An empty store summarises to zero entries rather than raising."""
+def test_llm_run_telemetry_empty_store_has_no_records(tmp_path: Path) -> None:
+    """An empty encrypted store returns no records."""
     recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
-    summary = recorder.summarize()
-    assert summary.entries == 0
-    assert summary.succeeded == 0
-    assert summary.failed == 0
-    assert summary.min_duration_ms is None
-    assert summary.max_duration_ms is None
-    assert summary.mean_duration_ms is None
+    assert recorder.load_records() == ()
 
 
 def test_llm_run_telemetry_record_corrupted_on_disk_breaks_roundtrip(tmp_path: Path) -> None:

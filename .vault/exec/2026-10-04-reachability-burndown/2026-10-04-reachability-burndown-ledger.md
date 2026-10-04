@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2689a0412de99101c2e88fcf660e1efe759589a16d5e5f2b97838244cab42163'
+body_hash: 'sha256:555f5d4fc67c5405b1cf04b64494a3c66683415d7325f028ba9f68a86ac9739d'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -366,6 +366,22 @@ related:
 - `S09` `verify:` `TUI workbench, bulk confirm, sources and rate boxes (42 passed)` -> `pass`
 - `S09` `verify:` `Owned Ruff check, format and ty (113 Python files)` -> `pass`
 - `S09` `verify:` `Fresh reachability: no exact findings, 84 method or data candidates, 3212 of 3212 modules runtime reachable` -> `fail`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/models.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_cache.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_llm_storage_shape_conformance.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_run_telemetry_roundtrip.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_smoke.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_usage.py`
+- `S11` `M` `src/cadrumo/adapters/outbound/llm/tests/test_usage_roundtrip.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/llm/cache.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/llm/run_telemetry.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/llm/usage.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py`
+- `S11` `M` `src/cadrumo/application/corpus_search/citation_lookup.py`
+- `S11` `M` `src/cadrumo/application/corpus_search/tests/test_citation_lookup.py`
+- `S11` `verify:` `LLM, citation and storage grammar unit corpus (702 passed)` -> `pass`
+- `S11` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -376,3 +392,4 @@ related:
 - `S04` The broader adapter failures include missing Chromium under isolated test roots and concurrent filing-layout changes. Pinning the provisioned component directory makes all 152 affected focused browser contracts pass. Final tree import/type checks and remaining findings stay open in S07 and S08.
 - `S08` Correct development-test labels expose previously hidden candidates. Whole-record dataclass serialization and typed factories now have qualified structural evidence. All remaining live candidates, including the 19 newly visible exact findings, remain open under S09. A concurrent new credential exception temporarily caused setup errors; its owner added the registry declarations and the same 68 audit controls then passed. Shared logging formatter changes are excluded from this commit. Final metadata generation and integrated gates remain S07.
 - `S09` Canonical fixture owners replace unused product projections; real JSON producer uses SchemaEnvelope. Private qualified locale constants are visible and 16 obsolete keys were removed through LocaleManager in all four catalogues. Actual authored conformance authority replaces ambient candidate borrowing; M303 fixture now carries replayable wallet evidence. Remaining M180 parser expectations and independent inventory import cycle remain under S07; 84 live heuristic candidates remain under S10. Concurrent filing clock, new wallet tests and locale additions are excluded from the checkpoint.
+- `S11` Removed unsupported summary APIs and their models; retained independent persistence field, filtering and failure assertions. Unsafe model tests drive actual encrypted cache reads and writes; tagged and vendor-qualified names round-trip unchanged. Retired the unused cache display grammar and legacy corpus-reference lookup; exact pinned citation resolution remains active. Shared external edits are outside this checkpoint.

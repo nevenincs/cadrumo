@@ -1,8 +1,7 @@
 """Unit tests for usage recording.
 
 Verifies that :class:`cadrumo.adapters.outbound.llm.UsageRecorder` round-trips
-records through encrypted secure-object storage and produces accurate
-aggregate summaries via :meth:`cadrumo.adapters.outbound.llm.UsageRecorder.summarize`.
+records through encrypted secure-object storage.
 """
 
 from __future__ import annotations
@@ -23,8 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _CREATED_AT = datetime(2026, 5, 28, 12, 35, 0, tzinfo=UTC)
 
 
-def test_usage_recorder_round_trip_and_summary(tmp_path: Path) -> None:
-    """Usage records should round-trip through JSONL and summarize correctly."""
+def test_usage_recorder_round_trip(tmp_path: Path) -> None:
+    """Usage records preserve accounting fields through encrypted storage."""
 
     recorder = UsageRecorder(root_dir=tmp_path)
     response = LLMResponse(
@@ -42,11 +41,10 @@ def test_usage_recorder_round_trip_and_summary(tmp_path: Path) -> None:
     path = recorder.record(record)
     assert not path.exists()
     assert recorder.load_records() == (record,)
-    summary = recorder.summarize()
-    assert summary.entries == 1
-    assert summary.total_input_tokens == 15
-    assert summary.total_output_tokens == 6
-    assert summary.total_cost_estimate_usd == Decimal("0.000135")
+    loaded = recorder.load_records()[0]
+    assert loaded.input_tokens == 15
+    assert loaded.output_tokens == 6
+    assert loaded.cost_estimate_usd == Decimal("0.000135")
 
 
 def test_usage_default_root_uses_central_settings(tmp_path: Path) -> None:

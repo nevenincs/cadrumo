@@ -3,7 +3,7 @@
 import pytest
 
 from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
+from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMError
@@ -24,6 +24,5 @@ def test_smoke_llm_key_symbols_are_importable() -> None:
     assert inspect.isclass(LLMError), "LLMError must be a class"
     assert inspect.isclass(LLMRunRecord), "LLMRunRecord must be a class"
     assert inspect.isclass(LLMRunTelemetryRecorder), "LLMRunTelemetryRecorder must be a class"
-    assert inspect.isclass(LLMRunTelemetrySummary), "LLMRunTelemetrySummary must be a class"
     assert inspect.isclass(UsageRecorder), "UsageRecorder must be a class"
     assert issubclass(LLMError, Exception), "LLMError must inherit from Exception"

@@ -1,13 +1,11 @@
-"""The LLM usage/telemetry/cache logical paths match their declared grammar shapes.
+"""The LLM usage and telemetry display paths match their declared grammar shapes.
 
-Three of ``STORAGE_PATH_DEFINITIONS``' filesystem-kind entries are NOT
+Two of ``STORAGE_PATH_DEFINITIONS``' filesystem-kind entries are NOT
 materialised as files: :class:`~adapters.outbound.llm.UsageRecorder`,
-:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, and
-:class:`~adapters.outbound.llm.LLMCache` all persist through
+:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` persist through
 ``secure_object_repository_for_active_bucket().save(...)`` (encrypted SQL
 secure objects); each producer's own docstring says its returned path is
-"logical ... for operator display only" (usage, run-telemetry) or that "the
-cache itself is persisted in encrypted SQL secure objects" (cache). The
+"logical ... for operator display only". The
 existing ``test_usage.py`` module already asserts ``not path.exists()``
 directly against this real, produced value.
 
@@ -29,13 +27,11 @@ import pytest
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.storage_taxonomy import StorageCategory
-from .....core.storage_taxonomy_locations import storage_location
 from .....tests.storage_scope import storage_overrides
-from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
-from ..models import LLMRequest, LLMResponse
+from ..models import LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -90,32 +86,8 @@ def test_the_run_telemetry_logical_path_matches_its_declared_shape(tmp_path: Pat
     assert_path_matches_grammar(key="llm_run_telemetry_record", root=root, produced=path)
 
 
-def test_the_cache_entry_logical_path_matches_its_declared_shape(tmp_path: Path) -> None:
-    root = tmp_path
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.LLM_CACHE)):
-        cache = LLMCache()
-        request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-        response = _response()
-        cache.write(request, response)
-        # ``write`` returns the persisted CachedEntry, not the logical path --
-        # the path is a separate helper, exactly as ``_path_for``'s docstring
-        # says: "Logical path for displaying the cache entry location."
-        key = cache.build_key(request, response.provider, response.model)
-        path = cache._path_for(key)
-
-    assert not path.exists()
-    assert_path_matches_grammar(key="llm_cache_entry", root=root, produced=path)
-
-
 def test_a_non_conforming_usage_filename_is_rejected_by_the_grammar(tmp_path: Path) -> None:
     """Positive control: the matcher can still fail."""
     malformed = tmp_path / "llm-usage" / "usage-not-a-date.jsonl"
     with pytest.raises(AssertionError):
         assert_path_matches_grammar(key="llm_usage_record", root=tmp_path, produced=malformed)
-
-
-def test_a_non_conforming_cache_path_is_rejected_by_the_grammar(tmp_path: Path) -> None:
-    """Positive control: a cache path missing the provider/model nesting fails."""
-    malformed = tmp_path / storage_location(StorageCategory.LLM_CACHE).relative_path() / "not-nested-enough.json"
-    with pytest.raises(AssertionError):
-        assert_path_matches_grammar(key="llm_cache_entry", root=tmp_path, produced=malformed)

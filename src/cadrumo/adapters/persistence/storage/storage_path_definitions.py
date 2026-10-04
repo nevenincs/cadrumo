@@ -483,17 +483,16 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     # grammar spelling the interpolated shape, exactly the mechanism the six
     # entries above already use for the blob/run fan-outs.
     #
-    # Three of the four (llm_usage_record, llm_run_telemetry_record,
-    # llm_cache_entry) are NOT materialised as files: their producers persist
+    # Usage and run-telemetry display paths are not materialised as files;
+    # their producers persist
     # through ``secure_object_repository_for_active_bucket().save(...)``
     # (encrypted SQL secure objects), and each producer's own docstring
-    # states its returned path is "logical ... for operator display only" /
-    # "The cache itself is persisted in encrypted SQL secure objects". The
+    # states its returned path is "logical ... for operator display only". The
     # grammar still documents that real, produced STRING -- callers build and
     # return it for display -- but no byte is ever written at it. Declared as
     # ``kind=FILE`` anyway (matching the composition the honesty review's taint
     # pass found, and giving the display-path contract a governed home) rather
-    # than invented as a new kind; the conformance tests for these three name
+    # than invented as a new kind; the conformance tests for both producers name
     # this explicitly and assert the returned Path, never on-disk presence.
     StoragePathDefinition(
         key="llm_usage_record",
@@ -514,13 +513,6 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar=f"<root>/{TOKENS_DIRNAME}/<bucket_id>-<auth_provider_kind>-auth.lock",
         owner="cadrumo.application.auth",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-    ),
-    StoragePathDefinition(
-        key="llm_cache_entry",
-        kind=StoragePathKind.FILE,
-        grammar=f"<root>/{LLM_CACHE_SUBPATH}/<provider>/<model>/<sha256>-<sha256>.json",
-        owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
 )

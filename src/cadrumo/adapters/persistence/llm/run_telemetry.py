@@ -46,7 +46,6 @@ from __future__ import annotations
 
 import json
 from datetime import date, timedelta
-from decimal import Decimal
 from pathlib import Path
 from typing import override
 from uuid import uuid4
@@ -73,7 +72,6 @@ __all__ = [
     "LLMRunRecord",
     "LLMRunTelemetryDiagnosticsAdapter",
     "LLMRunTelemetryRecorder",
-    "LLMRunTelemetrySummary",
 ]
 
 _RUN_TELEMETRY_NAMESPACE = LLM_RUN_TELEMETRY_NAMESPACE.namespace
@@ -107,52 +105,6 @@ class LLMRunRecord(BaseModel):
     succeeded: bool = Field(description="Whether the run completed without raising.")
     error_kind: str = Field(default="", description="Exception class name when the run failed; empty on success.")
     started_at: UtcInstant = Field(description="UTC timestamp the run started.")
-
-
-class LLMRunTelemetrySummary(BaseModel):
-    """Aggregated :class:`LLMRunTelemetryRecorder` statistics for one provider or overall."""
-
-    model_config = _STRICT_FROZEN
-
-    entries: int = Field(ge=0, description="Number of run records included.")
-    succeeded: int = Field(ge=0, description="Number of runs that completed without raising.")
-    failed: int = Field(ge=0, description="Number of runs that raised.")
-    min_duration_ms: int | None = Field(default=None, description="Fastest recorded run duration.")
-    max_duration_ms: int | None = Field(default=None, description="Slowest recorded run duration.")
-    mean_duration_ms: Decimal | None = Field(default=None, description="Mean recorded run duration.")
-
-
-def _records_for_provider(
-    records: tuple[LLMRunRecord, ...],
-    provider: str | None,
-) -> tuple[LLMRunRecord, ...]:
-    if provider is None:
-        return records
-    return tuple(item for item in records if item.provider == provider)
-
-
-def _summarize_records(records: tuple[LLMRunRecord, ...]) -> LLMRunTelemetrySummary:
-    if not records:
-        return LLMRunTelemetrySummary(entries=0, succeeded=0, failed=0)
-    durations: list[Decimal] = []
-    duration_values: list[int] = []
-    succeeded = 0
-    failed = 0
-    for item in records:
-        durations.append(Decimal(item.duration_ms))
-        duration_values.append(item.duration_ms)
-        if item.succeeded:
-            succeeded += 1
-        else:
-            failed += 1
-    return LLMRunTelemetrySummary(
-        entries=len(records),
-        succeeded=succeeded,
-        failed=failed,
-        min_duration_ms=min(duration_values),
-        max_duration_ms=max(duration_values),
-        mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(Decimal("0.01")),
-    )
 
 
 class LLMRunTelemetryRecorder:
@@ -275,26 +227,6 @@ class LLMRunTelemetryRecorder:
                 raise LLMCacheError(msg)
             rows.append((record, reconstructed))
         return tuple(sorted(rows, key=lambda item: (item[0].started_at, item[0].run_id)))
-
-    def summarize(
-        self,
-        since: date | None = None,
-        until: date | None = None,
-        *,
-        provider: str | None = None,
-    ) -> LLMRunTelemetrySummary:
-        """Aggregate run records into a :class:`LLMRunTelemetrySummary`.
-
-        Args:
-            since: Inclusive lower date bound, or ``None`` for no lower bound.
-            until: Inclusive upper date bound, or ``None`` for no upper bound.
-            provider: Optional provider filter; ``None`` aggregates every provider.
-
-        Returns:
-            Aggregate run-timing summary.
-        """
-        records = self.load_records(since=since, until=until)
-        return _summarize_records(_records_for_provider(records, provider))
 
     def prune(
         self,
