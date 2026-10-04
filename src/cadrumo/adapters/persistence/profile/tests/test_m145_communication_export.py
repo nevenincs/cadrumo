@@ -47,8 +47,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark
 
 def _field_values(**overrides: str) -> dict[str, str]:
     values = {
-        # Official DR145 row 2: ordinary page is an explicit blank, complementary is C.
-        "comunicacion.pagina-complementaria": " ",
+        # Principal-page input omits the optional marker; DR145 row 2 renders
+        # that absence as a blank wire slot. A declared marker must be C.
         "perceptor.nif": "12345678Z",
         "perceptor.primer-apellido": "Garcia",
         "perceptor.segundo-apellido": "Lopez",
@@ -288,9 +288,7 @@ def test_a_page_indicator_that_validates_also_exports(
 
     field_values = _field_values(**overrides)
     if _PAGE_INDICATOR not in overrides:
-        # Principal-page evidence also proves genuine absence is legal; the
-        # shared material fixture supplies an explicit blank for its byte10 witness.
-        field_values.pop(_PAGE_INDICATOR, None)
+        # Prove genuine input absence alongside the literal blank wire oracle.
         assert _PAGE_INDICATOR not in field_values
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:

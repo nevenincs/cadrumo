@@ -388,7 +388,6 @@ M145_WIRE_CONFORMANCE_FAMILY = ConformanceFamily(
 
 
 _RETAINED_M145_VALUES = {
-    "comunicacion.pagina-complementaria": " ",
     "perceptor.nif": "12345678Z",
     "perceptor.primer-apellido": "Garcia",
     "perceptor.segundo-apellido": "Lopez",
