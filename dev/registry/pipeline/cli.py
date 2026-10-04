@@ -794,6 +794,8 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         ("232", "2016-2017"),
         ("232", "2018-y-siguientes"),
         ("190", "2025-y-siguientes"),
+        ("347", "2011-2024"),
+        ("347", "2025-y-siguientes"),
     } and generated_form_companion_changed(
         prepared.target_root,
         prepared.candidate_root,

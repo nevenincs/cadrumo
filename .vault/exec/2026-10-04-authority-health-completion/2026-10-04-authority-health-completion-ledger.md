@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b174d7afdf62976dd9a405270383658277f6737e2eb2895b228e8ba823a3e50'
+body_hash: 'sha256:649febfd9003a3fa26a500fd91c21494e4a1d457fbc420b73ca8a666477a4b5c'
 related:
   - "[[2026-10-04-authority-health-completion-plan]]"
 ---
@@ -62,3 +62,19 @@ related:
 - `S04` `verify:` `Modelo 303 complete canonical migration equivalence and minimality no-op` -> `pass`
 - `S04` `verify:` `check-bindings zero blocking findings` -> `pass`
 - `S04` `by:` `root`
+- `S05` `M` `dev/registry/mappings/modelo_347/2011/0003-declarado.toml`
+- `S05` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S05` `M` `dev/registry/tests/test_modelo_347_declarado_export.py`
+- `S05` `M` `dev/registry/pipeline/generated_form_bridge.py`
+- `S05` `M` `dev/registry/pipeline/cli.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `verify:` `Modelo 347 producer/export tests 14 passed` -> `pass`
+- `S05` `verify:` `both Modelo 347 canonical target checks matched` -> `pass`
+- `S05` `verify:` `Modelo 347 complete canonical migration equivalence and minimality no-op` -> `pass`
+- `S05` `verify:` `check-bindings zero blocking findings` -> `pass`
+- `S05` `by:` `root`

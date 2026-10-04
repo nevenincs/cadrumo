@@ -16,7 +16,7 @@ related:
   - '[[2026-10-02-registry-health-repair-plan]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:820e4dc28c34af5ac515b88b3e7fbfdbbc28c41c6858a7c005c87b07f5fe65a0'
+body_hash: 'sha256:780e107c466caa07bc4b3cdcea522c0569c10789bf98f8418b67d7f454b9586e'
 ---
 
 # `authority-health-completion` plan
@@ -45,7 +45,7 @@ Proof-cohort dependency: execute S01-S08, then S11, then S09-S10, S12 and S13. S
 - [x] `S02` - Bind conformance report and coverage to one explicit candidate governed-fact scope and generation-safe cache; `dev/registry/conformance/profile.py, manager.py, defining composition helpers and conformance tests, preserve src/cadrumo/domain/calculations/registry/governed_fact_scope.py refusal`.
 - [x] `S03` - Make all candidate artifact health checks use the selected descriptor and preserve active defaults; `dev/registry/analysis/registry_status.py and defining descriptor/runtime load helpers, candidate health CLI composition and focused descriptor consistency tests`.
 - [x] `S04` - Resolve the Modelo 303 2022 recargo binding through its official applicable typed consumer; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml, exact source-grounded casilla or typed consumer delta and focused binding tests`.
-- [ ] `S05` - Close the four Modelo 347 repeated-row binding consumer edges across both declared epochs; `src/cadrumo/_data/registry/aeat/modelos/347/revisions/{2011-2024,2025-y-siguientes}/, dev/registry/mappings/modelo_347/{2011,2025}/, corresponding row producer/consumer tests`.
+- [x] `S05` - Close the four Modelo 347 repeated-row binding consumer edges across both declared epochs; `src/cadrumo/_data/registry/aeat/modelos/347/revisions/{2011-2024,2025-y-siguientes}/, dev/registry/mappings/modelo_347/{2011,2025}/, corresponding row producer/consumer tests`.
 - [ ] `S06` - Regenerate the stale Modelo 111 target from reviewed current source inputs with complete companions; `dev/registry/pipeline canonical legacy transaction recovery entrypoint, journal/lock owners and real recovery tests, Modelo 111 2019-y-siguientes source-pinned target and complete companions`.
 - [ ] `S07` - Commit the enrolled Modelo 490 2021 target through the canonical source-pinned bootstrap publication path; `dev/registry/pipeline canonical historical static bootstrap/supersession orchestration and isolated publication/refusal tests, enrolled Modelo 490 2021 source-pinned target, unchanged authority grade and generated companions`.
 - [ ] `S08` - Reconcile the complete target population and regenerate every repair-affected target in dependency order with truthful capability evidence; `dev/registry/analysis generated target census, existing registry-health-repair supported target work, reviewed source/map/profile inputs, bootstrap/disposition owners and affected generated export/construct/form companions`.

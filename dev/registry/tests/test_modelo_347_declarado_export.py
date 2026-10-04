@@ -171,6 +171,20 @@ _INVERSION_SUJETO_PASIVO = "modelo-347-contraparte-row-inversion-sujeto-pasivo"
 _PROVINCIA = "modelo-347-contraparte-row-provincia-codigo"
 
 
+@pytest.mark.parametrize(("revision_id", "year"), (("2011-2024", 2024), ("2025-y-siguientes", 2025)))
+def test_provincia_export_reads_each_declared_row_binding(revision_id: str, year: int) -> None:
+    revision = _revision(revision_id)
+    field = _field(_record(revision, "m347-declarado"), 77)
+    assert str(field.binding) == _PROVINCIA and field.casilla_id is None
+    observations = tuple(
+        observation.model_copy(update={"transaction_date": date(year, 5, 12)}) for observation in _PARTIES
+    )
+    values = resolve_invoice_binding_row_values(revision, observations, effective_date=date(year, 12, 31))
+    foreign_provinces = [value for (binding_id, _index), value in values.items() if str(binding_id) == _PROVINCIA]
+    assert foreign_provinces.count("99") == 2
+    assert all(render_fixed_width_export_field(field, value) == "99" for value in foreign_provinces if value == "99")
+
+
 def _filer_profile(operation: PinnedAuthorityOperation, *extra: UserProfileFact) -> ModeloWorkProfile:
     facts = (
         UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -390,6 +404,13 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
     ]
     reverse_charge = rows[("SUBCONTRATA OBRA SL", "", "X")]
     assert (reverse_charge[_IMPORTE], reverse_charge[_QUARTERS[2]]) == (Decimal("6000.00"), Decimal("6000.00"))
+    declarado = _record(_revision("2025-y-siguientes"), "m347-declarado")
+    cash_field, reverse_field = _field(declarado, 281), _field(declarado, 282)
+    assert str(cash_field.binding) == _CRITERIO_CAJA and cash_field.casilla_id is None
+    assert str(reverse_field.binding) == _INVERSION_SUJETO_PASIVO and reverse_field.casilla_id is None
+    assert render_fixed_width_export_field(cash_field, cash[_CRITERIO_CAJA]) == "X"
+    assert render_fixed_width_export_field(reverse_field, cash[_INVERSION_SUJETO_PASIVO]) == " "
+    assert render_fixed_width_export_field(reverse_field, reverse_charge[_INVERSION_SUJETO_PASIVO]) == "X"
     assert resolution.binding_values[_COUNT] == Decimal("4")
     assert "m347-record:criterio-caja-devengo" in _source_refs(resolution)
 

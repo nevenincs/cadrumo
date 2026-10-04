@@ -52,6 +52,18 @@ _REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
         "fb76af52570a20598382d59257ff685297864aa6091b1eac0d6155709dc52243",
         "a4e2d574372a6539b15d0467d566e6b1a03f75bb1ae3f75978ff352e09863405",
     ),
+    ("347", "2011-2024"): (
+        "aeat-dr-347-2011",
+        "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809",
+        "b8f17768bc41422e399d1f1309049bed94f4831d0297861218c1675222de02d1",
+        "91b8e514b64a86ab9a0674d4228edede7151ec45d2e67bf3ec97ac4b46f4c8bb",
+    ),
+    ("347", "2025-y-siguientes"): (
+        "aeat-dr-347-2025",
+        "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361",
+        "0c83baa05a29ccd3e0a246170c60af514e0848ecbb1ef20d5108157d376950da",
+        "8e71508cd3cefdad1e8f66cb1ef1e59e2ef104aab07560f9ee930f6f2518fbc1",
+    ),
 }
 
 
