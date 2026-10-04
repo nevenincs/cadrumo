@@ -171,3 +171,49 @@ class Settings(SettingsBase):
     definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
 
     assert definitions == {"Settings", "Settings.unused"}
+
+
+def test_assigned_validators_and_computed_fields_are_registered_only_on_models() -> None:
+    module = _module(
+        "pkg.models",
+        """
+from pydantic import BaseModel, field_validator as validator, computed_field
+class Model(BaseModel):
+    _normalize = validator('value')(normalize)
+    @computed_field
+    @property
+    def total(self): return 1
+    unused = ordinary_wrapper(normalize)
+    class Plain:
+        _normalize = validator('value')(normalize)
+class Plain:
+    _normalize = validator('value')(normalize)
+""",
+    )
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    assert definitions == {
+        "Model",
+        "Model.unused",
+        "Model.Plain",
+        "Model.Plain._normalize",
+        "Plain",
+        "Plain._normalize",
+    }
+
+
+def test_click_dispatch_overrides_are_reached_but_ordinary_methods_are_auditable() -> None:
+    module = _module(
+        "pkg.commands",
+        """
+from typer.core import TyperGroup as Group
+class Commands(Group):
+    def format_commands(self, ctx, formatter): pass
+    def unused(self): pass
+class Plain:
+    def format_commands(self, ctx, formatter): pass
+""",
+    )
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    assert definitions == {"Commands", "Commands.unused", "Plain", "Plain.format_commands"}

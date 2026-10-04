@@ -61,7 +61,15 @@ def _import_bindings(module: ShippedModule) -> dict[str, str]:
 def _installed_contract(target: str) -> FrameworkContract:
     """Consult only supported dependency families; product imports never execute."""
     module_name, _, class_name = target.rpartition(".")
-    if module_name.split(".")[0] not in {"textual", "sqlalchemy", "pydantic", "pydantic_settings", "ctypes"}:
+    if module_name.split(".")[0] not in {
+        "textual",
+        "sqlalchemy",
+        "pydantic",
+        "pydantic_settings",
+        "ctypes",
+        "click",
+        "typer",
+    }:
         return FrameworkContract()
     base = getattr(import_module(module_name), class_name, None)
     if not isinstance(base, type):

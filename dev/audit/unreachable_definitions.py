@@ -32,7 +32,7 @@ def _is_dunder(name: str) -> bool:
 def _registration_names(tree: ast.Module, contract: FrameworkContract) -> frozenset[str]:
     """Resolve the supported framework registration decorators from actual imports."""
     exports = {
-        "pydantic": {"field_validator", "model_validator", "field_serializer", "model_serializer"}
+        "pydantic": {"field_validator", "model_validator", "field_serializer", "model_serializer", "computed_field"}
         if contract.pydantic
         else set(),
         "textual": {"on"} if contract.textual else set(),
@@ -53,6 +53,17 @@ def _is_registered(function: ast.FunctionDef | ast.AsyncFunctionDef, registratio
         target = decorator.func if isinstance(decorator, ast.Call) else decorator
         if ast.unparse(target) in registrations:
             return True
+    return False
+
+
+def _is_registered_assignment(statement: ast.stmt, registrations: frozenset[str]) -> bool:
+    if not isinstance(statement, ast.Assign | ast.AnnAssign):
+        return False
+    value = statement.value
+    while isinstance(value, ast.Call):
+        if ast.unparse(value.func) in registrations:
+            return True
+        value = value.func
     return False
 
 
@@ -115,9 +126,11 @@ def _class_definitions(
             yield _Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.CLASS)
             yield from (
                 _Definition(inner.name, f"{node.name}.{inner.qualname}", inner.line, inner.kind, owner=inner.owner)
-                for inner in _class_definitions(statement, FrameworkContract(), registrations)
+                for inner in _class_definitions(statement, FrameworkContract(), frozenset())
             )
         else:
+            if _is_registered_assignment(statement, registrations):
+                continue
             declared = _assigned_str_value(statement)
             for name in _assigned_names(statement):
                 if (
