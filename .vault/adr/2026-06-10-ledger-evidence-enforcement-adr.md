@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-10-03'
-body_hash: 'sha256:86a3b17b0a6d58f5eb43f2c2724d6331aac2093c176abd3ec3890e368287c278'
+modified: '2026-10-04'
+body_hash: 'sha256:5937d315e854735cacc6a9952c9a43c8c70ece09029fc0a44367fc390e013e1b'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
+  - '[[2026-10-04-google-app-identity-adr]]'
 ---
 
 # `ledger-evidence-enforcement` adr: `Require encrypted evidence bytes; advisory evidence gate` | (**status:** `accepted`)
@@ -64,15 +65,10 @@ re-framing, and the test obligations.
 
 ## Constraints
 
-- **Google credentials and scope.** The fetch path depends on the operator
-  having connected Google with the `drive.file` scope. A Drive link to a file
-  the app did not create / the operator did not pick is unreachable under that
-  scope by design, and Gmail/URL links are unreachable entirely. Under the
-  decision below these become **refusals**, so the doclink verb's success
-  surface narrows to "Drive files reachable under `drive.file`". This is an
-  accepted, deliberate consequence — a scope upgrade to `drive.readonly` /
-  `gmail.readonly` is a separate Google-app-verification security decision and
-  is out of scope here.
+- **Google credentials and scope.** Remote link acquisition is withdrawn by
+  `2026-10-04-google-app-identity-adr`, which also settles the scope question
+  this record deferred: no `drive.readonly` or `gmail.readonly` upgrade.
+  Evidence bytes enter through local import only.
 - **Parent feature stability.** `resolve_document_link` and the `AttachmentStore`
   secure substrate are landed and stable. The verify-path advisory builds on the
   landed `verify_modelo_revision` findings aggregation and the landed
@@ -84,6 +80,10 @@ re-framing, and the test obligations.
 ## Implementation
 
 ### Decision 1 — Replace link-only recording with fetch-and-encrypt-or-refuse
+
+The repurposed remote verb is withdrawn by
+`2026-10-04-google-app-identity-adr`. The invariant is unchanged: an evidence
+record carries encrypted document bytes, and no link-only record exists.
 
 `add_link_attachment` is **removed**. The `aeat app ledger doclink` verb is
 repurposed: when given a Gmail/Drive/URL reference it calls

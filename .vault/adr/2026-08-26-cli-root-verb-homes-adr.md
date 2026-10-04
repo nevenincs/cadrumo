@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:47acb8fcbf24725a6dc274867f4ec296fac5fe683af0019730ce9f29ec4d42fc'
+body_hash: 'sha256:06448e8eb78343dc380be7d321bfeae96dfc002bb9b46ed73e0c17249e8f7e7a'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
+  - '[[2026-10-04-google-app-identity-adr]]'
 ---
 
 # `cli-root-verb-homes` adr: `root verb homes and bidirectional transport verb symmetry` | (**status:** `accepted`)
@@ -216,8 +217,9 @@ dispositions:
 - `app modelo audit`: `export` outbound; inbound absent — **declared gap**, an
   audit bundle is re-derivable and has no import case.
 - `app modelo review-package`: `export` and `import` both present; see D5.
-- `app ledger`: `import` / `export` complete for rows; `evidence pull` /
-  `pull-all` inbound from remote, outbound absent — **declared gap**.
+- `app ledger`: `import` / `export` complete for rows; evidence intake is local
+  (`evidence add`, `evidence batch`); remote inbound absent **by policy**
+  (`2026-10-04-google-app-identity-adr`).
 - `config profile archive`: `export` / `import` complete for local.
 - `config profile archive`: `push` outbound to the remote replica; `pull` absent
   — **declared gap**, the restore path does not exist and is owed a follow-on
@@ -345,6 +347,9 @@ becomes `app ledger evidence pull-all --folder`, using the real `pull-all`
 cardinality precedent from `app live filed` rather than the `-folder` locus
 suffix D2 refuses. `app ledger evidence add`'s positional local path and `evidence
 batch`'s positional directory declare their locus and take the D3 spellings.
+`evidence pull` and `evidence pull-all` are withdrawn by
+`2026-10-04-google-app-identity-adr`; `evidence add` and `evidence batch` are
+unchanged.
 
 **`file` transport uses are renamed.** `app modelo reconcile file` becomes
 `reconcile import`; `config profile censo file` becomes `censo import`. Both keep
