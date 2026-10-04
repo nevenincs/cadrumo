@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ddaefa055fddca4466b1d3b1d938e00bc00144ab706ae976babc824a6c12fc73'
+body_hash: 'sha256:eb9279095614c4ac069f340d2f8163227dc14bbac3750362e93f0dead2e0beb4'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -38,7 +38,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - The documentation set is about 435 MB in about 63,000 files across four languages. Every file can't be compiled into the binary.
 - The documentation runs third-party JavaScript (jQuery, Furo, mermaid, Pagefind). Tauri IPC must stay out of its reach.
 - The TUI and REPL own F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape and plain keys. WebView2 accelerators collide with several of these.
-- The shell grants no authority and adds no CLI semantics. Runtime launch, supervision, availability and authentication belong to the runtime and to a runtime manager whose design is still a draft. `2026-10-03-runtime-without-service-manager-adr` is interim. The user has named a runtime manager as a target, so this record ties its constraint to ownership, not to that record.
+- The shell grants no authority and adds no CLI semantics. Runtime launch, supervision, availability and authentication belong to the runtime and to a runtime manager. The user has said the runtime needs that manager (MCP clients can't connect otherwise), so runtime management is a required dependency of the desktop application. Its design is still a draft, its decision record is still to be written, and it waits on the user's ruling. `2026-10-03-runtime-without-service-manager-adr` is interim, so this record ties its constraint to ownership, not to that record.
 - Admitted work is owned by the runtime and survives the client disconnecting (`2026-09-26-mcp-purpose-authentication-adr`). Interaction bearers are local to one process. An operation waiting on review or confirmation from a TUI that has exited settles under the runtime's rules, by refusal or expiry, and a restarted TUI can't answer it.
 - When no storage root is set in the environment, installed code resolves it against the process's current working directory (`src/cadrumo/core/storage_environment.py:10`, `:19`; `src/cadrumo/core/config_state_root.py:92`). Two child processes started in different directories can therefore resolve different storage roots, and so different runtime endpoints. The delivered per-user default is still an open obligation of the storage owner (`native/CONTRACT.md`).
 - The user removed earlier unapproved landing content. Anything outside the spec and the four additions approved on 2026-10-04 needs the user's approval.
@@ -54,7 +54,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 ## Constraints
 
 - The documentation origin gets no IPC, plugin or capability. Tauri 2.12.1 treats every registered custom scheme as a local origin, so it resolves the documentation frame to the same capabilities as the shell. The refusal therefore belongs to the application, through a per-launch shell token:
-  - the host mints the token at startup from a CSPRNG, at least 128 bits, and never logs or persists it
+  - the host mints the token at startup from at least 32 CSPRNG bytes, and never logs or persists it
   - it is injected by an initialization script into the top frame only, never into all frames
   - the shell reads it once from a namespaced, non-enumerable global and keeps it in module scope
   - every app command takes the token as an argument, or in the `x-cadrumo-token` header for raw-body `terminal_write`, compares it in constant time, and refuses a mismatch with `invalid_arguments`
@@ -66,7 +66,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
 - `source` on a log record is an open enumeration. A later runtime-manager source must not break the shell.
 - Terminal output is never dropped. Backpressure pauses the PTY reader instead.
-- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control. Desktop-shell plan S12 stays blocked until the runtime-management ruling.
+- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control. Until the runtime-management ruling, the TUI tab shows only the TUI's own output, and desktop-shell plan S12 stays blocked.
 - The shell shows no authentication UI. Login stays in the TUI, the runtime's profile worker launches the Cl@ve browser, and approval prompts belong to the runtime manager or the TUI.
 - The shell never caches, forwards or persists session, lease, receipt or credential material between TUI processes. Restarting a session starts a new process that goes through admission again.
 - No shell or host copy says that work completes after a terminal closes or the window closes.
@@ -130,7 +130,7 @@ shell to documentation:
   - `terminal_ack` is credit backpressure: pause at 512 KiB unacknowledged, resume below 128 KiB
   - `terminal_resize`
   - `terminal_close` settles before it returns
-  - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the user's home directory. That is only allowed once the projected storage root is pinned in the child environment (see Constraints). Before that, both kinds start in the same working directory.
+  - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the user's home directory. That is only allowed once the projected storage root is pinned in the child environment (see Constraints). Before that, both kinds start in the same working directory. The interactive interpreter never starts inside the storage root. A relative write such as `open("notes.csv", "w")` would otherwise land a plaintext file inside the custody tree. Private data enters that tree only through approved encrypted custody.
 - Logs:
   - `logs_subscribe` delivers batches of at most ten per second, starting with a 5,000-record backlog from a 10,000-record ring
   - each record carries `seq`, `source` (`python` or `host`), the raw timestamp, a parsed timestamp or null, a level or null, a logger or null, the message, a detail (continuation lines) or null, and a host process
@@ -139,8 +139,8 @@ shell to documentation:
 - Shell commands:
   - `desktop_environment`: output language and documentation origin and languages
   - `open_external`
-  - clipboard read and write text, and native context menus, each a token-checked app command that wraps the plugin or menu Rust API
-  - window state
+  - `shell_clipboard_read` and `shell_clipboard_write` for text, and `shell_context_menu` for native menus, each a token-checked app command that wraps the plugin or menu Rust API. The menu either returns the chosen item, or returns at once and delivers the selection later under a popup id. That depends on whether the menu library reports a dismissal. The shell needs no dismissal signal, so either form works.
+  - window state, Rust-only, with no JavaScript command
   - WebView2 browser accelerator keys and default context menus are disabled.
 
 **Keymap** (shell-owned; reserved from xterm through `attachCustomKeyEventHandler`; relayed from the documentation through the bridge):
