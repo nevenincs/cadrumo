@@ -422,15 +422,6 @@ class AuthorityEvidenceProjection:
 
         return bool(quotation.strip()) and normalise_corpus_text(quotation) in self.legal_text(legal_reference_id)
 
-    def legal_provenance(self, legal_reference_id: str) -> NormativeCorpusProvenance:
-        """Return the publisher-derived provenance for one legal reference."""
-        item = self._legal_by_id.get(legal_reference_id)
-        if item is not None:
-            return item.provenance
-        raise AuthorityComponentCodecError(
-            f"published authority artifact has no evidence projection for legal reference {legal_reference_id!r}"
-        )
-
     def source_bytes(self, source_reference_id: str) -> bytes:
         """Return digest-checked runtime source bytes for one source reference."""
         item = self._sources_by_id.get(source_reference_id)

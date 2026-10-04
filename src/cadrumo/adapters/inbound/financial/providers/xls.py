@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
-from .....core.external_constants import XLS_EXTENSION
 from .....core.legacy_workbook import LegacyWorksheet, read_legacy_workbook
 from .....core.tabular import TabularSourceError
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
@@ -60,7 +59,6 @@ class XlsProvider(FinancialProvider):
     """
 
     name = "XLS provider"
-    supported_extensions = frozenset({XLS_EXTENSION})
     source_format = SourceFormat.XLS
     # The fixtures are synthetic workbooks generated from the same published
     # bank export column schemas as the XLSX corpus; no operator .xls specimen

@@ -344,8 +344,7 @@ def save_events_append(
     r"""Append a single :class:`RunEvent` line to the per-run ``events.jsonl``.
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
-    platform — mirroring
-    :class:`core.observability.sink.JsonlRunSink` — so
+    platform, so
     ``events.jsonl`` is byte-stable across Windows and POSIX writers.
     Every string leaf in the event is redacted at DIAGNOSTIC class
     before serialisation so the on-disk record stays free of plaintext

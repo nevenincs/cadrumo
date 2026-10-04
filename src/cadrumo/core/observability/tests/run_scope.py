@@ -12,10 +12,10 @@ from ...logging import attach_run_sink, detach_run_sink, get_logger
 from ...time.clock import now
 from ..capture import CAPTURE_SINK
 from ..context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR, RunContextInfo
-from ..fingerprint import compute_corpus_sha256, compute_data_root_sha256, read_cert_fingerprint
 from ..models import ArgumentRecord, RunEventKind, RunEventPayload, RunOutcome, RunTrace, StepBoundaryPayload
-from ..sink import JsonlRunSink
 from ..store import EVENTS_FILENAME, run_dir, save_envelope, save_trace, validate_run_id
+from .fingerprint import compute_corpus_sha256, compute_data_root_sha256, read_cert_fingerprint
+from .sink import JsonlRunSink
 
 _log = get_logger(__name__)
 
@@ -295,7 +295,7 @@ def run_context(
 
     The outermost enter mints a ``run_id``, fingerprints the corpus /
     db / cert state, attaches a
-    :class:`cadrumo.core.observability.sink.JsonlRunSink` to the root
+    :class:`cadrumo.core.observability.tests.sink.JsonlRunSink` to the root
     logger, emits a ``STEP_START`` event, and on exit emits a
     ``STEP_END`` plus persists the finalised
     :class:`cadrumo.core.observability.models.RunTrace` (even on
@@ -324,7 +324,7 @@ def run_context(
             successfully (outcome ``OK``).
     """
     # Local imports break the recorder ↔ context cycle.
-    from ..recorder import record_event
+    from .recorder import record_event
 
     outer = RUN_CONTEXT_VAR.get(None)
     if outer is not None:

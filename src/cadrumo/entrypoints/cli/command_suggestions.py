@@ -293,11 +293,6 @@ class LazySubcommand:
             self._decorated.append(typer_instance)
 
     @property
-    def loader_owner(self) -> str:
-        """Return the stable Python owner of this deferred loader."""
-        return self._target.owner
-
-    @property
     def target(self) -> LazyNodeTarget:
         """Expose immutable target metadata without materializing the node."""
         return self._target

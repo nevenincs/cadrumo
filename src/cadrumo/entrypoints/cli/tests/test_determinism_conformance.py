@@ -44,8 +44,8 @@ from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.review_projection import ledger_transaction_review_status
 from ....core.directory_scan import scan_directory
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
-from ....core.observability.fingerprint import compute_db_sha256
 from ....core.observability.tests.envelope_capture import capture_envelopes
+from ....core.observability.tests.fingerprint import compute_db_sha256
 from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd

@@ -247,7 +247,7 @@ class FinancialProvider(ABC):
     """Abstract base class for file-backed raw transaction providers.
 
     Concrete subclasses must declare :attr:`name`,
-    :attr:`supported_extensions`, :attr:`source_format`,
+    :attr:`source_format`,
     :attr:`verification_source`, and :attr:`provisional_pending_specimen`
     and implement :meth:`ingest` plus :meth:`validate_source`. The shared
     :meth:`build_provenance` helper centralises
@@ -262,8 +262,6 @@ class FinancialProvider(ABC):
     Attributes:
         name: Stable provider identifier embedded in synthetic
             transaction ids and provenance records.
-        supported_extensions: Lowercase file extensions
-            (including the leading dot) the provider accepts.
         source_format: Source-format enum used for provenance.
         verification_source: Corpus provenance declaration; one of
             ``"real_bank_corpus_pdf"``,
@@ -276,7 +274,6 @@ class FinancialProvider(ABC):
     """
 
     name: ClassVar[str]
-    supported_extensions: ClassVar[frozenset[str]]
     source_format: ClassVar[SourceFormat]
     verification_source: ClassVar[CorpusVerificationSource]
     provisional_pending_specimen: ClassVar[bool]
@@ -334,19 +331,6 @@ class FinancialProvider(ABC):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__}: verification_source='no_corpus' requires provisional_pending_specimen=True",
             )
-
-    def can_handle(self, path: Path) -> bool:
-        """Return whether the provider is a plausible match for ``path``.
-
-        Args:
-            path: Candidate source document.
-
-        Returns:
-            True if ``path`` exists and its extension is in
-            :attr:`supported_extensions`. Content sniffing is left to
-            :meth:`validate_source` and :func:`detect_provider`.
-        """
-        return path.is_file() and path.suffix.lower() in self.supported_extensions
 
     @abstractmethod
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:

@@ -34,6 +34,7 @@ from .unreachable_models import (
 )
 from .unreachable_policy import _DEV_LABEL
 from .unreachable_references import _references, _string_tokens, assembled_reference_names
+from .unreachable_schemas import schema_member_uses
 from .unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo
 
 
@@ -110,14 +111,15 @@ def _symbol_findings(
         self_uses[name] = _references(tree)
         whole_use |= _collection_uses(tree)
 
-    usage = _SymbolUsage(member_names, literal_tokens, resolved_uses, self_uses, whole_use)
+    contracts = framework_contracts(modules)
+    schema_uses = schema_member_uses(modules, full_reach, contracts)
+    usage = _SymbolUsage(member_names, literal_tokens, resolved_uses, self_uses, whole_use, schema_uses)
     findings: list[SymbolFinding] = []
     data_cleared = 0
     dev_cleared = 0
     audited_reach = sorted(
         name for name in runtime_reach if name == spec.package or name.startswith(spec.package + ".")
     )
-    contracts = framework_contracts(modules)
     for name in audited_reach:
         module = modules[name]
         for definition in _definitions(module.tree, contracts.get(name)):
@@ -266,10 +268,13 @@ class _SymbolUsage:
     resolved_uses: set[tuple[str, str]]
     self_uses: dict[str, set[str]]
     whole_use: set[str]
+    schema_uses: frozenset[tuple[str, str]]
 
 
 def _python_reaches_definition(name: str, definition: _Definition, usage: _SymbolUsage) -> bool:
     """Apply exact top-level references before member and enum-collection uses."""
+    if (name, definition.qualname) in usage.schema_uses or (name, definition.qualname) in usage.resolved_uses:
+        return True
     if definition.kind in _TOP_LEVEL_KINDS:
         if (name, definition.name) in usage.resolved_uses or definition.name in usage.self_uses[name]:
             return True
@@ -311,7 +316,7 @@ def _definition_finding(
         return None, 1, 0
     labels = outside.labels_for_name(definition.name)
     # Tests annotate findings; only an exact development-tool reference clears.
-    if definition.kind in _TOP_LEVEL_KINDS and _DEV_LABEL in outside.resolved_labels(name, definition.name):
+    if _DEV_LABEL in outside.resolved_labels(name, definition.qualname):
         return None, 0, 1
     return (
         SymbolFinding(

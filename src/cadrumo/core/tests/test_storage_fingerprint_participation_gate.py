@@ -42,7 +42,7 @@ import pytest
 
 from ...tests.env_scope import derived_storage_settings
 from ..config import override_settings
-from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
+from ..observability.tests.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 from ..storage_taxonomy import (
     FingerprintParticipation,
     StorageCategory,

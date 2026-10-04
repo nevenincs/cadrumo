@@ -114,7 +114,6 @@ _SEDE_CLIENT_MODULES: Final = (
     "cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet",
     "cadrumo.adapters.outbound.aeat.sede.nif_iva_check",
     "cadrumo.adapters.outbound.aeat.sede.notifications",
-    "cadrumo.adapters.outbound.aeat.sede.walker",
     "cadrumo.adapters.outbound.aeat.verify.contract",
 )
 _AEAT_ADAPTERS: Final = ("adapters", "outbound", "aeat")

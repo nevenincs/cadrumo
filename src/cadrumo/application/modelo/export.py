@@ -211,12 +211,6 @@ _COMPLETENESS_UNVERIFIED_MESSAGE = (
     "be structurally thin. Review the exported casillas against the official Diseño de Registros before filing."
 )
 
-_DOMICILIATION_CUTOFF_UNVERIFIED_MESSAGE = (
-    "This domiciliación fichero was NOT checked against a direct-debit cutoff: the filing window declares no "
-    "payment cutoff date. AEAT closes domiciliación before the end of the plazo, so confirm the debit can still be "
-    "ordered for this period before filing."
-)
-
 
 class ModeloExportReadinessRefusal(BaseModel):
     """Application-owned readiness fact and its declared operator outcome."""

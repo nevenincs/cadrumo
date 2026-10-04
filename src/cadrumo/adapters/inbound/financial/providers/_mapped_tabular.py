@@ -123,7 +123,6 @@ class MappedTabularProvider(FinancialProvider):
     """
 
     name = "Mapped tabular provider"
-    supported_extensions = MAPPED_TABULAR_EXTENSIONS
     source_format = SourceFormat.CSV
     # The bundled operator exports exercising this lane are generated documents
     # modelled on real bank, ERP and expense-tool export schemas.

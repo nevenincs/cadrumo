@@ -1,6 +1,6 @@
 """Read-only walker over AEAT's *Consultar declaraciones presentadas* surface.
 
-The expediente-tree walker (`_walker.walk_expedientes_tree`) walks
+The legacy expediente tree uses
 ``Mis Expedientes`` (``/wlpl/TEWV-CORE/ResumenVlt``) which is a
 *procedures* surface — sanciones, recursos, gestión recaudación —
 not the canonical filings register. To read the operator's actual

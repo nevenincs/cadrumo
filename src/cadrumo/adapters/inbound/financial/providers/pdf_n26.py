@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import TypedDict, override
 
 from .....core.decimal.grammar import DecimalSeparator
-from .....core.external_constants import DEFAULT_CURRENCY, PDF_EXTENSION
+from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
 from .....domain.transactions.raw_transaction import SourceFormat
 from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
@@ -113,7 +113,6 @@ class PdfN26Provider(FinancialProvider):
     """
 
     name = "n26-pdf"
-    supported_extensions = frozenset({PDF_EXTENSION})
     source_format = SourceFormat.PDF
     # Corpus PDFs are synthetic fixtures generated from sanitised text dumps
     # from the portfolio-performance open-source test corpus (Kontoauszug01.txt,

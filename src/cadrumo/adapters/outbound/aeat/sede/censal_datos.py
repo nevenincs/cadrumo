@@ -59,6 +59,7 @@ from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser.factory import default_browser_session_factory
 from ._adapter_utils import (
+    assert_landed_url_readable,
     assert_read_http_for,
     is_aeat_auth_gate_redirect,
     redacted_url,
@@ -69,7 +70,6 @@ from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from .censal_navigation import CENSAL_READ_POST_PATHS, capture_censal_consultations
 from .censal_tables import census_shape_error, census_source_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
-from .walker import assert_landed_url_readable
 
 if TYPE_CHECKING:
     from .....application.auth.protocols import BrowserSessionFactoryPort

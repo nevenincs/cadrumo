@@ -410,26 +410,6 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
             return False
         return self.segundo_ciclo_infantil_inicio_mes is None
 
-    def is_eligible_guarderia(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
-        """True when this descendant may carry an Art. 81.2 guardería increase at all.
-
-        Wider than :meth:`is_eligible_menor_tres`, which tests age under three at
-        year end and is the Art. 81.1 maternidad population. The guardería
-        increase additionally reaches the period the child TURNS three. Getting
-        that boundary wrong costs a full birth cohort rather than a minority
-        case, and the increase reduces cuota directly rather than the base, so
-        the error lands on tax owed at full value.
-
-        The authority is explicit that the increase is not gated on the
-        maternidad deduction's own eligibility — where the child turns three in
-        January, or the mother starts work after the birthday, the deduction does
-        not apply and that does NOT prevent the increase. Hence a separate
-        predicate rather than a widened shared one.
-        """
-        if not self.convive_con_contribuyente:
-            return False
-        return self.age_at_year_end(filing_year) <= context.integer("lirpf-art-58-under-three-maximum-age")
-
     def is_eligible_minimo_incremento_menor_tres(
         self, filing_year: int, *, context: FamilyFactResolutionContext
     ) -> bool:

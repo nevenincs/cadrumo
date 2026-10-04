@@ -183,7 +183,6 @@ class OfxProvider(FinancialProvider):
     """
 
     name = "OFX provider"
-    supported_extensions = OFX_EXTENSIONS
     source_format = SourceFormat.OFX
     # Corpus fixture is a synthetic OFX generated from the standard OFX 1.x spec;
     # the format is self-describing so structural fidelity is confirmed by parsing.

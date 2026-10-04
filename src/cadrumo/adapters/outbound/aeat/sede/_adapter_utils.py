@@ -56,6 +56,36 @@ _log = get_logger(__name__)
 EXTERNAL = Settings.external_constants()
 
 
+def assert_landed_url_readable(landed_url: str, *, requested_url: str) -> str:
+    """Return the landed URL, refusing a navigation that produced no readable one.
+
+    The re-assertion after a ``goto`` used to be skipped entirely when the
+    landed URL was empty, so the one case where the outcome could not be
+    established was the one case that was not checked -- fail-open in
+    exactly the position the re-assertion exists to cover.
+
+    Args:
+        landed_url: ``page.url`` after the navigation.
+        requested_url: The URL the navigation asked for, for diagnostics.
+
+    Returns:
+        The landed URL, once established as readable.
+
+    Raises:
+        SedeNavigationError: When the navigation produced no readable URL.
+    """
+    if landed_origin(landed_url) is None:
+        raise SedeNavigationError(
+            "sede navigation produced no readable landing URL, so where the "
+            "authenticated session ended up cannot be established; the read is refused "
+            f"rather than continued blind. requested_url={requested_url!r}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.landing_unreadable"),
+            context={"requested_url": requested_url, "landing_url": landed_url or "<empty>"},
+        )
+    return landed_url
+
+
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
     """Return whether ``current_url`` is AEAT's configured auth-gate landing.
 
@@ -614,6 +644,7 @@ __all__ = [
     "SPANISH_NEGATIVE_VERDICT_MARKERS",
     "_LocateHelper",
     "_SedeCheckerModel",
+    "assert_landed_url_readable",
     "assert_pdf_response",
     "assert_query_browser_action_for",
     "assert_read_http_for",

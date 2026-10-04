@@ -23,8 +23,8 @@ from ...storage_taxonomy import StorageCategory
 from ...storage_taxonomy_locations import storage_path
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
-from ..recorder import record_event
 from ..store import EVENTS_FILENAME, TRACE_FILENAME, iter_events, load_trace
+from .recorder import record_event
 from .run_scope import run_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -246,7 +246,7 @@ class TestRunSinkScrubbing:
     ) -> None:
         """The sink handler must carry a SecretScrubbingFilter after attach_run_sink."""
         from ...logging import SecretScrubbingFilter, attach_run_sink
-        from ..sink import JsonlRunSink
+        from .sink import JsonlRunSink
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)

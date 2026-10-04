@@ -30,10 +30,10 @@ import threading
 from pathlib import Path
 from typing import TextIO, override
 
-from ..logging import get_logger
-from .models import RunEvent
-from .redaction_rules import diagnostic_rules
-from .store import EVENTS_APPEND_LOCK
+from ...logging import get_logger
+from ..models import RunEvent
+from ..redaction_rules import diagnostic_rules
+from ..store import EVENTS_APPEND_LOCK
 
 logger = get_logger(__name__)
 
@@ -109,7 +109,7 @@ class JsonlRunSink(logging.Handler):
             # thread-safe on a frozen model, so holding the lock across
             # the encode step would serialise work that does not need
             # mutual exclusion.
-            from ..redaction.rules import redact_structured
+            from ...redaction.rules import redact_structured
 
             redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
             line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"

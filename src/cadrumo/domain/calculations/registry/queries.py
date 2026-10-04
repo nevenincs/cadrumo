@@ -75,7 +75,6 @@ from .schema_surfaces import CasillaDefinition
 from .support_matrix import build_support_matrix, build_support_matrix_from_directory_views
 from .temporal import (
     ModeloRevisionDirectory,
-    select_revision,
     select_revision_for_year,
     select_revision_metadata_for_year,
 )
@@ -223,40 +222,6 @@ class RegistryQueryService:
         """
         return tuple(row.code for row in self.list_modelos().modelos)
 
-    def revision_for_scope(
-        self,
-        modelo: str,
-        *,
-        filing_year: int,
-        period: str,
-        as_of: date | None = None,
-        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.APPLICABILITY,
-    ) -> ModeloRevision:
-        """Return exactly the revision selected for one explicit operation scope.
-
-        The report path owns canonical temporal and grade selection; callers
-        that need revision payload fields consume this selected result instead
-        of walking every revision in an authority-wide model graph.
-        """
-        normalized_modelo = modelo.strip()
-        definition = self._authority.validate_modelo(normalized_modelo)
-        if grade is not RegistryAuthorityGrade.APPLICABILITY:
-            return self.resolve_revision_for_scope(
-                normalized_modelo,
-                filing_year=filing_year,
-                period=period,
-                as_of=as_of,
-                grade=grade,
-            ).revision
-        # Metadata and snapshot consumers share the same temporal source.
-        return select_revision(
-            definition,
-            filing_year=filing_year,
-            period=period,
-            on=as_of,
-            support=self._authority.catalogues.supported_filing_years,
-        )
-
     def revision_by_id(self, modelo: str, revision_id: str) -> ModeloRevision:
         """Return one exact revision component by canonical identity."""
         normalized = Modelo(modelo).value
@@ -286,7 +251,7 @@ class RegistryQueryService:
         Bulk walks are intentionally named and deterministic.  They are for
         source inventories and other diagnostics that genuinely need every
         revision; ordinary runtime consumers should use
-        :meth:`revision_for_scope`.
+        :meth:`resolve_revision_for_scope`.
         """
         selected = self._authority.modelos
         if modelo_codes is not None:

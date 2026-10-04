@@ -30,11 +30,9 @@ from ...application.aggregation.service import (
     PerModeloAggregationResult,
 )
 from ...application.aggregation.withholding_observation_service import (
-    WithholdingGenerationAudit,
     WithholdingGenerationId,
     WithholdingMutationMode,
     WithholdingScopeToken,
-    WithholdingWindowState,
 )
 from ...application.calculations.observations_repository import (
     ObservationSourceKind,
@@ -1608,31 +1606,6 @@ class WithholdingWindowReadbackPayload(OutputSchema):
     baseline: WithholdingWindowBaselinePayload
     generation: NonNegativeInt
     generation_audit: WithholdingGenerationAuditPayload | None = None
-
-    @classmethod
-    def from_window_state(
-        cls,
-        state: WithholdingWindowState,
-        *,
-        generation_audit: WithholdingGenerationAudit | None,
-    ) -> WithholdingWindowReadbackPayload:
-        """Project an existing service read without interpreting its entries."""
-        return cls(
-            baseline=WithholdingWindowBaselinePayload(
-                scope_token=state.baseline.scope_token,
-                generation_id=state.baseline.generation_id,
-            ),
-            generation=state.generation,
-            generation_audit=(
-                None
-                if generation_audit is None
-                else WithholdingGenerationAuditPayload(
-                    parent_generation_id=generation_audit.parent_generation_id,
-                    mode=generation_audit.mode,
-                    supersedes_generation_id=generation_audit.supersedes_generation_id,
-                )
-            ),
-        )
 
 
 class ModeloAggregateResult(OutputSchema):

@@ -510,11 +510,6 @@ class ModeloWorkbenchScreen(
         return self._sort
 
     @property
-    def drawn_marks(self) -> tuple[WorkbenchMark, ...]:
-        """Every mark on screen now: the list's box states, then the header's, the stepper's and the navigator's."""
-        return (*self.box_marks, *self.other_marks)
-
-    @property
     def box_marks(self) -> tuple[WorkbenchMark, ...]:
         """The states of the boxes the list shows, once per box: its origin and any attention mark."""
         marks: list[WorkbenchMark] = []

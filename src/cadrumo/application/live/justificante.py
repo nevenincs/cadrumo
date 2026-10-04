@@ -2,8 +2,7 @@
 
 The live justificante pull retrieves the authentic, AEAT-signed
 *justificante de presentación* PDF for a filed work unit through the
-read-only sede surface (``capture_justificante`` →
-:class:`~cadrumo.adapters.outbound.aeat.sede.schema.SedeCapture`) and persists it
+read-only declarations register and persists it
 as a bucket-scoped, content-addressed secure object. The persisted
 artefact is the durable, official evidence the local reconciler reads —
 the operator no longer hand-downloads the receipt.

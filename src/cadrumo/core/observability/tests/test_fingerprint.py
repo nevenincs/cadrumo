@@ -1,4 +1,4 @@
-"""Real-behavior tests for :mod:`cadrumo.core.observability.fingerprint`.
+"""Real-behavior tests for :mod:`cadrumo.core.observability.tests.fingerprint`.
 
 Covers:
 
@@ -29,12 +29,7 @@ from pathlib import Path
 import pytest
 
 from ...config import Settings, load_settings, override_settings
-from ..fingerprint import (
-    compute_corpus_sha256,
-    compute_data_root_sha256,
-    compute_db_sha256,
-    data_root_cache_exclusions,
-)
+from .fingerprint import compute_corpus_sha256, compute_data_root_sha256, compute_db_sha256, data_root_cache_exclusions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

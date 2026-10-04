@@ -50,24 +50,13 @@ from ....application.user_profile.custody_ports import (
     ProfileRecordCryptoError,
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
-    ProfileSnapshotPersistencePort,
 )
-from ....core.classification.policies import SensitivityClass
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
 from ....core.profile_publication import ProfilePublicationKindValue
 from ....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ....core.storage_taxonomy_locations import storage_location
 from ....core.time.clock import now as _utc_now
-from ....domain.user_profile.errors import (
-    PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
-    PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
-    ProfileSnapshotClassificationError,
-    ProfileSnapshotNotFoundError,
-    ProfileSnapshotVersionError,
-    UserProfileValidationError,
-)
-from ....domain.user_profile.values import UserProfileSnapshot
 from ._kdf_salt import KDF_SALT_BYTES
 from .bucket.directory_layout import bucket_paths
 from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
@@ -146,8 +135,6 @@ from .custody.sentinel_contract import (
     verify_profile_custody_sentinel,
 )
 from .errors import (
-    ClassificationError,
-    EnvelopeVersionError,
     KeyringUnavailableError,
     PersistenceError,
     StorageValidationError,
@@ -166,11 +153,10 @@ from .master_key.kdf_params import (
 )
 from .master_key.master_key_derivation import derive_kek_with_params
 from .recovery_key import canonical_recovery_code, generate_recovery_key
-from .secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
+from .secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
-    from .sql.secure_objects import SecureObjectRepository
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -254,95 +240,6 @@ class _PersistenceProfileBucketStorage:
 
     def release_lock(self, paths: ProfileBucketStoragePathsPort) -> None:
         release_lock(paths)
-
-
-class _PersistenceProfileSnapshotStore:
-    """Profile port over the canonical generic snapshot persistence adapter."""
-
-    def __init__(
-        self,
-        *,
-        bucket_id: str,
-        object_key: Callable[[str, str], str],
-        objects: SecureObjectRepository | None,
-        profile_decode_context: ProfileDecodeContext,
-    ) -> None:
-        # The SQL-backed persistence stack loads only when a profile is read,
-        # never for a run that only lists or names profiles.
-        from ..profile.snapshots import SecureSnapshotRepository
-
-        def not_found(snapshot_id: str) -> Exception:
-            return ProfileSnapshotNotFoundError(context={"snapshot_id": snapshot_id})
-
-        def ambiguous(prefix: str, matches: tuple[str, ...]) -> Exception:
-            return UserProfileValidationError(context={"snapshot_id_prefix": prefix, "matches": matches})
-
-        def classification_error(
-            snapshot_id: str,
-            actual: SensitivityClass,
-            expected: SensitivityClass,
-        ) -> Exception:
-            return ProfileSnapshotClassificationError(
-                PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
-                translated_message="application.user_profile.errors.repository_classification_mismatch",
-                context={
-                    "namespace": USER_PROFILE_SNAPSHOT_NAMESPACE.namespace,
-                    "snapshot_id": snapshot_id,
-                    "classification": actual.value,
-                    "expected": expected.value,
-                },
-            )
-
-        def version_error(snapshot_id: str, actual: int, expected: int) -> Exception:
-            return ProfileSnapshotVersionError(
-                PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
-                translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
-                context={
-                    "snapshot_id": snapshot_id,
-                    "schema_version": actual,
-                    "max_supported_version": expected,
-                },
-            )
-
-        self._delegate = SecureSnapshotRepository(
-            bucket_id=bucket_id,
-            payload_model=UserProfileSnapshot,
-            namespace_definition=USER_PROFILE_SNAPSHOT_NAMESPACE,
-            object_key=object_key,
-            not_found_factory=not_found,
-            ambiguous_prefix_factory=ambiguous,
-            domain_label="profile",
-            input_error_cls=UserProfileValidationError,
-            objects=objects,
-            enforce_payload_identity=False,
-            classification_error_factory=classification_error,
-            version_error_factory=version_error,
-            payload_validation_context=profile_decode_context,
-        )
-
-    def exists(self, snapshot_id: str) -> bool:
-        return self._delegate.exists(snapshot_id)
-
-    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
-        try:
-            return self._delegate.load(snapshot_id)
-        except ProfileSnapshotNotFoundError:
-            return None
-        except ClassificationError as exc:
-            raise ProfileSnapshotClassificationError(
-                str(exc),
-                translated_message=exc.translated_message,
-                context=exc.context,
-            ) from exc
-        except EnvelopeVersionError as exc:
-            raise ProfileSnapshotVersionError(
-                str(exc),
-                translated_message=exc.translated_message,
-                context=exc.context,
-            ) from exc
-
-    def save(self, snapshot: UserProfileSnapshot) -> None:
-        self._delegate.save(snapshot)
 
 
 class _PersistenceProfileRecordCrypto:
@@ -784,26 +681,6 @@ class _PersistenceProfileCustody:
         return collect_profile_custody_carry(
             bucket_id=bucket_id,
             profile=profile,
-            profile_decode_context=profile_decode_context,
-        )
-
-    def profile_snapshot_persistence(
-        self,
-        bucket_id: str,
-        *,
-        object_key: Callable[[str, str], str],
-        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
-        profile_decode_context: ProfileDecodeContext,
-    ) -> ProfileSnapshotPersistencePort:
-        from .sql.secure_objects import SecureObjectRepository
-
-        resolved = (
-            None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
-        )
-        return _PersistenceProfileSnapshotStore(
-            bucket_id=bucket_id,
-            object_key=object_key,
-            objects=resolved,
             profile_decode_context=profile_decode_context,
         )
 

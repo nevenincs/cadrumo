@@ -119,8 +119,8 @@ class TestStderrRunEventFilter:
     ) -> None:
         """The filter must NOT accidentally drop events from the sink."""
         from ..models import GenericPayload, RunEventKind, RunEventPayload
-        from ..recorder import record_event
         from ..store import iter_events
+        from .recorder import record_event
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(entrypoint="cadrumo test stderr-filter", arguments=()) as info:

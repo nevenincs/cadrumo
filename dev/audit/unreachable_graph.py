@@ -11,6 +11,7 @@ from dev.quality.source_import_analysis import (
     type_checking_guarded_nodes,
 )
 
+from .unreachable_members import resolved_member_uses
 from .unreachable_memo import _walked
 from .unreachable_models import ShippedModule
 from .unreachable_policy import _DOTTED_SPEC, _MODULE_EXEC_FLAG
@@ -153,7 +154,7 @@ def resolved_symbol_uses(module: ShippedModule, known: frozenset[str]) -> set[tu
     Both are resolved here; a bare identifier load is deliberately not, because
     it says nothing about which module defined the name.
     """
-    uses: set[tuple[str, str]] = set()
+    uses: set[tuple[str, str]] = resolved_member_uses(module, known)
     for node in _walked(module.tree):
         if isinstance(node, ast.ImportFrom):
             base = resolve_relative_import(module.name, module.is_package, node.level, node.module)

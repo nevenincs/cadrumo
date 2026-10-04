@@ -218,21 +218,6 @@ class NativeEnrollmentClient:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return reply
 
-    def accept_approval_receipt(self, receipt: AutomationReceiptProjection) -> None:
-        """Pin the human's completion after this offer's source lease was retired.
-
-        This receipt conveys no authority and cannot write a credential. A key
-        completion must match the delivery identity already seen by this exact
-        client. A fresh runtime login still verifies the key and current grant.
-        """
-        if (
-            self._receipt is None
-            or receipt.stage is not EnrollmentStage.COMPLETE
-            or (receipt.key_id is not None and self._offer is None)
-        ):
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        self._pin_receipt(receipt)
-
     def accept_reconciled_terminal(self, receipt: AutomationReceiptProjection) -> None:
         """Pin a terminal receipt obtained by fresh exact-client runtime reconciliation.
 

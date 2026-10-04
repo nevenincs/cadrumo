@@ -39,7 +39,6 @@ from .....core.tabular import (
 )
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._constants import CSV_EXTENSIONS
 from .base import (
     FinancialProvider,
     FinancialValidationError,
@@ -230,7 +229,6 @@ class CsvProvider(FinancialProvider):
     """
 
     name = "CSV provider"
-    supported_extensions = CSV_EXTENSIONS
     source_format = SourceFormat.CSV
     # Corpus fixtures are synthetic CSVs modelled on real bank export schemas;
     # column-mapping fidelity is confirmed against published specifications.

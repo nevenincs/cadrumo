@@ -293,7 +293,7 @@ def _read_reference_node(node: ast.AST, names: set[str]) -> None:
     """Read one non-prose node through the existing reference syntax cases."""
     if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
         names.add(node.id)
-    elif isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
+    elif isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load | ast.Store):
         names.add(node.attr)
     elif isinstance(node, ast.keyword) and node.arg is not None:
         names.add(node.arg)

@@ -8,7 +8,7 @@ Covers:
   DIAGNOSTIC-class URL host-only redaction property.
 * :exc:`cadrumo.core.observability.RunTraceValidationError` on a corrupted
   JSONL line.
-* :class:`cadrumo.core.observability.sink.JsonlRunSink` rejecting events
+* :class:`cadrumo.core.observability.tests.sink.JsonlRunSink` rejecting events
   whose ``run_id`` does not match its bound id, and skipping records
   that carry no ``run_event`` extra (without creating the file).
 * Strict ``run_id`` validation across :func:`load_trace`,
@@ -37,7 +37,6 @@ from ...storage_taxonomy import StorageCategory
 from ...storage_taxonomy_locations import storage_path
 from ..errors import RunTracePersistenceError, RunTraceValidationError
 from ..models import NavigationPayload, RunEvent, RunEventKind, RunEventPayload, RunOutcome, RunTrace
-from ..sink import JsonlRunSink
 from ..store import (
     EVENTS_FILENAME,
     TRACE_FILENAME,
@@ -48,6 +47,7 @@ from ..store import (
     save_events_append,
     save_trace,
 )
+from .sink import JsonlRunSink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # What central redaction leaves of a URL: the origin, with the path and the
@@ -493,7 +493,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
                 )
                 record.run_event = self._event(run_id)
 
-                with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability.sink"):
+                with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability.tests.sink"):
                     sink.emit(record)
             finally:
                 sink.close()
@@ -501,7 +501,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert warning_records, "sink must emit a WARNING when the write fails"
         warn = warning_records[0]
-        assert warn.name == "cadrumo.core.observability.sink"
+        assert warn.name == "cadrumo.core.observability.tests.sink"
         # The record must have been processed by SecretScrubbingFilter:
         # exc_text is set by the filter (it formats exc_info into text and
         # scrubs it).  We assert the raw bearer/token placeholder is absent

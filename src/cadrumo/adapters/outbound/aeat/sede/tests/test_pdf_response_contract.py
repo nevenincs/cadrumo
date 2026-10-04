@@ -25,7 +25,7 @@ import pytest
 
 from ......core.directory_scan import scan_directory
 from ......core.external_constants import PDF_MIME_TYPE
-from .. import _declarations_fetch, walker
+from .. import _declarations_fetch
 from .._adapter_utils import assert_pdf_response, response_media_type
 from ..errors import JustificanteFetchError
 
@@ -205,10 +205,7 @@ class TestEveryLookalikeWasGenuinelyAdmittedBefore:
 class TestEveryCapturePathRoutesThroughTheContract:
     """No capture path may re-grow its own copy of the checks."""
 
-    _CAPTURE_SITES = (
-        (_declarations_fetch, "capture_row_pdf_artefact"),
-        (walker, "capture_justificante"),
-    )
+    _CAPTURE_SITES = ((_declarations_fetch, "capture_row_pdf_artefact"),)
 
     @pytest.mark.parametrize(("module", "function"), _CAPTURE_SITES)
     def test_the_capture_path_calls_the_canonical_validator(self, module: object, function: str) -> None:
@@ -240,7 +237,7 @@ class TestEveryCapturePathRoutesThroughTheContract:
         content type CONTAINS a pdf token, which is the shape that admitted
         ``application/notpdf`` and ``x-application/pdf-trap``.
         """
-        sede_root = Path(walker.__file__).resolve().parent
+        sede_root = Path(_declarations_fetch.__file__).resolve().parent
         offenders: list[str] = []
         for source_path in scan_directory(sede_root, pattern="*.py"):
             tree = ast.parse(source_path.read_text(encoding="utf-8"))

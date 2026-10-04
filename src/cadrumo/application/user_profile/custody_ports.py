@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import CarriedSecureObject
-    from ...domain.user_profile.values import UserProfileSnapshot
 
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
@@ -280,22 +279,6 @@ class ProfileCustodySecureObjectRepositoryPort(Protocol):
 
     def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:
         """Commit an atomic set of encrypted-object writes."""
-        ...
-
-
-class ProfileSnapshotPersistencePort(Protocol):
-    """Encrypted persistence boundary for immutable filing-time snapshots."""
-
-    def exists(self, snapshot_id: str) -> bool:
-        """Report whether one immutable snapshot row exists."""
-        ...
-
-    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
-        """Load and decode one snapshot, or report its absence."""
-        ...
-
-    def save(self, snapshot: UserProfileSnapshot) -> None:
-        """Encode and persist one immutable snapshot."""
         ...
 
 
@@ -1129,17 +1112,6 @@ class ProfileCustodyPort(Protocol):
         """Project portable rows and namespace coverage through persistence."""
         ...
 
-    def profile_snapshot_persistence(
-        self,
-        bucket_id: str,
-        *,
-        object_key: Callable[[str, str], str],
-        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
-        profile_decode_context: ProfileDecodeContext,
-    ) -> ProfileSnapshotPersistencePort:
-        """Return immutable profile-snapshot persistence for one bucket."""
-        ...
-
     def record_crypto(self) -> ProfileRecordCryptoPort:
         """Return the profile-record AEAD adapter."""
         ...
@@ -1634,7 +1606,6 @@ __all__ = [
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
     "ProfileRecoveryKeyPort",
-    "ProfileSnapshotPersistencePort",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",

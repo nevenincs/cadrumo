@@ -203,8 +203,7 @@ class WorkflowEngine:
                 the draft stage.
             settings: Application :class:`Settings` instance.
             expedientes_source: Test seam over
-                :func:`adapters.outbound.aeat.sede.walker.walk_expedientes_tree`. Defaults to the
-                live walker.
+                the bucket-scoped application capture.
             notifications_source: Test seam over
                 a bucket-scoped application capture. ``None`` leaves the
                 inbox stage not wired; it must never default to a direct
@@ -235,32 +234,6 @@ class WorkflowEngine:
         self._run_obligation: WorkflowDeadlineTarget | None = None
 
     # ------------------------------------------------------------------ public
-
-    async def run_next(
-        self,
-        profile: TaxpayerProfile,
-        *,
-        fail_on_warning: bool = False,
-        today: date | None = None,
-    ) -> WorkflowResult:
-        """Drive the workflow for the caller's next obligation.
-
-        Args:
-            profile: The :class:`TaxpayerProfile` to run for.
-            fail_on_warning: Forwarded to the filing draft builder.
-            today: Reference date for deadline / preflight checks.
-                Defaults to :meth:`date.today`.
-
-        Returns:
-            A fully populated :class:`WorkflowResult`.
-        """
-        return await self._drive(
-            profile=profile,
-            target_modelo=None,
-            target_period=None,
-            fail_on_warning=fail_on_warning,
-            today=today,
-        )
 
     async def run_for_period(
         self,

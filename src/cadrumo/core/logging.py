@@ -2,8 +2,7 @@
 
 Provides :func:`get_logger` as the consistent logger factory to avoid scattered
 bare logging instances, with :func:`configure_logging` installing the project
-defaults. The installed log-record factory reads
-:class:`cadrumo.core.observability.sink.JsonlRunSink` state indirectly through
+defaults. The installed log-record factory reads the active correlation
 contextvars, so every record automatically picks up the active ``run_id`` /
 ``step_id`` while a run context is bound.
 
@@ -563,8 +562,7 @@ class DropRunEventFilter(logging.Filter):
     """Suppress observability ``run_event`` records on the stderr handler.
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
-    diet — they're already persisted to ``events.jsonl`` via
-    :class:`~cadrumo.core.observability.sink.JsonlRunSink`. Echoing them
+    diet — they are already delivered to the attached structured sink. Echoing them
     on stderr as well would spam the console with one
     ``run.event NAVIGATION`` line per step; suppressing them here
     removes the noise while leaving the record intact for any other
@@ -864,9 +862,7 @@ def attach_run_sink(sink: logging.Handler) -> None:
     guard checks ``root_logger.handlers`` for an existing instance.
 
     Args:
-        sink: The :class:`logging.Handler` (typically
-            :class:`cadrumo.core.observability.sink.JsonlRunSink`) to
-            attach to the root logger.
+        sink: The :class:`logging.Handler` to attach to the root logger.
 
     The sink is a diagnostic observability target. It receives redacted log
     records, not CLI result payloads or secure-storage records.

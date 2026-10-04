@@ -25,7 +25,6 @@ from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from .....core.external_constants import XLSX_EXTENSION
 from .....core.logging import get_logger
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from .....domain.transactions.raw_transaction import SourceFormat
@@ -78,7 +77,6 @@ class XlsxProvider(FinancialProvider):
     """
 
     name = "XLSX provider"
-    supported_extensions = frozenset({XLSX_EXTENSION})
     source_format = SourceFormat.XLSX
     # Corpus fixture is a synthetic XLSX generated from the standard bank
     # export column schema; layout fidelity confirmed against the spec.

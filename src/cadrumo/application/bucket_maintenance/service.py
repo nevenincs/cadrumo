@@ -19,7 +19,6 @@ from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOu
 from ...core.time.clock import now
 from ...domain.buckets.errors import BucketDeleteRefusedError
 from ...domain.retention.floor import RetentionFloorAssessment
-from ...domain.user_profile.errors import ProfileNotFoundError
 from ..bucket_deletion_contracts import BucketDeletionFingerprint
 from ..filing.retention import FilingRetentionAuthority
 from ..operator_actions.models import PreconditionVerdict
@@ -76,41 +75,6 @@ class BucketMaintenanceService:
     def __init__(self, *, bucket_storage: ProfileBucketStoragePort) -> None:
         """Bind the bucket storage used by maintenance operations."""
         self._bucket_storage = bucket_storage
-
-    @contextmanager
-    def _mutation_target_lock(
-        self,
-        *,
-        root: Path,
-        bucket_id: str,
-        wait_seconds: float,
-        missing_ok: bool = False,
-    ) -> Generator[None]:
-        try:
-            paths = validated_bucket_deletion_paths(
-                root=root,
-                bucket_id=bucket_id,
-                storage=self._bucket_storage,
-            )
-        except FileNotFoundError as exc:
-            if missing_ok:
-                yield
-                return
-            raise ProfileNotFoundError(
-                translated_message="errors.refused.refused_profile_not_found",
-                context={"bucket_id": bucket_id},
-            ) from exc
-        except ValueError as exc:
-            raise _bucket_delete_refusal(
-                BucketDeletionPreconditionCondition.CUSTODY_TARGET_UNLINKED,
-                bucket_id=str(bucket_id),
-                facts={"bucket_id": str(bucket_id), "custody_target_unlinked": False},
-            ) from exc
-        self._bucket_storage.acquire_lock(paths, wait_seconds=wait_seconds)
-        try:
-            yield
-        finally:
-            self._bucket_storage.release_lock(paths)
 
     @contextmanager
     def deletion_target_locks(
