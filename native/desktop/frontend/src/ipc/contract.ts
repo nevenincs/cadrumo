@@ -2,9 +2,8 @@
 // registers, the frames its channels carry, and the postMessage bridge between
 // the shell document and the documentation frame.
 //
-// Types only. This module emits no runtime code; field names and casing follow
-// the host's serde output exactly. Where the host side is still being built,
-// the comment on the type names the Step that implements it.
+// Types, plus the terminal frame tags as constants; nothing else here runs.
+// Field names and casing follow the host's serde output exactly.
 
 import type { Channel } from "@tauri-apps/api/core";
 
@@ -51,6 +50,9 @@ export type Authorized<Arguments extends object = Record<never, never>> =
 
 /** Header names for commands whose body is raw bytes. */
 export type TokenHeader = "x-cadrumo-token";
+
+/** The header naming the session a raw-body `terminal_write` addresses. */
+export type SessionHeader = "x-cadrumo-session";
 
 // ---------------------------------------------------------------------------
 // Failures
@@ -103,13 +105,17 @@ export type HostFailure = {
 export type ProcessRole = "environment" | "cli" | "tui" | "repl" | "console";
 
 // ---------------------------------------------------------------------------
-// desktop_environment (S07)
+// desktop_environment
 // ---------------------------------------------------------------------------
 
 export type DocsLanguage = {
   /** Language code, for example `en`, `es`, `ca`, `hu`. */
   code: string;
-  /** The language's entry from the docs manifest. Use it as given. */
+  /**
+   * The language's entry page from the docs manifest, as an absolute URL on
+   * the documentation origin with its path segments percent-encoded. Use it
+   * as given; do not rebuild it from `origin`.
+   */
   entry: string;
 };
 
@@ -179,50 +185,270 @@ export type LogSubscription = {
 };
 
 // ---------------------------------------------------------------------------
-// Shell services (S07)
+// Shell services
 // ---------------------------------------------------------------------------
 
+/**
+ * Plain clipboard text. A write is refused with `invalid_arguments` when
+ * `text` exceeds 1 MiB (1,048,576 bytes) in UTF-8, which is not the same
+ * bound as `text.length`.
+ */
 export type ClipboardText = { text: string };
 
+/**
+ * `id` and `label` are 1 to 128 and 1 to 256 characters, `shortcut` 1 to 64,
+ * none with control characters; ids are unique within one menu.
+ */
 export type ContextMenuAction = {
-  /** Unique within one menu; the host namespaces it internally. */
+  /** Returned as `chosen`; the host namespaces it internally per popup. */
   id: string;
+  /** Shown literally; an `&` is not a mnemonic marker. */
   label: string;
+  /** A disabled item is shown but can never be `chosen`. */
   enabled: boolean;
   /** Display-only accelerator text shown beside the label; binds nothing. */
   shortcut?: string;
 };
 
+/** Exactly `{ separator: true }`; any other field is refused. */
 export type ContextMenuSeparator = { separator: true };
 
 export type ContextMenuItem = ContextMenuAction | ContextMenuSeparator;
 
+/**
+ * 1 to 64 items with at least one action. `x` and `y` are both present or
+ * both omitted; one without the other is refused with `invalid_arguments`.
+ */
 export type ContextMenuRequest = {
   items: ContextMenuItem[];
-  /**
-   * Logical position in shell CSS pixels: for a documentation menu, the
-   * iframe rect plus its border plus the relayed client coordinates, with no
-   * device-pixel scaling. Omit both for a pointer-opened menu, which opens at
-   * the cursor.
-   */
-  x?: number;
-  y?: number;
-};
+} & (
+  | {
+      /**
+       * Logical position in shell CSS pixels: for a documentation menu, the
+       * iframe rect plus its border plus the relayed client coordinates, with
+       * no device-pixel scaling. Finite, with a magnitude of at most 1e6.
+       */
+      x: number;
+      y: number;
+    }
+  | {
+      /** Omit both for a pointer-opened menu, which opens at the cursor. */
+      x?: never;
+      y?: never;
+    }
+);
 
 /** Resolves when the native menu closes; `null` when it was dismissed. */
 export type ContextMenuResult = { chosen: string | null };
 
 // ---------------------------------------------------------------------------
-// Terminals (S04)
+// Terminals
 // ---------------------------------------------------------------------------
 
-// ==== BEGIN S04 TERMINAL CONTRACT (pending) =================================
-// terminal_open, the tagged frame encoding on the single per-session channel,
-// terminal_write, terminal_ack, terminal_resize, terminal_close and
-// diagnostics_snapshot are defined here once S04 fixes them. Until then this
-// block declares nothing usable, so no consumer can depend on a guessed shape.
-export type TerminalContractPending = never;
-// ==== END S04 TERMINAL CONTRACT =============================================
+/**
+ * At most one session per kind: `console` is the platform's interactive
+ * shell and `python` the packaged interpreter's REPL, both started in the
+ * user's home; `tui` is the Cadrumo TUI, started in the storage root.
+ */
+export type TerminalKind = "console" | "python" | "tui";
+
+/** A session id from `terminal_open`; a replaced or closed id is refused. */
+export type TerminalSessionId = number;
+
+/** Columns and rows are each an integer from 2 to 1000. */
+export type TerminalSize = { cols: number; rows: number };
+
+/**
+ * Every message on a session's frame channel arrives as an `ArrayBuffer`
+ * holding one frame: a tag byte, then the payload. One channel orders every
+ * frame, and frames can arrive before `terminal_open` resolves.
+ *
+ * | Tag | Frame     | Payload                                    |
+ * | --- | --------- | ------------------------------------------ |
+ * | 0   | `data`    | PTY output bytes, 1 to 8192                |
+ * | 1   | `started` | UTF-8 JSON `TerminalStartedPayload`        |
+ * | 2   | `exited`  | UTF-8 JSON `TerminalExitedPayload`         |
+ * | 3   | `failed`  | UTF-8 JSON `TerminalFailedPayload`         |
+ *
+ * An empty frame, an empty `data` frame, an unknown tag or a payload that is
+ * not the stated JSON is malformed.
+ */
+export const TerminalFrameTag = {
+  data: 0,
+  started: 1,
+  exited: 2,
+  failed: 3,
+} as const;
+
+export type TerminalFrameType = keyof typeof TerminalFrameTag;
+export type TerminalFrameTagValue =
+  (typeof TerminalFrameTag)[TerminalFrameType];
+
+/** The largest `data` payload, in bytes. */
+export type TerminalDataLimit = 8192;
+
+/** The `started` payload: the child's operating-system process id. */
+export type TerminalStartedPayload = { pid: number };
+
+/**
+ * The `exited` payload. `code` is the child's exit code as an unsigned
+ * 32-bit value, so a Windows status such as `0xC000013A` arrives as a large
+ * positive number; it is `null` when the host could not read the status.
+ */
+export type TerminalExitedPayload = { code: number | null };
+
+/** The `failed` payload: the serialized host failure. */
+export type TerminalFailedPayload = { error: HostFailure };
+
+/**
+ * Output bytes. Only `data` payload bytes advance the offset `terminal_ack`
+ * acknowledges.
+ */
+export type TerminalDataFrame = { type: "data"; bytes: Uint8Array };
+
+/** The first frame of a session. */
+export type TerminalStartedFrame = {
+  type: "started";
+} & TerminalStartedPayload;
+
+/**
+ * The last frame of a session whose child exited on its own: it follows
+ * every `data` frame. A session settled by `terminal_close` or by a new
+ * shell document stops delivering frames and sends no `exited`.
+ */
+export type TerminalExitedFrame = { type: "exited" } & TerminalExitedPayload;
+
+/**
+ * A read, write or wait failure. A read failure ends output; write and wait
+ * failures are reported just before `exited`. Not itself the last frame.
+ */
+export type TerminalFailedFrame = { type: "failed" } & TerminalFailedPayload;
+
+/** One decoded frame, discriminated by `type`. */
+export type TerminalFrame =
+  | TerminalDataFrame
+  | TerminalStartedFrame
+  | TerminalExitedFrame
+  | TerminalFailedFrame;
+
+export type TerminalOpenArguments = TerminalSize & {
+  kind: TerminalKind;
+  /** Receives the session's frames, each as an `ArrayBuffer`. */
+  frames: Channel<ArrayBuffer>;
+};
+
+export type TerminalOpened = { session: TerminalSessionId };
+
+/**
+ * The cumulative count of `data` payload bytes the shell has consumed. A
+ * stale offset changes nothing; an offset beyond the bytes delivered is
+ * refused with `invalid_arguments`. The host stops reading the PTY once
+ * 512 KiB are unacknowledged and resumes below 128 KiB, so the child blocks
+ * rather than losing output.
+ */
+export type TerminalAck = { session: TerminalSessionId; offset: number };
+
+export type TerminalResize = TerminalSize & { session: TerminalSessionId };
+
+export type TerminalClose = { session: TerminalSessionId };
+
+/** Resolves once the session has settled: its child and workers are gone. */
+export type TerminalClosed = Record<never, never>;
+
+/**
+ * The headers of a `terminal_write` call, as a plain object passed as
+ * `invoke`'s `headers` option. The session header is the id in decimal.
+ */
+export type TerminalWriteHeaders = {
+  [Name in TokenHeader]: ShellToken;
+} & { [Name in SessionHeader]: string };
+
+/**
+ * The body of a `terminal_write` call: raw input bytes, at most 65,536. When
+ * Tauri falls back to its postMessage transport the same bytes arrive as a
+ * JSON array of integers from 0 to 255, under the same limit. An empty body
+ * is accepted and writes nothing. The call resolves with `null` once the
+ * bytes are queued.
+ *
+ * Refusals: `invalid_arguments` for a missing token or session header, an
+ * oversized or malformed body; `queue_full` when eight writes are already
+ * pending, which is backpressure and must be retried with the same bytes;
+ * `session_unavailable` once the session's input has stopped; `write_failed`
+ * after an earlier write to the child failed.
+ */
+export type TerminalWriteBody = Uint8Array | number[];
+
+export type TerminalWriteLimit = 65536;
+
+// ---------------------------------------------------------------------------
+// Diagnostics (diagnostics_snapshot)
+// ---------------------------------------------------------------------------
+
+export type DiagnosticsEventKind =
+  | "host_started"
+  | "headless_selected"
+  | "gui_selected"
+  | "child_started"
+  | "child_exited"
+  | "child_terminated"
+  | "failure"
+  | "host_stopped";
+
+/** `ProcessPhase` in `native/application/src/process/status.rs`. */
+export type ProcessPhase = "running" | "exited" | "terminated" | "failed";
+
+export type OutputStream = "stdout" | "stderr" | "terminal";
+
+/** One child process the host started; the host keeps the latest 128. */
+export type ProcessStatus = {
+  /** The host's own process number, distinct from the operating-system `pid`. */
+  id: number;
+  pid: number;
+  role: ProcessRole;
+  phase: ProcessPhase;
+  startedMs: number;
+  finishedMs: number | null;
+  exitCode: number | null;
+  stdoutBytes: number;
+  stderrBytes: number;
+  terminalBytes: number;
+};
+
+export type DiagnosticsEvent = {
+  timestampMs: number;
+  hostPid: number;
+  kind: DiagnosticsEventKind;
+  /** The `ProcessStatus.id` the event concerns. */
+  process: number | null;
+  failure: HostFailure | null;
+  status: ProcessStatus | null;
+};
+
+/** Captured output, kept in memory only and bounded to 256 KiB in total. */
+export type OutputChunk = {
+  /** Increases by one per chunk; pass the last one seen as `after`. */
+  sequence: number;
+  /** The `ProcessStatus.id` that wrote the chunk. */
+  process: number;
+  stream: OutputStream;
+  bytes: number[];
+};
+
+/** Absolute paths of the host's diagnostics log. */
+export type DiagnosticsLogPaths = { current: string; lock: string };
+
+export type DiagnosticsSnapshot = {
+  /** `null` until the host has configured its log file. */
+  paths: DiagnosticsLogPaths | null;
+  logFailure: HostFailure | null;
+  /** The latest 512 events. */
+  events: DiagnosticsEvent[];
+  processes: ProcessStatus[];
+  /** Only chunks whose `sequence` is greater than the request's `after`. */
+  output: OutputChunk[];
+  /** Output bytes evicted from the capture since the host started. */
+  droppedBytes: number;
+};
 
 // ---------------------------------------------------------------------------
 // Command table
@@ -232,11 +458,44 @@ export type TerminalContractPending = never;
  * Every app command with JSON arguments: its arguments (all carrying the
  * token) and the value it resolves with. A refused call rejects with a
  * `HostFailure`. Commands that return nothing resolve with `null`.
+ * `terminal_write` takes a raw body instead: see `TerminalWriteBody`.
  */
 export interface HostCommands {
   desktop_environment: {
     args: Authorized;
     result: DesktopEnvironment;
+  };
+  /**
+   * Starts a session of `kind`, replacing one that already exited. Refuses
+   * `session_unavailable` while a live session of that kind exists and
+   * `invalid_arguments` for a size outside 2 to 1000.
+   */
+  terminal_open: {
+    args: Authorized<TerminalOpenArguments>;
+    result: TerminalOpened;
+  };
+  terminal_ack: {
+    args: Authorized<TerminalAck>;
+    result: null;
+  };
+  /** Refuses `invalid_arguments` for a size outside 2 to 1000. */
+  terminal_resize: {
+    args: Authorized<TerminalResize>;
+    result: null;
+  };
+  /**
+   * Stops the session and waits up to three seconds for it to settle. A
+   * session that misses the bound stays owned and the call rejects, with
+   * `cleanup_failed` or the termination failure; a later close retries.
+   */
+  terminal_close: {
+    args: Authorized<TerminalClose>;
+    result: TerminalClosed;
+  };
+  /** `after` is the last `OutputChunk.sequence` seen; 0 for everything. */
+  diagnostics_snapshot: {
+    args: Authorized<{ after: number }>;
+    result: DiagnosticsSnapshot;
   };
   logs_subscribe: {
     args: Authorized<{ records: Channel<LogBatch> }>;
@@ -247,7 +506,14 @@ export interface HostCommands {
     args: Authorized<{ subscription: number }>;
     result: null;
   };
-  /** Accepts only `https:` and `mailto:` URLs; refuses every other scheme. */
+  /**
+   * Hands the URL to the system's handler. Accepts an `https://` URL with a
+   * non-empty host and no user information, or a `mailto:` URL with an
+   * address part. The text must be at most 8,192 printable ASCII characters
+   * without a backslash, and the scheme lowercase. Everything else is
+   * refused with `invalid_arguments`; a handler that cannot start rejects
+   * with `spawn_failed`.
+   */
   open_external: {
     args: Authorized<{ url: string }>;
     result: null;
@@ -256,12 +522,17 @@ export interface HostCommands {
     args: Authorized;
     result: ClipboardText;
   };
-  /** `text` is at most 1 MiB. */
+  /** Refuses `text` over 1 MiB in UTF-8 with `invalid_arguments`. */
   shell_clipboard_write: {
     args: Authorized<ClipboardText>;
     result: null;
   };
-  /** Refuses a second menu while one is open. */
+  /**
+   * Shows a native popup and resolves when it closes. Refuses
+   * `session_unavailable` while another popup is open, `unsupported_platform`
+   * on every platform but Windows, and `invalid_arguments` for a malformed
+   * request.
+   */
   shell_context_menu: {
     args: Authorized<ContextMenuRequest>;
     result: ContextMenuResult;
@@ -291,7 +562,10 @@ export type BridgeEnvelope<Type extends string> = {
 
 export type DocsTheme = "auto" | "light" | "dark";
 
-/** Page bridge capabilities a page announces in `ready` (S14). */
+/**
+ * Optional page bridge capabilities a page announces in `ready`. Send a
+ * message that needs one only when the page lists it in `ready.features`.
+ */
 export type BridgeFeature =
   "search" | "navigate" | "home" | "appearance" | (string & {});
 
@@ -303,7 +577,7 @@ export type DocsLink = {
 };
 
 /**
- * Documentation result kinds from the docs search controller (S14). Open:
+ * Documentation result kinds from the docs search controller. Open:
  * the index also carries `legal` records, and a navigation title with no
  * kind of its own arrives as `page`.
  */
@@ -311,7 +585,7 @@ export type DocsResultKind =
   "concept" | "cli" | "casilla" | "page" | (string & {});
 
 /**
- * One documentation search result (S14). Results arrive in the docs search
+ * One documentation search result. Results arrive in the docs search
  * controller's own ranking: term, casilla and command cards above pages.
  */
 export type DocsSearchResult = {
@@ -341,7 +615,10 @@ export type DocsReady = BridgeEnvelope<"ready"> & {
   title: string;
   lang: string;
   theme: DocsTheme;
-  /** Absent on pages built before S14; enable a feature only when listed. */
+  /**
+   * Absent on pages that predate the optional capabilities; enable a
+   * feature only when listed.
+   */
   features?: BridgeFeature[];
 };
 
@@ -373,13 +650,16 @@ export type DocsContextMenu = BridgeEnvelope<"context-menu"> & {
   link: DocsLink | null;
   /**
    * False when the keyboard opened the menu (Shift+F10 or the menu key),
-   * true for a pointer. Absent on pages built before S14; read
+   * true for a pointer. Absent on pages that predate keyboard menus; read
    * `pointer !== false` as pointer-opened.
    */
   pointer?: boolean;
 };
 
-/** The answer to a `search` request with the same `id` (S14). */
+/**
+ * The answer to a `search` request with the same `id`; sent only by a page
+ * that lists `search` in `ready.features`.
+ */
 export type DocsSearchResults = BridgeEnvelope<"search-results"> & {
   id: string;
   results: DocsSearchResult[];
@@ -418,13 +698,15 @@ export type ShellCommand = BridgeEnvelope<"command"> &
     | { name: "open-search" }
     /**
      * An absolute URL on the documentation origin, at most 4,096 characters;
-     * anything else is refused (S14).
+     * anything else is refused. Optional; send only when the page lists
+     * `navigate` in `ready.features`.
      */
     | { name: "navigate"; url: string }
     /**
      * The root of the language the shown page belongs to: the target of the
      * page's own brand link, which is the docs manifest's entry for that
-     * language (S14).
+     * language. Optional; send only when the page lists `home` in
+     * `ready.features`.
      */
     | { name: "home" }
   );
@@ -433,9 +715,10 @@ export type ShellCommand = BridgeEnvelope<"command"> &
 export type ShellZoom = BridgeEnvelope<"zoom"> & { factor: number };
 
 /**
- * A bounded search (S14), answered by one `search-results` with the same
- * `id`. A refused request is never answered. A blank query is answered with
- * no results.
+ * A bounded search, answered by one `search-results` with the same `id`. A
+ * refused request is never answered. A blank query is answered with no
+ * results. Optional; send only when the page lists `search` in
+ * `ready.features`.
  */
 export type ShellSearch = BridgeEnvelope<"search"> & {
   /** At most 64 characters; at most one request in flight per `id`. */
@@ -449,7 +732,8 @@ export type ShellSearch = BridgeEnvelope<"search"> & {
 /**
  * Applied the way Furo's own toggle applies a theme, and persisted the same
  * way for later pages; answered by one `theme` report. `auto` hands the
- * choice back to the page's toggle (S14).
+ * choice back to the page's toggle. Optional; send only when the page lists
+ * `appearance` in `ready.features`.
  */
 export type ShellAppearance = BridgeEnvelope<"appearance"> & {
   theme: DocsTheme;

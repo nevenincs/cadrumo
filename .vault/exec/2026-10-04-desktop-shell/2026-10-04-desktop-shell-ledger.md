@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:07c2ec8e8cf0057ea28943a27da916430f8f72ad2eb758e5a184449069630aff'
+body_hash: 'sha256:d3f25194b8599153be7c53ceeb110cdb9d374455215a7f77b0a62a5c7df7c34f'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -251,6 +251,14 @@ related:
 - `S14` `verify:` `ruff check, ruff format --check, ty check on the test file; node --check on both scripts; tsc --noEmit, prettier --check, eslint on contract.ts` -> `pass`
 - `S14` `verify:` `pytest test_palette_ranking, test_search_page_inline_ladder, test_palette_loading_state, test_search_page_query_param, test_search_page_fulltext_class_ranking: 6 pass, 3 fail at RegistryValidationError before any browser step (current invalid registry, not this change)` -> `fail`
 - `S14` `by:` `opus-s14-executor`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S08` `verify:` `npx tsc --noEmit` -> `pass`
+- `S08` `verify:` `npx eslint src/ipc/contract.ts` -> `pass`
+- `S08` `verify:` `npx prettier --check src/ipc/contract.ts` -> `pass`
+- `S08` `verify:` `npm run check` -> `pass`
+- `S08` `verify:` `grep -P step-id and ADR-stem patterns in contract.ts zero matches` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
 
 ## Notes
 
