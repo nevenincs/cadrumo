@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:78d0b1a3e86a942a8963f78a43b62ea0dd5eaf38482f5161f56b58c15372ca21'
+body_hash: 'sha256:2c48e27f276f538b4896634e314613d35e0b469cfa7d1966eb4dc4165db0d73f'
 related: []
 ---
 
@@ -27,12 +27,12 @@ These findings describe the code and built artifacts that the desktop shell comp
 - The docs are built by Sphinx with the Furo theme (`docs/conf.py:373`). Fonts (Hanken Grotesk, Newsreader, JetBrains Mono) are bundled as woff2 in `docs/_static/`.
 - Search is Pagefind, built after Sphinx and kept separate from it (`docs/pagefind.yml`, `dev/docs/pagefind_index.py`, `dev/docs/pagefind_inject.py`). `docs/_static/cadrumo-docs.js:364` loads `pagefind/pagefind.js` with a dynamic `import()`. Pagefind instantiates WebAssembly, so the document origin's CSP needs `'wasm-unsafe-eval'`.
 - The docs bind their own keys. Ctrl+K opens the search palette (`docs/_static/cadrumo-docs.js:972`). ArrowLeft and ArrowRight step between pages when no modifier is held (`:1475`). Escape closes popovers and the language switcher (`:1703`, `:1798`). Clipboard writes use `navigator.clipboard` (`:1387`).
-- Each language has its own root: English at the top level, and es/ca/hu as subdirectories (`justfile` recipe `docs-lang`). Per language, the shippable files total about 108 MB in about 15,700 files. Pagefind takes about 30 MB and about 15,000 of those files. `_generated/casillas` is 35 MB and `_generated/legal` is 15 MB. All four languages together come to about 435 MB and 63,000 files.
+- Each language has its own root: English at the top level, and es/ca/hu as subdirectories (`justfile` recipe `docs-lang`). The language switcher (`docs/_templates/cadrumo-language-switcher.html:19`) depends on this layout. Per language, the shippable files total about 108 MB in about 15,700 files by this measurement, and 113 to 115 MB by the technical session's packaging pass. Pagefind takes about 30 MB in the development build and about 17 MB as packaged, in about 15,000 files. `_generated/casillas` is 35 MB and `_generated/legal` is 15 MB. All four languages together come to about 435 MB and 63,000 files.
 - The output root also holds build-only content that must not ship: `.doctrees` (2.0 GB in each localized root, inside `html/<lang>/`), `_sources` (39 MB per root) and `.buildinfo`.
 - The English root in the measured build has no `pagefind/` directory, while es/ca/hu each have one.
 - CSP-relevant content in a built page (`index.html`):
   - an async MathJax script from `cdn.jsdelivr.net` loaded on every page, although no English page contains a `class="math` node
-  - one executing inline script, Furo's `document.body.dataset.theme = localStorage.getItem("theme") || "auto";`
+  - one executing inline script on `index.html`, Furo's `document.body.dataset.theme = localStorage.getItem("theme") || "auto";`. Across a whole root, the technical session's packaging pass measured 5 distinct executing inline-script hashes, so the CSP hash list has to come from the docs manifest, never a fixed value
   - a non-executing `<script type="application/json" id="cadrumo-chrome-strings">` emitted by `docs/_templates/base.html`
   - no inline event-handler attributes
   - inline `style=` attributes, covered by `'unsafe-inline'`

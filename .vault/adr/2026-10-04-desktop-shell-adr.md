@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3a8824c3ff1d06f7d53f2591ea6337ab86b9628585743f1f0ff930a63e820476'
+body_hash: 'sha256:a194ce4415dcee4df3d25bd652e9807a75a06f95fc9d6813b0fb1764dadc7fc2'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -38,7 +38,9 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - The documentation set is about 435 MB in about 63,000 files across four languages. Every file can't be compiled into the binary.
 - The documentation runs third-party JavaScript (jQuery, Furo, mermaid, Pagefind). Tauri IPC must stay out of its reach.
 - The TUI and REPL own F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape and plain keys. WebView2 accelerators collide with several of these.
-- The shell grants no authority, adds no CLI semantics, and shows no control to start, supervise, time out or authenticate a runtime (`2026-10-03-runtime-without-service-manager-adr`). Runtime management is undecided and belongs to its own session.
+- The shell grants no authority and adds no CLI semantics. Runtime launch, supervision, availability and authentication belong to the runtime and to a runtime manager whose design is still a draft. `2026-10-03-runtime-without-service-manager-adr` is interim. The user has named a runtime manager as a target, so this record ties its constraint to ownership, not to that record.
+- Admitted work is owned by the runtime and survives the client disconnecting (`2026-09-26-mcp-purpose-authentication-adr`). Interaction bearers are local to one process. An operation waiting on review or confirmation from a TUI that has exited settles under the runtime's rules, by refusal or expiry, and a restarted TUI can't answer it.
+- When no storage root is set in the environment, installed code resolves it against the process's current working directory (`src/cadrumo/core/storage_environment.py:10`, `:19`; `src/cadrumo/core/config_state_root.py:92`). Two child processes started in different directories can therefore resolve different storage roots, and so different runtime endpoints. The delivered per-user default is still an open obligation of the storage owner (`native/CONTRACT.md`).
 - The user removed earlier unapproved landing content. Anything outside the spec and the four additions approved on 2026-10-04 needs the user's approval.
 - Localized chrome uses the informal singular. It comes from the canonical locale catalogues, with no parallel translation table.
 
@@ -61,8 +63,14 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. Every other scheme is refused.
 - The shell never captures F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape or plain keys while a terminal has focus.
 - The log view keeps "available", "missing" and "unreadable" sources distinct from an empty list. It only reads the log and never truncates, rotates or deletes it.
+- The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
+- `source` on a log record is an open enumeration. A later runtime-manager source must not break the shell.
 - Terminal output is never dropped. Backpressure pauses the PTY reader instead.
-- Runtime state, authentication requests and timeouts stay out of the shell until the runtime-management ruling (desktop-shell plan S12).
+- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control. Desktop-shell plan S12 stays blocked until the runtime-management ruling.
+- The shell shows no authentication UI. Login stays in the TUI, the runtime's profile worker launches the Cl@ve browser, and approval prompts belong to the runtime manager or the TUI.
+- The shell never caches, forwards or persists session, lease, receipt or credential material between TUI processes. Restarting a session starts a new process that goes through admission again.
+- No shell or host copy says that work completes after a terminal closes or the window closes.
+- The host adds no storage-root, log-directory or other Settings variable to its child processes beyond the Settings projection. Both terminal kinds must resolve the same storage root as each other. Running the Python session in the user's home directory is therefore conditional on a storage root that doesn't depend on the working directory. Until the storage owner settles that default, both kinds start in the same working directory.
 - This record proposes replacing these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration. That record's author should reconcile the wording.
 
 ## Implementation
@@ -86,7 +94,7 @@ We will build the desktop window as a React shell at the app origin that hosts t
 
 **Packaging and origins** (hypothesis: exact paths may change during the technical review):
 
-- Each language ships under `P/docs/user/<lang>/`. A docs manifest lists the languages, entry paths, a sha256 inventory and the hashes of executing inline scripts. The packaging step refuses missing Pagefind output and any remote reference.
+- The documentation ships under `P/docs/user/` in the owner's published layout, with English at the top and es/ca/hu under `<lang>/`. The language switcher (`docs/_templates/cadrumo-language-switcher.html:19`) depends on that layout. A docs manifest lists the languages, the entry path for each, a sha256 inventory and the hashes of executing inline scripts. The shell takes entry paths from `desktop_environment` and never builds them itself. The packaging step refuses missing Pagefind output and any remote reference.
 - Documentation is served read-only through the `cadrumo-docs` scheme with path containment, a closed MIME table and its own CSP:
   - `script-src 'self' 'wasm-unsafe-eval'` plus the manifest hashes
   - `connect-src 'self'`
@@ -122,7 +130,7 @@ shell to documentation:
   - `terminal_ack` is credit backpressure: pause at 512 KiB unacknowledged, resume below 128 KiB
   - `terminal_resize`
   - `terminal_close` settles before it returns
-  - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the user's home directory.
+  - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the same working directory as the TUI. It moves to the user's home directory only after the storage-root default stops depending on the working directory (see Constraints).
 - Logs:
   - `logs_subscribe` delivers batches of at most ten per second, starting with a 5,000-record backlog from a 10,000-record ring
   - each record carries `seq`, `source` (`python` or `host`), the raw timestamp, a parsed timestamp or null, a level or null, a logger or null, the message, a detail (continuation lines) or null, and a host process
@@ -180,10 +188,10 @@ A shell-owned keymap made of Ctrl+Shift chords and the physical Backquote key av
 **Benefits.**
 - The documentation becomes the window's primary surface, with offline search in four languages.
 - Terminals no longer poll.
-- Logs from every Python process on the storage root show in one place.
+- Logs from every Python process on the storage root that logs through `configure_logging` show in one place. That includes the runtime (`src/cadrumo/entrypoints/runtime/main.py:53`).
 
 **Accepted costs.**
-- An installed package grows by about 435 MB and 63,000 files.
+- An installed package grows by about 450 MB and 63,000 files across four languages, measured at packaging.
 - The documentation needs a desktop build flavor.
 - Log records can't name the Python process that wrote them until a structured log sink is decided separately.
 
@@ -191,5 +199,12 @@ A shell-owned keymap made of Ctrl+Shift chords and the physical Backquote key av
 - package size or file count proves unacceptable for installation
 - Tauri stabilizes multi-webview layout
 - the runtime-management ruling places runtime state or authentication prompts in the shell
+
+**Seams kept but not built.** These would need a runtime-manager decision and the user's approval:
+- a status slot in the tab strip, fed only through the runtime manager's own local IPC and never from the runtime endpoint
+- a host command that asks the single runtime-manager instance to show its own UI, starting, stopping and authenticating nothing
+- a close prompt keyed to a fact the TUI reports, that it has an open interaction, rather than to runtime state
+
+The runtime-control UI in `2026-10-03-application-packaging-adr` moves to the runtime manager, not to `cadrumo.exe`.
 
 Acceptance would not mean that any part of this is implemented.
