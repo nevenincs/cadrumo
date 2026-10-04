@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2feb9c8cc00405e38b7cb8a8e32f2719527200ad3866b2f0b1ad36274ae157d0'
+body_hash: 'sha256:b6116f12fc109f9edf408c05a5baa8d523863968a3a827c303d808657e86a446'
 related:
   - "[[2026-10-04-canonical-environment-plan]]"
 ---
@@ -70,6 +70,16 @@ related:
 - `S01` `M` `src/cadrumo/core/tests/test_ensure_storage_tree.py`
 - `S01` `verify:` `WSL Ubuntu venv pytest test_ensure_storage_tree.py and test_storage_root_vectors.py (POSIX root 0o700, installed layout, undeclared platform)` -> `pass`
 - `S01` `verify:` `uv run --no-sync python -m pytest storage, settings, ensure-tree, storage-management, worker, KDF and CLI metadata tests plus structural storage gates` -> `pass`
+- `S02` `M` `dev/packaging/native/generate.py`
+- `S02` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S02` `M` `src/cadrumo/core/config.py`
+- `S02` `M` `src/cadrumo/core/tests/test_storage_environment.py`
+- `S02` `M` `native/CMakeLists.txt`
+- `S02` `verify:` `95 focused tests incl schema 1 projection, contract.rs leak test, generator literal gate with planted defect` -> `pass`
+- `S02` `verify:` `746 consumer tests local_runtime, settings and fingerprint gates, config_state_root, Linux worker launch` -> `pass`
+- `S02` `verify:` `native/platform builds and tests against generated contract.rs` -> `pass`
+- `S02` `verify:` `ruff, format, ty` -> `pass`
+- `S02` `by:` `CADRUMO-BUILD-RUNTIME`
 
 ## Notes
 
@@ -79,3 +89,6 @@ related:
 - `S01` Root creation at mode 0o700 is wired into `prepare_temporary_directory` and `child_environment,` but not yet into `ensure_storage_tree` `(core/storage_materialization.py` is outside the S01 file list).
 - `S01` `test_redaction_recorded_sequence_output::test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity` exceeds the 300 s pytest timeout under current machine load. It is unrelated to this Step: it touches no storage or Settings code, and it passed at 218 s earlier in this session.
 - `S01` Orchestrator rulings applied: outside-list files approved; `ensure_storage_tree` creates the root through `ensure_storage_root` with `STORAGE_ROOT.posix_directory_mode` `(STORAGE_ROOT_MODE` now reads the declaration); development mode resolves on any sys.platform and only the installed default refuses an undeclared platform.
+- `S02` `TOOL_CACHE_ENV,` `TOOL_CACHE_DEFAULT` and legacy constants still emitted, now derived from declarations; S03 removes them with the pywin32 cache successor per the recorded packaging constraint
+- `S02` CMake dry-run unsupported by the MSBuild generator; regeneration evidence is the build log from the declared `native_contract` OUTPUT and storage DEPENDS glob
+- `S02` Committed by CADRUMO-BUILD-RUNTIME as 00f44b5ae1
