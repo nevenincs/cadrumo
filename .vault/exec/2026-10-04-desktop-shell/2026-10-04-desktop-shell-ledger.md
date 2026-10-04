@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:f531df0a7d07396219e4d7131760cd2f4426d8bf8a8ea92e6870fd54362619d7'
+body_hash: 'sha256:3cb450758d3e394dd9f3594e51a457d9f586f7b1ba6d1d35338b930dfb69423e'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -294,6 +294,9 @@ related:
 - `S07` `verify:` `groupb integrated platform C consumers static and dll linked against the snapshot crate built --locked without webview2` -> `pass`
 - `S07` `verify:` `groupb integrated platform cargo clippy -D warnings: 5 missing_safety_doc in HEAD lib.rs, identical on pure HEAD` -> `fail`
 - `S07` `by:` `groupb-integration`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npm run build` -> `pass`
+- `S09` `verify:` `npx playwright test (12)` -> `pass`
 
 ## Notes
 

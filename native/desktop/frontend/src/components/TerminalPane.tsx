@@ -269,7 +269,13 @@ export function TerminalPane({
       id={tabPanel ? `panel-${kind}` : undefined}
       aria-labelledby={tabPanel ? `tab-${kind}` : undefined}
     >
-      <div className="terminal-host" ref={container} />
+      {/* Without a host there is no session to show: keep the terminal's
+          size for fitting but draw only the note, not an idle cursor. */}
+      <div
+        className="terminal-host"
+        ref={container}
+        style={unavailable ? { visibility: "hidden" } : undefined}
+      />
       {unavailable && (
         <p className="terminal-note" role="status">
           {t("desktop.host.unavailable")}

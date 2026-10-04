@@ -110,6 +110,7 @@ export function App({ host }: { host: Host }) {
     state: "loading",
   });
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [docsTheme, setDocsTheme] = useState<DocsTheme>("auto");
   const [docsSearchReady, setDocsSearchReady] = useState(false);
   const [prefersDark, setPrefersDark] = useState(
@@ -143,6 +144,7 @@ export function App({ host }: { host: Host }) {
   const splitMinA = useMetric("--split-min-a", 260);
   const splitMinBRow = useMetric("--split-min-b-row", 320);
   const splitMinBCol = useMetric("--split-min-b-col", 160);
+  const railWidth = useMetric("--rail-w", 48);
   const panelResizeStep = useMetric("--resize-step", 24);
   const panelCollapseThreshold = useMetric("--panel-collapse-threshold", 60);
   const terminalFontSize = useTerminalFontSize(prefs.fontSize);
@@ -169,7 +171,10 @@ export function App({ host }: { host: Host }) {
   useEffect(() => {
     const query = matchMedia("(prefers-color-scheme: dark)");
     const change = () => setPrefersDark(query.matches);
-    const resize = () => setViewportHeight(window.innerHeight);
+    const resize = () => {
+      setViewportHeight(window.innerHeight);
+      setViewportWidth(window.innerWidth);
+    };
     query.addEventListener("change", change);
     window.addEventListener("resize", resize);
     return () => {
@@ -931,6 +936,14 @@ export function App({ host }: { host: Host }) {
       run: () => toggleMaximize(area),
     };
   };
+  // Side by side needs room for both panes' minimums; a narrower window
+  // stacks them without changing the remembered preference.
+  const orientation =
+    prefs.orientation === "row" &&
+    viewportWidth - railWidth < splitMinA + splitMinBRow
+      ? "column"
+      : prefs.orientation;
+
   const splitControls: PaneControl[] = maximized
     ? []
     : [
@@ -940,12 +953,18 @@ export function App({ host }: { host: Host }) {
           label: t("desktop.split.swap"),
           run: () => runAction("split.swap"),
         },
-        {
-          id: "orientation",
-          icon: byId("split.orientation")?.icon ?? "splitColumn",
-          label: byId("split.orientation")?.label ?? "",
-          run: () => runAction("split.orientation"),
-        },
+        // While the window forces stacking, the orientation choice would
+        // change nothing visible, so it is not offered.
+        ...(orientation === prefs.orientation
+          ? [
+              {
+                id: "orientation",
+                icon: byId("split.orientation")?.icon ?? "splitColumn",
+                label: byId("split.orientation")?.label ?? "",
+                run: () => runAction("split.orientation"),
+              },
+            ]
+          : []),
       ];
 
   const railTop: RailItem[] = [
@@ -1110,12 +1129,12 @@ export function App({ host }: { host: Host }) {
         <div className="workspace">
           <main className="main-area" hidden={maximized === "panel"}>
             <Split
-              orientation={prefs.orientation}
+              orientation={orientation}
               reversed={prefs.order === "tui"}
               ratio={layout.splitRatio}
               onRatio={(ratio) => patch({ splitRatio: ratio })}
               minA={splitMinA}
-              minB={prefs.orientation === "row" ? splitMinBRow : splitMinBCol}
+              minB={orientation === "row" ? splitMinBRow : splitMinBCol}
               a={docsPane}
               b={tuiPane}
               aShown={maximized !== "tui"}

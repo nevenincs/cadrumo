@@ -89,6 +89,11 @@ test("without a host the shell lays out every area and invents nothing", async (
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   for (const rows of await target.locator(".xterm-rows").all())
     await expect(rows).toHaveText("");
+  // Only the note shows: an idle terminal would draw its cursor over it.
+  await expect(target.locator(".pane-tui .terminal-note")).toHaveText(
+    label("desktop.host.unavailable"),
+  );
+  await expect(target.locator(".pane-tui .terminal-host")).toBeHidden();
   await rail.getByRole("button", { name: label("desktop.rail.logs") }).click();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.logs") }),
@@ -159,6 +164,25 @@ test("maximize, swap, orientation and hide never reload the documentation", asyn
     () => (window as unknown as { kept?: boolean }).kept === true,
   );
   expect(kept).toBe(true);
+});
+
+test("a window too narrow for side by side stacks without changing the choice", async ({
+  page: target,
+}) => {
+  await target.goto("/");
+  const docsHead = target.locator(".pane-docs .pane-head");
+  const stack = docsHead.getByRole("button", {
+    name: label("desktop.split.stack"),
+  });
+  await expect(target.locator(".split")).toHaveClass(/split-row/);
+  await expect(stack).toBeVisible();
+  await target.setViewportSize({ width: 520, height: 600 });
+  await expect(target.locator(".split")).toHaveClass(/split-column/);
+  // The choice cannot take effect here, so it is not offered.
+  await expect(stack).toHaveCount(0);
+  await target.setViewportSize({ width: 1280, height: 720 });
+  await expect(target.locator(".split")).toHaveClass(/split-row/);
+  await expect(stack).toBeVisible();
 });
 
 test("the documentation can relay only the chords the shell published to it", async ({
