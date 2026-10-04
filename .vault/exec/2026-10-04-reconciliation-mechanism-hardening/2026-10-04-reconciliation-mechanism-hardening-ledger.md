@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6da9122308a4dc699b52e66d33336cf83b0e2f318255fccc6776a7ba287fcf9a'
+body_hash: 'sha256:eb2b2445d9807757e71145fd4b985398e7ae04358b287ac7d3e85cdee60a2755'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -148,6 +148,16 @@ related:
 - `S07` `verify:` `Paging tests Ruff format ty` -> `pass`
 - `S07` `verify:` `Independent S07 integrated review` -> `pass`
 - `S07` `verify:` `Canonical scoped private import scan 12 files zero findings` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S08` `M` `.vault/audit/2026-10-04-reconciliation-mechanism-hardening-audit.md`
+- `S08` `verify:` `Restricted session tests 13` -> `pass`
+- `S08` `verify:` `Native launcher session switching` -> `pass`
+- `S08` `verify:` `Native human workbench full regression` -> `pass`
+- `S08` `verify:` `Ruff format ty and production basedpyright pyrefly` -> `pass`
+- `S08` `verify:` `Integrated scope review` -> `pass`
+- `S08` `by:` `root`
 
 ## Notes
 
@@ -157,3 +167,4 @@ related:
 - `S07` Native suite failed before help checks at unrelated MCP contract denial timeout; not counted as passing.
 - `S07` One uninstrumented TUI root run refused intermittently; subsequent direct root and instrumented installed calculation run passed; final reconciliation run pending.
 - `S07` Broad native workbench test retains unrelated MCP `frontend_denied` precondition failure before help assertions; no full repository green claim. Live history starts2023 and does not establish immediate target predecessor; `wallet_only` authority retained. No official submission or payment.
+- `S08` Intermediate human admission timeout recorded in audit; isolated native reruns pass without production deadline changes. Preserve unrelated working-tree styling hunks.

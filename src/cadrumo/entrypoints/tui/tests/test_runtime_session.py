@@ -183,10 +183,12 @@ async def test_status_shows_exact_allowlisted_scope_without_human_calls_or_clien
         await _shown(app, pilot)
         assert str(client.profile_id) in str(app.query_one("#restricted-profile", Static).render())
         assert "user-profile.view" in str(app.query_one("#restricted-operations", Static).render())
+        assert "submit" in str(app.query_one("#restricted-scope-actions", Static).render())
         assert "2025 1T" in str(app.query_one("#restricted-periods", Static).render())
         assert client.human_calls == 0
         await pilot.click("#restricted-close")
         assert app.return_value is None
+        assert str(app.query_one("#restricted-scope-actions", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0
 
 

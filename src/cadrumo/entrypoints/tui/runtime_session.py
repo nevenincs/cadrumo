@@ -106,7 +106,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             yield Static("", id="restricted-session-expiry", markup=False)
             yield Static("", id="restricted-grant", markup=False)
             yield Static("", id="restricted-operations", markup=False)
-            yield Static("", id="restricted-actions", markup=False)
+            yield Static("", id="restricted-scope-actions", markup=False)
             yield Static("", id="restricted-disclosures", markup=False)
             yield Static("", id="restricted-delegation", markup=False)
             yield Static("", id="restricted-periods", markup=False)
@@ -189,7 +189,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             tr("tui.restricted.grant", valid=tr("tui.restricted.yes"), expires_at=status.grant_expires_at.isoformat())
         )
         self.query_one("#restricted-operations", Static).update(tr("tui.restricted.operations", values=operations))
-        self.query_one("#restricted-actions", Static).update(tr("tui.restricted.actions", values=actions))
+        self.query_one("#restricted-scope-actions", Static).update(tr("tui.restricted.actions", values=actions))
         self.query_one("#restricted-disclosures", Static).update(
             f"{tr('tui.automation_inventory.disclosures')}: {disclosures}"
         )
@@ -219,7 +219,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             "#restricted-session-expiry",
             "#restricted-grant",
             "#restricted-operations",
-            "#restricted-actions",
+            "#restricted-scope-actions",
             "#restricted-disclosures",
             "#restricted-delegation",
             "#restricted-periods",

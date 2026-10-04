@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b0e364a0a13680765a336552da3902665e87695e886d383dbb902522a21c110'
+body_hash: 'sha256:46f9e55bd996a333e4ea1206e906909e4300ea57fab15c1f55d1a76bde1ad3c4'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -109,6 +109,20 @@ Focused application/client paging tests pass (23), including real frontend and w
 The restarted 32 KiB runtime passed the actual installed wallet TUI pilot: saved Modelo 303 casilla 110 and its editor both match the captured balance, with imported origin and exit status zero. The native Windows multipage/global-lock continuation-refusal regression passed (20261004T181019.249621Z-pytest-79180-09658743); its 36-request fixture now includes one bounded monthly-period scope, asserts raw inventory within 32 KiB and public projection beyond one 32 KiB page. All three paging test files pass Ruff, formatting and ty. These complete the pending checks from the preceding review checkpoint.
 
 Live acceptance established eight 2023–2024 Modelo 303 declarations, 582 casillas, eight encrypted history states and five FIFO compensation lots. The wallet balance and historical remaining total agree. Actual CLI calculation consumes wallet authority in casilla 110; saved revision verification and the filing wallet gate pass; exported bytes parse back to the same value. The isolated development profile export uses development software identity, and no official submission or payment occurred. Target 2026 Q3 lacks the immediate predecessor in retained history, so the current authority decision correctly remains wallet_only rather than a claimed recurrence match. The earlier-history opening application remains explicitly unallocated. AEAT authentication has been cleared. Scope passes independent review; the unrelated broad native MCP-denial precondition failure remains disclosed.
+
+### S08 native refusal diagnosis | low | test deadline precedes worker control budget
+
+The earlier recorded frontend_denied traceback was a warning emitted inside the existing ProfileAccessRefusedError handler, not an uncaught exception. The native test imposed a five-second deadline on contract discovery, although its worker control exchange permits ten seconds before the runtime constructs and sends the structured refusal. Increased only that integration-test request budget to a bounded thirty seconds; the exact RuntimeAccessRefusal/FRONTEND_DENIED assertions remain intact and production authorization/timeouts are unchanged. The pre-edit complete-file run has already passed both the in-process generation test and the formerly failing native workbench test, including concurrent help, profile boundaries and denial assertions. Launcher verification and a rerun of the edited test remain pending. This supersedes the earlier interpretation of an uncaught MCP refusal; it does not erase the recorded timeout.
+
+### S08 restricted-session mount | high | duplicate widget identity repaired
+
+Running the complete native file passed in-process generation and the formerly failing workbench flow, then exposed a separate launcher defect: Static scope text and the Horizontal button row both used restricted-actions, causing Textual MountError before the API session mounted. Renamed the scope text to restricted-scope-actions consistently in compose, render and clearing. Preserved concurrent button-row styling changes. Added assertions that action scope renders and clears through the existing real Textual lifecycle test. Thirteen focused screen tests pass, as do Ruff, ty, basedpyright and pyrefly. The two affected native tests are rerunning with the bounded discovery deadline and mount fix; review remains pending until those results return.
+
+### S08 final review | low | PASS with scoped native evidence
+
+The repaired launcher test passes (20261004T184228.737758Z-pytest-87628-2a14f347), exercising human to restricted API to human session switching and custody boundaries. The edited native workbench test passes (20261004T184423.804704Z-pytest-44196-03ef78d2), including exact MCP refusal, profile isolation, concurrent help reads, calculation and root interaction. Thirteen restricted-session tests passed in 20261004T184006.670399Z-pytest-25036-25d06f05. The unaffected in-process generation test passed in 20261004T183204.620607Z-pytest-76920-c56e86ab. Thus all three native-file cases have applicable passing evidence across runs; no claim of one final all-file green invocation or full repository verification.
+
+An intermediate rerun failed at initial human worker preparation with runtime_deadline_exceeded before reaching either repaired path. Subsequent isolated launcher and workbench runs passed without changing production authentication budgets. Preserve that observation as intermittent admission reliability evidence, not proof of a repaired admission timeout. Review traced all renamed scope-widget selectors through mounting, rendering and clearing; authentication, expiry, lock and denial assertions remain enforced. Ruff, format, ty and production basedpyright/pyrefly checks pass. No import changes were introduced. Stage only owned rename/assertion/deadline hunks, preserving concurrent styling/test edits. No blocking findings remain for these two repairs.
 
 ## Recommendations
 

@@ -458,6 +458,9 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                     mcp.login_api_key(mcp_key)
                     assert not any(mcp_key)
 
+                    # Contract discovery crosses the worker control channel,
+                    # whose own bounded exchange may take ten seconds. Allow
+                    # that exchange to return the actual policy refusal.
                     mcp_contract = mcp_raw.operation(
                         RuntimeOperationContract(
                             request_id=uuid4(),
@@ -465,7 +468,7 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                             session_id=mcp.session_id,
                             definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
                         ),
-                        deadline=time.monotonic() + 5,
+                        deadline=time.monotonic() + 30,
                     )
                     assert isinstance(mcp_contract, RuntimeAccessRefusal)
                     assert mcp_contract.code is AccessDenialCode.FRONTEND_DENIED
