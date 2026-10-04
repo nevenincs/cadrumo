@@ -68,7 +68,7 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
@@ -144,6 +144,8 @@ class DuplicationResult:
     clone_count: int = 0
     duplicated_pct: str = ""
     groups: tuple[CloneGroup, ...] = ()
+    raw_groups: tuple[CloneGroup, ...] = ()
+    declaration_groups: tuple[CloneGroup, ...] = ()
     reason: str = ""
 
     @classmethod
@@ -173,6 +175,7 @@ class DuplicationResult:
             clone_count=clone_count,
             duplicated_pct=duplicated_pct,
             groups=groups,
+            raw_groups=groups,
         )
 
     @classmethod
@@ -198,7 +201,8 @@ class DuplicationResult:
         pct_clause = f", {self.duplicated_pct}% duplicated lines" if self.duplicated_pct else ""
         return (
             f"{self.clone_count} clone cluster(s){pct_clause} "
-            f"across {self.files_analyzed} analysed file(s) (advisory debt)"
+            f"across {self.files_analyzed} analysed file(s) (advisory); "
+            f"{len(self.groups)} executable or unclassified, {len(self.declaration_groups)} declaration-only"
         )
 
 
@@ -331,14 +335,105 @@ def _span_is_import_preamble(repo_root: Path, site: tuple[str, int, int]) -> boo
         and node.lineno <= start <= getattr(node, "end_lineno", node.lineno)
         for node in statements
     )
-    carries_behavior = any(
-        isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) for node in statements
-    )
-    return starts_in_import and not carries_behavior
+    return starts_in_import and all(isinstance(node, (ast.Import, ast.ImportFrom)) for node in statements)
 
 
 def _spans_overlap(left: tuple[str, int, int], right: tuple[str, int, int]) -> bool:
     return left[0] == right[0] and left[1] <= right[2] and right[1] <= left[2]
+
+
+def _span_is_declaration(repo_root: Path, site: tuple[str, int, int]) -> bool:
+    """Prove a span contains only declarations, without clearing calls or bodies."""
+    path, start, end = site
+    try:
+        source = (repo_root / path).read_text(encoding=_UTF_8)
+        tree = ast.parse(source, filename=path)
+    except (OSError, UnicodeError, SyntaxError):
+        return False
+    declared: set[int] = set()
+    executable: set[int] = set()
+
+    def lines(node: ast.AST) -> set[int]:
+        return set(range(getattr(node, "lineno", 0), getattr(node, "end_lineno", 0) + 1))
+
+    def visit(body: list[ast.stmt], *, in_class: bool = False, protocol: bool = False) -> None:
+        for node in body:
+            if isinstance(node, ast.Import | ast.ImportFrom):
+                declared.update(lines(node))
+            elif isinstance(node, ast.ClassDef):
+                declared.update(range(node.lineno, node.body[0].lineno))
+                if any(
+                    isinstance(part, ast.Call) for base in node.bases + node.decorator_list for part in ast.walk(base)
+                ):
+                    executable.update(range(node.lineno, node.body[0].lineno))
+                is_protocol = any(
+                    (isinstance(base, ast.Name) and base.id == "Protocol")
+                    or (isinstance(base, ast.Attribute) and base.attr == "Protocol")
+                    for base in node.bases
+                )
+                visit(node.body, in_class=True, protocol=is_protocol)
+            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                header = set(range(node.lineno, node.body[0].lineno))
+                declared.update(header)
+                defaults = node.args.defaults + [value for value in node.args.kw_defaults if value is not None]
+                if any(
+                    isinstance(part, ast.Call) for value in defaults + node.decorator_list for part in ast.walk(value)
+                ):
+                    executable.update(header)
+                if protocol and all(
+                    isinstance(stmt, ast.Pass)
+                    or (
+                        isinstance(stmt, ast.Expr)
+                        and isinstance(stmt.value, ast.Constant)
+                        and (stmt.value.value is Ellipsis or isinstance(stmt.value.value, str))
+                    )
+                    for stmt in node.body
+                ):
+                    declared.update(lines(node))
+                else:
+                    for stmt in node.body:
+                        executable.update(lines(stmt))
+            elif in_class and isinstance(node, ast.AnnAssign):
+                value = node.value
+                field = isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field"
+                inert = value is None or isinstance(value, ast.Constant)
+                if field:
+                    inert = not value.args and all(
+                        item.arg != "default_factory" and isinstance(item.value, ast.Constant)
+                        for item in value.keywords
+                    )
+                (declared if inert else executable).update(lines(node))
+            elif (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
+                declared.update(lines(node))
+            else:
+                executable.update(lines(node))
+
+    visit(tree.body)
+    relevant = {
+        number
+        for number, line in enumerate(source.splitlines(), 1)
+        if start <= number <= end and line.strip() and not line.lstrip().startswith("#")
+    }
+    return bool(relevant) and relevant <= declared and not relevant & executable
+
+
+def classify_clone_spans(result: DuplicationResult, repo_root: Path) -> DuplicationResult:
+    """Retain raw measurements while separating proven declarations from review leads."""
+    if result.outcome is not DuplicationOutcome.CLONES:
+        return result
+    groups = actionable_clone_groups(result.raw_groups, repo_root)
+    declarations = tuple(
+        group
+        for group in groups
+        if len(group.sites()) >= 2 and all(_span_is_declaration(repo_root, site) for site in group.sites())
+    )
+    return replace(
+        result, groups=tuple(group for group in groups if group not in declarations), declaration_groups=declarations
+    )
 
 
 def actionable_clone_groups(groups: tuple[CloneGroup, ...], repo_root: Path) -> tuple[CloneGroup, ...]:
@@ -402,15 +497,7 @@ def run_duplication_scan(
     result = classify_jscpd_output(completed.stdout)
     if result.outcome is not DuplicationOutcome.CLONES:
         return result
-    groups = actionable_clone_groups(result.groups, repo_root)
-    if not groups:
-        return DuplicationResult.observed_zero(result.files_analyzed)
-    return DuplicationResult.from_clones(
-        files_analyzed=result.files_analyzed,
-        clone_count=len(groups),
-        duplicated_pct=result.duplicated_pct,
-        groups=groups,
-    )
+    return classify_clone_spans(result, repo_root)
 
 
 def render_console_report(result: DuplicationResult) -> str:
@@ -420,13 +507,19 @@ def render_console_report(result: DuplicationResult) -> str:
     if result.outcome is DuplicationOutcome.OBSERVED_ZERO:
         return f"duplication: {result.headline()}."
 
-    pct_clause = f", {result.duplicated_pct}% duplicated lines" if result.duplicated_pct else ""
-    out = [f"duplication: {result.clone_count} clones{pct_clause}."]
+    out = [f"duplication: {result.headline()}."]
+    omitted = len(result.raw_groups) - len(result.groups) - len(result.declaration_groups)
+    missing = max(0, result.clone_count - len(result.raw_groups))
+    out.append(
+        f"Raw evidence: {omitted} import-only or overlapping reports; {missing} reports without parsed locations."
+    )
     for group in result.groups[:_CLONE_CAP]:
         out.append("")
         out.append(group.render())
     if len(result.groups) > _CLONE_CAP:
         out.append(f"\n... {len(result.groups) - _CLONE_CAP} more clones")
+    for group in result.declaration_groups:
+        out.extend(("", "Declaration-only token overlap:", group.render()))
     return "\n".join(out)
 
 

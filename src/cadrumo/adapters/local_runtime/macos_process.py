@@ -178,6 +178,27 @@ def decode_macos_incarnation(payload: bytes, *, pid: int) -> MacosProcessIncarna
     return MacosProcessIncarnation(pid=pid, version=int(value.version), unique_id=int(value.unique_id))
 
 
+def read_macos_pidinfo(pid: int, *, flavor: int, record_size: int) -> bytes | None:
+    """Read one complete native process record; only ESRCH establishes absence."""
+    if sys.platform != "darwin" or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    try:
+        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+        query = native.proc_pidinfo
+        query.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_uint64, ctypes.c_void_p, ctypes.c_int)
+        query.restype = ctypes.c_int
+        buffer = ctypes.create_string_buffer(record_size)
+        ctypes.set_errno(0)
+        count = query(pid, flavor, 0, ctypes.byref(buffer), record_size)
+        if count <= 0 and ctypes.get_errno() == errno.ESRCH:
+            return None
+        if count != record_size:
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        return bytes(buffer.raw)
+    except (AttributeError, OSError):
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
+
+
 def read_macos_incarnation(pid: int) -> MacosProcessIncarnation | None:
     """Read the live incarnation of a PID; None means no live process holds it.
 
@@ -187,23 +208,10 @@ def read_macos_incarnation(pid: int) -> MacosProcessIncarnation | None:
     Args:
         pid: Kernel PID, bounded before native integer conversion.
     """
-    if sys.platform != "darwin" or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-    try:
-        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
-        query = native.proc_pidinfo
-        query.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_uint64, ctypes.c_void_p, ctypes.c_int)
-        query.restype = ctypes.c_int
-        value = _UniqueIdentifierInfo()
-        ctypes.set_errno(0)
-        count = query(pid, _PROC_PIDUNIQIDENTIFIERINFO, 0, ctypes.byref(value), ctypes.sizeof(value))
-        if count <= 0 and ctypes.get_errno() == errno.ESRCH:
-            return None
-        if count != ctypes.sizeof(value):
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        return decode_macos_incarnation(ctypes.string_at(ctypes.byref(value), ctypes.sizeof(value)), pid=pid)
-    except (AttributeError, OSError):
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
+    payload = read_macos_pidinfo(
+        pid, flavor=_PROC_PIDUNIQIDENTIFIERINFO, record_size=ctypes.sizeof(_UniqueIdentifierInfo)
+    )
+    return None if payload is None else decode_macos_incarnation(payload, pid=pid)
 
 
 def macos_audit_token(incarnation: MacosProcessIncarnation, *, user_id: int, group_id: int) -> bytes:

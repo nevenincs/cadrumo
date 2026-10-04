@@ -12,13 +12,10 @@ callers should inspect those fields rather than parsing localized messages.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from decimal import Decimal
-
-from ....domain.justificante.errors import PdfExtractionCoverageMixin, PdfModeloImportError
+from ....domain.justificante.errors import PdfModeloImportError
 
 
-class DeclaracionParseError(PdfExtractionCoverageMixin, PdfModeloImportError):
+class DeclaracionParseError(PdfModeloImportError):
     """Raised when a PDF cannot be parsed into a declaración filing.
 
     Base class for all parse-time errors emitted by
@@ -31,29 +28,9 @@ class DeclaracionParseError(PdfExtractionCoverageMixin, PdfModeloImportError):
     The structured ``missing`` / ``malformed`` / ``ambiguous`` / ``coverage``
     extraction-coverage attributes (casilla IDs here, mirroring
     :class:`~domain.justificante.errors.JustificanteParseError`'s field names) come
-    from the shared :class:`~domain.justificante.errors.PdfExtractionCoverageMixin`
+    from the shared :class:`~domain.justificante.errors.PdfModeloImportError`
     so callers can assert on them without parsing the message string.
     """
-
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
-        missing: tuple[str, ...] = (),
-        malformed: tuple[str, ...] = (),
-        ambiguous: tuple[str, ...] = (),
-        coverage: Decimal | None = None,
-    ) -> None:
-        """Initialise the registered error and its extraction-coverage fields."""
-        super().__init__(message, context=context, translated_message=translated_message)
-        self._set_extraction_coverage(
-            missing=missing,
-            malformed=malformed,
-            ambiguous=ambiguous,
-            coverage=coverage,
-        )
 
 
 class TemplateNotDetectedError(DeclaracionParseError):

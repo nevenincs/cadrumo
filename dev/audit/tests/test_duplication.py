@@ -25,6 +25,7 @@ from ..duplication import (
     DuplicationOutcome,
     DuplicationResult,
     actionable_clone_groups,
+    classify_clone_spans,
     classify_jscpd_output,
     jscpd_command,
     render_console_report,
@@ -147,6 +148,58 @@ def test_import_preamble_that_reaches_a_function_remains_actionable(tmp_path: Pa
     group = CloneGroup(("Clone found (python):", " - a.py [1:1 - 4:16]", "   b.py [1:1 - 4:16]"))
 
     assert actionable_clone_groups((group,), tmp_path) == (group,)
+
+
+@pytest.mark.parametrize(
+    ("source", "declaration"),
+    [
+        ("class Record:\n    value: int\n    label: str = 'value'\n", True),
+        ("class Record:\n    value: int = Field(ge=0)\n", True),
+        ("class Record:\n    value: int = Field(default_factory=read_value)\n", False),
+        ("class Record:\n    value: int = read_value()\n", False),
+        ("def execute(\n    value: int,\n) -> int:\n    return value\n", False),
+        ("class Port(Protocol):\n    def execute(self, value: int) -> int: ...\n", True),
+        ("class Port(Protocol):\n    def execute(self, value: int) -> int:\n        return value\n", False),
+        ("from one import value\nRESULT = execute(value)\n", False),
+        ("def execute(:\n", False),
+    ],
+)
+def test_declaration_proof_preserves_calls_bodies_and_unparseable_spans(
+    tmp_path: Path, source: str, declaration: bool
+) -> None:
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text(source, encoding="utf-8")
+    end = len(source.splitlines())
+    group = CloneGroup(("Clone found (python):", f" - a.py [1:1 - {end}:22]", f"   b.py [1:1 - {end}:22]"))
+    raw = DuplicationResult.from_clones(files_analyzed=2, clone_count=1, duplicated_pct="1", groups=(group,))
+    result = classify_clone_spans(raw, tmp_path)
+    assert result.clone_count == 1
+    assert result.raw_groups == (group,)
+    assert result.is_green is False
+    assert result.declaration_groups == ((group,) if declaration else ())
+    assert result.groups == (() if declaration else (group,))
+
+
+def test_filtered_imports_and_missing_locations_retain_raw_nonzero_evidence(tmp_path: Path) -> None:
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text("from one import value\n", encoding="utf-8")
+    group = CloneGroup(("Clone found (python):", " - a.py [1:1 - 1:22]", "   b.py [1:1 - 1:22]"))
+    raw = DuplicationResult.from_clones(files_analyzed=2, clone_count=3, duplicated_pct="1", groups=(group,))
+    result = classify_clone_spans(raw, tmp_path)
+    assert result.groups == ()
+    assert result.clone_count == 3
+    assert result.is_green is False
+    assert "2 reports without parsed locations" in render_console_report(result)
+
+
+def test_signature_default_call_remains_unclassified(tmp_path: Path) -> None:
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text(
+            "def execute(\n    value: int = read_value(),\n) -> int:\n    return value\n", encoding="utf-8"
+        )
+    group = CloneGroup(("Clone found (python):", " - a.py [1:1 - 3:22]", "   b.py [1:1 - 3:22]"))
+    raw = DuplicationResult.from_clones(files_analyzed=2, clone_count=1, duplicated_pct="1", groups=(group,))
+    assert classify_clone_spans(raw, tmp_path).groups == (group,)
 
 
 def test_console_report_names_unavailability_instead_of_claiming_clean() -> None:

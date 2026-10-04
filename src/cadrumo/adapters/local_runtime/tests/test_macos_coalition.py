@@ -258,6 +258,8 @@ class _NativeFunction:
 def test_native_coalition_read_distinguishes_gone_from_unreadable(
     monkeypatch: pytest.MonkeyPatch, count: int, error_number: int, expected: int | RuntimeRefusalCode | None
 ) -> None:
+    from .. import macos_process
+
     record = _coalition_record(1056028)
 
     def query(pid: int, flavor: int, argument: int, buffer: ctypes.c_void_p, size: int) -> int:
@@ -266,7 +268,7 @@ def test_native_coalition_read_distinguishes_gone_from_unreadable(
         ctypes.set_errno(error_number)
         return count
 
-    monkeypatch.setattr(native, "sys", SimpleNamespace(platform="darwin"))
+    monkeypatch.setattr(macos_process.sys, "platform", "darwin")
     monkeypatch.setattr(
         native.ctypes, "CDLL", lambda _name, *, use_errno: SimpleNamespace(proc_pidinfo=_NativeFunction(query))
     )

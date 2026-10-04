@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9be0328db6eb6234817b21271faf5fa1da2ae96975541ce055c84b05530d681a'
+body_hash: 'sha256:16ebb5eb07d5fc4cbaf6fb2f9ce8025c4195d87085f838de99fa51fbf25a45a2'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -449,6 +449,17 @@ related:
 - `S05` `verify:` `Ledger and M360 behavior: 26 passed` -> `pass`
 - `S05` `verify:` `Live capture writes and preview accounting: 25 passed` -> `pass`
 - `S05` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S06` `M` `dev/audit/duplication.py`
+- `S06` `M` `dev/audit/tests/test_duplication.py`
+- `S06` `M` `src/cadrumo/adapters/inbound/declaracion/errors.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/macos_coalition.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/macos_process.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_coalition.py`
+- `S06` `M` `src/cadrumo/domain/justificante/errors.py`
+- `S06` `verify:` `macOS process and coalition contracts: 53 passed` -> `pass`
+- `S06` `verify:` `PDF parsing and registered errors: 57 passed` -> `pass`
+- `S06` `verify:` `Duplication parser and planted negative controls: 29 passed` -> `pass`
+- `S06` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -464,3 +475,4 @@ related:
 - `S13` Removed six test-only TUI getters. Tests inspect the actual retained presentation facts at their owner; production mounting, sort state, refusal codes and cancellation outcomes are unchanged. Native endpoint-dependent automation integration remains S07.
 - `S14` Uncalled locale dictionary and workspace date aliases are removed. Google live-test opt-in is owned by its test fixture and retains strict literal matching. The complete eight-word macOS audit-token ABI is decoded while only six consumed identity coordinates are retained. Broader i18n failure from concurrent unaliased Translatable imports remains visible under S07.
 - `S05` One fenced result publisher preserves unknown effects on action failure and settled effects on operand storage failure. One machine-secret option declaration drives all three command groups. Shared provider capture setup preserves authority preflight before composition and browser ownership, preview posture and session write accounting.
+- `S06` macOS incarnation and coalition probes share the native pidinfo query without weakening ABI lengths or ESRCH-only absence. Registered PDF import error roots now own the one coverage constructor; subclasses retain their codes. Duplication reports preserve raw nonzero token counts and distinguish AST-proven declarations from executable or unclassified spans. Import, overlap and missing-location filtering cannot claim zero.

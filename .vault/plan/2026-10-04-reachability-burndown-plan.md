@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:b2b7f0f45c5372d725e792004294f9e87304f4c476305c5a371a4e259edb42af'
+body_hash: 'sha256:e07bd5196e77b0bb23c797df83faf79d34c89c351808d614587de362d70d9fc5'
 ---
 
 # `reachability-burndown` plan
@@ -42,7 +42,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S14` - Retire uncalled core dictionary conversion and date aliases, move the Google test predicate to its actual fixture owner and project only consumed native audit-token coordinates; `Core configuration and locales, AEAT workspace, native audit token decoding and owning tests`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
-- [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.
+- [x] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.
 - [ ] `S07` - Remeasure all audit gates, repair remaining verification defects and complete integrated review; `dev/quality, source tests, audit run evidence and plan`.
 
 ## Parallelization

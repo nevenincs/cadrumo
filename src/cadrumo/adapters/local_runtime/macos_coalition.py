@@ -8,7 +8,6 @@ the owned descendant scope that process groups alone cannot provide.
 from __future__ import annotations
 
 import ctypes
-import errno
 import math
 import sys
 import time
@@ -19,12 +18,12 @@ from .macos_process import (
     MacosProcessIncarnation,
     MacosSignalDelivery,
     read_macos_incarnation,
+    read_macos_pidinfo,
     signal_macos_incarnation,
 )
 
 # Darwin libproc PROC_PIDCOALITIONINFO; word 0 is the resource coalition.
 _PROC_PIDCOALITIONINFO = 20
-_MAXIMUM_PID = 2_147_483_647
 _MAXIMUM_LISTED_PROCESSES = 1 << 20
 _SIGKILL = 9
 _QUIET_PASSES = 2
@@ -56,23 +55,8 @@ def read_macos_resource_coalition(pid: int) -> int | None:
     Args:
         pid: Kernel PID, bounded before native integer conversion.
     """
-    if sys.platform != "darwin" or type(pid) is not int or not 0 < pid <= _MAXIMUM_PID:
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-    try:
-        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
-        query = native.proc_pidinfo
-        query.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_uint64, ctypes.c_void_p, ctypes.c_int)
-        query.restype = ctypes.c_int
-        value = _CoalitionInfo()
-        ctypes.set_errno(0)
-        count = query(pid, _PROC_PIDCOALITIONINFO, 0, ctypes.byref(value), ctypes.sizeof(value))
-        if count <= 0 and ctypes.get_errno() == errno.ESRCH:
-            return None
-        if count != ctypes.sizeof(value):
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        return decode_macos_resource_coalition(ctypes.string_at(ctypes.byref(value), ctypes.sizeof(value)))
-    except (AttributeError, OSError):
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
+    payload = read_macos_pidinfo(pid, flavor=_PROC_PIDCOALITIONINFO, record_size=ctypes.sizeof(_CoalitionInfo))
+    return None if payload is None else decode_macos_resource_coalition(payload)
 
 
 def list_macos_process_ids() -> tuple[int, ...]:
