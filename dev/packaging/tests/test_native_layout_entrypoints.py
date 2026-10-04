@@ -34,12 +34,12 @@ def _checkout(root: Path, entrypoints: dict[str, str], scripts: dict[str, str]) 
     return root
 
 
-def test_declared_console_script_maps_to_a_package_root_executable(tmp_path: Path) -> None:
+def test_declared_console_script_maps_to_the_native_directory(tmp_path: Path) -> None:
     root = _checkout(tmp_path, {"cadrumo-runtime": "Runtime"}, {"cadrumo-runtime": "pkg.runtime:main"})
 
     layout = load_layout("windows-x64", root=root)
 
-    assert entrypoint_files(layout) == {"cadrumo-runtime": "cadrumo-runtime.exe"}
+    assert entrypoint_files(layout) == {"cadrumo-runtime": "bin/cadrumo-runtime.exe"}
 
 
 def test_undeclared_console_script_is_refused(tmp_path: Path) -> None:
@@ -60,4 +60,4 @@ def test_entrypoint_names_that_cannot_be_embedded_safely_are_refused(tmp_path: P
 def test_checkout_layout_declares_the_runtime_entrypoint() -> None:
     layout = load_layout("windows-x64")
 
-    assert entrypoint_files(layout)["cadrumo-runtime"] == "cadrumo-runtime.exe"
+    assert entrypoint_files(layout)["cadrumo-runtime"] == "bin/cadrumo-runtime.exe"

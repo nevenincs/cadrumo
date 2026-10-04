@@ -14,6 +14,7 @@ from cadrumo.core.storage_environment import storage_directory
 
 from ...command_execution import CommandResult, run_command
 from ..hashing import digest
+from ..layout import entrypoint_files
 from ..verification_paths import verification_destination
 
 PROBE = r"""
@@ -183,8 +184,9 @@ def verify_entrypoints(
 ) -> dict[str, Any]:
     """Pass arguments through each console entrypoint and serve the packaged runtime."""
     observed: dict[str, Any] = {}
-    for name in layout["entrypoints"]:
-        executable = destination / (name + layout["entrypoint_suffix"])
+    files = entrypoint_files(layout)
+    for name, relative in files.items():
+        executable = destination / relative
         usage = run_command([str(executable), "--help"], cwd=cwd, environment=environment, timeout_seconds=90)
         if usage.returncode != 0 or f"usage: {name}" not in usage.stdout:
             raise AssertionError(f"Entrypoint {name} did not run its console script: {usage.stderr}")
@@ -193,8 +195,22 @@ def verify_entrypoints(
         )
         if refused.returncode != 2:
             raise AssertionError(f"Entrypoint {name} did not forward its arguments: exit {refused.returncode}")
-        observed[name] = {"usage": True, "argument_refusal_exit": refused.returncode}
-    runtime = (destination / ("cadrumo-runtime" + layout["entrypoint_suffix"])).resolve(strict=True)
+        # A declared entrypoint outside the native directory cannot locate its package root.
+        displaced = destination / executable.name
+        shutil.copy2(executable, displaced)
+        try:
+            outside = run_command([str(displaced), "--help"], cwd=cwd, environment=environment, timeout_seconds=90)
+        finally:
+            displaced.unlink()
+        if outside.returncode == 0 or "must reside in the package" not in outside.stderr:
+            raise AssertionError(f"Displaced entrypoint {name} was not refused: exit {outside.returncode}")
+        observed[name] = {
+            "location": relative,
+            "usage": True,
+            "argument_refusal_exit": refused.returncode,
+            "displaced_refusal_exit": outside.returncode,
+        }
+    runtime = (destination / files["cadrumo-runtime"]).resolve(strict=True)
     served = json.loads(run(["-c", RUNTIME_PROBE, str(runtime)]).stdout)
     if Path(served["runtime_image"]) != runtime:
         raise AssertionError(f"Runtime endpoint was served by another image: {served['runtime_image']}")

@@ -122,10 +122,10 @@ def assemble(
     executable = root / layout["executable"]
     executable.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(build / executable.name, executable)
-    # The native platform context derives the package root from each executable's directory.
+    # Console entrypoints share the native directory; the platform context maps them back to the package root.
     entrypoints = sorted(entrypoint_files(contract).values())
-    for name in entrypoints:
-        shutil.copy2(build / name, executable.parent / name)
+    for relative in entrypoints:
+        shutil.copy2(build / Path(relative).name, root / relative)
     if development:
         development_executable = root / files["development_executable"]
         development_executable.parent.mkdir(parents=True, exist_ok=True)
@@ -165,7 +165,7 @@ def assemble(
     shutil.copy2(metadata, root / files["build_metadata"])
     startup_files = [
         layout["executable"],
-        *((executable.parent / name).relative_to(root).as_posix() for name in entrypoints),
+        *entrypoints,
         layout["stdlib"],
         files["path_file"],
         files["build_metadata"],

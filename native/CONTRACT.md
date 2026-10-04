@@ -70,7 +70,7 @@ storage-owner integration obligation; this interpreter does not invent them.
 
 | Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
 | --- | --- | --- | --- |
-| Executables | `P/python.exe`, console entrypoints such as `P/cadrumo-runtime.exe`, future `P/cadrumo.exe`; components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
+| Executables | `P/python.exe`, future `P/cadrumo.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | Private `P/lib/`; extension identities retained | `Contents/Frameworks/`, extension package subtrees |
 | Immutable resources | `P/data/`, `P/docs/` | `P/share/cadrumo/` | `Contents/Resources/data/` and `docs/` |
@@ -110,9 +110,14 @@ executables, with their version-resource descriptions. Each name must be a
 other. The platform mapping supplies the executable suffix. CMake compiles
 the same host source once per entrypoint with the script name fixed at
 compile time, so `cadrumo-runtime.exe` cannot be redirected to other code by
-its arguments. Entrypoints sit at the package root beside the interpreter
-because the platform library derives the package root from the executable's
-directory.
+its arguments. Entrypoints ship in the native directory, for example
+`P/bin/cadrumo-runtime.exe`. The generated contract lists their file names; the
+platform library maps a declared entrypoint image in `P/bin/` back to `P` and
+refuses one found anywhere else. Every other image, including `python.exe` and
+the desktop `cadrumo.exe`, keeps the package root as its own directory. Because
+`P/bin/` also holds the bundled DLLs, every host links with
+`/DEPENDENTLOADFLAG:0x800` so its load-time imports resolve from System32, and
+assembly refuses a bundled DLL whose name matches a host import.
 
 An entrypoint host performs the same platform preparation, loader setup and
 isolated initialization as `python.exe`, then runs the installed console
@@ -122,7 +127,7 @@ because runtime workers and the supervised KDF child relaunch it with
 interpreter arguments. Entrypoint executables are startup files, hashed by the
 package bootstrap before application code runs. CTest checks each staged entrypoint's
 usage output. Product ZIP verification forwards help and an unknown option
-through each entrypoint, then starts `cadrumo-runtime.exe` against an isolated
+through each entrypoint, refuses a copy displaced to the package root, then starts `cadrumo-runtime.exe` against an isolated
 storage root with hostile Python variables and completes the verified runtime
 handshake with the runtime's exact process image. The probe stops the runtime
 through its process scope; it registers no service and leaves no process.

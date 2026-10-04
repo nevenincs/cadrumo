@@ -65,10 +65,11 @@ if(BUILD_TESTING)
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
   set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
+  string(JSON entrypoint_directory GET "${package_layout}" paths native)
   foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
     add_test(NAME bundle.entrypoint.${entrypoint} COMMAND "${CMAKE_COMMAND}" -E env
       "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
-      "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${entrypoint}${CMAKE_EXECUTABLE_SUFFIX}" --help)
+      "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${entrypoint_directory}/${entrypoint}${CMAKE_EXECUTABLE_SUFFIX}" --help)
     set_tests_properties(bundle.entrypoint.${entrypoint} PROPERTIES
       PASS_REGULAR_EXPRESSION "usage: ${entrypoint}" RESOURCE_LOCK package_inventory)
   endforeach()

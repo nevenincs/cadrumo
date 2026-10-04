@@ -40,8 +40,9 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
 
 
 def entrypoint_files(layout: dict[str, Any]) -> dict[str, str]:
-    """Map each declared console entrypoint to its package-root executable."""
-    return {name: name + layout["entrypoint_suffix"] for name in layout["entrypoints"]}
+    """Map each declared console entrypoint to its package-relative executable in the native directory."""
+    native = layout["paths"]["native"]
+    return {name: f"{native}/{name}{layout['entrypoint_suffix']}" for name in layout["entrypoints"]}
 
 
 def backend(contract: dict[str, Any]) -> ModuleType:

@@ -1,4 +1,4 @@
-# Console entrypoints share the interpreter host and live beside it at the package root.
+# Console entrypoints share the interpreter host source and ship in the native directory.
 string(JSON entrypoint_suffix GET "${package_layout}" entrypoint_suffix)
 if(NOT entrypoint_suffix STREQUAL CMAKE_EXECUTABLE_SUFFIX)
   message(FATAL_ERROR "The platform entrypoint suffix does not match the selected toolchain")
@@ -86,7 +86,9 @@ set_property(SOURCE interpreter/windows/host.rc APPEND PROPERTY OBJECT_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest")
 foreach(target IN LISTS host_targets)
   target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows")
-  target_link_options(${target} PRIVATE /MANIFEST:NO)
+  # Entrypoint hosts run from the native directory beside bundled DLLs; resolve their
+  # load-time imports from System32 only (LOAD_LIBRARY_SEARCH_SYSTEM32).
+  target_link_options(${target} PRIVATE /MANIFEST:NO /DEPENDENTLOADFLAG:0x800)
   add_custom_command(TARGET ${target} POST_BUILD
     COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
       "$<TARGET_FILE:${target}>" "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"

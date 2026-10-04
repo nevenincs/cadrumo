@@ -106,6 +106,12 @@ def assemble_native(python: Path, packages: Path, native: Path, root: Path, cont
                 "reason": "Use bundled COM extensions and user-root cache; exclude host Python registry paths",
             }
         )
+    # Entrypoint hosts run from the native directory: no bundled DLL there may shadow a host import.
+    bundled = {p.name.casefold() for p in native.glob("*.dll")}
+    for host in native.glob("*.exe"):
+        shadowed = pe_imports(host) & bundled
+        if shadowed:
+            raise ValueError(f"Bundled DLLs shadow {host.name} imports: {sorted(shadowed)}")
     loader_files = [p for p in native.rglob("*") if p.suffix.lower() in {".dll", ".pyd"}]
     imported_pyds = {name for p in loader_files for name in pe_imports(p) if name.endswith(".pyd")}
     searched_files = [p for p in loader_files if p.suffix.lower() == ".dll" or p.name.casefold() in imported_pyds]

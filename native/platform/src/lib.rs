@@ -65,12 +65,40 @@ fn refined_storage_path(name: &str, root: &Path, default: &Path) -> PathBuf {
         .map(|path| rooted(path, root))
         .unwrap_or_else(|| default.to_path_buf())
 }
+/// Declared console entrypoints live in NATIVE; every other image sits at the package root.
+fn package_root(exe: &Path) -> Result<PathBuf, String> {
+    let directory = exe.parent().ok_or("Executable has no parent")?;
+    let declared = exe
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| {
+            ENTRYPOINT_FILES
+                .iter()
+                .any(|file| file.eq_ignore_ascii_case(name))
+        });
+    if !declared {
+        return Ok(directory.to_path_buf());
+    }
+    let mut package = directory;
+    for expected in Path::new(NATIVE).components().rev() {
+        let inside = package
+            .file_name()
+            .and_then(|name| name.to_str())
+            .zip(expected.as_os_str().to_str())
+            .is_some_and(|(actual, expected)| actual.eq_ignore_ascii_case(expected));
+        if !inside {
+            return Err(format!(
+                "Entrypoint must reside in the package {NATIVE} directory: {}",
+                exe.display()
+            ));
+        }
+        package = package.parent().ok_or("Entrypoint has no package root")?;
+    }
+    Ok(package.to_path_buf())
+}
 fn context() -> Result<Context, String> {
     let exe = env::current_exe().map_err(|e| e.to_string())?;
-    let package = exe
-        .parent()
-        .ok_or("Executable has no parent")?
-        .to_path_buf();
+    let package = package_root(&exe)?;
     let root = project_root(&package);
     let user = context_storage_root(&root);
     let temporary = refined_storage_path(TEMPORARY_ENV, &user, &user.join(TEMPORARY_DEFAULT));
@@ -273,5 +301,37 @@ pub unsafe extern "C" fn cadrumo_platform_destroy(ctx: *mut Context) {
         unsafe {
             drop(Box::from_raw(ctx));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn package_root_maps_declared_entrypoints_from_the_native_directory() {
+        let package = Path::new(r"C:\Program Files\CADRUMO\app");
+        let interpreter = package.join(EXECUTABLE);
+        assert_eq!(package_root(&interpreter).unwrap(), package);
+        for file in ENTRYPOINT_FILES {
+            let entrypoint = package.join(NATIVE).join(file);
+            assert_eq!(package_root(&entrypoint).unwrap(), package);
+            let uppercase = package
+                .join(NATIVE.to_uppercase())
+                .join(file.to_uppercase());
+            assert_eq!(package_root(&uppercase).unwrap(), package);
+        }
+    }
+
+    #[test]
+    fn package_root_refuses_a_declared_entrypoint_outside_the_native_directory() {
+        assert!(!ENTRYPOINT_FILES.is_empty());
+        let package = Path::new(r"C:\Program Files\CADRUMO\app");
+        for file in ENTRYPOINT_FILES {
+            assert!(package_root(&package.join(file)).is_err());
+            assert!(package_root(&package.join("data").join(file)).is_err());
+        }
+        let undeclared = package.join(NATIVE).join("other.exe");
+        assert_eq!(package_root(&undeclared).unwrap(), package.join(NATIVE));
     }
 }

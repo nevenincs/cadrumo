@@ -11,9 +11,10 @@ related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-09-20-lud-authority-adr]]'
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
-modified: '2026-10-03'
+  - '[[2026-10-04-runtime-manager-architecture-adr]]'
+modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:c2cb48c6bb99c6c8f21baa382c8a5b99f7ee9c332b989c3345d07df1606d3bef'
+body_hash: 'sha256:683c049ff706ff134d630c4eb29376b5965338465adda7da537e9f1d76896b2f'
 ---
 
 # `application-core-packaging` plan
@@ -28,7 +29,7 @@ Continuation requested 2026-10-03. The user explicitly requires a multiplatform 
 
 This plan follows `2026-10-03-application-packaging-plan`; it does not take over or close that session's open Steps. The original deliverable was this continuation plan; the user's subsequent execution instruction authorizes its scoped implementation. S01 records the stable handoff before shared files change. Earlier macOS deferral bounded the Windows interpreter proof; it does not defer this plan's required macOS build conformance. Full application runtime platform behavior and the Tauri UI remain separately owned.
 
-Decision coverage: `2026-10-03-application-packaging-interpreter-foundation-adr` governs retained interpreter/ABI ownership; `2026-09-02-python-runtime-compatibility-adr` and `2026-06-28-product-packaging-adr` govern the pin, dependency closure and exact-version cohort in S02-S05/S10-S11. `2026-08-03-canonical-storage-management-adr` and `2026-09-20-lud-authority-adr` govern generated paths, custody and published authority in S01/S07-S09. `2026-10-03-runtime-without-service-manager-adr` excludes service installation, autostart and runtime supervision throughout. The proposed `2026-10-03-application-packaging-adr` supplies design context. The user's explicit Rust-library clarification authorizes the standalone S06 implementation and library-owned S07-S08 behavior against supplied contracts; S01 still reconciles broader composition and shared integration before S09-S10 adoption. This execution authorization does not promote unrelated choices in the broader proposal.
+Decision coverage: `2026-10-03-application-packaging-interpreter-foundation-adr` governs retained interpreter/ABI ownership; `2026-09-02-python-runtime-compatibility-adr` and `2026-06-28-product-packaging-adr` govern the pin, dependency closure and exact-version cohort in S02-S05/S10-S11. `2026-08-03-canonical-storage-management-adr` and `2026-09-20-lud-authority-adr` govern generated paths, custody and published authority in S01/S07-S09. Within this plan, `2026-10-03-runtime-without-service-manager-adr` excludes service installation, autostart and runtime supervision. The accepted `2026-10-04-runtime-manager-architecture-adr` assigns per-user runtime management and supervision to its own plan; this plan only packages the `bin/cadrumo-runtime.exe` launch target that manager uses. The proposed `2026-10-03-application-packaging-adr` supplies design context. The user's explicit Rust-library clarification authorizes the standalone S06 implementation and library-owned S07-S08 behavior against supplied contracts; S01 still reconciles broader composition and shared integration before S09-S10 adoption. This execution authorization does not promote unrelated choices in the broader proposal.
 
 ### Current evidence and required corrections
 

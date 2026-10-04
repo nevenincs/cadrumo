@@ -12,7 +12,7 @@ from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, configured_
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 
-from .layout import load_layout
+from .layout import entrypoint_files, load_layout
 
 
 def generate(root: Path, destination: Path) -> None:
@@ -63,6 +63,9 @@ def generate(root: Path, destination: Path) -> None:
         "pub const STORAGE_ENV_ALLOWLIST: &[&str] = &[" + ",".join(map(json.dumps, sorted(storage_envs))) + "];"
     )
     rust.append("pub const PACKAGE_ENV_ALLOWLIST: &[&str] = &[" + ",".join(map(json.dumps, layout["overrides"])) + "];")
+    # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
+    entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
+    rust.append("pub const ENTRYPOINT_FILES: &[&str] = &[" + ",".join(map(json.dumps, entrypoints)) + "];")
     (destination / "contract.rs").write_text("\n".join(rust) + "\n", encoding="utf-8")
     (destination / "contract.h").write_text(
         f'#define CADRUMO_PYTHON_VERSION "{version}"\n#define CADRUMO_PLATFORM_ABI {layout["abi"]}\n',
