@@ -160,6 +160,20 @@ def _model_schema_graph_state(model_type: type[BaseModel]) -> dict[type[BaseMode
 
 def _schema_state(value: object, snapshots: dict[int, tuple[object, object]]) -> object:
     """Freeze schema containers and metadata without cloning identity-based types."""
+    # Field metadata contains mostly immutable built-in leaves. They cannot
+    # carry mutable attributes, so avoid walking the container/dataclass checks
+    # for every leaf on every fingerprint revalidation. Subclasses still take
+    # the full path because they may carry editable metadata of their own.
+    value_type = type(value)
+    if (
+        value is None
+        or value_type is str
+        or value_type is int
+        or value_type is float
+        or value_type is bool
+        or value_type is bytes
+    ):
+        return value
     if isinstance(value, type) or callable(value):
         return value
     if id(value) in snapshots:

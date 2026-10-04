@@ -161,6 +161,20 @@ def test_unclosed_schemas_are_never_memoized() -> None:
     assert OpenPayload.schema_generations == 4
 
 
+def test_scalar_subclass_metadata_remains_mutation_guarded(payload_type: type[_CountedPayload]) -> None:
+    class Description(str):
+        notes: list[str]
+
+    description = Description("Value")
+    description.notes = ["initial"]
+    payload_type.model_fields["value"].description = description
+    with operation_schema_compilation_scope():
+        strict_model_json_schema(payload_type)
+        description.notes.append("changed")
+        with pytest.raises(ValueError, match="model graph changed"):
+            strict_model_json_schema(payload_type)
+
+
 def test_model_mutation_during_schema_generation_is_refused() -> None:
     class MutatingPayload(_CountedPayload):
         @classmethod

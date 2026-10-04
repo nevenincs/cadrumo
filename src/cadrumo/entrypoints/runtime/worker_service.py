@@ -45,6 +45,8 @@ from ...application.runtime.profile_worker import (
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.async_cleanup import await_cancellation_complete, close_async_resources
+from ...core.logging import get_logger
+from ...core.startup_phase_log import startup_phase
 from . import worker_cleanup as _worker_cleanup
 from . import worker_operation_requests as _worker_requests
 from .operation_host import ProfileWorkerOperationHost
@@ -52,6 +54,7 @@ from .profile_login import ProfileWorkerHumanLogin
 from .worker_submission_staging import WorkerSubmissionStaging
 
 _ControlDisposition = Literal["handled", "status", "stop"]
+_log = get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,7 +155,10 @@ async def _handle_human_control(
 ) -> _ControlDisposition | None:
     if not isinstance(request, ProfileWorkerControlRequest) or request.action not in {"password", "receipt"}:
         return None
-    with read_secret(context.channel, deadline=time.monotonic() + 5) as secret:
+    with (
+        startup_phase(_log, "worker_human_proof"),
+        read_secret(context.channel, deadline=time.monotonic() + 5) as secret,
+    ):
         candidate, login = (
             context.human.authenticate(secret) if request.action == "password" else context.human.resume(secret)
         )

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:46f9e55bd996a333e4ea1206e906909e4300ea57fab15c1f55d1a76bde1ad3c4'
+body_hash: 'sha256:d342e262095d364f1ba9ae7fb8e62e954c5cc08e83ba5fb6e9420035965da514'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -123,6 +123,16 @@ Running the complete native file passed in-process generation and the formerly f
 The repaired launcher test passes (20261004T184228.737758Z-pytest-87628-2a14f347), exercising human to restricted API to human session switching and custody boundaries. The edited native workbench test passes (20261004T184423.804704Z-pytest-44196-03ef78d2), including exact MCP refusal, profile isolation, concurrent help reads, calculation and root interaction. Thirteen restricted-session tests passed in 20261004T184006.670399Z-pytest-25036-25d06f05. The unaffected in-process generation test passed in 20261004T183204.620607Z-pytest-76920-c56e86ab. Thus all three native-file cases have applicable passing evidence across runs; no claim of one final all-file green invocation or full repository verification.
 
 An intermediate rerun failed at initial human worker preparation with runtime_deadline_exceeded before reaching either repaired path. Subsequent isolated launcher and workbench runs passed without changing production authentication budgets. Preserve that observation as intermittent admission reliability evidence, not proof of a repaired admission timeout. Review traced all renamed scope-widget selectors through mounting, rendering and clearing; authentication, expiry, lock and denial assertions remain enforced. Ruff, format, ty and production basedpyright/pyrefly checks pass. No import changes were introduced. Stage only owned rename/assertion/deadline hunks, preserving concurrent styling/test edits. No blocking findings remain for these two repairs.
+
+### S09 admission investigation | low | measured startup mitigation verified, historical attribution pending
+
+The human worker reply combines credential proof and cold operation-registry preparation under the unchanged internal 30-second preparation deadline. End-to-end admission also includes worker startup; the test helper allows 75 seconds overall. Native instrumentation measured proof at 0.388 seconds and cold preparation at 7.607 seconds, versus 0.427 seconds and 0.000608 seconds for a shared worker. Explicit worker-boundary logging configuration was needed to retain phase records. Diagnostics contain fixed phase names and elapsed time only.
+
+A profiled public registry build spent 22.66 of 23.38 seconds in schema validation, including 10.05 seconds repeatedly snapshotting model graphs. Exact built-in scalar leaves now bypass container/dataclass inspection while scalar subclasses retain full mutable-metadata checks. Sequential same-process comparisons measured baseline CPU 10.156/8.703 seconds versus optimized 7.156/6.797 seconds (roughly22 percent reduction using the second pair); wall10.900/8.961 versus7.282/6.862. Separate profiled runs varied with overhead/load and are not a before/after wall-speed guarantee. Mutation, rebuild, subclass, isolation and logger-failure guards remain tested.
+
+Verification:22 schema/startup-phase tests pass (20261004T203000.478932Z-pytest-53132-f7df1be3);three fresh-worker cold/shared admission cases pass (20261004T202645.513900Z-pytest-31132-9dc605b5), cold17.12/23.83/15.36 seconds overall and shared0.69/0.74/0.63. Original populated native workbench test passes with a current frozen authority (20261004T202916.138234Z-pytest-70912-5dbc1bf0), proof0.392 seconds and preparation6.343 seconds. An earlier attempt was blocked before login by stale isolated authority after a Modelo347 field rename; a launcher profiling attempt was interrupted after it stopped making progress. Neither establishes an admission result. Original historical timeout has NOT been reproduced with the new phases, so S09 remains open for causal attribution; the optimization is a verified mitigation, not proof that every timeout is resolved.
+
+Scoped Ruff/format/ty, strict application basedpyright and pyrefly pass; import scan six files reports zero findings. Optional extra basedpyright checks of entrypoint modules report pre-existing private worker_service._serve access/unused diagnostics outside the configured strict subset. Read-only review found no correctness/security blocker in the mitigation and required retaining the attribution limit. Preserve unrelated operation_host docstring edits. No live AEAT login or submission involved.
 
 ## Recommendations
 

@@ -16,7 +16,7 @@ related:
   - '[[2026-10-04-live-reconciliation-repair-audit]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:5f81afd8c610b3b6f014101f82a83e6d9ddbf2755582d45c9a1ef43b8a10738a'
+body_hash: 'sha256:96a5325a5c4ab2048f465a748a44cc81ac1aebbfcba2cfedf8cd2c1bc555bdb1'
 ---
 
 # Reconciliation mechanism hardening
@@ -37,6 +37,7 @@ The user explicitly directed iterating through justificante, declaration, workin
 - [x] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
 - [x] `S07` - Pull the live IVA wallet and compensation ledger from authenticated AEAT and verify the actual balance with its source provenance and CLI TUI coverage; `Live IVA wallet and Modelo 303 history capture paths plus retained profile acceptance evidence and necessary root-cause repairs`.
 - [x] `S08` - Repair the known native MCP contract refusal failure and run the complete native workbench regression; `Native workbench regression timeout and restricted-session widget ID collision while preserving concurrent styling edits`.
+- [ ] `S09` - Trace and repair intermittent native human admission timeout with measured stage evidence and regression coverage; `Native worker admission stage diagnostics and measured operation-schema snapshot overhead with mutation-guard regressions`.
 
 ## Parallelization
 

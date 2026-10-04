@@ -33,6 +33,7 @@ from ...core.async_cleanup import (
     close_async_resources,
 )
 from ...core.config import override_settings
+from ...core.logging import configure_logging
 from ..adapter_composition import profile_adapter_composition
 from ..exchange_rate_composition import live_exchange_rate_composition
 from . import worker_cleanup as _worker_cleanup
@@ -160,6 +161,7 @@ def _serve_connected_worker(
                 cadrumo_active_profile=str(identity.binding.profile_id),
             )
         )
+        configure_logging()
         composition.enter_context((composition_factory or installed_profile_worker_composition)())
         operations = ProfileWorkerOperationHost(
             custody,

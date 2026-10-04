@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb2b2445d9807757e71145fd4b985398e7ae04358b287ac7d3e85cdee60a2755'
+body_hash: 'sha256:e403e2a2832835add285a236251cc37c5071bac3f7653aefa969ee70c00e129d'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -158,6 +158,20 @@ related:
 - `S08` `verify:` `Ruff format ty and production basedpyright pyrefly` -> `pass`
 - `S08` `verify:` `Integrated scope review` -> `pass`
 - `S08` `by:` `root`
+- `S09` `M` `src/cadrumo/application/operations/registry_schema_validation.py`
+- `S09` `M` `src/cadrumo/application/operations/tests/test_registry_schema_validation.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_human_admission_preparation.py`
+- `S09` `M` `.vault/audit/2026-10-04-reconciliation-mechanism-hardening-audit.md`
+- `S09` `verify:` `Schema and startup diagnostics tests22` -> `pass`
+- `S09` `verify:` `Cold and shared native admission three fresh workers` -> `pass`
+- `S09` `verify:` `Original populated native workbench current authority` -> `pass`
+- `S09` `verify:` `Ruff format ty and configured strict schema checks` -> `pass`
+- `S09` `verify:` `Scoped private import scan six files` -> `pass`
+- `S09` `verify:` `Scoped independent mitigation review` -> `pass`
+- `S09` `by:` `root`
 
 ## Notes
 
@@ -168,3 +182,4 @@ related:
 - `S07` One uninstrumented TUI root run refused intermittently; subsequent direct root and instrumented installed calculation run passed; final reconciliation run pending.
 - `S07` Broad native workbench test retains unrelated MCP `frontend_denied` precondition failure before help assertions; no full repository green claim. Live history starts2023 and does not establish immediate target predecessor; `wallet_only` authority retained. No official submission or payment.
 - `S08` Intermediate human admission timeout recorded in audit; isolated native reruns pass without production deadline changes. Preserve unrelated working-tree styling hunks.
+- `S09` Checkpoint verified performance mitigation and stage diagnostics. S09 stays open: historical intermittent admission timeout not reproduced with phase evidence, so exact attribution remains pending.

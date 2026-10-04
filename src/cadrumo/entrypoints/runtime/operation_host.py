@@ -63,7 +63,9 @@ from ...application.workbench_generation_operation import (
 from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
+from ...core.logging import get_logger
 from ...core.operations import OperationLifecycle
+from ...core.startup_phase_log import startup_phase
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -82,6 +84,7 @@ if TYPE_CHECKING:
     from ...application.operations.supervisor import OperationSupervisor
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+_log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 
 
@@ -132,7 +135,8 @@ class ProfileWorkerOperationHost:
         exchange deadlines. Admission owns this one-time compilation cost while
         the profile is already pinned and before a client can start an operation.
         """
-        self._composed()
+        with startup_phase(_log, "worker_operation_prepare"):
+            self._composed()
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""
@@ -433,7 +437,8 @@ class ProfileWorkerOperationHost:
         """Bind each internal projection to policy the runtime must recheck on final output."""
         self.custody.require(session_id)
         await self._require_current_inventory()
-        self._composed()
+        with startup_phase(_log, "worker_operation_prepare"):
+            self._composed()
         execution = self._execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
