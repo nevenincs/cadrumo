@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
+    IndexedRegistryAuthority,
     ValidatedRegistryAuthority,
     bundled_authority_descriptor_path,
 )
@@ -26,7 +27,7 @@ from ..compiler.validate_export_field_placement import (
     record_placed_spans,
     validate_export_record_field_placement,
 )
-from ..conformance.cli import load_bundled_runtime_authority, validate_registry
+from ..conformance.cli import validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
 from ..pipeline.authority_publication import AuthorityDatabaseCurrencyStatus, authority_database_currency
@@ -451,7 +452,7 @@ def collect_registry_status(
         resolved_source_root,
         details,
     )
-    loadable = _runtime_authority_loadable(details)
+    loadable = _runtime_authority_loadable(resolved_descriptor, details)
     unreferenced_bindings, informational_bindings = _record_binding_counts(authority, details)
     export_placement = _record_export_placement(authority, details)
 
@@ -591,10 +592,10 @@ def _collect_authority_currency(
     return currency.status.value, currency.recorded_identity_digest, currency.candidate_identity_digest
 
 
-def _runtime_authority_loadable(details: list[str]) -> bool:
-    """Check the packaged runtime loader independently from development validation."""
+def _runtime_authority_loadable(descriptor: Path, details: list[str]) -> bool:
+    """Check the selected artifact with the runtime reader, independently of source validation."""
     try:
-        runtime_authority = load_bundled_runtime_authority()
+        runtime_authority = IndexedRegistryAuthority(descriptor)
         runtime_authority.close()
         return True
     except Exception as error:
@@ -993,8 +994,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit the status payload as JSON")
     parser.add_argument("--check", action="store_true", help="exit non-zero when any lifecycle lane fails")
+    parser.add_argument("--registry-root", type=Path, help="registry source cohort to assess")
+    parser.add_argument("--source-root", type=Path, help="source evidence root for that cohort")
+    parser.add_argument("--authority-descriptor", type=Path, help="explicit authority artifact to assess")
     args = parser.parse_args(argv)
-    status = collect_registry_status()
+    status = collect_registry_status(
+        registry_root=args.registry_root,
+        source_root=args.source_root,
+        authority_descriptor=args.authority_descriptor,
+    )
     payload = _payload(status, blocking=args.check)
     if args.json:
         _print_json_status(status, payload)

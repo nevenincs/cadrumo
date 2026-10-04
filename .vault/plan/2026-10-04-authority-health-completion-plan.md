@@ -16,7 +16,7 @@ related:
   - '[[2026-10-02-registry-health-repair-plan]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:dee06cf11b36b18f74cd39f0b4d0bc21401c94f0fbfa61b2bcff5f2a00372716'
+body_hash: 'sha256:19db61f77d11e596ae16a334b18a98d356ab4e086b08cf3cdfc7374a0602035c'
 ---
 
 # `authority-health-completion` plan
@@ -43,7 +43,7 @@ Proof-cohort dependency: execute S01-S08, then S11, then S09-S10, S12 and S13. S
 
 - [ ] `S01` - Reconcile current writer ownership, settle canonical transactions and inventory every live maintenance blocker and required proof receipt; `Existing registry-health-repair handoff, dev/registry/pipeline transaction owners, .authority/, fresh isolated health receipts and authority-health-completion audit`.
 - [x] `S02` - Bind conformance report and coverage to one explicit candidate governed-fact scope and generation-safe cache; `dev/registry/conformance/profile.py, manager.py, defining composition helpers and conformance tests, preserve src/cadrumo/domain/calculations/registry/governed_fact_scope.py refusal`.
-- [ ] `S03` - Make all candidate artifact health checks use the selected descriptor and preserve active defaults; `dev/registry/analysis/registry_status.py and defining descriptor/runtime load helpers, candidate health CLI composition and focused descriptor consistency tests`.
+- [x] `S03` - Make all candidate artifact health checks use the selected descriptor and preserve active defaults; `dev/registry/analysis/registry_status.py and defining descriptor/runtime load helpers, candidate health CLI composition and focused descriptor consistency tests`.
 - [ ] `S04` - Resolve the Modelo 303 2022 recargo binding through its official applicable typed consumer; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml, exact source-grounded casilla or typed consumer delta and focused binding tests`.
 - [ ] `S05` - Close the four Modelo 347 repeated-row binding consumer edges across both declared epochs; `src/cadrumo/_data/registry/aeat/modelos/347/revisions/{2011-2024,2025-y-siguientes}/, dev/registry/mappings/modelo_347/{2011,2025}/, corresponding row producer/consumer tests`.
 - [ ] `S06` - Regenerate the stale Modelo 111 target from reviewed current source inputs with complete companions; `dev/registry/mappings/modelo_111/, dev/registry/render_profiles/modelo_111/, src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/, canonical currentness and provenance receipts`.
