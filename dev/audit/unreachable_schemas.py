@@ -11,6 +11,7 @@ from .unreachable_frameworks import FrameworkContract, _expression_name, _import
 from .unreachable_members import resolved_calls
 from .unreachable_models import ShippedModule
 from .unreachable_schema_consumers import schema_parameter_consumers
+from .unreachable_schema_slots import schema_slot_payloads
 
 _SCHEMA_METHODS = frozenset({"model_validate", "model_validate_json", "model_json_schema", "model_construct"})
 
@@ -86,20 +87,37 @@ def schema_member_uses(
             target = rebound
         return target
 
-    schema_parameters = schema_parameter_consumers(modules, qualify)
+    schema_parameters = schema_parameter_consumers(modules, qualify, frozenset(models))
     pending: list[str] = []
+    constructed: set[str] = set()
     for name in reachable:
         for call in resolved_calls(modules[name], frozenset(modules)):
             target = call.target
-            for parameter, candidate in call.keywords:
-                if parameter in schema_parameters.get(target, ()) and candidate in models:
-                    pending.append(candidate)
+            if target in classes:
+                constructed.add(target)
+            parameters = schema_parameters.get(target)
+            if parameters is not None:
+                pending.extend(
+                    candidate
+                    for parameter, candidate in call.keywords
+                    if parameter in parameters.keywords and candidate in models
+                )
+                pending.extend(
+                    call.positionals[index]
+                    for index in parameters.positionals
+                    if index < len(call.positionals) and call.positionals[index] in models
+                )
             if target == "pydantic.TypeAdapter":
                 pending.extend(candidate for candidate in call.arguments if candidate in schema_targets)
             if target.rsplit(".", 1)[-1] in _SCHEMA_METHODS or target in factories:
                 target = target.rsplit(".", 1)[0]
             if target in models:
                 pending.append(target)
+    pending.extend(
+        schema_slot_payloads(
+            modules, classes, frozenset(models), reachable, qualify, schema_parameters, frozenset(constructed)
+        )
+    )
     used: set[tuple[str, str]] = set()
     visited: set[str] = set()
     while pending:

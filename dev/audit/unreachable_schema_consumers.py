@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 
 from .unreachable_models import ShippedModule
 
@@ -12,9 +13,17 @@ _OPERATIONS = frozenset(
 )
 
 
+@dataclass(frozen=True)
+class SchemaParameters:
+    """Exact keyword names and positional coordinates consumed by a schema call."""
+
+    keywords: frozenset[str]
+    positionals: tuple[int, ...]
+
+
 def schema_parameter_consumers(
-    modules: Mapping[str, ShippedModule], qualify: Callable[[str, ast.expr], str]
-) -> dict[str, tuple[str, ...]]:
+    modules: Mapping[str, ShippedModule], qualify: Callable[[str, ast.expr], str], models: frozenset[str]
+) -> dict[str, SchemaParameters]:
     """A type annotation alone is insufficient: the parameter must reach Pydantic.
 
     Forwarders inherit only the consumed argument positions of an already proven
@@ -32,12 +41,32 @@ def schema_parameter_consumers(
                 prefix = f"{name}.{owner.name}" if isinstance(owner, ast.ClassDef) else name
                 target = prefix + "." + function.name
                 functions[target] = (name, prefix, function, tuple(argument.arg for argument in arguments))
+                bounds = {
+                    parameter.name: qualify(name, parameter.bound)
+                    for parameter in (*getattr(owner, "type_params", ()), *function.type_params)
+                    if isinstance(parameter, ast.TypeVar) and parameter.bound is not None
+                }
+
+                def type_target(
+                    annotation: ast.expr | None, bounds: Mapping[str, str] = bounds, name: str = name
+                ) -> str:
+                    if not isinstance(annotation, ast.Subscript) or ast.unparse(annotation.value) != "type":
+                        return ""
+                    value = annotation.slice
+                    if isinstance(value, ast.Subscript):
+                        value = value.value
+                    return bounds.get(ast.unparse(value), qualify(name, value))
+
+                rebound = {
+                    part.id
+                    for part in ast.walk(function)
+                    if isinstance(part, ast.Name) and isinstance(part.ctx, ast.Store)
+                }
                 typed[target] = {
                     argument.arg
                     for argument in arguments
-                    if isinstance(argument.annotation, ast.Subscript)
-                    and ast.unparse(argument.annotation.value) == "type"
-                    and qualify(name, argument.annotation.slice) in {"pydantic.BaseModel", "pydantic.main.BaseModel"}
+                    if argument.arg not in rebound
+                    and type_target(argument.annotation) in models | {"pydantic.BaseModel", "pydantic.main.BaseModel"}
                 }
                 consumed[target] = {
                     part.value.id
@@ -47,6 +76,21 @@ def schema_parameter_consumers(
                     and part.attr in _OPERATIONS
                     and part.value.id in typed[target]
                 }
+                schema_receivers = {
+                    argument.arg
+                    for argument in arguments
+                    if argument.arg not in rebound and type_target(argument.annotation) in models
+                }
+                for call in (part for part in ast.walk(function) if isinstance(part, ast.Call)):
+                    if not isinstance(call.func, ast.Attribute) or call.func.attr != "__class_getitem__":
+                        continue
+                    if not isinstance(call.func.value, ast.Name) or call.func.value.id not in schema_receivers:
+                        continue
+                    consumed[target].update(
+                        argument.id
+                        for argument in call.args
+                        if isinstance(argument, ast.Name) and argument.id in typed[target]
+                    )
     changed = True
     while changed:
         changed = False
@@ -74,7 +118,13 @@ def schema_parameter_consumers(
                 previous = len(consumed[target])
                 consumed[target].update(forwarded)
                 changed |= len(consumed[target]) != previous
-    return {
-        target: tuple(parameter for parameter in record[3] if parameter in consumed[target])
-        for target, record in functions.items()
-    }
+    result: dict[str, SchemaParameters] = {}
+    for target, (_name, _prefix, function, arguments) in functions.items():
+        positional = tuple(argument.arg for argument in (*function.args.posonlyargs, *function.args.args))
+        if positional and positional[0] in {"self", "cls"}:
+            positional = positional[1:]
+        result[target] = SchemaParameters(
+            frozenset(parameter for parameter in arguments if parameter in consumed[target]),
+            tuple(index for index, parameter in enumerate(positional) if parameter in consumed[target]),
+        )
+    return result

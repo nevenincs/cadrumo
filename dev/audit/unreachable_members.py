@@ -20,6 +20,7 @@ class ResolvedCall:
     target: str
     keywords: tuple[tuple[str | None, str], ...]
     arguments: frozenset[str]
+    positionals: tuple[str, ...]
 
 
 def _expression_nodes(node: ast.AST) -> Iterator[ast.AST]:
@@ -197,6 +198,7 @@ def resolved_member_uses(
                                 for item in (argument, *ast.walk(argument))
                                 if isinstance(item, ast.Name | ast.Attribute | ast.Call)
                             ),
+                            tuple(expression(argument, scoped) for argument in part.args),
                         )
                     )
 

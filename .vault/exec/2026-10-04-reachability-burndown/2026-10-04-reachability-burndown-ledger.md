@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:585814c2035460bbb8a4bf154eb640143ccb148859b56a603b8a11bc48368c3f'
+body_hash: 'sha256:ac19a2f5ed4835698fb6cb174817bbbcf755b6aafb74d7b8a6d55e0291c4f438'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -570,6 +570,14 @@ related:
 - `S18` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_payload_parity.py`
 - `S18` `verify:` `Registry, family, lineage and transport projection behavior: 264 passed; one independent catalogue debt test remains under S07` -> `pass`
 - `S18` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S19` `M` `dev/audit/unreachable_members.py`
+- `S19` `M` `dev/audit/unreachable_schema_consumers.py`
+- `S19` `A` `dev/audit/unreachable_schema_slots.py`
+- `S19` `M` `dev/audit/unreachable_schemas.py`
+- `S19` `M` `dev/audit/tests/test_unreachable_schemas.py`
+- `S19` `verify:` `Generic schema, slot and override planted controls: 11 passed` -> `pass`
+- `S19` `verify:` `Full audit-tool corpus: 317 passed` -> `pass`
+- `S19` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -590,3 +598,4 @@ related:
 - `S16` Legacy batch wrappers are retired in favor of current-schema batches and the actual coordinated migration owner. Diagnostic observation history and raw index inventory now belong to finite fixtures that retain guarded SQL, encryption, identity refusals and ordering. Shared files are staged from owned HEAD transformations to preserve concurrent work.
 - `S17` Qualified homogeneous iterable annotations now bind loop and comprehension receivers only within their lexical scope. Mixed, unknown, vendor-shadowed and nested-shadowed receivers remain unresolved. Canonical module-qualified iterable annotations are supported without borrowing unrelated element types.
 - `S18` Uncalled JSON schema and source-inventory projections and their unsupported records are retired. Catalogue, family, lineage and old transport construction helpers now belong to finite fixtures over the same canonical kernels. The empty bootstrap family claim is removed while actual exemption membership and citation controls remain. Shared files are staged from owned HEAD transformations to preserve concurrent work.
+- `S19` Typed PEP-695 schema consumers retain exact positional and keyword arguments. Actual schema specialization proves payload consumption; constructed repositories bind their class payload slots and overridden payload getters through the inherited schema factory. Imported-only models, unused repository classes, rebound parameters and shadowed getattr remain candidates. Module-level shadow facts are cached per pass to avoid repeating whole-module walks.

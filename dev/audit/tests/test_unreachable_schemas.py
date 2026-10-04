@@ -180,3 +180,155 @@ type Recursive = Recursive
     assert schema_member_uses(modules, frozenset(modules), framework_contracts(modules)) == frozenset(
         {(records.name, "Payload.value")}
     )
+
+
+def test_pep695_generic_schema_arguments_keep_their_exact_position() -> None:
+    records = _module(
+        "pkg.records",
+        """
+from pydantic import BaseModel
+class Payload(BaseModel):
+    value: int
+class Ignored(BaseModel):
+    orphan: int
+""",
+    )
+    caller = _module(
+        "pkg.caller",
+        """
+from pydantic import BaseModel
+from .records import Payload, Ignored
+def validate[T: BaseModel](label: str, model: type[T]):
+    return model.model_validate_json('{}')
+validate(Ignored, Payload)
+""",
+    )
+    modules = {module.name: module for module in (records, caller)}
+    assert schema_member_uses(modules, frozenset(modules), framework_contracts(modules)) == frozenset(
+        {(records.name, "Payload.value")}
+    )
+
+
+def test_generic_repository_slots_require_actual_schema_building_and_construction() -> None:
+    records = _module(
+        "pkg.records",
+        """
+from pydantic import BaseModel
+from typing import ClassVar, cast
+class Payload(BaseModel):
+    value: int
+class ImportedOnly(BaseModel):
+    orphan: int
+class Unconsumed(BaseModel):
+    orphan: int
+class Envelope[T: BaseModel](BaseModel):
+    payload: T
+def build[T: BaseModel](payload: type[T], *, envelope: type[Envelope[T]] = Envelope):
+    return envelope.__class_getitem__(payload)
+class Repository[T: BaseModel]:
+    payload_type: ClassVar[type[BaseModel]]
+    @classmethod
+    def payload_model(cls) -> type[T]:
+        payload_type = getattr(cls, 'payload_type', None)
+        return cast('type[T]', payload_type)
+    def schema(self):
+        return build(self.payload_model())
+class Live(Repository[Payload]):
+    payload_type: ClassVar[type[Payload]] = Payload
+class Unconstructed(Repository[ImportedOnly]):
+    payload_type: ClassVar[type[ImportedOnly]] = ImportedOnly
+class Diagnostic:
+    payload_type: ClassVar[type[Unconsumed]] = Unconsumed
+    @classmethod
+    def payload_model(cls):
+        return cls.payload_type
+    def report(self):
+        return repr(self.payload_model())
+Live()
+Diagnostic()
+""",
+    )
+    modules = {records.name: records}
+    uses = schema_member_uses(modules, frozenset(modules), framework_contracts(modules))
+    assert (records.name, "Payload.value") in uses
+    assert (records.name, "ImportedOnly.orphan") not in uses
+    assert (records.name, "Unconsumed.orphan") not in uses
+
+
+def test_rebound_schema_parameter_does_not_consume_the_supplied_model() -> None:
+    record = _module("pkg.record", "from pydantic import BaseModel\nclass Payload(BaseModel):\n orphan: int")
+    caller = _module(
+        "pkg.caller",
+        """
+from pydantic import BaseModel
+from .record import Payload
+def inspect[T: BaseModel](model: type[T]):
+    model = unknown()
+    return model.model_validate_json('{}')
+inspect(Payload)
+""",
+    )
+    modules = {module.name: module for module in (record, caller)}
+    assert schema_member_uses(modules, frozenset(modules), framework_contracts(modules)) == frozenset()
+
+
+def test_shadowed_getattr_cannot_prove_a_repository_payload_getter() -> None:
+    record = _module(
+        "pkg.record",
+        """
+from pydantic import BaseModel
+from typing import ClassVar
+from vendor import getattr
+class Payload(BaseModel):
+    orphan: int
+def validate(model: type[BaseModel]):
+    return model.model_validate_json('{}')
+class Repository:
+    payload_type: ClassVar[type[Payload]] = Payload
+    def payload_model(self):
+        return getattr(self, 'payload_type', None)
+    def schema(self):
+        return validate(self.payload_model())
+Repository()
+""",
+    )
+    modules = {record.name: record}
+    assert (record.name, "Payload.orphan") not in schema_member_uses(
+        modules, frozenset(modules), framework_contracts(modules)
+    )
+
+
+def test_constructed_repository_payload_override_reaches_inherited_schema_factory() -> None:
+    record = _module(
+        "pkg.record",
+        """
+from pydantic import BaseModel
+from typing import ClassVar
+class Payload(BaseModel):
+    wire_field: int
+class ImportedOnly(BaseModel):
+    orphan: int
+def validate(model: type[BaseModel]):
+    return model.model_validate_json('{}')
+class Repository:
+    payload_type: ClassVar[type[BaseModel]]
+    @classmethod
+    def payload_model(cls):
+        return cls.payload_type
+    def decode(self):
+        return validate(self.payload_model())
+class Live(Repository):
+    @classmethod
+    def payload_model(cls) -> type[Payload]:
+        return Payload
+class Unconstructed(Repository):
+    @classmethod
+    def payload_model(cls) -> type[ImportedOnly]:
+        return ImportedOnly
+Live()
+""",
+    )
+    modules = {record.name: record}
+    uses = schema_member_uses(modules, frozenset(modules), framework_contracts(modules))
+    assert (record.name, "Payload.wire_field") in uses
+    assert (record.name, "ImportedOnly.orphan") not in uses
