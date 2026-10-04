@@ -1,0 +1,122 @@
+/* Canonical length tokens for the shell chrome: spacing, radii, type, control
+   sizes and the handful of structural numbers the layout code reads at
+   runtime (src/shell/metrics.ts). Every length here is rem, so the whole
+   shell scales with the user's root font size; WebView2/WebKit apply the OS
+   DPI scale to CSS pixels on their own, so nothing in this file or its
+   readers does manual DPI math. The two exceptions are the hairline and the
+   focus ring: device edges rather than typographic measures, same as the
+   product site's stylesheet (docs/_static/cadrumo-docs.css). Colour values
+   live in src/generated/palette.css and src/styles.css's role mapping; this
+   file defines no colour. */
+
+:root {
+  /* ── Spacing scale (rem; the trailing number is px at the 16px default) ── */
+  --space-1: 0.0625rem;
+  --space-2: 0.125rem;
+  --space-3: 0.1875rem;
+  --space-4: 0.25rem;
+  --space-5: 0.3125rem;
+  --space-6: 0.375rem;
+  --space-7: 0.4375rem;
+  --space-8: 0.5rem;
+  --space-9: 0.5625rem;
+  --space-10: 0.625rem;
+  --space-12: 0.75rem;
+  --space-14: 0.875rem;
+  --space-16: 1rem;
+  --space-20: 1.25rem;
+  --space-24: 1.5rem;
+  --space-48: 3rem;
+
+  /* ── Radii ─────────────────────────────────────────────────────────── */
+  --radius-xs: 0.125rem;
+  --radius-s: 0.25rem;
+  --radius-m: 0.375rem;
+  --radius-l: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 0.875rem;
+  /* A radius past half of anything it's applied to; any sufficiently large
+     value rounds a pill the same way. 999px snapped to the rem grid. */
+  --radius-pill: 62.5rem;
+
+  /* ── Font sizes and line heights ──────────────────────────────────── */
+  --font-2xs: 0.625rem;
+  --font-xs: 0.6875rem;
+  --font-sm: 0.75rem;
+  --font-base: 0.8125rem;
+  --font-md: 1rem;
+  --font-lg: 1.25rem;
+  --leading-loose: 1.55;
+
+  /* ── Control sizes: tabs, icon buttons, pane header, rail button, chips,
+     inputs. Width and height share the same step where a control is
+     square. ────────────────────────────────────────────────────────── */
+  --control-xs: 1.625rem;
+  --control-s: 1.75rem;
+  --control-m: 1.875rem;
+  --control-l: 2.125rem;
+  --control-xl: 2.25rem;
+  --rail-w: 3rem;
+  --badge-size: 1rem;
+
+  /* ── Icon sizes (named steps; Icon takes a size name, not a number) ── */
+  --icon-xs: 0.75rem;
+  --icon-s: 1rem;
+  --icon-m: 1.125rem;
+  --icon-l: 1.25rem;
+
+  /* ── Minimum pane sizes ───────────────────────────────────────────── */
+  --docs-min: 12.5rem;
+  /* Also the panel's floor: enough height for a usable handful of terminal
+     rows at the smallest terminal font step. */
+  --panel-min: 8.75rem;
+  --split-min-a: 16.25rem;
+  --split-min-b-row: 20rem;
+  --split-min-b-col: 10rem;
+  --panel-collapse-threshold: 3.75rem;
+  --resize-step: 1.5rem;
+
+  /* ── Popover, palette and settings widths and offsets ────────────── */
+  --palette-w: 40rem;
+  --palette-max-h: 35rem;
+  --palette-edge-gap: 2rem;
+  --settings-w: 21.25rem;
+  --filter-input-w: 13.75rem;
+  --menu-min-w: 13.75rem;
+  --menu-edge-gap: 1.5rem;
+  --menu-sep-h: 0.5625rem;
+  --menu-pad: 0.625rem;
+
+  /* ── z-index layers ───────────────────────────────────────────────── */
+  --layer-separator: 5;
+  --layer-tooltip: 40;
+  --layer-settings: 44;
+  --layer-backdrop: 45;
+  --layer-menu: 50;
+  --layer-toast: 60;
+
+  /* ── Motion durations (not yet applied to a transition; reserved so a
+     future one has a canonical step instead of a new literal) ────────── */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+
+  /* ── Shadow geometry (length only; colour stays in styles.css) ──────── */
+  --shadow-offset-y: 1rem;
+  --shadow-blur: 3rem;
+  --shadow-spread: -0.75rem;
+
+  /* ── Hairline and focus ring: device edges, not typographic measures.
+     The only lengths in this file that are not rem. ───────────────────── */
+  --hairline: 1px;
+  --focus-ring: 2px;
+
+  /* ── Terminal font-size steps. xterm.js renders to a canvas and takes a
+     plain pixel number for its own font size; these back the named
+     "small"/"medium"/"large"/"x-large" preference (src/shell/layout.ts) and
+     are read at runtime through src/shell/metrics.ts, not duplicated in TS. */
+  --term-font-small: 12px;
+  --term-font-medium: 13px;
+  --term-font-large: 14px;
+  --term-font-xlarge: 16px;
+}

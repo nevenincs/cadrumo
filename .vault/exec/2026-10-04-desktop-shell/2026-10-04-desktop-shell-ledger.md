@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:25d149f26c892b0c755aec4826d76a9ab834de424363b67bb9034e34a9cdbe3b'
+body_hash: 'sha256:e1d68effa0a2237dd67e8140bc301bc4da68c781c0cc9f7793c0064dc3c9a0b2'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -87,6 +87,57 @@ related:
 - `S01` `M` `dev/packaging/native/docs_build.py`
 - `S01` `M` `dev/packaging/tests/test_native_docs_staging.py`
 - `S01` `verify:` `pytest test_native_docs_staging.py (15 passed) and ruff, format, ty` -> `pass`
+- `S05` `M` `native/desktop/src-tauri/src/docs/mod.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/policy.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/request.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/site.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/webview.rs`
+- `S05` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S05` `M` `native/desktop/src-tauri/src/app.rs`
+- `S05` `M` `native/desktop/scripts/configuration.mjs`
+- `S05` `M` `native/desktop/scripts/configuration.d.mts`
+- `S05` `M` `native/desktop/tests/configuration.test.mjs`
+- `S05` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -D warnings (isolated HEAD snapshot plus S05 files, fresh contract)` -> `pass`
+- `S05` `verify:` `cargo test docs:: (13 tests: containment and encoded traversal, junction escape, membership, MIME, HEAD, methods, host, CSP on every response, origins Windows Linux dev, shell frame-src recheck against generated TAURI_CONFIG)` -> `pass`
+- `S05` `verify:` `live: real staged en+es desktop-flavor tree (scratch dev.docs.build --flavor desktop, staged with docs_stage scan and hash rules) serves index.html, es/index.html, pagefind.js, pagefind-worker.js, pagefind-entry.json, pf_index, pf_fragment, pf_meta, wasm.en.pagefind with CSP and nosniff` -> `pass`
+- `S05` `verify:` `mutation check: host check, canonical containment, encoded-escape refusal, CSP header, method gate removed each fail a docs test` -> `pass`
+- `S05` `verify:` `node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S05` `verify:` `prettier --check and rustfmt --check on S05 files` -> `pass`
+- `S05` `verify:` `full desktop crate cargo test in snapshot: packaged_pty_unicode_input_resize_output_exit_and_cleanup timed out under load, passes alone (HEAD terminal code, not S05)` -> `fail`
+- `S05` `by:` `opus-s05-executor`
+- `S08` `A` `native/desktop/frontend/src/ipc/contract.ts`
+- `S08` `verify:` `npx tsc --noEmit -p native/desktop/frontend` -> `pass`
+- `S08` `verify:` `npx eslint src/ipc/contract.ts` -> `pass`
+- `S08` `verify:` `npx prettier --check src/ipc/contract.ts` -> `pass`
+- `S08` `by:` `vaultspec-high-executor`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `M` `native/desktop/frontend/src/main.tsx`
+- `S09` `M` `native/desktop/frontend/src/styles.css`
+- `S09` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S09` `D` `native/desktop/frontend/src/components/DiagnosticsPanel.tsx`
+- `S09` `D` `native/desktop/frontend/src/components/TerminalView.tsx`
+- `S09` `A` `native/desktop/frontend/src/tokens.css`
+- `S09` `A` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ContextMenu.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/DocsFrame.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Icon.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Rail.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Settings.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Split.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S09` `A` `native/desktop/frontend/src/shell/actions.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/host.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/layout.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/metrics.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/strings.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/terminalThemes.ts`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S09` `by:` `CADRUMO-BUILD-TAURI-DESIGNER`
 
 ## Notes
 
@@ -96,3 +147,8 @@ related:
 - `S02` Added the plan's `channel_interceptor` (shell/channel.rs) and a table-driven dispatcher token test after first logging; tauri test feature added as a dev-dependency for mock-runtime tests.
 - `S01` S01 stays open: en refuses at the stale-authority sequence gate; no-op rebuild, touch-rebuild, Release docs bundle and runtime rendering unproven until one full docs build succeeds
 - `S01` Committed jointly with CADRUMO-BUILD-RUNTIME's console entrypoint change in a87038dd6d; `cli_projection` stale-import fix in 233a8c2e33
+- `S05` WebView2 `ICoreWebView2_22` and ICoreWebView2Settings3 startup probe not implemented: docs/webview.rs is a doc-only seam; the platform function `missing_webview_interface` and its call are assigned to S07 by the orchestrator
+- `S05` No live window run: the shell frontend (S09) and a docs-bearing package do not exist yet; iframe load, pagefind search and CSP console checks remain with S10
+- `S05` Working-tree crate does not compile while S04 and S06 edits are in flight; S05 checks ran on an isolated HEAD snapshot plus S05 files
+- `S08` Terminal command and frame types left as a delimited S04 placeholder pending S04's encoding
+- `S09` Checkpoint, S09 stays open: terminals await the S04 terminal contract (tauriHost.openTerminal rejects TerminalContractPending); context-menu separators and shortcut text await the S08 contract update; chrome strings and palette tokens await S08 landing 2.
