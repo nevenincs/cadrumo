@@ -28,6 +28,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
@@ -51,6 +52,7 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _secure_backend,
     _snapshot_303,
     _store_operator_profile_with_tax_id,
+    _store_prior_303_compensation,
     _wallet_observation,
     _work_unit_repositories,
     _work_unit_repositories_with_modelo_303_work_unit,
@@ -71,7 +73,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X1234567L"
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303()
         with bundled_indexed_authority().operation() as operation:
@@ -124,6 +126,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             bucket_event_repository=event_repo,
             operation=operation,
         )
+        _store_prior_303_compensation(CalculationObservationRepository(), amount=Decimal("1200"))
         with bundled_indexed_authority().operation() as operation:
             verification_report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
@@ -196,7 +199,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
         datetime(2026, 7, 16, 10, 0, 0, tzinfo=UTC),
     )
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
@@ -207,6 +210,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         filings = []
 
         for index, wallet_pending in enumerate((Decimal("1200.00"), Decimal("600.00"))):
+            _store_prior_303_compensation(CalculationObservationRepository(), amount=wallet_pending)
             with bundled_indexed_authority().operation() as operation:
                 report = reconcile_modelo_303_iva_compensation(
                     snapshot,
@@ -253,6 +257,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     bucket_event_repository=event_repo,
                     operation=operation,
                 )
+            _store_prior_303_compensation(CalculationObservationRepository(), amount=wallet_pending)
             with bundled_indexed_authority().operation() as operation:
                 verification = verify_modelo_revision_with_preconditions(
                     revision.calculation_revision_id,
@@ -344,7 +349,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
     filing_profile = workflow_profile(taxpayer_nif).model_copy(
         update={"activity_start_date": date(2026, 1, 1)},
     )
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot_1t = _snapshot_303(period="1T")
         with bundled_indexed_authority().operation() as operation:

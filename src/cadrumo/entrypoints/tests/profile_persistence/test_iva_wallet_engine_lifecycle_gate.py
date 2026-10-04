@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
@@ -21,9 +22,12 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     require_persisted_iva_compensation_decision_matches_revision,
+    resolve_iva_compensation_decision_for_calculation,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _DECIDED_AT,
@@ -83,14 +87,22 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
 
 def _require_persisted_iva_compensation_decision_matches_revision(work_unit: Any, revision: Any, **kwargs: Any) -> Any:
     kwargs.setdefault("repository", IvaWalletDecisionRepository())
-    return require_persisted_iva_compensation_decision_matches_revision(work_unit, revision, **kwargs)
+    with bundled_indexed_authority().operation() as operation:
+        return require_persisted_iva_compensation_decision_matches_revision(
+            work_unit,
+            revision,
+            operation=operation,
+            observation_repository=CalculationObservationRepository(),
+            history_repository=IvaCompensationHistoryRepository(),
+            **kwargs,
+        )
 
 
 def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303(period="1T")
         report = _reconcile_modelo_303_iva_compensation(
@@ -154,7 +166,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
 def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile()
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(
             compensation_amount=Decimal("1200.00"), operation=operation
@@ -169,7 +181,7 @@ def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(
 def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile()
         _save_wallet_gate_decision(amount=Decimal("800.00"))
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(
@@ -186,7 +198,7 @@ def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(
 def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile()
         _save_wallet_gate_decision(amount=Decimal("1200.00"))
         work_unit, revision = _work_unit_and_revision_for_wallet_gate(
@@ -202,7 +214,7 @@ def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(
 def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile()
         snapshot = _snapshot_303()
         report = _reconcile_modelo_303_iva_compensation(
@@ -247,3 +259,39 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
         decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert decision is not None
         assert decision.divergence == "wallet_only"
+
+
+@pytest.mark.parametrize("age_days", [31, 32])
+def test_persisted_wallet_ages_before_lifecycle_use(
+    tmp_path: Path, age_days: int, *, operation: PinnedAuthorityOperation
+) -> None:
+    with frozen_clock(_DECIDED_AT + timedelta(days=age_days)), _secure_backend(tmp_path):
+        _store_operator_profile()
+        _save_wallet_gate_decision(amount=Decimal("1200"))
+        work_unit, revision = _work_unit_and_revision_for_wallet_gate(
+            compensation_amount=Decimal("1200"), operation=operation
+        )
+        if age_days == 31:
+            assert _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision) is not None
+        else:
+            supplied = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, work_unit.period)
+            refreshed = resolve_iva_compensation_decision_for_calculation(
+                work_unit,
+                snapshot=_snapshot_303(),
+                operation=operation,
+                supplied_decision=supplied,
+                repository=IvaWalletDecisionRepository(),
+                observation_repository=CalculationObservationRepository(),
+                history_repository=IvaCompensationHistoryRepository(),
+                binding_values=None,
+                backend_binding_values=None,
+                casilla_inputs=None,
+                backend_casilla_inputs=None,
+                profile_values={"identity.tax_id": _TAXPAYER_NIF},
+            )
+            assert isinstance(refreshed, IvaCompensationReconciliationDecision) and refreshed.blocked
+            with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+                _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
+            decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, work_unit.period)
+            assert decision is not None and decision.stale_wallet and decision.blocked
+            assert decision.wallet_captured_at == _DECIDED_AT

@@ -51,6 +51,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
 from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ._ledger_drift_gate import ledger_drift_findings
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
@@ -253,6 +254,7 @@ def collect_verification_gate_findings(
     justificante_repository: JustificanteRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
     operation: PinnedAuthorityOperation,
@@ -303,6 +305,9 @@ def collect_verification_gate_findings(
             work_unit,
             target,
             repository=iva_compensation_decision_repository,
+            observation_repository=observation_repository,
+            history_repository=iva_compensation_history_repository,
+            operation=operation,
             subject_leaf_key="modelo.work.verify",
         )
     except ModeloIvaWalletReconciliationBlocked as exc:

@@ -710,13 +710,14 @@ def persist_and_reconcile_iva_compensation_wallet(
         )
     from ..application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 
-    resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
-        objects=resolved_repository.secure_object_repository,
-    )
     operation_scope = (
         nullcontext(authority_operation) if authority_operation is not None else bundled_indexed_authority().operation()
     )
     with operation_scope as operation:
+        resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
+            objects=resolved_repository.secure_object_repository,
+            operation=operation,
+        )
         snapshot = operation.snapshot(
             Modelo("303").value,
             filing_year=reloaded.target_year,
@@ -741,7 +742,7 @@ def persist_and_reconcile_iva_compensation_wallet(
             operation=operation,
         )
         decision = reconciliation.decision
-    loaded = resolved_decision_repository.load_decision(decision.taxpayer_nif, decision.target_period)
+        loaded = resolved_decision_repository.load_decision(decision.taxpayer_nif, decision.target_period)
     if loaded != decision:
         raise LiveApplicationError(
             translated_message="application.live.iva_wallet.errors.decision_reload_diverged",

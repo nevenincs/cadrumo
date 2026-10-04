@@ -40,7 +40,8 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 
@@ -71,6 +72,7 @@ from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
+    IvaCompensationWalletObservationProtocol,
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
@@ -398,7 +400,7 @@ def resolve_iva_compensation_decision_for_calculation(
     it has none.
     """
     if supplied_decision is not None:
-        return require_persisted_iva_compensation_decision_for_work_unit(
+        require_persisted_iva_compensation_decision_for_work_unit(
             work_unit,
             supplied_decision=supplied_decision,
             snapshot=snapshot,
@@ -826,11 +828,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
 ) -> IvaCompensationReconciliationDecision:
-    if not (
-        _decision_is_first_period_zero(decision)
-        or _decision_is_missing_local_authority(decision)
-        or _decision_uses_observation_envelope_recurrence(decision)
-    ):
+    if decision.selected_authority == "taxpayer_override":
         return decision
     refreshed = _reconcile_local_iva_compensation(
         work_unit,
@@ -840,6 +838,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
         observation_repository=observation_repository,
         history_repository=history_repository,
         persist=False,
+        wallet=_wallet_evidence_from_decision(decision),
         profile_values=profile_values,
     )
     if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
@@ -848,28 +847,12 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     return refreshed
 
 
-def _decision_uses_observation_envelope_recurrence(decision: object) -> bool:
-    """Whether a decision must revalidate the prior filed-envelope recurrence.
-
-    A local envelope recurrence can be superseded or found invalid on a later
-    encrypted read. Replay only re-evaluates the selected local filed-history
-    authority, never a settled live-wallet or taxpayer-override decision whose
-    arbitrary evidence locator might share this textual prefix.
-    """
-    if str(getattr(decision, "selected_authority", "")) not in {
-        "local_recurrence",
-        "filed_history",
-    }:
-        return False
-    return any(
-        str(getattr(source, "source_kind", "")) in _LOCAL_EVIDENCE_SOURCE_KINDS
-        and str(getattr(source, "source_locator", "")).startswith("observation-envelope:")
-        for source in getattr(decision, "authority_sources", ()) or ()
-    )
-
-
 def _decision_replay_basis(decision: IvaCompensationReconciliationDecision) -> tuple[object, ...]:
     return (
+        decision.wallet_captured_at,
+        decision.stale_wallet,
+        decision.wallet_amount,
+        decision.source_registry_snapshot_refs,
         decision.selected_authority,
         decision.selected_amount,
         decision.local_recurrence_amount,
@@ -1028,6 +1011,36 @@ def _activity_start_proves_first_iva_period(
     return bool(partition.suppressed) and not partition.in_scope
 
 
+@dataclass(frozen=True, slots=True)
+class _PersistedWalletEvidence:
+    """The original captured wallet operands retained by a persisted decision."""
+
+    taxpayer_nif: str
+    target_year: int
+    target_period: _Period
+    total_pending: Decimal
+    source_url: str
+    captured_at: datetime
+
+
+def _wallet_evidence_from_decision(
+    decision: IvaCompensationReconciliationDecision,
+) -> IvaCompensationWalletObservationProtocol | None:
+    if decision.wallet_amount is None or decision.wallet_captured_at is None:
+        return None
+    sources = [source for source in decision.authority_sources if source.source_kind == "aeat_wallet"]
+    if len(sources) != 1 or sources[0].amount != decision.wallet_amount:
+        return None
+    return _PersistedWalletEvidence(
+        taxpayer_nif=decision.taxpayer_nif,
+        target_year=decision.target_year,
+        target_period=decision.target_period,
+        total_pending=decision.wallet_amount,
+        source_url=sources[0].source_locator,
+        captured_at=decision.wallet_captured_at,
+    )
+
+
 def _reconcile_local_iva_compensation(
     work_unit: WorkUnit,
     *,
@@ -1038,6 +1051,7 @@ def _reconcile_local_iva_compensation(
     history_repository: IvaCompensationHistoryRepositoryProtocol,
     persist: bool,
     profile_values: Mapping[str, str] | None,
+    wallet: IvaCompensationWalletObservationProtocol | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
     if work_unit.modelo != Modelo("303"):
         return None
@@ -1057,7 +1071,7 @@ def _reconcile_local_iva_compensation(
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=taxpayer_nif,
-        wallet=None,
+        wallet=wallet,
         repository=observation_repository,
         decision_repository=repository,
         operation=operation,
@@ -1291,6 +1305,9 @@ def require_persisted_iva_compensation_decision_matches_revision(
     revision: CalculationRevision,
     *,
     repository: IvaWalletDecisionRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     subject_leaf_key: str = "modelo.export",
 ) -> IvaCompensationReconciliationDecision | None:
     """Return the IVA compensation decision when it matches the revision.
@@ -1310,9 +1327,13 @@ def require_persisted_iva_compensation_decision_matches_revision(
     if work_unit.modelo != Modelo("303"):
         return None
     profile_values = _profile_path_values_for_bucket(work_unit.bucket_id)
-    decision = load_persisted_iva_compensation_decision_for_work_unit(
+    decision = _persisted_decision_for_calculation(
         work_unit,
+        snapshot=_registry_snapshot_for_work_unit(work_unit, subject_leaf_key=subject_leaf_key, operation=operation),
+        operation=operation,
         repository=repository,
+        observation_repository=observation_repository,
+        history_repository=history_repository,
         profile_values=profile_values,
     )
     if decision is None:
@@ -1356,6 +1377,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
             _registry_snapshot_for_work_unit(
                 work_unit,
                 subject_leaf_key=subject_leaf_key,
+                operation=operation,
             ),
             decision,
             subject_leaf_key=subject_leaf_key,

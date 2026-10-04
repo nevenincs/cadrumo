@@ -542,6 +542,9 @@ def _require_filing_preconditions(
         work_unit,
         target,
         repository=ports.iva_compensation_decision_repository,
+        observation_repository=ports.observation_repository,
+        history_repository=ports.iva_compensation_history_repository,
+        operation=operation,
         subject_leaf_key="modelo.work.file",
     )
     require_cross_period_clean_state(

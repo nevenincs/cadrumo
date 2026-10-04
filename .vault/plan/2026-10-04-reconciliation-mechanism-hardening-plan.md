@@ -16,7 +16,7 @@ related:
   - '[[2026-10-04-live-reconciliation-repair-audit]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:5f73852e69101ea3150c7e2005bf0a2142edf376d77c8009d52963cbfcf515eb'
+body_hash: 'sha256:08cdf7f753c863558293d298412bae6380faab827a63fc95d88efa96b32b818d'
 ---
 
 # Reconciliation mechanism hardening
@@ -33,7 +33,7 @@ The user explicitly directed iterating through justificante, declaration, workin
 - [x] `S01` - Isolate working-calculation divergence checks to official evidence under the pinned authority and verify absence and drift semantics; `src/cadrumo/application/modelo/pulled_filing_reconcile.py verification_model_findings.py and focused encrypted persistence tests`.
 - [x] `S02` - Verify and repair filing-chain confirmation contradiction replay and evidence-enrichment transitions; `src/cadrumo/application/modelo/filing_chain_reconciliation.py live persistence integration and chain tests`.
 - [x] `S03` - Verify and repair registry-owned cross-model comparison selection coverage and visible findings; `src/cadrumo/application/modelo/_m303_m349_reconcile.py verification integration and cross-model tests`.
-- [ ] `S04` - Verify and repair IVA compensation authority refresh override scope and carry decisions; `src/cadrumo/application/calculations/iva_wallet_reconciliation.py domain/iva_compensation and persistence/CLI tests`.
+- [x] `S04` - Verify and repair IVA compensation authority refresh override scope and carry decisions; `src/cadrumo/application/calculations/iva_wallet_reconciliation.py domain/iva_compensation and persistence/CLI tests`.
 - [ ] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
 
 ## Parallelization

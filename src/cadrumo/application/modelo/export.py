@@ -500,11 +500,6 @@ class ModeloExportResult(BaseModel):
         """Operator-facing coverage advisory text for a completeness-unverified export."""
         return _COMPLETENESS_UNVERIFIED_MESSAGE
 
-    @property
-    def domiciliation_cutoff_advisory_message(self) -> str:
-        """Operator-facing advisory text for a domiciliación export with no declared cutoff."""
-        return _DOMICILIATION_CUTOFF_UNVERIFIED_MESSAGE
-
 
 def envelope_stamped_software_identity(
     export_layout: ExportLayoutDefinition | None,
@@ -1988,6 +1983,9 @@ def _prepare_modelo_export(
         work_unit,
         revision,
         repository=export_ports.iva_compensation_decision,
+        observation_repository=export_ports.observation,
+        history_repository=export_ports.iva_compensation_history,
+        operation=operation,
     )
     _require_modelo_export_clean_state(
         work_unit=work_unit,

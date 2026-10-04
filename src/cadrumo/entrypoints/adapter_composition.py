@@ -402,6 +402,7 @@ def build_modelo_export_ports(
         CalculationObservationRepository,
         IvaWalletDecisionRepository,
     )
+    from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -435,7 +436,8 @@ def build_modelo_export_ports(
         verification=calculation_binding.verification_repository(),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
-        iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
+        iva_compensation_decision=IvaWalletDecisionRepository(objects=objects, operation=operation),
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         justificante=JustificanteRepository(objects=objects),
         prorrata_register=ProrrataRegisterRepository(
             bucket_id=normalized_bucket_id,
@@ -739,7 +741,7 @@ def build_modelo_iva_wallet_seed_ports(
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         calculation_observation_ports=CalculationObservationPorts(
             observation_repository=CalculationObservationRepository(objects=objects),
-            iva_wallet_decision_repository=IvaWalletDecisionRepository(objects=objects),
+            iva_wallet_decision_repository=IvaWalletDecisionRepository(objects=objects, operation=operation),
         ),
         iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
     )
@@ -1121,7 +1123,7 @@ def build_calculation_action_ports(
             repository=PercepcionObservationRepositoryAdapter(objects=objects),
         ),
         iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
-        iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects),
+        iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects, operation=operation),
         borrador_snapshot_repository=build_borrador_100_snapshot_repository(
             bucket_id=normalized_bucket_id, objects=objects
         ),
@@ -1252,7 +1254,7 @@ def build_filing_action_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
         ),
         iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
-        iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects),
+        iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects, operation=operation),
         workflow_run_repository=WorkflowRunRepository(objects=objects),
         draft_review_ports=build_draft_review_ports(
             bucket_id=normalized_bucket_id, operation=operation, objects=objects
@@ -1470,7 +1472,7 @@ def build_verification_repository_bundle(
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
         iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
-        iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
+        iva_compensation_decision=IvaWalletDecisionRepository(objects=objects, operation=operation),
         participation_index=TransactionParticipationIndexRepository(bucket_id=normalized_bucket_id, objects=objects),
         workflow_run=WorkflowRunRepository(objects=objects),
         justificante=JustificanteRepository(objects=objects),

@@ -48,7 +48,7 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import RevisionId
@@ -483,6 +483,25 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     history_schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.schema_version
     payload_type: ClassVar[type[BaseModel]] = IvaWalletDecisionEnvelopePayload
 
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        settings: Settings | None = None,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> None:
+        """Use the caller's pinned authority when composed for a governed operation."""
+        super().__init__(bucket_id=bucket_id, objects=objects, settings=settings)
+        self._operation = operation
+
+    def _require_current(self, decision: IvaCompensationReconciliationDecision) -> None:
+        if self._operation is not None:
+            require_decision_registry_coordinates_current(decision, operation=self._operation)
+        else:
+            with bundled_indexed_authority().operation() as operation:
+                require_decision_registry_coordinates_current(decision, operation=operation)
+
     @override
     def extract_identifier(self, payload: IvaWalletDecisionEnvelopePayload) -> str:
         decision = payload.decision
@@ -499,8 +518,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         decision that cannot be audited. The substrate already owns the
         transaction boundary; this composes both writes into it.
         """
-        with bundled_indexed_authority().operation() as operation:
-            require_decision_registry_coordinates_current(decision, operation=operation)
+        self._require_current(decision)
         payload = IvaWalletDecisionEnvelopePayload(decision=decision)
         latest_write = self.to_secure_object_write(payload)
         history_envelope = Envelope[IvaWalletDecisionEnvelopePayload](
@@ -528,8 +546,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_period))
         if payload is None:
             return None
-        with bundled_indexed_authority().operation() as operation:
-            require_decision_registry_coordinates_current(payload.decision, operation=operation)
+        self._require_current(payload.decision)
         return payload.decision
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:
@@ -558,9 +575,8 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
                 ),
             ),
         )
-        with bundled_indexed_authority().operation() as operation:
-            for decision in decisions:
-                require_decision_registry_coordinates_current(decision, operation=operation)
+        for decision in decisions:
+            self._require_current(decision)
         return decisions
 
     def load_decision_history(
@@ -574,19 +590,17 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         """
         filing_period = require_observation_period(target_period)
         decisions: list[IvaCompensationReconciliationDecision] = []
-        with bundled_indexed_authority().operation() as operation:
-            for record in self._objects.list_records(
-                self.history_namespace,
-                expected_class=self.sensitivity,
-                max_supported_version=self.history_schema_version,
-            ):
-                envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(
-                    record.payload.decode(UTF_8_ENCODING),
-                )
-                decision = envelope.payload.decision
-                if same_tax_identifier(decision.taxpayer_nif, taxpayer_nif) and decision.target_period == filing_period:
-                    require_decision_registry_coordinates_current(decision, operation=operation)
-                    decisions.append(decision)
+        for record in self._objects.list_records(
+            self.history_namespace,
+            expected_class=self.sensitivity,
+            max_supported_version=self.history_schema_version,
+        ):
+            envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(
+                record.payload.decode(UTF_8_ENCODING),
+            )
+            decision = envelope.payload.decision
+            if same_tax_identifier(decision.taxpayer_nif, taxpayer_nif) and decision.target_period == filing_period:
+                decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
 
 

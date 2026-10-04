@@ -33,6 +33,7 @@ from ...domain.transactions.own_accounts import OwnAccountRegister
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.producer_snapshot_m360 import Modelo360SolicitudRegister
 
@@ -69,6 +70,7 @@ class ModeloExportPorts:
     verification: VerificationReportCatalogueRepositoryProtocol
     bucket_event: BucketEventHistoryRepositoryProtocol
     observation: CalculationObservationRepositoryProtocol
+    iva_compensation_history: IvaCompensationHistoryRepositoryProtocol
     iva_compensation_decision: IvaWalletDecisionRepositoryProtocol
     justificante: JustificanteRepositoryProtocol
     prorrata_register: ProrrataRegisterRepositoryProtocol

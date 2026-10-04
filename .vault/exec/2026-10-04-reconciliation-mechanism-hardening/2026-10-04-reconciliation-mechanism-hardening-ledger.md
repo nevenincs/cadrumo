@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9148f30656e46a0f10b1c64091b25fc6550857648057161e8af69717de91e9ec'
+body_hash: 'sha256:57e912b816e54158115add4ea0500a08fcb0f0ad48ebd148602c37e2641d058f'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -96,3 +96,27 @@ related:
 - `S05` `verify:` `actual CLI explicit-revision retained receipt import and encrypted readback` -> `pass`
 - `S05` `verify:` `independent S05 review` -> `pass`
 - `S05` `by:` `receipt_fix`
+- `S04` `M` `src/cadrumo/application/modelo/iva_wallet_gate.py`
+- `S04` `M` `src/cadrumo/application/modelo/iva_wallet_seed.py`
+- `S04` `M` `src/cadrumo/domain/iva_compensation/reconciliation.py`
+- `S04` `M` `src/cadrumo/application/modelo/export.py`
+- `S04` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S04` `M` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S04` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S04` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S04` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/calculation_observations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_wallet_correction.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_iva_wallet_engine_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_lifecycle_gate.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_overrides.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_iva_wallet.py`
+- `S04` `verify:` `33 wallet lifecycle domain live and encrypted persistence tests` -> `pass`
+- `S04` `verify:` `23 correction override and history tests` -> `pass`
+- `S04` `verify:` `9 verify file refile export tests` -> `pass`
+- `S04` `verify:` `Ruff format ty basedpyright pyrefly canonical private static imports` -> `pass`
+- `S04` `verify:` `independent S04 review` -> `pass`
+- `S04` `by:` `receipt_fix`

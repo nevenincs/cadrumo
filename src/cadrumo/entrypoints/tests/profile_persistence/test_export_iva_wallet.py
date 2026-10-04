@@ -86,7 +86,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with (
-        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_local_recurrence_divergence"),
+        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="stale_wallet_local_recurrence_requires_override"),
         bundled_indexed_authority().operation() as operation,
     ):
         export_modelo_revision(
@@ -159,7 +159,9 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
 
     try:
         with (
-            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_local_recurrence_divergence"),
+            pytest.raises(
+                ModeloIvaWalletReconciliationBlocked, match="stale_wallet_local_recurrence_requires_override"
+            ),
             bundled_indexed_authority().operation() as operation,
         ):
             export_modelo_revision(
@@ -212,7 +214,7 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
     assert report.granted_verificado_completo is False
     assert any(
         finding.message_locale_key == "application.modelo.findings.iva_wallet_precondition_failed"
-        and str(finding.message_facts.get("scenario_id", "")).endswith("filed_history_requires_override")
+        and str(finding.message_facts.get("scenario_id", "")).endswith("no_usable_authority")
         for finding in report.findings
     )
     revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
@@ -259,7 +261,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     assert report.granted_verificado_completo is False
     assert any(
         finding.message_locale_key == "application.modelo.findings.iva_wallet_precondition_failed"
-        and str(finding.message_facts.get("scenario_id", "")).endswith("wallet_local_recurrence_divergence")
+        and str(finding.message_facts.get("scenario_id", "")).endswith("stale_wallet_no_local_recurrence")
         for finding in report.findings
     )
     revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
@@ -292,7 +294,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
 
     try:
         with (
-            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_local_recurrence_divergence"),
+            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="stale_wallet_no_local_recurrence"),
             bundled_indexed_authority().operation() as operation,
         ):
             file_modelo_revision(

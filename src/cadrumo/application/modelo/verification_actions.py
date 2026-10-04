@@ -285,6 +285,7 @@ def verify_modelo_revision_with_preconditions(
             transaction_repository=repos.transaction,
             invoice_repository=repos.draft_review_ports.invoice_repository,
             iva_compensation_decision_repository=repos.iva_compensation_decision,
+            iva_compensation_history_repository=repos.iva_compensation_history,
             cross_period_expected_member_sets=cross_period_expected_member_sets,
             operation=operation,
             work_profile=checked_profile,

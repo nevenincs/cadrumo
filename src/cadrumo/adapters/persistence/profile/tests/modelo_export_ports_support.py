@@ -57,6 +57,8 @@ from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueReposit
 from cadrumo.domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+
 _EMPTY_EXPORT_BUCKET_ID = "ephemeral"
 
 
@@ -104,6 +106,7 @@ def _compose_modelo_export_ports(
         ),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
         justificante=JustificanteRepository(objects=objects),
         prorrata_register=ProrrataRegisterRepository(bucket_id=bucket_id, objects=objects),
@@ -167,6 +170,7 @@ def modelo_export_ports_for_test(
         verification=verification if verification is not None else composed.verification,
         bucket_event=bucket_event if bucket_event is not None else composed.bucket_event,
         observation=observation if observation is not None else composed.observation,
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=(
             iva_compensation_decision if iva_compensation_decision is not None else composed.iva_compensation_decision
         ),
