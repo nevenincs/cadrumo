@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e8c7ad42bce7bcbd371f57a1f50ca6d9a1e8644ed7069bf9c930367b14e004c'
+body_hash: 'sha256:07c2ec8e8cf0057ea28943a27da916430f8f72ad2eb758e5a184449069630aff'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -241,6 +241,16 @@ related:
 - `S09` `verify:` `npm run check` -> `pass`
 - `S09` `verify:` `npx playwright test` -> `pass`
 - `S09` `verify:` `mutation: bridge shortcut allow-list removed -> new security test fails` -> `pass`
+- `S14` `M` `docs/_static/cadrumo-desktop-bridge.js`
+- `S14` `M` `docs/_static/cadrumo-docs.js`
+- `S14` `M` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S14` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S14` `verify:` `pytest -n0 -m integration dev/docs/tests/test_docs_desktop_flavor.py (24 tests: real docs/conf.py desktop build, real Pagefind index with injected term/casilla/CLI records, Chromium bridge gates)` -> `pass`
+- `S14` `verify:` `mutation check: 23 single-guard mutants (query/limit/id bounds, per-id and eight-in-flight limits, result origin filter, markup excerpt, summary ranges, limit cut, navigate origin, home fragment, Ctrl+K and trigger relay, appearance storage/echo/validation, ready features, source and origin checks, stray token field, context-menu pointer) each fail their matching test; unmutated control passes` -> `pass`
+- `S14` `verify:` `real desktop-en build (S03 scratch build, 561 pages, 14,813 indexed; new bridge and cadrumo-docs.js overlaid): ready.features exact, 5 queries match the page palette order with cards above pages, plain-text excerpts, same-origin URLs, home from a nested page lands on index.html, foreign navigate refused, appearance applied, page palette stays shut` -> `pass`
+- `S14` `verify:` `ruff check, ruff format --check, ty check on the test file; node --check on both scripts; tsc --noEmit, prettier --check, eslint on contract.ts` -> `pass`
+- `S14` `verify:` `pytest test_palette_ranking, test_search_page_inline_ladder, test_palette_loading_state, test_search_page_query_param, test_search_page_fulltext_class_ranking: 6 pass, 3 fail at RegistryValidationError before any browser step (current invalid registry, not this change)` -> `fail`
+- `S14` `by:` `opus-s14-executor`
 
 ## Notes
 
@@ -272,3 +282,5 @@ related:
 - `S07` Window state resolved by orchestrator ruling B: host module `shell/window_state.rs` writes `<Launch.webview>/window-state.json` atomically (temp file then rename); tauri-plugin-window-state not used; ADR wording amendment requested from the designer by the orchestrator
 - `S07` Final checks built against HEAD native/platform/src/lib.rs because the runtime owner's in-flight lib.rs needs a newer generated contract
 - `S09` Independent review findings fixed: critical bridge shortcut allow-list, ack accounting from the first frame and on refusal, close ordering, slice writes, no silent paste drop, separator/menu/settings accessibility, bounded selection and link schemes, rail roving state, palette grouping. Keyboard-opened docs menus need the bridge to report pointer origin (S14).
+- `S14` A fresh desktop build is blocked: the casilla reference hook fails registry validation (modelo 720 unknown bindings, stale form layout); the first attempt failed on another session's in-progress OsLockState import. Real-build verification used the S03 scratch build with the two changed scripts overlaid; `CADRUMO_DOCS_SKIP_SEQUENCE_CHECK=1` in scratch only.
+- `S14` Chromium reports a keyboard-opened contextmenu with pointerType mouse and detail 0, like a right-click; only button differs (-1 vs 2), so pointer is derived from pointerType empty or button -1.

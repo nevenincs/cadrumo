@@ -598,6 +598,10 @@
         href: url,
         crumb: crumbParts.join(" · "),
         excerpt: summary || excerpt || "",
+        /* A summary is plain text; Pagefind's own excerpt is markup carrying
+         * its matches as <mark> elements. A consumer that needs plain text
+         * reads this to know which one `excerpt` holds. */
+        excerptIsMarkup: !summary && !!excerpt,
         kind: kind,
         displayClass: displayClass,
         /* The weight-sorted Pagefind pass contains only injected records. Keep
@@ -894,6 +898,19 @@
 
     return {
       render: render,
+      /* The ranked rows for `query` as data, in the order render() paints
+       * them, without touching the busy state or any host node. Never
+       * rejects: every search path settles, as it does for render(). */
+      results: function (query) {
+        return searchPagefind(query).then(
+          function (cards) {
+            return compose(query, cards);
+          },
+          function () {
+            return compose(query, []);
+          }
+        );
+      },
       moveSelection: function (delta) {
         select(selected + delta);
       },
@@ -906,6 +923,32 @@
       },
     };
   }
+
+  /* ── Search as data ────────────────────────────────────────────────────
+   * The one search entry point other scripts on the page may call: the
+   * desktop frame bridge answers the window's own palette with it. It runs
+   * the same controller as the Ctrl-K palette, with no host nodes and no
+   * full-text handoff row, and resolves to that controller's ranked rows in
+   * order. Defined while the script evaluates, after the document body it
+   * reads has been parsed. */
+  var dataController = null;
+
+  function searchAsData(query) {
+    if (dataController === null) {
+      var trigger = document.querySelector("[data-cadrumo-search]");
+      dataController = createSearchController({
+        searchUrl: (trigger && trigger.getAttribute("data-cadrumo-search-url")) || "search.html",
+        handoffRow: false,
+      });
+    }
+    return dataController.results(String(query));
+  }
+
+  (function exposeSearch() {
+    var api = window.CadrumoDocs || {};
+    api.search = searchAsData;
+    window.CadrumoDocs = api;
+  })();
 
   /* ── Command palette (modal host) ──────────────────────────────────────── */
 

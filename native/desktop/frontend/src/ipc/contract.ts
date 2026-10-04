@@ -302,20 +302,36 @@ export type DocsLink = {
   external: boolean;
 };
 
-/** Documentation result kinds from the docs search controller (S14). */
+/**
+ * Documentation result kinds from the docs search controller (S14). Open:
+ * the index also carries `legal` records, and a navigation title with no
+ * kind of its own arrives as `page`.
+ */
 export type DocsResultKind =
   "concept" | "cli" | "casilla" | "page" | (string & {});
 
-/** One documentation search result (S14). */
+/**
+ * One documentation search result (S14). Results arrive in the docs search
+ * controller's own ranking: term, casilla and command cards above pages.
+ */
 export type DocsSearchResult = {
   kind: DocsResultKind;
   title: string;
-  /** A documentation-origin URL; the page never sends another origin. */
+  /** An absolute documentation-origin URL; the page never sends another origin. */
   url: string;
-  /** Plain text, never HTML. */
+  /** Plain text, never HTML; empty when the result has no excerpt. */
   excerpt: string;
-  /** Match ranges into `excerpt` as `[start, end)` character offsets. */
+  /**
+   * Match ranges into `excerpt` as sorted, non-overlapping `[start, end)`
+   * offsets in UTF-16 code units, the indices `String.prototype.slice` takes.
+   */
   ranges: Array<readonly [start: number, end: number]>;
+  /**
+   * The controller's localized category line, such as
+   * `Casilla · Modelo 200 · 00562`; empty when it has none. Every page that
+   * answers `search` sends it.
+   */
+  crumb?: string;
 };
 
 // Documentation page to shell.
@@ -355,6 +371,12 @@ export type DocsContextMenu = BridgeEnvelope<"context-menu"> & {
   /** At most 65,536 characters. */
   selection: string;
   link: DocsLink | null;
+  /**
+   * False when the keyboard opened the menu (Shift+F10 or the menu key),
+   * true for a pointer. Absent on pages built before S14; read
+   * `pointer !== false` as pointer-opened.
+   */
+  pointer?: boolean;
 };
 
 /** The answer to a `search` request with the same `id` (S14). */
@@ -394,23 +416,41 @@ export type ShellCommand = BridgeEnvelope<"command"> &
     | { name: "back" }
     | { name: "forward" }
     | { name: "open-search" }
-    /** Refused for a URL outside the documentation origin (S14). */
+    /**
+     * An absolute URL on the documentation origin, at most 4,096 characters;
+     * anything else is refused (S14).
+     */
     | { name: "navigate"; url: string }
-    /** The active language's manifest entry (S14). */
+    /**
+     * The root of the language the shown page belongs to: the target of the
+     * page's own brand link, which is the docs manifest's entry for that
+     * language (S14).
+     */
     | { name: "home" }
   );
 
 /** Documentation zoom, 0.5 to 2.0; 1 restores the page's own size. */
 export type ShellZoom = BridgeEnvelope<"zoom"> & { factor: number };
 
-/** A bounded query; at most one request in flight per `id` (S14). */
+/**
+ * A bounded search (S14), answered by one `search-results` with the same
+ * `id`. A refused request is never answered. A blank query is answered with
+ * no results.
+ */
 export type ShellSearch = BridgeEnvelope<"search"> & {
+  /** At most 64 characters; at most one request in flight per `id`. */
   id: string;
+  /** At most 256 characters. At most eight searches are in flight at once. */
   query: string;
+  /** An integer from 1 to 50. */
   limit: number;
 };
 
-/** Applied the way Furo's own toggle applies a theme; `auto` hands the choice back (S14). */
+/**
+ * Applied the way Furo's own toggle applies a theme, and persisted the same
+ * way for later pages; answered by one `theme` report. `auto` hands the
+ * choice back to the page's toggle (S14).
+ */
 export type ShellAppearance = BridgeEnvelope<"appearance"> & {
   theme: DocsTheme;
 };
