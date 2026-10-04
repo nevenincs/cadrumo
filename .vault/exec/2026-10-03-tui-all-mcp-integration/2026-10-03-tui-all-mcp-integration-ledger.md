@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:1365d5e5f76697749fde471e8ea08ce9ea3dbd3fc2eca688756a63583262b1ca'
+body_hash: 'sha256:44abc86dbaad31ee2d9dde76d6068224040dbd0a00d99e0585658b30f37cb051'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3560,6 +3560,13 @@ related:
 - `S05` `M` `src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py`
 - `S05` `A` `.codex/handoffs/tui-all-mcp-final-modelo-public-detail-repair.json`
 - `S05` `verify:` `whole durable error-detail7PASS;affected positive matrix2PASS;actual scope/privacyCLI4PASS;threepaths Ruff/format/ty` -> `pass`
+- `S05` `A` `src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py`
+- `S05` `A` `src/cadrumo/entrypoints/cli/tests/portable_api_cli_runtime.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/_command_drive_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_command_aeat_capability_probe.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-portable-probe-repairs.json`
+- `S05` `verify:` `whole AEAT80+governed62=142PASS/0fail/0skip;detector teeth/offline seal;fivepaths Ruff/format/ty` -> `pass`
 
 ## Notes
 
@@ -3588,3 +3595,4 @@ related:
 - `S05` Demonstrated installed producer defect, corrected at source; compiled/installed verification pending. The genuine M303 first profile command reached the packaged KDF child before any password request, but native application environment projection removed four declared Python keys and added six application keys. Strict readiness correctly refused. The Windows host now preserves supplied neutral environment only for the complete fixed seven-argument KDF invocation with two distinct canonical positive pointer-sized decimal handles. Ordinary and near-match invocations retain application projection. Context derivation, DLL lookup, isolated CPython, package startup hash checks and the parent Job/cwd/environment/frame pre-secret attestation are unchanged. The owning package verifier adds an actual no-request ready/join/neutral-cleanup proof and a real valid-parser extra-option refusal/join proof. Scoped Ruff/format/ty, embedded-probe compilation and diff checks pass. Independent baseline source review and root integrated review identify no remaining high/critical source finding. These static checks do not establish compiled execution, protected storage or financial E2E; the sole coordinated source-matching artifact refresh must execute both probes and the actual journey. This is the authorized baseline-first source checkpoint, with explicit pending native execution; S05 stays open and no destination landing occurred.
 - `S05` Resolved production defects. The internal selection holder now retains an already repository/aggregate-validated CalculationRevision in a frozen slots dataclass rather than revalidating it without the aggregate. No public, persisted or candidate schema changed. The existing mismatch refusal now declares finite axis, requested/law revision and captured modelo/year/period context for the bounded public detail boundary; raw args and redaction policy are unchanged. Both complete selector/D1 owner modules pass29 with stable three source hashes; actual amendment11 and all four scope/privacy CLI cases pass in the separate combined17pass/1unrelated test-premise failure run, retained with exit1. Scoped Ruff/format/ty pass. Fresh native artifact inclusion and combined verification remain separate.
 - `S05` Resolved production omission. Work-create and readiness alone opt in to the existing public executor error-detail boundary; all other read definitions retain defaultFalse. Request/result/refusal serializers, registered capability/access guards and raw-private error policy remain unchanged. Two new cases exercise the real definitions/executors with a fault injected at the defining ports factory, then actual encrypted journal settlement, guarded detail projection and typed serialization. The whole seven-case owner passes, including retained private/redaction controls. The two affected positive operation matrix cases pass; all four actual CLI scope/privacy cases pass after the companion typed-context repair. Scoped Ruff/format/ty pass. These portable injected fault cases do not establish native/provider or installed E2E acceptance.
+- `S05` Resolved fixture premises. Five test-only paths establish registered credential profiles, genuine password cryptography and runtime admission through explicit synthetic OS transport/custody ports and joined workers. The API fixture performs canonical request/approval/delivery/possession to COMPLETE and uses its opaque key; it never fabricates HUMAN elevation or API authority. Real expired ENROLL/own-key ROTATE operands reach the unchanged administration validator and observed False without lending governed-fact scope. Typed UUID/digest and required year/certificate premises are supplied. NIF-IVA retains its deliberate product refusal: the probe partition records its exact CLI code/effectNONE/no contact and the owning supervisor proves refusal before provider/browser work. Complete two-module replay passes142 with no failure/skip, including both deliberate undeclared detector teeth and offline seal. Ruff/format/ty pass on all five frozen files. One documented startup CRLF-to-LF drift has byte-normalized and position-inclusive AST equality; no raw zero-drift or physical native custody claim is made.

@@ -56,7 +56,7 @@ import sys
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from functools import cache
 from itertools import islice
 from pathlib import Path
@@ -66,12 +66,17 @@ from typing import Final
 import pytest
 
 import cadrumo
+from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import changed
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
+from cadrumo.application.user_profile import automation_administration_service
+from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
 from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     outside_governed_fact_validation,
+    require_governed_fact_authority,
 )
 from ....domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
@@ -88,15 +93,14 @@ from ..command_shared_contracts import (
 from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ..command_specs import COMMAND_GRAPH
 from ._command_drive_support import (
-    PROBE_PROFILE_ID,
-    PROBE_PROFILE_LABEL,
     free_monitoring_tool,
     handler_code,
     is_runnable,
-    seed_probe_profile,
+    seeded_probe_runtime,
     synthetic_argv,
 )
-from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
+from .cli_runner import invoke_uncached_typer_app
+from .portable_api_cli_runtime import portable_api_cli_runtime
 
 __all__ = ["offline_guard_fixture"]
 
@@ -235,6 +239,28 @@ def missing_scope_raise_sites() -> frozenset[RaiseSite]:
 
 
 # --- in-process observation -----------------------------------------------
+
+
+@contextmanager
+def observe_automation_proposal_validation() -> Iterator[list[bool]]:
+    """Observe the real operand validator's result without replacing its implementation."""
+    results: list[bool] = []
+    code = automation_administration_service._proposal_is_allowed.__code__
+    tool = free_monitoring_tool()
+    sys.monitoring.use_tool_id(tool, "automation-proposal-proof")
+
+    def returned(_code: CodeType, _offset: int, value: object) -> None:
+        assert isinstance(value, bool)
+        results.append(value)
+
+    sys.monitoring.register_callback(tool, sys.monitoring.events.PY_RETURN, returned)
+    sys.monitoring.set_local_events(tool, code, sys.monitoring.events.PY_RETURN)
+    try:
+        yield results
+    finally:
+        sys.monitoring.set_local_events(tool, code, 0)
+        sys.monitoring.register_callback(tool, sys.monitoring.events.PY_RETURN, None)
+        sys.monitoring.free_tool_id(tool)
 
 
 @dataclass(frozen=True, slots=True)
@@ -385,17 +411,65 @@ def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
     workdir.mkdir()
     argv = synthetic_argv(COMMAND_GRAPH, spec, workdir, also=_HANDLER_REQUIRED_OPTIONS.get(key, ()))
 
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path, bucket_id=PROBE_PROFILE_ID, label=PROBE_PROFILE_LABEL
-    ) as profile:
-        seed_probe_profile(profile)
-        with outside_governed_fact_validation(), observe_invocation(handler_code(handler.target)) as observed:
-            result = invoke_cached_cli(argv)
+    if key == "config_profile_automation_change":
+        with portable_api_cli_runtime(tmp_path) as api_runtime:
+            # A valid own-key ROTATE operand with expired key validity is refused
+            # by the actual administration owner after genuine API admission.
+            proposal = changed(
+                api_runtime.proposal,
+                kind=EnrollmentKind.ROTATE,
+                target_grant_id=api_runtime.grant_id,
+                target_key_id=api_runtime.key_id,
+                key_expires_at=datetime.now(UTC) - timedelta(minutes=1),
+            )
+            with (
+                outside_governed_fact_validation(),
+                observe_invocation(handler_code(handler.target)) as observed,
+                observe_automation_proposal_validation() as operand_validation,
+            ):
+                result = api_runtime.invoke(
+                    [*argv, "--secrets-stdin"], input='{"proposal":' + proposal.model_dump_json() + "}"
+                )
+            assert operand_validation == [False], "the real own-grant operand validation was not reached"
+    else:
+        client_native = MemoryNativePort() if key == "config_profile_automation_create" else None
+        with (
+            seeded_probe_runtime(tmp_path, client_native_store=client_native) as runtime,
+            outside_governed_fact_validation(),
+            observe_invocation(handler_code(handler.target)) as observed,
+        ):
+            if key == "config_profile_automation_create":
+                # An expired, strictly typed ENROLL operand reaches the real
+                # handler and is refused without a pending review or native writes.
+                expired = datetime.now(UTC) - timedelta(minutes=1)
+                proposal = EnrollmentProposal(
+                    kind=EnrollmentKind.ENROLL,
+                    scope=AccessScope(
+                        operations=frozenset({"user-profile.field-mutation"}),
+                        actions=frozenset(AccessAction),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=False,
+                    ),
+                    expires_at=expired,
+                    key_expires_at=expired,
+                    unattended=False,
+                    allow_os_lock=False,
+                )
+                with observe_automation_proposal_validation() as operand_validation:
+                    result = runtime.invoke(
+                        ["--profile", str(runtime.profile_id), *argv, "--secrets-stdin"],
+                        input='{"proposal":' + proposal.model_dump_json() + "}",
+                    )
+                assert operand_validation == [False], "the real ENROLL operand validation was not reached"
+            else:
+                result = runtime.invoke(argv)
     request.node.user_properties.append(("offline_outcome", f"{offline_guard.outcome()}; exit {result.exit_code}"))
 
     assert observed.refusals == [], _refusal_report(key, spec, observed.refusals)
     assert observed.handler_started, (
-        f"{key} never reached its behavior target (exit {result.exit_code}); argv={argv}; output={result.output[-400:]}"
+        f"{key} never reached its behavior target (exit {result.exit_code}); argv={argv}; output={result.output}"
     )
     assert not observed.scope_lent_to_handler, f"{key} ran under a lent governed-fact scope, which masks a missing read"
 
@@ -466,7 +540,7 @@ def test_the_probe_flags_a_state_free_command_that_reads_a_governed_fact() -> No
     assert observed.handler_started
     assert not observed.scope_lent_to_handler
     assert result.exit_code != 0
-    reader = inspect.getsourcefile(resolve_m347_counterparty_annual_threshold)
+    reader = inspect.getsourcefile(require_governed_fact_authority)
     assert reader is not None
     assert [refusal.site.path for refusal in observed.refusals] == [os.path.normcase(str(Path(reader).resolve()))]
-    assert observed.refusals[0].error_type == "RegistryValidationError"
+    assert observed.refusals[0].error_type == "InternalInvariantError"

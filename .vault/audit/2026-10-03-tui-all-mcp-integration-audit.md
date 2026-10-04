@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5d8d5fc2113b0df342951f4b0e1cacffb874c1fd0c15297d1f785115d15f676'
+body_hash: 'sha256:0741d7683a04d2cc028f18e6bf8ebae89f944b9978ea27372f07cfcc1b1edd4d'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -174,6 +174,10 @@ Resolved production defects. The internal selection holder now retains an alread
 ### recorded-modelo-scope-detail | medium | Work creation and readiness retain declared public diagnostic context through settlement
 
 Resolved production omission. Work-create and readiness alone opt in to the existing public executor error-detail boundary; all other read definitions retain defaultFalse. Request/result/refusal serializers, registered capability/access guards and raw-private error policy remain unchanged. Two new cases exercise the real definitions/executors with a fault injected at the defining ports factory, then actual encrypted journal settlement, guarded detail projection and typed serialization. The whole seven-case owner passes, including retained private/redaction controls. The two affected positive operation matrix cases pass; all four actual CLI scope/privacy cases pass after the companion typed-context repair. Scoped Ruff/format/ty pass. These portable injected fault cases do not establish native/provider or installed E2E acceptance.
+
+### observable-portable-command-probes | medium | Capability detectors reach real handlers through genuine admitted test sessions
+
+Resolved fixture premises. Five test-only paths establish registered credential profiles, genuine password cryptography and runtime admission through explicit synthetic OS transport/custody ports and joined workers. The API fixture performs canonical request/approval/delivery/possession to COMPLETE and uses its opaque key; it never fabricates HUMAN elevation or API authority. Real expired ENROLL/own-key ROTATE operands reach the unchanged administration validator and observed False without lending governed-fact scope. Typed UUID/digest and required year/certificate premises are supplied. NIF-IVA retains its deliberate product refusal: the probe partition records its exact CLI code/effectNONE/no contact and the owning supervisor proves refusal before provider/browser work. Complete two-module replay passes142 with no failure/skip, including both deliberate undeclared detector teeth and offline seal. Ruff/format/ty pass on all five frozen files. One documented startup CRLF-to-LF drift has byte-normalized and position-inclusive AST equality; no raw zero-drift or physical native custody claim is made.
 
 ## Recommendations
 
