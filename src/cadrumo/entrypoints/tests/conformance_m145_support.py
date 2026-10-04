@@ -199,7 +199,9 @@ def _expected_wire_text(field: ExportFieldDefinition, values: Mapping[CasillaId,
     value = values.get(field.casilla_id)
     if field.data_type == "text":
         return (value or "").ljust(field.length)
-    assert field.data_type in {"integer", "money"}, (field.id, field.data_type)
+    # The typed layout names monetary slots decimal. This seed leaves them
+    # absent, so their independent DR145 oracle is the declared zero fill.
+    assert field.data_type in {"integer", "decimal"}, (field.id, field.data_type)
     assert value is None or value.isdecimal(), (field.id, value)
     return (value or "").rjust(field.length, "0")
 

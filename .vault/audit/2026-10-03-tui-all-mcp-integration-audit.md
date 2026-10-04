@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6331a512560d1bea7cd011bf5e1ce26916b6b60236fe9b7d8b791387eaebaf6a'
+body_hash: 'sha256:2d04e075069d46880fa699cae83538765c78f2df87f4a540dc07e032193405de'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -150,6 +150,10 @@ Resolved fixture premise at source; affected behavioral replay pending. The real
 ### current-operator-and-fixture-owners | medium | Current runtime contract and meaningful invoice summary restored with independent fixture premises
 
 Resolved at source and covering behavior. The defining operator contract retires the stale app.runtime mount already absent from the accepted command graph. A real missing invoice lease summary dropped the supplied premises; canonical locale set-batch adds both placeholders in all four supported languages without changing the caller or assertions. Browser tests now establish the actual controlled-category environment, and the atomic reconciliation test addresses the public PreparedModeloReconciliation.persist owner while retaining actual SQL rollback and grounding assertions. Whole five-owner replay passes46 cases in13.02s, including unchanged refusal-target and leased-premises TUI assertions. Scoped Ruff/format/ty and four YAML/placeholder checks pass. Authority is unchanged. Current installed payload proof must include these real contract and locale changes in the coordinated final rebuild.
+
+### m145-complete-affected-replay | low | Independent DR145 oracle retains exact wire proof using the current typed decimal slot
+
+Resolved. The supplementary independent oracle accepts the defining physical decimal type instead of the retired money label; it still independently fills absent numeric slots and never calls the shared codec. The whole adapter14, primary5, supplementary5 and completeness/duplicate2 replay passes all26 in103.29s. Its actual passed-node union covers all13 original serial failures; the other424 passing serial cases remain preserved separately, giving scoped coverage of all437 selected serial cases. Raw serial exit1 remains visible. Three unrelated CLI fixture paths changed during replay, so global zero-drift is explicitly not claimed; M145 owners, authority and physical export oracles were unchanged. Later runtime admission changes have a separate owning replay and this receipt does not establish combined native or destination acceptance.
 
 ## Recommendations
 
