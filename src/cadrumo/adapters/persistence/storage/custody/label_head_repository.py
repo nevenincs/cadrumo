@@ -58,13 +58,6 @@ class ProfileLabelHeadRepository:
         """
         return self._head_root / f".{profile_id}.pending.json"
 
-    def load_current(self, profile_id: UUID) -> ProfileLabelHead:
-        """Return the exact durable head for an already-verified current capsule."""
-        head = self._load_head(profile_id)
-        if head is None:
-            raise ProfileCustodyRecordError("profile label head is absent")
-        return head
-
     def verify(self, *, label: ProfileCustodyCapsuleLabel) -> ProfileLabelHead | None:
         """Read and verify the durable head without publishing or repairing it."""
         current = self._load_head(label.profile_id)
@@ -84,33 +77,6 @@ class ProfileLabelHeadRepository:
         head = ProfileLabelHead.create_initial(label=label, source_witness=source_witness)
         self._write_head_exclusive(head)
         return head
-
-    def begin_advance(
-        self,
-        *,
-        current_head: ProfileLabelHead,
-        current_label: ProfileCustodyCapsuleLabel,
-        replacement_label: ProfileCustodyCapsuleLabel,
-    ) -> ProfileLabelHeadPendingAdvance:
-        """Durably record intent to advance the head before writing the new head itself.
-
-        This is the write-ahead half of the crash-recovery protocol
-        :meth:`recover_pending` completes on the other side: the pending
-        record lands on disk FIRST, so a crash between here and the eventual
-        head write leaves a resumable trail instead of an ambiguous
-        half-advanced state.
-        """
-        if not current_head.verifies(current_label):
-            raise ProfileCustodyRecordError("profile label differs from its trusted head")
-        replacement_head = ProfileLabelHead.advance(current=current_head, label=replacement_label)
-        pending = ProfileLabelHeadPendingAdvance.create(
-            expected_head=current_head,
-            expected_label=current_label,
-            replacement_label=replacement_label,
-            replacement_head=replacement_head,
-        )
-        self._write_pending_exclusive(pending)
-        return pending
 
     def recover_pending(
         self,

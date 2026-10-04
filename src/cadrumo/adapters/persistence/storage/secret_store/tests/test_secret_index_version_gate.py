@@ -37,6 +37,7 @@ from ......core.external_constants import UTF_8_ENCODING
 from ...errors import EnvelopeVersionError, StorageValidationError
 from ...storage_path_definitions import SECRET_INDEX_SCHEMA_VERSION
 from ..store import SecretRecord, SecretStore
+from .digest_inventory import list_digests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -143,7 +144,7 @@ def test_an_absent_index_still_materialises_a_fresh_store(tmp_path: Path, store:
     """
     del tmp_path
     assert not _index_path(store).exists()
-    assert list(store.list_digests()) == []
+    assert list(list_digests(store)) == []
 
     store.put(_record())
 

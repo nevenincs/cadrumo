@@ -26,7 +26,6 @@ when it is absent.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Final
@@ -616,19 +615,6 @@ class SecretStore:
                 _log.debug("secret-store blob cleanup on delete skipped because blob is already absent")
             del index.entries[digest]
             self._write_index(index)
-
-    def list_digests(self) -> Iterable[str]:
-        """Yield every persisted lookup digest.
-
-        Plaintext keys are NOT recoverable from digests by design; this
-        method exists for inventory diagnostics (e.g. counting records,
-        rotating store-wide).
-
-        Returns:
-            A tuple of 64-character hex digests in iteration order.
-        """
-        index = self._read_index()
-        return tuple(index.entries.keys())
 
     def rotate(self, key: str, new_value: bytes, *, expires_at: datetime | None = None) -> BlobReference:
         """Replace the value of an existing secret and return the new blob reference.

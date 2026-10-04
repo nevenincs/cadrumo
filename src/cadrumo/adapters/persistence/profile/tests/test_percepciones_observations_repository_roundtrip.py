@@ -38,6 +38,7 @@ from .....domain.calculations.registry.withholding_bindings import (
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.errors import PathContainmentError, SecureObjectRowIdentityError
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...storage.sql.tests.raw_key_writer import save_with_raw_key
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
@@ -397,7 +398,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
 
         key_a = repo.extract_identifier(_payload(row_a))
         write_b = repo.to_secure_object_write(_payload(row_b))
-        repo.secure_object_repository.save_with_raw_key(
+        save_with_raw_key(
+            repo.secure_object_repository,
             namespace=repo.namespace,
             hashed_object_key=secure_object_key_digest(key_a),
             classification=repo.sensitivity,

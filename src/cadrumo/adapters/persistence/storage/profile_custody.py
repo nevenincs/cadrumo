@@ -106,7 +106,6 @@ from .custody.filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     clear_profile_custody_local_record,
     compare_and_clear_profile_custody_local_record,
-    compare_and_replace_profile_custody_local_record,
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
     profile_custody_local_lock,
     profile_custody_root_lock,
@@ -196,21 +195,6 @@ class _PersistenceProfileCustodyLocalRecordStore:
 
     def clear(self, path: Path) -> None:
         clear_profile_custody_local_record(path)
-
-    def compare_and_replace(
-        self,
-        path: Path,
-        *,
-        expected: bytes | None,
-        replacement: bytes,
-        maximum_bytes: int,
-    ) -> None:
-        compare_and_replace_profile_custody_local_record(
-            path,
-            expected=expected,
-            replacement=replacement,
-            maximum_bytes=maximum_bytes,
-        )
 
     def compare_and_replace_same_or_predecessor(
         self,
@@ -330,38 +314,6 @@ class _PersistenceProfileRecordCrypto:
             ),
             blob=ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
         )
-
-    def open_with_passphrase(
-        self,
-        blob: ProfileRecordEncryptedBlob,
-        *,
-        passphrase: bytes,
-        parameters: ProfilePassphraseKdfParameters,
-        associated_data: bytes,
-    ) -> bytes:
-        policy = self.passphrase_kdf_policy()
-        if parameters.version != policy.version or not self.passphrase_kdf_window_accepts(
-            memory_cost=parameters.memory_cost,
-            time_cost=parameters.time_cost,
-            parallelism=parameters.parallelism,
-            salt=parameters.salt,
-        ):
-            raise ProfileRecordCryptoError("profile passphrase KDF parameters are unsupported")
-        try:
-            sealing_key = derive_kek_with_params(
-                passphrase,
-                parameters.salt,
-                memory_cost=parameters.memory_cost,
-                time_cost=parameters.time_cost,
-                parallelism=parameters.parallelism,
-            )
-            return decrypt_record(
-                EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
-                key=sealing_key,
-                associated_data=associated_data,
-            )
-        except Exception as exc:
-            raise ProfileRecordCryptoError("profile passphrase record decryption failed") from exc
 
 
 class _PersistenceProfileCustody:

@@ -11,6 +11,7 @@ from ..capsule import recognize_current_profile_capsule
 from ..capsule_records import PROFILE_CUSTODY_LABEL_FILENAME, PROFILE_CUSTODY_LABEL_MAX_BYTES
 from ..errors import ProfileCustodyRecordError
 from ..filesystem_primitives import anchor_directory
+from .label_head_probe import begin_advance
 
 
 def replace_test_profile_custody_label_file(
@@ -66,11 +67,7 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
         label_revision=current.label_revision + 1,
         previous_label_digest=current.content_digest,
     )
-    heads.begin_advance(
-        current_head=current_head,
-        current_label=current,
-        replacement_label=replacement,
-    )
+    begin_advance(heads, current_head=current_head, current_label=current, replacement_label=replacement)
     replace_test_profile_custody_label_file(
         profile_id,
         replacement.canonical_json_bytes(),

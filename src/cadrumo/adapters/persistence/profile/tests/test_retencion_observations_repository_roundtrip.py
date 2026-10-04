@@ -35,6 +35,8 @@ from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.period import Period
 
+from ...storage.sql.tests.raw_key_writer import save_with_raw_key
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
@@ -412,7 +414,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
-        repo.secure_object_repository.save_with_raw_key(
+        save_with_raw_key(
+            repo.secure_object_repository,
             namespace=repo.namespace,
             hashed_object_key=secure_object_key_digest(key_a),
             classification=repo.sensitivity,
@@ -536,7 +539,8 @@ def test_a_stored_envelope_missing_the_capture_kind_refuses_to_load(tmp_path: Pa
         assert corrupted["payload"].pop("source_kind", None) is not None, (
             "the persisted payload does not carry source_kind, so deleting it proves nothing"
         )
-        repo.secure_object_repository.save_with_raw_key(
+        save_with_raw_key(
+            repo.secure_object_repository,
             namespace=repo.namespace,
             hashed_object_key=secure_object_key_digest(repo.extract_identifier(built)),
             classification=repo.sensitivity,

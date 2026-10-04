@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac19a2f5ed4835698fb6cb174817bbbcf755b6aafb74d7b8a6d55e0291c4f438'
+body_hash: 'sha256:1dab9163def5d068e836a78903bfd5b22c69be8363bd56c225806d8fcfb0306f'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -578,6 +578,36 @@ related:
 - `S19` `verify:` `Generic schema, slot and override planted controls: 11 passed` -> `pass`
 - `S19` `verify:` `Full audit-tool corpus: 317 passed` -> `pass`
 - `S19` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S20` `M` `src/cadrumo/adapters/persistence/profile/tests/test_percepciones_observations_repository_roundtrip.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_observations_repository_roundtrip.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/custody/label_head_repository.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/label_head_probe.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/support.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_lifecycle.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_label_head_repository.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/secret_store/store.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/storage/secret_store/tests/digest_inventory.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_store.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/storage/sql/tests/batch_failures.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/storage/sql/tests/raw_key_writer.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/storage/tests/local_record_probe.py`
+- `S20` `A` `src/cadrumo/adapters/persistence/storage/tests/passphrase_probe.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/tests/test_runtime.py`
+- `S20` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S20` `M` `src/cadrumo/application/user_profile/profile_repository.py`
+- `S20` `A` `src/cadrumo/application/user_profile/tests/unlocked_profile_probe.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py`
+- `S20` `verify:` `Storage and custody behavior corpus: 163 passed` -> `pass`
+- `S20` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -599,3 +629,4 @@ related:
 - `S17` Qualified homogeneous iterable annotations now bind loop and comprehension receivers only within their lexical scope. Mixed, unknown, vendor-shadowed and nested-shadowed receivers remain unresolved. Canonical module-qualified iterable annotations are supported without borrowing unrelated element types.
 - `S18` Uncalled JSON schema and source-inventory projections and their unsupported records are retired. Catalogue, family, lineage and old transport construction helpers now belong to finite fixtures over the same canonical kernels. The empty bootstrap family claim is removed while actual exemption membership and citation controls remain. Shared files are staged from owned HEAD transformations to preserve concurrent work.
 - `S19` Typed PEP-695 schema consumers retain exact positional and keyword arguments. Actual schema specialization proves payload consumption; constructed repositories bind their class payload slots and overridden payload getters through the inherited schema factory. Imported-only models, unused repository classes, rebound parameters and shadowed getattr remain candidates. Module-level shadow facts are cached per pass to avoid repeating whole-module walks.
+- `S20` Relocated raw corruption, digest inventories, per-row failure inspection, passphrase decryption and retained custody probes into finite owning fixtures. Existing encryption, UTC, KDF, revision and authenticated-session kernels and refusal behavior remain exercised; fixture functions refuse unsupported adapter identities.

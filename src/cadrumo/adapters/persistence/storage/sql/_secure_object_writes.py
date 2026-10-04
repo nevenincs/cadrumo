@@ -26,7 +26,7 @@ from ..crypto.encrypted_columns import (
     secure_object_key_digest,
     secure_object_payload_aad,
 )
-from ..errors import RepositoryError, SecureObjectRevisionConflictError, StorageValidationError
+from ..errors import RepositoryError, SecureObjectRevisionConflictError
 from ._secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .orm import SecureObjectRow
 from .secure_object_crypto import derive_revision_id
@@ -138,7 +138,7 @@ class SecureObjectWriteOperations:
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`
         instead.
 
         Args:
@@ -300,72 +300,6 @@ class SecureObjectWriteOperations:
                     current_revision_id=None,
                 )
 
-    def save_with_raw_key(
-        self,
-        *,
-        namespace: str,
-        hashed_object_key: bytes,
-        classification: SensitivityClass,
-        schema_version: int,
-        written_at: datetime,
-        payload: bytes,
-        write_provenance: str = _DEFAULT_WRITE_PROVENANCE,
-        source_event_id: str | None = None,
-        expected_revision_id: str | None = None,
-    ) -> None:
-        """Encrypt and upsert one byte payload keyed by a pre-computed digest.
-
-        The 32-byte ``hashed_object_key`` is passed straight through
-        the :class:`~adapters.persistence.storage.crypto.encrypted_columns.HashedLookup` column
-        without re-hashing. Used by
-        the archive restore path to round-trip rows whose natural key
-        is not present in the bundle (e.g. the path-keyed setup-profile
-        and inventory namespaces).
-
-        Args:
-            namespace: Storage namespace string.
-            hashed_object_key: 32 raw HMAC-SHA256 bytes (the digest
-                produced by ``HashedLookup.compute`` under the same master key
-                the row was originally written with).
-            classification:
-                :class:`~core.classification.policies.SensitivityClass`
-                to upsert at.
-            schema_version: Envelope schema version captured on the row.
-            written_at: UTC-aware datetime captured on the row. A naive or
-                offset-bearing instant is refused for the same reason as
-                :meth:`save`.
-            payload: Plaintext envelope bytes (the column encrypts).
-            write_provenance: Human-readable string identifying the write
-                origin (e.g. caller module or operation name). Defaults to
-                the repository's default provenance marker.
-            source_event_id: Optional opaque identifier of the domain event
-                that triggered this write; stored verbatim for audit trails.
-            expected_revision_id: Optional optimistic-concurrency guard; when
-                supplied the upsert is rejected if the row's current revision
-                does not match.
-
-        Raises:
-            StorageValidationError: When ``hashed_object_key`` is not exactly 32 bytes.
-            :exc:`RepositoryError`: On underlying SQL integrity errors.
-        """
-        self._check_session_freshness(namespace)
-        if len(hashed_object_key) != 32:
-            raise StorageValidationError(
-                context={"length": len(hashed_object_key)},
-                translated_message="errors.integrity.integrity_storage_secure_object_hashed_key_length",
-            )
-        self._save_internal(
-            namespace=namespace,
-            key=hashed_object_key,
-            classification=classification,
-            schema_version=schema_version,
-            written_at=written_at,
-            payload=payload,
-            write_provenance=write_provenance,
-            source_event_id=source_event_id,
-            expected_revision_id=expected_revision_id,
-        )
-
     def _save_internal(
         self,
         *,
@@ -384,13 +318,13 @@ class SecureObjectWriteOperations:
         Backs
         :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.save`
         and
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`.
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._enforce_registered_write_policy(
             namespace=namespace,
             classification=classification,
             schema_version=schema_version,
-            # ``save`` passes the natural string key; ``save_with_raw_key``
+            # ``save`` passes the natural string key; raw-key fixtures
             # passes an already-digested ``bytes`` key with no natural form
             # left to check against the namespace's declared grammar.
             object_key=key if isinstance(key, str) else None,
@@ -438,7 +372,7 @@ class SecureObjectWriteOperations:
 
         ``written_at`` is gated here rather than only on the
         ``SecureObjectWrite`` DTO because the direct ``save`` and
-        ``save_with_raw_key`` boundaries take a bare ``datetime`` and never
+        raw-key fixtures boundaries take a bare ``datetime`` and never
         construct that model. An offset-bearing instant loses its ``tzinfo``
         in the SQLite column while the revision id was derived from the UTC
         instant, so the row would commit and then fail its own read-time
@@ -474,7 +408,7 @@ class SecureObjectWriteOperations:
         session: Session,
         pending: Sequence[_PendingSecureObjectWrite],
     ) -> None:
-        """Single write funnel for save, save_many, apply_batch, and save_with_raw_key.
+        """Single write funnel for save, save_many, apply_batch, and raw-key fixtures.
 
         Writes execute in caller order with set-based SQL: one previous-
         metadata read per namespace slice, then one ``INSERT`` executemany for

@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:b64b9313ae7cdf3e571def7d875dce4b5692dddf375702c707c44e1ae732f55f'
+body_hash: 'sha256:6e17d5ccf3e5ab98d66eb72b7544a48be399a77068ed6f252958fd9ad780c3c4'
 ---
 
 # `reachability-burndown` plan
@@ -45,8 +45,11 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S17` - Resolve homogeneous iterable receiver evidence without clearing shadowed or unknown element types; `Reachability receiver analysis, outside consumers and planted controls`.
 - [x] `S18` - Retire unsupported diagnostic projections and bind existing tests to canonical kernels; `Registry diagnostics, operator schema projections, family and lineage helpers, bootstrap declarations and owning fixtures`.
 - [x] `S19` - Follow typed generic schema factories and consumed repository payload slots; `Reachability schema consumers, resolved call coordinates and planted positive and negative controls`.
-- [ ] `S20` - Move test-only raw storage and custody probes to finite fixtures; `Secure object corruption and inventory probes, profile custody wrapper probes, retained label-head fixture helpers and owning tests`.
+- [x] `S20` - Move test-only raw storage and custody probes to finite fixtures; `Secure object corruption and inventory probes, profile custody wrapper probes, retained label-head fixture helpers and owning tests`.
 - [ ] `S21` - Surface restricted model licence advisories through real provisioning outcomes and remove the fictional logout result; `Model selection, local-reader target and outcome contracts, CLI notices and profile operation declarations with owning tests`.
+- [ ] `S22` - Retire legacy register and observation writing wrappers and retain their finite fixture owners; `Foreign asset and prorrata fixture authoring, observation window adapters and owning tests`.
+- [ ] `S23` - Remove inventory facade loaders and bind every import to its defining module; `Inventory foundational records, closing authority, Anexo D projections and all source and fixture consumers`.
+- [ ] `S24` - Complete transient financial custody for batched manual edits under a new request version; `Versioned edit requests, indexed exact operand waits, submission and executor wiring, legacy journal purge and typed migration refusals with native and operator proofs`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [x] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

@@ -379,17 +379,6 @@ class ProfileCustodyLocalRecordStore(Protocol):
         """Remove one anchored local record without following its leaf."""
         ...
 
-    def compare_and_replace(
-        self,
-        path: Path,
-        *,
-        expected: bytes | None,
-        replacement: bytes,
-        maximum_bytes: int,
-    ) -> None:
-        """CAS-replace one local record without a separate app-layer read."""
-        ...
-
     def compare_and_replace_same_or_predecessor(
         self,
         path: Path,
@@ -587,17 +576,6 @@ class ProfileRecordCryptoPort(Protocol):
         associated_data: bytes,
     ) -> ProfilePassphraseEncryptedRecord:
         """Derive a fresh passphrase key and seal one record under it."""
-        ...
-
-    def open_with_passphrase(
-        self,
-        blob: ProfileRecordEncryptedBlob,
-        *,
-        passphrase: bytes,
-        parameters: ProfilePassphraseKdfParameters,
-        associated_data: bytes,
-    ) -> bytes:
-        """Derive the persisted passphrase key and authenticate one record."""
         ...
 
 
