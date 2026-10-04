@@ -497,6 +497,14 @@ core:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
 desktop:
+  account:
+    remaining_access: El acceso de agentes que activaste sigue activo.
+    sign_out: Cerrar sesión
+    sign_out_hint: Cierra tu sesión en todas las ventanas de Cadrumo.
+    signed_in: Sesión iniciada
+    signed_out: Sin sesión iniciada
+    title: Cuenta
+    unknown: Estado de la sesión desconocido
   action:
     docs_back: Atrás
     docs_forward: Adelante
@@ -598,6 +606,33 @@ desktop:
     terminal_text: Texto del terminal
     terminals: Terminales
     title: Ajustes
+  signin:
+    checking: Comprobando tu sesión…
+    lead: Escribe la contraseña de tu perfil para abrir tu espacio de trabajo.
+    open_tui: Abrir la TUI
+    open_tui_hint: ¿Configuración inicial, otro perfil o recuperación? Usa la TUI.
+    password: Contraseña
+    refused:
+      custody_changed: La contraseña o la configuración de recuperación de este perfil
+        ha cambiado. Vuelve a iniciar sesión.
+      generation_changed: Se ha cerrado tu sesión en otro lugar. Vuelve a iniciar
+        sesión.
+      invalid: Esa contraseña no ha funcionado. Vuelve a intentarlo.
+      keyring_unavailable: Cadrumo no puede mantener tu sesión en este dispositivo,
+        así que la TUI te pedirá la contraseña.
+      login_mismatch: Tu inicio de sesión es de una sesión anterior en este ordenador.
+        Vuelve a iniciar sesión.
+      other: No se ha podido iniciar sesión ({code}).
+      profile_locked: Este perfil está bloqueado. Continúa en la TUI para desbloquearlo.
+      receipt_absent: No has iniciado sesión.
+      receipt_expired: Tu sesión ha caducado. Vuelve a iniciar sesión.
+      runtime_unavailable: Los servicios en segundo plano de Cadrumo no están en marcha.
+      throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
+    start_services: Iniciar los servicios en segundo plano
+    submit: Iniciar sesión
+    submitting: Iniciando sesión…
+    title: Inicia sesión en Cadrumo
+    unsupported: En este sistema, inicia sesión desde la TUI.
   split:
     resize: Cambiar el tamaño de documentación y TUI
     side_by_side: Poner documentación y TUI lado a lado

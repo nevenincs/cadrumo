@@ -482,6 +482,14 @@ core:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
 desktop:
+  account:
+    remaining_access: Az általad engedélyezett ügynöki hozzáférés bekapcsolva marad.
+    sign_out: Kijelentkezés
+    sign_out_hint: Minden Cadrumo-ablakból kijelentkeztet.
+    signed_in: Bejelentkezve
+    signed_out: Nincs bejelentkezve
+    title: Fiók
+    unknown: A bejelentkezés állapota ismeretlen
   action:
     docs_back: Vissza
     docs_forward: Előre
@@ -582,6 +590,32 @@ desktop:
     terminal_text: Terminál szövegmérete
     terminals: Terminálok
     title: Beállítások
+  signin:
+    checking: A bejelentkezésed ellenőrzése…
+    lead: Add meg a profilod jelszavát a munkaterületed megnyitásához.
+    open_tui: TUI megnyitása
+    open_tui_hint: Első beállítás, másik profil vagy helyreállítás? Használd a TUI-t.
+    password: Jelszó
+    refused:
+      custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
+        Jelentkezz be újra.
+      generation_changed: Máshol kijelentkeztettek. Jelentkezz be újra.
+      invalid: Ez a jelszó nem működött. Próbáld újra.
+      keyring_unavailable: A Cadrumo ezen az eszközön nem tud bejelentkezve tartani,
+        ezért a TUI kérni fogja a jelszavadat.
+      login_mismatch: A bejelentkezésed egy korábbi munkamenetből származik ezen a
+        számítógépen. Jelentkezz be újra.
+      other: A bejelentkezés nem sikerült ({code}).
+      profile_locked: Ez a profil zárolva van. A feloldásához folytasd a TUI-ban.
+      receipt_absent: Nem vagy bejelentkezve.
+      receipt_expired: A bejelentkezésed lejárt. Jelentkezz be újra.
+      runtime_unavailable: A Cadrumo háttérszolgáltatásai nem futnak.
+      throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
+    start_services: Háttérszolgáltatások indítása
+    submit: Bejelentkezés
+    submitting: Bejelentkezés…
+    title: Jelentkezz be a Cadrumóba
+    unsupported: Ezen a rendszeren a TUI-ban jelentkezz be.
   split:
     resize: Dokumentáció és TUI átméretezése
     side_by_side: Dokumentáció és TUI egymás mellé

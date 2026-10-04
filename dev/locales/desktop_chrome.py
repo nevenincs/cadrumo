@@ -11,7 +11,8 @@ translation.
 locale key scan reads it as a key source, because no Python call site names
 these keys and a text scan would otherwise report every one of them as stale.
 A key the shell builds at runtime from a template is declared in full, member
-by member, in :data:`DESKTOP_CHROME_FAMILIES`.
+by member, in :data:`DESKTOP_CHROME_FAMILIES`. A declared key whose view is not
+written yet is also listed in :data:`DESKTOP_CHROME_AWAITING_CONSUMER`.
 
 Generation refuses rather than degrades: a key missing, blank, echoing its own
 name, or carrying placeholders the shell cannot substitute in any locale stops
@@ -51,6 +52,13 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
 
 DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
     {
+        "desktop.account.remaining_access",
+        "desktop.account.sign_out",
+        "desktop.account.sign_out_hint",
+        "desktop.account.signed_in",
+        "desktop.account.signed_out",
+        "desktop.account.title",
+        "desktop.account.unknown",
         "desktop.action.docs_back",
         "desktop.action.docs_forward",
         "desktop.action.logs_errors",
@@ -139,6 +147,27 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.settings.terminal_text",
         "desktop.settings.terminals",
         "desktop.settings.title",
+        "desktop.signin.checking",
+        "desktop.signin.lead",
+        "desktop.signin.open_tui",
+        "desktop.signin.open_tui_hint",
+        "desktop.signin.password",
+        "desktop.signin.refused.custody_changed",
+        "desktop.signin.refused.generation_changed",
+        "desktop.signin.refused.invalid",
+        "desktop.signin.refused.keyring_unavailable",
+        "desktop.signin.refused.login_mismatch",
+        "desktop.signin.refused.other",
+        "desktop.signin.refused.profile_locked",
+        "desktop.signin.refused.receipt_absent",
+        "desktop.signin.refused.receipt_expired",
+        "desktop.signin.refused.runtime_unavailable",
+        "desktop.signin.refused.throttled",
+        "desktop.signin.start_services",
+        "desktop.signin.submit",
+        "desktop.signin.submitting",
+        "desktop.signin.title",
+        "desktop.signin.unsupported",
         "desktop.split.resize",
         "desktop.split.side_by_side",
         "desktop.split.stack",
@@ -147,6 +176,44 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.tui.hide",
         "desktop.tui.label",
         "desktop.tui.show",
+    }
+)
+
+#: Declared keys no shell source names yet, because their view is still being
+#: written. They are authored and generated like every other key; the drift
+#: check holds the rest of the declaration to an exact match with the shell
+#: source and refuses any key here once the shell names it, so a key leaves
+#: this set when its view lands and the set only shrinks.
+DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset(
+    {
+        "desktop.account.remaining_access",
+        "desktop.account.sign_out",
+        "desktop.account.sign_out_hint",
+        "desktop.account.signed_in",
+        "desktop.account.signed_out",
+        "desktop.account.title",
+        "desktop.account.unknown",
+        "desktop.signin.checking",
+        "desktop.signin.lead",
+        "desktop.signin.open_tui",
+        "desktop.signin.open_tui_hint",
+        "desktop.signin.password",
+        "desktop.signin.refused.custody_changed",
+        "desktop.signin.refused.generation_changed",
+        "desktop.signin.refused.invalid",
+        "desktop.signin.refused.keyring_unavailable",
+        "desktop.signin.refused.login_mismatch",
+        "desktop.signin.refused.other",
+        "desktop.signin.refused.profile_locked",
+        "desktop.signin.refused.receipt_absent",
+        "desktop.signin.refused.receipt_expired",
+        "desktop.signin.refused.runtime_unavailable",
+        "desktop.signin.refused.throttled",
+        "desktop.signin.start_services",
+        "desktop.signin.submit",
+        "desktop.signin.submitting",
+        "desktop.signin.title",
+        "desktop.signin.unsupported",
     }
 )
 

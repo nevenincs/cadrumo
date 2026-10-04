@@ -490,6 +490,14 @@ core:
       output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
         admès en forma de text.
 desktop:
+  account:
+    remaining_access: L'accés d'agents que vas activar continua actiu.
+    sign_out: Tanca la sessió
+    sign_out_hint: Tanca la teva sessió a totes les finestres de Cadrumo.
+    signed_in: Sessió iniciada
+    signed_out: Sense sessió iniciada
+    title: Compte
+    unknown: Estat de la sessió desconegut
   action:
     docs_back: Enrere
     docs_forward: Endavant
@@ -591,6 +599,34 @@ desktop:
     terminal_text: Text del terminal
     terminals: Terminals
     title: Configuració
+  signin:
+    checking: S'està comprovant la teva sessió…
+    lead: Escriu la contrasenya del teu perfil per obrir el teu espai de treball.
+    open_tui: Obre la TUI
+    open_tui_hint: Configuració inicial, un altre perfil o recuperació? Fes servir
+      la TUI.
+    password: Contrasenya
+    refused:
+      custody_changed: La contrasenya o la configuració de recuperació d'aquest perfil
+        ha canviat. Torna a iniciar la sessió.
+      generation_changed: S'ha tancat la teva sessió en un altre lloc. Torna a iniciar
+        la sessió.
+      invalid: Aquesta contrasenya no ha funcionat. Torna-ho a provar.
+      keyring_unavailable: Cadrumo no pot mantenir la teva sessió en aquest dispositiu,
+        així que la TUI et demanarà la contrasenya.
+      login_mismatch: El teu inici de sessió és d'una sessió anterior en aquest ordinador.
+        Torna a iniciar la sessió.
+      other: No s'ha pogut iniciar la sessió ({code}).
+      profile_locked: Aquest perfil està bloquejat. Continua a la TUI per desbloquejar-lo.
+      receipt_absent: No has iniciat la sessió.
+      receipt_expired: La teva sessió ha caducat. Torna a iniciar la sessió.
+      runtime_unavailable: Els serveis en segon pla de Cadrumo no estan en marxa.
+      throttled: Massa intents. Podràs tornar-ho a provar d'aquí a {seconds} s.
+    start_services: Inicia els serveis en segon pla
+    submit: Inicia la sessió
+    submitting: S'està iniciant la sessió…
+    title: Inicia la sessió a Cadrumo
+    unsupported: En aquest sistema, inicia la sessió des de la TUI.
   split:
     resize: Canvia la mida de la documentació i la TUI
     side_by_side: Posa la documentació i la TUI una al costat de l'altra

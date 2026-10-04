@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c9350c24a3a7630b1fb2a2caad07301b17b482f27aaf1521f90d631cae0a4797'
+body_hash: 'sha256:6d0049103d4c15717cef1647bcdcb0eca97265f6b2f84bc27ed6ff42d69529b2'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -191,6 +191,15 @@ related:
 - `S04` `verify:` `cargo test native/application` -> `pass`
 - `S04` `by:` `opus-s04-executor`
 - `S09` `A` `native/desktop/frontend/src/shell/tauriTerminal.ts`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/locales/tests/test_desktop_chrome.py`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S18` `verify:` `python -m dev.locales.desktop_chrome` -> `pass`
+- `S18` `by:` `vaultspec-high-executor`
 
 ## Notes
 
