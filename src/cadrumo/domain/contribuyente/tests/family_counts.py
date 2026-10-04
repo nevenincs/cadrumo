@@ -5,13 +5,14 @@ from __future__ import annotations
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..family_types import MinimoDescendientesThresholds
+from .under_three import is_eligible_menor_tres
 
 
 def descendientes_menores_3_year_end(
     self: RentaFamilyProfile, filing_year: int, *, context: FamilyFactResolutionContext
 ) -> int:
     """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
-    return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year, context=context))
+    return sum(1 for d in self.descendientes if is_eligible_menor_tres(d, filing_year, context=context))
 
 
 def descendientes_eligible_minimum(

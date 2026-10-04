@@ -41,9 +41,9 @@ from ..config import (
 )
 from ..config_support import StorageRouteKind
 from ..external_constants import load_external_constants
-from ..storage_environment import project_root
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
+from .checkout import project_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 

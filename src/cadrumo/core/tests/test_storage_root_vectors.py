@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from dev.packaging.native.storage_vectors import StorageRootVector, storage_root_vectors
 
 from ...tests.audited_process import ensure_text_completed_process, run_audited_process
 from ..errors.hierarchy import CoreValidationError
@@ -19,15 +20,13 @@ from ..storage_environment import (
     StorageModeEvidence,
     StoragePlatform,
     StorageRootRefusal,
-    StorageRootVector,
     child_environment,
     ensure_storage_root,
-    project_root,
     resolve_storage_root,
     storage_root_for,
-    storage_root_vectors,
 )
 from ..type_guards import is_str_keyed_dict
+from .checkout import project_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -114,10 +113,7 @@ try:
     result["root"] = str(declaration.configured_storage_root())
 except CoreValidationError as error:
     result["refusal"] = error.context["storage_root_refusal"]
-try:
-    declaration.project_root()
-except CoreValidationError as error:
-    result["project_root"] = error.context["storage_root_refusal"]
+result["checkout"] = "absent" if declaration.storage_mode().checkout is None else "present"
 print(json.dumps(result))
 """
 
@@ -159,7 +155,7 @@ def _installed_probe(site: Path, cwd: Path, environment: dict[str, str]) -> dict
         result[key] = value
     assert Path(result.pop("module")).is_relative_to(site)
     assert result.pop("mode") == StorageMode.INSTALLED.value
-    assert result.pop("project_root") == StorageRootRefusal.CHECKOUT_UNAVAILABLE.value
+    assert result.pop("checkout") == "absent"
     return result
 
 

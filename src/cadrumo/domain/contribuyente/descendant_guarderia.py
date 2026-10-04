@@ -416,7 +416,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """True when Art. 58.2 grants the bajo-3-años increase for this descendant.
 
         Two independent limbs, and the second is why this is separate from
-        :meth:`is_eligible_menor_tres` rather than shared with it:
+        the annual household-count fixture rather than shared with it:
 
         * the ordinary limb — under three at the devengo instant Art. 61
           norma 3ª fixes; and

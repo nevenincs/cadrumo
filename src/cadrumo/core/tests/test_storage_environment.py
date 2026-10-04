@@ -22,7 +22,6 @@ from ..storage_environment import (
     detect_storage_mode,
     development_tool_env_var_names,
     product_env_var_names,
-    project_root,
     storage_directory,
 )
 from ..storage_taxonomy import (
@@ -34,6 +33,7 @@ from ..storage_taxonomy import (
     StorageOverridePolicy,
 )
 from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location, storage_path
+from .checkout import project_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -216,7 +216,8 @@ def test_strict_child_carries_only_pins_and_host_inherited_values(tmp_path: Path
         "TMPDIR": temporary,
     }
     ambient = child_environment(ChildEnvironmentProfile.STRICT, root, received=received, sys_platform="win32")
-    assert set(ambient) == {*environment, "PATH", "SYSTEMROOT"}
+    assert set(ambient) == {*environment, "PATH", "SYSTEMROOT", "XDG_CACHE_HOME"}
+    assert ambient["XDG_CACHE_HOME"] == received["XDG_CACHE_HOME"]
 
 
 @pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
@@ -231,7 +232,12 @@ def test_packaged_cache_pin_reaches_windows_children_only(tmp_path: Path, profil
 
 
 def test_pinned_names_and_precedence_come_from_the_declaration() -> None:
-    assert PROCESS_ENVIRONMENT.pinned_names() == ("CADRUMO_LOCAL_STORAGE_ROOT", "TEMP", "TMP", "TMPDIR")
+    assert (STORAGE_ROOT.variable, *PROCESS_ENVIRONMENT.temporary_variables) == (
+        "CADRUMO_LOCAL_STORAGE_ROOT",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+    )
     assert STORAGE_ROOT.precedence == ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT")
     assert STORAGE_ROOT.root_variables(StorageMode.INSTALLED) == ("CADRUMO_LOCAL_STORAGE_ROOT",)
     assert STORAGE_ROOT_SETTINGS_FIELD == "cadrumo_local_storage_root"

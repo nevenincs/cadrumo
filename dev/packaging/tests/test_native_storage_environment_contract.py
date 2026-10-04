@@ -15,7 +15,6 @@ from cadrumo.core.storage_environment import (
     StorageMode,
     development_tool_env_var_names,
     product_env_var_names,
-    storage_root_vectors,
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
@@ -23,6 +22,7 @@ from dev._paths import REPO_ROOT
 from dev.packaging.native import generate as generator_module
 from dev.packaging.native.generate import generate
 from dev.packaging.native.layout import load_layout
+from dev.packaging.native.storage_vectors import storage_root_vectors
 from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -139,7 +139,7 @@ def test_packaged_contract_carries_no_development_tool_location_beyond_the_inter
     assert leaked == {"CADRUMO_TOOL_CACHE_DIR"}
 
 
-_ENVIRONMENT_NAME = re.compile(r"[A-Z][A-Z0-9_]+")
+_ENVIRONMENT_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9_]+")
 
 
 def _location_variable_names() -> frozenset[str]:
@@ -148,7 +148,7 @@ def _location_variable_names() -> frozenset[str]:
 
 
 def _spelled_location_names(source: str) -> set[str]:
-    return set(_ENVIRONMENT_NAME.findall(source)) & _location_variable_names()
+    return {match[0] for match in _ENVIRONMENT_NAME.finditer(source)} & _location_variable_names()
 
 
 def test_generator_spells_no_location_variable_name() -> None:

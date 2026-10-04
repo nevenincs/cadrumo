@@ -22,7 +22,6 @@ from .storage_environment import (
     configured_storage_root,
     host_installed_default_root,
     storage_mode,
-    storage_root_for,
 )
 from .storage_taxonomy import StorageCategory
 from .storage_taxonomy_locations import storage_location
@@ -81,21 +80,12 @@ class StateRootInputs(BaseModel):
     mode: StorageMode | None = None
 
 
-class StateRootResolution(BaseModel):
-    """Resolved application-data anchor and default storage root."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    platform_user_data_root: Path
-    storage_root: Path
-
-
 def live_state_root_inputs() -> StateRootInputs:
     """Capture the running process's state-root inputs.
 
     Snapshots :data:`~sys.platform`, a copy of ``os.environ``, and the
     user's home directory into a frozen :class:`StateRootInputs` for
-    :func:`resolve_state_root`.
+    :func:`platform_user_data_root`.
     """
     return StateRootInputs(
         platform=sys.platform,
@@ -124,15 +114,6 @@ def platform_user_data_root(inputs: StateRootInputs) -> Path:
     if evidence.checkout is not None:
         return evidence.checkout.resolve()
     return host_installed_default_root(inputs.environ, sys_platform=inputs.platform)
-
-
-def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
-    """Resolve the relative-path anchor and the storage root from one set of inputs."""
-    evidence = _mode_evidence(inputs)
-    return StateRootResolution(
-        platform_user_data_root=platform_user_data_root(inputs),
-        storage_root=storage_root_for(inputs.environ, evidence, sys_platform=inputs.platform),
-    )
 
 
 def default_storage_root() -> Path:

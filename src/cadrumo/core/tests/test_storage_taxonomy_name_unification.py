@@ -34,12 +34,12 @@ from ..config_state_root import (
     FormerProductStateError,
     StateRootInputs,
     refuse_former_product_database,
-    resolve_state_root,
 )
 from ..config_storage_route import classify_storage_route_for_settings
 from ..config_support import StorageRouteKind
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
+from .state_root_projection import resolve_state_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

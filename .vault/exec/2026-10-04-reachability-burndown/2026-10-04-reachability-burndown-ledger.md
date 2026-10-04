@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3abbf7fdfd21e3c8a0c46a5daa6539aa1d3db4f496c7eff9425e2307204dc0d'
+body_hash: 'sha256:9c225c620ecd3c868ade3e7e4618cb994d2f70af2781aacedbd2037b4380f117'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -733,6 +733,25 @@ related:
 - `S27` `verify:` `observed-login and password independence integration: 1 passed` -> `pass`
 - `S27` `verify:` `Windows IPC pending denial recovery integration: 1 passed` -> `pass`
 - `S27` `verify:` `Ruff and ty owned scope` -> `pass`
+- `S28` `M` `dev/corpus/text.py`
+- `S28` `D` `src/cadrumo/core/corpus_text.py`
+- `S28` `verify:` `corpus, observation replacement, prorrata fixtures and legal citation scoped tests: 89 passed` -> `pass`
+- `S28` `verify:` `owned Ruff and ty` -> `pass`
+- `S28` `verify:` `integrated authored article grounding remains blocked by live Modelo 720 export binding and form-layout drift` -> `fail`
+- `S29` `A` `src/cadrumo/adapters/persistence/operations/financial_journal_purge.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/operations/journal.py`
+- `S29` `A` `src/cadrumo/adapters/persistence/operations/tests/test_financial_journal_purge.py`
+- `S29` `M` `src/cadrumo/application/journal_repository.py`
+- `S29` `M` `src/cadrumo/application/operations/persistence/journal.py`
+- `S29` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S29` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S29` `M` `src/cadrumo/locales/en/errors.yml`
+- `S29` `M` `src/cadrumo/locales/es/errors.yml`
+- `S29` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S29` `verify:` `financial purge and journal controls including all four localized refusals: 54 passed` -> `pass`
+- `S29` `verify:` `common journal Windows contention and focused purge controls: 28 passed` -> `pass`
+- `S29` `verify:` `core error registry controls with initial purge corpus: 56 passed` -> `pass`
+- `S29` `verify:` `Ruff and ty owned scope` -> `pass`
 
 ## Notes
 
@@ -761,3 +780,5 @@ related:
 - `S25` Finite fixtures retain independent expectations; actual installed storage resolver and authority kernels remain production-owned. The initial ambient-variable failure was repaired and all 20 affected checks pass.
 - `S26` Reconstruct exact adjacent unsigned components while preserving raw slots and source locators. Four Modelo 180 enumeration expectations were corrected against canonical committed layouts.
 - `S27` Actual native profile admission reconciles the exact pending protected denial before creating the host. Retain production label-head recovery and move only its fixture writer. Full census preview carries every certified axis. Observed login invalidation follows native facts.
+- `S28` S28 remains open. Exact kernel relocation and finite observation writers pass their controls. Repeated complete registry compilation refuses active Modelo 720 drift owned by another publishing workstream, before article grounding executes. No final gate or closure claimed.
+- `S29` Purge precedes journal hydration on all readers and locked writes. Superseded snapshot 6 remains refused after its amounts are purged. Legacy secure-reference invocation metadata is retired without adopting or replaying its stored request. Identity, lifecycle, effect and settled receipt remain intact. Mutable shared staging prevents the pending per-Step Git checkpoint.

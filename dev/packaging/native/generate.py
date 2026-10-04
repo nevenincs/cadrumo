@@ -19,10 +19,10 @@ from cadrumo.core.storage_environment import (
     StorageRootRefusal,
     development_tool_env_var_names,
     product_env_var_names,
-    storage_root_vectors,
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
+from dev.packaging.native.storage_vectors import storage_root_vectors
 
 from .layout import entrypoint_files, load_layout
 
@@ -106,7 +106,7 @@ def _environment_section(fields: list[str]) -> dict[str, Any]:
             "namespace_prefix": declaration.namespace_prefix,
             "reserved_settings": fields,
         },
-        "pinned": list(declaration.pinned_names()),
+        "pinned": [STORAGE_ROOT.variable, *declaration.temporary_variables],
         "host_inherited": {
             "all": list(declaration.host_inherited),
             "windows": list(declaration.windows_host_inherited),

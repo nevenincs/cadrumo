@@ -769,28 +769,3 @@ class DescendantRecordBase(DescendantRecordFields):
         if self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age"):
             return False
         return self.art_58_2_entry_date() is None
-
-    def is_eligible_menor_tres(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
-        """True when the descendant is under three at the devengo date and cohabits.
-
-        Scoped to the Art. 81 deductions — the deducción por maternidad
-        (art. 81.1) and the guardería incremento (art. 81.2). It is NOT the
-        Art. 58.2 test: see
-        :meth:`is_eligible_minimo_incremento_menor_tres`, which carries an
-        additional limb this one deliberately lacks.
-
-        Two known narrowings against the Art. 81 text, both in the
-        over-taxing direction and both needing data this axis does not carry:
-        art. 81.1 runs monthly "hasta que el menor alcance los tres años de
-        edad" rather than testing age once at year-end, and art. 81.2 extends
-        the guardería incremento through the period in which the child turns
-        three, "respecto de los gastos incurridos con posterioridad al
-        cumplimiento de dicha edad hasta el mes anterior a aquel en el que
-        pueda comenzar el segundo ciclo de educación infantil". Both need
-        month-level figures; ``gastos_guarderia_euros`` is an annual total, so
-        widening this predicate alone would swap an under-grant for an
-        over-grant.
-        """
-        if not self.convive_con_contribuyente:
-            return False
-        return self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age")

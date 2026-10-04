@@ -416,12 +416,6 @@ class AuthorityEvidenceProjection:
             f"published authority artifact has no evidence projection for legal reference {legal_reference_id!r}"
         )
 
-    def quotation_is_grounded(self, legal_reference_id: str, quotation: str) -> bool:
-        """Answer a citation query without opening any authoring corpus path."""
-        from ....core.corpus_text import normalise_corpus_text
-
-        return bool(quotation.strip()) and normalise_corpus_text(quotation) in self.legal_text(legal_reference_id)
-
     def source_bytes(self, source_reference_id: str) -> bytes:
         """Return digest-checked runtime source bytes for one source reference."""
         item = self._sources_by_id.get(source_reference_id)

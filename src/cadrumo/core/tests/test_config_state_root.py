@@ -8,18 +8,15 @@ from pathlib import Path
 import pytest
 
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
-from ..config_state_root import (
-    StateRootInputs,
-    live_state_root_inputs,
-    resolve_state_root,
-)
+from ..config_state_root import StateRootInputs, live_state_root_inputs
 from ..errors.hierarchy import CoreValidationError
 from ..paths import resolve_project_path
 from ..product_identity import PRODUCT_IDENTITY
 from ..storage_environment import StorageMode
-from ..storage_environment import project_root as authored_project_root
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_path
+from .checkout import project_root as authored_project_root
+from .state_root_projection import resolve_state_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

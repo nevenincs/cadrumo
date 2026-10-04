@@ -43,6 +43,7 @@ from ._registry_thresholds import (
     registry_thresholds,
 )
 from .family_counts import descendientes_eligible_minimum, descendientes_menores_3_year_end
+from .under_three import is_eligible_menor_tres
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -252,11 +253,11 @@ class TestDescendantInfoAgeCalculation:
 
     def test_is_eligible_menor_tres_age_1_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(2023, 1, 15))
-        assert d.is_eligible_menor_tres(2024, context=_FACT_CONTEXT) is True
+        assert is_eligible_menor_tres(d, 2024, context=_FACT_CONTEXT) is True
 
     def test_is_eligible_menor_tres_age_3_is_false(self) -> None:
         d = DescendantInfo(birth_date=date(2021, 12, 31))
-        assert d.is_eligible_menor_tres(2024, context=_FACT_CONTEXT) is False
+        assert is_eligible_menor_tres(d, 2024, context=_FACT_CONTEXT) is False
 
 
 # ---------------------------------------------------------------------------
