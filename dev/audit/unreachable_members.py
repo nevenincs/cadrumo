@@ -10,7 +10,7 @@ from dev.quality.source_import_analysis import resolve_relative_import
 
 from .unreachable_frameworks import _import_bindings
 from .unreachable_models import ShippedModule
-from .unreachable_receiver_types import ReceiverTypes
+from .unreachable_receiver_types import ReceiverTypes, iterable_receiver_type
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,8 @@ class ResolvedCall:
 
 def _expression_nodes(node: ast.AST) -> Iterator[ast.AST]:
     yield node
+    if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+        return
     for child in ast.iter_child_nodes(node):
         if not isinstance(child, ast.stmt):
             yield from _expression_nodes(child)
@@ -65,9 +67,24 @@ def resolved_member_uses(
             return expression(parsed, bindings)
         return ""
 
-    def walk(nodes: list[ast.stmt], inherited: dict[str, str], class_owner: str = "") -> None:
+    def element(node: ast.expr, bindings: dict[str, str], containers: dict[str, str]) -> str:
+        if receivers is None:
+            return ""
+        if isinstance(node, ast.Name) and node.id in containers:
+            return containers[node.id]
+        target = expression(node.func if isinstance(node, ast.Call) else node, bindings)
+        return receivers.iterables.get(target, "")
+
+    def walk(
+        nodes: list[ast.stmt],
+        inherited: dict[str, str],
+        class_owner: str = "",
+        inherited_containers: dict[str, str] | None = None,
+    ) -> None:
         bindings = dict(inherited)
+        containers = dict(inherited_containers or {})
         for node in nodes:
+            child_bindings = bindings
             if isinstance(node, ast.ImportFrom):
                 base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
                 if base:
@@ -79,16 +96,24 @@ def resolved_member_uses(
                     )
             elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 local = dict(bindings)
+                local_containers = dict(containers)
                 arguments = (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
                 for argument in arguments:
                     local.pop(argument.arg, None)
+                    local_containers.pop(argument.arg, None)
                     if argument.arg in {"self", "cls"} and class_owner:
                         local[argument.arg] = class_owner
                     if argument.annotation is not None:
                         owner = expression(argument.annotation, bindings)
                         if owner:
                             local[argument.arg] = owner
-                walk(node.body, local)
+                        if receivers is not None:
+                            item_type = iterable_receiver_type(
+                                argument.annotation, module.name, bindings, receivers.classes
+                            )
+                            if item_type:
+                                local_containers[argument.arg] = item_type
+                walk(node.body, local, inherited_containers=local_containers)
                 continue
             elif isinstance(node, ast.ClassDef):
                 bindings[node.name] = f"{module.name}.{node.name}"
@@ -109,8 +134,23 @@ def resolved_member_uses(
                 for target in targets:
                     if isinstance(target, ast.Name):
                         bindings.pop(target.id, None)
+                        containers.pop(target.id, None)
                         if owner:
                             bindings[target.id] = owner
+                        item_type = element(value, bindings, containers) if value is not None else ""
+                        if isinstance(node, ast.AnnAssign) and receivers is not None:
+                            item_type = iterable_receiver_type(
+                                node.annotation, module.name, bindings, receivers.classes
+                            )
+                        if item_type:
+                            containers[target.id] = item_type
+            elif isinstance(node, ast.For | ast.AsyncFor):
+                child_bindings = dict(bindings)
+                if isinstance(node.target, ast.Name):
+                    child_bindings.pop(node.target.id, None)
+                    item_type = element(node.iter, bindings, containers)
+                    if item_type:
+                        child_bindings[node.target.id] = item_type
             elif isinstance(node, ast.With | ast.AsyncWith) and receivers is not None:
                 for item in node.items:
                     if isinstance(item.context_expr, ast.Call) and isinstance(item.optional_vars, ast.Name):
@@ -118,9 +158,28 @@ def resolved_member_uses(
                         owner = receivers.contexts.get(expression(item.context_expr.func, bindings))
                         if owner:
                             bindings[item.optional_vars.id] = owner
-            for part in _expression_nodes(node):
+
+            def visit_expression(part: ast.AST, scoped: dict[str, str]) -> None:
+                if isinstance(part, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+                    local = dict(scoped)
+                    for generator in part.generators:
+                        for inner in _expression_nodes(generator.iter):
+                            visit_expression(inner, local)
+                        if isinstance(generator.target, ast.Name):
+                            item_type = element(generator.iter, local, containers)
+                            local.pop(generator.target.id, None)
+                            if item_type:
+                                local[generator.target.id] = item_type
+                        for condition in generator.ifs:
+                            for inner in _expression_nodes(condition):
+                                visit_expression(inner, local)
+                    results = (part.key, part.value) if isinstance(part, ast.DictComp) else (part.elt,)
+                    for result in results:
+                        for inner in _expression_nodes(result):
+                            visit_expression(inner, local)
+                    return
                 if isinstance(part, ast.Attribute):
-                    target = expression(part, bindings)
+                    target = expression(part, scoped)
                     parts = target.split(".")
                     for end in range(len(parts) - 2, 0, -1):
                         owner = ".".join(parts[:end])
@@ -130,20 +189,23 @@ def resolved_member_uses(
                 elif calls is not None and isinstance(part, ast.Call):
                     calls.append(
                         ResolvedCall(
-                            expression(part.func, bindings),
-                            tuple((keyword.arg, expression(keyword.value, bindings)) for keyword in part.keywords),
+                            expression(part.func, scoped),
+                            tuple((keyword.arg, expression(keyword.value, scoped)) for keyword in part.keywords),
                             frozenset(
-                                expression(item, bindings)
+                                expression(item, scoped)
                                 for argument in part.args
                                 for item in (argument, *ast.walk(argument))
                                 if isinstance(item, ast.Name | ast.Attribute | ast.Call)
                             ),
                         )
                     )
+
+            for part in _expression_nodes(node):
+                visit_expression(part, bindings)
             for block in ("body", "orelse", "finalbody"):
                 children = getattr(node, block, None)
                 if isinstance(children, list):
-                    walk(children, bindings)
+                    walk(children, child_bindings, inherited_containers=containers)
 
     initial = _import_bindings(module)
     initial.update(

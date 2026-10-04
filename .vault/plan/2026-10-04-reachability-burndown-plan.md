@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:788db11d9764c648eed8c55dab20afd1885c1b01da06fa191d97faa83daf961a'
+body_hash: 'sha256:d386dbe8603668d280fb109a52f64e8ec58080543e12e5c51c648420d87fb11f'
 ---
 
 # `reachability-burndown` plan
@@ -42,7 +42,8 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S14` - Retire uncalled core dictionary conversion and date aliases, move the Google test predicate to its actual fixture owner and project only consumed native audit-token coordinates; `Core configuration and locales, AEAT workspace, native audit token decoding and owning tests`.
 - [x] `S15` - Bind Windows worker admission to retained process birth and exact Job membership and retire unsupported native and browser test doors; `Native worker identity, enrollment and shutdown fixture owners, browser authentication and owning tests`.
 - [x] `S16` - Retire legacy secure batch wrappers and move diagnostic observation-history and index inspection to their real fixture owners; `Secure object batches, observation repositories, transaction index probes and owning fixtures`.
-- [ ] `S17` - Resolve homogeneous iterable receiver evidence without clearing shadowed or unknown element types; `Reachability receiver analysis, outside consumers and planted controls`.
+- [x] `S17` - Resolve homogeneous iterable receiver evidence without clearing shadowed or unknown element types; `Reachability receiver analysis, outside consumers and planted controls`.
+- [ ] `S18` - Retire unsupported diagnostic projections and bind existing tests to canonical kernels; `Registry diagnostics, operator schema projections, family and lineage helpers, bootstrap declarations and owning fixtures`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [x] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

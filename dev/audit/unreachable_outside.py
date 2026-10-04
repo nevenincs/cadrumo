@@ -65,6 +65,7 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str], receivers: Receiv
             receivers.classes | outside_receivers.classes,
             {**receivers.fields, **outside_receivers.fields},
             {**receivers.contexts, **outside_receivers.contexts},
+            {**receivers.iterables, **outside_receivers.iterables},
         )
     for probe, label in probes:
         runtime, type_only = module_edges(probe, known)

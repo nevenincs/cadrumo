@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f84233448a369f65eb65d5964aa0f42bcfaa83e2eb8fc1b19192de198e6580f'
+body_hash: 'sha256:42a99fd244752d2259608227147bc7792784a26b47b6f21ec11bcd42dd5993b5'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -528,6 +528,13 @@ related:
 - `S16` `M` `src/cadrumo/entrypoints/tests/test_runtime_attached_repositories_part1.py`
 - `S16` `verify:` `Secure batches, guarded indexes and encrypted observation history: 60 passed` -> `pass`
 - `S16` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S17` `M` `dev/audit/unreachable_members.py`
+- `S17` `M` `dev/audit/unreachable_receiver_types.py`
+- `S17` `M` `dev/audit/unreachable_outside.py`
+- `S17` `M` `dev/audit/tests/test_unreachable_members.py`
+- `S17` `verify:` `Reachability receiver planted controls: 8 passed` -> `pass`
+- `S17` `verify:` `Broader audit corpus before independent legal-screen repair: 307 passed and 2 tracked legal failures` -> `fail`
+- `S17` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -546,3 +553,4 @@ related:
 - `S06` macOS incarnation and coalition probes share the native pidinfo query without weakening ABI lengths or ESRCH-only absence. Registered PDF import error roots now own the one coverage constructor; subclasses retain their codes. Duplication reports preserve raw nonzero token counts and distinguish AST-proven declarations from executable or unclassified spans. Import, overlap and missing-location filtering cannot claim zero.
 - `S15` Windows worker admission now opens a non-inherited process handle, compares it with the pipe-held birth and verifies exact Job membership before accepting its PID. Handles close on every outcome; native installed workers and a real outside-Job peer prove both boundaries. Protected candidate-secret inspection and terminal retry drivers now belong to finite real-host fixtures; unsupported browser reauthentication and close-count getters are retired while real close/authenticate and lifecycle guards remain. Shared files are staged from owned transformations of HEAD to preserve concurrent changes.
 - `S16` Legacy batch wrappers are retired in favor of current-schema batches and the actual coordinated migration owner. Diagnostic observation history and raw index inventory now belong to finite fixtures that retain guarded SQL, encryption, identity refusals and ordering. Shared files are staged from owned HEAD transformations to preserve concurrent work.
+- `S17` Qualified homogeneous iterable annotations now bind loop and comprehension receivers only within their lexical scope. Mixed, unknown, vendor-shadowed and nested-shadowed receivers remain unresolved. Canonical module-qualified iterable annotations are supported without borrowing unrelated element types.

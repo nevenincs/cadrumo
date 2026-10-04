@@ -19,12 +19,46 @@ class ReceiverTypes:
     classes: frozenset[str]
     fields: Mapping[str, str]
     contexts: Mapping[str, str]
+    iterables: Mapping[str, str]
 
 
 def _qualify(node: ast.expr, name: str, bindings: Mapping[str, str]) -> str:
     spelling = _expression_name(node)
     head, separator, tail = spelling.partition(".")
     return f"{bindings.get(head, f'{name}.{head}')}{separator}{tail}"
+
+
+def iterable_receiver_type(
+    annotation: ast.expr, name: str, bindings: Mapping[str, str], classes: frozenset[str]
+) -> str:
+    """Resolve a homogeneous declared iterable, keeping unknown and mixed elements unknown."""
+    if not isinstance(annotation, ast.Subscript):
+        return ""
+    spelling = _expression_name(annotation.value)
+    qualified = _qualify(annotation.value, name, bindings)
+    if spelling.partition(".")[0] in bindings:
+        if qualified not in {
+            "builtins.tuple",
+            "builtins.list",
+            "builtins.set",
+            "builtins.frozenset",
+            "collections.abc.Iterable",
+            "collections.abc.Iterator",
+            "collections.abc.Sequence",
+            "typing.Iterable",
+            "typing.Iterator",
+            "typing.Sequence",
+        }:
+            return ""
+    elif spelling not in {"tuple", "list", "set", "frozenset"}:
+        return ""
+    arguments = list(annotation.slice.elts) if isinstance(annotation.slice, ast.Tuple) else [annotation.slice]
+    types = {
+        _qualify(item, name, bindings)
+        for item in arguments
+        if not isinstance(item, ast.Constant) or item.value is not Ellipsis
+    }
+    return next(iter(types)) if len(types) == 1 and types <= classes else ""
 
 
 def receiver_types(
@@ -41,6 +75,8 @@ def receiver_types(
     returns: dict[str, str] = {}
     fields: dict[str, str] = {}
     contexts: dict[str, str] = {}
+    iterables: dict[str, str] = {}
+
     for name, module in modules.items():
         bindings = _import_bindings(module)
 
@@ -51,6 +87,9 @@ def receiver_types(
                         target = _qualify(member.annotation, name, bindings)
                         if target in classes:
                             fields[f"{name}.{owner.name}.{member.target.id}"] = target
+                        item_type = iterable_receiver_type(member.annotation, name, bindings, classes)
+                        if item_type:
+                            iterables[f"{name}.{owner.name}.{member.target.id}"] = item_type
             functions = owner.body if isinstance(owner, ast.ClassDef) else [owner]
             for function in functions:
                 if not isinstance(function, ast.FunctionDef | ast.AsyncFunctionDef) or function.returns is None:
@@ -59,6 +98,10 @@ def receiver_types(
                 if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
                     annotation = ast.parse(annotation.value, mode="eval").body
                 result = _qualify(annotation, name, bindings)
+                prefix = f"{name}.{owner.name}." if isinstance(owner, ast.ClassDef) else f"{name}."
+                item_type = iterable_receiver_type(annotation, name, bindings, classes)
+                if item_type:
+                    iterables[prefix + function.name] = item_type
                 if isinstance(owner, ast.ClassDef) and _expression_name(annotation) == "Self":
                     result = f"{name}.{owner.name}"
                 if result in classes:
@@ -80,4 +123,4 @@ def receiver_types(
                 targets = owner.targets if isinstance(owner, ast.Assign) else [owner.target]
                 if result in classes:
                     values.update((f"{name}.{target.id}", result) for target in targets if isinstance(target, ast.Name))
-    return ReceiverTypes(values, returns, classes, fields, contexts)
+    return ReceiverTypes(values, returns, classes, fields, contexts, iterables)

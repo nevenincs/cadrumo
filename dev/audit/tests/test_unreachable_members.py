@@ -14,6 +14,70 @@ from ..unreachable_receiver_types import receiver_types
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def test_iterated_return_fields_and_comprehensions_keep_qualified_elements() -> None:
+    records = ShippedModule(
+        "pkg.records",
+        Path("records.py"),
+        False,
+        ast.parse("""
+from collections.abc import Sequence
+class Record: pass
+class Other: pass
+class Holder:
+    rows: tuple[Record, ...]
+def build() -> tuple[Record, ...]: ...
+def mixed() -> tuple[Record, Other]: ...
+def unknown(): ...
+def holder() -> Holder: ...
+"""),
+    )
+    caller = ShippedModule(
+        "pkg.consumer",
+        Path("consumer.py"),
+        False,
+        ast.parse("""
+from .records import Record, build, mixed, unknown, holder
+for record in build():
+    record.direct
+rows = build()
+values = [record.comp for record in rows]
+for record in holder().rows:
+    record.nested
+def typed(rows: tuple[Record, ...]):
+    return tuple(record.argument for record in rows)
+for record in mixed():
+    record.mixed_unknown
+for record in unknown():
+    record.unknown
+def shadow(build):
+    return [record.shadow_unknown for record in build()]
+def sibling(rows):
+    return [record.sibling_unknown for record in rows]
+"""),
+    )
+    uses = resolved_member_uses(caller, frozenset({records.name}), receivers=receiver_types({records.name: records}))
+    assert {pair for pair in uses if pair[1].startswith("Record.")} == {
+        (records.name, "Record.direct"),
+        (records.name, "Record.comp"),
+        (records.name, "Record.nested"),
+        (records.name, "Record.argument"),
+    }
+
+
+def test_shadowed_iterable_annotation_does_not_establish_a_class_element() -> None:
+    records = ShippedModule(
+        "pkg.records",
+        Path("records.py"),
+        False,
+        ast.parse("""
+from vendor import Sequence
+class Record: pass
+def build() -> Sequence[Record]: ...
+"""),
+    )
+    assert receiver_types({records.name: records}).iterables == {}
+
+
 def test_imported_class_constructor_and_typed_receivers_are_qualified() -> None:
     module = ShippedModule(
         "pkg.consumer",
@@ -133,3 +197,40 @@ with unknown() as record:
     assert (records.name, "Holder.record") in uses
     assert (records.name, "Record.nested") in uses
     assert (records.name, "Record.orphan") not in uses
+
+
+def test_nested_comprehension_shadow_does_not_borrow_outer_element_type() -> None:
+    records = ShippedModule("pkg.records", Path("records.py"), False, ast.parse("class Record: pass"))
+    caller = ShippedModule(
+        "pkg.consumer",
+        Path("consumer.py"),
+        False,
+        ast.parse("""
+from .records import Record
+def inspect(rows: tuple[Record, ...], unknown):
+    return [(record.outer, [record.unproven for record in unknown]) for record in rows]
+"""),
+    )
+    uses = resolved_member_uses(caller, frozenset({records.name}), receivers=receiver_types({records.name: records}))
+    assert (records.name, "Record.outer") in uses
+    assert (records.name, "Record.unproven") not in uses
+
+
+def test_qualified_canonical_iterable_annotations_retain_element_type() -> None:
+    records = ShippedModule(
+        "pkg.records",
+        Path("records.py"),
+        False,
+        ast.parse("""
+import collections.abc as abc
+import typing
+class Record: pass
+def sequence() -> abc.Sequence[Record]: ...
+def iterable() -> typing.Iterable[Record]: ...
+"""),
+    )
+    facts = receiver_types({records.name: records})
+    assert facts.iterables == {
+        "pkg.records.sequence": "pkg.records.Record",
+        "pkg.records.iterable": "pkg.records.Record",
+    }
