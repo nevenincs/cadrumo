@@ -64,5 +64,16 @@
   "shipping_product_data_authority_changed": false,
   "external_proof_sha256": "c97e18d58fd4cf57db4f35989949c9330b2d5301a1bff37477ad8df0914a1537",
   "original_base": "66b785a1418ef48cb2f56711c83933c0828c46f8",
-  "source_checkpoint_mapping": "Pending coherent root checkpoint; source byte proof and prior failed gate retained separately."
+  "source_checkpoint_mapping": "Coherently committed source, exact blob OIDs and tested working-byte qualification recorded; original receipt status is retained separately.",
+  "integration_source_rows": [
+    {
+      "path": "src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py",
+      "sha256": "08a75f7541ad37065d62f5d1e9dd6296a04ef54d0e5753ea069f03bac3bf56eb",
+      "disposition": "incorporated",
+      "integration_commit": "7d249727426ccace4e238fdf5cbe2db03008946c",
+      "committed_blob_oid": "6d74fd4e6dc05f15a870064360828386df8f2931",
+      "committed_blob_sha256": "08a75f7541ad37065d62f5d1e9dd6296a04ef54d0e5753ea069f03bac3bf56eb",
+      "byte_relation": "exact"
+    }
+  ]
 }

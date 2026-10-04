@@ -122,5 +122,53 @@
   "final_native_artifact": "held for all source owner freeze and root inventory release",
   "native_artifact_status": "prepared external owning runner; root all-owner/inventory/metadata release pending",
   "original_external_proof_sha256": "d5b1363c3b2e8cfd22b761fb84763d8c06409df274ee8b1d7d0c6cdd2e9170c6",
-  "root_review": "No remaining high/critical source finding; physical/native claims excluded. Genuine cryptographic password proof, enrolled API possession/admission and registered executors are retained across explicit synthetic OS transport/custody ports. Detector teeth and offline seal remain."
+  "root_review": "No remaining high/critical source finding; physical/native claims excluded. Genuine cryptographic password proof, enrolled API possession/admission and registered executors are retained across explicit synthetic OS transport/custody ports. Detector teeth and offline seal remain.",
+  "integration_source_rows": [
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py",
+      "working_source_sha256": "49f543d2862d665863d2d6764c77fd7e5729fe46a7b5a002960409e4bb99703a",
+      "disposition": "incorporated",
+      "integration_commit": "8d89c65ca835fda2db8ed82d70a00a9e06f7d50b",
+      "committed_blob_oid": "365e07d7a3bdc0f5e71f37e93d20324ebe6d48b4",
+      "committed_blob_sha256": "49f543d2862d665863d2d6764c77fd7e5729fe46a7b5a002960409e4bb99703a",
+      "byte_relation": "exact"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/portable_api_cli_runtime.py",
+      "working_source_sha256": "ab9cc5b0bf36ff96aa6ad565246d2cb21996831f0d574482f94811804705e992",
+      "disposition": "incorporated",
+      "integration_commit": "8d89c65ca835fda2db8ed82d70a00a9e06f7d50b",
+      "committed_blob_oid": "ff562df631b611abb1d3fd0a8d43609f0dd65419",
+      "committed_blob_sha256": "ab9cc5b0bf36ff96aa6ad565246d2cb21996831f0d574482f94811804705e992",
+      "byte_relation": "exact"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py",
+      "working_source_sha256": "c571c525c4471b7fce2ddb1c96ce9db2f5096a339d6d0d34de615547ca3195df",
+      "disposition": "incorporated",
+      "integration_commit": "8d89c65ca835fda2db8ed82d70a00a9e06f7d50b",
+      "committed_blob_oid": "96393e00cb4bab347c31129cfcf80bf83dfac65e",
+      "committed_blob_sha256": "c571c525c4471b7fce2ddb1c96ce9db2f5096a339d6d0d34de615547ca3195df",
+      "byte_relation": "exact"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_command_aeat_capability_probe.py",
+      "working_source_sha256": "71d8435630dc6b995c2d93498d29f3a315e3c01f083de891921e8e7e742fdc0e",
+      "disposition": "incorporated",
+      "integration_commit": "8d89c65ca835fda2db8ed82d70a00a9e06f7d50b",
+      "committed_blob_oid": "b5f42cba22bb582f8016388c4989475202ed439b",
+      "committed_blob_sha256": "71d8435630dc6b995c2d93498d29f3a315e3c01f083de891921e8e7e742fdc0e",
+      "byte_relation": "exact"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py",
+      "working_source_sha256": "e420726f2e3aafeba67e800e927eef3eae3133cc3abb27f86eb4c3bcff3e0153",
+      "disposition": "incorporated",
+      "integration_commit": "8d89c65ca835fda2db8ed82d70a00a9e06f7d50b",
+      "committed_blob_oid": "3ac86b0f953fe21838855e935f1f6524e706534c",
+      "committed_blob_sha256": "d9c5d32d84657f1f1d11741abf0d39971655b3e19c416f2ac78b7b988e32d4e7",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
+    }
+  ],
+  "integration_mapping_note": "Actual coherent source checkpoint, exact committed blob and explicitly qualified tested working-byte relation; no historical result relabeled green."
 }

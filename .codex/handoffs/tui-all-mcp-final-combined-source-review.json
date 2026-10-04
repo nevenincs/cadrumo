@@ -1,0 +1,404 @@
+{
+  "schema_version": 1,
+  "reviewer": "independent final combined-source reviewer",
+  "recorded_utc": "2026-10-04T03:58:50.6986063Z",
+  "verdict": "PENDING",
+  "after_boundary_repair_expected_verdict": "PENDING; no current native/landing completion claim",
+  "feature": "tui-all-mcp-integration",
+  "steps": [
+    "S03",
+    "S04",
+    "S05"
+  ],
+  "diff_base": "d315a9003c6573b44af2195e48aa4f9f61f5c0ca",
+  "reviewed_head": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+  "source_working_diff_to_head": [],
+  "source_rows": [
+    {
+      "path": "dev/acceptance/installed_cli.py",
+      "working_sha256": "a03560a20c5fe7e2d675d131bc32d96ec36393db579cec58c267d799299605b3",
+      "committed_blob_oid": "629a05b6cf9396db5000c5fb9f03e85e062be906"
+    },
+    {
+      "path": "dev/acceptance/iva/cli_journey.py",
+      "working_sha256": "83a4c233a79efcff4226e840a149749c140dacb8d697b80d0fa5c3253dc92b05",
+      "committed_blob_oid": "fde9a2d30006a1113afa9bb78f526d9d9c2daf1f"
+    },
+    {
+      "path": "dev/acceptance/iva/tests/test_cli_argument_prefix.py",
+      "working_sha256": "2e7a97baf8bcbdfa8bb02dad0f1951bf20d93dca67795757f9b940c817ee9271",
+      "committed_blob_oid": "fd6800656e7aaf53c98374ca04d38f325613340f"
+    },
+    {
+      "path": "dev/acceptance/tests/test_installed_cli.py",
+      "working_sha256": "c2cd60110f6c6c1348b398b98b91bbef92de17e69454bddd64a0ecff5f2022f9",
+      "committed_blob_oid": "932eca5636bfdff463ffbf6075afa10617e63329"
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows_verify.py",
+      "working_sha256": "7c5f0fe1caa5e01ae28233a8ae2d1c0546efd5e94766dbe4053b6ccc42fd6cfb",
+      "committed_blob_oid": "87313ad1dfb8d41d31fb7277606c439e27ef56a2"
+    },
+    {
+      "path": "native/interpreter/windows/host.c",
+      "working_sha256": "3b41a4ea4613ce990716f9f0518caec06f3f64e1dc08ca5307ff204d7307f87c",
+      "committed_blob_oid": "058562391e5813784fb9a7de9e60721b9c39d66b"
+    },
+    {
+      "path": "src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py",
+      "working_sha256": "15b800e648f54407a79bea8bd38ac735f1ff712c134a2fd5fd68311bb079c2d3",
+      "committed_blob_oid": "a629adcc2c4df8e83202cca47ae7b30f3733f8a8"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py",
+      "working_sha256": "2ea868c34db84a9328d31247292c3b22dd5f872010b635b40cdc401a3ce0eace",
+      "committed_blob_oid": "df9a5018e22e99b8d46f4305ca3d70475362f94e"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/test_modelo_reconciliation_repository.py",
+      "working_sha256": "456287bb9c1d123b39db3571fd1e03feefb7773f59c8d3ef8834f367b8e2f756",
+      "committed_blob_oid": "ddcd1a912c64e79ac2aced18ea06d62339d1b4a3"
+    },
+    {
+      "path": "src/cadrumo/adapters/persistence/profile/tests/test_revision_id_d1_contract.py",
+      "working_sha256": "04b0ece6c2d2ef25c19ad807d0d42ea52c5713dbc2eb7c7ea925c745aba37fe4",
+      "committed_blob_oid": "d11bbe317540f6e1da89a2f90f8ebab578540a52"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/query_read_operation.py",
+      "working_sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db",
+      "committed_blob_oid": "56a7ba7639725b09d4d6606df24b248901740643"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/selectors.py",
+      "working_sha256": "c14929af12203b12fdf15c424fe8ec9acad67901e28d28e9f04c9b006e1aaed7",
+      "committed_blob_oid": "7592b246124484d0882080ab32298b25d18da1ec"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/work_addressing.py",
+      "working_sha256": "332e62f9407b30f0baf4c2dcc8ed0fcd98ed1dfe3e3b2838c254dc11d7289ba2",
+      "committed_blob_oid": "be70a80a808d119b2f6acc59cafe326fe8b481e9"
+    },
+    {
+      "path": "src/cadrumo/application/modelo/work_create_operation.py",
+      "working_sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b",
+      "committed_blob_oid": "a31cedf748a59a92edd9928af784d0957c0e28a4"
+    },
+    {
+      "path": "src/cadrumo/application/operator_surface/contract.py",
+      "working_sha256": "2431bd7298cce93cd91eed213ced8d9577da11f1f7369c99475071c77db15c42",
+      "committed_blob_oid": "dfa96571d7b42e637f1ecbe7d2fccfd665441d79"
+    },
+    {
+      "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
+      "working_sha256": "3ed6302fb63d2f15b631dbf3d98e5aeeb446abe113d7c8ef073837dcd3fd8acb",
+      "committed_blob_oid": "4d153b14ac617b72c6a57cf5121b4f2324442f80"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py",
+      "working_sha256": "c571c525c4471b7fce2ddb1c96ce9db2f5096a339d6d0d34de615547ca3195df",
+      "committed_blob_oid": "96393e00cb4bab347c31129cfcf80bf83dfac65e"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/_m303_ordinary_cli_support.py",
+      "working_sha256": "94c76b97103dada857f32c038336e921e1da81a3833843a2c41ebd70abf14a50",
+      "committed_blob_oid": "6e9636779999e11cb2c61ffb2582de0cdcb932d6"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/_modelo_work_ux_support.py",
+      "working_sha256": "6dbac28ae315c2ea319e6bedba544aac213d9ec53b78ed60970b3f2302a0f2f3",
+      "committed_blob_oid": "414ce0a3101ddd2773e7dc604508974f5142cf0e"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/modelo_cli.py",
+      "working_sha256": "77a306092dbda5d310de266b95750ae876f34da8d062581f63b0433d5694acd7",
+      "committed_blob_oid": "7273ea60481408a29fc6c76a9edccd821db5ab51"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/modelo_profile_seed.py",
+      "working_sha256": "fa49f944e0a05e1b7eb0d75bfae779cdb94ab24d3491bf9f432e33174dfdcff7",
+      "committed_blob_oid": "0cdf09fbae3db8b92d98fda2110eebd98aa7b143"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/portable_api_cli_runtime.py",
+      "working_sha256": "ab9cc5b0bf36ff96aa6ad565246d2cb21996831f0d574482f94811804705e992",
+      "committed_blob_oid": "ff562df631b611abb1d3fd0a8d43609f0dd65419"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py",
+      "working_sha256": "49f543d2862d665863d2d6764c77fd7e5729fe46a7b5a002960409e4bb99703a",
+      "committed_blob_oid": "365e07d7a3bdc0f5e71f37e93d20324ebe6d48b4"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_calculation_blocked_filing_cli.py",
+      "working_sha256": "f68010255d9673227d16e706ebc6a82d15630d8f850ae5005255ab6ab2a15cf5",
+      "committed_blob_oid": "6fc9c9a8d78505e10cb892188dba561ecda265df"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_command_aeat_capability_probe.py",
+      "working_sha256": "71d8435630dc6b995c2d93498d29f3a315e3c01f083de891921e8e7e742fdc0e",
+      "committed_blob_oid": "b5f42cba22bb582f8016388c4989475202ed439b"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py",
+      "working_sha256": "e420726f2e3aafeba67e800e927eef3eae3133cc3abb27f86eb4c3bcff3e0153",
+      "committed_blob_oid": "3ac86b0f953fe21838855e935f1f6524e706534c"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_direction_reaches_the_confirm_boundary.py",
+      "working_sha256": "c635e7d5a66f84a863bce8e9d8f56d7ff1b768cada60a3f7a97fd25012c3ecfe",
+      "committed_blob_oid": "74746a319add9fec98d855a5b745110f6f924030"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_m303_bienes_inversion_quarters_cli.py",
+      "working_sha256": "6d939ffb7ae25649d2e0eddfb45b3f9c292cd57e2138e42a0c366282a223de00",
+      "committed_blob_oid": "4149c0856e5b12fd4b560dcfa5db64412a830763"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py",
+      "working_sha256": "1d769fb0ba320212f318e2ca38a2f767b1a85cba9495b298a1c416f9f8523ceb",
+      "committed_blob_oid": "f5923753ba5c6297ce6afc9f9a27bc68ed127c15"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_m303_zero_cuota_and_investment_inputs_cli.py",
+      "working_sha256": "23b5bff56125a749384c6aa74733bba68d08c23320ff65072576e9053764299c",
+      "committed_blob_oid": "4c275f2f13055b721d1e1e25abd8f2a272c041df"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
+      "working_sha256": "4f0f2f0cfdd4a0877ff43d199685d72376a578dcabe8414513d5c5d593920c70",
+      "committed_blob_oid": "7734247cb6eaaa8e8daa3301f86908680fa58228"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_discovery_defects.py",
+      "working_sha256": "ebff97e7f2e11ddb974eaeb8e36da6cd47660b127b46ba660904f77d946f8efe",
+      "committed_blob_oid": "c5fe5724397c423c277eafe68e7d326790982309"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_period_tokens.py",
+      "working_sha256": "2855d241c54a5e3d1164e27866d275f7b510bb34974542974feedfd7bcb43344",
+      "committed_blob_oid": "6720c88e0fc876edbc162a399ff44bf0d8309856"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
+      "working_sha256": "87227a82fce780eaf1264978e934b2a1573bd45d529095c29b097e92d37f6a46",
+      "committed_blob_oid": "3168ae9b20d666fe33674aaf05147ebea13c4652"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/enrollment_connections.py",
+      "working_sha256": "08cb3a98e17f21ef3a54094274717add5d28f799eac4a18ef4e3bdb050b48749",
+      "committed_blob_oid": "2fd5e97bedcac06967b0150d81a73b2c5857872b"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/profile_connection_admission.py",
+      "working_sha256": "6f29dc49ec3adad5f3d27d8aeb8f21f3bb2a633e1ef28db4ad5d90521302ad9b",
+      "committed_blob_oid": "681982ceee2d4c7958ecc874425651c985a5e07c"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/profile_connections.py",
+      "working_sha256": "3ae86a18a0c0ae73544426d75a55af1a3917e30c27e9e006df313a789b3edae9",
+      "committed_blob_oid": "e432fcbbbd45f56a2b5307b024db8e32bec0acb7"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/profile_host.py",
+      "working_sha256": "efd14c7d0064de79a40dd8f4c78000e79287bbaa203b8e3bdf479dbd0432dd84",
+      "committed_blob_oid": "ec7bf98f010d037a1c5d4cd1d694e32be4bc3d86"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/runtime/tests/test_profile_binding_retirement.py",
+      "working_sha256": "387b11c21a41c0e8cc9ca2d42f7f327a6fe1f98d19c3d5b08714a74f714fa032",
+      "committed_blob_oid": "c55f54fa50396192abc8f1a5beaf35789c391376"
+    },
+    {
+      "path": "src/cadrumo/entrypoints/tests/conformance_m145_support.py",
+      "working_sha256": "1564cb3125d3cc6b8ccfc81ea95d65927670c899c41e6a9b573b7af027be7d37",
+      "committed_blob_oid": "8b1f4136f4c8cfa2690af1c03d2c74bea78bdc7b"
+    },
+    {
+      "path": "src/cadrumo/locales/ca/common.yml",
+      "working_sha256": "2b8ecdee6b788df4daa3001dfbdff6bb883dabe7681c3cd8d6a3715d04fbd237",
+      "committed_blob_oid": "705628b0fcc159df92bd9bb1976fa774a9542d55"
+    },
+    {
+      "path": "src/cadrumo/locales/en/common.yml",
+      "working_sha256": "89d15b7586cec3c3ef43f36af935d32d35c01699fd1c2ef9704b1125d341a646",
+      "committed_blob_oid": "4cc03dafa2277828c9291fef0fc385ba8fef9b26"
+    },
+    {
+      "path": "src/cadrumo/locales/es/common.yml",
+      "working_sha256": "ed8c75ca7bcb50a44f74978784d829c813afa79164cd15980db97fcd45a78bad",
+      "committed_blob_oid": "60aed5a61205cddea9b861474008c7cf437507fa"
+    },
+    {
+      "path": "src/cadrumo/locales/hu/common.yml",
+      "working_sha256": "a074c025e85acd6a8014650cbbde7435b70d817464c6248eeea0c3d4b44a59f0",
+      "committed_blob_oid": "27466e23e5c277ca7c20007abc44d8bfb5a3503f"
+    }
+  ],
+  "ownership": "Read-only source, Git, index, .codex and .vault; this external JSON is the only write",
+  "prior_review_reuse": "Unchanged combined-source review through d315a9003c reused; original 3069 source mappings and baseline not reaudited",
+  "governing_records": [
+    ".vault/plan/2026-10-03-tui-all-mcp-integration-plan.md",
+    ".vault/adr/2026-09-26-mcp-purpose-authentication-adr.md",
+    ".vault/adr/2026-09-26-mcp-purpose-authentication-profile-access-adr.md",
+    ".vault/adr/2026-10-03-runtime-without-service-manager-adr.md",
+    ".vault/adr/2026-10-03-application-packaging-interpreter-foundation-adr.md",
+    ".vault/adr/2026-10-04-application-distribution-adr.md"
+  ],
+  "findings": [
+    {
+      "id": "portable-kdf-private-cross-package-owner",
+      "level": "high",
+      "status": "closed by canonical defining-owner move; actual configured import gate and focused behavior pass",
+      "location": "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py:46,52,57,58",
+      "summary": "New CLI test-support owner imports four private custody modules and four private worker functions across package boundaries",
+      "consequence": "Actual configured check-import-boundaries fails with 17 PRIVATE_CROSS_PACKAGE findings; cannot close configured verification or land this source",
+      "evidence": ".logs/tui-all-mcp-quality-final-probes.txt lines 6261-6280; .codex/handoffs/tui-all-mcp-quality-final-probes.json: exit1, zero source_drift, 11 other gates pass",
+      "governing_rule": ".codex/rules/00-architecture.md: private imports stay within defining package; move definitions and every consumer atomically without facades, aliases or weakened checks",
+      "repair": "Move _JoinedKdfWorker plus portable_password_custody implementation into the narrow custody/tests owner; remove displaced CLI definitions and private custody imports; update portable_human_cli_runtime, portable_api_cli_runtime and _command_drive_support to canonical defining module. Preserve joined cryptography, genuine admission and cleanup. No forwarding facade/alias, exemption or suppression",
+      "closure": "Review actual move and semantic equivalence; current configured import-boundary gate must pass. Refresh native action proof because test paths participate in native action inputs even though shipping production bytes stay unchanged",
+      "historical_status": "open at reviewed frozen source; proposed fix not yet applied",
+      "closure_evidence": "Custody implementation AST-identical to5737; three direct defining imports; configured UV15/15contracts,0hard,4368/4368loads; focused8PASS47.49s. Exact current hashes recorded in independent_focused_repair_review."
+    }
+  ],
+  "production_static_assessment": [
+    "No additional concrete high or critical production finding in corrective diff",
+    "Successor binding admission drains canonical retained owner with dedicated retirement lock and released connection/profile guards; failed containment retains exact owner and typed CONFLICT. Enrollment removal filters exact host, preserving successor offers and sessions",
+    "Windows exact KDF invocation exception requires argc7, fixed module/order and distinct canonical positive uintptr decimal handles; overflow/all-one handle/near-match refused. Context, isolated interpreter/package checks and pre-secret parent attestation remain",
+    "Internal selection dataclass retains repository-validated aggregate revision without revalidating outside aggregate context; constructors and consumers remain internal with coordinate checks",
+    "Work-create/readiness alone opt into existing encrypted bounded public detail through settled result authority. Typed mismatch coordinates remain finite and scrubbed; raw messages/arguments do not enter detail",
+    "Portable API admission actually completes request/approval/protected delivery/possession enrollment; human fixture uses real password codec/Argon2id/AEAD. Memory transport/custody loans are explicitly qualified, not native containment proof",
+    "Capability teeth and offline seal remain. NIF-IVA contact premise is replaced only by exact registered refusal/effectNONE/no-contact oracle plus owning supervisor test",
+    "Financial fixture note remains draft with genuine verification refusal and no copied grant; earlier export/file guards, no artifact/filed pointer and recalculation success are asserted. M145 full wire oracle is independent of codec; absent numeric slots remain zero filled",
+    "Installed CLI prefix survives both reopen boundaries, keeps credentials on stdin, and refuses incomplete verification; mocked adapter tests are not financial E2E"
+  ],
+  "verification_reused": [
+    ".codex/handoffs/tui-all-mcp-final-runtime-replacement-repair.json: actual Windows62 owner PASS plus deterministic3; plain public reset and rotation. Five unrelated CLI fixture bookend deltas explicitly qualified",
+    ".codex/handoffs/tui-all-mcp-final-portable-probe-repairs.json: two whole modules142PASS, detector teeth, genuine API operand validation and no-contact NIF guard. Newline normalization qualified",
+    ".codex/handoffs/tui-all-mcp-final-revision-selection-repair.json: selector/revision owners29PASS; final scope/amendment CLI cases included in qualified reuse",
+    ".codex/handoffs/tui-all-mcp-final-modelo-public-detail-repair.json: durable7PASS, positive matrix2PASS, final CLI scope/privacy4PASS",
+    ".codex/handoffs/tui-all-mcp-final-modelo-cli-premise-repairs.json: current node union133PASS, original failed aggregate retained",
+    ".codex/handoffs/tui-all-mcp-final-eight-owner-repairs.json and final-m145-premise-repair.json: owner46 and M14526PASS; unrelated changed inputs qualified",
+    ".codex/handoffs/tui-all-mcp-final-installed-cli-prefix.json: adapter/unit15PASS; native actual journey separate",
+    "external portable-final-case-coverage.json: original parallel136 failures covered by135 exact same-node PASS and1 explicit supported NIF replacement; original serial13 failures accounted; raw exit1/source-drift/POSIX skip preserved"
+  ],
+  "configured_evidence": {
+    "report": ".codex/handoffs/tui-all-mcp-quality-final-probes.json",
+    "exit_code": 1,
+    "status": "11PASS/1FAIL",
+    "source_drift": [],
+    "failed_gate": "check-import-boundaries",
+    "hard_findings": 17,
+    "hard_finding_code": "PRIVATE_CROSS_PACKAGE",
+    "log_sha256": "67b6a35848f9c34bee5ba029622f156dde603a7628b9af861c8823d83f2fd078",
+    "source_bookend_after_sha256": "d4d240e087bfd53e2f0fd9a952706597f72501c57e5419cc0535b423c4cd88ee"
+  },
+  "pending_verification": [
+    "Fresh compiled Windows manifest host, genuine native package/KDF/Desktop/protected financial journey and final artifact/source fingerprints; no native success inferred from old artifact or static review.",
+    "Final configured aggregate on current integration cut after all coordinated repairs.",
+    "Current native macOS containment and withholding lifecycle/private failure/reopen acceptance; host offline, prior-source proof is qualified.",
+    "Latest live TUI78 preserved independent delta coordination before landing; external119-path review records one additiveM347 oracle incorporated and other118 qualified/preserved.",
+    "Safe feature/tui landing only after applicable gates and coordinated writer reconciliation; actual destination E2E remains separate."
+  ],
+  "checks_launched": "None; reused owner evidence and read-only static inspection; no duplicate expensive/native/stateful run",
+  "historical_verdict": "REVISION REQUIRED",
+  "independent_focused_repair_review": {
+    "reviewer": "baseline independent review owner, read-only source/index/vault; external report only",
+    "reviewed_head": "e2592377aeea515d14cb94b245247dfad347dad3",
+    "paths": [
+      {
+        "path": "src/cadrumo/adapters/persistence/storage/custody/tests/portable_password_custody.py",
+        "sha256": "59684182fe36bddb3ae27e741e69d526038a455e13b475513f9da9dd9cc94552"
+      },
+      {
+        "path": "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py",
+        "sha256": "6029b0921f98f905b20b106ed9a4b4ff9e029f9101881762c39487a8a97dd314"
+      },
+      {
+        "path": "src/cadrumo/entrypoints/cli/tests/portable_api_cli_runtime.py",
+        "sha256": "0e7f94d7b17957f37f419aa4a8339c804e59998e7a26efc4e412b597384998d3"
+      },
+      {
+        "path": "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py",
+        "sha256": "e84cd7c069fc7817df4aee900bbdbd6244c6f7c6172a10cca2126b2303871655"
+      },
+      {
+        "path": "dev/acceptance/iva/cli_journey.py",
+        "sha256": "380335db4cd34e2c2136ded0fc7ba428b826534aa699d588229ed9af399f3dd4"
+      },
+      {
+        "path": "dev/acceptance/iva/tests/test_runtime_scope.py",
+        "sha256": "b884bcf2052793e827c98eb548832fc0abbf88b41752527301321ef9ddaf0686"
+      },
+      {
+        "path": "native/interpreter/windows/host.manifest",
+        "sha256": "3f623c99befa1f94fe149f0944c89cf1d6848a3abe311d9b6cb7e8f7514c832f"
+      },
+      {
+        "path": "dev/packaging/native/platforms/windows_verify.py",
+        "sha256": "b3e6c33438ff98c0c28cae175145669804d4cf63b299f537e2248da487086e24"
+      }
+    ],
+    "source_assessment": "No additional high or critical source finding in the eight-path focused repair slice. Historical private-import high closed; pending verification remains.",
+    "custody_move": {
+      "original_cut": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "independent_ast_equivalence": true,
+      "canonical_defining_imports": 3,
+      "facades_aliases_suppressions_or_exemptions_added": false,
+      "limits": "Test-only in-memory transport and synthetic joined KDF process are not native protected custody/containment proof."
+    },
+    "dev_scope": {
+      "operational_journey_ast_unchanged": true,
+      "validation_before_scope_entry": true,
+      "all_journey_and_reopen_actions_within_scope": true,
+      "error_cleanup_asserted": true,
+      "verification": "17PASS2.33s plus scoped Ruff/format/ty owner receipts",
+      "limits": "Mocked adapter boundaries; no installed private financial E2E positive inferred."
+    },
+    "windows_manifest": {
+      "official_evidence": "https://learn.microsoft.com/en-us/windows/win32/sysinfo/targeting-your-application-at-windows-8-1",
+      "primary_source_read": true,
+      "assessment": "Microsoft documents unmanifested version API reporting6.2 and this exact Windows10/11 supportedOS GUID. Both CMake host targets consume the manifest. Only compatibility declaration added; longPathAware retained. Existing Windows desktop major>=10 and session checks unchanged. Verifier asserts real installed major>=10 and records public OS version; no guard bypass or fake OS value.",
+      "kdf_ready_probe_bytes_unchanged_independently": true,
+      "owning_other_probe_constants_unchanged": true,
+      "xml_namespace_and_guid_independently_checked": true,
+      "owner_validation": "XML/probe syntax/KDF equality and old actual artifact negative6.2 recorded in native-windows-manifest-prepared/prepared-validation.json; scoped checks reportedPASS.",
+      "limits": "Fresh compiled/installed native verification not yet established. Old artifact negative is diagnosis, not repaired native success."
+    },
+    "evidence": {
+      "custody_focused": {
+        "path": "var/storage/development/.logs/test-runs/2026-10-04/20261004T041023.631880Z-pytest-34572-8d9f4f69/run.log",
+        "sha256": "3e82be89e524935f1ae265a028a79bbec1ad286d628a36e42e1f9a5aa45a27b2",
+        "actual_exit_zero": true
+      },
+      "dev_runtime_scope": {
+        "path": "var/storage/development/.logs/test-runs/2026-10-04/20261004T041845.587506Z-pytest-87752-95b4cdcd/run.log",
+        "sha256": "288311182d776ea9d905213934dd4e8b8f464e3f16ec936b1304e79167c5789a",
+        "actual_exit_zero": true
+      }
+    },
+    "configured_import_closure": {
+      "log": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\portable-kdf-owner-import-gate-configured.log",
+      "sha256": "5673c4f8cc7803497570a5be8b0abb56ae94f41aaa95b51c415c1fe6bdda8d0e",
+      "contracts_kept": 15,
+      "hard_findings": 0,
+      "runtime_loads": 4368,
+      "owner_bookends_equal": true
+    },
+    "own_m347_additions": "Excluded from independent authored-code review; root reviews three additive physical wire assertions separately.",
+    "checks_launched": "No test/checker/native reruns. Read-only AST, XML, exact source hashes and existing receipts inspected."
+  },
+  "completed_public_installed_scope": {
+    "receipt": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\windows-public-mcp-final-5737-20261004T035803838Z\\receipt.json",
+    "scope": "Actual packaged SDK public authority/corpus/citation positives and ranked search schema/authentication_required refusal; no private positive or admitted ranking claim. Shipping5737 application/authority scope unchanged by test-owner move; manifest host changes require owner artifact qualification."
+  },
+  "review_source_bookend": {
+    "head_before": "e2592377aeea515d14cb94b245247dfad347dad3",
+    "head_after": "e2592377aeea515d14cb94b245247dfad347dad3",
+    "eight_source_hashes_after_equal": true
+  },
+  "immutable_external_receipt": {
+    "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\final-combined-source-review.json",
+    "sha256": "58bca4a39e78ac543033fcf2b6efd367d3250c0b33e2923e616e29d920e4a044"
+  }
+}

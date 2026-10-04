@@ -6,25 +6,33 @@
       "path": "dev/acceptance/installed_cli.py",
       "status": "modified",
       "base_sha256": "77d6a9e3aa68d8ee680b78ff44634e1c5d94d5c0365b20baf465010d843ff2f7",
-      "current_sha256": "a03560a20c5fe7e2d675d131bc32d96ec36393db579cec58c267d799299605b3"
+      "current_sha256": "a03560a20c5fe7e2d675d131bc32d96ec36393db579cec58c267d799299605b3",
+      "integration_commit": "d800464383c5858d7d7d740e419217ca3e748788",
+      "disposition": "incorporated"
     },
     {
       "path": "dev/acceptance/iva/cli_journey.py",
       "status": "modified",
       "base_sha256": "d31d734690a6430a466ff03ce3e78419a04918aa16ab8b34ae3560bf1250e76a",
-      "current_sha256": "83a4c233a79efcff4226e840a149749c140dacb8d697b80d0fa5c3253dc92b05"
+      "current_sha256": "83a4c233a79efcff4226e840a149749c140dacb8d697b80d0fa5c3253dc92b05",
+      "integration_commit": "d800464383c5858d7d7d740e419217ca3e748788",
+      "disposition": "incorporated"
     },
     {
       "path": "dev/acceptance/tests/test_installed_cli.py",
       "status": "modified",
       "base_sha256": "b3da6f4ae33ad41ba67bb5dacddf7e6175b7dfc73ffa2e64f5b3c94785d519b0",
-      "current_sha256": "c2cd60110f6c6c1348b398b98b91bbef92de17e69454bddd64a0ecff5f2022f9"
+      "current_sha256": "c2cd60110f6c6c1348b398b98b91bbef92de17e69454bddd64a0ecff5f2022f9",
+      "integration_commit": "d800464383c5858d7d7d740e419217ca3e748788",
+      "disposition": "incorporated"
     },
     {
       "path": "dev/acceptance/iva/tests/test_cli_argument_prefix.py",
       "status": "added",
       "base_sha256": null,
-      "current_sha256": "2e7a97baf8bcbdfa8bb02dad0f1951bf20d93dca67795757f9b940c817ee9271"
+      "current_sha256": "2e7a97baf8bcbdfa8bb02dad0f1951bf20d93dca67795757f9b940c817ee9271",
+      "integration_commit": "d800464383c5858d7d7d740e419217ca3e748788",
+      "disposition": "incorporated"
     }
   ],
   "behavior": [
@@ -46,5 +54,6 @@
     "No product source, inventory, Git index, vault, authority or installed artifact was changed."
   ],
   "invocation": "run_iva_m303_cli_journey(executable=packaged_python, cli_argument_prefix=('-c', \"from cadrumo.entrypoints.cli.bootstrap import main; import sys; sys.argv=['aeat',*sys.argv[1:]]; main()\"), authority_root=..., storage_root=..., artifact_root=..., year=2025)",
-  "entrypoint_correction": "The CLI package has no __main__; actual native owning invocation uses bootstrap:main via -c. Adapter preserves this exact immutable prefix; no product entrypoint was added."
+  "entrypoint_correction": "The CLI package has no __main__; actual native owning invocation uses bootstrap:main via -c. Adapter preserves this exact immutable prefix; no product entrypoint was added.",
+  "checkpoint_mapping_note": "Real committed source mapping added after coherent source checkpoint; original command outcomes, hashes and verification limits retained."
 }

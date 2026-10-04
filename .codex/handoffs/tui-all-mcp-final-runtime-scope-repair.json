@@ -26,5 +26,26 @@
     "old_financial_body_ast_sha256": "a709cffc7a2dc14053c960f2379bc1c2de190a4cbc237fade43d820573fa1d26",
     "limit": "Only optional resource context, function argument, documentation, and defining contextlib imports are added; assertions and operations retain their exact AST."
   },
-  "actual_execution": "Independent packaged native run retained separately; exact Windows version virtualization defect observed before desktop token admission. No financial positive from adapter doubles."
+  "actual_execution": "Independent packaged native run retained separately; exact Windows version virtualization defect observed before desktop token admission. No financial positive from adapter doubles.",
+  "integration_source_rows": [
+    {
+      "path": "dev/acceptance/iva/cli_journey.py",
+      "sha256": "380335db4cd34e2c2136ded0fc7ba428b826534aa699d588229ed9af399f3dd4",
+      "disposition": "incorporated",
+      "integration_commit": "e2592377aeea515d14cb94b245247dfad347dad3",
+      "committed_blob_oid": "1221f8d1cc5292a8b786a47a3b4086e6fe0b86cd",
+      "committed_blob_sha256": "acd5cf7547f9f5153894e4f5236867420424456133cf27520709f2c3136960d6",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
+    },
+    {
+      "path": "dev/acceptance/iva/tests/test_runtime_scope.py",
+      "sha256": "b884bcf2052793e827c98eb548832fc0abbf88b41752527301321ef9ddaf0686",
+      "disposition": "incorporated",
+      "integration_commit": "e2592377aeea515d14cb94b245247dfad347dad3",
+      "committed_blob_oid": "473fd3fc2cb1d164643013be236f5ba0135e33a4",
+      "committed_blob_sha256": "287a4d517a6087a3e71558fd2f4bc40bf7b9dc836b521bef70d7b6bc233d45c3",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
+    }
+  ],
+  "source_checkpoint_mapping": "Coherently committed source, exact blob OIDs and tested working-byte qualification recorded; original receipt status is retained separately."
 }

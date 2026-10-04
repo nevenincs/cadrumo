@@ -4,67 +4,147 @@
   "paths": [
     {
       "path": "src/cadrumo/entrypoints/cli/tests/modelo_profile_seed.py",
-      "sha256": "fa49f944e0a05e1b7eb0d75bfae779cdb94ab24d3491bf9f432e33174dfdcff7"
+      "sha256": "fa49f944e0a05e1b7eb0d75bfae779cdb94ab24d3491bf9f432e33174dfdcff7",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "0cdf09fbae3db8b92d98fda2110eebd98aa7b143",
+      "committed_blob_sha256": "fa49f944e0a05e1b7eb0d75bfae779cdb94ab24d3491bf9f432e33174dfdcff7",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/modelo_cli.py",
-      "sha256": "77a306092dbda5d310de266b95750ae876f34da8d062581f63b0433d5694acd7"
+      "sha256": "77a306092dbda5d310de266b95750ae876f34da8d062581f63b0433d5694acd7",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "7273ea60481408a29fc6c76a9edccd821db5ab51",
+      "committed_blob_sha256": "77a306092dbda5d310de266b95750ae876f34da8d062581f63b0433d5694acd7",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/_modelo_work_ux_support.py",
-      "sha256": "6dbac28ae315c2ea319e6bedba544aac213d9ec53b78ed60970b3f2302a0f2f3"
+      "sha256": "6dbac28ae315c2ea319e6bedba544aac213d9ec53b78ed60970b3f2302a0f2f3",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "414ce0a3101ddd2773e7dc604508974f5142cf0e",
+      "committed_blob_sha256": "6dbac28ae315c2ea319e6bedba544aac213d9ec53b78ed60970b3f2302a0f2f3",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_discovery_defects.py",
-      "sha256": "ebff97e7f2e11ddb974eaeb8e36da6cd47660b127b46ba660904f77d946f8efe"
+      "sha256": "ebff97e7f2e11ddb974eaeb8e36da6cd47660b127b46ba660904f77d946f8efe",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "c5fe5724397c423c277eafe68e7d326790982309",
+      "committed_blob_sha256": "ebff97e7f2e11ddb974eaeb8e36da6cd47660b127b46ba660904f77d946f8efe",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_calculation_blocked_filing_cli.py",
-      "sha256": "f68010255d9673227d16e706ebc6a82d15630d8f850ae5005255ab6ab2a15cf5"
+      "sha256": "f68010255d9673227d16e706ebc6a82d15630d8f850ae5005255ab6ab2a15cf5",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "6fc9c9a8d78505e10cb892188dba561ecda265df",
+      "committed_blob_sha256": "5ecb092e6ea929f33d24a2c8b111c187d4625d1da7064e84ed1a24fafacbc649",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_m303_bienes_inversion_quarters_cli.py",
-      "sha256": "6d939ffb7ae25649d2e0eddfb45b3f9c292cd57e2138e42a0c366282a223de00"
+      "sha256": "6d939ffb7ae25649d2e0eddfb45b3f9c292cd57e2138e42a0c366282a223de00",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "4149c0856e5b12fd4b560dcfa5db64412a830763",
+      "committed_blob_sha256": "98d2a35ecf999289b1f4e70d2fd4a7323397d31d966b21eeb6cf9cff17139d5c",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_m303_zero_cuota_and_investment_inputs_cli.py",
-      "sha256": "23b5bff56125a749384c6aa74733bba68d08c23320ff65072576e9053764299c"
+      "sha256": "23b5bff56125a749384c6aa74733bba68d08c23320ff65072576e9053764299c",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "4c275f2f13055b721d1e1e25abd8f2a272c041df",
+      "committed_blob_sha256": "23b5bff56125a749384c6aa74733bba68d08c23320ff65072576e9053764299c",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py",
-      "sha256": "1d769fb0ba320212f318e2ca38a2f767b1a85cba9495b298a1c416f9f8523ceb"
+      "sha256": "1d769fb0ba320212f318e2ca38a2f767b1a85cba9495b298a1c416f9f8523ceb",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "f5923753ba5c6297ce6afc9f9a27bc68ed127c15",
+      "committed_blob_sha256": "1d769fb0ba320212f318e2ca38a2f767b1a85cba9495b298a1c416f9f8523ceb",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
-      "sha256": "87227a82fce780eaf1264978e934b2a1573bd45d529095c29b097e92d37f6a46"
+      "sha256": "87227a82fce780eaf1264978e934b2a1573bd45d529095c29b097e92d37f6a46",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "3168ae9b20d666fe33674aaf05147ebea13c4652",
+      "committed_blob_sha256": "f2efc3017622a9cf95881c662c15a376f0661eee3b02c2a3c8ce129070a4bf1b",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/_m303_ordinary_cli_support.py",
-      "sha256": "94c76b97103dada857f32c038336e921e1da81a3833843a2c41ebd70abf14a50"
+      "sha256": "94c76b97103dada857f32c038336e921e1da81a3833843a2c41ebd70abf14a50",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "6e9636779999e11cb2c61ffb2582de0cdcb932d6",
+      "committed_blob_sha256": "94c76b97103dada857f32c038336e921e1da81a3833843a2c41ebd70abf14a50",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_period_tokens.py",
-      "sha256": "2855d241c54a5e3d1164e27866d275f7b510bb34974542974feedfd7bcb43344"
+      "sha256": "2855d241c54a5e3d1164e27866d275f7b510bb34974542974feedfd7bcb43344",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "6720c88e0fc876edbc162a399ff44bf0d8309856",
+      "committed_blob_sha256": "2855d241c54a5e3d1164e27866d275f7b510bb34974542974feedfd7bcb43344",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
-      "sha256": "4f0f2f0cfdd4a0877ff43d199685d72376a578dcabe8414513d5c5d593920c70"
+      "sha256": "4f0f2f0cfdd4a0877ff43d199685d72376a578dcabe8414513d5c5d593920c70",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "7734247cb6eaaa8e8daa3301f86908680fa58228",
+      "committed_blob_sha256": "95a8fdfd5a2a23618ba7f53c56ec486f9eadb1c136d2c16a34f0871280007ec1",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_direction_reaches_the_confirm_boundary.py",
-      "sha256": "c635e7d5a66f84a863bce8e9d8f56d7ff1b768cada60a3f7a97fd25012c3ecfe"
+      "sha256": "c635e7d5a66f84a863bce8e9d8f56d7ff1b768cada60a3f7a97fd25012c3ecfe",
+      "disposition": "incorporated",
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "committed_blob_oid": "74746a319add9fec98d855a5b745110f6f924030",
+      "committed_blob_sha256": "80feb9db2443e0d92f4434c002edf4849c5244cd1c9dd96a9f9450f6578b1aba",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     },
     {
       "path": "src/cadrumo/application/modelo/work_create_operation.py",
-      "sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b"
+      "sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b",
+      "disposition": "incorporated",
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "committed_blob_oid": "a31cedf748a59a92edd9928af784d0957c0e28a4",
+      "committed_blob_sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/application/modelo/query_read_operation.py",
-      "sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db"
+      "sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db",
+      "disposition": "incorporated",
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "committed_blob_oid": "56a7ba7639725b09d4d6606df24b248901740643",
+      "committed_blob_sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py",
-      "sha256": "2ea868c34db84a9328d31247292c3b22dd5f872010b635b40cdc401a3ce0eace"
+      "sha256": "2ea868c34db84a9328d31247292c3b22dd5f872010b635b40cdc401a3ce0eace",
+      "disposition": "incorporated",
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "committed_blob_oid": "df9a5018e22e99b8d46f4305ca3d70475362f94e",
+      "committed_blob_sha256": "29e48a6b86afa207fb10a0f7ef3696459937dff033e8c13a635525af8a15cf1f",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     }
   ],
   "shared_human_fixture_sha256": "49f543d2862d665863d2d6764c77fd7e5729fe46a7b5a002960409e4bb99703a",
@@ -147,7 +227,7 @@
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
-      "reason": "Unknown selector intentionally normalizes private invalid/ambiguous selection to operation_denied at metadata_read_operation155\u2013159, transported as declared RuntimeFrontendRefusedError; exact refusal/non-disclosure/no result/no work mutation asserted."
+      "reason": "Unknown selector intentionally normalizes private invalid/ambiguous selection to operation_denied at metadata_read_operation155–159, transported as declared RuntimeFrontendRefusedError; exact refusal/non-disclosure/no result/no work mutation asserted."
     }
   ],
   "limitations": [
@@ -883,5 +963,6 @@
     ]
   },
   "original_external_proof_sha256": "cb3dda95031890ef4db77a06edc5d46b2b95e8f4b87f1d3b41e21f44dcd82c74",
-  "root_review": "No high/critical remaining source finding. Financial wire/amount/amendment/parity oracles retained; genuine admission and exact typed refusal facts replace obsolete fixture premises. Synthetic OS ports and controlled blocking note are qualified; no copied verification grant or native proof claim."
+  "root_review": "No high/critical remaining source finding. Financial wire/amount/amendment/parity oracles retained; genuine admission and exact typed refusal facts replace obsolete fixture premises. Synthetic OS ports and controlled blocking note are qualified; no copied verification grant or native proof claim.",
+  "integration_mapping_note": "Actual coherent source checkpoint, exact committed blob and explicitly qualified tested working-byte relation; no historical result relabeled green."
 }

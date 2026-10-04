@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b306c23813553dc121038cb7cf5587829743255d3b63b98f798a7ddd6b6202a6'
+body_hash: 'sha256:f1f4bd35cebf1fd21e38a3678c2694aee0683c6c7785f4f02daa0df7e7504ef1'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -198,6 +198,10 @@ The installed acceptance adapter accepts an optional caller-owned context, enter
 ### native-windows-version-producer | high | Native host manifest must expose the supported Windows version before desktop admission
 
 An actual owned-runtime Windows financial run completed the public handshake and genuine profile creation but refused private setup. Secret-free producer diagnosis proves the packaged host reports6.2.9200 on Windows11 kernel10.0.26100; its embedded manifest has no supportedOS declarations. The unchanged >=Windows10 desktop admission guard therefore refuses before any token or WinSta0 observation. Declare the official Windows10/11 compatibility GUID in the common manifest used by both native host targets, and require/record the actual version in the canonical installed verifier. Existing longPathAware and the entire KDF readiness/refusal probe remain unchanged. The old actual artifact fails the new version assertion, XML/embedded probe parse and scoped Ruff/format/ty pass. This is a demonstrated producer defect addressed in source, with fresh coherent native rebuild and genuine private financial execution pending; no host-context gap or final green is inferred.
+
+### final-source-completeness-and-qualified-review | low | Original MCP source work is integrated and later writer dependencies stay explicit
+
+All3069 original source/path deltas are reconciled:263incorporated,814superseded with actual replacements and rationale,1992already present,0unresolved. The original six worktrees were read-preserved03:48:47–03:49:11 with0newdelta,0capture drift, unchanged HEADs and original indexes; all preservation refs remain. Coherent corrective source checkpoints through5b8458 retain exact committed blobs and explicitly qualified tested CRLF/LF relations. Original raw226module batches remain exit1 (Parallel2664PASS136FAIL1SKIP;Serial424PASS13FAIL); exact affected-node proof resolves135same-node Parallel failures, one explicitly supported NIFguard/no-contact replacement and13same-node Serial failures. No fresh whole-suite pass is claimed. The current frozen-source configured12 aggregate actually passes with0source drift; one later native-verifier Python change has scoped style/format/type/AST proof and genuine owning artifact execution underway, while all other checker inputs remain byte-current. Independent corrective review closes the17private-import high and finds no additional high/critical source issue; root separately reviewed the independent pinned3line M347 oracle. Fresh liveTUI78d675 relative to66b785 has119explicit dispositions:one incorporated7d249,seven already present,111independent active-writer landing dependencies unresolved with reasons and immutable preservation. They are not missing original MCP intents. The source reconciliation/accounting responsibilities S03/S04 are complete; S05 remains open for actual rebuilt native Windows/privatefinancial, current nativeMac/Keychain/privateCLI-TUI-MCP/withholding, safe writer handoff/merge and destination E2E. Review remainsPENDING; no landed or finalgreen claim.
 
 ## Recommendations
 

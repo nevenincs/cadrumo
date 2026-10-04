@@ -7,17 +7,32 @@
     {
       "path": "src/cadrumo/application/modelo/selectors.py",
       "before_sha256": "fc577a3403352cb875ddd5563dabbfcf758cd055b51bcb8d251337488c5bf6a7",
-      "after_sha256": "c14929af12203b12fdf15c424fe8ec9acad67901e28d28e9f04c9b006e1aaed7"
+      "after_sha256": "c14929af12203b12fdf15c424fe8ec9acad67901e28d28e9f04c9b006e1aaed7",
+      "disposition": "incorporated",
+      "integration_commit": "daa6dfaaa892847a38379963f8ad689689623a6b",
+      "committed_blob_oid": "7592b246124484d0882080ab32298b25d18da1ec",
+      "committed_blob_sha256": "c14929af12203b12fdf15c424fe8ec9acad67901e28d28e9f04c9b006e1aaed7",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/application/modelo/work_addressing.py",
       "before_sha256": "7a997eac96c8ffa31b43f29d0f36b334c09f15d0d3218924ce65403bdca3aa09",
-      "after_sha256": "332e62f9407b30f0baf4c2dcc8ed0fcd98ed1dfe3e3b2838c254dc11d7289ba2"
+      "after_sha256": "332e62f9407b30f0baf4c2dcc8ed0fcd98ed1dfe3e3b2838c254dc11d7289ba2",
+      "disposition": "incorporated",
+      "integration_commit": "daa6dfaaa892847a38379963f8ad689689623a6b",
+      "committed_blob_oid": "be70a80a808d119b2f6acc59cafe326fe8b481e9",
+      "committed_blob_sha256": "332e62f9407b30f0baf4c2dcc8ed0fcd98ed1dfe3e3b2838c254dc11d7289ba2",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/adapters/persistence/profile/tests/test_revision_id_d1_contract.py",
       "before_sha256": "66e1626bb907f61a9384ab78ef47327dfdf4743af44cfa9ad7df2f7a818c7128",
-      "after_sha256": "04b0ece6c2d2ef25c19ad807d0d42ea52c5713dbc2eb7c7ea925c745aba37fe4"
+      "after_sha256": "04b0ece6c2d2ef25c19ad807d0d42ea52c5713dbc2eb7c7ea925c745aba37fe4",
+      "disposition": "incorporated",
+      "integration_commit": "daa6dfaaa892847a38379963f8ad689689623a6b",
+      "committed_blob_oid": "d11bbe317540f6e1da89a2f90f8ebab578540a52",
+      "committed_blob_sha256": "04b0ece6c2d2ef25c19ad807d0d42ea52c5713dbc2eb7c7ea925c745aba37fe4",
+      "byte_relation": "exact"
     }
   ],
   "fixes": [
@@ -95,5 +110,6 @@
       "unrelated_failure_disposition": "History owns test-only correction: genuine note-bearing draft verification refuses, and export/file correctly stop at earlier declared state guards; no fabricated verification grant or guard change."
     }
   },
-  "artifact_freshness": "Shipping production changes: final sole native/wheel artifact must include both final production SHA values; packaged public MCP smoke remains queued"
+  "artifact_freshness": "Shipping production changes: final sole native/wheel artifact must include both final production SHA values; packaged public MCP smoke remains queued",
+  "integration_mapping_note": "Actual coherent source checkpoint, exact committed blob and explicitly qualified tested working-byte relation; no historical result relabeled green."
 }

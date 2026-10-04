@@ -2,15 +2,30 @@
   "paths": [
     {
       "path": "src/cadrumo/application/modelo/work_create_operation.py",
-      "sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b"
+      "sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b",
+      "disposition": "incorporated",
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "committed_blob_oid": "a31cedf748a59a92edd9928af784d0957c0e28a4",
+      "committed_blob_sha256": "175edb52a2a0ba9b298a5b6d57af9560ad0e1150ae856400a551d4c658e2106b",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/application/modelo/query_read_operation.py",
-      "sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db"
+      "sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db",
+      "disposition": "incorporated",
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "committed_blob_oid": "56a7ba7639725b09d4d6606df24b248901740643",
+      "committed_blob_sha256": "070259d9fdbbeeba764d3443753ff06a48c9f61a31f94e1dd37ac2b5092719db",
+      "byte_relation": "exact"
     },
     {
       "path": "src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py",
-      "sha256": "2ea868c34db84a9328d31247292c3b22dd5f872010b635b40cdc401a3ce0eace"
+      "sha256": "2ea868c34db84a9328d31247292c3b22dd5f872010b635b40cdc401a3ce0eace",
+      "disposition": "incorporated",
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "committed_blob_oid": "df9a5018e22e99b8d46f4305ca3d70475362f94e",
+      "committed_blob_sha256": "29e48a6b86afa207fb10a0f7ef3696459937dff033e8c13a635525af8a15cf1f",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
     }
   ],
   "definition_change": "Existing public_error_detail=True opt-in for work-create and readiness only; request/result/refusal serializers, contracts, acquire/authority/access gates unchanged. Other query read definitions defaultFalse.",
@@ -48,5 +63,6 @@
     "Initial incomplete fixture/diagnostic premises are preserved as failed-run receipts and corrected only at their declaring test/production owner; no marker skips, guards, classifier, serializers or authority policy relaxed.",
     "Native KDF producer and generic prefix adapter reports are separate generations; actual native proof awaits sole owning refresh/replay."
   ],
-  "actual_source_head": "28d1415ed90d9b495e80fcf696987e2282bbdf5f"
+  "actual_source_head": "28d1415ed90d9b495e80fcf696987e2282bbdf5f",
+  "integration_mapping_note": "Actual coherent source checkpoint, exact committed blob and explicitly qualified tested working-byte relation; no historical result relabeled green."
 }

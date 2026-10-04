@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d35868993945f648d15edb8b9a4df9e0647a80bc2d5b001cee6b102724af8d75'
+body_hash: 'sha256:6c210b643ce39644b64a5ad6a51284eb0a0ed2cd50ce8301c73e7ba271598156'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3596,6 +3596,37 @@ related:
 - `S05` `M` `native/interpreter/windows/host.manifest`
 - `S05` `A` `.codex/handoffs/tui-all-mcp-final-native-version-repair.json`
 - `S05` `verify:` `scoped Ruff/format/ty;manifestXML/embeddedprobeAST;oldactualpackagednegative;KDFprobeexactunchanged` -> `pass`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-combined-source-review.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-custody-owner-repair.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-eight-owner-repairs.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-installed-cli-prefix.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-live-tui-dispositions.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-m347-repair.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-modelo-cli-premise-repairs.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-modelo-public-detail-repair.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-native-kdf-bootstrap.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-native-version-repair.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-native-windows-5737-proof.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-portable-case-coverage.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-portable-execution.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-portable-probe-repairs.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-portable-results.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-public-mcp-sdk-proof.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-quality-applicability.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-revision-selection-repair.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-runtime-replacement-repair.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-final-runtime-scope-repair.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-serial-case-replay.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-source-observation-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-source-reconciliation-summary.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-live-tui-final-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-quality-final-owned-runtime.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-quality-final-probes.json`
+- `S05` `verify:` `3069original disposition audit0unresolved;119live explicitreasoned dispositions;all amendment commitsancestors;all reportJSONvalid;configured12actualPASS0drift;qualified135plus1plus13failedcasecoverage` -> `pass`
+- `S03` `M` `.vault/plan/2026-10-03-tui-all-mcp-integration-plan.md`
+- `S03` `verify:` `affected genuine CLI Modelo133,capability142,runtime62,typed selectors29,durable detail7 and privacy4;12configured gates;independent source review` -> `pass`
+- `S04` `M` `.vault/plan/2026-10-03-tui-all-mcp-integration-plan.md`
+- `S04` `verify:` `3069original dispositions0unresolved,119later live explicit dispositions,6original zero-delta index-preserving observations,coherent ancestor maps and JSON validation` -> `pass`
 
 ## Notes
 
@@ -3630,3 +3661,6 @@ related:
 - `S05` Incorporated the unique three-line oracle from fresh preserved live TUI snapshot78d675 relative to66b785. The current public/pinned schema helper and historical filing grade remain intact. The independent source-pinned M347 fields f011/f012 declare one-based offsets115/116 and lengths1/25; the existing fixture independently declares situation1 and literal cadastral reference. The test now checks those exact output spans in its I record. The whole owner passes3 in2.51s with no failure/skip and scoped Ruff/format/ty passes; source byte hashes remain stable. No shipping model, DTO, compiler, authority or data changes are imported. All119 later source deltas are accounted by the external review: one adapted unique oracle, three exact, three semantic, and one policy/factoring already-present cases, and111 independent ongoing cases preserved without blind import. Final metadata records the incorporated oracle separately; the active nested lease migration and live destination handoff remain separately coordinated.
 - `S05` The installed acceptance adapter accepts an optional caller-owned context, entered after the existing fresh-store validation and creation, retained through both readback and verify/export CLI reopens, and released by ExitStack on every outcome. Default None behavior and accepted no-autostart policy remain intact. Independent AST comparison proves the full previous financial journey body and all its assertions unchanged inside the scope. Two focused resource-boundary cases plus15 existing owner cases pass17 in2.33s; scoped Ruff/format/ty pass. Adapter doubles establish lifetime and refusal behavior only, not a financial positive. The separate actual packaged run completed public runtime handshake and genuine profile creation but refused desktop admission: the custom Windows host reports version6.2 on kernel10.0.26100, with a manifest lacking supportedOS compatibility. Native producer correction and real financial replay remain required; no consumer admission guard is relaxed.
 - `S05` An actual owned-runtime Windows financial run completed the public handshake and genuine profile creation but refused private setup. Secret-free producer diagnosis proves the packaged host reports6.2.9200 on Windows11 kernel10.0.26100; its embedded manifest has no supportedOS declarations. The unchanged >=Windows10 desktop admission guard therefore refuses before any token or WinSta0 observation. Declare the official Windows10/11 compatibility GUID in the common manifest used by both native host targets, and require/record the actual version in the canonical installed verifier. Existing longPathAware and the entire KDF readiness/refusal probe remain unchanged. The old actual artifact fails the new version assertion, XML/embedded probe parse and scoped Ruff/format/ty pass. This is a demonstrated producer defect addressed in source, with fresh coherent native rebuild and genuine private financial execution pending; no host-context gap or final green is inferred.
+- `S05` All3069 original source/path deltas are reconciled:263incorporated,814superseded with actual replacements and rationale,1992already present,0unresolved. The original six worktrees were read-preserved03:48:47–03:49:11 with0newdelta,0capture drift, unchanged HEADs and original indexes; all preservation refs remain. Coherent corrective source checkpoints through5b8458 retain exact committed blobs and explicitly qualified tested CRLF/LF relations. Original raw226module batches remain exit1 (Parallel2664PASS136FAIL1SKIP;Serial424PASS13FAIL); exact affected-node proof resolves135same-node Parallel failures, one explicitly supported NIFguard/no-contact replacement and13same-node Serial failures. No fresh whole-suite pass is claimed. The current frozen-source configured12 aggregate actually passes with0source drift; one later native-verifier Python change has scoped style/format/type/AST proof and genuine owning artifact execution underway, while all other checker inputs remain byte-current. Independent corrective review closes the17private-import high and finds no additional high/critical source issue; root separately reviewed the independent pinned3line M347 oracle. Fresh liveTUI78d675 relative to66b785 has119explicit dispositions:one incorporated7d249,seven already present,111independent active-writer landing dependencies unresolved with reasons and immutable preservation. They are not missing original MCP intents. The source reconciliation/accounting responsibilities S03/S04 are complete; S05 remains open for actual rebuilt native Windows/privatefinancial, current nativeMac/Keychain/privateCLI-TUI-MCP/withholding, safe writer handoff/merge and destination E2E. Review remainsPENDING; no landed or finalgreen claim.
+- `S03` S03 source reconciliation is complete through5b8458; exact qualified receipts recorded, native/private combinedE2E remains open underS05.
+- `S04` S04 accounting complete;111independent activeTUI writer deltas preserved with concrete landing dependencies, separate from missingMCP intents. S05 native/privateE2E and safe merge/destination verification staysopen.

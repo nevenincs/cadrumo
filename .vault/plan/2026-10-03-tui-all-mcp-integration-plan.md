@@ -14,7 +14,7 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:1968093002008e671fbb93fd667090af82b6c413d3dec670544db6e5c5898185'
+body_hash: 'sha256:3e833fc4ff51a6e1fa0872a45d84dbc4f394026ba58b3db486fe859de6945802'
 ---
 
 # `tui-all-mcp-integration` plan
@@ -33,8 +33,8 @@ Decision coverage: the accepted MCP purpose and profile-access decisions govern 
 
 - [x] `S01` - Restore public MCP corpus retrieval and ranked permitted-operation discovery; `src/cadrumo_harness/mcp, src/cadrumo/application/command_search, src/cadrumo/application/corpus_search`.
 - [x] `S02` - Integrate missing native containment, peer identity, Darwin custody and filesystem primitives; `src/cadrumo/adapters/local_runtime, src/cadrumo/adapters/persistence/storage/custody, src/cadrumo/entrypoints/runtime`.
-- [ ] `S03` - Reconcile broader MCP application, CLI, TUI, persistence and test-support changes; `src/cadrumo excluding S01 and S02 ownership`.
-- [ ] `S04` - Account for every historical and later source delta and reconcile shared configuration and documentation; `.codex/handoffs/tui-all-mcp-*, dev, docs, conftest.py, pyproject.toml, justfile, env/.env.example`.
+- [x] `S03` - Reconcile broader MCP application, CLI, TUI, persistence and test-support changes; `src/cadrumo excluding S01 and S02 ownership`.
+- [x] `S04` - Account for every historical and later source delta and reconcile shared configuration and documentation; `.codex/handoffs/tui-all-mcp-*, dev, docs, conftest.py, pyproject.toml, justfile, env/.env.example`.
 - [ ] `S05` - Verify and review combined interfaces and reconcile the live TUI destination before safe landing; `.vault/audit and integration verification corrections and landing evidence`.
 
 ## Parallelization

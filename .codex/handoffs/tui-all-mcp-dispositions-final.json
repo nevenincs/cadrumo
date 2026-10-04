@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "feature": "tui-all-mcp-integration",
-  "status": "all original MCP work and captured later TUI53f/efb/66 source reconciled and coherently committed; configured12pass; behavioral/native verification and safe destination landing pending",
+  "status": "All original3069MCP source-intent deltas reconciled and coherently committed; configured12 and qualified149failed-case corrections proved; native freshE2E and independent livewriter landing dependencies remain.",
   "original_inventory": ".codex/handoffs/tui-all-mcp-20261003.json",
   "source_delta_hash_encoding": "SHA256 of exact per-path git diff --binary --no-ext-diff --no-renames --no-color --no-textconv --full-index original_base source_snapshot output; modes and immutable source/base blob OIDs retained separately.",
   "sources": [
@@ -61,13 +61,15 @@
     },
     "status_totals": {
       "incorporated": 2679,
-      "superseded": 1430,
+      "superseded": 1431,
       "already present": 1997,
-      "unresolved": 1
+      "unresolved": 0
     },
     "selected_committed_clave_paths": 2,
     "subsequent_linked_source_path_records": 5122,
-    "all_linked_source_path_records": 11229
+    "all_linked_source_path_records": 11229,
+    "final_later_live_tui_path_records": 119,
+    "all_linked_source_path_records_including_final_live_cut": 11348
   },
   "original_source_dispositions": [
     {
@@ -38553,7 +38555,7 @@
     {
       "source": "mcp-tui-collision",
       "path": "dev/acceptance/retenciones/installed_tui_withholding.py",
-      "status": "unresolved",
+      "status": "superseded",
       "owner": ".codex/handoffs/tui-all-mcp-dispositions-history.json#dispositions",
       "original_base": "ca6bf959a555f6ff6336c4c3d291140a24481d0b",
       "source_snapshot": "67047039edc7e79b4b560dd64960ee843080fda6",
@@ -38564,7 +38566,7 @@
       },
       "original_tui_checkpoint_blob": null,
       "source_delta_sha256": "a418bf2c6dc64d847b9f5fec90124c699177d847c9f42c11fec41dfe4a40af35",
-      "rationale": "Historical direct-composition withholding capture was intentionally retired at3bb3b647876a. The current public-CLI-seeded real-runtime TUI professional/rent lifecycle/export/fresh-reopen continuation is implemented and unit-verified; actual installed stateful proof remains pending root before acceptance success is claimed.",
+      "rationale": "Historical direct-composition scratch capture intentionally retired at3bb3b647876a. The current public-CLI-seeded, registered-runtime professional/rent lifecycle/export/fresh-reopen replacement is coherently committed68258c3539 and its bounded owner checks are recorded. This resolves source-intent disposition; actual installed Mac execution remains a separate unresolved verification requirement.",
       "replacement": "dev/acceptance/retenciones/installed_tui_withholding.py with installed_tui_seed.py and installed_tui_controls.py; unavailable capture truthfully withheld.",
       "evidence": {
         "disposition_records": [
@@ -38600,7 +38602,12 @@
         "basis": "Exact immutable Git blob bytes; temporary isolated merge workspace is intentionally not certified."
       },
       "implementation_commit": "68258c3539f79c5ef6b127c55b7acd2b1e15f70b",
-      "execution_proof_status": "unresolved; implementation is committed, actual installed-runtime full journey proof remains incomplete"
+      "execution_proof_status": "unresolved required native installed withholding lifecycle/export/independent oracle/fresh second-child reopen; not a missing source delta",
+      "previous_disposition": {
+        "status": "unresolved",
+        "rationale": "Historical direct-composition withholding capture was intentionally retired at3bb3b647876a. The current public-CLI-seeded real-runtime TUI professional/rent lifecycle/export/fresh-reopen continuation is implemented and unit-verified; actual installed stateful proof remains pending root before acceptance success is claimed.",
+        "execution_proof_status": "unresolved; implementation is committed, actual installed-runtime full journey proof remains incomplete"
+      }
     },
     {
       "source": "mcp-tui-collision",
@@ -306205,13 +306212,7 @@
       }
     }
   ],
-  "unresolved": [
-    {
-      "source": "mcp-tui-collision",
-      "path": "dev/acceptance/retenciones/installed_tui_withholding.py",
-      "rationale": "Historical direct-composition withholding capture intentionally retired at3bb3b647876a; current public-CLI-seeded real-runtime lifecycle/export/fresh-reopen implementation committed68258c3539. Only actual installed end-to-end execution proof remains unresolved, and final verification is deferred by user direction."
-    }
-  ],
+  "unresolved": [],
   "integration_commit_mapping": {
     "status": "Every incorporated path mapped to a real baseline integration ancestor; already-present/superseded source history remains independently evidenced",
     "mapped_incorporated_count": 2679,
@@ -306237,7 +306238,7 @@
   "verification_limits": {
     "installed_tui_withholding": "Unresolved pending parent actual installed-runtime lifecycle/export/reopen proof.",
     "native_macos_keychain": "Independent scoped root-native containment/custody/Keychain evidence remains in owning receipts; do not infer native desktop-login/lock claims from the explicit development-session withholding fixture. Final combined/after-merge verification deferred.",
-    "m390_2022": "Dev drift row retirement accompanies imported full generated envelope; root fresh canonical source-render reproduction remains required and is not inferred from inheritance tests."
+    "m390_2022": "Fresh source-render/authority currentness already demonstrated by six-scope registry proof; unchanged current authority generation and107421696byte database retained in owning proof. No native financial positive inferred."
   },
   "later_capture_zero_delta_sources": [
     {
@@ -308963,6 +308964,151 @@
     {
       "integration_commit": "ca956c57b6919f10412833e68412178af0f46527",
       "reason": "Only2M145test-only preparation seeds omit optional principal marker to match captureddeclaredC semantics; unchangedindependent610byte/hash/receipt/event andX/c/CC refusals. ScopedRuff/format/tyPASS; affectedcompletebehavioralreplay queued; rawinitialsource-drift/failuresretained."
+    },
+    {
+      "integration_commit": "6502edfcfe31e9cd64cf495cb2ebe77b79dd77b2",
+      "reason": "Restore accepted operator graph contract and meaningful invoice lease facts in four locales; exact controlled browser and public atomic reconciliation test owners;46coveringPASS.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-eight-owner-repairs.json",
+      "paths": [
+        "src/cadrumo/application/operator_surface/contract.py",
+        "src/cadrumo/locales/ca/common.yml",
+        "src/cadrumo/locales/en/common.yml",
+        "src/cadrumo/locales/es/common.yml",
+        "src/cadrumo/locales/hu/common.yml",
+        "src/cadrumo/application/tests/test_provisioning_browser.py",
+        "src/cadrumo/adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py",
+        "src/cadrumo/adapters/persistence/profile/tests/test_modelo_reconciliation_repository.py"
+      ]
+    },
+    {
+      "integration_commit": "208dad820d8a82598da8cbd950d03432adc3a454",
+      "reason": "IndependentM145oracle accepts canonicaldecimalphysicaltype preserving610byte/hash/event/receipt/refusal proofs;26affectedPASS coversall13serialfailures.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-m145-premise-repair.json",
+      "paths": [
+        "src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py",
+        "src/cadrumo/entrypoints/tests/conformance_m145_support.py"
+      ]
+    },
+    {
+      "integration_commit": "d800464383c5858d7d7d740e419217ca3e748788",
+      "reason": "Installedacceptance immutable-cbootstrapargumentprefix survives bothfreshIVAchildadapters/sanitizedreceipts;15adapterPASS withstdin-onlysecret/noncompleteverificationrefusal retained; nofinancialnativepositiveclaim.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-installed-cli-prefix.json",
+      "paths": [
+        "dev/acceptance/installed_cli.py",
+        "dev/acceptance/iva/cli_journey.py",
+        "dev/acceptance/tests/test_installed_cli.py",
+        "dev/acceptance/iva/tests/test_cli_argument_prefix.py"
+      ]
+    },
+    {
+      "integration_commit": "7dfcd9aa015b56138336f29e1d6b355edac23d16",
+      "reason": "Canonical bounded predecessor retirement fixes immediate successor admission without dropping failed containment ownership.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-runtime-replacement-repair.json",
+      "paths": [
+        "src/cadrumo/entrypoints/runtime/profile_connection_admission.py",
+        "src/cadrumo/entrypoints/runtime/profile_connections.py",
+        "src/cadrumo/entrypoints/runtime/profile_host.py",
+        "src/cadrumo/entrypoints/runtime/enrollment_connections.py",
+        "src/cadrumo/entrypoints/runtime/tests/test_profile_binding_retirement.py"
+      ]
+    },
+    {
+      "integration_commit": "28d1415ed90d9b495e80fcf696987e2282bbdf5f",
+      "reason": "Native producer preserves the exact supervised KDF neutral environment, with owning installed positive and near-match refusal probes.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-native-kdf-bootstrap.json",
+      "paths": [
+        "native/interpreter/windows/host.c",
+        "dev/packaging/native/platforms/windows_verify.py"
+      ]
+    },
+    {
+      "integration_commit": "daa6dfaaa892847a38379963f8ad689689623a6b",
+      "reason": "Internal validated selection holder and finite public mismatch facts preserve genuine amendment reads and diagnostics.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-revision-selection-repair.json",
+      "paths": [
+        "src/cadrumo/application/modelo/selectors.py",
+        "src/cadrumo/application/modelo/work_addressing.py",
+        "src/cadrumo/adapters/persistence/profile/tests/test_revision_id_d1_contract.py"
+      ]
+    },
+    {
+      "integration_commit": "93ca2adab001bcdd61a14db416666b6c5d4539dd",
+      "reason": "Two existing definitions retain public bounded executor details through durable settlement; other readers and privacy policy unchanged.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-modelo-public-detail-repair.json",
+      "paths": [
+        "src/cadrumo/application/modelo/work_create_operation.py",
+        "src/cadrumo/application/modelo/query_read_operation.py",
+        "src/cadrumo/adapters/persistence/operations/tests/test_operation_error_detail.py"
+      ]
+    },
+    {
+      "integration_commit": "8d89c65ca835fda2db8ed82d70a00a9e06f7d50b",
+      "reason": "Actual capability handlers and enrolled API operand validation execute over declared synthetic OS ports;142 owner passes and detector teeth retained.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-portable-probe-repairs.json",
+      "paths": [
+        "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py",
+        "src/cadrumo/entrypoints/cli/tests/portable_api_cli_runtime.py",
+        "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py",
+        "src/cadrumo/entrypoints/cli/tests/test_command_aeat_capability_probe.py",
+        "src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py"
+      ]
+    },
+    {
+      "integration_commit": "5737ce1f0c955e05bce0ce9f9007e731c74b10f5",
+      "reason": "Current admitted CLI fixtures preserve financial/parity/refusal/lifecycle oracles;133 latest node passes with qualified reuse.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-modelo-cli-premise-repairs.json",
+      "paths": [
+        "src/cadrumo/entrypoints/cli/tests/modelo_profile_seed.py",
+        "src/cadrumo/entrypoints/cli/tests/modelo_cli.py",
+        "src/cadrumo/entrypoints/cli/tests/_modelo_work_ux_support.py",
+        "src/cadrumo/entrypoints/cli/tests/test_modelo_discovery_defects.py",
+        "src/cadrumo/entrypoints/cli/tests/test_calculation_blocked_filing_cli.py",
+        "src/cadrumo/entrypoints/cli/tests/test_m303_bienes_inversion_quarters_cli.py",
+        "src/cadrumo/entrypoints/cli/tests/test_m303_zero_cuota_and_investment_inputs_cli.py",
+        "src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py",
+        "src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py",
+        "src/cadrumo/entrypoints/cli/tests/_m303_ordinary_cli_support.py",
+        "src/cadrumo/entrypoints/cli/tests/test_modelo_period_tokens.py",
+        "src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
+        "src/cadrumo/entrypoints/cli/tests/test_direction_reaches_the_confirm_boundary.py"
+      ]
+    },
+    {
+      "integration_commit": "2a3666aeb29a815b93cb1a905a4f7039944460aa",
+      "reason": "Canonical custody fixture preserves genuine joined cryptographic transport and closes17private-cross-package findings without exemptions.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-custody-owner-repair.json",
+      "paths": [
+        "src/cadrumo/adapters/persistence/storage/custody/tests/portable_password_custody.py",
+        "src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py",
+        "src/cadrumo/entrypoints/cli/tests/portable_api_cli_runtime.py",
+        "src/cadrumo/entrypoints/cli/tests/_command_drive_support.py"
+      ]
+    },
+    {
+      "integration_commit": "7d249727426ccace4e238fdf5cbe2db03008946c",
+      "reason": "Unique later TUI physical wire assertions adapted into current pinned leased-premises export fixture.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-m347-repair.json",
+      "paths": [
+        "src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py"
+      ]
+    },
+    {
+      "integration_commit": "e2592377aeea515d14cb94b245247dfad347dad3",
+      "reason": "Installed acceptance retains explicit caller-owned runtime through both fresh CLI reopens; whole financial body AST unchanged.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-runtime-scope-repair.json",
+      "paths": [
+        "dev/acceptance/iva/cli_journey.py",
+        "dev/acceptance/iva/tests/test_runtime_scope.py"
+      ]
+    },
+    {
+      "integration_commit": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "reason": "Real Windows11 producer version virtualization repaired in common native host manifest, preserving desktop admission guard and adding installed owning observation.",
+      "source_proof": ".codex/handoffs/tui-all-mcp-final-native-version-repair.json",
+      "paths": [
+        "native/interpreter/windows/host.manifest",
+        "dev/packaging/native/platforms/windows_verify.py"
+      ]
     }
   ],
   "implementation_vs_execution_limits": {
@@ -308982,13 +309128,53 @@
     "write_scope": "external evidence alternate indexes/objects only; no source worktree/index/refs touched",
     "qualification": "source-completeness observation, not native/E2E verification or destination landing"
   },
-  "current_checkpoint": "ca956c57b6919f10412833e68412178af0f46527",
-  "updated_utc": "2026-10-04T01:50:26.847376+00:00",
+  "current_checkpoint": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+  "updated_utc": "2026-10-04T04:37:49.394571+00:00",
   "latest_independent_static_review": {
     "checkpoint": "c2a6199fd30e2af5b8c93f289511f32261edf240",
     "owner": "history Sol6.1high",
     "remaining_critical_or_high": 0,
     "verification_status": "PENDING for actualnative/behavioral/E2E/landing",
     "audit": ".vault/audit/2026-10-03-tui-all-mcp-integration-audit.md"
+  },
+  "verification_continuation": "Original MCP source unresolved0. Allsrc/dev/native source clean at5b8458. Genuine Windows rebuilt compatibility artifact, nativeMac/current private journeys, safe destination merge and destination E2E remain active. New111laterTUI dependencies are separately scoped, not missingMCP intents.",
+  "unresolved_disposition_history": [
+    {
+      "source": "mcp-tui-collision",
+      "path": "dev/acceptance/retenciones/installed_tui_withholding.py",
+      "rationale": "Historical direct-composition withholding capture intentionally retired at3bb3b647876a; current public-CLI-seeded real-runtime lifecycle/export/fresh-reopen implementation committed68258c3539. Only actual installed end-to-end execution proof remains unresolved, and final verification is deferred by user direction."
+    }
+  ],
+  "execution_verification_gaps": [
+    "Current Windows actual new manifest artifact and private financial journey: genuine pipeline active, old private refusal retained as demonstrated producer defect.",
+    "Current nativeMac containment/Keychain/privateCLI-TUI-MCP/withholding: correct SSH became reachable04:34; actual native lane active, no fresh pass inferred.",
+    "After isolated E2E green, checkpoint/clean handoff from active feature/tui writer; reconcile current HEAD and relevant retained independent deltas, including owning nested-lease storage migration, merge without overwrite, then run destination E2E."
+  ],
+  "latest_original_mcp_source_observation": {
+    "proof": ".codex/handoffs/tui-all-mcp-final-source-observation-20261004.json",
+    "path": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\final-source-observation-20261004T034847Z\\manifest.json",
+    "sha256": "3e3f7e70fdb780cc176520334ef8f4817ed3512d2c38f06de574261e0fc7a210",
+    "original_mcp_sources": 6,
+    "new_deltas": 0,
+    "capture_drift": 0,
+    "source_head_changes": 0,
+    "real_indexes_unchanged": true,
+    "window": [
+      "2026-10-04T03:48:47.462901+00:00",
+      "2026-10-04T03:49:11.690918+00:00"
+    ]
+  },
+  "final_live_tui_reconciliation": {
+    "proof": ".codex/handoffs/tui-all-mcp-final-live-tui-dispositions.json",
+    "source_capture": "78d6752507d187b8abba8534fd967073e27f7e41",
+    "base_capture": "66b785a1418ef48cb2f56711c83933c0828c46f8",
+    "paths": 119,
+    "formal_dispositions": {
+      "incorporated": 1,
+      "already present": 7,
+      "unresolved": 111
+    },
+    "original_mcp_unresolved_source_intents": 0,
+    "landing_dependency": "After isolated E2E green, checkpoint/clean handoff from active feature/tui writer; reconcile current HEAD and relevant retained independent deltas, including owning nested-lease storage migration, merge without overwrite, then run destination E2E."
   }
 }

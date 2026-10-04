@@ -37,5 +37,28 @@
   "limits": [
     "The old actual host fails the new owning regression observation; fresh native rebuild/CTest/ZIP verifier/Desktop/financial replay are still required.",
     "No consumer guard relaxation, fabricated desktop session, provider override, autostart, credential, profile or authority mutation is introduced."
-  ]
+  ],
+  "integration_source_rows": [
+    {
+      "path": "native/interpreter/windows/host.manifest",
+      "before_sha256": "3242062989f717f0f1846b13ad2082e37438d32bdc33903effeaecaa6cfb7382",
+      "sha256": "3f623c99befa1f94fe149f0944c89cf1d6848a3abe311d9b6cb7e8f7514c832f",
+      "disposition": "incorporated",
+      "integration_commit": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "committed_blob_oid": "51cc795e786a40e3bed003bd858c925a226be1b7",
+      "committed_blob_sha256": "7b000320eff3527d01f429b082ded58a21fc72f5f648cd3abba91e9e241514f1",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows_verify.py",
+      "before_sha256": "7c5f0fe1caa5e01ae28233a8ae2d1c0546efd5e94766dbe4053b6ccc42fd6cfb",
+      "sha256": "b3e6c33438ff98c0c28cae175145669804d4cf63b299f537e2248da487086e24",
+      "disposition": "incorporated",
+      "integration_commit": "5b8458ce7e1eb81306cafdb1340c189b830541ba",
+      "committed_blob_oid": "3ecb1db6696fbb79d4b0a15bf6851f8d947b8c3c",
+      "committed_blob_sha256": "ef70efd8938cb0a8ce77e921ff9448f8e63511e052ac22c56debe5914c8656bf",
+      "byte_relation": "Git-owned CRLF-to-LF normalization only"
+    }
+  ],
+  "source_checkpoint_mapping": "Coherently committed source, exact blob OIDs and tested working-byte qualification recorded; original receipt status is retained separately."
 }

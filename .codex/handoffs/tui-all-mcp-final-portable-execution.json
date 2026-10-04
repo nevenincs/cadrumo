@@ -262,7 +262,7 @@
       ]
     },
     "Parallel": {
-      "workers": 2,
+      "workers": 4,
       "paths": [
         "src/cadrumo/adapters/inbound/declaracion/tests/test_parser_synthetic_fixtures_m347.py",
         "src/cadrumo/adapters/inbound/financial/tests/test_ledger_corpus_fidelity.py",
@@ -514,5 +514,11 @@
       ".codex/handoffs/tui-all-mcp-final-portable-execution.ps1": "7f01272c343e2da1108309eac8633795418f72ca167e21575fe058c8724ea2af",
       ".codex/handoffs/tui-all-mcp-final-source-bookends.py": "1585a9b901c99227ff3389d4b574d1ba7d1c15816df3cdcd65cfa78c3ebac054"
     }
+  },
+  "resource_overlap_ruling": {
+    "root_authorization": "Explicit four-worker overlap with active serial process after resource-scope audit",
+    "isolation": "Process-private active sessions/settings/monkeypatches, run scratch and per-test profile/storage/socket roots. Shared authority and browser cache are read-only. No fixture wheel build. Automation NativeEnrollmentRecipient binds test MemoryNativePort.",
+    "machine_shared": "Optional acceleration receipts use native credential service cadrumo:profile-session:v2, with exact profile_id/session_id UUID-pair accounts. Teardown recovers only private-root identities then deletes exact named receipt; no service-wide erase or credential-count assertions found in selected206 modules.",
+    "capacity_note": "Capacity/latency shared; one owner monitors. Scoped namespaces and exact cleanup allow correctness-preserving overlap."
   }
 }
