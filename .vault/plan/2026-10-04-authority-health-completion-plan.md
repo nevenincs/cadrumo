@@ -16,7 +16,7 @@ related:
   - '[[2026-10-02-registry-health-repair-plan]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:1124eef7eb5262fbf9373cfffe4fd466fe126e3d9d3df0dc2dfaa200e57459bd'
+body_hash: 'sha256:8d1fc7b44d6466ca8a86a6c10ce0521501b5b770d1ac8eca520722c502996c54'
 ---
 
 # `authority-health-completion` plan
@@ -47,7 +47,7 @@ Proof-cohort dependency: execute S01-S08, then S11, then S09-S10, S12 and S13. S
 - [x] `S04` - Resolve the Modelo 303 2022 recargo binding through its official applicable typed consumer; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml, exact source-grounded casilla or typed consumer delta and focused binding tests`.
 - [x] `S05` - Close the four Modelo 347 repeated-row binding consumer edges across both declared epochs; `src/cadrumo/_data/registry/aeat/modelos/347/revisions/{2011-2024,2025-y-siguientes}/, dev/registry/mappings/modelo_347/{2011,2025}/, corresponding row producer/consumer tests`.
 - [x] `S06` - Regenerate the stale Modelo 111 target from reviewed current source inputs with complete companions; `dev/registry/pipeline canonical legacy transaction recovery entrypoint, journal/lock owners and real recovery tests, Modelo 111 2019-y-siguientes source-pinned target and complete companions`.
-- [ ] `S07` - Commit the enrolled Modelo 490 2021 target through the canonical source-pinned bootstrap publication path; `dev/registry/pipeline canonical historical static bootstrap/supersession orchestration and isolated publication/refusal tests, enrolled Modelo 490 2021 source-pinned target, unchanged authority grade and generated companions`.
+- [x] `S07` - Commit the enrolled Modelo 490 2021 target through the canonical source-pinned bootstrap publication path; `dev/registry/pipeline canonical historical static bootstrap/supersession orchestration and isolated publication/refusal tests, enrolled Modelo 490 2021 source-pinned target, unchanged authority grade and generated companions`.
 - [ ] `S08` - Reconcile the complete target population and regenerate every repair-affected target in dependency order with truthful capability evidence; `dev/registry/analysis generated target census, existing registry-health-repair supported target work, reviewed source/map/profile inputs, bootstrap/disposition owners and affected generated export/construct/form companions`.
 - [ ] `S11` - Normalize all settled affected revisions and prove complete minimal storage, equivalence, idempotence and focused repair checks; `Canonical registry edition migration/collapse owners, changed registry/modelo components including form layouts, affected success/refusal tests and required code/data checks`.
 - [ ] `S09` - Repair public closure proof from reviewed generation and official bytes while preserving provenance pin mismatch refusals; `dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml, dev/registry/filing_export_conformance_vectors.py, dev/registry/tests/test_pinned_conformance_vector.py and additional required public vectors discovered by the complete closure census`.

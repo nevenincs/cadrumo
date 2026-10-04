@@ -91,8 +91,6 @@ def publish_validated_generated_export_tree(
         )
         if recovered:
             return _already_published(target_export_root)
-        if context.supersession is not None and context.validation.historical_static_source_ref is not None:
-            raise RegistryValidationError("historical static target cannot publish a manual-layout supersession")
         validated, candidate_manifest, candidate_manifest_sha256, staged_candidate_export_root = (
             _validate_and_stage_candidate(
                 context=context,
@@ -105,8 +103,6 @@ def publish_validated_generated_export_tree(
             )
         )
         if context.supersession is not None:
-            if isinstance(validated, ValidatedHistoricalStaticGeneratedExportTree):
-                raise RegistryValidationError("historical static target cannot publish a manual-layout supersession")
             return _publish_superseding_revision_bundle(
                 context=context,
                 target_export_root=target_export_root,

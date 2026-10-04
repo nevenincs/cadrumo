@@ -1,10 +1,2 @@
 # A target's bootstrap authorization is retired once its generated tree is published.
-[[targets]]
-modelo = "490"
-revision = "2021"
-source_ref = "aeat-dr-490-2021"
-source_sha256 = "d8115bd4f4d18745c6a20b9b8c184582c3ddc5ba24a6c955ba51dd92f1534fa7"
-layout_id = "modelo-490-fichero-boe"
-line_ending = "none"
-supersedes_layout_id = "modelo-490-fichero-boe"
-superseded_construct_references = 0
+targets = []

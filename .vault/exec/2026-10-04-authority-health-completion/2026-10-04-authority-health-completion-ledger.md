@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6869a6cce24e7c284321dd4c0e3e9dad9c4af025018f730592c2278ebb89aa9e'
+body_hash: 'sha256:fe87981b6ed2a141799c02c7961179686b69cab4f57d97afaec380ca923cc079'
 related:
   - "[[2026-10-04-authority-health-completion-plan]]"
 ---
@@ -88,6 +88,15 @@ related:
 - `S06` `by:` `root`
 - `S06` `verify:` `uv run --no-sync python -m pytest -o addopts="" -n 0 dev/registry/pipeline/tests/test_historical_bootstrap_publication.py dev/registry/pipeline/tests/test_legacy_publication_recovery.py -q` -> `pass`
 - `S06` `verify:` `uv run --no-sync python -m dev.registry.pipeline check 111 2019-y-siguientes aeat-dr-111-2019-v18 2024 1T` -> `pass`
+- `S07` `M` `dev/registry/pipeline/_tree_publication.py`
+- `S07` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S07` `A` `dev/registry/pipeline/tests/test_historical_bootstrap_publication.py`
+- `S07` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/export_layouts/0001-declarations.toml`
+- `S07` `A` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/export`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/form_layouts/0001-form-layout.toml`
+- `S07` `verify:` `Historical bootstrap publication and five legacy recovery cases, six passed` -> `pass`
+- `S07` `verify:` `Canonical publish-target and subsequent check for Modelo 490 2021 matched` -> `pass`
+- `S07` `by:` `root`
 
 ## Notes
 
