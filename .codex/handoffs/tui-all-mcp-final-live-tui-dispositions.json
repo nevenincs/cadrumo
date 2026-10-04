@@ -43,7 +43,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "bd9a0f28a583cdef664a228a914a156af25e3505",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/audit/2026-10-02-registry-health-repair-registry-health-audit.md",
@@ -62,7 +63,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "9d13e52798ae0d1df63041e0e2267e47eafcc4d5",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/exec/2026-10-02-duplication-remediation/2026-10-02-duplication-remediation-ledger.md",
@@ -81,7 +83,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e67799744ead46d3994a206f822bf3cdc29e7424",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/exec/2026-10-02-registry-health-repair/2026-10-02-registry-health-repair-ledger.md",
@@ -100,7 +103,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "04d8ddf48e08aaa03d72ca899618342156e3e43e",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/plan/2026-10-02-registry-health-repair-plan.md",
@@ -119,7 +123,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "6eaf250f16a1fb868f0b7fe5d6dbdefd59422f87",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/reference/2026-10-02-duplication-remediation-reference.md",
@@ -138,7 +143,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "0b4d1c1c8b14470f013b4cbf8c2cb05199b04cae",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/mappings/modelo_347/2011/0001-records.toml",
@@ -155,7 +161,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "2a413a83a21ae82269484bc5188c8fbef4417b79",
       "current_evidence_and_rationale": "Typed TOML maps identical: all province/lease flags and optional repeated inmueble six-field row contracts already retained; preserve canonical order and remove auto-merge duplicate keys.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/mappings/modelo_347/2025/0001-records.toml",
@@ -172,7 +179,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "310518c144442599eab0fcfa9af766ba23444c5a",
       "current_evidence_and_rationale": "Typed TOML maps identical: all province/lease flags and optional repeated inmueble six-field row contracts already retained; preserve canonical order and remove auto-merge duplicate keys.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/pipeline/generated_tree_dispositions.toml",
@@ -189,7 +197,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "30bef151bd94d64b1be7bc155d4e972ad710dfac",
       "current_evidence_and_rationale": "Both semantic ledgers empty; previous actual M232 guarded export/form closure and floor proof justify retired two historical drifts; no resurrected or silently retired new disposition.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/pipeline/tests/test_m347_row_transport.py",
@@ -208,7 +217,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "b057c2705417a8d62940c579a68e7a5205dcccbf",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/tests/test_modelo_303_binding_source_repair.py",
@@ -227,7 +237,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "1a84e0959f294619d68c87f4f69eddc939d07736",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/155-entrypoint-operation-and-read-composition.po",
@@ -246,7 +257,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "45d5db83f4e011479ca12da72064afe8903c71bb",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/156-cli-command-contracts-and-operator-surfaces.po",
@@ -265,7 +277,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "bd8272d0d1beac1ec9901c7488389d29f45a4728",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/157-live-aeat-cli-capture-and-snapshot-surfaces.po",
@@ -284,7 +297,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "d0884f5ad7a5a92ec57270a2eb885212b2cfaae0",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/158-cli-contracts-execution-projection-diagnostics-and-evidence-notices.po",
@@ -303,7 +317,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "781c2ae7f7653f5511a5439d2201c18082319e07",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/159-ledger-invoice-and-document-evidence-operator-flows.po",
@@ -322,7 +337,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "4e3e76914c6e4b533546ddf4ad7b3edecc2bbcd5",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/160-ledger-review-imports-rules-inventory-and-read-surfaces.po",
@@ -341,7 +357,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "c628721073cff0bbff2983bd5cb3fbb17f098bde",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/161-modelo-command-support-discovery-amendment-and-export-surfaces.po",
@@ -360,7 +377,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "831b0ab1b3f280c9e9480f75a880ad1a6e2b1067",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/162-modelo-local-records-wallet-preview-and-non-work-command-contracts.po",
@@ -379,7 +397,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "bffd784c966a9ba9e78ee5065468adc409869514",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/163-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.po",
@@ -398,7 +417,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "14837a8b9a54b96ecfba8952ae6cd8542d36ffa4",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/164-work-inspection-overview-verification-and-profile-authentication.po",
@@ -417,7 +437,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "ef18a595fa7f858fe735b27486f76a7077b5a341",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/165-prorrata-review-root-cli-and-command-authority.po",
@@ -436,7 +457,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "2ffa0cfb383d35d308123a722574aa761ff94900",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/166-shared-cli-transport-and-profile-configuration-surfaces.po",
@@ -455,7 +477,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "8fd4eee614072647825ef91d1e5fc640cd43595b",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/167-profile-maintenance-repair-and-google-operations.po",
@@ -474,7 +497,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "37cdcd91ab3b628dcdff1a59b2ba0e30a29d127b",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.po",
@@ -493,7 +517,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "bd263b3d75b9d1a711a9ee529a68e1d3b740d9dc",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/169-secure-cli-input-profile-bridges-and-storage-controls.po",
@@ -512,7 +537,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e638801cc3277de46080af5404a548afee7f2390",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/170-cli-error-handling-ledger-actions-and-modelo-work.po",
@@ -531,7 +557,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "9293a4182153e325eab6a066a0d416b66c5e3ea9",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/171-cli-period-registered-operation-and-ledger-bridges.po",
@@ -550,7 +577,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "6759aa6f71d1fc8ad8b8b802e603771bd6727264",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/172-ledger-and-modelo-cli-operations.po",
@@ -569,7 +597,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "23aebbaeef785172f017767b056149eabc084b18",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.po",
@@ -588,7 +617,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e5c13bca1c090837462ddffc7562e174f6c51647",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/174-installed-runtime-profile-host-and-worker-authority.po",
@@ -607,7 +637,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "3744100439b2a571b322a91b4c19244d5c76012f",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/175-profile-worker-request-staging.po",
@@ -626,7 +657,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "d8b8c8bacdfd5a900e172f5a3d6e597c54fdbd6d",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/176-textual-terminal-workbench-and-declarations-calendar.po",
@@ -645,7 +677,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "52b04e288e2dfd34d8e37c30934f53c8cec11300",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/177-home-declarations-portfolio-and-ledger-tui-flows.po",
@@ -664,7 +697,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "0a4ebdfa95504b1a9c810efb663120dfa20789eb",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.po",
@@ -683,7 +717,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "c3d93c6e957f86884a38e39fd48cd8d97e82e617",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.po",
@@ -702,7 +737,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "46342e10af794b06e7ad233fbbc27057aced15e6",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/180-modelo-workbench-issue-review-progress-and-navigation.po",
@@ -721,7 +757,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "7ab5fc518de121cc8030c0c480bbfb3fd49a57ef",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/181-modelo-workbench-editing-source-map-and-operation-flow.po",
@@ -740,7 +777,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "315a9bb4949e5a4f1a3c15f5d7e37809323dca24",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/182-supervised-operation-modal-and-profile-manager.po",
@@ -759,7 +797,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "cce72b631fa1dd772c90ca12d5f4709304efd988",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/183-runtime-tui-access-workbench-and-secret-entry-flows.po",
@@ -778,7 +817,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "5ac01b4185c37c5aa71bdb9d1fe4bb31080b9a07",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/184-profile-registration-recovery-and-runtime-login.po",
@@ -797,7 +837,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "d2dc7d30774acaaf08705033772d8c1760e5b5cb",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.po",
@@ -816,7 +857,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e51ebef36606743752128f397e94c19fff4813f5",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/187-filing-skills-and-the-mcp-operator-harness.po",
@@ -835,7 +877,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "f6aadd9cf23de9bf6ad81745d16a5b333b2dbd69",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/194-facturae-3-2-2-enumerations-and-total-composition.po",
@@ -854,7 +897,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e02cc979726cefcc89eb84d25d4a69283100df67",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/articles/catalogue.po",
@@ -873,7 +917,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "0f472f401458c24822f78d55c6e80f3c2cb63298",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/ca/LC_MESSAGES/technical/evidence/review-questions.po",
@@ -892,7 +937,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "c8c52fc0b38d0f54e80980b61b6b050a239b41f1",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/es/LC_MESSAGES/technical/articles/165-prorrata-review-root-cli-and-command-authority.po",
@@ -911,7 +957,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "358f533436e88a613dcfed465eb876f193c49bfb",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/011-iva-wallet-notifications-vies-checks-and-expediente-reads.po",
@@ -930,7 +977,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "376b7c4894aa9b862318558d8c28b68655ae454c",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/102-encrypted-profile-custody-and-censal-workflows.po",
@@ -949,7 +997,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "58217153b432dbd2bd1d9a262db5bf891f768b54",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/119-error-contracts-renderers-and-record-fault-projection.po",
@@ -968,7 +1017,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "175d78fa80d1f5fa1afe1230a417c98e5633ca15",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/126-binding-enrollment-prior-filings-deadlines-and-lineage.po",
@@ -987,7 +1037,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e7ef5d5672825d5d1b96ae3ac932c8872286d972",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/127-casilla-identity-legal-vocabularies-and-fixed-width-exports.po",
@@ -1006,7 +1057,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "1a615420c7faf7047e1e3a2ec338e24032b9ab09",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/128-governed-facts-and-export-conversion.po",
@@ -1025,7 +1077,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "96a5413ddc6e529ec3492e8253782a69281f3b13",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/129-formula-evaluation-traceability-and-row-source-bindings.po",
@@ -1044,7 +1097,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "b1a38d26b87c0cd0290460e0c712e34940fab8b2",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/130-dated-tax-vocabularies-inheritance-and-iva-carries.po",
@@ -1063,7 +1117,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "0f6266c5141dc160d7baffcfa1d39ade28013ba4",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/131-ledger-binding-families-and-modelo-303-evidence-projections.po",
@@ -1082,7 +1137,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "797b3a9a8265eaac8b5efa9125e007d5effd2728",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/132-modelo-303-projections-profile-bindings-and-registry-scope.po",
@@ -1101,7 +1157,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "5c5ad51e3b00ccbddda0990fb1ba91e4364ecb41",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/133-registry-reporting-cross-filing-relations-and-coverage-checks.po",
@@ -1120,7 +1177,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "98a5cd19239701783767cf1883a0ffa3cb968e97",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/134-withholding-bindings-revision-validation-and-registry-schema.po",
@@ -1139,7 +1197,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "18be7a278a7f42dbb0b9424a63d7bb55e29db1f0",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/135-registry-schemas-for-exports-extraction-forms-and-governance.po",
@@ -1158,7 +1217,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "a1b741891ef3005113d9c3bfa1ec7a030e0ab0a6",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/138-spending-categories-proportionality-and-census-projections.po",
@@ -1177,7 +1237,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "0be0b4d89a9d70dbb08fcfa462197b693c80f2ab",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/143-iva-classification-and-evidence-substrate.po",
@@ -1196,7 +1257,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "6a571ca73862e7f389862e7de30dad4a24101c74",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/147-ledger-evidence-detail-rows-and-modelo-verification.po",
@@ -1215,7 +1277,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "b2c067f297129e39fe87ded6d6a56f18b20aae0d",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/148-portal-catalogue-and-annual-prorrata-register.po",
@@ -1234,7 +1297,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "cb042aeaa3c9f2778961dbf1ca3ba08494077ef7",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/149-renta-expense-rules-and-activity-asset-amortization.po",
@@ -1253,7 +1317,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "60de7d1d10a4a2968fdfdb0f4baed7659c4f06c6",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/153-usage-ratios-and-user-profile-domain.po",
@@ -1272,7 +1337,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "3cea6a1b9530aeb514bfb6c443aefb065edb5dc3",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/171-cli-period-registered-operation-and-ledger-bridges.po",
@@ -1291,7 +1357,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "db0ec10fdbef46796390e3cdc1d220eda3b8f718",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/articles/catalogue.po",
@@ -1310,7 +1377,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "4daace0e8deb51daa3a47e97d4ffea0e9d152aee",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/evidence/review-questions.po",
@@ -1329,7 +1397,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "654caae95fc4ecad1a4e86654915ec17cf3989d5",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "docs/locales/hu/LC_MESSAGES/technical/topics/operator-interfaces-part-2.po",
@@ -1348,7 +1417,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "286d06a4363ba2800a7bb84a628fd43bf9437fe6",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/export/_generation.provenance.json",
@@ -1371,7 +1441,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "d590d117217e3ab4fa6f2bb236b137aed65d2240",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/_generation.provenance.json",
@@ -1394,7 +1465,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "037d367684fc71709150ed052e33fb21682a3bf5",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/export/_generation.provenance.json",
@@ -1417,7 +1489,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "93c07f8da183f15d2bd1357079fd87f1172f1ee1",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/export/_generation.provenance.json",
@@ -1440,7 +1513,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "3b6e12bfa954ea9e775153007891a7ae495be955",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -1463,7 +1537,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "b625c7421c0547f5215765b45e89cf7b56976383",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0000-export-layout.toml",
@@ -1480,7 +1555,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "b06a91644300d9aa57adce028b0999460dc61829",
       "current_evidence_and_rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json",
@@ -1499,7 +1575,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "8dad29ff657d45930325d0695b1301a20065f7c2",
       "current_evidence_and_rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml",
@@ -1518,7 +1595,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "13974c8313e42065b446e2cb6b88ecf8c9665212",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/export/_generation.provenance.json",
@@ -1541,7 +1619,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "407d427bad512a83387dafe5beb19e6226156f5c",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/form_layouts/0001-form-layout.toml",
@@ -1560,7 +1639,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "d9de259bacff901c7022e7d489f6d0e708f4491d",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/export/_generation.provenance.json",
@@ -1583,7 +1663,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "99804bded395b4f3b50ba6ca96167838b18c0c65",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml",
@@ -1602,7 +1683,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "d4ac114b2f2df310d03a198d2e4c60061ae40ea4",
       "current_evidence_and_rationale": "Incoming new bound casilla18 override from2023 retained against manual2022 physical source. Binding sequence additions/removals/order use current minimized alignment; incoming sequence itself unchanged from original base. Five source tests prove manual2022, bound2023, super binding exactly once, all3 recargo order and retired59/60 absent.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/export/_generation.provenance.json",
@@ -1625,7 +1707,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "a957587e33f871e06fb867b24282ebb0a7832851",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/export/_generation.provenance.json",
@@ -1648,7 +1731,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "22c97cc8ba50d95105ea2ddb3c32569807dc3720",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/export/_generation.provenance.json",
@@ -1671,7 +1755,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "3750adf7a2271c38359d7f14f8e9fdaf2b17345b",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/export/_generation.provenance.json",
@@ -1694,7 +1779,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "ad10d26064a7aa365e97a5680abef6d291ff1eed",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/export/_generation.provenance.json",
@@ -1717,7 +1803,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "35c62db9347b6e58f747bb2e6240bc46ac4f566d",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/_generation.provenance.json",
@@ -1740,7 +1827,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "7c65bcd6f9ec4c224c4a3951705fa657c7d89185",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/_generation.provenance.json",
@@ -1763,7 +1851,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "9a8b46d4c7c04eac11661695fa6dbd802dddb9bd",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/_generation.provenance.json",
@@ -1786,7 +1875,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "b98529fc4ee811116aed0dfb1bc4d4138c6eca18",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json",
@@ -1812,7 +1902,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "8530e29b1ebe08f12c2d18d737e87c1001726cd6",
       "current_evidence_and_rationale": "Retain committed current owner-generated package manifest as conflict bootstrap (current manifest matches all actual package files; retain current casilla projection instead of incoming older binding-kind package), pending actual final canonical currentness/regeneration; no manual generated fields.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json",
@@ -1838,7 +1929,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "669d7e427dc1907c68783f8c98fb86898640ed5a",
       "current_evidence_and_rationale": "Retain committed current owner-generated package manifest as conflict bootstrap (current manifest matches all actual package files; retain current casilla projection instead of incoming older binding-kind package), pending actual final canonical currentness/regeneration; no manual generated fields.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/_generation.provenance.json",
@@ -1861,7 +1953,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "c290c204c27cbf96cb09caee60ffe712b12ebe7b",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/_generation.provenance.json",
@@ -1884,7 +1977,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "50e402d6edd10f4b8401a33d2188fc4f6c63574e",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py",
@@ -1903,7 +1997,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "19f97edd1d23291592c757968d17b77a26f3e7ff",
       "current_evidence_and_rationale": "Incoming nested encrypted roundtrip/missing-family/malformed-family tests plus actual historical flat ciphertext load and canonical re-save.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py",
@@ -1920,7 +2015,7 @@
       "verification_receipt": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\m347-wire-oracle-additions.json",
       "canonical_log": "var/storage/development/.logs/test-runs/2026-10-04/20261004T041017.352348Z-pytest-76616-166175fe/run.log",
       "original_review_classification": "incorporated_unique_oracles_pending_commit",
-      "integration_commit": "7d249727426ccace4e238fdf5cbe2db03008946c",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba",
       "historical_status": "incorporated",
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "6d74fd4e6dc05f15a870064360828386df8f2931",
@@ -1944,7 +2039,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "9c6734c2753fa46f0bb25b4b7007e153d49fe240",
       "current_evidence_and_rationale": "Incoming nested private lease request; preserve current public reference bound25 and defining enum import only.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/catalogue_add_operation.py",
@@ -1963,7 +2059,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "5240c6e05e4251268c707a1ca1ff09a086966291",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/catalogue_creation.py",
@@ -1982,7 +2079,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "c2f099d08a784ebf05a033be5fade62e94f2af36",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/source_resolver.py",
@@ -2001,7 +2099,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "f4a2750cab0664545a1487527c3cb8bfaa7bbad4",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py",
@@ -2020,7 +2119,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "abeef204b105bb515f425531a87313dfea1c3eb2",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/tests/test_lifecycle.py",
@@ -2039,7 +2139,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "bf201a2d13f7b4a268d45f4d577235a3e88533cb",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/tests/test_source_resolver.py",
@@ -2058,7 +2159,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "542a3504bd5ba40cf23b9a3a84f734430dc80015",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/ledger/evidence_followup_contracts.py",
@@ -2075,7 +2177,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "0192d0fbad5609d5874c207a0046032fd9e3cb9d",
       "current_evidence_and_rationale": "Current explicit UTC validators retained over duplicate incoming callable aliases; plain datetime JSON schema incoming intent already present.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/calculations/registry/formula_input_keys.py",
@@ -2094,7 +2197,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "c1aae0bd012a4821f8295e9de97288344c96d8e8",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/calculations/registry/formula_runtime_ops.py",
@@ -2113,7 +2217,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "48674dad95f77900e44c20e9de276145c404ba60",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/calculations/registry/formula_text_inputs.py",
@@ -2132,7 +2237,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "ad7c0b483956d19ca4d72f1d4ec26355ae552246",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/calculations/registry/tests/test_formula_runtime_validation.py",
@@ -2151,7 +2257,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e45af6c3980385e706612ecb462d2ccec6e1c429",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/invoices/business_premises.py",
@@ -2170,7 +2277,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "ff5ce8731043efb13e9dcefbc89e42b75ad53572",
       "current_evidence_and_rationale": "Incoming defining enum and lease factory retained; validated historical hydration added, contradiction/malformed facts refused.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/invoices/models.py",
@@ -2189,7 +2297,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "58746250f3cf5f0c59e575eba4be0d36a72d7a7c",
       "current_evidence_and_rationale": "Retain incoming nested field and issued-kind guard, remove auto-merged duplicate flat canonical fields/type helpers; hydrate historical flat ciphertext into canonical nested family before normal validation.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/invoices/tests/test_business_premises_lease.py",
@@ -2208,7 +2317,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "bf12a2521405e97923b2229524b95dfaede6fdbd",
       "current_evidence_and_rationale": "Preserve original fact/kind/code/reference assertions in nested incoming forms; add historical hydration/no-duplicate-schema/contradiction/validation tests.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/domain/user_profile/tests/test_registry_contract.py",
@@ -2225,7 +2335,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "72562d7175017125d06c06e9a05a087f83be4be8",
       "current_evidence_and_rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py",
@@ -2244,7 +2355,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "863fe129456e33844afecf3f70f60c01a57d3de6",
       "current_evidence_and_rationale": "Incoming defining lease conversion import retained; obsolete unused object-list guard omitted; current real invoice line/public schema handling retained.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_business_invoice_verbs.py",
@@ -2263,7 +2375,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "e950478d8fe3eaacd23f518e6b251210a849b448",
       "current_evidence_and_rationale": "Canonical joined HUMAN seed fixture replaces original active-pointer-only premise; original actual public CLI assertions retained.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_lifecycle.py",
@@ -2282,7 +2395,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "7da8eabdd75449800f3162b45a53ef9382191a8c",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/tui/ledger/invoice_entry.py",
@@ -2301,7 +2415,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "ccfa8e8cffe87000d25c593c507b712608d7857a",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/tui/ledger/models.py",
@@ -2320,7 +2435,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "7aff3f7047007f5e70a6211fe235964625689441",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py",
@@ -2339,7 +2455,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "96f318e12638bb37695f06a7ae1fba7b4c063700",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py",
@@ -2358,7 +2475,8 @@
       "current_source_capture": "800b2668832f61da780f607283af4e48a75d605f",
       "current_resolved_blob": "66fe05ae0ecf15ff0960cee8d8a5ba772890c4b0",
       "current_evidence_and_rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
-      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "current_reconciliation_report": ".codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json",
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     }
   ],
   "missing_original_mcp_intent_demonstrated": false,
@@ -2421,5 +2539,6 @@
     "sha256": "f7c31d841945653a256f184ee9f88152fd90f0651a72c6ca995f6e630c469c22"
   },
   "landing_dependency": "After isolated E2E green, checkpoint/clean handoff from active feature/tui writer; reconcile current HEAD and relevant retained independent deltas, including owning nested-lease storage migration, merge without overwrite, then run destination E2E.",
-  "latest_finished_capture": "800b2668832f61da780f607283af4e48a75d605f"
+  "latest_finished_capture": "800b2668832f61da780f607283af4e48a75d605f",
+  "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
 }

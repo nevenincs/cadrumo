@@ -41,7 +41,8 @@
       "passed": 9
     },
     "m303_form_reproduction": "pass,0stale fragments/0missing layouts",
-    "source_owner_lint_format_types": "all assigned scopes pass; final temp helper shadow correction scoped Ruff/format/ty pass"
+    "source_owner_lint_format_types": "all assigned scopes pass; final temp helper shadow correction scoped Ruff/format/ty pass",
+    "all19_generated_export_targets_current": "Actual canonical reproduction PASS19; zero source drift and no registry/authority mutation."
   },
   "independent_source_review": "No new high/critical code defect on unchanged owner hash bookends; PENDING final verification. Historical private-task route violation is closed by exact own task absence, not test success.",
   "full_quality_receipt": ".codex/handoffs/tui-all-mcp-quality-finished-tui-800b-corrected.json",
@@ -81,5 +82,17 @@
   ],
   "m360_limit": "Original scaffold now explicitly proposed, not accepted; encrypted solicitud adapter declaration writer has no registered production caller in captured source, no complete operator-entry E2E claimed.",
   "mac_private_contract": "Prior native default protected refusal demonstrated; deliberate unchanged original MacLogin locked=True/UNKNOWN admission policy, not a newly introduced regression or host outage.",
-  "landed_on_feature_tui": false
+  "landed_on_feature_tui": false,
+  "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba",
+  "authority_publication": "Recorded1a8dc024 versus current source candidate96870a52991c3915f59fb9a0bb833002df1a0f068127710448aa2db89869167d; actual currency STALE/legal sources changed. Publication remains separate.",
+  "later_destination_observation": {
+    "observed_utc": "2026-10-04T05:45:44.195353+00:00",
+    "head": "cbf0497d372128c09848f292d4497342033af0a6",
+    "later_commits": [
+      "89eb5a2f61",
+      "cbf0497d37"
+    ],
+    "dirty_tracked_paths": 18,
+    "claim": "Live destination advanced and has later working edits; no landing or source overwrite performed. These later source generations require preservation/reconciliation before landing."
+  }
 }

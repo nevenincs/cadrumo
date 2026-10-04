@@ -5,88 +5,46 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:41f0e23c7d13b0d06e9a0ed0bf9c7b237f3a5db459581965cf547245f8163cc2'
+body_hash: 'sha256:2c29540545c6bf1afd2acc489eca143d5d5756c34be70f5c0d5296e831e73359'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-adr]]"
+  - '[[2026-10-04-modelo-360-solicitud-custody-reference]]'
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace modelo-360-solicitud-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
+# `modelo-360-solicitud-custody` adr: `Modelo 360 solicitud facts and refund account in encrypted profile custody` | (**status:** `accepted`)
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     Reuse, amendment, and supersession follow the vaultspec system section.
-     Preserve accepted content while a revision is pending; apply only an
-     authorized amendment. Accept a reversal's successor before superseding
-     its predecessor. Unchanged coverage needs no new record.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
-
-# `modelo-360-solicitud-custody` adr: `Modelo 360 solicitud facts and refund account in encrypted profile custody` | (**status:** `proposed`)
-
-<!-- DOCUMENT BOUNDARY:
-     Keep the ruling understandable on its own: scope, commitment, rationale,
-     consequences. Cite detailed research/reference/audit evidence by stem.
-     Each section may be a sentence; do not pad it to resemble a specification.
-     Inconclusive experiments remain evidence, not an accepted decision. -->
+Accepted 2026-10-04 on the operator's approval, given that day, to build encrypted persisted storage for the modelo 360 refund application and bank-account data.
 
 ## Problem Statement
 
-<!-- The problem and why a decision is needed now, in this record's own
-     terms. Do not re-narrate the research's evidence; cite it. -->
+Modelo 360 could not be exported. The typed página 1 facts (`Modelo360ProfileFacts` in `src/cadrumo/application/filing/producer_snapshot_m360.py`) and the snapshot validator that requires them (`src/cadrumo/application/filing/producer_snapshot.py`, `_validate_modelo_360_snapshot`) existed, but nothing persisted them: the export path supplied `GeneralFilingProfileFacts` for every modelo outside 303, 202 and 111 (`src/cadrumo/application/modelo/export.py`, `_resolve_export_model_profile`), so the snapshot refused. The refund account had no store either: `ModeloIVAProfile.refund_account` is never populated from the profile projection (`src/cadrumo/domain/deadlines/profiles.py`, `_resolve_modelo_iva_profile`), and modelo 360 has no result casilla, so its disposition is the INGRESO fallback and no refund account was ever selected.
 
 ## Considerations
 
-<!-- Only the forces that bear on the choice, each a terse line citing its
-     grounding by stem or locator. Nothing the research already
-     establishes is re-argued here. -->
+- DR360 campo 114 lets the refund account belong to the representante, and campo 116 makes the BIC obligatorio, so the 360 account is a fact of the solicitud rather than the taxpayer's standing IVA refund account (`2026-06-24-m303-refund-fichero-block-adr`).
+- The solicitud header (destination Member State, causa, earlier registro number) changes per solicitud; the work unit addresses one solicitud per filing year and the revision's single `AD-HOC` period.
+- An encrypted singleton register with revision-guarded mutation already exists for comparable operator-declared filing inputs (`src/cadrumo/adapters/persistence/profile/foreign_assets.py`, `src/cadrumo/adapters/persistence/profile/_secure_model_document.py`).
 
 ## Considered options
 
-<!-- Name each alternative evaluated, compared at the same level of abstraction, with its
-key pros and cons and why it was kept or rejected. Naming the rejected options - not only
-the chosen one - is what lets a future reader reconstruct the decision. Keep each option
-to a terse claim-first line or two; the chosen option's full reasoning belongs under
-Rationale. -->
+- Profile-schema fields on the user profile record: rejected; the facts are per solicitud and the account may be a third party's, which a taxpayer profile axis cannot express.
+- Fields on the calculation revision's filing-instance evidence, as modelo 303 does: rejected for now; it reaches the calculation request, its content address and every calculate surface, which is disproportionate to header facts that never enter a formula.
+- A dedicated encrypted singleton register keyed inside the payload by period: chosen.
 
 ## Constraints
 
-<!-- Binding commitments and scope, including exceptions and affected prior rulings.
-     Make obligations distinguishable from implementation hypotheses. -->
+- The register persists only through the registered `FINANCIAL` namespace `cadrumo.persistence.profile.modelo_360_solicitud`, bucket-local, structured custody, singleton key `default`; the period lives inside the ciphertext, never in a key.
+- The account is the existing checksum-validated `RefundAccount`; the solicitud facts keep their own validators. An undeclared solicitud, an undeclared account or a missing BIC is a refusal, never a blank or default.
+- The account is selected for the account page by the modelo's record design, not by inventing a refund disposition; the snapshot keeps refusing an account on any other non-refund filing.
 
 ## Implementation
 
-<!-- Lead with the chosen decision: "We will ..." and its scope. Follow with only the
-     implementation outline needed to understand it. Mark hypotheses that may change
-     within the constraints; keep task sequencing and code elsewhere. -->
+We will persist `Modelo360SolicitudRegister` (entries of period, `Modelo360ProfileFacts` and an optional `RefundAccount`) through `Modelo360SolicitudRepository` on the bare-document secure-object kernel, expose it to export through `ModeloExportPorts.m360_solicitud`, and have the export resolve the entry for the work unit's period into the producer snapshot. The operator write surface (registered operation, CLI and TUI) is not part of this decision's first delivery and remains open.
 
 ## Rationale
 
-<!-- Why this option wins against the drivers: a knockout criterion or a
-     clear edge over the alternatives. Cite `{research}` findings and
-     grounding `{reference}` by stem; do not restate them. A new fact
-     surfacing here first belongs in the grounding document. -->
+The register mirrors a working analogue on the same storage kernel, keeps banking data in encrypted custody, and changes no calculation identity. Keying by period inside the payload matches how the work unit already addresses a 360 solicitud.
 
 ## Consequences
 
-<!-- Benefits, accepted costs, and conditions that would require reconsideration.
-     Acceptance does not assert that implementation is already complete. -->
+Modelo 360 export now passes the producer boundary from persisted facts. A later move of the facts into filing-instance evidence, or a second solicitud per period, would require a migration of this register. The published página 2 layout still refuses an ordinary solicitud at its page marker, which is a registry-layout matter outside this decision.

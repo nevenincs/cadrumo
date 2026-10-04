@@ -12,7 +12,7 @@
       "disposition": "incorporated",
       "rationale": "Incoming unfinished draft preserved; normalize unresolved scaffold status enumeration to proposed through owning CLI. No accepted authority or completed operator declaration workflow claimed.",
       "evidence": "owning Vaultspec edit original proposed draft status repair",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/audit/2026-10-02-duplication-remediation-audit.md",
@@ -23,7 +23,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "finished-tui-record-resolutions.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/exec/2026-10-02-duplication-remediation/2026-10-02-duplication-remediation-ledger.md",
@@ -34,7 +34,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "finished-tui historical ledger owning CLI repair",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": ".vault/reference/2026-10-02-duplication-remediation-reference.md",
@@ -45,7 +45,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "finished-tui-record-resolutions.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/actionlint.py",
@@ -56,7 +56,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/ci/tests/test_actionlint_read_only.py",
@@ -67,7 +67,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/deploy/docs_delivery_activation.py",
@@ -78,7 +78,7 @@
       "disposition": "superseded",
       "rationale": "Preserve canonical defining core.storage_environment temporary helper; all class/function ASTs equal both parents, incoming context-manager formatting retained; complete native import graph/custody owner contracts unchanged.",
       "evidence": "registry-800b-source-resolution.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/docs/serve.py",
@@ -89,7 +89,7 @@
       "disposition": "incorporated",
       "rationale": "Incoming post-build serve_languages and CADRUMO_DOCS_LANGUAGE=en retained; all function/class ASTs match incoming. Current canonical core.storage_environment temporary helper import replaces incoming dev._paths reexport.",
       "evidence": "history four-path semantic review",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/docs/serve_languages.py",
@@ -100,7 +100,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/docs/tests/test_docs_serve.py",
@@ -111,7 +111,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/quality/import_candidate_inventory.py",
@@ -122,7 +122,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/quality/import_gate.py",
@@ -133,7 +133,7 @@
       "disposition": "superseded",
       "rationale": "Preserve canonical defining core.storage_environment temporary helper; all class/function ASTs equal both parents, incoming context-manager formatting retained; complete native import graph/custody owner contracts unchanged.",
       "evidence": "registry-800b-source-resolution.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/bindings.py",
@@ -144,7 +144,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/compiler/loader_cache.py",
@@ -155,7 +155,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/compiler/record_design_cache.py",
@@ -166,7 +166,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/compiler/validate_evidence.py",
@@ -177,7 +177,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/compiler/validation_verdict_cache.py",
@@ -188,7 +188,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/compiler/verdict_cache.py",
@@ -199,7 +199,7 @@
       "disposition": "superseded",
       "rationale": "Current default function body unchanged from incoming; retain correct shared development/cache/registry-verdict documentation rather than incoming stale checkout .cache description. Current result exact integration parent.",
       "evidence": "history four-path semantic review",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/edition_delta_migration.py",
@@ -210,7 +210,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/filing_export_conformance.py",
@@ -221,7 +221,7 @@
       "disposition": "superseded",
       "rationale": "Defining temporary-directory helper is core.storage_environment; preserve canonical defining import over incoming dev._paths reexport.",
       "evidence": "registry-800b-source-resolution.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/registry/parity/workbook_parity_libreoffice.py",
@@ -232,7 +232,7 @@
       "disposition": "superseded",
       "rationale": "Remove clean-auto-merge duplicate/nondefining temporary helper import; retain actual core defining helper and all workbook behavior.",
       "evidence": "registry-800b-source-resolution.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "dev/tui/harness/sequences.py",
@@ -243,7 +243,7 @@
       "disposition": "already present",
       "rationale": "Incoming harness behavior retained; actual duplicate-shadow auto-merge error corrected by retaining defining core.storage_environment helper and removing dev._paths reexport import. All function/class bodies match both parents.",
       "evidence": "history four-path semantic review and duplicate-import fix",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/local_runtime/linux_gnome_installation.py",
@@ -254,7 +254,7 @@
       "disposition": "superseded",
       "rationale": "Retired resource-only product setup module remains absent; incoming formatting-only delta is represented by current standalone dev packaging owner, not restored runtime management/provisioning.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/local_runtime/linux_gnome_lock.py",
@@ -265,7 +265,7 @@
       "disposition": "already present",
       "rationale": "Preserve all reply decoding and trailing check inside live bus context; incoming import-format delta already present.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/local_runtime/profile_worker.py",
@@ -276,7 +276,7 @@
       "disposition": "already present",
       "rationale": "Incoming environment-comprehension format already present; current platform containment and launch authority retained.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/local_runtime/tests/test_linux_gnome_lock.py",
@@ -287,7 +287,7 @@
       "disposition": "already present",
       "rationale": "Keep portable posix_owner_uid at native filesystem seam and current invalid-after-close fake/lifetime regressions; no lost incoming assertion (incoming sole conflict is os.getuid substitution).",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py",
@@ -298,7 +298,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py",
@@ -309,7 +309,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py",
@@ -320,7 +320,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py",
@@ -331,7 +331,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/storage/namespace_registry.py",
@@ -342,7 +342,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py",
@@ -353,7 +353,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py",
@@ -364,7 +364,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/filing/draft_construction.py",
@@ -375,7 +375,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/filing/producer_snapshot.py",
@@ -386,7 +386,7 @@
       "disposition": "incorporated",
       "rationale": "Incorporate canonical account-page selection generalization for mandatory M360 refund account and unchanged M303 Nota3 shape; no other-model banking authority broadened.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/filing/producer_snapshot_m360.py",
@@ -397,7 +397,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/catalogue_add_contracts.py",
@@ -408,7 +408,7 @@
       "disposition": "incorporated",
       "rationale": "Incoming nested private lease request; preserve current public reference bound25 and defining enum import only.",
       "evidence": "lease-800b-owner-current-manifest.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/catalogue_add_operation.py",
@@ -419,7 +419,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py",
@@ -430,7 +430,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/modelo/export.py",
@@ -441,7 +441,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/modelo/export_ports.py",
@@ -452,7 +452,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/tests/test_provisioning_browser.py",
@@ -463,7 +463,7 @@
       "disposition": "superseded",
       "rationale": "Retain explicit clearing of controlled browser-category override when asserting its absence/default. Incoming installer root/temporary-environment oracle already lives in defining adapter test_installer.py, which asserts all four vendor/TEMP/TMP/TMPDIR values; do not reintroduce duplicate cross-layer application installer test. Prior46-owner combined suite passes, relevant inputs unchanged here.",
       "evidence": "integration6502edfcfe browser-default repair; src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/application/tests/test_provisioning_host.py",
@@ -474,7 +474,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/adapter_composition.py",
@@ -485,7 +485,7 @@
       "disposition": "incorporated",
       "rationale": "Compose M360 repository over exact same normalized admitted bucket and SecureObjectRepository used by other export authorities; preserve current pinned calculation binding/public defining helpers.",
       "evidence": "final-tui-runtime-iva-m145-m360-reconciliation.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py",
@@ -496,7 +496,7 @@
       "disposition": "incorporated",
       "rationale": "Incoming defining lease conversion import retained; obsolete unused object-list guard omitted; current real invoice line/public schema handling retained.",
       "evidence": "lease-800b-owner-current-manifest.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py",
@@ -507,7 +507,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py",
@@ -518,7 +518,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/locales/ca/common.yml",
@@ -529,7 +529,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/locales/en/common.yml",
@@ -540,7 +540,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/locales/es/common.yml",
@@ -551,7 +551,7 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/locales/hu/common.yml",
@@ -562,7 +562,7 @@
       "disposition": "incorporated",
       "rationale": "Exact source snapshot blob retained in reconciled merge; current parent intent preserved through automatic three-way merge or existing equality.",
       "evidence": "finished-tui-locale-resolutions.json",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     },
     {
       "path": "src/cadrumo/tests/env_scope.py",
@@ -573,7 +573,8 @@
       "disposition": "already present",
       "rationale": "Exact committed incoming blob already exists in integration parent; source delta against its original base preserved.",
       "evidence": "exact canonical Git blob comparison",
-      "integration_commit": "containing merge checkpoint; resolve by git log --all --first-parent -- .codex/handoffs/tui-all-mcp-finished-tui-800b-dispositions.json"
+      "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
     }
-  ]
+  ],
+  "integration_commit": "f25e99c5444bc70a310179a9be7c1fa3d0d6c8ba"
 }

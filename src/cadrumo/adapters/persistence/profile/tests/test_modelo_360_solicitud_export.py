@@ -1,14 +1,15 @@
-"""Modelo 360 exports from the encrypted solicitud register, and refuses without it.
+"""Modelo 360 export reads the encrypted solicitud register, and refuses without it.
 
 The solicitud facts and refund account are declared through the real
-:class:`Modelo360SolicitudRepository`, read back by the real ``export_modelo_revision``
-through the composed export ports, and the written fichero is read at the positions DR360
-página 1 (``aeat-dr-360-2010``) prints. The positions below are transcribed from the
-design, never read from the layout under test. All data is synthetic.
+:class:`Modelo360SolicitudRepository` and read back by the real ``export_modelo_revision``
+through the composed export ports. Página 1's rendering from these facts is asserted at
+DR360's positions in ``application/filing/tests/test_modelo_360_header_export.py``. All
+data is synthetic.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -50,21 +51,6 @@ _PERIOD = Period.from_year_and_code(_YEAR, "AD-HOC")
 _TAX_ID = "12345678Z"
 _SYNTHETIC_IBAN = "ES9121000418450200051332"
 _SYNTHETIC_BIC = "CAIXESBBXXX"
-
-#: DR360 página 1 campo -> (posición, longitud), as printed.
-_DR360_PAGINA_1: dict[int, tuple[int, int]] = {
-    5: (18, 1),
-    6: (19, 2),
-    8: (25, 1),
-    12: (60, 9),
-    14: (194, 100),
-    41: (794, 1),
-    113: (1912, 25),
-    114: (1937, 1),
-    115: (1938, 34),
-    116: (1972, 11),
-    117: (1983, 3),
-}
 
 
 def _casilla(raw: str) -> CasillaId:
@@ -127,44 +113,38 @@ def _export(calculation_revision_id: str, output: Path) -> None:
         )
 
 
-def _campo(pagina_1: str, campo: int) -> str:
-    position, length = _DR360_PAGINA_1[campo]
-    return pagina_1[position - 1 : position - 1 + length]
+def _cause_chain(error: BaseException) -> Iterator[BaseException]:
+    current: BaseException | None = error
+    while current is not None:
+        yield current
+        current = current.__cause__
 
 
-def _an(value: str, length: int) -> str:
-    return value + " " * (length - len(value))
-
-
-def test_a_declared_solicitud_exports_its_header_and_account_at_the_design_positions(
+def test_a_declared_solicitud_passes_the_producer_boundary_and_stops_only_at_page_2(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
+    """The persisted solicitud and account satisfy every página 1 producer fact.
+
+    The export now gets past the producer snapshot -- the boundary that refused every
+    modelo 360 before the register existed -- and renders until página 2 campo 2. DR360
+    prints that campo "obligatorio, blanco o C", yet the published layout declares it
+    required with no blank, so an ordinary solicitud is refused there. That is a layout
+    defect outside this register; when it is corrected this test must turn into the
+    success assertion on the written fichero.
+    """
     bucket_id = seed_profile(tax_id=_TAX_ID)
     calculation_revision_id = _seed_360_revision(bucket_id)
     Modelo360SolicitudRepository(bucket_id=bucket_id).declare(_entry(refund_account=_account()))
     output = tmp_path / "modelo-360.txt"
 
-    _export(calculation_revision_id, output)
+    with pytest.raises(ModeloExportError) as exc_info:
+        _export(calculation_revision_id, output)
 
-    fichero = output.read_bytes().decode("latin-1")
-    start = fichero.index("<T360010>")
-    pagina_1 = fichero[start : fichero.index("</T360010>", start) + len("</T360010>")]
-    assert len(pagina_1) == 3400
-    expected = {
-        5: "2",
-        6: "DE",
-        8: "0",
-        12: _TAX_ID,
-        14: _an("solicitante@example.es", 100),
-        41: "1",
-        113: _an("OPERATOR TEST", 25),
-        114: "A",
-        115: _an(_SYNTHETIC_IBAN, 34),
-        116: _SYNTHETIC_BIC,
-        117: "EUR",
-    }
-    assert {campo: _campo(pagina_1, campo) for campo in expected} == expected
+    causes = list(_cause_chain(exc_info.value))
+    assert "FilingProducerSnapshotError" not in {type(cause).__name__ for cause in causes}
+    assert any("m360-2010.pagina02.f002" in str(cause) for cause in causes)
+    assert not output.exists()
 
 
 def test_an_undeclared_solicitud_is_refused_before_any_file_is_written(

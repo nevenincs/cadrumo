@@ -177,6 +177,14 @@
       "ty": "passed",
       "changed_lines": 1,
       "source_frozen": true
+    },
+    "generated_target_currentness": {
+      "proof": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\registry-800b-target-currentness-before.json",
+      "sha256": "7ffd98e520a2f0342a254e2086ce6ea0d4d540ba032d98b3e1343d4f1c1122f9",
+      "current": 19,
+      "other": 0,
+      "source_bookend_drift": 0,
+      "registry_or_authority_mutations": 0
     }
   },
   "authority_currency_read_only": {
@@ -185,5 +193,6 @@
     "candidate_identity_digest": "96870a52991c3915f59fb9a0bb833002df1a0f068127710448aa2db89869167d",
     "recorded_identity_digest": "1a8dc024bc0cf73719f36174f63faea00914ed74281625fcd512005284bffd6b",
     "detail": "the legal sources changed since the indexed generation was published"
-  }
+  },
+  "status": "owned_source_frozen_target_currentness_passed_authority_publication_deferred"
 }
