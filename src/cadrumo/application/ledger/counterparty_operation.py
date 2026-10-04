@@ -13,12 +13,11 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect
-from ...core.time.clock import now
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.iva.classification import require_iva_territorial_scope
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.fenced_result import publish_fenced_result
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -345,15 +344,12 @@ async def _publish_counterparty_action(
             repository_factory=repository_factory,
         )
 
-    if payload.action == "view":
-        result = await run_action()
-        await context.events.effect(OperationEffect.NONE)
-        return await context.operands.put(result, written_at=now())
-    async with context.cancellation.irreversible_section():
-        await context.events.effect(OperationEffect.UNKNOWN)
-        result = await run_action()
-        await context.events.effect(OperationEffect.UPDATED if result.changed else OperationEffect.NONE)
-        return await context.operands.put(result, written_at=now())
+    return await publish_fenced_result(
+        context,
+        run_action=run_action,
+        is_read=payload.action == "view",
+        result_changed=lambda result: result.changed,
+    )
 
 
 class LedgerCounterpartyExecutor:

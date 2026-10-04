@@ -14,7 +14,6 @@ from ._app_ledger_command_spec_support import (
     _required_text_option,
 )
 from ._command_secret_contracts import (
-    MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
@@ -30,26 +29,9 @@ from .command_shared_contracts import (
     ValueContract,
 )
 from .command_spec import CommandSpec, ExecutionPolicySpec
+from .machine_secret_command_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 
 _GROUP = "app_ledger_account"
-_SECRETS_STDIN = OptionSpec(
-    name="secrets_stdin",
-    declarations=("--secrets-stdin",),
-    value=ValueContract(DeferredTarget("builtins", "bool")),
-    default=ParameterDefault.value(False),
-    help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-    is_flag=True,
-    flag_value=True,
-    machine_secret_channel=MachineSecretChannelKind.STDIN,
-)
-_SECRETS_FD = OptionSpec(
-    name="secrets_fd",
-    declarations=("--secrets-fd",),
-    value=ValueContract(DeferredTarget("builtins", "int")),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-    machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-)
 _ACCOUNT_ID = _required_text_argument("own_account_id", "cli.app.ledger.account.account_id_help")
 _SECRET_FIELDS = ("iban", "swift_bic", "bank_name", "bank_address", "bank_city", "bank_country_code")
 
@@ -128,8 +110,8 @@ LEDGER_ACCOUNT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _choice_option("holding", ("--holding",), _HOLDINGS, required=True),
             _optional_text_option("currency", ("--currency",), "cli.app.ledger.account.currency_help"),
             _optional_text_option("opened_on", ("--opened-on",), "cli.app.ledger.account.opened_on_help"),
-            _SECRETS_STDIN,
-            _SECRETS_FD,
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
         ),
         policy=_POLICY_4,
         result="OwnAccountChangeResult",
@@ -145,8 +127,8 @@ LEDGER_ACCOUNT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _choice_option("holding", ("--holding",), _HOLDINGS, required=False),
             _optional_text_option("currency", ("--currency",), "cli.app.ledger.account.currency_help"),
             _optional_text_option("opened_on", ("--opened-on",), "cli.app.ledger.account.opened_on_help"),
-            _SECRETS_STDIN,
-            _SECRETS_FD,
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
         ),
         policy=_POLICY_4,
         result="OwnAccountChangeResult",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -23,7 +24,13 @@ from .session import LiveSessionWriteReceipt
 
 if TYPE_CHECKING:
     from .filed_data_ports import FiledEffectGuard
-    from .filed_history_operation import FiledHistoryBrowserResources, FiledHistoryBrowserResourcesFactory
+    from .filed_history_operation import (
+        FiledHistoryBrowserResources,
+        FiledHistoryBrowserResourcesFactory,
+        FiledHistoryComposition,
+        FiledHistoryCompositionFactory,
+        FiledHistoryProviderPreflight,
+    )
 
 
 def require_exact_profile_worker(profile_id: UUID, subject_ref: str, *, active_bucket_id: str) -> str:
@@ -118,3 +125,24 @@ async def track_capture_session(context: OperationExecutorContext, *, may_write:
     if may_write:
         await context.events.effect(OperationEffect.UNKNOWN)
     return LiveSessionWriteReceipt(context.events.effect)
+
+
+async def prepare_provider_capture(
+    context: OperationExecutorContext,
+    profile_id: UUID,
+    output_root: Path,
+    composition_factory: FiledHistoryCompositionFactory,
+    browser_resources_factory: FiledHistoryBrowserResourcesFactory,
+    provider_preflight: FiledHistoryProviderPreflight,
+    *,
+    preflight_phase: str,
+    acquire_phase: str,
+    may_write: bool,
+) -> tuple[FiledHistoryComposition, FiledHistoryBrowserResources, LiveSessionWriteReceipt]:
+    """Preflight authority before constructing and owning capture resources."""
+    await context.events.phase(preflight_phase)
+    provider_preflight(profile_id, context.authority_operation)
+    composition = composition_factory(output_root, operation=context.authority_operation)
+    resources = await own_provider_browser(context, browser_resources_factory, acquire_phase=acquire_phase)
+    session_receipt = await track_capture_session(context, may_write=may_write)
+    return composition, resources, session_receipt

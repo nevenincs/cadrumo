@@ -5,13 +5,12 @@ from __future__ import annotations
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ._command_secret_contracts import (
-    MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
 from ._modelo_nonwork_command_spec_policies import _METADATA, _MODEL_READ, _MODEL_WRITE
-from .command_parameter_contracts import ArgumentSpec, OptionSpec, ParameterSpec
+from .command_parameter_contracts import ArgumentSpec, ParameterSpec
 from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -22,6 +21,7 @@ from .command_shared_contracts import (
     ValueContract,
 )
 from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from .machine_secret_command_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 
 _GROUP = "app_modelo_m360"
 _FILING_YEAR = ArgumentSpec(
@@ -29,24 +29,6 @@ _FILING_YEAR = ArgumentSpec(
     value=ValueContract(DeferredTarget("builtins", "int")),
     default=ParameterDefault.required(),
     help_key=TranslationKey("cli.app.modelo.m360.filing_year_help"),
-)
-_SECRETS_STDIN = OptionSpec(
-    name="secrets_stdin",
-    declarations=("--secrets-stdin",),
-    value=ValueContract(DeferredTarget("builtins", "bool")),
-    default=ParameterDefault.value(False),
-    help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-    is_flag=True,
-    flag_value=True,
-    machine_secret_channel=MachineSecretChannelKind.STDIN,
-)
-_SECRETS_FD = OptionSpec(
-    name="secrets_fd",
-    declarations=("--secrets-fd",),
-    value=ValueContract(DeferredTarget("builtins", "int")),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-    machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
 )
 
 
@@ -94,7 +76,7 @@ MODELO_M360_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
     _leaf(
         "declare",
-        (_FILING_YEAR, _SECRETS_STDIN, _SECRETS_FD),
+        (_FILING_YEAR, MACHINE_SECRET_STDIN_OPTION, MACHINE_SECRET_FD_OPTION),
         policy=_MODEL_WRITE,
         result="Modelo360SolicitudChangeResult",
         machine_secret=MachineSecretSpec(

@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:c406e193e68d32812add8abd2271442af2ba82374c04299d1cdc955c85249b05'
+body_hash: 'sha256:b2b7f0f45c5372d725e792004294f9e87304f4c476305c5a371a4e259edb42af'
 ---
 
 # `reachability-burndown` plan
@@ -41,7 +41,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S13` - Retire TUI properties used only for test introspection while preserving real presentation and retained cancellation facts; `TUI app, screen hosts, workbench and automation screens with owning and development tests`.
 - [x] `S14` - Retire uncalled core dictionary conversion and date aliases, move the Google test predicate to its actual fixture owner and project only consumed native audit-token coordinates; `Core configuration and locales, AEAT workspace, native audit token decoding and owning tests`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
-- [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
+- [x] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.
 - [ ] `S07` - Remeasure all audit gates, repair remaining verification defects and complete integrated review; `dev/quality, source tests, audit run evidence and plan`.
 

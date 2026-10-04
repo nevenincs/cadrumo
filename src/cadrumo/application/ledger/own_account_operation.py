@@ -26,8 +26,6 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect
-from ...core.time.clock import now
 from ...domain.transactions.own_accounts import (
     OwnAccountDesignation,
     OwnAccountHolding,
@@ -40,6 +38,7 @@ from ...domain.transactions.own_accounts import (
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.fenced_result import publish_fenced_result
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -319,15 +318,12 @@ async def _publish_own_account_action(
             repository=repository_factory(bucket_id=bucket_id),
         )
 
-    if payload.action in _READ_ACTIONS:
-        result = await run_action()
-        await context.events.effect(OperationEffect.NONE)
-        return await context.operands.put(result, written_at=now())
-    async with context.cancellation.irreversible_section():
-        await context.events.effect(OperationEffect.UNKNOWN)
-        result = await run_action()
-        await context.events.effect(OperationEffect.UPDATED if result.changed else OperationEffect.NONE)
-        return await context.operands.put(result, written_at=now())
+    return await publish_fenced_result(
+        context,
+        run_action=run_action,
+        is_read=payload.action in _READ_ACTIONS,
+        result_changed=lambda result: result.changed,
+    )
 
 
 class LedgerOwnAccountExecutor:

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4893a3a892416df899b53d9e968929d5cb42de0902d6716f0af3931a3f0b2d4c'
+body_hash: 'sha256:9be0328db6eb6234817b21271faf5fa1da2ae96975541ce055c84b05530d681a'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -431,6 +431,24 @@ related:
 - `S14` `verify:` `Native and core suite: 181 passed, one independent alias source-contract failure` -> `fail`
 - `S14` `verify:` `Strict Google fixture: literal 1 accepted and seven alternatives refused` -> `pass`
 - `S14` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S05` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
+- `S05` `M` `src/cadrumo/application/ledger/own_account_operation.py`
+- `S05` `M` `src/cadrumo/application/live/filed_bulk_capture_operation.py`
+- `S05` `M` `src/cadrumo/application/live/iva_remote_state_capture_operation.py`
+- `S05` `M` `src/cadrumo/application/live/iva_wallet_history_capture_operation.py`
+- `S05` `M` `src/cadrumo/application/live/live_operation_execution.py`
+- `S05` `A` `src/cadrumo/application/live/tests/test_provider_capture_preparation.py`
+- `S05` `M` `src/cadrumo/application/modelo/m360_solicitud_operation.py`
+- `S05` `A` `src/cadrumo/application/operations/fenced_result.py`
+- `S05` `A` `src/cadrumo/application/operations/tests/test_fenced_result.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_app_ledger_account_command_specs.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_m360_command_specs.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
+- `S05` `A` `src/cadrumo/entrypoints/cli/machine_secret_command_parameters.py`
+- `S05` `verify:` `Fenced result and machine-secret authority: 18 passed` -> `pass`
+- `S05` `verify:` `Ledger and M360 behavior: 26 passed` -> `pass`
+- `S05` `verify:` `Live capture writes and preview accounting: 25 passed` -> `pass`
+- `S05` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -445,3 +463,4 @@ related:
 - `S12` Explicit discriminated and nested type aliases now retain real schema fields, with import-only and recursive negative controls. Removed unused filing single-source wrapper, perceptor-scope and activity-staleness convenience methods, unsupported payment-state enum and uncalled profile/localization enum members. Real foreign-asset year-end disagreement now calls `ceased_in` after `held_in` establishes the year cohort. Retired obsolete wizard-door enrollment; broader legal-excerpt expectations remain visibly open under S07.
 - `S13` Removed six test-only TUI getters. Tests inspect the actual retained presentation facts at their owner; production mounting, sort state, refusal codes and cancellation outcomes are unchanged. Native endpoint-dependent automation integration remains S07.
 - `S14` Uncalled locale dictionary and workspace date aliases are removed. Google live-test opt-in is owned by its test fixture and retains strict literal matching. The complete eight-word macOS audit-token ABI is decoded while only six consumed identity coordinates are retained. Broader i18n failure from concurrent unaliased Translatable imports remains visible under S07.
+- `S05` One fenced result publisher preserves unknown effects on action failure and settled effects on operand storage failure. One machine-secret option declaration drives all three command groups. Shared provider capture setup preserves authority preflight before composition and browser ownership, preview posture and session write accounting.

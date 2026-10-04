@@ -25,10 +25,9 @@ from .filed_history_operation import (
 )
 from .iva_remote_state import capture_iva_compensation_history
 from .live_operation_execution import (
-    own_provider_browser,
+    prepare_provider_capture,
     publish_live_capture_report,
     require_exact_profile_worker,
-    track_capture_session,
 )
 from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .remote_state_models import IvaCompensationHistoryCaptureReport
@@ -125,11 +124,17 @@ class IvaWalletHistoryCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
-        await context.events.phase(_PHASES[0])
-        self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory(payload.output_root, operation=context.authority_operation)
-        resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
-        session_receipt = await track_capture_session(context, may_write=True)
+        composition, resources, session_receipt = await prepare_provider_capture(
+            context,
+            payload.profile_id,
+            payload.output_root,
+            self._composition_factory,
+            self._browser_resources_factory,
+            self._provider_preflight,
+            preflight_phase=_PHASES[0],
+            acquire_phase=_PHASES[1],
+            may_write=True,
+        )
         with resources.activate():
             report = await capture_iva_compensation_history(
                 ports=composition.iva_remote_state_port,

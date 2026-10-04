@@ -5,7 +5,6 @@ from __future__ import annotations
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, ProfileAuthenticationPosture
 
 from .._command_secret_contracts import (
-    MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
@@ -21,6 +20,7 @@ from ..command_shared_contracts import (
     ValueContract,
 )
 from ..command_spec import CommandSpec, InvocationSpec
+from ..machine_secret_command_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from ._spec_policies import PROFILE_DESTRUCTIVE, PROFILE_READ
 
 _LANGUAGE = OptionSpec(
@@ -29,24 +29,6 @@ _LANGUAGE = OptionSpec(
     value=ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__)),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
-_SECRETS_STDIN = OptionSpec(
-    name="secrets_stdin",
-    declarations=("--secrets-stdin",),
-    value=ValueContract(DeferredTarget("builtins", "bool")),
-    default=ParameterDefault.value(False),
-    help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-    is_flag=True,
-    flag_value=True,
-    machine_secret_channel=MachineSecretChannelKind.STDIN,
-)
-_SECRETS_FD = OptionSpec(
-    name="secrets_fd",
-    declarations=("--secrets-fd",),
-    value=ValueContract(DeferredTarget("builtins", "int")),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-    machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
 )
 _UUID = ValueContract(DeferredTarget("uuid", "UUID"))
 
@@ -111,7 +93,7 @@ RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.config.profile.automation.create.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_SECRETS_STDIN, _SECRETS_FD, _LANGUAGE),
+        parameters=(MACHINE_SECRET_STDIN_OPTION, MACHINE_SECRET_FD_OPTION, _LANGUAGE),
         policy=PROFILE_DESTRUCTIVE,
         handler=LazyBinding.available(DeferredTarget(".runtime_automation_request", "automation_create", __package__)),
         result_schema=_result("ConfigProfileAutomationCreateResult", "config.profile.automation.create"),
@@ -141,8 +123,8 @@ RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.config.profile.automation.change.kind_help"),
             ),
-            _SECRETS_STDIN,
-            _SECRETS_FD,
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
             _LANGUAGE,
         ),
         policy=PROFILE_DESTRUCTIVE,
@@ -202,8 +184,8 @@ RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.config.profile.automation.approve.digest_help"),
             ),
-            _SECRETS_STDIN,
-            _SECRETS_FD,
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
             _LANGUAGE,
         ),
         policy=PROFILE_DESTRUCTIVE,
@@ -322,8 +304,8 @@ RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 help_key=TranslationKey("cli.config.profile.resume.grant_help"),
                 multiple=True,
             ),
-            _SECRETS_STDIN,
-            _SECRETS_FD,
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
             _LANGUAGE,
         ),
         policy=PROFILE_DESTRUCTIVE,
