@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:5875ddd6fbbe21d4ae81e3dd84bc2ab10cace86a9e762bc1b87a41099aba45bb'
+body_hash: 'sha256:c406e193e68d32812add8abd2271442af2ba82374c04299d1cdc955c85249b05'
 ---
 
 # `reachability-burndown` plan
@@ -39,6 +39,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S11` - Retire unsupported LLM summary and cache display doors and the legacy corpus-reference lookup; `LLM persistence and owning tests, citation lookup and owning tests`.
 - [x] `S12` - Resolve explicit type-alias schema visibility and remove uncalled domain and filing convenience doors; `dev/audit schema consumer analysis, domain record predicates, filing runtime and owning tests`.
 - [x] `S13` - Retire TUI properties used only for test introspection while preserving real presentation and retained cancellation facts; `TUI app, screen hosts, workbench and automation screens with owning and development tests`.
+- [x] `S14` - Retire uncalled core dictionary conversion and date aliases, move the Google test predicate to its actual fixture owner and project only consumed native audit-token coordinates; `Core configuration and locales, AEAT workspace, native audit token decoding and owning tests`.
 - [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.

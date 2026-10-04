@@ -403,11 +403,6 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
     document_custody_observed_at: UtcInstant | None = None
     selection_key: AeatSyncNotificationSelectionKey | None = None
 
-    @property
-    def issue_date(self) -> date:
-        """Return the notification issue date."""
-        return self.issued_on
-
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _coherent(self) -> Self:

@@ -417,16 +417,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         """
         return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_enabled)
 
-    @property
-    def live_tests_google_enabled(self) -> bool:
-        """Whether the Google live-test opt-in is enabled.
-
-        Google OAuth / Drive tests use the same strict ``"1"`` predicate as the
-        general live-read opt-in and remain separate from production provider
-        construction.
-        """
-        return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_google)
-
     # ── TTY / colour ────────────────────────────────────────────────────────
     cadrumo_force_color: bool = Field(
         default=False,

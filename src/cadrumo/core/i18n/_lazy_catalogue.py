@@ -311,11 +311,6 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         self._load_all()
         return len(self._key_cache)
 
-    def to_dict(self) -> dict[str, str | None]:
-        """Return a complete flattened dictionary of all translation keys."""
-        self._load_all()
-        return dict(self._key_cache)
-
 
 __all__ = [
     "LazyLocaleCatalogue",

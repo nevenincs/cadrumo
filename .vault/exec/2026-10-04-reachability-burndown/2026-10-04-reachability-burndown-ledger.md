@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c502154cc6557a8c21298d308670cb82d9cc85ba39e7297d38f9614389b43e15'
+body_hash: 'sha256:4893a3a892416df899b53d9e968929d5cb42de0902d6716f0af3931a3f0b2d4c'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -420,6 +420,17 @@ related:
 - `S13` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_accessibility.py`
 - `S13` `verify:` `Owned TUI unit corpus (81 passed)` -> `pass`
 - `S13` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S14` `M` `src/cadrumo/adapters/local_runtime/macos_login.py`
+- `S14` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py`
+- `S14` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix_peer_liveness.py`
+- `S14` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S14` `M` `src/cadrumo/core/config.py`
+- `S14` `M` `src/cadrumo/core/config_live_tests.py`
+- `S14` `M` `src/cadrumo/core/i18n/_lazy_catalogue.py`
+- `S14` `M` `src/cadrumo/tests/live_gate.py`
+- `S14` `verify:` `Native and core suite: 181 passed, one independent alias source-contract failure` -> `fail`
+- `S14` `verify:` `Strict Google fixture: literal 1 accepted and seven alternatives refused` -> `pass`
+- `S14` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -433,3 +444,4 @@ related:
 - `S11` Removed unsupported summary APIs and their models; retained independent persistence field, filtering and failure assertions. Unsafe model tests drive actual encrypted cache reads and writes; tagged and vendor-qualified names round-trip unchanged. Retired the unused cache display grammar and legacy corpus-reference lookup; exact pinned citation resolution remains active. Shared external edits are outside this checkpoint.
 - `S12` Explicit discriminated and nested type aliases now retain real schema fields, with import-only and recursive negative controls. Removed unused filing single-source wrapper, perceptor-scope and activity-staleness convenience methods, unsupported payment-state enum and uncalled profile/localization enum members. Real foreign-asset year-end disagreement now calls `ceased_in` after `held_in` establishes the year cohort. Retired obsolete wizard-door enrollment; broader legal-excerpt expectations remain visibly open under S07.
 - `S13` Removed six test-only TUI getters. Tests inspect the actual retained presentation facts at their owner; production mounting, sort state, refusal codes and cancellation outcomes are unchanged. Native endpoint-dependent automation integration remains S07.
+- `S14` Uncalled locale dictionary and workspace date aliases are removed. Google live-test opt-in is owned by its test fixture and retains strict literal matching. The complete eight-word macOS audit-token ABI is decoded while only six consumed identity coordinates are retained. Broader i18n failure from concurrent unaliased Translatable imports remains visible under S07.

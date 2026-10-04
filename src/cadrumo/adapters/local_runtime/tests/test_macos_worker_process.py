@@ -451,7 +451,7 @@ class _Channel:
 
 
 def _channel(*, version: int = _WORKER.version, owner: str = str(_UID)) -> PosixRuntimeChannel:
-    token = MacosPeerAuditToken(_UID, _UID, 20, _UID, 20, _WORKER.pid, 100009, version)
+    token = MacosPeerAuditToken(_UID, _UID, _UID, _WORKER.pid, 100009, version)
     return cast(PosixRuntimeChannel, _Channel(RuntimePeer(os_owner_id=owner, process_id=_WORKER.pid), token))
 
 
@@ -562,7 +562,7 @@ def test_worker_outside_the_guardian_coalition_or_incarnation_refuses(
         version=99 if defect == "version" else _WORKER.version, owner="502" if defect == "owner" else "501"
     )
     if defect == "guardian-pid":
-        token = MacosPeerAuditToken(_UID, _UID, 20, _UID, 20, _GUARDIAN.pid, 100009, _GUARDIAN.version)
+        token = MacosPeerAuditToken(_UID, _UID, _UID, _GUARDIAN.pid, 100009, _GUARDIAN.version)
         channel = cast(PosixRuntimeChannel, _Channel(RuntimePeer(os_owner_id="501", process_id=_GUARDIAN.pid), token))
     with pytest.raises(RuntimeRefusalError) as caught:
         scope.verify_worker(channel, owner_id=str(_UID))

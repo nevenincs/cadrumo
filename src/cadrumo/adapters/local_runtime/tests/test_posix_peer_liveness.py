@@ -31,7 +31,7 @@ class _KernelSocket:
 
 
 def _token(pid: int) -> MacosPeerAuditToken:
-    return MacosPeerAuditToken(501, 501, 20, 501, 20, pid, 100009, 77)
+    return MacosPeerAuditToken(501, 501, 501, pid, 100009, 77)
 
 
 @pytest.fixture
