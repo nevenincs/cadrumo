@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8d6d1187a898a5f7d03ba45abe44360f2b07ea52ebd75c016e72c1215b54669'
+body_hash: 'sha256:9b174d7afdf62976dd9a405270383658277f6737e2eb2895b228e8ba823a3e50'
 related:
   - "[[2026-10-04-authority-health-completion-plan]]"
 ---
@@ -52,3 +52,13 @@ related:
 - `S03` `verify:` `candidate descriptor status and lifecycle axes tests` -> `pass`
 - `S03` `verify:` `candidate/drift/binding/placement focused tests 26 passed` -> `pass`
 - `S03` `by:` `root`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/bindings/0009-super-reducido-recargo.toml`
+- `S04` `M` `dev/registry/tests/test_modelo_303_binding_source_repair.py`
+- `S04` `verify:` `Modelo 303 source repair tests 5 passed` -> `pass`
+- `S04` `verify:` `Modelo 303 complete canonical migration equivalence and minimality no-op` -> `pass`
+- `S04` `verify:` `check-bindings zero blocking findings` -> `pass`
+- `S04` `by:` `root`

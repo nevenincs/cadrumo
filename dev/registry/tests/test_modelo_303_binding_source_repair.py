@@ -1,4 +1,4 @@
-"""The 2022/2023 three-rung recargo has one grounded source binding."""
+"""The fixed-tier recargo binding starts where the design pins its tier."""
 
 from __future__ import annotations
 
@@ -20,14 +20,21 @@ def _modelo():
     return load_modelo_directory(_MODELO_DIR)
 
 
-@pytest.mark.parametrize("revision_id", ("2022", "2023"))
-def test_three_rung_recargo_binding_cites_its_own_design(revision_id: str) -> None:
-    """Both three-rung designs carry the super-reducido recargo source binding."""
-    revision = _modelo().revisions[revision_id]
+def test_fixed_tier_recargo_binding_cites_its_2023_design() -> None:
+    """The 2023 design supplies the fixed 0.5 percent rung's bound source."""
+    revision = _modelo().revisions["2023"]
     binding = next(binding for binding in revision.bindings if str(binding.id) == _SUPER)
 
     assert binding.provider.fact == "recargo_amount_sum"
-    assert binding.source_refs[0] == f"aeat-dr-303-{revision_id}"
+    assert binding.source_refs[0] == "aeat-dr-303-2023"
+
+
+def test_free_2022_rate_does_not_enroll_an_unused_fixed_tier_binding() -> None:
+    """2022 keeps the rate and cuota manual rather than assigning a guessed tier."""
+    revision = _modelo().revisions["2022"]
+    assert _SUPER not in {str(binding.id) for binding in revision.bindings}
+    construct = next(item for item in revision.constructs if str(item.id) == "modelo-303-iva-autoliquidacion")
+    assert _SUPER not in {str(binding) for binding in construct.bindings}
 
 
 @pytest.mark.parametrize(("revision_id", "bound"), (("2022", False), ("2023", True)))
