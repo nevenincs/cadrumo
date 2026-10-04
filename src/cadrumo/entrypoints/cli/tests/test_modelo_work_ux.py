@@ -663,15 +663,22 @@ def test_work_revision_shows_persisted_casilla_values(seed_profile: ProfileSeede
 
 
 def test_work_revision_rejects_an_unknown_revision_id(seed_profile: ProfileSeeder) -> None:
-    """An absent revision id is refused cleanly, not surfaced as an
-    opaque internal error."""
+    """Invalid selections refuse without disclosing candidate revision identities."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
     unknown = "0" * 64
-    result = _invoke(["app", "modelo", "work", "revision", unknown])
-    assert result.exit_code != 0
+    result = _invoke(["--format", "json", "app", "modelo", "work", "revision", unknown])
+    assert result.exit_code == 2
     assert "Traceback" not in result.output
-    assert unknown in result.output
+    refused = require_error_document(result.output)
+    assert refused["status"] == "error"
+    assert refused["error"]["code"] == "REFUSED_RUNTIME_FRONTEND"
+    assert refused["error"]["context"]["reason"] == "operation_denied"
+    assert unknown not in result.output
+    assert "result" not in refused
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_units"] == []
 
 
 def test_idempotent_work_create_reports_reuse(seed_profile: ProfileSeeder) -> None:

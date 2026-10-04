@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0741d7683a04d2cc028f18e6bf8ebae89f944b9978ea27372f07cfcc1b1edd4d'
+body_hash: 'sha256:265645b8121c1543c74cc0375ceb573bfdae48f1ae2d7db7fb4decdb8c958e70'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -178,6 +178,10 @@ Resolved production omission. Work-create and readiness alone opt in to the exis
 ### observable-portable-command-probes | medium | Capability detectors reach real handlers through genuine admitted test sessions
 
 Resolved fixture premises. Five test-only paths establish registered credential profiles, genuine password cryptography and runtime admission through explicit synthetic OS transport/custody ports and joined workers. The API fixture performs canonical request/approval/delivery/possession to COMPLETE and uses its opaque key; it never fabricates HUMAN elevation or API authority. Real expired ENROLL/own-key ROTATE operands reach the unchanged administration validator and observed False without lending governed-fact scope. Typed UUID/digest and required year/certificate premises are supplied. NIF-IVA retains its deliberate product refusal: the probe partition records its exact CLI code/effectNONE/no contact and the owning supervisor proves refusal before provider/browser work. Complete two-module replay passes142 with no failure/skip, including both deliberate undeclared detector teeth and offline seal. Ruff/format/ty pass on all five frozen files. One documented startup CRLF-to-LF drift has byte-normalized and position-inclusive AST equality; no raw zero-drift or physical native custody claim is made.
+
+### modelo-cli-owned-premises | medium | Real admitted scenarios retain financial and safe refusal oracles
+
+Resolved fixture premises on13 test-only paths. The shared seeder registers genuine password custody and retains its exact encrypted setup oracle separately from joined human frontend admission. Public calls keep the existing no-seed path; native helper callers retain their actual native path. Private Modelo, M303 secure evidence, amendment, period and invoice direction scenarios now invoke the seeded registered runtime. Unknown selections assert the deliberate safe operation-denied refusal without exposing candidate IDs. Reciprocal capital-goods cases assert the independent registered catalogue message and declared identity context. All four locale action assertions retain the defining current wording. The controlled note-bearing calculation remains BORRADOR with no copied verification grant; genuine verify returns its note-specific refusal, default/explicit export and file retain their earlier state guards, no artifact or filed pointer appears, and clearing/recalculation/verification/export succeeds. All16 owned paths including the separately committed3 public-detail paths pass scoped Ruff/format/ty and are frozen. Canonical latest per-node union is133PASS/0FAIL/0SKIP with qualified reuse across recorded runs, rather than a relabeled whole-suite pass. Original failed receipts and call-order diagnoses remain preserved. Six owning import inventories regenerate/check with zero byte changes; no checker policy or exemptions change. Native installed/provider/desktop/destination proof remains separate.
 
 ## Recommendations
 

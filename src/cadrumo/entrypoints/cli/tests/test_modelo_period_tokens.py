@@ -5,10 +5,11 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ._modelo_fixtures import active_cli_profile_fixture
+from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 
-__all__ = ["active_cli_profile_fixture"]
+__all__ = ["seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,7 +52,7 @@ def test_optional_cli_period_requires_year() -> None:
 # --- Period-token confusion: --year and --period are composed ---
 
 
-def test_work_create_year_repeated_into_period_explains_composition(_active_cli_profile: None) -> None:
+def test_work_create_year_repeated_into_period_explains_composition(seed_profile: ProfileSeeder) -> None:
     """``--year 2024 --period 2024`` is refused with a clear composition hint.
 
     The disaster-recovery testimony flagged the M100 annual confusion:
@@ -61,7 +62,8 @@ def test_work_create_year_repeated_into_period_explains_composition(_active_cli_
     composed separately and enumerate the modelo's valid period tokens.
     """
 
-    result = invoke_cached_cli(
+    seed_profile(label="operator", facts=operator_profile_facts())
+    result = invoke_seeded_profile_cli(
         [
             "app",
             "modelo",

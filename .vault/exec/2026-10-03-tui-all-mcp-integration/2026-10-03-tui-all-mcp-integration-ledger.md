@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:44abc86dbaad31ee2d9dde76d6068224040dbd0a00d99e0585658b30f37cb051'
+body_hash: 'sha256:2b30ca9b2da4a30461778c2e297df8900f0dd4a05e8572435364b02db101ca2f'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3567,6 +3567,21 @@ related:
 - `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py`
 - `S05` `A` `.codex/handoffs/tui-all-mcp-final-portable-probe-repairs.json`
 - `S05` `verify:` `whole AEAT80+governed62=142PASS/0fail/0skip;detector teeth/offline seal;fivepaths Ruff/format/ty` -> `pass`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/modelo_profile_seed.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/modelo_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/_modelo_work_ux_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_discovery_defects.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_calculation_blocked_filing_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_m303_bienes_inversion_quarters_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_m303_zero_cuota_and_investment_inputs_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_m303_unsubstantiated_deduction_verify_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/_m303_ordinary_cli_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_period_tokens.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_direction_reaches_the_confirm_boundary.py`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-modelo-cli-premise-repairs.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-owned-inventory-refresh.json`
+- `S05` `verify:` `latest per-node133PASS/0fail/0skip qualified reuse;final blocked lifecycle1PASS52.47s;whole amendment11PASS;all16 Ruff/format/ty;6owner inventories zero change` -> `pass`
 
 ## Notes
 
@@ -3596,3 +3611,4 @@ related:
 - `S05` Resolved production defects. The internal selection holder now retains an already repository/aggregate-validated CalculationRevision in a frozen slots dataclass rather than revalidating it without the aggregate. No public, persisted or candidate schema changed. The existing mismatch refusal now declares finite axis, requested/law revision and captured modelo/year/period context for the bounded public detail boundary; raw args and redaction policy are unchanged. Both complete selector/D1 owner modules pass29 with stable three source hashes; actual amendment11 and all four scope/privacy CLI cases pass in the separate combined17pass/1unrelated test-premise failure run, retained with exit1. Scoped Ruff/format/ty pass. Fresh native artifact inclusion and combined verification remain separate.
 - `S05` Resolved production omission. Work-create and readiness alone opt in to the existing public executor error-detail boundary; all other read definitions retain defaultFalse. Request/result/refusal serializers, registered capability/access guards and raw-private error policy remain unchanged. Two new cases exercise the real definitions/executors with a fault injected at the defining ports factory, then actual encrypted journal settlement, guarded detail projection and typed serialization. The whole seven-case owner passes, including retained private/redaction controls. The two affected positive operation matrix cases pass; all four actual CLI scope/privacy cases pass after the companion typed-context repair. Scoped Ruff/format/ty pass. These portable injected fault cases do not establish native/provider or installed E2E acceptance.
 - `S05` Resolved fixture premises. Five test-only paths establish registered credential profiles, genuine password cryptography and runtime admission through explicit synthetic OS transport/custody ports and joined workers. The API fixture performs canonical request/approval/delivery/possession to COMPLETE and uses its opaque key; it never fabricates HUMAN elevation or API authority. Real expired ENROLL/own-key ROTATE operands reach the unchanged administration validator and observed False without lending governed-fact scope. Typed UUID/digest and required year/certificate premises are supplied. NIF-IVA retains its deliberate product refusal: the probe partition records its exact CLI code/effectNONE/no contact and the owning supervisor proves refusal before provider/browser work. Complete two-module replay passes142 with no failure/skip, including both deliberate undeclared detector teeth and offline seal. Ruff/format/ty pass on all five frozen files. One documented startup CRLF-to-LF drift has byte-normalized and position-inclusive AST equality; no raw zero-drift or physical native custody claim is made.
+- `S05` Resolved fixture premises on13 test-only paths. The shared seeder registers genuine password custody and retains its exact encrypted setup oracle separately from joined human frontend admission. Public calls keep the existing no-seed path; native helper callers retain their actual native path. Private Modelo, M303 secure evidence, amendment, period and invoice direction scenarios now invoke the seeded registered runtime. Unknown selections assert the deliberate safe operation-denied refusal without exposing candidate IDs. Reciprocal capital-goods cases assert the independent registered catalogue message and declared identity context. All four locale action assertions retain the defining current wording. The controlled note-bearing calculation remains BORRADOR with no copied verification grant; genuine verify returns its note-specific refusal, default/explicit export and file retain their earlier state guards, no artifact or filed pointer appears, and clearing/recalculation/verification/export succeeds. All16 owned paths including the separately committed3 public-detail paths pass scoped Ruff/format/ty and are frozen. Canonical latest per-node union is133PASS/0FAIL/0SKIP with qualified reuse across recorded runs, rather than a relabeled whole-suite pass. Original failed receipts and call-order diagnoses remain preserved. Six owning import inventories regenerate/check with zero byte changes; no checker policy or exemptions change. Native installed/provider/desktop/destination proof remains separate.
