@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e29f7830a5712918a0ac4ccb55dbcdb91b04f9edf3e617f056b7b67b6594b2ee'
+body_hash: 'sha256:9148f30656e46a0f10b1c64091b25fc6550857648057161e8af69717de91e9ec'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -73,3 +73,26 @@ related:
 - `S03` `verify:` `scoped Ruff format ty basedpyright pyrefly canonical private-import checks` -> `pass`
 - `S03` `verify:` `independent S03 review including renderer correction` -> `pass`
 - `S03` `by:` `mirror_fix`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_records.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_pull.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_import.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/profile/tests/test_reconciliation_revision_provenance.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_pull_operation.py`
+- `S05` `M` `src/cadrumo/locales/en/cli.yml`
+- `S05` `M` `src/cadrumo/locales/es/cli.yml`
+- `S05` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S05` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S05` `verify:` `37 focused reconciliation and 3 provenance coverage tests` -> `pass`
+- `S05` `verify:` `7 registered pull-operation tests including explicit missing-ID refusal` -> `pass`
+- `S05` `verify:` `Ruff format ty basedpyright pyrefly canonical private static imports` -> `pass`
+- `S05` `verify:` `actual CLI explicit-revision retained receipt import and encrypted readback` -> `pass`
+- `S05` `verify:` `independent S05 review` -> `pass`
+- `S05` `by:` `receipt_fix`

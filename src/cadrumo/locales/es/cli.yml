@@ -1240,6 +1240,7 @@ cli:
         list_work_unit_id_help: Filtra las conciliaciones por identificador de declaración
           (SHA-256 o prefijo inequívoco).
         pull_help: "Descarga evidencia de la AEAT y compárala con el cálculo local guardado (solo lectura en la AEAT)."
+        calculation_revision_help: ID de revisión de cálculo guardada que se comparará. Por defecto, presentada o verificada, después la última guardada.
         source_help: "Evidencia a comparar: justificante comprueba identidad e importes vinculados; declaration compara las casillas presentadas con el cálculo guardado."
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       requires:

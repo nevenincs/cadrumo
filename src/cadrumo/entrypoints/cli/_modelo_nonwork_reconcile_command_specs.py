@@ -35,6 +35,9 @@ RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
     _optional_text_option("period", ("--period",), "cli.app.modelo.work.period_help"),
     _optional_text_option("revision", ("--revision",), "cli.app.modelo.work.revision_help"),
     _optional_text_option("bucket_id", ("--bucket-id",), "cli.app.modelo.work.bucket_id_help"),
+    _optional_text_option(
+        "calculation_revision", ("--calculation-revision",), "cli.app.modelo.reconcile.calculation_revision_help"
+    ),
     _optional_text_option("actor", ("--by",), "cli.app.modelo.work.actor_help"),
 )
 

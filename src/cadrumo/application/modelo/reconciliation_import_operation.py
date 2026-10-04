@@ -15,12 +15,13 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.codes import ModeloCode
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -43,6 +44,7 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .action_errors import CalculationRevisionNotFoundError
 from .reconciliation import (
     ModeloReconciliationCommand,
     ModeloReconciliationReport,
@@ -56,6 +58,7 @@ from .reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
+from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 from .work_addressing import ModeloWorkAddressNotFoundError
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .work_unit_repository import work_unit_catalogue_repository
@@ -96,6 +99,7 @@ class ModeloReconciliationImportRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     work_unit_id: _WorkUnitLookupId | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
     modelo: _ModeloSelector | None = None
     filing_year: FilingYear | None = None
     period: _PeriodToken | None = None
@@ -145,9 +149,11 @@ class ModeloReconciliationImportProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    registry_snapshot_ref: ModeloVerificationRegistrySnapshotProjection | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationImportAdvisoryProjection, ...] = ()
@@ -159,6 +165,12 @@ class ModeloReconciliationImportProjection(BaseModel):
         """Copy the canonical report without dropping diff or advisory data."""
         return cls(
             work_unit_id=report.work_unit_id,
+            calculation_revision_id=report.calculation_revision_id,
+            registry_snapshot_ref=(
+                ModeloVerificationRegistrySnapshotProjection.from_snapshot(report.registry_snapshot_ref)
+                if report.registry_snapshot_ref
+                else None
+            ),
             bucket_id=report.bucket_id,
             source_kind=report.source_kind,
             source_path=report.source_path,
@@ -180,6 +192,10 @@ class ModeloReconciliationImportProjection(BaseModel):
         """Reconstruct the original advisory mappings for existing renderers."""
         return ModeloReconciliationReport(
             work_unit_id=self.work_unit_id,
+            calculation_revision_id=self.calculation_revision_id,
+            registry_snapshot_ref=(
+                RegistrySnapshotRef(**self.registry_snapshot_ref.model_dump()) if self.registry_snapshot_ref else None
+            ),
             bucket_id=self.bucket_id,
             source_kind=self.source_kind,
             source_path=self.source_path,
@@ -287,19 +303,27 @@ class ModeloReconciliationImportExecutor:
                 source_kind=payload.source_kind,
                 source_path=Path(payload.source_path),
                 actor=payload.actor,
+                calculation_revision_id=payload.calculation_revision_id,
             )
             with validating_governed_facts(context.authority_operation):
                 prepared = prepare_modelo_reconcile(command, operation=context.authority_operation)
             return command, prepared
 
-        command, prepared = await await_cancellation_complete(
-            asyncio.to_thread(prepare),
-            task_name="modelo-reconciliation-import-prepare",
-        )
+        try:
+            command, prepared = await await_cancellation_complete(
+                asyncio.to_thread(prepare),
+                task_name="modelo-reconciliation-import-prepare",
+            )
+        except CalculationRevisionNotFoundError as exc:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
         report = ModeloReconciliationImportProjection.from_report(prepared.report)
         if (
             report.bucket_id != profile_id
             or report.work_unit_id != command.work_unit_id
+            or (
+                payload.calculation_revision_id is not None
+                and report.calculation_revision_id != payload.calculation_revision_id
+            )
             or report.source_kind is not payload.source_kind
             or report.source_path != str(command.source_path)
         ):

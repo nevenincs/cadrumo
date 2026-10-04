@@ -58,6 +58,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         (ModeloReconciliationEvidenceKind.DECLARATION, "empty_casillas"),
         (ModeloReconciliationEvidenceKind.DECLARATION, "non_numeric_casillas"),
         (ModeloReconciliationEvidenceKind.DECLARATION, "stale_snapshot"),
+        (ModeloReconciliationEvidenceKind.DECLARATION, "missing_revision"),
     ],
 )
 def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
@@ -98,6 +99,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
         witness.profile_id = profile_id
         subject_ref = profile_operation_subject(str(profile_id))
         with override_settings(cadrumo_active_profile=str(profile_id)):
+            revision_id: str | None = None
             if source is ModeloReconciliationEvidenceKind.DECLARATION:
                 revision_id = modelo_operation_test_support.seeded_modelo_calculation_revision(
                     profile_id, operation=operation
@@ -200,6 +202,9 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
             snapshot_id=snapshot_id,
             observation_id=observation_id,
             source_kind=source,
+            calculation_revision_id=("a" * 64 if invalid_evidence == "missing_revision" else revision_id)
+            if source is ModeloReconciliationEvidenceKind.DECLARATION
+            else None,
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         )
         with override_settings(cadrumo_active_profile=str(uuid4())):
@@ -258,6 +263,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
         assert projection.work_unit_id == unit.work_unit_id
         assert projection.source_path.endswith(snapshot_id or observation_id or "unreachable")
         if source is ModeloReconciliationEvidenceKind.DECLARATION:
+            assert projection.calculation_revision_id == revision_id
             assert projection.verdict is ModeloReconciliationVerdict.MISMATCHES
             difference = next(diff for diff in projection.diffs if diff.field_name == "19")
             assert difference.evidence_value == "123.45"
@@ -265,6 +271,8 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
             assert projection.advisories == ()
         with override_settings(cadrumo_active_profile=str(profile_id)):
             history = list_modelo_reconciliations(bucket_id=str(profile_id), operation=operation)
+        assert history[-1].calculation_revision_id == projection.calculation_revision_id
+        assert after_records[-1].calculation_revision_id == projection.calculation_revision_id
         assert history[-1].advisory_count == len(projection.advisories)
         assert ModeloReconciliationListEntryProjection.from_history_entry(history[-1]).advisory_count == len(
             projection.advisories

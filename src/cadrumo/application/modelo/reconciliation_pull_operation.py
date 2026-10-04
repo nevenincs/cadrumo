@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
-from ...core.identity.hex_ids import SnapshotId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
@@ -43,6 +43,7 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .action_errors import CalculationRevisionNotFoundError
 from .reconciliation import (
     ModeloReconciliationBytesCommand,
     PreparedModeloReconciliation,
@@ -66,6 +67,7 @@ class ModeloReconciliationPullRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     snapshot_id: SnapshotId | None = None
     observation_id: SnapshotId | None = None
     source_kind: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE
@@ -184,6 +186,7 @@ class ModeloReconciliationPullExecutor:
                         observation=observation,
                         source_ref=reconciliation_pull_source_ref(payload.source_kind, None, payload.observation_id),
                         actor=payload.actor,
+                        calculation_revision_id=payload.calculation_revision_id,
                         operation=context.authority_operation,
                     )
             if payload.snapshot_id is None:
@@ -204,14 +207,18 @@ class ModeloReconciliationPullExecutor:
                 source_bytes=snapshot.decoded_pdf_bytes(),
                 source_ref=source_ref,
                 actor=payload.actor,
+                calculation_revision_id=payload.calculation_revision_id,
             )
             with validating_governed_facts(context.authority_operation):
                 prepared = prepare_modelo_reconcile_bytes(command, operation=context.authority_operation)
             return prepared
 
-        prepared = await await_cancellation_complete(
-            asyncio.to_thread(prepare), task_name="modelo-reconciliation-pull-prepare"
-        )
+        try:
+            prepared = await await_cancellation_complete(
+                asyncio.to_thread(prepare), task_name="modelo-reconciliation-pull-prepare"
+            )
+        except CalculationRevisionNotFoundError as exc:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
         projection = ModeloReconciliationImportProjection.from_report(prepared.report)
         expected_source_ref = reconciliation_pull_source_ref(
             payload.source_kind, payload.snapshot_id, payload.observation_id
@@ -219,6 +226,10 @@ class ModeloReconciliationPullExecutor:
         if (
             projection.bucket_id != profile_id
             or projection.work_unit_id != payload.work_unit_id
+            or (
+                payload.calculation_revision_id is not None
+                and projection.calculation_revision_id != payload.calculation_revision_id
+            )
             or projection.source_kind is not payload.source_kind
             or projection.source_path != expected_source_ref
         ):

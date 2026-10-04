@@ -1231,6 +1231,7 @@ cli:
         list_work_unit_id_help: Filtra les conciliacions per identificador de declaració
           (SHA-256 o un prefix inequívoc).
         pull_help: "Descarrega evidència de l’AEAT i compara-la amb el càlcul local desat (només lectura a l’AEAT)."
+        calculation_revision_help: ID de revisió de càlcul desada que es compararà. Per defecte, presentada o verificada, després la darrera desada.
         source_help: "Evidència a comparar: justificante comprova identitat i imports vinculats; declaration compara les caselles presentades amb el càlcul desat."
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       requires:

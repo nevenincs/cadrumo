@@ -35,6 +35,7 @@ def import_modelo_reconciliation(
     revision: str | None,
     bucket_id: str | None,
     actor: str,
+    calculation_revision: str | None = None,
 ) -> ModeloReconciliationReport:
     """Select and reconcile inside the invocation's exact profile worker."""
     client = bound_profile_client(ctx)
@@ -55,6 +56,7 @@ def import_modelo_reconciliation(
         source_kind=source_kind,
         source_path=source_path,
         actor=actor,
+        calculation_revision_id=calculation_revision,
     )
     completed = run_registered_operation(
         client,
@@ -67,6 +69,8 @@ def import_modelo_reconciliation(
         timeout=120,
     )
     projection = completed.projection
+    if calculation_revision is not None and projection.calculation_revision_id != calculation_revision:
+        raise invalid_completion_error(completed)
     if _reconciliation_import_receipt_invalid(completed, projection, profile_id, source_kind, source_path, selected_id):
         raise invalid_completion_error(completed)
     return projection.to_report()

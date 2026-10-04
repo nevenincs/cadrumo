@@ -35,6 +35,7 @@ def pull_modelo_reconciliation(
     revision: str | None,
     bucket_id: str | None,
     actor: str,
+    calculation_revision: str | None = None,
     source: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE,
 ) -> ModeloReconciliationReport:
     """Resolve, capture and compare without ambient profile storage access."""
@@ -85,6 +86,7 @@ def pull_modelo_reconciliation(
         observation_id=observation_id,
         source_kind=source,
         actor=actor,
+        calculation_revision_id=calculation_revision,
     )
     completed = run_registered_operation(
         client,
@@ -97,6 +99,8 @@ def pull_modelo_reconciliation(
         timeout=120,
     )
     projection = completed.projection
+    if calculation_revision is not None and projection.calculation_revision_id != calculation_revision:
+        raise invalid_completion_error(completed)
     expected_source = reconciliation_pull_source_ref(source, snapshot_id, observation_id)
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED

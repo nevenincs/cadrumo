@@ -1146,6 +1146,7 @@ cli:
         list_work_unit_id_help: Filter reconciliations by declaration id (SHA-256
           or an unambiguous prefix).
         pull_help: "Pull AEAT evidence and compare it with the saved local calculation (read-only at AEAT)."
+        calculation_revision_help: Saved calculation revision ID to compare. Defaults to the filed or verified revision, then the latest saved revision.
         source_help: "Evidence to compare: justificante checks receipt identity and mapped totals; declaration compares captured filing fields with the saved calculation."
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       requires:

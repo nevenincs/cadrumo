@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:36b13d9b2616c9e3d40ef1c11157fca7457488b6bd3469529168f39392d7066a'
+body_hash: 'sha256:ac5637a6bf763f98f6df9d0fbc0c7c7807b4720afda1a709032b6b9c4eb6f171'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -67,6 +67,18 @@ Core S03 review passed with 32 combined working/cross-model cases and scoped che
 ### cross-model-rendering-closed | low | S03 operator contract verified and passed
 
 The shared finding formatter now enrolls counterpart model and both missing-value counts with the correct closed fact kinds. Four-language CLI report JSON roundtrips and TUI wire-finding roundtrips assert displayed amounts and missing counts. Thirteen renderer/producer cases pass in addition to the 32 working/cross-model cases. Scoped style, types and canonical private-import checks pass. Independent review found no remaining S03 finding; the earlier formatter gap is closed.
+
+### declaration-coverage | medium | Effective empty scope required an advisory
+
+S05 review found that a nonempty registry policy could still produce an empty effective numeric scope after exemptions or optional-field intersection. The repair now emits totals_not_reconciled with no_comparable_casillas. Three provenance/coverage regressions passed. The selected saved revision is resolved once and bound to the work unit; records, event, report and history preserve its ID and registry coordinate. Historical records remain readable without applying current-law validation. S05 code review passed.
+
+### iva-lifecycle | low | S04 freshness and recurrence repairs reviewed
+
+Wallet evidence retains its capture timestamp and is reconciled against current local recurrence at calculation and before verification, export and filing. Seed corrections and supplied persisted decisions cannot bypass refresh. Overrides are evaluated against fresh authority without being transferred to newly captured evidence. Immutable decision history remains readable; both secondary first-period and live persistence readers reuse the caller pin. Thirty-three wallet/lifecycle tests, 23 correction/override cases and nine verification/filing/export cases passed. Independent code review passed; strict import evidence is pending.
+
+### installed-acceptance | low | CLI provenance verified and TUI pilot pending
+
+The manually started runtime served all three retained historical records via the actual CLI. Importing the retained real 2024 Q1 receipt with an explicit saved revision persisted a fourth comparison with the exact ID; CLI disclosed identity-only coverage because no Modelo 303 receipt-total mapping exists. Encrypted readback confirms unchanged local calculation, no local filing creation, two identical grounded 14-difference declaration comparisons, one exact-ID record and three older records whose missing IDs remain unknown. The first installed TUI pilot exceeded its 90-second root-composition budget; a direct root probe subsequently passed. The longer pilot is still running, so final integrated acceptance remains pending.
 
 ## Recommendations
 

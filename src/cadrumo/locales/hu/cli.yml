@@ -1209,6 +1209,7 @@ cli:
         list_work_unit_id_help: Bevallásazonosító szerint szűri az egyeztetéseket
           (SHA-256 vagy egyértelmű előtag).
         pull_help: "AEAT-bizonyíték letöltése és összehasonlítása a mentett helyi számítással (az AEAT-nál csak olvasás)."
+        calculation_revision_help: Az összehasonlítandó mentett számítási változat azonosítója. Alapértelmezés szerint beadott vagy ellenőrzött, majd a legutóbbi mentett változat.
         source_help: "Összehasonlítandó bizonyíték: justificante az azonosítókat és a hozzárendelt összegeket ellenőrzi; declaration a benyújtott mezőket hasonlítja a mentett számításhoz."
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       requires:

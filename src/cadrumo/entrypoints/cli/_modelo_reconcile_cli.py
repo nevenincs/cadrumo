@@ -22,6 +22,7 @@ import typer
 from ...application.modelo.reconciliation import ModeloReconciliationReport
 from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...core.i18n.render import tr
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ._modelo_cli_support import resolve_default_actor
 from .common import emit_envelope
 
@@ -43,6 +44,8 @@ def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliati
 
     result = ModeloReconcileResult(
         work_unit_id=report.work_unit_id,
+        calculation_revision_id=report.calculation_revision_id,
+        registry_snapshot_ref=report.registry_snapshot_ref,
         bucket_id=report.bucket_id,
         source_kind=report.source_kind,
         source_path=report.source_path,
@@ -74,6 +77,7 @@ def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliati
     lines = [
         f"work_unit_id\t{report.work_unit_id}",
         f"bucket\t{report.bucket_id}",
+        f"calculation_revision_id\t{report.calculation_revision_id or 'unknown'}",
         f"source_kind\t{report.source_kind.value}",
         f"source_path\t{report.source_path}",
         f"verdict\t{report.verdict.value}",
@@ -95,6 +99,7 @@ def reconcile_pull_verb(
     revision: str | None = None,
     bucket_id: str | None = None,
     actor: str | None = None,
+    calculation_revision: str | None = None,
     source: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE,
 ) -> None:
     """Pull the AEAT justificante for a work unit and reconcile against it."""
@@ -110,6 +115,7 @@ def reconcile_pull_verb(
         revision=revision,
         bucket_id=bucket_id,
         actor=resolved_actor,
+        calculation_revision=calculation_revision,
         source=source,
     )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
@@ -125,6 +131,7 @@ def reconcile_file_verb(
     revision: str | None = None,
     bucket_id: str | None = None,
     actor: str | None = None,
+    calculation_revision: str | None = None,
     kind: ModeloReconciliationEvidenceKind | None = None,
 ) -> None:
     """Reconcile a work unit against a local justificante or declaración PDF file."""
@@ -143,6 +150,7 @@ def reconcile_file_verb(
         revision=revision,
         bucket_id=bucket_id,
         actor=resolved_actor,
+        calculation_revision=calculation_revision,
     )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
@@ -163,6 +171,12 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
         reconciliations=[
             ModeloReconciliationHistoryRowPayload(
                 event_id=entry.event_id,
+                calculation_revision_id=entry.calculation_revision_id,
+                registry_snapshot_ref=(
+                    RegistrySnapshotRef(**entry.registry_snapshot_ref.model_dump())
+                    if entry.registry_snapshot_ref
+                    else None
+                ),
                 bucket_id=entry.bucket_id,
                 work_unit_id=entry.work_unit_id,
                 source_kind=entry.source_kind,
@@ -182,7 +196,9 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
         f"reconciliation_count\t{projection.reconciliation_count}",
     ]
     if entries:
-        lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tadvisory_count\tactor")
+        lines.append(
+            "reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tadvisory_count\tactor\tcalculation_revision_id"
+        )
         lines.extend(
             "\t".join(
                 (
@@ -193,6 +209,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
                     str(entry.diff_count),
                     str(entry.advisory_count),
                     entry.actor,
+                    entry.calculation_revision_id or "unknown",
                 )
             )
             for entry in entries

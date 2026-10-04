@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEventId
@@ -40,6 +40,7 @@ from .reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
+from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 
 MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID = "modelo.reconcile.list"
 MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH = 4_096
@@ -65,7 +66,9 @@ class ModeloReconciliationListEntryProjection(BaseModel):
     event_id: BucketEventId
     bucket_id: BucketId
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
+    registry_snapshot_ref: ModeloVerificationRegistrySnapshotProjection | None = None
     source_path: _BoundedSourcePath
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
@@ -86,6 +89,12 @@ class ModeloReconciliationListEntryProjection(BaseModel):
             event_id=entry.event_id,
             bucket_id=entry.bucket_id,
             work_unit_id=entry.work_unit_id,
+            calculation_revision_id=entry.calculation_revision_id,
+            registry_snapshot_ref=(
+                ModeloVerificationRegistrySnapshotProjection.from_snapshot(entry.registry_snapshot_ref)
+                if entry.registry_snapshot_ref
+                else None
+            ),
             source_kind=entry.source_kind,
             source_path=entry.source_path,
             verdict=entry.verdict,

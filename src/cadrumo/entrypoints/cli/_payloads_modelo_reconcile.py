@@ -25,11 +25,12 @@ from ...application.modelo.reconciliation_records import (
 from ...application.modelo.taxation_comparison import TaxationRecommendation
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.modelo import Modelo
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ._decimal_wire import DecimalWireText
 
 
@@ -83,6 +84,8 @@ class ModeloReconcileResult(OutputSchema):
     bespoke advisory field.
     """
 
+    calculation_revision_id: CalculationRevisionId | None = None
+    registry_snapshot_ref: RegistrySnapshotRef | None = None
     work_unit_id: WorkUnitId
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind

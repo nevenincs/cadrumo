@@ -61,7 +61,7 @@ from ...core.casilla_value_kind import CasillaValueKind
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -69,7 +69,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
-from .action_errors import WorkUnitNotFoundError
+from .action_errors import CalculationRevisionNotFoundError, WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
@@ -208,6 +208,7 @@ class ModeloReconciliationCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_path: Path
     actor: str = Field(default="operator", min_length=1, max_length=64)
@@ -225,6 +226,7 @@ class ModeloReconciliationBytesCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_bytes: bytes = Field(min_length=1)
     # Bounded at the bucket-event payload width, not above it. This reference is
@@ -253,6 +255,7 @@ class ModeloReconciliationReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
@@ -261,6 +264,7 @@ class ModeloReconciliationReport(BaseModel):
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
     reconciled_at: datetime
     narrative: str = ""
+    registry_snapshot_ref: RegistrySnapshotRef | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -409,6 +413,7 @@ def prepare_modelo_reconcile(
             source_kind=command.source_kind,
             source_ref=str(command.source_path),
             actor=command.actor,
+            calculation_revision_id=command.calculation_revision_id,
             declaracion=declaracion,
             operation=operation,
         )
@@ -427,6 +432,7 @@ def prepare_modelo_reconcile(
         source_kind=command.source_kind,
         source_ref=str(command.source_path),
         actor=command.actor,
+        calculation_revision_id=command.calculation_revision_id,
         justificante=justificante,
         operation=operation,
     )
@@ -457,6 +463,7 @@ def prepare_modelo_reconcile_bytes(
         source_kind=command.source_kind,
         source_ref=command.source_ref,
         actor=command.actor,
+        calculation_revision_id=command.calculation_revision_id,
         justificante=justificante,
         operation=operation,
     )
@@ -470,6 +477,7 @@ def prepare_parsed_justificante(
     actor: str,
     justificante: Justificante,
     operation: PinnedAuthorityOperation,
+    calculation_revision_id: CalculationRevisionId | None = None,
 ) -> PreparedModeloReconciliation:
     """Compare parsed justificante evidence without writing it."""
     active_bucket_id = work_unit.bucket_id
@@ -488,10 +496,9 @@ def prepare_parsed_justificante(
         ),
     )
 
-    try:
-        filed_revision = _filed_revision_for_work_unit(work_unit, operation=operation)
-    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
-        filed_revision = None
+    filed_revision = _resolve_reconciliation_revision(
+        work_unit, operation=operation, calculation_revision_id=calculation_revision_id
+    )
     total_diffs, total_advisories = reconcile_receipt_totals(
         work_unit=work_unit,
         justificante=justificante,
@@ -508,6 +515,7 @@ def prepare_parsed_justificante(
         actor=actor,
         diffs=diffs,
         advisories=advisories,
+        calculation_revision_id=filed_revision.calculation_revision_id if filed_revision else None,
         narrative_subject=f"modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'}",
     )
 
@@ -520,6 +528,7 @@ def prepare_parsed_declaracion(
     actor: str,
     declaracion: ReconciliationDeclaracionObservation,
     operation: PinnedAuthorityOperation,
+    calculation_revision_id: CalculationRevisionId | None = None,
 ) -> PreparedModeloReconciliation:
     """Compare parsed declaration evidence without writing it."""
     active_bucket_id = work_unit.bucket_id
@@ -553,7 +562,11 @@ def prepare_parsed_declaracion(
         ),
     )
 
+    filed_revision = _resolve_reconciliation_revision(
+        work_unit, operation=operation, calculation_revision_id=calculation_revision_id
+    )
     casilla_diffs, casilla_advisories = _reconcile_declaracion_casillas(
+        revision=filed_revision,
         work_unit=work_unit,
         declaracion=declaracion,
         operation=operation,
@@ -568,6 +581,7 @@ def prepare_parsed_declaracion(
         actor=actor,
         diffs=diffs,
         advisories=advisories,
+        calculation_revision_id=filed_revision.calculation_revision_id if filed_revision else None,
         narrative_subject=f"modelo {declaracion.modelo} for ejercicio {declaracion.ejercicio}",
     )
 
@@ -579,6 +593,7 @@ def prepare_filed_observation_reconciliation(
     source_ref: str,
     actor: str,
     operation: PinnedAuthorityOperation,
+    calculation_revision_id: CalculationRevisionId | None = None,
 ) -> PreparedModeloReconciliation:
     """Compare a persisted authenticated register manifest against saved calculation values."""
     from ..calculations.revision_carry_gate import revision_carry_outcome
@@ -615,7 +630,11 @@ def prepare_filed_observation_reconciliation(
     }
     if not values:
         raise ReconciliationEvidenceInvalidError("captured declaration has no numeric comparison fields")
+    filed_revision = _resolve_reconciliation_revision(
+        work_unit, operation=operation, calculation_revision_id=calculation_revision_id
+    )
     casilla_diffs, comparison_advisories = _reconcile_casilla_values(
+        revision=filed_revision,
         work_unit=work_unit,
         filed_values=values,
         operation=operation,
@@ -629,6 +648,7 @@ def prepare_filed_observation_reconciliation(
         actor=actor,
         diffs=diffs,
         advisories=advisories,
+        calculation_revision_id=filed_revision.calculation_revision_id if filed_revision else None,
         narrative_subject=f"captured modelo {observation.modelo} for ejercicio {observation.ejercicio}",
     )
 
@@ -710,6 +730,7 @@ def _prepare_reconciliation(
     diffs: list[ModeloReconciliationDiff],
     advisories: list[ModeloReconciliationAdvisory],
     narrative_subject: str,
+    calculation_revision_id: CalculationRevisionId | None,
 ) -> PreparedModeloReconciliation:
     """Build the report, record and event for one later atomic write.
 
@@ -736,7 +757,15 @@ def _prepare_reconciliation(
         f"verdict={verdict.value}; diffs={len(diffs)}; advisories={len(advisories)}"
     )
     reconciled_at = now()
+    snapshot_ref = RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
     report = ModeloReconciliationReport(
+        calculation_revision_id=calculation_revision_id,
+        registry_snapshot_ref=snapshot_ref,
         work_unit_id=work_unit.work_unit_id,
         bucket_id=work_unit.bucket_id,
         source_kind=source_kind,
@@ -760,6 +789,7 @@ def _prepare_reconciliation(
         "verdict": verdict.value,
         "diffs": str(len(diffs)),
         "advisories": str(len(advisories)),
+        "calculation_revision_id": calculation_revision_id or "unknown",
     }
     actor = actor.strip()
     event_id = derive_bucket_event_id(
@@ -784,6 +814,7 @@ def _prepare_reconciliation(
     )
     record = ModeloReconciliationRecord(
         bucket_event_id=event_id,
+        calculation_revision_id=calculation_revision_id,
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
@@ -1095,6 +1126,7 @@ def _declaracion_divergences(
 
 def _reconcile_declaracion_casillas(
     *,
+    revision: CalculationRevision | None,
     work_unit: WorkUnit,
     declaracion: ReconciliationDeclaracionObservation,
     operation: PinnedAuthorityOperation,
@@ -1126,6 +1158,7 @@ def _reconcile_declaracion_casillas(
     comparison the reconcile could not perform.
     """
     return _reconcile_casilla_values(
+        revision=revision,
         work_unit=work_unit,
         filed_values=_decimal_declaracion_values(declaracion),
         operation=operation,
@@ -1134,6 +1167,7 @@ def _reconcile_declaracion_casillas(
 
 def _reconcile_casilla_values(
     *,
+    revision: CalculationRevision | None,
     work_unit: WorkUnit,
     filed_values: Mapping[str, Decimal],
     operation: PinnedAuthorityOperation,
@@ -1147,7 +1181,6 @@ def _reconcile_casilla_values(
     if not policy.computed_casilla_ids and not policy.reconcile_when_present_casilla_ids:
         return [], [_totals_not_reconciled("map_not_declared", modelo=modelo)]
 
-    revision = _filed_revision_for_work_unit(work_unit, operation=operation)
     if revision is None:
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
 
@@ -1155,6 +1188,10 @@ def _reconcile_casilla_values(
 
     revision_casillas = casillas_by_id(snapshot.revision)
     computed_values: Mapping[str, Decimal] = revision.casilla_values
+    if not _declaracion_reconcilable_scope(
+        policy, revision_casillas=revision_casillas
+    ) and not _declaracion_present_scope(policy, computed_values=computed_values, filed_values=filed_values):
+        return [], [_totals_not_reconciled("no_comparable_casillas", modelo=modelo)]
     divergences = _declaracion_divergences(
         policy=policy,
         revision_casillas=revision_casillas,
@@ -1230,6 +1267,39 @@ def _decimal_declaracion_values(declaracion: ReconciliationDeclaracionObservatio
         elif isinstance(printed, int) and not isinstance(printed, bool):
             values[extracted.casilla_id] = Decimal(printed)
     return values
+
+
+def _resolve_reconciliation_revision(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+    calculation_revision_id: CalculationRevisionId | None,
+) -> CalculationRevision | None:
+    """Bind the saved operand once, preserving the default filed-state priority."""
+    if calculation_revision_id is None:
+        return _filed_revision_for_work_unit(work_unit, operation=operation)
+    catalogue = calculation_revision_catalogue_repository(
+        bucket_id=str(work_unit.bucket_id),
+        operation=operation,
+    ).load(operation=operation)
+    revision = catalogue.get(calculation_revision_id)
+    expected_ref = RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    if (
+        revision is None
+        or revision.work_unit_id != work_unit.work_unit_id
+        or revision.registry_snapshot_ref != expected_ref
+    ):
+        raise CalculationRevisionNotFoundError(
+            "The requested calculation revision does not belong to this work unit.",
+            context={"calculation_revision_id": calculation_revision_id, "work_unit_id": work_unit.work_unit_id},
+        )
+    require_calculation_revision_coordinates_current(revision, operation=operation)
+    return revision
 
 
 def _filed_revision_for_work_unit(
