@@ -64,6 +64,7 @@ from .....application.modelo.reconcile_casilla import (
 )
 from .....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from .....core.casilla_id import CasillaId
+from .....core.config import override_settings
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.errors import RegistrySnapshotError
@@ -385,6 +386,7 @@ def _persist_pulled_filing(
     repository: CalculationObservationRepository,
     *,
     casilla_values: Mapping[CasillaId, Decimal],
+    source_kind: ObservationSourceKind = ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
 ) -> None:
     """Persist one AEAT-observed filing through the production observation write path.
 
@@ -441,7 +443,7 @@ def _persist_pulled_filing(
                     casilla_values=casilla_values,
                 ),
             ),
-            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            source_kind=source_kind,
             captured_at=_CAPTURED_AT,
             stamped_revision_id=str(_law_resolved_revision().id),
             source_metadata={
@@ -481,6 +483,7 @@ def test_no_pulled_filing_produces_no_findings(
         work_unit=work_unit,
         target=target,
         observation_repository=observation_repository,
+        operation=published_authority_operation(),
     )
 
     assert findings == []
@@ -506,6 +509,7 @@ def test_pulled_filing_advisory_refuses_a_divergent_persisted_coordinate(
             work_unit=work_unit,
             target=target,
             observation_repository=observation_repository,
+            operation=published_authority_operation(),
         )
 
 
@@ -529,6 +533,7 @@ def test_a_pulled_filing_against_an_empty_bucket_produces_no_findings(
         work_unit=work_unit,
         target=target,
         observation_repository=observation_repository,
+        operation=published_authority_operation(),
     )
 
     assert findings == []
@@ -562,6 +567,7 @@ def test_a_populated_calculation_agreeing_with_the_filing_produces_no_findings(
         work_unit=work_unit,
         target=target,
         observation_repository=observation_repository,
+        operation=published_authority_operation(),
     )
 
     assert findings == []
@@ -594,6 +600,7 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
         work_unit=work_unit,
         target=target,
         observation_repository=observation_repository,
+        operation=published_authority_operation(),
     )
 
     assert len(findings) == 1, f"exactly one casilla disagrees; got {findings!r}"
@@ -628,3 +635,74 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
         f"casilla {foil.number} carries different legal references, so a finding matching it "
         "would mean the grounding is not read from the diverging casilla at all"
     )
+
+
+@pytest.mark.parametrize("source_kind", [ObservationSourceKind.APP_FILING, ObservationSourceKind.OPERATOR_MANUAL])
+@pytest.mark.parametrize("official_present", [False, True])
+def test_pending_local_never_supplies_or_masks_remote_comparison(
+    observation_repository: CalculationObservationRepository,
+    source_kind: ObservationSourceKind,
+    official_present: bool,
+) -> None:
+    revision = _law_resolved_revision()
+    subject, binding = _subject_casilla(revision)
+    work_unit, target = _work_unit_and_calculation(
+        casilla_values={subject.id: _LOCAL_AMOUNT},
+        binding_overrides={binding.id: str(_LOCAL_AMOUNT)},
+    )
+    if official_present:
+        _persist_pulled_filing(observation_repository, casilla_values={subject.id: _FILED_AMOUNT})
+    _persist_pulled_filing(observation_repository, casilla_values={subject.id: _LOCAL_AMOUNT}, source_kind=source_kind)
+    effective = observation_repository.load_observation(_MODELO, work_unit.period)
+    assert effective is not None and effective.source_kind is source_kind
+    findings = pulled_filing_divergence_findings(
+        work_unit=work_unit,
+        target=target,
+        observation_repository=observation_repository,
+        operation=published_authority_operation(),
+    )
+    assert len(findings) == int(official_present)
+    if official_present:
+        assert findings[0].message_facts["filed_value"] == _FILED_AMOUNT
+
+
+def test_another_period_official_filing_does_not_supply_comparison(
+    observation_repository: CalculationObservationRepository,
+) -> None:
+    revision = _law_resolved_revision()
+    subject, binding = _subject_casilla(revision)
+    work_unit, target = _work_unit_and_calculation(
+        casilla_values={subject.id: _LOCAL_AMOUNT},
+        binding_overrides={binding.id: str(_LOCAL_AMOUNT)},
+    )
+    _persist_pulled_filing(observation_repository, casilla_values={subject.id: _FILED_AMOUNT})
+    other_period = work_unit.model_copy(update={"period": Period.from_year_and_code(_FILING_YEAR, "2T")})
+    findings = pulled_filing_divergence_findings(
+        work_unit=other_period,
+        target=target,
+        observation_repository=observation_repository,
+        operation=published_authority_operation(),
+    )
+    assert findings == []
+
+
+def test_comparison_uses_the_existing_pin_when_default_authority_is_unavailable(
+    observation_repository: CalculationObservationRepository,
+    tmp_path: Path,
+) -> None:
+    operation = published_authority_operation()
+    subject, binding = _subject_casilla(_law_resolved_revision())
+    work_unit, target = _work_unit_and_calculation(
+        casilla_values={subject.id: _LOCAL_AMOUNT},
+        binding_overrides={binding.id: str(_LOCAL_AMOUNT)},
+    )
+    _persist_pulled_filing(observation_repository, casilla_values={subject.id: _FILED_AMOUNT})
+    with override_settings(cadrumo_authority_root=tmp_path / "unpublished-authority"):
+        findings = pulled_filing_divergence_findings(
+            work_unit=work_unit,
+            target=target,
+            observation_repository=observation_repository,
+            operation=operation,
+        )
+    assert len(findings) == 1
+    assert findings[0].message_facts["filed_value"] == _FILED_AMOUNT

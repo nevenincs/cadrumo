@@ -64,6 +64,7 @@ def append_model_specific_findings(
             work_unit=work_unit,
             target=target,
             observation_repository=observation_repository,
+            operation=operation,
         ),
     )
     m210_agrupacion_findings = m210_agrupacion_renta_verification_findings(
