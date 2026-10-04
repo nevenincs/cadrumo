@@ -325,6 +325,8 @@ def calculated_m210_plazo_resolution(
         period=work_unit.period,
         operation=operation,
     )
+    if resultado is None:
+        return None
     tipo_renta_code = revision.m210_official_tipo_renta_code
     window = resolve_filing_window(
         str(work_unit.modelo),

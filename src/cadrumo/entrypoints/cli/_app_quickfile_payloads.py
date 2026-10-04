@@ -56,7 +56,7 @@ class QuickfileExportSummaryPayload(OutputSchema):
     byte_size: int
     file_sha256: str
     format: str
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition | None
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElection

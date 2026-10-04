@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
+from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
@@ -76,17 +77,11 @@ from .action_errors import (
     ModeloPaymentElectionIncompatibleError,
     ModeloProfileReadinessError,
     ModeloRefundElectionNotEligibleError,
+    ModeloResultDispositionUncodifiedError,
 )
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-
-#: Provisional fallback "Tipo de declaración" disposition for a modelo that
-#: declares the header but has no diseño-grounded result-disposition
-#: spec. ``INGRESO`` ("I") is wrong for a credit/zero result, so a new modelo
-#: MUST be added to the spec rather than relying on it. Mirrors the export
-#: fallback constant — kept here because the resolver is the disposition authority.
-DECLARATION_TYPE_FALLBACK: ResultDisposition = ResultDisposition.INGRESO
 
 
 def resolve_modelo_result_disposition(
@@ -98,7 +93,7 @@ def resolve_modelo_result_disposition(
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
     operation: PinnedAuthorityOperation | None = None,
-) -> ResultDisposition:
+) -> ResultDisposition | None:
     """Resolve the single fichero "Tipo de declaración" result disposition.
 
     The boundary resolves a persisted :class:`CalculationRevision` through its
@@ -130,9 +125,13 @@ def resolve_modelo_result_disposition(
 
     Returns the one :class:`~core.result_disposition.ResultDisposition` both the export header
     composer and the cross-period carry persistence read, so the fichero
-    disposition and the carry can never disagree.
+    disposition and the carry can never disagree. Returns ``None`` for a modelo
+    whose design carries no disposition at all; no election applies to it.
 
     Raises:
+        ModeloResultDispositionUncodifiedError: When the selected revision's
+            layout declares the "Tipo de declaración" header but no
+            diseño-grounded code set exists for the modelo.
         ModeloRefundElectionNotEligibleError: When ``refund_election`` is
             ``DEVOLVER`` but the period is not a lawful refund period for a
             non-REDEME taxpayer.
@@ -170,7 +169,7 @@ def base_modelo_result_disposition(
     revision: CalculationRevision,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> ResultDisposition:
+) -> ResultDisposition | None:
     """Return the disposition the final-result casilla implies before any operator election.
 
     Args:
@@ -182,31 +181,63 @@ def base_modelo_result_disposition(
         operation: The generation-pinned authority the casillas are read under.
 
     Returns:
-        The derived disposition, or the declared fallback when the modelo has none.
+        The derived or design-fixed disposition, or ``None`` when the modelo's
+        layout declares no "Tipo de declaración" header and no fixed one.
+
+    Raises:
+        ModeloResultDispositionUncodifiedError: When the layout declares the
+            header but the modelo has no codified spec, so any code written
+            there would be a guess.
     """
-    base = derive_result_disposition(
-        work_unit.modelo,
-        _result_disposition_values_for_revision(
-            work_unit=work_unit,
-            revision=revision,
-            period=period,
-            operation=operation,
-        ),
+    registry_revision, result_values = _result_disposition_values_for_revision(
+        work_unit=work_unit,
+        revision=revision,
         period=period,
+        operation=operation,
     )
-    return base or DECLARATION_TYPE_FALLBACK
+    base = derive_result_disposition(work_unit.modelo, result_values, period=period)
+    if base is not None:
+        return base
+    producer_key = FilingProducerKey.FILING_RESULT_DISPOSITION
+    if any(
+        field.producer_key is producer_key
+        for layout in registry_revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+    ):
+        raise ModeloResultDispositionUncodifiedError(
+            translated_message="errors.refused.refused_modelo_result_disposition_uncodified",
+            context={
+                "modelo": str(work_unit.modelo),
+                "revision_id": str(registry_revision.id),
+                "producer_key": producer_key.value,
+            },
+        )
+    return None
 
 
 def _resolve_elected_disposition(
-    base_disposition: ResultDisposition,
+    base_disposition: ResultDisposition | None,
     *,
     work_unit: WorkUnit,
     workflow_profile: TaxpayerProfile,
     period: Period,
     refund_election: RefundElection,
     payment_election: PaymentElection,
-) -> ResultDisposition:
+) -> ResultDisposition | None:
     """Apply the one election axis that the computed result makes applicable."""
+    if base_disposition is None:
+        if payment_election is not PaymentElection.INGRESO:
+            raise ModeloPaymentElectionIncompatibleError(
+                translated_message="errors.error.error_modelos",
+                context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
+            )
+        if refund_election is not RefundElection.COMPENSAR:
+            raise ModeloRefundElectionNotEligibleError(
+                translated_message="errors.error.error_modelos",
+                context={"modelo": str(work_unit.modelo), "refund_election": refund_election.value},
+            )
+        return None
     if base_disposition is ResultDisposition.INGRESO:
         if refund_election is not RefundElection.COMPENSAR:
             raise ModeloRefundElectionNotEligibleError(
@@ -301,11 +332,13 @@ def _result_disposition_values_for_revision(
     revision: CalculationRevision,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> Mapping[CasillaId, Decimal]:
+) -> tuple[ModeloRevision, Mapping[CasillaId, Decimal]]:
     """Validate a full :class:`CalculationRevision` value map and return result casillas.
 
     The :class:`WorkUnit` selects the registry snapshot whose
-    :class:`ModeloRevision` declares the canonical casilla ids accepted here.
+    :class:`ModeloRevision` declares the canonical casilla ids accepted here;
+    that registry revision is returned with the values so the caller reads its
+    layout from the same snapshot.
     """
     # This deliberately resolves its own snapshot rather than calling
     # resolve_registry_snapshot_for_work_unit directly: that helper resolves on
@@ -340,17 +373,13 @@ def _result_disposition_values_for_revision(
         declared_ids=declared_casilla_ids(snapshot.revision),
         registry_revision=snapshot.revision,
     )
-    result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
-    if result_ids is None:
-        empty_result: dict[CasillaId, Decimal] = {}
-        return empty_result
     result_values: dict[CasillaId, Decimal] = {}
-    for casilla_id in result_ids:
+    for casilla_id in result_disposition_casilla_ids(str(work_unit.modelo)) or ():
         if casilla_id not in revision.casilla_values:
             continue
         value: Decimal = revision.casilla_values[casilla_id]
         result_values[casilla_id] = value
-    return result_values
+    return snapshot.revision, result_values
 
 
 def _reject_non_revision_casilla_values(
@@ -452,7 +481,6 @@ def _apply_modelo_303_refund_election(
 
 
 __all__ = [
-    "DECLARATION_TYPE_FALLBACK",
     "base_modelo_result_disposition",
     "require_admissible_charge_account",
     "resolve_modelo_result_disposition",

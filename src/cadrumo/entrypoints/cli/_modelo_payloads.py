@@ -1316,7 +1316,7 @@ class ModeloExportPayload(OutputSchema):
     file_sha256: str
     format: str
     bucket_event_id: str
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition | None
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElectionProjection

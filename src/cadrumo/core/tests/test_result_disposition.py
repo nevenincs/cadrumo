@@ -148,8 +148,8 @@ def test_disposition_rejects_non_result_casilla_values() -> None:
 
 
 def test_uncodified_modelo_returns_none_not_a_guess() -> None:
-    """A modelo without a codified spec returns None so the caller applies a
-    documented fallback rather than a guessed disposition."""
+    """A modelo without a codified spec returns None so the caller refuses or
+    records no disposition rather than a guessed one."""
     assert derive_result_disposition("390", _values(_M303_RESULT_CASILLA, "-1000.00"), period=_Q2) is None
     assert result_disposition_casilla_ids("303") == (_M303_RESULT_CASILLA,)
 
@@ -217,3 +217,11 @@ def test_domiciliacion_is_declared_where_the_diseno_lists_u_and_nowhere_else() -
     assert result_disposition_declares("111", ResultDisposition.DOMICILIACION)
     assert not result_disposition_declares("210", ResultDisposition.DOMICILIACION)
     assert not result_disposition_declares("390", ResultDisposition.DOMICILIACION)
+
+
+def test_modelo_360_is_a_fixed_devolucion_whatever_the_values() -> None:
+    """DR360 section 4 is "Devolución solicitada": a refund application by design."""
+    assert derive_result_disposition("360", {}, period=_Q2) is ResultDisposition.DEVOLUCION
+    assert result_disposition_declares("360", ResultDisposition.DEVOLUCION)
+    assert not result_disposition_declares("360", ResultDisposition.INGRESO)
+    assert not result_disposition_declares("360", ResultDisposition.DOMICILIACION)

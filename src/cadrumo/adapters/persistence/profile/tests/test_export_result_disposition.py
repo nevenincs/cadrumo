@@ -11,6 +11,7 @@ from .....application.modelo.action_errors import (
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
+    ModeloResultDispositionUncodifiedError,
 )
 from .....application.modelo.result_disposition_resolution import (
     require_admissible_charge_account,
@@ -127,17 +128,18 @@ def _resolve_result_disposition(
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
-) -> str:
+) -> str | None:
     work_unit = _result_disposition_work_unit(modelo=modelo, period=period)
     revision = _result_disposition_revision(work_unit=work_unit, casilla_values=casilla_values)
-    return resolve_modelo_result_disposition(
+    disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=profile,
         period=period,
         refund_election=refund_election,
         payment_election=payment_election,
-    ).value
+    )
+    return None if disposition is None else disposition.value
 
 
 def _result_disposition_profile(kind: str) -> TaxpayerProfile:
@@ -183,7 +185,9 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         ("130", {_M130_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "4T"), "N"),
         ("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2025, "0A"), "D"),
         # A filing-grade Modelo 390 year: the 2026 edition claims applicability only.
-        ("390", {}, Period.from_year_and_code(2025, "0A"), "I"),
+        # Its layout declares no Tipo de declaración, so it records no disposition.
+        ("390", {}, Period.from_year_and_code(2025, "0A"), None),
+        ("360", {}, Period.from_year_and_code(2025, "AD-HOC"), "D"),
     ),
     ids=(
         "m303-positive-ingreso",
@@ -195,14 +199,15 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         "m130-negative-fourth-quarter-negativa",
         "m130-zero-fourth-quarter-negativa",
         "m200-negative-refund",
-        "uncodified-modelo-provisional-ingreso",
+        "modelo-without-disposition-records-none",
+        "m360-fixed-devolucion",
     ),
 )
 def test_resolve_modelo_result_disposition_maps_result_to_disposition(
     modelo: str,
     casilla_values: dict[CasillaId, Decimal],
     period: Period,
-    expected: str,
+    expected: str | None,
 ) -> None:
     """The fichero 'Tipo de declaración' is derived from the result, never hardcoded."""
     assert (
@@ -369,3 +374,49 @@ def test_a_charge_account_outside_spain_is_capability_refused_without_account_ma
         "payment_election": "domiciliacion",
         "charge_account_country": "DE",
     }
+
+
+def test_a_layout_declaring_the_header_without_a_codified_spec_refuses() -> None:
+    """Modelo 216 prints Tipo de declaración but has no codified code set: no I is invented."""
+    with pytest.raises(ModeloResultDispositionUncodifiedError) as refused:
+        _resolve_result_disposition(
+            modelo="216",
+            casilla_values={},
+            profile=_profile(),
+            period=Period.from_year_and_code(2024, "1T"),
+        )
+
+    assert refused.value.context is not None
+    assert refused.value.context["producer_key"] == "filing.result_disposition"
+    assert refused.value.context["modelo"] == "216"
+
+
+def test_an_absent_disposition_admits_no_election() -> None:
+    period = Period.from_year_and_code(2025, "0A")
+    with pytest.raises(ModeloPaymentElectionIncompatibleError):
+        _resolve_result_disposition(
+            modelo="390",
+            casilla_values={},
+            profile=_profile(),
+            period=period,
+            payment_election=PaymentElection.DOMICILIACION,
+        )
+    with pytest.raises(ModeloRefundElectionNotEligibleError):
+        _resolve_result_disposition(
+            modelo="390",
+            casilla_values={},
+            profile=_profile(),
+            period=period,
+            refund_election=RefundElection.DEVOLVER,
+        )
+
+
+def test_modelo_360_refuses_a_domiciliacion_election() -> None:
+    with pytest.raises(ModeloPaymentElectionIncompatibleError):
+        _resolve_result_disposition(
+            modelo="360",
+            casilla_values={},
+            profile=_profile(),
+            period=Period.from_year_and_code(2025, "AD-HOC"),
+            payment_election=PaymentElection.DOMICILIACION,
+        )

@@ -1166,7 +1166,9 @@ def _shared_filing_producer_values(
     identity = snapshot.taxpayer_identity
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
-        FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
+        FilingProducerKey.FILING_RESULT_DISPOSITION: (
+            None if snapshot.elections.result_disposition is None else snapshot.elections.result_disposition.value
+        ),
         FilingProducerKey.TAXPAYER_TAX_ID: str(snapshot.taxpayer_tax_id),
         FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
         FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,

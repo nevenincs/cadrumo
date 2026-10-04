@@ -446,6 +446,15 @@ class ModeloPaymentElectionCapabilityRefusedError(ModeloError):
     """
 
 
+class ModeloResultDispositionUncodifiedError(ModeloError):
+    """Raised when a layout declares "Tipo de declaración" but no code set is codified.
+
+    The header is a filing fact whose closed code set comes from the modelo's
+    record design. Without that codified set any value written there would be
+    a guess, so the export or filing is refused rather than defaulted to ``I``.
+    """
+
+
 class ModeloPriorDomiciliationElectionRefusedError(ModeloError):
     """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority."""
 

@@ -393,7 +393,8 @@ class ModeloExportResult(BaseModel):
         actor: Operator identifier captured into the event.
         bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
             to the catalogue.
-        resolved_result_disposition: The single resolved AEAT declaration type.
+        resolved_result_disposition: The single resolved AEAT declaration type,
+            or ``None`` for a modelo whose design carries no disposition.
         payment_election: The semantic positive-result election when applicable.
         refund_election: The semantic negative-result election when applicable.
         casilla_provenance: Regulatory grounding for casillas covered
@@ -418,7 +419,7 @@ class ModeloExportResult(BaseModel):
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
-    resolved_result_disposition: ResultDisposition = ResultDisposition.INGRESO
+    resolved_result_disposition: ResultDisposition | None = ResultDisposition.INGRESO
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElectionProjection = Field(
@@ -776,7 +777,7 @@ def _build_export_producer_snapshot(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
-    resolved_result_disposition: ResultDisposition,
+    resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
     amendment_evidence: AmendmentEvidence | None,
     export_ports: ModeloExportPorts,
@@ -788,19 +789,26 @@ def _build_export_producer_snapshot(
         work_unit=work_unit,
         operation=operation,
     )
-    nota_three_refund_account = _require_export_accounts(
-        command,
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=workflow_profile,
-        resolved_result_disposition=resolved_result_disposition,
-        prior_domiciliation_election=prior_domiciliation_election.election,
-        amendment_evidence=amendment_evidence,
-    )
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
         m360_solicitud = _require_m360_solicitud(modelo=modelo, work_unit=work_unit, export_ports=export_ports)
+        # The solicitud's own account, never the profile's IVA refund account:
+        # DR360 campo 114 lets it be the representante's.
+        if m360_solicitud is not None:
+            refund_account = m360_solicitud.refund_account
+        else:
+            refund_account = iva_profile.refund_account if iva_profile is not None else None
+        nota_three_refund_account = _require_export_accounts(
+            command,
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=workflow_profile,
+            refund_account=refund_account,
+            resolved_result_disposition=resolved_result_disposition,
+            prior_domiciliation_election=prior_domiciliation_election.election,
+            amendment_evidence=amendment_evidence,
+        )
         model_profile, m303_filing_facts = _resolve_export_model_profile(
             modelo=modelo,
             work_unit=work_unit,
@@ -812,13 +820,8 @@ def _build_export_producer_snapshot(
             m360_solicitud=m360_solicitud,
         )
         if m360_solicitud is not None:
-            # The solicitud's own account, never the profile's IVA refund account:
-            # DR360 campo 114 lets it be the representante's. Undeclared, it selects
-            # nothing and the snapshot refuses the solicitud.
-            refund_account = m360_solicitud.refund_account
             account_page_refund_account = refund_account is not None
         else:
-            refund_account = iva_profile.refund_account if iva_profile is not None else None
             account_page_refund_account = nota_three_refund_account
         return build_filing_producer_snapshot(
             modelo=modelo,
@@ -892,7 +895,8 @@ def _require_export_accounts(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
-    resolved_result_disposition: ResultDisposition,
+    refund_account: RefundAccount | None,
+    resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     amendment_evidence: AmendmentEvidence | None,
 ) -> bool:
@@ -916,14 +920,13 @@ def _require_export_accounts(
     nota_three = _m303_nota_three_requires_refund_account(
         work_unit, revision, prior_domiciliation_election, amendment_evidence
     )
-    if result_disposition_is_refund(resolved_result_disposition) or nota_three:
-        refund_account = iva_profile.refund_account if iva_profile is not None else None
-        if _export_refund_account_is_missing(refund_account):
-            raise ModeloRefundAccountMissingError(
-                "the export's account page requires a refund account on file",
-                context=context,
-            )
-    return nota_three and not result_disposition_is_refund(resolved_result_disposition)
+    refund = resolved_result_disposition is not None and result_disposition_is_refund(resolved_result_disposition)
+    if (refund or nota_three) and _export_refund_account_is_missing(refund_account):
+        raise ModeloRefundAccountMissingError(
+            "the export's account page requires a refund account on file",
+            context=context,
+        )
+    return nota_three and not refund
 
 
 def _require_export_identity(
@@ -1298,7 +1301,7 @@ def _emit_export_event(
     work_unit: WorkUnit,
     receipt: DeclaracionExportResult,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
-    resolved_result_disposition: ResultDisposition,
+    resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
     exported_at: datetime,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
@@ -1323,8 +1326,9 @@ def _emit_export_event(
         "modelo": work_unit.modelo,
         "filing_year": str(work_unit.filing_year),
         "period": work_unit.period.registry_token,
-        "resolved_result_disposition": resolved_result_disposition.value,
     }
+    if resolved_result_disposition is not None:
+        event_payload["resolved_result_disposition"] = resolved_result_disposition.value
     if resolved_result_disposition in {
         ResultDisposition.INGRESO,
         ResultDisposition.DOMICILIACION,

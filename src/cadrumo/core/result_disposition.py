@@ -217,8 +217,9 @@ _M210_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
 
 #: Per-modelo disposition spec, grounded in each bundled diseño's "Tipo de
 #: declaración" note and the registry's result-casilla ``semantic_role``. Modelos
-#: absent from this table return ``None`` and the caller applies a documented
-#: fallback rather than a guessed mapping.
+#: absent from this table and from :data:`_FIXED_DISPOSITION` derive ``None``; the
+#: application resolver refuses one whose layout declares the header and records
+#: no disposition for the rest.
 _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
     # IVA: credit is a compensar (C). Result casilla 71 "Resultado final".
     Modelo("303"): _DispositionSpec(
@@ -290,6 +291,15 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         zero=ResultDisposition.NEGATIVA,
         declared=_M210_DECLARED,
     ),
+}
+
+
+#: Modelos whose disposition the design fixes rather than the result deriving.
+#: Modelo 360 is a refund application: its design section 4 is "Devolución
+#: solicitada" and its layout has no "Tipo de declaración" slot, so DEVOLUCION
+#: is never rendered but still drives the account gate, receipts and events.
+_FIXED_DISPOSITION: dict[str, ResultDisposition] = {
+    Modelo("360"): ResultDisposition.DEVOLUCION,
 }
 
 
@@ -375,6 +385,9 @@ def result_disposition_declares(modelo: str, disposition: ResultDisposition) -> 
     spec declares nothing, so every election on it is refused rather than
     guessed.
     """
+    fixed = _FIXED_DISPOSITION.get(modelo)
+    if fixed is not None:
+        return disposition is fixed
     spec = _DISPOSITION_SPEC.get(modelo)
     return spec is not None and disposition in spec.declared
 
@@ -410,10 +423,16 @@ def derive_result_disposition(
       which cannot go sub-zero in practice).
     - ``== 0`` (or the casilla absent) → the modelo's zero code (``N``).
 
+    A modelo whose design fixes its disposition (Modelo 360, always
+    :attr:`ResultDisposition.DEVOLUCION`) returns that code whatever the values.
+
     Returns the derived :class:`ResultDisposition`, or ``None`` for a modelo
-    without a codified spec, so the caller applies a documented fallback rather
-    than a guessed disposition.
+    without a codified spec, so the caller refuses or records no disposition
+    rather than guessing one.
     """
+    fixed = _FIXED_DISPOSITION.get(modelo)
+    if fixed is not None:
+        return fixed
     result = canonical_result_amount(modelo, casilla_values)
     if result is None:
         return None

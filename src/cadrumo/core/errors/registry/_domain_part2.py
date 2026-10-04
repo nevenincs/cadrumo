@@ -308,6 +308,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloResultDispositionUncodifiedError",
+        ErrorCode(
+            code="REFUSED_MODELO_RESULT_DISPOSITION_UNCODIFIED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_result_disposition_uncodified",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.ModeloPriorDomiciliationElectionRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_DOMICILIATION_ELECTION",

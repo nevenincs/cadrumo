@@ -865,7 +865,7 @@ class FilingElectionFacts(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    result_disposition: ResultDisposition
+    result_disposition: ResultDisposition | None
     payment: PaymentElection
     refund: RefundElection
     prior_domiciliation: PriorDomiciliationElection
@@ -1210,7 +1210,7 @@ def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> No
             raise ValueError("domiciliacion disposition requires a selected charge account")
     elif snapshot.elections.payment is PaymentElection.DOMICILIACION:
         raise ValueError("domiciliacion payment election requires the matching result disposition")
-    elif result_disposition_is_refund(disposition):
+    elif disposition is not None and result_disposition_is_refund(disposition):
         if not isinstance(snapshot.selected_account, RefundAccountSelection):
             raise ValueError("refund disposition requires a selected refund account")
     elif snapshot.selected_account is not None and not (
@@ -1333,7 +1333,7 @@ def _select_filing_account(
         if charge_account is None:
             raise FilingProducerSnapshotError("domiciliacion requires a charge account")
         return ChargeAccountSelection(role="charge", account=charge_account)
-    if result_disposition_is_refund(elections.result_disposition):
+    if elections.result_disposition is not None and result_disposition_is_refund(elections.result_disposition):
         if refund_account is None or refund_account.iban is None:
             raise FilingProducerSnapshotError("refund disposition requires a refund account")
         return RefundAccountSelection(role="refund", account=refund_account)

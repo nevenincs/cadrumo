@@ -469,7 +469,7 @@ def _filed_revision_result_disposition(
     workflow_profile: TaxpayerProfile,
     refund_election: RefundElection,
     payment_election: PaymentElection,
-) -> ResultDisposition:
+) -> ResultDisposition | None:
     """Resolve once at the filing boundary for both export and carry evidence."""
     return resolve_modelo_result_disposition(
         work_unit=work_unit,

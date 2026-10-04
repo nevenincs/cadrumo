@@ -5,40 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:cbe9b0560f48a677ca4e2afbf05233147b7e67326d004c9b0ced176dbad94de9'
+body_hash: 'sha256:485dc026c7d3d43cbd23ab0322b6da3008cc7c961ffa498dfee91fd1bef515fb'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `taxpayer-bank-accounts` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `A` `src/cadrumo/domain/transactions/own_accounts.py`
 - `S01` `A` `src/cadrumo/domain/transactions/tests/test_own_accounts.py`
@@ -117,9 +91,34 @@ related:
 - `S08` `verify:` `ruff check and format on touched files` -> `pass`
 - `S08` `verify:` `just check-types touched files` -> `pass`
 - `S08` `by:` `vaultspec-standard-executor`
+- `S14` `M` `src/cadrumo/core/result_disposition.py`
+- `S14` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S14` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S14` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S14` `M` `src/cadrumo/application/modelo/export.py`
+- `S14` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S14` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S14` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S14` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S14` `M` `src/cadrumo/application/modelo/work_plazo.py`
+- `S14` `M` `src/cadrumo/core/tests/test_result_disposition.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S14` `M` `src/cadrumo/locales/en/errors.yml`
+- `S14` `M` `src/cadrumo/locales/es/errors.yml`
+- `S14` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S14` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S14` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, core/tests, core/errors (6899 passed; 62 failures attributed to concurrent registry/authority drift and other lanes, none in disposition paths)` -> `pass`
+- `S14` `verify:` `focused disposition and 360 export tests (61 passed)` -> `pass`
+- `S14` `verify:` `ruff check, ruff format --check, ty, pyrefly on touched files` -> `pass`
+- `S14` `by:` `lane-c`
 
 ## Notes
 
 - `S01` import-boundary gate: 15/15 contracts kept; its failure is the pre-existing `dev/docs/serve_languages.py` re-export and stale import-load-target metadata. 2 pre-existing failures in core/errors exception-hygiene tests name unrelated modules.
 - `S02` Directory run: own-account and namespace tests pass; 39 failures are pre-existing and unrelated (OS keyring logon-session probe, evidence-draft extraction, composing-write declarations naming other modules).
 - `S08` `docs/_sequences` import-provider-list golden not refreshed: dev.docs.sequences refresh fails in registry composition on Lane A in-flight `own_account_operation;` refresh pending
+- `S14` the 360 export test hunk for S14 was swept into commit 6bcf868788 by the page-marker session before this Step's code landed
+- `S14` docs goldens how-to/modelo-100 and modelo-349 recorded the fabricated I disposition and need a refresh after the authority is republished

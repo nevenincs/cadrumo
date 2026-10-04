@@ -124,7 +124,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition | None
     payment_election: PaymentElection | None
     refund_election: RefundElection | None
     prior_domiciliation_election: ModeloPriorDomiciliationPublicProvenance

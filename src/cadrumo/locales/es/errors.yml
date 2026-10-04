@@ -1259,6 +1259,10 @@ errors:
     refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
       periodo donde no está disponible; solo el último periodo de declaración del
       año permite la devolución a un no inscrito en REDEME.
+    refused_modelo_result_disposition_uncodified: El diseño de registro de este modelo
+      tiene un campo de tipo de declaración, pero Cadrumo aún no tiene un juego de
+      códigos fundamentado para él, así que el resultado no puede presentarse sin
+      adivinar ese campo.
     refused_modelo_stored_row_field_input: La revisión de cálculo {calculation_revision_id}
       guarda un único valor de entrada para las casillas {casilla_ids}, que toman
       un valor por cada fila de detalle. Vuelve a calcular la unidad de trabajo {work_unit_id}
