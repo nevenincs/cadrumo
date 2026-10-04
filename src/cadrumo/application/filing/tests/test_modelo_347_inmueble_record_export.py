@@ -163,6 +163,9 @@ def test_a_recorded_lease_files_one_inmueble_record(operation: PinnedAuthorityOp
 
     assert len(lines) == 5
     assert sorted(_type_2_kinds(lines)) == ["D", "D", "D", "I"]
+    inmueble = next(line for line in lines if line[_KIND_POSITION - 1] == "I")
+    assert inmueble[114:115] == "1"
+    assert inmueble[115:140] == "9872023VH5797S0001WX".ljust(25)
 
 
 def test_the_historical_filing_edition_exports_without_inmueble_records(operation: PinnedAuthorityOperation) -> None:

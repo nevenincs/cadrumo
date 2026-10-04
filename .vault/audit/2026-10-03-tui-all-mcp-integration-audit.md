@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:06872ca141420e1b81dd5ff79846e557ccd805355a7ab78bf645cea78f6375b2'
+body_hash: 'sha256:ade6930cea13588e021fd1e879c77d36071d31422b0f9f2a30498d7a487418f3'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -186,6 +186,10 @@ Resolved fixture premises on13 test-only paths. The shared seeder registers genu
 ### portable-kdf-defining-owner | high | Cross-package private fixture imports removed without changing the behavior under test
 
 Resolved source ownership defect. The first frozen configured aggregate passed11 gates and failed import authority with17 private custody module/symbol accesses in the CLI fixture. The joined KDF worker and public test context manager now live as defining implementations in the narrow custody test package; all three consumers import that public manager directly, and no CLI facade, forwarding alias, suppression or checker exemption remains. Parser/crypto/frame/join/context-manager bodies have identical AST to the original5737 fixture. Four files pass scoped Ruff/format/ty and eight actual human/API/AEAT/guard/detector/offline-seal cases pass47.49s. The supported configured UV import gate passes authoritatively with15/15 contracts,4368/4368 production modules loaded and zero hard findings; source snapshots match. The earlier plain-Python retry is retained as unavailable because its tool PATH omitted lint-imports, despite zero hard findings. Original142-case proof remains qualified by behavior-preserving ownership relocation; current native action fingerprint refresh is still required because its declared input scope includes tests, although shipping bytes are unchanged. Final whole configured aggregate and native/provider/landing obligations remain separate.
+
+### later-m347-physical-oracle | low | Current leased-premises export retains independent situation and reference byte assertions
+
+Incorporated the unique three-line oracle from fresh preserved live TUI snapshot78d675 relative to66b785. The current public/pinned schema helper and historical filing grade remain intact. The independent source-pinned M347 fields f011/f012 declare one-based offsets115/116 and lengths1/25; the existing fixture independently declares situation1 and literal cadastral reference. The test now checks those exact output spans in its I record. The whole owner passes3 in2.51s with no failure/skip and scoped Ruff/format/ty passes; source byte hashes remain stable. No shipping model, DTO, compiler, authority or data changes are imported. All119 later source deltas are accounted by the external review: one adapted unique oracle, three exact, three semantic, and one policy/factoring already-present cases, and111 independent ongoing cases preserved without blind import. Final metadata records the incorporated oracle separately; the active nested lease migration and live destination handoff remain separately coordinated.
 
 ## Recommendations
 
