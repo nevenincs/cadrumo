@@ -133,8 +133,6 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
     ``None`` is deliberately inert: it is not an inference hook and does not
     select a policy from field width, type, identifier, or historical layout.
     """
-    if policy is None:
-        return value
     if isinstance(value, ParsedExportPolicyWireValue):
         if policy not in _RETAINED_WIRE_POLICIES or value.policy is not policy:
             raise RegistryValidationError(
@@ -142,6 +140,8 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
             )
         validate_export_wire_value(policy, value.raw)
         return value.raw
+    if policy is None:
+        return value
     projector = _PROJECTOR_BY_POLICY.get(policy)
     if projector is None:
         raise RegistryValidationError(f"unknown export value policy {policy!r}")
@@ -152,8 +152,9 @@ def policy_defines_absent_slot(policy: ExportValuePolicy | None) -> bool:
     """Whether ``policy`` assigns its OWN meaning to a slot carrying no value.
 
     An unselected checkbox is not an absent number: its policy declares that the
-    empty slot means ``0``, so the value must reach the projector. Every other
-    policy leaves absence to the field's declared blank fill, which is what
+    empty slot means ``0``, so the value must reach the projector. A negative-only
+    sign likewise declares ``0`` when no negative amount is present. Other
+    policies leave absence to the field's declared blank fill, which is what
     AEAT's designs state ("los campos numericos que no tengan contenido se
     rellenaran a ceros"). Named rather than inlined at the call site so the
     exception stays one auditable list instead of a condition readers must
@@ -284,6 +285,8 @@ def _project_signed_component_magnitude(value: object) -> Decimal:
 
 
 def _project_signed_component_zero_sign(value: object) -> str:
+    if value is None or (isinstance(value, str) and value == ""):
+        return "0"
     number = _signed_component_number(value)
     if number > 0:
         raise RegistryValidationError("negative-only signed component cannot encode a positive amount")
@@ -485,10 +488,10 @@ _PROJECTOR_BY_POLICY: dict[ExportValuePolicy, Callable[[object], object]] = {
 }
 
 #: Policies that give an EMPTY slot a meaning of their own, so absence must be
-#: projected rather than filled. Only the checkbox does: its unselected state is
-#: the declared ``0``, not a missing number.
+#: projected rather than filled. Unselected checkboxes and absent negative-only
+#: sign components both require the declared ``0`` token.
 _POLICIES_DEFINING_ABSENCE: frozenset[ExportValuePolicy] = frozenset(
-    {ExportValuePolicy.SELECTED_1_UNSELECTED_0},
+    {ExportValuePolicy.SELECTED_1_UNSELECTED_0, ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN},
 )
 
 #: Policies whose wire token cannot be inverted to the semantic value it came
@@ -501,6 +504,12 @@ _RETAINED_WIRE_POLICIES: frozenset[ExportValuePolicy] = frozenset(
         ExportValuePolicy.FRACTIONAL_DIGITS,
         ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
         ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+        ExportValuePolicy.SIGNED_COMPONENT_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE,
+        ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
+        ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
+        ExportValuePolicy.YYYYMMDD_TEXT_DAY,
     },
 )
 

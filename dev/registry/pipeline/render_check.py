@@ -52,7 +52,7 @@ from typing import Literal, cast
 
 import rtoml
 
-from cadrumo.core.period import Period, PeriodError, is_administrative_period_token
+from cadrumo.core.period import Period, PeriodError, is_administrative_period_token, is_symbolic_event_selector
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -315,15 +315,14 @@ def _validate_requested_administrative_period(
     filing_year: int,
     period: str | None,
 ) -> None:
-    if period is None or not is_administrative_period_token(period):
+    if period is None or not (is_administrative_period_token(period) or is_symbolic_event_selector(period)):
         return
     selector = selected.period_selector
     if not selector.includes_year(filing_year) or not any(
         selector_period_matches_request(token, period) for token in selector.periods_for_year(filing_year)
     ):
-        raise ValueError(
-            f"{modelo}/{revision} administrative period {period!r} is not declared for filing_year={filing_year}"
-        )
+        label = "administrative period" if is_administrative_period_token(period) else "event selector"
+        raise ValueError(f"{modelo}/{revision} {label} {period!r} is not declared for filing_year={filing_year}")
 
 
 def _applicable_record_design_refs(
@@ -361,6 +360,10 @@ def _render_frame_interval(
     *, selected: ModeloRevision, filing_year: int, period: str | None
 ) -> tuple[date, date] | None:
     if period is None:
+        return date(filing_year, 1, 1), date(filing_year, 12, 31)
+    if is_symbolic_event_selector(period):
+        # A selector covers concrete event filings without naming one event.
+        # Like an event period without dates, its design must cover the year.
         return date(filing_year, 1, 1), date(filing_year, 12, 31)
     if is_administrative_period_token(period):
         # An administrative coordinate has no filing-period dates. Its real
@@ -650,7 +653,13 @@ def _revision_render_inputs(
 
 
 def compare_revision_against_committed(
-    authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: str,
+    revision: str,
+    source_ref: str | None = None,
+    filing_year: int | None = None,
+    period: str | None = None,
 ) -> RenderComparison:
     """Re-render one revision from its authored inputs and diff it against the shipped tree.
 
@@ -660,7 +669,14 @@ def compare_revision_against_committed(
             reported by name rather than substituted, because a silent fallback
             would compare the wrong thing and report a match.
     """
-    inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
+    inputs = revision_render_inputs(
+        authority,
+        modelo=modelo,
+        revision=revision,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        period=period,
+    )
     inheritance = select_generated_export_inheritance(
         authority,
         bundled_path("registry", "aeat"),

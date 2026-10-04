@@ -58,9 +58,9 @@ from ..export_fragment_provenance_projection import loader_semantic_digest
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view
-from ..render_check import compare_revision_against_committed, parsed_tree_file
+from ..render_check import compare_export_tree_roots, parsed_tree_file
 from ..source_defects import source_defects_for
-from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
+from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos, tree_inheritance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -105,7 +105,9 @@ _EXPECTED_FILING_GRADE_REFUSALS = _expected_filing_grade_refusals()
 
 def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
     """Load the committed tree's layout exactly as check mode loads its published witness."""
-    staged = stage_published_modelo(root, modelo=tree.modelo, revision=tree.revision)
+    staged = stage_published_modelo(
+        root, modelo=tree.modelo, revision=tree.revision, inheritance=tree_inheritance(tree)
+    )
     definition = load_modelo_directory(staged or bundled_path("registry", "aeat", "modelos", tree.modelo))
     (layout,) = definition.revisions[tree.revision].export_layouts
     return layout
@@ -236,6 +238,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     """
     joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     source_defects = source_defects_for(tree.source_ref)
+    inheritance = tree_inheritance(tree)
     fresh_root = tmp_path / "fresh" / "export"
 
     # The refusal ledger is consulted BEFORE the render, not after it. A tree the
@@ -256,6 +259,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
                 render_profile=render_profile,
                 render_profile_source_evidence=evidence,
                 source_defects=source_defects,
+                inheritance=inheritance,
             )
         assert refusal.refusal_marker in str(refused.value), (
             f"{tree}: render-refusal pin is dormant or its cause changed"
@@ -271,6 +275,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         render_profile=render_profile,
         render_profile_source_evidence=evidence,
         source_defects=source_defects,
+        inheritance=inheritance,
     )
 
     fresh_members = {path.name for path in fresh_root.iterdir()}
@@ -317,10 +322,12 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
 
     if differing:
         disposition = _RECORD_DRIFT_DISPOSITIONS.get(subject)
-        comparison = compare_revision_against_committed(
-            compiled_bundled_authority(),
+        comparison = compare_export_tree_roots(
             modelo=tree.modelo,
             revision=tree.revision,
+            layout_id=tree.layout_id,
+            committed_root=tree.committed,
+            rendered_root=fresh_root,
         )
         if disposition is not None:
             assert disposition.source_ref == tree.source_ref
@@ -355,7 +362,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     )
     # The published layout load must see exactly the target revision, so a
     # multi-revision modelo is staged through the same isolation the CLI uses.
-    published_modelo_root = stage_published_modelo(candidate_root, modelo=tree.modelo, revision=tree.revision)
+    published_modelo_root = stage_published_modelo(
+        candidate_root, modelo=tree.modelo, revision=tree.revision, inheritance=inheritance
+    )
     context = GeneratedExportTreeCheckContext(
         validation=GeneratedExportTreeValidationContext(
             registry_root=registry_root,
@@ -369,8 +378,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             period=tree.period,
             supporting_modelos=supporting_modelos(tree),
             continuity_metadata_modelo_root=continuity_metadata_modelo_root,
-            scope_authority=compiled_bundled_authority() if tree.historical_static else None,
+            scope_authority=compiled_bundled_authority(),
             historical_static_source_ref=tree.source_ref if tree.historical_static else None,
+            inheritance=inheritance,
         ),
         temporary_root=candidate_root,
         target_registry_root=bundled_path("registry", "aeat"),
@@ -398,7 +408,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         f"{tree}: check mode now PASSES, so the pending entry {expected!r} is stale -- remove it "
         "from _EXPECTED_FILING_GRADE_REFUSALS and let this gate assert the pass"
     )
-    assert str(checked.candidate.layout.id) == tree.layout_id
+    assert str(checked.candidate.layout.id) == transport.layout_id
     if tree.historical_static:
         assert isinstance(checked.candidate, ValidatedHistoricalStaticGeneratedExportTree)
         assert str(checked.candidate.inspection.revision_id) == tree.revision

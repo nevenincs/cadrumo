@@ -468,7 +468,11 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> Prepared
 def test_absent_tree_is_validated_then_published_through_the_canonical_authorities(tmp_path: Path) -> None:
     """An owed tree is bootstrap-publishable only after its fresh candidate validates."""
     first = _prepared_absent_target(tmp_path / "check", tmp_path / "target" / "registry" / "aeat")
-    shutil.copytree(first.candidate_root, first.target_root)
+    # Final publication validates the complete authority, including the
+    # predecessor editions that own this child's seeded continuity.
+    shutil.copytree(bundled_path("registry", "aeat"), first.target_root)
+    assert first.target_export_root.resolve().is_relative_to(tmp_path.resolve())
+    shutil.rmtree(first.target_export_root)
 
     result, _rendered, _target_state = check_prepared_invocation(first)
     assert result == "publishable_absence"
@@ -493,18 +497,18 @@ def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_autho
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The final currency callback's supplied authority takes the read-only prepare path."""
-    invocation = GeneratedTreeInvocation("184", "2025-y-siguientes", "fixture-source", 2025, "0A")
+    invocation = GeneratedTreeInvocation(
+        ISOLATED_TREE.modelo,
+        ISOLATED_TREE.revision,
+        ISOLATED_TREE.source_ref,
+        ISOLATED_TREE.filing_year,
+        ISOLATED_TREE.period,
+    )
     target_root = tmp_path / "live-registry" / "aeat"
     (target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export").mkdir(
         parents=True,
     )
-    authority = SimpleNamespace(
-        catalogues=SimpleNamespace(
-            sources={
-                invocation.source_ref: SimpleNamespace(id=invocation.source_ref, sha256="a" * 64),
-            },
-        ),
-    )
+    authority = compiled_bundled_authority()
     monkeypatch.setattr(cli_module, "bundled_path", lambda *_parts: target_root)
     monkeypatch.setattr(cli_module, "compile_validated_authority", lambda *_args, **_kwargs: authority)
 

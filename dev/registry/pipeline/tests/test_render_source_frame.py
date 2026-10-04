@@ -78,6 +78,48 @@ def test_late_m131_source_is_only_eligible_for_its_quarters() -> None:
 
 
 @pytest.mark.parametrize(
+    ("revision", "filing_year", "expected_source", "expected_epoch"),
+    (
+        ("2023", 2023, "aeat-dr-210-2022", "2022"),
+        ("2024", 2024, "aeat-dr-210-2022", "2022"),
+        ("2025", 2025, "aeat-dr-210-2022", "2022"),
+        ("2026-y-siguientes", 2026, "aeat-dr-210-2026", "2026"),
+    ),
+)
+def test_m210_event_selector_and_concrete_event_select_the_same_design(
+    revision: str, filing_year: int, expected_source: str, expected_epoch: str
+) -> None:
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "210"))
+    selected = definition.revisions[revision]
+    for period in ("EVENT-N", "EVENT-1"):
+        assert _select_record_design_source(
+            selected,
+            catalogues.sources,
+            modelo="210",
+            revision=revision,
+            source_ref=None,
+            filing_year=filing_year,
+            period=period,
+        ) == (expected_source, expected_epoch)
+
+
+def test_an_event_selector_does_not_widen_an_administrative_revision() -> None:
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "145"))
+    with pytest.raises(ValueError, match=r"event selector.*not declared"):
+        _select_record_design_source(
+            definition.revisions["2012-01-31-y-siguientes"],
+            catalogues.sources,
+            modelo="145",
+            revision="2012-01-31-y-siguientes",
+            source_ref=None,
+            filing_year=2022,
+            period="EVENT-N",
+        )
+
+
+@pytest.mark.parametrize(
     ("filing_year", "period"), ((2012, "comunicacion"), (2022, "comunicacion"), (2022, "variacion"))
 )
 def test_m145_administrative_frame_selects_its_exact_source(filing_year: int, period: str) -> None:

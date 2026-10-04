@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
+from ...form_layout.serialization import FORM_LAYOUT_FRAGMENT
 from .._form_layout_companion import prepare_generated_form_layout_companion
 from .._tree_publication import publish_validated_generated_export_tree
 from .._tree_validation import (
@@ -605,6 +606,7 @@ def test_zero_reference_supersession_retires_only_the_pinned_layout_and_installs
         / "form_layouts"
     )
     expected_form_bytes = _tree_bytes(candidate_form_root)
+    (expected_form_payload,) = expected_form_bytes.values()
 
     published = _publish(context, joined, semantic_map, rendered)
 
@@ -616,7 +618,7 @@ def test_zero_reference_supersession_retires_only_the_pinned_layout_and_installs
     assert not (target_revision_root / "export_layouts" / "0001-manual-layout.toml").exists()
     assert unrelated_fragment.read_bytes() == unrelated_bytes
     assert unrelated_member.read_bytes() == unrelated_member_bytes
-    assert _tree_bytes(target_revision_root / "form_layouts") == expected_form_bytes
+    assert _tree_bytes(target_revision_root / "form_layouts") == {FORM_LAYOUT_FRAGMENT: expected_form_payload}
     assert not _bundle_transaction_siblings(context)
     transaction_paths = GeneratedExportTransactionPaths.for_context(context)
     assert transaction_paths.journal.parent == context.target_root.parent

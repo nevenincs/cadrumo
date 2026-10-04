@@ -72,6 +72,16 @@ class TestFamiliesTheLiteralChainHandled:
     def test_decimal_families_parse(self, data_type: str) -> None:
         assert str(_binding_input("b", "12.34", _binding(data_type))) == "12.34"
 
+    @pytest.mark.parametrize("data_type", ("integer", "decimal", "money"))
+    @pytest.mark.parametrize("value", (None, ""))
+    def test_empty_numeric_binding_preserves_absence(self, data_type: str, value: object) -> None:
+        assert _binding_input("b", value, _binding(data_type)) is None
+
+    @pytest.mark.parametrize("data_type", ("integer", "decimal", "money"))
+    def test_whitespace_is_not_a_canonical_empty_numeric_binding(self, data_type: str) -> None:
+        with pytest.raises(ModeloBuilderError):
+            _binding_input("b", " ", _binding(data_type))
+
 
 class TestFamiliesTheLiteralChainRejected:
     """Specific text families the registry declares but filing refused."""

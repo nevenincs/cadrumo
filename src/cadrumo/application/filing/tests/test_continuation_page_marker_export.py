@@ -38,8 +38,15 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.software_identity import development_mock_software_identity
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..export import export_draft
@@ -72,7 +79,9 @@ _PAGE_INDICATORS = (
 )
 
 
-def _shipped(modelo: str, filing_year: int, period: str, record_id: str, field_id: str):
+def _shipped(
+    modelo: str, filing_year: int, period: str, record_id: str, field_id: str
+) -> tuple[RegistrySnapshot, ExportLayoutDefinition, ExportRecordDefinition, ExportFieldDefinition]:
     snapshot = published_snapshot(modelo, filing_year=filing_year, period=period)
     for layout in snapshot.revision.export_layouts:
         for record in layout.records:
@@ -161,6 +170,8 @@ def test_a_modelo_131_complementaria_export_marks_only_its_second_dpa_page(tmp_p
         _approved_131_draft(("722", "845")),
         output_path=output_path,
         producer_snapshot=snapshot,
+        product_software_identity=development_mock_software_identity(),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
 

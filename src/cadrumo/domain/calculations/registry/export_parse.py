@@ -237,8 +237,8 @@ def _parse_xml_dictionary_payload(
 
     parsed: list[ParsedExportFieldValue] = []
     for entry in entries:
-        for index, element in enumerate(_find_xml_path(root, entry.path), start=1):
-            raw = (element.text or "").strip()
+        for index, text in enumerate(_xml_dictionary_path_values(root, entry.path), start=1):
+            raw = text.strip()
             if not raw:
                 continue
             parsed.append(
@@ -395,6 +395,16 @@ def _find_xml_path(root: Element[str], absolute_path: str) -> tuple[Element[str]
         if not current:
             return ()
     return current
+
+
+def _xml_dictionary_path_values(root: Element[str], absolute_path: str) -> tuple[str, ...]:
+    """Read element text or the final attribute explicitly named by a dictionary row."""
+    parts = _xml_path_parts(absolute_path)
+    if parts and parts[-1].startswith("@"):
+        attribute = parts[-1][1:]
+        parents = _find_xml_path(root, "/".join(parts[:-1]))
+        return tuple(element.attrib[attribute] for element in parents if attribute in element.attrib)
+    return tuple(element.text or "" for element in _find_xml_path(root, absolute_path))
 
 
 def _xml_path_parts(absolute_path: str) -> tuple[str, ...]:
@@ -727,11 +737,12 @@ __all__ = [
 def _reconstruct_signed_component_pair(parsed: list[ParsedExportFieldValue], index: int) -> None:
     """Recombine a sign/magnitude pair while preserving both raw source slots."""
     sign, magnitude = parsed[index : index + 2]
-    if sign.raw not in {" ", "N"} or not isinstance(magnitude.value, Decimal):
+    if sign.raw not in {" ", "N"} or not magnitude.raw.isascii() or not magnitude.raw.isdigit():
         raise RegistryValidationError("signed component pair has invalid sign or magnitude")
-    if sign.raw == "N" and magnitude.value == 0:
+    magnitude_amount = Decimal(magnitude.raw).scaleb(-2)
+    if sign.raw == "N" and magnitude_amount == 0:
         raise RegistryValidationError("signed component pair cannot encode negative zero")
-    amount = -magnitude.value if sign.raw == "N" else magnitude.value
+    amount = -magnitude_amount if sign.raw == "N" else magnitude_amount
     parsed[index] = sign.model_copy(update={"value": amount})
     parsed[index + 1] = magnitude.model_copy(update={"value": amount})
 

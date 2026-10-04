@@ -29,7 +29,6 @@ class ExportComputedKey(StrEnum):
 
     ENVELOPE_CLOSING_TAG = "envelope_closing_tag"
     SEPA_MARCA = "sepa_marca"
-    COMPLEMENTARIA_PAGE_MARKER = "complementaria_page_marker"  # TEMP-D2
     #: Renders the official ``C`` "página complementaria" marker on a
     #: continuation page -- a further page of the same type carrying the
     #: occurrences the first could not hold -- and blank on the principal page.

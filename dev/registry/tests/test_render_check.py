@@ -27,7 +27,9 @@ from ..pipeline.generated_tree_dispositions import (
     disposition_ledger_from_path,
     record_drift_dispositions,
 )
+from ..pipeline.generated_tree_inventory import generated_export_trees
 from ..pipeline.render_check import (
+    RenderComparison,
     compare_export_tree_roots,
     compare_revision_against_committed,
     revision_render_inputs,
@@ -39,6 +41,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
     return compiled_bundled_authority()
+
+
+@pytest.fixture(scope="module")
+def generated_tree_comparisons(authority: ValidatedRegistryAuthority) -> tuple[RenderComparison, ...]:
+    """Compare every generated tree at its canonical law-selectable filing frame."""
+    trees = generated_export_trees()
+    assert {(tree.modelo, tree.revision) for tree in trees} == {
+        (str(modelo.id), str(revision.id))
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        if bundled_path("registry", "aeat", "modelos", str(modelo.id), "revisions", str(revision.id), "export").is_dir()
+    }, "every committed generated export directory must have an inventory entry"
+    return tuple(
+        compare_revision_against_committed(
+            authority,
+            modelo=tree.modelo,
+            revision=tree.revision,
+            source_ref=tree.source_ref,
+            filing_year=tree.filing_year,
+            period=tree.period,
+        )
+        for tree in trees
+    )
 
 
 def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedRegistryAuthority) -> None:
@@ -264,6 +289,7 @@ def test_a_cited_source_of_the_wrong_kind_is_refused_by_name_not_treated_as_the_
 
 def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_live(
     authority: ValidatedRegistryAuthority,
+    generated_tree_comparisons: tuple[RenderComparison, ...],
 ) -> None:
     """No tree unsafe to republish sits unexplained, and no explanation outlives its cause.
 
@@ -279,11 +305,6 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
 
     It stores no count and no ceiling. Two rows today is not the contract.
     """
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-    from cadrumo.core.resources.bundled_data import bundled_path
-
-    from ..pipeline.render_check import compare_revision_against_committed
-
     dispositions = record_drift_dispositions()
     dispositioned = {row.subject: row for row in dispositions}
     for row in dispositions:
@@ -293,15 +314,11 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
         assert source is not None, f"{row.subject}: disposition source is absent"
         assert source.sha256 == row.source_sha256, f"{row.subject}: disposition source was reissued; reconsider the pin"
 
-    drifting: set[str] = set()
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        for code in sorted(str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)):
-            for revision_id in authority.modelo(code).revisions:
-                if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
-                    continue
-                comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-                if comparison.disposition_class == "record_drift":
-                    drifting.add(f"{code}/{revision_id}")
+    drifting = {
+        f"{comparison.modelo}/{comparison.revision}"
+        for comparison in generated_tree_comparisons
+        if comparison.disposition_class == "record_drift"
+    }
 
     assert drifting == set(dispositioned), (
         f"trees whose records drifted and carry no disposition: {sorted(drifting - set(dispositioned))}; "
@@ -314,23 +331,14 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
 
 
 def test_every_manifest_stale_tree_really_does_reproduce_its_records(
-    authority: ValidatedRegistryAuthority,
+    generated_tree_comparisons: tuple[RenderComparison, ...],
 ) -> None:
     """Every remaining manifest-stale tree differs only in semantically reproduced output."""
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-    from cadrumo.core.resources.bundled_data import bundled_path
-
-    from ..pipeline.render_check import compare_revision_against_committed
-
-    unsafe: list[str] = []
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        for code in sorted(str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)):
-            for revision_id in authority.modelo(code).revisions:
-                if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
-                    continue
-                comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-                if comparison.disposition_class == "provenance_only" and not comparison.semantically_reproduced:
-                    unsafe.append(f"{code}/{revision_id}")
+    unsafe = [
+        f"{comparison.modelo}/{comparison.revision}"
+        for comparison in generated_tree_comparisons
+        if comparison.disposition_class == "provenance_only" and not comparison.semantically_reproduced
+    ]
 
     assert not unsafe, f"trees called provenance-only whose records do not reproduce semantically: {unsafe}"
 

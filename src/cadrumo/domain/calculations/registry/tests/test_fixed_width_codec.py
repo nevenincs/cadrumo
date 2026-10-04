@@ -45,6 +45,21 @@ def _field(**overrides: object) -> ExportFieldDefinition:
     return ExportFieldDefinition.model_validate(payload)
 
 
+@pytest.mark.parametrize(("kind", "literal", "expected"), (("literal", "25", "25"), ("filler", None, "  ")))
+def test_retained_wire_values_do_not_override_declared_constants(kind: str, literal: str | None, expected: str) -> None:
+    field = _field(
+        kind=kind,
+        casilla_id=None,
+        literal=literal,
+        data_type="text",
+        length=2,
+        padding="none",
+        justification="none",
+    )
+    retained = ParsedExportPolicyWireValue(ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, "26")
+    assert render_fixed_width_export_field(field, retained) == expected
+
+
 @pytest.mark.parametrize("value", (" 1", "1 ", "+1", "1e2", "NaN", "Infinity", True, 1.0))
 def test_fixed_width_decimal_coercion_refuses_noncanonical_or_lossy_values(value: object) -> None:
     with pytest.raises(ValueError):
@@ -378,6 +393,81 @@ def test_complete_reviewed_policy_set_renders_and_parses_exact_wire_bytes(
     actual = parse_fixed_width_export_field(field, wire)
     assert actual == parsed
     assert render_fixed_width_export_field(field, actual) == wire
+
+
+@pytest.mark.parametrize(
+    ("policy", "overrides", "value", "wire"),
+    (
+        (ExportValuePolicy.FRACTIONAL_DIGITS, {"length": 2}, Decimal("123.45"), "45"),
+        (ExportValuePolicy.INTEGER_PART, {}, Decimal("123.45"), "00123"),
+        (ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS, {"length": 2}, Decimal("-123.45"), "45"),
+        (ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART, {}, Decimal("-123.45"), "00123"),
+        (ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE, {"data_type": "money"}, Decimal("-123.45"), "12345"),
+        (
+            ExportValuePolicy.SIGNED_COMPONENT_SIGN,
+            {"length": 1, "data_type": "text", "padding": "none", "justification": "none"},
+            Decimal("-123.45"),
+            "N",
+        ),
+        (
+            ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+            {"length": 1, "data_type": "text", "padding": "none", "justification": "none"},
+            Decimal("-123.45"),
+            "N",
+        ),
+        (ExportValuePolicy.YYYYMMDD_TEXT_YEAR, {"length": 4}, "20250314", "2025"),
+        (ExportValuePolicy.YYYYMMDD_TEXT_MONTH, {"length": 2}, "20250314", "03"),
+        (ExportValuePolicy.YYYYMMDD_TEXT_DAY, {"length": 2}, "20250314", "14"),
+    ),
+)
+def test_noninvertible_parts_preserve_their_exact_wire_bytes(
+    policy: ExportValuePolicy, overrides: dict[str, object], value: object, wire: str
+) -> None:
+    field = _field(value_policy=policy, **overrides)
+
+    assert render_fixed_width_export_field(field, value) == wire
+    parsed = parse_fixed_width_export_field(field, wire)
+    assert parsed == ParsedExportPolicyWireValue(policy=policy, raw=wire)
+    assert render_fixed_width_export_field(field, parsed) == wire
+
+
+@pytest.mark.parametrize(
+    ("policy", "raw"),
+    (
+        (ExportValuePolicy.INTEGER_PART, "45"),
+        (ExportValuePolicy.FRACTIONAL_DIGITS, "4X"),
+        (ExportValuePolicy.FRACTIONAL_DIGITS, "045"),
+    ),
+)
+def test_retained_wire_cannot_bypass_policy_grammar_or_field_width(policy: ExportValuePolicy, raw: str) -> None:
+    field = _field(length=2, value_policy=ExportValuePolicy.FRACTIONAL_DIGITS)
+
+    with pytest.raises(RegistryValidationError):
+        render_fixed_width_export_field(field, ParsedExportPolicyWireValue(policy=policy, raw=raw))
+
+
+def test_retained_wire_requires_a_declared_matching_policy() -> None:
+    with pytest.raises(RegistryValidationError):
+        render_fixed_width_export_field(
+            _field(), ParsedExportPolicyWireValue(policy=ExportValuePolicy.INTEGER_PART, raw="00123")
+        )
+
+
+@pytest.mark.parametrize("value", (None, "", Decimal(0)))
+def test_negative_only_sign_writes_its_numeric_zero_state_for_an_empty_amount(value: object) -> None:
+    field = _field(
+        value_policy=ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        length=1,
+        data_type="text",
+        padding="none",
+        justification="none",
+    )
+    assert render_fixed_width_export_field(field, value) == "0"
+    assert parse_fixed_width_export_field(field, "0") == ParsedExportPolicyWireValue(
+        policy=ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, raw="0"
+    )
+    with pytest.raises(RegistryValidationError):
+        parse_fixed_width_export_field(field, " ")
 
 
 def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -> None:
@@ -933,6 +1023,33 @@ def test_an_absent_optional_year_zero_fill_reads_back_as_absence() -> None:
         parse_fixed_width_export_field(required, "0000")
     with pytest.raises(RegistryValidationError, match="year from 1000 through 9999"):
         parse_fixed_width_export_field(optional, "0999")
+
+
+@pytest.mark.parametrize("data_type", ("integer", "money", "decimal"))
+def test_an_optional_numeric_space_fill_round_trips_without_loosening_required_slots(data_type: str) -> None:
+    optional = _field(
+        data_type=data_type,
+        decimals=2 if data_type == "decimal" else None,
+        padding="right_space",
+        justification="left",
+    )
+    required = _field(
+        data_type=data_type,
+        decimals=2 if data_type == "decimal" else None,
+        padding="right_space",
+        justification="left",
+        required=True,
+    )
+
+    assert render_fixed_width_export_field(optional, None) == " " * 5
+    assert parse_fixed_width_export_field(optional, " " * 5) is None
+    assert render_fixed_width_export_field(optional, parse_fixed_width_export_field(optional, " " * 5)) == " " * 5
+    with pytest.raises(RegistryValidationError):
+        parse_fixed_width_export_field(required, " " * 5)
+    with pytest.raises(RegistryValidationError):
+        parse_fixed_width_export_field(
+            _field(data_type=data_type, decimals=2 if data_type == "decimal" else None), " " * 5
+        )
 
 
 @pytest.mark.parametrize(

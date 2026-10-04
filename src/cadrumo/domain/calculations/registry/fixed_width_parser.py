@@ -123,19 +123,20 @@ def _parse_boolean(field: ExportField, raw: str) -> bool | None:
 
 
 def _fill_reads_as_absent_text(field: ExportField, raw: str) -> bool:
-    """Whether an optional non-numeric slot holds exactly its declared absent fill.
+    """Whether an optional slot holds exactly its declared absent text fill.
 
     Zero is a numeric state only: a text or date field has no zero, so the fill
     its declaration writes for an absent value -- spaces, or the zeros some
     designs ask for in an alphanumeric identifier slot -- can only mean that no
     value was given. Reading a zero fill back as the text ``"0"`` would invent a
-    value the record never carried. A required field has no absent fill, so its
-    wire always carries a value and is parsed as one.
+    value the record never carried. Numeric slots may also declare space fill
+    for absence; their zero tokens still carry numeric values. A required field
+    has no absent fill, so its wire always carries a value and is parsed as one.
     """
     if field.required or field.value_policy is not None:
         return False
     if field.data_type in ZERO_PADDED_EXPORT_DATA_TYPES or field.data_type == "boolean":
-        return False
+        return not raw.strip() and raw == render_absent_slot(field)
     return raw == render_absent_slot(field)
 
 

@@ -862,6 +862,11 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
             translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
             context={"binding_id": binding_id, "data_type": data_type},
         ) from exc
+    if family in {"int", "decimal"} and (value is None or value == ""):
+        # Row producers leave inapplicable amounts empty (for example M347's
+        # quarterly amounts on an annual computation basis). Preserve absence
+        # so the declared export slot decides its fill and requiredness.
+        return None
     if family == "str":
         # Coerce first so the generic ``text`` channel keeps accepting a
         # non-string scalar (an integer ``rectified_year``); the canonical

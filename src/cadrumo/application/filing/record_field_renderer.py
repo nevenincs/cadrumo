@@ -10,6 +10,7 @@ from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from ...domain.calculations.registry.fixed_width_codec import (
     render_empty_block_slot,
@@ -116,7 +117,12 @@ def _render_positioned_record(
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
-        if not _field_is_active_for_row(field, row):
+        active_for_row = _field_is_active_for_row(field, row)
+        if not active_for_row and any(
+            export_fields_overlap(field, other) for other in record.fields if other is not field
+        ):
+            # An inactive alternative must not overwrite another binding's
+            # slot. An unambiguous absent slot still needs its declared fill.
             continue
         start, rendered = _render_positioned_field_bytes(
             record,
@@ -126,7 +132,7 @@ def _render_positioned_record(
             producer_values=producer_values,
             producer_snapshot=producer_snapshot,
             casilla_values=casilla_values,
-            binding_values=binding_values,
+            binding_values=binding_values if active_for_row else {},
             row=row,
             render_context=render_context,
             projection_values=projection_values,

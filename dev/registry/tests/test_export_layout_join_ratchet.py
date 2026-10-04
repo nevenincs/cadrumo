@@ -186,8 +186,10 @@ def _scan() -> tuple[
                                 # prefix, including roles and source pin, by
                                 # the coverage validator before fallback.
                                 continue
-                            unjoined.add(key)
                             record_counts[key] = len(layout.records)
+                            if len(layout.records) < 2:
+                                continue
+                            unjoined.add(key)
     return frozenset(unjoined), len(seen), record_counts, frozenset(frames), tuple(sorted(misfiled))
 
 
@@ -233,9 +235,9 @@ def test_every_inventory_entry_sits_on_a_multi_record_layout() -> None:
     Without this, the inventory would accept a benign single-record entry and
     quietly overstate how much coverage the project has actually given up.
     """
-    measured, _, record_counts, _, _ = _scan()
+    _, _, record_counts, _, _ = _scan()
 
-    benign = sorted(key for key in measured if record_counts.get(key, 0) < 2)
+    benign = sorted(key for key in _UNJOINED_DESIGN_SHEETS if record_counts.get(key, 0) < 2)
 
     assert not benign, (
         "inventory entr(ies) sit on a single-record layout, where the fallback asks the same "
@@ -268,3 +270,10 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
         "inventory entr(ies) are auxiliary envelope headers, which the coverage check handles on "
         "their own branch rather than through the weak fallback, so they are not debt: " + ", ".join(sorted(misfiled))
     )
+
+
+def test_a_single_record_fallback_does_not_claim_a_loss_of_record_coverage() -> None:
+    measured, _, record_counts, _, _ = _scan()
+    key = ("576", "2008-y-siguientes", "Pág 1")
+    assert record_counts[key] == 1
+    assert key not in measured

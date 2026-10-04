@@ -766,7 +766,7 @@ def _extra_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]
         (
             "drop",
             _dropped_occurrence,
-            "filing-envelope payload must be the exact prefix, occurrences, and closer bytes",
+            "filing-envelope payload must be the exact prefix, occurrences, closer, and terminator bytes",
         ),
         (
             "duplicate",

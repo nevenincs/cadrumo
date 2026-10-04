@@ -176,3 +176,38 @@ def test_the_historical_filing_edition_exports_without_inmueble_records(operatio
     assert len(lines) == 3
     assert lines[0].startswith("13472024")
     assert _type_2_kinds(lines) == ["D", "D"]
+
+
+@pytest.mark.parametrize("edition", (_FILING_EDITION, _HISTORICAL_FILING_EDITION))
+def test_nonresident_province_and_country_survive_the_complete_export(
+    operation: PinnedAuthorityOperation, edition: _Edition
+) -> None:
+    foreign = _observation("inv-foreign", "B87654323", "NONRESIDENT PARTY", edition.year, "A").model_copy(
+        update={"country_code": "US"}
+    )
+    lines = _fichero_lines(operation, edition, _resolved_inputs(operation, edition, foreign))
+    declarados = {line[35:75].rstrip(): line for line in lines if line.startswith("2347") and line[75] == "D"}
+
+    assert declarados["NONRESIDENT PARTY"][76:80] == "99US"
+    assert declarados["CLIENTE NACIONAL SL"][76:80] == "    "
+    assert declarados["PROVEEDOR NACIONAL SA"][76:80] == "    "
+
+
+def test_cash_accounting_and_reverse_charge_marks_survive_the_complete_export(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    edition = _FILING_EDITION
+    cash = _observation("inv-cash", "B87654323", "CASH ACCOUNTING PARTY", edition.year, "A").model_copy(
+        update={"cash_accounting_operation": True, "annual_computation_basis": True}
+    )
+    reverse_charge = _observation("inv-reverse", "B11111112", "REVERSE CHARGE PARTY", edition.year, "A").model_copy(
+        update={"reverse_charge_recipient": True}
+    )
+    lines = _fichero_lines(operation, edition, _resolved_inputs(operation, edition, cash, reverse_charge))
+    declarados = {line[35:75].rstrip(): line for line in lines if line.startswith("2347") and line[75] == "D"}
+
+    assert declarados["CASH ACCOUNTING PARTY"][280:282] == "X "
+    assert declarados["REVERSE CHARGE PARTY"][280:282] == " X"
+    assert declarados["CLIENTE NACIONAL SL"][280:282] == "  "
+    assert declarados["PROVEEDOR NACIONAL SA"][280:282] == "  "
+    assert declarados["CASH ACCOUNTING PARTY"][135:199] == (" " + "0" * 15) * 4

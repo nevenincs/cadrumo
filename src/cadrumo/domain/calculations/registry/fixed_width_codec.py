@@ -16,6 +16,7 @@ from ....core.money.rounding import round_to_cents
 from .errors import RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
+    ParsedExportPolicyWireValue,
     policy_defines_absent_slot,
     project_export_value,
     validate_export_wire_value,
@@ -244,9 +245,17 @@ def render_fixed_width_export_field(field: ExportField, value: object) -> str:
         # under the declaration's padding rule.
         if value == "":
             return _pad(field, value)
-    if _is_absent_slot(field, value) and not policy_defines_absent_slot(field.value_policy):
+    if isinstance(value, ParsedExportPolicyWireValue):
+        project_export_value(field.value_policy, value)
+        if len(value.raw) != field.length:
+            raise RegistryValidationError(f"export field {field.id!r} parsed wire value has the wrong width")
+        return value.raw
+    if _is_absent_slot(field, value) and (
+        not policy_defines_absent_slot(field.value_policy)
+        or (field.required and field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN)
+    ):
         # Absence is settled BEFORE projection for every policy that does not
-        # claim the empty slot. Every projector refuses ``None`` -- correctly, an
+        # claim the empty slot. Those projectors refuse ``None`` -- correctly, an
         # absent quantity is not a quantity -- so testing absence only after
         # projection made the blank fill unreachable on any field declaring a
         # policy, and an optional casilla the taxpayer legitimately lacks could
