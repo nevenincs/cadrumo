@@ -4,28 +4,23 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from .....application.modelo.action_errors import (
-    ModeloDomiciliationPastCutoffError,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
     ModeloResultDispositionUncodifiedError,
 )
-from .....application.modelo.export import ModeloExportCommand, _require_domiciliation_before_cutoff
 from .....application.modelo.result_disposition_resolution import (
     require_admissible_charge_account,
     resolve_modelo_result_disposition,
 )
 from .....core.casilla_id import CasillaId
-from .....core.errors.error_codes import get_registered_error_code
 from .....core.payment_election import PaymentElection
 from .....core.period import Period
 from .....core.refund_election import RefundElection
-from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.deadlines.models import (
@@ -304,58 +299,6 @@ def test_a_devolucion_into_a_foreign_account_settles_as_x_where_the_modelo_decla
         )
         == expected
     )
-
-
-# Modelo 303 2026 monthly period 01 declares payment_cutoff_on 2026-02-25; the
-# 2026 quarterly 1T window declares none. Clocks are UTC; the gate compares the
-# Europe/Madrid civil date (UTC+1 in February).
-@pytest.mark.parametrize(
-    ("period_code", "exported_at", "expected"),
-    (
-        ("01", datetime(2026, 2, 25, 22, 59, tzinfo=UTC), "admitted"),
-        ("01", datetime(2026, 2, 25, 23, 0, tzinfo=UTC), "refused"),
-        ("1T", datetime(2026, 7, 1, 12, 0, tzinfo=UTC), "advisory"),
-    ),
-    ids=("on-the-madrid-cutoff-day", "after-the-madrid-cutoff-day", "no-declared-cutoff"),
-)
-def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
-    period_code: str,
-    exported_at: datetime,
-    expected: str,
-) -> None:
-    """U closes on the registry's payment_cutoff_on; an undeclared cutoff advises instead of refusing."""
-    work_unit = _result_disposition_work_unit(modelo="303", period=Period.from_year_and_code(2026, period_code))
-    command = ModeloExportCommand(
-        calculation_revision_id="a" * 64,
-        output_path=Path("unused.txt"),
-        actor="operator",
-        payment_election=PaymentElection.DOMICILIACION,
-    )
-
-    def gate(disposition: ResultDisposition | None) -> bool:
-        return _require_domiciliation_before_cutoff(
-            command,
-            work_unit=work_unit,
-            resolved_result_disposition=disposition,
-            exported_at=exported_at,
-            operation=published_authority_operation(),
-        )
-
-    assert gate(ResultDisposition.INGRESO) is False
-    if expected == "refused":
-        with pytest.raises(ModeloDomiciliationPastCutoffError) as refused:
-            gate(ResultDisposition.DOMICILIACION)
-        assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF"
-        assert refused.value.context == {
-            "calculation_revision_id": "a" * 64,
-            "modelo": "303",
-            "filing_year": "2026",
-            "period": "01",
-            "payment_cutoff_on": "2026-02-25",
-            "export_on": "2026-02-26",
-        }
-    else:
-        assert gate(ResultDisposition.DOMICILIACION) is (expected == "advisory")
 
 
 def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() -> None:

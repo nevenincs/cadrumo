@@ -8,7 +8,8 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from dev._paths import REPO_ROOT, prepare_temporary_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
 from .build_paths import docs_build_root, docs_html_root

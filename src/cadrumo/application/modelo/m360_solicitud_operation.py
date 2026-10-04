@@ -29,6 +29,7 @@ from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.deadlines.models import RefundAccount
+from ...domain.modelos.errors import ModeloError
 from ...domain.transactions.own_accounts import OwnAccountId, OwnAccountRegister
 from ..filing.producer_snapshot_m360 import (
     M360CausaPresentacion,
@@ -51,7 +52,6 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_errors import ModeloError
 
 MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID = "modelo.m360_solicitud"
 #: The Modelo 360 revision addresses one solicitud per filing year through its single period.
