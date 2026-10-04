@@ -8,6 +8,7 @@ import type {
   ShellToken,
 } from "../ipc/contract";
 import type { Host } from "./host";
+import { openTauriTerminal } from "./tauriTerminal";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -19,13 +20,6 @@ function takeToken(): ShellToken | null {
   return typeof token === "string" && TOKEN_PATTERN.test(token)
     ? (token as ShellToken)
     : null;
-}
-
-export class TerminalContractPending extends Error {
-  constructor() {
-    super("terminal-contract-pending");
-    this.name = "TerminalContractPending";
-  }
 }
 
 /** The desktop host, reached only through the published command contract. */
@@ -45,8 +39,12 @@ export function tauriHost(): Host {
     available: true,
     nativeMenus: true,
     environment: () => call("desktop_environment", {}),
-    // Terminal commands are published with the terminal frame encoding.
-    openTerminal: () => Promise.reject(new TerminalContractPending()),
+    openTerminal: (kind, size, listener) =>
+      token
+        ? openTauriTerminal(token, kind, size, listener)
+        : Promise.reject(
+            new Error("The desktop host did not provide a launch token."),
+          ),
     async subscribeLogs(listener: (batch: LogBatch) => void) {
       const records = new Channel<LogBatch>();
       records.onmessage = listener;
