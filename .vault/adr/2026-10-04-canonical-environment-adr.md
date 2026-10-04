@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0fc849e7f57dc0bfc4a6de8813c3973247857a60104c106ace775116c34de039'
+body_hash: 'sha256:138e00b2b60b40fd5325c94623e3778526906fd57a29a294e076eb8eff17fd07'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -70,7 +70,7 @@ We will make the Python core storage owner the single declaration of every locat
 - `project_root()` keeps its checkout test (module location beside `pyproject.toml`) and loses the cwd fallback. A module outside a checkout is in installed mode.
 - `platform_user_data_root()` in `config_state_root.py` returns the real per-user base in installed mode and the checkout in development mode; `resolve_project_path` and relative member overrides keep anchoring to it, so the "never the process cwd" promise at `src/cadrumo/core/paths.py:194-200` becomes true in installed mode.
 - `_config_runtime.py:38-40` and the env-source alias at `config.py:115-117` read precedence from the declaration (closes `2026-08-03-canonical-storage-management-adr` R19).
-- `Settings.storage_env_var_names()` narrows to the product allowlist: the two root variables plus the settings field of every `OPERATOR_OVERRIDABLE` member. Development tool variables get their own accessor used only by `dev/` and the justfile. *Hypothesis:* `development_tool_env_var_names()` beside it.
+- `Settings.storage_env_var_names()` narrows to the product allowlist: the root variable `CADRUMO_LOCAL_STORAGE_ROOT` plus the settings field of every `OPERATOR_OVERRIDABLE` member. Development tool variables get their own accessor used only by `dev/` and the justfile. *Hypothesis:* `development_tool_env_var_names()` beside it.
 - New taxonomy members: `DESKTOP_WEBVIEW` (`webview`, directory, root scope, `OPERATOR_OVERRIDABLE` with `cadrumo_webview_dir`, grouping `CACHE`, fingerprint `EXCLUDED`; lifecycle *hypothesis* `UNBOUNDED_BY_DESIGN` because the renderer owns its own eviction) replaces `environment.rs:114`. `.runtime/` and its `installation.json`, `boot.json` and `manager-*` records become `FIXED` members registered by the runtime manager decision; this ADR only requires that `installation.py:36` stop joining the literal. `RUNTIME_SOCKETS` (`runtime`) and `.runtime/` are distinct directories and both stay.
 
 **Installed default root (per OS, per channel).** Let `name` be `PRODUCT_IDENTITY.python_package` (`cadrumo`) for the stable channel and `python_package` plus `-` plus channel for any other channel (`cadrumo-preview`), produced by the identity projection, never spelled by a consumer.
@@ -144,3 +144,7 @@ Pin-and-inherit is what S02 proved and what the manager needs: a single resoluti
 **Reconsider if:** an OS base directory cannot be determined reliably on a supported platform; enterprise deployment needs a machine-wide or redirected root; channel coexistence is dropped from the product; or the pip and uvx distribution gains a preview channel.
 
 Acceptance establishes the contract and the default; it does not claim any consumer implements it yet.
+
+## 2026-10-05 reconciliation of the allowlist wording
+
+An independent review found the Implementation contradicting itself: one passage put both root variables in the product allowlist while the Constraints excluded the development-only `CADRUMO_STORAGE_ROOT` from installed packages. The Constraints govern. The product allowlist and every installed projection carry only `CADRUMO_LOCAL_STORAGE_ROOT`; `CADRUMO_STORAGE_ROOT` belongs to the development projection only, and an installed native host does not honour it. This restates the accepted intent; it adds no new commitment.
