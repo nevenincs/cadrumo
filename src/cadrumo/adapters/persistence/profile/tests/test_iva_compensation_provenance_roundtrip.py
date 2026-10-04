@@ -41,10 +41,10 @@ from cadrumo.application.calculations.iva_compensation_history_ports import IvaC
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
+from .....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from .iva_compensation_history_support import _state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

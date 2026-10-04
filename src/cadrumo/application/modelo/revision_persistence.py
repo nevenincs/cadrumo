@@ -25,7 +25,7 @@ See Also:
         Separate import boundary that creates current records with
         :class:`~ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
-    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
     :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`:

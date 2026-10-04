@@ -63,8 +63,8 @@ from cadrumo.core.config import Settings
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
-from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports, compose_live_state
+from cadrumo.domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
+from cadrumo.entrypoints.live_state_composition import compose_live_state
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
@@ -207,67 +207,6 @@ def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Pa
         "failed_declaration_count": 1,
         "failed_declarations": ("modelo=303;ejercicio=2024;period=1T;failure_type=TimeoutError",),
     }
-
-
-def test_year_chunked_filed_history_reports_aggregate_into_one_command_report(
-    tmp_path: Path, operation: PinnedAuthorityOperation
-) -> None:
-    report_2024 = IvaCompensationHistoryCaptureReport(
-        output_root=str(tmp_path / "filed-history"),
-        year_from=2024,
-        year_to=2024,
-        captured_count=4,
-        observation_paths=("observations/303-2024-1T.json", "observations/303-2024-2T.json"),
-        artefact_refs=("secure-object:2024-1T",),
-        casilla_count=316,
-        calculation_observation_count=4,
-        calculation_observation_keys=("303:2024:1T", "303:2024:2T"),
-        reloaded_history_count=4,
-        reloaded_rows=(),
-    )
-    report_2023 = IvaCompensationHistoryCaptureReport(
-        output_root=str(tmp_path / "filed-history"),
-        year_from=2023,
-        year_to=2023,
-        captured_count=3,
-        observation_paths=("observations/303-2023-1T.json",),
-        artefact_refs=("secure-object:2023-1T", "secure-object:2023-2T"),
-        casilla_count=237,
-        calculation_observation_count=3,
-        calculation_observation_keys=("303:2023:1T",),
-        reloaded_history_count=7,
-        reloaded_rows=(),
-        failed_declaration_count=1,
-        failed_declarations=("modelo=303;ejercicio=2023;period=4T;failure_type=TimeoutError",),
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        aggregate = aggregate_iva_compensation_history_reports(
-            [report_2024, report_2023],
-            output_root=tmp_path / "filed-history",
-            year_from=2023,
-            year_to=2024,
-            operation=operation,
-        )
-
-    assert aggregate.year_from == 2023
-    assert aggregate.year_to == 2024
-    assert aggregate.captured_count == 7
-    assert aggregate.casilla_count == 553
-    assert aggregate.calculation_observation_count == 7
-    assert aggregate.observation_paths == (
-        "observations/303-2024-1T.json",
-        "observations/303-2024-2T.json",
-        "observations/303-2023-1T.json",
-    )
-    assert aggregate.artefact_refs == (
-        "secure-object:2024-1T",
-        "secure-object:2023-1T",
-        "secure-object:2023-2T",
-    )
-    assert aggregate.calculation_observation_keys == ("303:2024:1T", "303:2024:2T", "303:2023:1T")
-    assert aggregate.failed_declaration_count == 1
-    assert aggregate.failed_declarations == ("modelo=303;ejercicio=2023;period=4T;failure_type=TimeoutError",)
 
 
 def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) -> None:

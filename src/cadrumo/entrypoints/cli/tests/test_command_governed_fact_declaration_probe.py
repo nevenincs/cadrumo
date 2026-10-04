@@ -75,10 +75,10 @@ from cadrumo.application.user_profile.automation_enrollment import EnrollmentKin
 
 from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
-    outside_governed_fact_validation,
     require_governed_fact_authority,
 )
-from ....domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
+from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from .._command_runtime import build_command_app, runs_in_governed_fact_scope
 from ..command_graph import CommandSpecGraph

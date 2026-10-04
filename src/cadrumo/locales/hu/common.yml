@@ -16,14 +16,6 @@ aggregation:
       not_a_retenedor_liability: Ennél az áfakezelésnél és számlatípusnál a levonás
         nem olyan tartozás, amellyel te mint a levonást végző kifizető (retenedor)
         tartozol; az általad kiállított számlán szereplő levonás a javadra szóló jóváírás.
-    errors:
-      euro_figures_unavailable_after_defect_sweep: Az euróösszegek nem érhetők el
-        egy olyan számlán, amely átment a hibaszűrésen.
-      perceptor_tax_id_unavailable_after_defect_sweep: A kedvezményezett adóazonosítója
-        nem érhető el egy olyan számlán, amely átment a hibaszűrésen.
-      projection_defects_repeat: A számla-visszatartási vetület ugyanazt a hibát ismétli.
-      projection_outcome_ambiguous: A számla-visszatartási vetület vagy megfigyelést,
-        vagy hibákat hordozhat, sosem mindkettőt és sosem egyiket sem.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: A(z) %{source_jurisdiction} source_jurisdiction
@@ -1141,8 +1133,6 @@ tui:
       unchanged: Változatlan
       unset: Nincs beállítva
     column:
-      compared_at: Összehasonlítás ideje
-      advisories: Figyelmeztetések
       aeat: AEAT
       aeat_value: AEAT érték
       area: Terület
@@ -1162,9 +1152,9 @@ tui:
       sources: Források
       status: Állapot
     discrepancy:
-      incomplete: Hiányos összehasonlítás
       aeat_only: Csak AEAT
       contradictory_source: Ellentmondó forrás
+      incomplete: Hiányos összehasonlítás
       local_only: Csak helyi
       none: Nincs eltérés
       state_mismatch: Állapoteltérés
@@ -1210,16 +1200,16 @@ tui:
     overview:
       title: Az AEAT-szinkron áttekintése
     reconciliation:
-      historical: 'Mentett összehasonlítás; az aktuális számítás nincs újra ellenőrizve.'
-      identity: 'Munkaegység: %{work} | Bizonyíték: %{evidence}'
+      advisories_withheld: '%{count} figyelmeztetés fordításra vár.'
       calculation_revision: 'Összehasonlított számítás: %{revision}'
-      calculation_revision_unknown: 'Az összehasonlított számítás verzióját nem rögzítették.'
+      calculation_revision_unknown: Az összehasonlított számítás verzióját nem rögzítették.
+      evidence:
+        declaration: Benyújtott bevallás
+        justificante: AEAT igazolás
+      historical: Mentett összehasonlítás; az aktuális számítás nincs újra ellenőrizve.
+      identity: 'Munkaegység: %{work} | Bizonyíték: %{evidence}'
       incomplete: Nem teljes összehasonlítás
       matches: Nincs eltérés az összehasonlított mezőkben
-      advisories_withheld: '%{count} figyelmeztetés fordításra vár.'
-      evidence:
-        justificante: AEAT igazolás
-        declaration: Benyújtott bevallás
       title: Az AEAT-szinkron egyeztetése
     reconciliation_state:
       accept_aeat: AEAT elfogadása
@@ -1247,10 +1237,10 @@ tui:
         profile: Helyi profil
         reconciliation: Helyi egyeztetés
     source_state:
-      incomplete: Hiányos összehasonlítás
       absent: Hiányzik
       accepted: Elfogadva
       conflict: Konfliktus
+      incomplete: Hiányos összehasonlítás
       not_observed: Nem figyelték meg
       present: Jelen van
       rejected: Elutasítva
@@ -1655,11 +1645,6 @@ tui:
     ledger: Nyilvántartás
     profile: Profil
     withholding: Levonások
-  filing_year_route:
-    invalid: Adj meg érvényes négyjegyű adóévet.
-    open: Levonások megnyitása
-    prompt: Válassz adóévet (ÉÉÉÉ)
-    unavailable: A Levonások nem érhetők el ehhez a profilhoz és adóévhez.
   home:
     account_fallback: Fiók
     action:

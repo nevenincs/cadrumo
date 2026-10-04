@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:bdb8292eda2e99786952b7fa522f57360a7cd7bfab17c80f092900e488e7c120'
+body_hash: 'sha256:2689a0412de99101c2e88fcf660e1efe759589a16d5e5f2b97838244cab42163'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -232,6 +232,140 @@ related:
 - `S08` `verify:` `custody and withholding predicates plus audit controls (77 passed)` -> `pass`
 - `S08` `verify:` `owned Ruff check and format plus ty` -> `pass`
 - `S08` `verify:` `reachability audit (103 candidates, 19 exact)` -> `fail`
+- `S09` `M` `dev/ci/tests/test_core_storage_taxonomy.py`
+- `S09` `M` `dev/ci/tests/test_ledger_scale_benchmark.py`
+- `S09` `M` `dev/ci/tests/test_live_iva_remote_state_acquisition.py`
+- `S09` `M` `dev/locales/_ast_key_naming.py`
+- `S09` `M` `dev/locales/tests/test_audit.py`
+- `S09` `M` `dev/locales/tests/test_contract.py`
+- `S09` `M` `dev/locales/tests/test_tr_constant_naming_convention.py`
+- `S09` `M` `dev/registry/compiler/tests/test_m303_orden_anual.py`
+- `S09` `M` `dev/registry/conformance/profile.py`
+- `S09` `M` `dev/registry/conformance/registry_classification_coherence.py`
+- `S09` `M` `dev/registry/conformance/tests/test_conformance_profile.py`
+- `S09` `M` `dev/registry/conformance/tests/test_profile_candidate_scope.py`
+- `S09` `M` `dev/registry/tests/ledger_iva_aggregation_support.py`
+- `S09` `M` `dev/registry/tests/test_creation.py`
+- `S09` `M` `dev/registry/tests/test_cross_domain_fact_authority.py`
+- `S09` `M` `dev/registry/tests/test_filing_grade_binding_resolution.py`
+- `S09` `M` `dev/registry/tests/test_formula_runtime_previous_filing.py`
+- `S09` `M` `dev/registry/tests/test_modelo_100_filing_surface_across_supported_years.py`
+- `S09` `M` `dev/registry/tests/test_modelo_100_historical_pagos_fraccionados.py`
+- `S09` `M` `dev/registry/tests/test_modelo_180_registry.py`
+- `S09` `M` `dev/registry/tests/test_modelo_190_registry.py`
+- `S09` `M` `dev/registry/tests/test_modelo_193_registry.py`
+- `S09` `M` `dev/registry/tests/test_modelo_applicability.py`
+- `S09` `M` `dev/registry/tests/test_transaction_fact_coordinates.py`
+- `S09` `M` `src/cadrumo/adapters/inbound/declaracion/tests/_verification_chain_support.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_support.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/profile_registration.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_binding_prefill.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_filed_observation_storage_context.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_compensation_provenance_roundtrip.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_compensation_relation_prefill.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_180_115_reconciliation_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_190_111_reconciliation_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_193_123_reconciliation_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_200_bin_carry_forward_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_200_dotaciones_deterioro_carry_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_303_compensacion_carry_anti_regression.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_303_compensacion_carry_forward_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_303_refunded_period_carry.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S09` `M` `src/cadrumo/application/aggregation/invoice_devengo.py`
+- `S09` `M` `src/cadrumo/application/aggregation/tests/test_invoice_devengo.py`
+- `S09` `M` `src/cadrumo/application/aggregation/tests/test_retencion_treatment.py`
+- `S09` `M` `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py`
+- `S09` `M` `src/cadrumo/application/modelo/filed_revision_observation.py`
+- `S09` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S09` `M` `src/cadrumo/application/modelo/local_observation_actions.py`
+- `S09` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/filed_observation_fixture.py`
+- `S09` `M` `src/cadrumo/application/operator_surface/__init__.py`
+- `S09` `M` `src/cadrumo/application/operator_surface/contract.py`
+- `S09` `M` `src/cadrumo/application/operator_surface/errors.py`
+- `S09` `M` `src/cadrumo/application/operator_surface/models.py`
+- `S09` `M` `src/cadrumo/core/identity/documents.py`
+- `S09` `M` `src/cadrumo/core/json_contract.py`
+- `S09` `M` `src/cadrumo/core/observability/tests/fingerprint.py`
+- `S09` `M` `src/cadrumo/core/product_identity.py`
+- `S09` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S09` `A` `src/cadrumo/core/tests/storage_taxonomy_views.py`
+- `S09` `M` `src/cadrumo/core/tests/test_product_identity.py`
+- `S09` `M` `src/cadrumo/core/tests/test_storage_default_parity.py`
+- `S09` `M` `src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_string_mapping.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/governed_fact_scope.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/irpf_regimes.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/m347_threshold.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/observation_fold.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/relations.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tax_id_runtime.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/fact_scope.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/m347_fixture.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/relation_fixture.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/tax_id_fixture.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_host_lease.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogues_refuse_without_a_governed_fact_scope.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_committed_registry.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations_modelo_202_200.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_formula_runtime_previous_filing.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_m349_nif_export_rows_require_a_governed_fact_scope.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_historical_pagos_fraccionados.py`
+- `S09` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_anexo_d_projection.py`
+- `S09` `M` `src/cadrumo/domain/contribuyente/tests/test_descendiente_refusal_keys.py`
+- `S09` `M` `src/cadrumo/domain/invoices/tests/test_registry_tokens_require_a_governed_fact_scope.py`
+- `S09` `M` `src/cadrumo/domain/transactions/tests/test_tipo_actividad_partitions.py`
+- `S09` `M` `src/cadrumo/domain/transactions/tipo_actividad_partitions.py`
+- `S09` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/_profile_lifecycle_support.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_command_runtime_governed_scope.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_config_descendiente_governed_scope.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_rule_add_governed_scope.py`
+- `S09` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_quarters_to_m100_annual.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_invoice_accumulative_cross_modelo_periods.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_compensation_provenance_population.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_integration.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_layout.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S09` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S09` `M` `src/cadrumo/locales/ca/application.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S09` `M` `src/cadrumo/locales/en/application.yml`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S09` `M` `src/cadrumo/locales/es/application.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S09` `M` `src/cadrumo/locales/hu/application.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `Owned unit corpus (805 passed, 6 failed)` -> `fail`
+- `S09` `verify:` `Scope isolation and M303 wallet fixture delta (180 passed, six independent M180 parse expectations failed)` -> `fail`
+- `S09` `verify:` `JSON envelopes, operator contracts and aggregation (53 passed)` -> `pass`
+- `S09` `verify:` `Locale discovery, envelope and schema suite (47 passed; remaining obsolete prose expectation subsequently repaired)` -> `pass`
+- `S09` `verify:` `Locale product identity expectation after canonical cleanup (1 passed)` -> `pass`
+- `S09` `verify:` `TUI workbench, bulk confirm, sources and rate boxes (42 passed)` -> `pass`
+- `S09` `verify:` `Owned Ruff check, format and ty (113 Python files)` -> `pass`
+- `S09` `verify:` `Fresh reachability: no exact findings, 84 method or data candidates, 3212 of 3212 modules runtime reachable` -> `fail`
 
 ## Notes
 
@@ -241,3 +375,4 @@ related:
 - `S03` 21 integration failures require an unavailable runtime endpoint or Windows Credential Manager synthetic probe. Native credential error 1312 reports no logon session; no persistent-service bridge or security bypass is authorized. Host-dependent verification remains pending S07.
 - `S04` The broader adapter failures include missing Chromium under isolated test roots and concurrent filing-layout changes. Pinning the provisioned component directory makes all 152 affected focused browser contracts pass. Final tree import/type checks and remaining findings stay open in S07 and S08.
 - `S08` Correct development-test labels expose previously hidden candidates. Whole-record dataclass serialization and typed factories now have qualified structural evidence. All remaining live candidates, including the 19 newly visible exact findings, remain open under S09. A concurrent new credential exception temporarily caused setup errors; its owner added the registry declarations and the same 68 audit controls then passed. Shared logging formatter changes are excluded from this commit. Final metadata generation and integrated gates remain S07.
+- `S09` Canonical fixture owners replace unused product projections; real JSON producer uses SchemaEnvelope. Private qualified locale constants are visible and 16 obsolete keys were removed through LocaleManager in all four catalogues. Actual authored conformance authority replaces ambient candidate borrowing; M303 fixture now carries replayable wallet evidence. Remaining M180 parser expectations and independent inventory import cycle remain under S07; 84 live heuristic candidates remain under S10. Concurrent filing clock, new wallet tests and locale additions are excluded from the checkpoint.

@@ -17,15 +17,6 @@ aggregation:
       not_a_retenedor_liability: With this IVA treatment and invoice type, the withholding
         is not something you owe as the payer who withholds (retenedor); withholding
         on an invoice you issued is a credit in your favour.
-    errors:
-      euro_figures_unavailable_after_defect_sweep: Euro figures are unavailable on
-        an invoice that passed the defect sweep.
-      perceptor_tax_id_unavailable_after_defect_sweep: The perceptor tax identifier
-        is unavailable on an invoice that passed the defect sweep.
-      projection_defects_repeat: An invoice retención projection repeats the same
-        defect.
-      projection_outcome_ambiguous: An invoice retención projection must carry either
-        an observation or defects, never both and never neither.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is outside
@@ -1114,8 +1105,6 @@ tui:
       unchanged: Unchanged
       unset: Unset
     column:
-      compared_at: Compared at
-      advisories: Advisories
       aeat: AEAT
       aeat_value: AEAT value
       area: Area
@@ -1135,9 +1124,9 @@ tui:
       sources: Sources
       status: Status
     discrepancy:
-      incomplete: Incomplete comparison
       aeat_only: AEAT only
       contradictory_source: Contradictory source
+      incomplete: Incomplete comparison
       local_only: Local only
       none: No difference
       state_mismatch: State mismatch
@@ -1183,16 +1172,16 @@ tui:
     overview:
       title: AEAT Sync overview
     reconciliation:
-      historical: 'Stored comparison; current calculation has not been rechecked.'
-      identity: 'Work unit: %{work} | Evidence: %{evidence}'
+      advisories_withheld: '%{count} advisories withheld pending localization.'
       calculation_revision: 'Compared calculation: %{revision}'
-      calculation_revision_unknown: 'Compared calculation revision was not recorded.'
+      calculation_revision_unknown: Compared calculation revision was not recorded.
+      evidence:
+        declaration: Filed declaration
+        justificante: AEAT receipt
+      historical: Stored comparison; current calculation has not been rechecked.
+      identity: 'Work unit: %{work} | Evidence: %{evidence}'
       incomplete: Not fully compared
       matches: No differences in compared fields
-      advisories_withheld: '%{count} advisories withheld pending localization.'
-      evidence:
-        justificante: AEAT receipt
-        declaration: Filed declaration
       title: AEAT Sync reconciliation
     reconciliation_state:
       accept_aeat: Accept AEAT
@@ -1220,10 +1209,10 @@ tui:
         profile: Local profile
         reconciliation: Local reconciliation
     source_state:
-      incomplete: Incomplete comparison
       absent: Absent
       accepted: Accepted
       conflict: Conflict
+      incomplete: Incomplete comparison
       not_observed: Not observed
       present: Present
       rejected: Rejected
@@ -1622,11 +1611,6 @@ tui:
     ledger: Records
     profile: Profile
     withholding: Withholding
-  filing_year_route:
-    invalid: Enter a valid four-digit filing year.
-    open: Open Withholding
-    prompt: Select a filing year (YYYY)
-    unavailable: Withholding is not available for this profile and year.
   home:
     account_fallback: Account
     action:

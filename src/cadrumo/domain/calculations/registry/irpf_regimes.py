@@ -300,15 +300,6 @@ def irpf_estimation_regime_objetiva_token(
     return require_irpf_estimation_regime("objetiva", effective_date=effective_date, authority=authority)
 
 
-def irpf_special_regime_general_token(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> IrpfSpecialRegime:
-    """Return the declared general special-regime token."""
-    return require_irpf_special_regime("general", effective_date=effective_date, authority=authority)
-
-
 def irpf_special_regime_impatriado_token(
     *,
     effective_date: date | None = None,
@@ -340,7 +331,6 @@ __all__ = [
     "irpf_estimation_regime_directa_simplificada_token",
     "irpf_estimation_regime_objetiva_token",
     "irpf_estimation_regime_tokens",
-    "irpf_special_regime_general_token",
     "irpf_special_regime_impatriado_token",
     "irpf_special_regime_impatriado_window_years",
     "irpf_special_regime_tokens",

@@ -673,8 +673,6 @@ application:
           which live-capture evidence will not overwrite.
         evidence_snapshot_not_active: Only an active live-capture snapshot can be
           stamped as filing evidence.
-        expediente_not_in_tree: The submitted declaration references an expediente
-          that is not in the expedientes tree.
         filing_identity_unresolved: The filing profile tax identity could not be resolved,
           so live-capture evidence is not stamped.
         filing_record_mismatch: The captured justificante does not match the current
@@ -1259,8 +1257,6 @@ application:
       external_import_registry_snapshot_unresolved: The modelo definitions for modelo
         %{modelo}, filing year %{filing_year}, period %{period} could not be resolved;
         imported box ids cannot be checked.
-      external_import_source_actor_blank: Importing a return submitted outside Cadrumo
-        must record who submitted it. The declared person is blank.
       external_import_source_casilla_mismatch: The casillas carrying source text do
         not match the casillas whose values are imported. Both sets must describe
         exactly the same casillas.
@@ -1272,7 +1268,6 @@ application:
         cannot be read as an amount. Check the submitted value before importing it.
       external_import_source_lexical_value_mismatch: The amount read from the source
         text of casilla {casilla_id} does not match the value imported for that casilla.
-      external_import_target_mismatch: The filing evidence does not belong to the selected profile, declaration or period.
       external_import_source_period_mismatch: The declared period belongs to a different
         filing year than the one given. Both must refer to the same year.
       external_import_source_revision_mismatch: The version named on the return submitted
@@ -1281,6 +1276,8 @@ application:
       external_import_source_work_unit_ambiguous: More than one active declaration
         exists for that modelo, filing year and period, so the import cannot be matched
         to one of them.
+      external_import_target_mismatch: The filing evidence does not belong to the
+        selected profile, declaration or period.
       external_import_tax_id_missing: External-filing import evidence %{evidence_reference_id}
         (%{evidence_kind}) requires the filing taxpayer tax id before it can be tied
         to a justificante record.
@@ -1477,6 +1474,10 @@ application:
         not include it.
       cross_casilla_invariant_violated: Two or more boxes on this form do not agree
         with each other as the official rules require.
+      cross_model_reconciliation_incomplete: 'Comparison between Modelo %{modelo}
+        and Modelo %{sibling_modelo} for %{period_code}/%{filing_year} is incomplete:
+        %{own_missing_count} local and %{sibling_missing_count} counterpart values
+        are missing.'
       cross_period_activity_start_missing: Modelo %{target_modelo} for %{target_filing_year},
         period %{target_period}, needs the date your activity started.
       cross_period_dependency_unclean: This declaration uses figures from modelo %{source_modelo}
@@ -1570,7 +1571,6 @@ application:
         may be subject to a limitation-on-benefits clause in the tax treaty.
       m210_rate_unavailable: The modelo 210 tax rate for income type (tipo de renta)
         %{tipo_renta_code} in %{filing_year} could not be determined.
-      cross_model_reconciliation_incomplete: "Comparison between Modelo %{modelo} and Modelo %{sibling_modelo} for %{period_code}/%{filing_year} is incomplete: %{own_missing_count} local and %{sibling_missing_count} counterpart values are missing."
       m303_m349_intracom_reconciliation_mismatch: For period %{period_code} %{filing_year},
         the intra-community total in modelo 303 (%{m303_total} EUR) and the total
         in modelo 349 (%{m349_total} EUR) differ by %{gap} EUR.

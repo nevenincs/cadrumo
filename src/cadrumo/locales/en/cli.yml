@@ -1134,6 +1134,8 @@ cli:
         app_help: 'Compare a saved local calculation with AEAT evidence: pull downloads
           a receipt or filed declaration; import compares a local PDF; list shows
           past comparisons.'
+        calculation_revision_help: Saved calculation revision ID to compare. Defaults
+          to the filed or verified revision, then the latest saved revision.
         file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
           modelo) or declaration (filed declaración PDF, box-level reconcile, enrolled
           modelos only). Defaults to justificante.'
@@ -1145,9 +1147,11 @@ cli:
         list_help: List past reconciliations recorded in the active profile.
         list_work_unit_id_help: Filter reconciliations by declaration id (SHA-256
           or an unambiguous prefix).
-        pull_help: "Pull AEAT evidence and compare it with the saved local calculation (read-only at AEAT)."
-        calculation_revision_help: Saved calculation revision ID to compare. Defaults to the filed or verified revision, then the latest saved revision.
-        source_help: "Evidence to compare: justificante checks receipt identity and mapped totals; declaration compares captured filing fields with the saved calculation."
+        pull_help: Pull AEAT evidence and compare it with the saved local calculation
+          (read-only at AEAT).
+        source_help: 'Evidence to compare: justificante checks receipt identity and
+          mapped totals; declaration compares captured filing fields with the saved
+          calculation.'
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       requires:
         help: 'Show the data-inventory checklist for one modelo and period: which
@@ -1801,8 +1805,6 @@ cli:
         to AEAT'
   common:
     errors:
-      filing_requires_declared_tax_id: 'The active profile does not declare a tax
-        identity, so a declaration cannot be exported under it. Supply: %{requirements}.'
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
         is required.'
       parse_invalid_choice: 'Invalid value ''{value}''. Choose from: {accepted}.'
@@ -3396,10 +3398,7 @@ cli:
       unchanged: Nothing changed.
   operator_surface:
     errors:
-      accepted_roots_only: The CLI accepts only the config and app roots.
       contract_not_accepted: 'Command surface %{surface} rejected the contract: %{reason}.'
-      unknown_source_kind: 'Unknown source kind: %{kind}. Available source kinds:
-        %{options}.'
     help:
       app:
         footer: Run aeat --help for the full overview.

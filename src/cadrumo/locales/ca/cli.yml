@@ -1216,9 +1216,11 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
-        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull
-          descarrega un justificant o una declaració presentada; import compara un PDF
-          local; list mostra les comparacions anteriors.'
+        app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull descarrega
+          un justificant o una declaració presentada; import compara un PDF local;
+          list mostra les comparacions anteriors.'
+        calculation_revision_help: ID de revisió de càlcul desada que es compararà.
+          Per defecte, presentada o verificada, després la darrera desada.
         file_kind_help: 'Tipus de document d''evidència: justificante (rebut AEAT,
           tots els models) o declaration (PDF de declaració presentada, conciliació
           a nivell de casella, només models habilitats). Per defecte justificante.'
@@ -1230,9 +1232,10 @@ cli:
         list_help: Llista les conciliacions anteriors registrades al perfil actiu.
         list_work_unit_id_help: Filtra les conciliacions per identificador de declaració
           (SHA-256 o un prefix inequívoc).
-        pull_help: "Descarrega evidència de l’AEAT i compara-la amb el càlcul local desat (només lectura a l’AEAT)."
-        calculation_revision_help: ID de revisió de càlcul desada que es compararà. Per defecte, presentada o verificada, després la darrera desada.
-        source_help: "Evidència a comparar: justificante comprova identitat i imports vinculats; declaration compara les caselles presentades amb el càlcul desat."
+        pull_help: Descarrega evidència de l’AEAT i compara-la amb el càlcul local
+          desat (només lectura a l’AEAT).
+        source_help: 'Evidència a comparar: justificante comprova identitat i imports
+          vinculats; declaration compara les caselles presentades amb el càlcul desat.'
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       requires:
         help: 'Mostra la llista de dades necessàries per a un model i un període:
@@ -1919,8 +1922,6 @@ cli:
         i exporta; mai presenta a l''AEAT'
   common:
     errors:
-      filing_requires_declared_tax_id: 'El perfil actiu no declara una identitat fiscal,
-        de manera que no es pot exportar una declaració amb ell. Indica: %{requirements}.'
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
         ISO 8601 (AAAA-MM-DD).'
       parse_invalid_choice: 'Valor no vàlid ''{value}''. Tria entre: {accepted}.'
@@ -3640,11 +3641,8 @@ cli:
       unchanged: No ha canviat res.
   operator_surface:
     errors:
-      accepted_roots_only: Només s'accepten les ordres arrel 'app' i 'config'.
       contract_not_accepted: 'La interfície d''ordres %{surface} ha rebutjat el contracte:
         %{reason}.'
-      unknown_source_kind: 'Tipus de font desconegut: %{kind}. Opcions de tipus de
-        font disponibles: %{options}.'
     help:
       app:
         footer: Executa 'aeat app <ordre> --help' per obtenir més informació sobre

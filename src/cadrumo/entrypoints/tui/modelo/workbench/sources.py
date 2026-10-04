@@ -174,8 +174,8 @@ _FILED_GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyTyp
     }
 )
 """Names for the groups that ask for a value, on a declaration recorded as filed: what they hold, not a request."""
-_AEAT_IMPORTED_ON_KEY: Final[str] = "tui.modelo.workbench.sources.group.aeat_data_imported_on"
-_NO_EARLIER_GROUP_KEY: Final[str] = "tui.modelo.workbench.sources.group.earlier_declarations_none"
+_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.group.aeat_data_imported_on"
+_NO_EARLIER_GROUP_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.group.earlier_declarations_none"
 _STATE_LOCALE_KEYS: Final[Mapping[SourceState, str]] = MappingProxyType(
     {
         SourceState.NONE_FOUND: "tui.modelo.workbench.sources.none_found",
@@ -508,10 +508,10 @@ def group_words(
         return f"  {tr(_FILED_GROUP_LOCALE_KEYS[kind])}"
     glyph = SOURCE_GROUP_MARKS[kind].glyph
     if kind is SourceGroupKind.EARLIER_DECLARATIONS and none_to_carry:
-        return f"{glyph} {tr(_NO_EARLIER_GROUP_KEY)}"
+        return f"{glyph} {tr(_NO_EARLIER_GROUP_LOCALE_KEY)}"
     if kind is SourceGroupKind.AEAT_DATA and imported_on is not None:
         written = date_text(imported_on, OutputLanguage(output_language()) if language is None else language)
-        return f"{glyph} {tr(_AEAT_IMPORTED_ON_KEY, date=written)}"
+        return f"{glyph} {tr(_AEAT_IMPORTED_ON_LOCALE_KEY, date=written)}"
     return f"{glyph} {tr(_GROUP_LOCALE_KEYS[kind])}"
 
 

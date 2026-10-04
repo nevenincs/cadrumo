@@ -21,15 +21,11 @@ from ..binding_aggregation import binding_aggregation_op
 from ..binding_value_contract import BindingValueChannel
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..relations import (
-    RegistryFoldRequirement,
-    relation_prefill_bindings_for_period,
-    relation_source_requirements,
-    resolve_relation_values_from_observations,
-)
+from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloRevision, RegistrySnapshot
 from ._cross_dependency_calculation_support import _observations_from_requirements
 from .published_authority import published_authored_revision, published_supported_filing_years
+from .relation_fixture import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

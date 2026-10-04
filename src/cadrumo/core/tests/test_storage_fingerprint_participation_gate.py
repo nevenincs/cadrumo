@@ -48,7 +48,8 @@ from ..storage_taxonomy import (
     StorageCategory,
     StorageScope,
 )
-from ..storage_taxonomy_locations import FINGERPRINT_EXCLUDED_STORAGE_FIELDS, STORAGE_TAXONOMY
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY
+from .storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_FIELDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

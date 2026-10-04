@@ -767,34 +767,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
 
 
-def aggregate_iva_compensation_history_reports(
-    reports: list[IvaCompensationHistoryCaptureReport],
-    *,
-    output_root: Path,
-    year_from: int,
-    year_to: int,
-    operation: PinnedAuthorityOperation,
-) -> IvaCompensationHistoryCaptureReport:
-    """Combine per-year history reports at the shared composition boundary."""
-    composition = compose_live_state(output_root=output_root, operation=operation)
-    reloaded = composition.iva_remote_state_port.list_history(as_of_year=None)
-    return IvaCompensationHistoryCaptureReport(
-        output_root=str(output_root),
-        year_from=year_from,
-        year_to=year_to,
-        captured_count=sum(report.captured_count for report in reports),
-        observation_paths=_iva_history_observation_paths(reports),
-        artefact_refs=_iva_history_artefact_refs(reports),
-        casilla_count=sum(report.casilla_count for report in reports),
-        calculation_observation_count=sum(report.calculation_observation_count for report in reports),
-        calculation_observation_keys=tuple(key for report in reports for key in report.calculation_observation_keys),
-        reloaded_history_count=reloaded.row_count,
-        reloaded_rows=reloaded.rows,
-        failed_declaration_count=sum(report.failed_declaration_count for report in reports),
-        failed_declarations=tuple(failure for report in reports for failure in report.failed_declarations),
-    )
-
-
 async def pull_filed_history_with_shared_composition(
     payload: FiledHistoryOperationRequest,
     profile: TaxpayerProfile | None,
@@ -917,7 +889,6 @@ def _decimal(value: object) -> str | None:
 __all__ = [
     "AppIvaRemoteStatePort",
     "LiveStateComposition",
-    "aggregate_iva_compensation_history_reports",
     "carry_forward_lot_row",
     "compose_filed_observation_persistence_ports",
     "compose_live_state",
@@ -972,16 +943,6 @@ async def _capture_one_iva_history_declaration(
             observation = deferred.persist_artefacts(persist_artefact)
             manifest_path = store.persist_observation(observation)
     return observation, manifest_path
-
-
-def _iva_history_observation_paths(reports: list[IvaCompensationHistoryCaptureReport]) -> tuple[str, ...]:
-    """Flatten observation_paths in report order while preserving every recorded reference."""
-    return tuple(path for report in reports for path in report.observation_paths)
-
-
-def _iva_history_artefact_refs(reports: list[IvaCompensationHistoryCaptureReport]) -> tuple[str, ...]:
-    """Flatten artefact_refs in report order while preserving every recorded reference."""
-    return tuple(ref for report in reports for ref in report.artefact_refs)
 
 
 def _stage_iva_history_declaration_progress(

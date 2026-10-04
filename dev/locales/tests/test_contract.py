@@ -19,7 +19,7 @@ See Also:
     :func:`~application.operator_surface.help.build_help_document`
         Backend help document builder checked against the current mounted
         command families.
-    :func:`~application.operator_surface.contract.require_accepted_root`
+    :func:`~application.operator_surface.contract.get_operator_surface_contract`
         Refusal gate that raises the registered operator-surface contract error.
     :mod:`~entrypoints.cli`
         Entrypoint layer consuming the contract without owning it.
@@ -47,10 +47,7 @@ from cadrumo.application import operator_surface
 from cadrumo.application.operator_surface import help as _help_module
 from cadrumo.application.operator_surface.contract import (
     get_operator_surface_contract,
-    require_accepted_root,
-    resolve_source_kind_alias,
 )
-from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.application.operator_surface.help import (
     build_help_document,
     build_root_landing_report,
@@ -63,7 +60,6 @@ from cadrumo.application.operator_surface.help_models import (
     RootLandingReport,
 )
 from cadrumo.application.operator_surface.models import (
-    FilingStatus,
     LifecycleContract,
     ModeloLifecycleStep,
     MountedCommandDomain,
@@ -73,7 +69,6 @@ from cadrumo.application.operator_surface.models import (
 )
 from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind
 from cadrumo.core.config import override_settings
-from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.external_constants import OutputLanguage
 from dev.packaging.command_execution import run_command
 
@@ -113,25 +108,6 @@ def test_contract_lifecycle_is_calculate_verify_file() -> None:
                 ModeloLifecycleStep.FILE,
             ),
         )
-
-
-def test_contract_source_kind_aliases_are_parser_only() -> None:
-    assert resolve_source_kind_alias("ledger_transaction") is BindingSourceKind.LEDGER_TRANSACTION
-    assert resolve_source_kind_alias("lt") is BindingSourceKind.LEDGER_TRANSACTION
-    assert resolve_source_kind_alias("pie") is BindingSourceKind.PURCHASE_INVOICE_EVIDENCE
-    assert resolve_source_kind_alias("pi") is BindingSourceKind.PAYABLE_INVOICE
-    assert resolve_source_kind_alias("ci") is BindingSourceKind.COLLECTIBLE_INVOICE
-
-
-def test_require_accepted_root_uses_registered_application_error() -> None:
-    assert require_accepted_root("config").name is RootSurfaceName.CONFIG
-
-    with pytest.raises(OperatorSurfaceContractError, match=r"operator|surface|contract") as exc_info:
-        require_accepted_root("setup")
-
-    error = exc_info.value
-    assert error.reason == "The CLI accepts only the config and app roots."
-    assert get_registered_error_code(error).code == "REFUSED_OPERATOR_SURFACE_CONTRACT"
 
 
 def test_contract_models_are_strict_and_immutable() -> None:
@@ -503,22 +479,6 @@ def test_root_landing_report_reads_profile_state_input_only() -> None:
     assert registered.command == "aeat config login NAME"
     assert registered.profile_selected is False
     assert registered.active_profile is None
-
-
-def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
-    """FilingStatus.FILED is the token the LIVE command family mounts.
-
-    The membership half of this claim moved to ``test_contract_live``: the
-    contract no longer restates a family's verbs, so whether ``app live``
-    mounts a ``filed`` subgroup is a question only the materialised tree can
-    answer. What stays here is the token identity itself.
-    """
-    assert FilingStatus.FILED == "filed"
-    assert str(FilingStatus.FILED) == "filed"
-
-    contract = get_operator_surface_contract()
-    live_family = next(f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE)
-    assert live_family.child == "live"
 
 
 def test_retired_recovery_family_names_are_absent() -> None:

@@ -23,8 +23,8 @@ from cadrumo.domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
     irpf_estimation_regime_directa_simplificada_token,
     irpf_estimation_regime_objetiva_token,
-    irpf_special_regime_general_token,
     irpf_special_regime_impatriado_token,
+    require_irpf_special_regime,
 )
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_fiscal_residency
@@ -61,7 +61,7 @@ with validating_governed_facts(compiled_bundled_authority()):
     _DIRECTA_NORMAL = irpf_estimation_regime_directa_normal_token()
     _DIRECTA_SIMPLIFICADA = irpf_estimation_regime_directa_simplificada_token()
     _OBJETIVA = irpf_estimation_regime_objetiva_token()
-    _SPECIAL_GENERAL = irpf_special_regime_general_token()
+    _SPECIAL_GENERAL = require_irpf_special_regime("general")
     _IMPATRIADO = irpf_special_regime_impatriado_token()
     _NON_RESIDENT_IRNR = require_fiscal_residency("non_resident_irnr")
     _NON_PERIODIC_IVA_REGIMES = (require_iva_regime("EXENTO"), require_iva_regime("RECARGO_EQUIVALENCIA"))

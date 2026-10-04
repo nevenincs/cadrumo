@@ -18,15 +18,6 @@ aggregation:
       not_a_retenedor_liability: Con este tratamiento de IVA y este tipo de factura,
         la retención no es algo que debas como pagador que retiene (retenedor); la
         retención de una factura que has emitido es un crédito a tu favor.
-    errors:
-      euro_figures_unavailable_after_defect_sweep: Las cifras en euros no están disponibles
-        en una factura que superó el barrido de defectos.
-      perceptor_tax_id_unavailable_after_defect_sweep: El identificador fiscal del
-        perceptor no está disponible en una factura que superó el barrido de defectos.
-      projection_defects_repeat: Una proyección de retención de factura repite el
-        mismo defecto.
-      projection_outcome_ambiguous: Una proyección de retención de factura debe portar
-        o una observación o defectos, nunca ambos ni ninguno.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} queda
@@ -1154,8 +1145,6 @@ tui:
       unchanged: Sin cambios
       unset: Sin establecer
     column:
-      compared_at: Comparado el
-      advisories: Avisos
       aeat: AEAT
       aeat_value: Valor AEAT
       area: Área
@@ -1175,9 +1164,9 @@ tui:
       sources: Orígenes
       status: Estado
     discrepancy:
-      incomplete: Comparación incompleta
       aeat_only: Solo AEAT
       contradictory_source: Origen contradictorio
+      incomplete: Comparación incompleta
       local_only: Solo datos locales
       none: Sin diferencia
       state_mismatch: Estados no coincidentes
@@ -1223,16 +1212,16 @@ tui:
     overview:
       title: Resumen de Sincronización AEAT
     reconciliation:
-      historical: 'Comparación guardada; el cálculo actual no se ha vuelto a comprobar.'
-      identity: 'Unidad de trabajo: %{work} | Evidencia: %{evidence}'
+      advisories_withheld: '%{count} avisos pendientes de traducción.'
       calculation_revision: 'Cálculo comparado: %{revision}'
-      calculation_revision_unknown: 'No se registró la revisión del cálculo comparado.'
+      calculation_revision_unknown: No se registró la revisión del cálculo comparado.
+      evidence:
+        declaration: Declaración presentada
+        justificante: Justificante AEAT
+      historical: Comparación guardada; el cálculo actual no se ha vuelto a comprobar.
+      identity: 'Unidad de trabajo: %{work} | Evidencia: %{evidence}'
       incomplete: Comparación incompleta
       matches: Sin diferencias en los campos comparados
-      advisories_withheld: '%{count} avisos pendientes de traducción.'
-      evidence:
-        justificante: Justificante AEAT
-        declaration: Declaración presentada
       title: Conciliación de Sincronización AEAT
     reconciliation_state:
       accept_aeat: Aceptar AEAT
@@ -1262,10 +1251,10 @@ tui:
         profile: Perfil local
         reconciliation: Conciliación local
     source_state:
-      incomplete: Comparación incompleta
       absent: Ausente
       accepted: Aceptado
       conflict: Conflicto
+      incomplete: Comparación incompleta
       not_observed: No observado
       present: Presente
       rejected: Rechazado
@@ -1671,11 +1660,6 @@ tui:
     ledger: Registros
     profile: Perfil
     withholding: Retenciones
-  filing_year_route:
-    invalid: Introduce un ejercicio válido de cuatro cifras.
-    open: Abrir Retenciones
-    prompt: Selecciona un ejercicio (AAAA)
-    unavailable: Retenciones no está disponible para este perfil y ejercicio.
   home:
     account_fallback: Cuenta
     action:

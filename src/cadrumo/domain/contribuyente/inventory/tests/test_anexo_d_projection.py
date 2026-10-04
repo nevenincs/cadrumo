@@ -404,7 +404,8 @@ def test_reminted_substituted_sources_refuse_but_distinct_projection_succeeds() 
 def test_a_missing_authority_scope_is_an_invariant_failure_not_an_inapplicable_year() -> None:
     # Deferred: importing the registry before the inventory records re-enters their import cycle.
     from cadrumo.core.errors.hierarchy import InternalInvariantError
-    from cadrumo.domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
+
+    from ....calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
     ledger = _ledger()
 

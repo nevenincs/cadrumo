@@ -19,11 +19,8 @@ from typer.testing import CliRunner
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.governed_fact_scope import (
-    GovernedFactSource,
-    governed_facts_in_scope,
-    outside_governed_fact_validation,
-)
+from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from .._command_runtime import GOVERNED_FACT_SCOPE_CAPABILITIES, build_command_app, runs_in_governed_fact_scope
 from ..command_graph import CommandSpecGraph
 from ..command_shared_contracts import (

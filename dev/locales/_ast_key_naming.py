@@ -55,13 +55,12 @@ def tr_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int, 
         if not node.args:
             continue
         first = node.args[0]
-        if not isinstance(first, ast.Name):
+        name = first.id if isinstance(first, ast.Name) else first.attr if isinstance(first, ast.Attribute) else None
+        if name is None or not _UPPER_CONSTANT_NAME_RE.match(name.lstrip("_")):
             continue
-        if not _UPPER_CONSTANT_NAME_RE.match(first.id):
+        if name.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
             continue
-        if first.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
-            continue
-        yield node.lineno, first.id
+        yield node.lineno, name
 
 
 def find_tr_constant_naming_violations(root: Path) -> list[str]:

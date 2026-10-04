@@ -7,9 +7,9 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.governed_fact_scope import (
     CandidateFactAuthority,
     governed_facts_in_scope,
-    outside_governed_fact_validation,
     validating_governed_facts,
 )
+from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree

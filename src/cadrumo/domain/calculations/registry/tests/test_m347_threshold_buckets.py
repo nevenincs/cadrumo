@@ -34,10 +34,10 @@ from ..m347_threshold import (
     M347ThresholdBuckets,
     m347_declarable_party_buckets,
     m347_threshold_decimal,
-    resolve_m347_counterparty_annual_threshold,
     resolve_m347_threshold_buckets,
 )
 from ..schema import SupportedFilingYearsCatalogue
+from .m347_fixture import resolve_m347_counterparty_annual_threshold
 from .published_authority import published_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

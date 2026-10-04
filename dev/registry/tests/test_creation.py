@@ -24,8 +24,8 @@ from cadrumo.adapters.persistence.profile.catalogue_creation import (
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_devengo import (
+    devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,
-    proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
 )
 from cadrumo.application.aggregation.source_mesh import (
@@ -446,7 +446,12 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
         assert devengo.devengo_date == date(2026, 3, 28)
         assert devengo.rank is InvoiceDevengoRank.OPERATION_DATE_DECLARED
         assert invoice_devengo_in_period(reloaded, period=Period.from_year_and_code(2026, "1T")) is True
-        assert proxy_attributed_invoice_ids((reloaded,)) == ()
+        assert (
+            devengo_proxy_attribution_diagnostics(
+                (reloaded,), source_kind="ledger_iva_aggregation", resolver_id="ledger_iva_aggregation"
+            )
+            == ()
+        )
 
 
 def test_omitting_the_operation_date_leaves_the_record_on_the_issue_date_proxy(tmp_path: Path) -> None:
@@ -476,7 +481,11 @@ def test_omitting_the_operation_date_leaves_the_record_on_the_issue_date_proxy(t
         assert reloaded is not None
         assert reloaded.operation_date is None
         assert resolve_invoice_devengo(reloaded).rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
-        assert proxy_attributed_invoice_ids((reloaded,)) == (reloaded.invoice_id,)
+        diagnostics = devengo_proxy_attribution_diagnostics(
+            (reloaded,), source_kind="ledger_iva_aggregation", resolver_id="ledger_iva_aggregation"
+        )
+        assert len(diagnostics) == 1
+        assert reloaded.invoice_number in diagnostics[0].message
 
 
 def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) -> None:

@@ -110,6 +110,5 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
     }
-    identity_aeat_names = {"AEAT_AUTHORITY_SHORT_NAME"}
-    assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == identity_aeat_names
+    assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == set()
     assert allowed_aeat_names  # the wider cross-module set stays documented above

@@ -24,7 +24,7 @@ from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....core.hashing import sha256_hex
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from .....domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
+from .....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 from .....domain.user_profile.tests.schema_value_support import REQUIRED_PROFILE_PLACEHOLDERS
 from .....domain.user_profile.values import (
     ProfileSetupState,

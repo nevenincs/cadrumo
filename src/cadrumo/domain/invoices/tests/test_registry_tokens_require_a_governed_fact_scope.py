@@ -8,8 +8,8 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
 
+from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ..enums import InvoiceLegalMention, IvaRate, invoice_legal_mention_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

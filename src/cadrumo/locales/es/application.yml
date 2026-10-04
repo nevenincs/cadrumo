@@ -732,8 +732,6 @@ application:
           de la AEAT, que la evidencia de captura en vivo no sobrescribirá.
         evidence_snapshot_not_active: Solo un snapshot de captura en vivo activo puede
           sellarse como evidencia de presentación.
-        expediente_not_in_tree: La declaración presentada referencia un expediente
-          que no está en el árbol de expedientes.
         filing_identity_unresolved: No se pudo resolver la identidad fiscal del perfil
           de presentación, por lo que no se sella la evidencia de captura en vivo.
         filing_record_mismatch: El justificante capturado no coincide con el registro
@@ -1345,9 +1343,6 @@ application:
       external_import_registry_snapshot_unresolved: No se pudieron resolver las definiciones
         del modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}; no se pueden
         comprobar los ids de casilla importados.
-      external_import_source_actor_blank: La importación de una autoliquidación presentada
-        fuera de Cadrumo debe indicar quién la presentó. La persona declarada está
-        vacía.
       external_import_source_casilla_mismatch: Las casillas con texto original no
         coinciden con las casillas cuyo valor se importa. Ambos conjuntos deben describir
         exactamente las mismas casillas.
@@ -1361,7 +1356,6 @@ application:
         de importarlo.
       external_import_source_lexical_value_mismatch: El importe leído del texto original
         de la casilla {casilla_id} no coincide con el valor importado para esa casilla.
-      external_import_target_mismatch: La evidencia presentada no corresponde al perfil, declaración o período seleccionado.
       external_import_source_period_mismatch: El período declarado pertenece a un
         ejercicio distinto del ejercicio de presentación indicado. Ambos deben referirse
         al mismo ejercicio.
@@ -1371,6 +1365,8 @@ application:
       external_import_source_work_unit_ambiguous: Existe más de una declaración activa
         para ese modelo, ejercicio y periodo, de modo que no puede determinarse a
         cuál corresponde la importación.
+      external_import_target_mismatch: La evidencia presentada no corresponde al perfil,
+        declaración o período seleccionado.
       external_import_tax_id_missing: La evidencia de importación externa %{evidence_reference_id}
         (%{evidence_kind}) requiere el NIF del contribuyente antes de asociarse a
         un registro de justificante.
@@ -1588,6 +1584,10 @@ application:
         en %{filing_year}, pero la casilla [%{casilla_id}] no la incluye.
       cross_casilla_invariant_violated: Dos o más casillas de este modelo no concuerdan
         entre sí como exigen las normas oficiales.
+      cross_model_reconciliation_incomplete: 'La comparación entre el Modelo %{modelo}
+        y el Modelo %{sibling_modelo} para %{period_code}/%{filing_year} está incompleta:
+        faltan %{own_missing_count} valores locales y %{sibling_missing_count} de
+        la declaración relacionada.'
       cross_period_activity_start_missing: El modelo %{target_modelo} de %{target_filing_year},
         periodo %{target_period}, necesita la fecha en que empezó tu actividad.
       cross_period_dependency_unclean: Esta declaración usa datos del modelo %{source_modelo}
@@ -1687,7 +1687,6 @@ application:
         del convenio.
       m210_rate_unavailable: No se ha podido determinar el tipo de gravamen del modelo
         210 para el tipo de renta %{tipo_renta_code} en %{filing_year}.
-      cross_model_reconciliation_incomplete: "La comparación entre el Modelo %{modelo} y el Modelo %{sibling_modelo} para %{period_code}/%{filing_year} está incompleta: faltan %{own_missing_count} valores locales y %{sibling_missing_count} de la declaración relacionada."
       m303_m349_intracom_reconciliation_mismatch: En el periodo %{period_code} de
         %{filing_year}, el total intracomunitario del modelo 303 (%{m303_total} EUR)
         y el total del modelo 349 (%{m349_total} EUR) difieren en %{gap} EUR.

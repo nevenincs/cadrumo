@@ -1194,9 +1194,12 @@ cli:
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
         benyújtására.
       reconcile:
-        app_help: 'Hasonlítsd össze a mentett helyi számítást az AEAT adataival: a pull
-          igazolást vagy benyújtott bevallást tölt le; az import helyi PDF-et hasonlít össze;
-          a list a korábbi összehasonlításokat mutatja.'
+        app_help: 'Hasonlítsd össze a mentett helyi számítást az AEAT adataival: a
+          pull igazolást vagy benyújtott bevallást tölt le; az import helyi PDF-et
+          hasonlít össze; a list a korábbi összehasonlításokat mutatja.'
+        calculation_revision_help: Az összehasonlítandó mentett számítási változat
+          azonosítója. Alapértelmezés szerint beadott vagy ellenőrzött, majd a legutóbbi
+          mentett változat.
         file_kind_help: 'Bizonyítékdokumentum típusa: justificante (AEAT-igazolás,
           minden nyomtatvány) vagy declaration (benyújtott bevallás PDF-je, rovatszintű
           egyeztetés, csak engedélyezett nyomtatványok). Alapértelmezés: justificante.'
@@ -1208,9 +1211,11 @@ cli:
         list_help: Listázd az aktív profilban rögzített korábbi egyeztetéseket.
         list_work_unit_id_help: Bevallásazonosító szerint szűri az egyeztetéseket
           (SHA-256 vagy egyértelmű előtag).
-        pull_help: "AEAT-bizonyíték letöltése és összehasonlítása a mentett helyi számítással (az AEAT-nál csak olvasás)."
-        calculation_revision_help: Az összehasonlítandó mentett számítási változat azonosítója. Alapértelmezés szerint beadott vagy ellenőrzött, majd a legutóbbi mentett változat.
-        source_help: "Összehasonlítandó bizonyíték: justificante az azonosítókat és a hozzárendelt összegeket ellenőrzi; declaration a benyújtott mezőket hasonlítja a mentett számításhoz."
+        pull_help: AEAT-bizonyíték letöltése és összehasonlítása a mentett helyi számítással
+          (az AEAT-nál csak olvasás).
+        source_help: 'Összehasonlítandó bizonyíték: justificante az azonosítókat és
+          a hozzárendelt összegeket ellenőrzi; declaration a benyújtott mezőket hasonlítja
+          a mentett számításhoz.'
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       requires:
         help: 'Megjeleníti az adott nyomtatványhoz és időszakhoz szükséges adatok
@@ -1910,8 +1915,6 @@ cli:
         és exportál; soha nem nyújt be az AEAT-hoz'
   common:
     errors:
-      filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,
-        ezért nem exportálható vele bevallás. Add meg: %{requirements}.'
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
         ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.'
       parse_invalid_choice: 'Érvénytelen érték: ''{value}''. Válassz ezek közül: {accepted}.'
@@ -3618,12 +3621,8 @@ cli:
       unchanged: Nem változott semmi.
   operator_surface:
     errors:
-      accepted_roots_only: A CLI csak a config és az app gyökérparancsokat fogadja
-        el.
       contract_not_accepted: 'A(z) %{surface} parancsfelület elutasította a szerződést:
         %{reason}.'
-      unknown_source_kind: 'Ismeretlen forrástípus: %{kind}. Elérhető forrástípusok:
-        %{options}.'
     help:
       app:
         footer: 'Teljes áttekintésért futtasd: aeat --help.'

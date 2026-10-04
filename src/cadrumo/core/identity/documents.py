@@ -208,20 +208,7 @@ class IdentityError(CadrumoError):
 
 
 def nif_check_letter(number: int, tax_id_format: SpanishTaxIdFormat) -> str:
-    """Return the AEAT NIF / NIE check letter for a numeric body.
-
-    Resolves the governed check-letter table without retaining a local
-    catalogue. This is the single source of the check-letter computation for
-    the whole :mod:`cadrumo.core.identity` package; the sibling
-    :mod:`cadrumo.core.identity.tax_id` consumes it rather than re-declaring
-    the modulo expression, and every enum-returning validator in this module
-    computes its expected letter through it.
-    """
-    return _nif_check_letter(number, tax_id_format)
-
-
-def _nif_check_letter(number: int, tax_id_format: SpanishTaxIdFormat) -> str:
-    """Return one registry-declared NIF/NIE check letter, failing closed."""
+    """Compute a NIF/NIE check letter from the caller's governed format."""
     return tax_id_format.nif_letters[number % len(tax_id_format.nif_letters)]
 
 
@@ -268,7 +255,7 @@ def _validate_nif(candidate: str, tax_id_format: SpanishTaxIdFormat) -> Identity
             context={"candidate": candidate},
         )
     digits, letter = match.group(1), match.group(2)
-    expected = _nif_check_letter(int(digits), tax_id_format)
+    expected = nif_check_letter(int(digits), tax_id_format)
     if letter != expected:
         raise IdentityError(
             f"NIF checksum mismatch for {digits}: expected check letter {expected!r}, got {letter!r}",
@@ -288,7 +275,7 @@ def _validate_prefixed_nif(candidate: str, tax_id_format: SpanishTaxIdFormat) ->
             context={"candidate": candidate},
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
-    expected = _nif_check_letter(int(digits), tax_id_format)
+    expected = nif_check_letter(int(digits), tax_id_format)
     if letter != expected:
         raise IdentityError(
             f"NIF checksum mismatch for {prefix + digits}: expected check letter {expected!r}, got {letter!r}",
@@ -309,7 +296,7 @@ def _validate_nie(candidate: str, tax_id_format: SpanishTaxIdFormat) -> Identity
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
     numeric_str = dict(tax_id_format.nie_prefix_substitutions)[prefix] + digits
-    expected = _nif_check_letter(int(numeric_str), tax_id_format)
+    expected = nif_check_letter(int(numeric_str), tax_id_format)
     if letter != expected:
         raise IdentityError(
             f"NIE checksum mismatch for {prefix + digits}: expected check letter {expected!r}, got {letter!r}",

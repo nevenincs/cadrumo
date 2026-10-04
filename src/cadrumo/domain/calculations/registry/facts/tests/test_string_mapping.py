@@ -10,13 +10,10 @@ import pytest
 from ......core.errors.hierarchy import InternalInvariantError
 from ......core.time.clock import today_madrid
 from ...errors import RegistryValidationError
-from ...governed_fact_scope import (
-    CandidateFactAuthority,
-    outside_governed_fact_validation,
-    validating_governed_facts,
-)
+from ...governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from ...schema import SupportedFilingYearsCatalogue
 from ...schema_base import DateAxis
+from ...tests.fact_scope import outside_governed_fact_validation
 from ..resolution import (
     GovernedFactQuery,
     MappingFactQuery,

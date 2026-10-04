@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:bec822ebc9aeb0909db1137f5558c009770077fa723d6955a60d16be80371f14'
+body_hash: 'sha256:b8dcf506ac3c96a5c702989752510979242fc03fbb2fa8203ae7cf616702fdfc'
 ---
 
 # `reachability-burndown` plan
@@ -35,7 +35,8 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 - [x] `S03` - Remove unused application and command helpers and verify real operator paths; `src/cadrumo/application and src/cadrumo/entrypoints and their tests`.
 - [x] `S04` - Retire unused domain and adapter doors, activate the declared expense validator, and resolve schema and qualified member consumers; `dev/audit, source owners and focused tests`.
 - [x] `S08` - Resolve typed receiver and dataclass serialization visibility, distinguish development tests, retire uncalled wrappers and relocate remaining core and profile test helpers; `dev/audit, core observability and logging, profile snapshots, Modelo 036, withholding and Renta predicates with owning tests`.
-- [ ] `S09` - Resolve the remaining method and data candidates through their live owners, including candidates exposed by corrected development-test labels; `src/cadrumo, dev/audit and owning tests`.
+- [x] `S09` - Resolve newly exact unused functions and test-only catalogue projections, wire the canonical JSON envelope emitter, repair private locale-key visibility and remove obsolete translations; `Core JSON contracts, operator and aggregation helpers, registry fixture owners, locale discovery and catalogues, conformance isolation and owning tests`.
+- [ ] `S10` - Resolve the remaining unused methods and data members through actual product and fixture owners; `src/cadrumo, dev/audit and owning tests`.
 - [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.
 - [ ] `S06` - Consolidate verified domain and adapter duplication while preserving boundary semantics; `src/cadrumo/domain and src/cadrumo/adapters and owning tests`.
 - [ ] `S07` - Remeasure all audit gates, repair remaining verification defects and complete integrated review; `dev/quality, source tests, audit run evidence and plan`.

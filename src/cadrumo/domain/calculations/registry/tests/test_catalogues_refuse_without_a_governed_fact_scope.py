@@ -52,7 +52,7 @@ from ..descendant_relacion_catalogue import resolve_descendant_relacion_catalogu
 from ..entity_type import resolve_entity_vocabulary
 from ..eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..foreign_asset_obligation_catalogue import resolve_foreign_asset_obligation_catalogue
-from ..governed_fact_scope import GovernedFactSource, outside_governed_fact_validation, validating_governed_facts
+from ..governed_fact_scope import GovernedFactSource, validating_governed_facts
 from ..inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ..invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
@@ -69,7 +69,7 @@ from ..iva_regime_vocabulary import resolve_iva_regime_catalogue
 from ..ledger_oss_bindings import LedgerOssProvider, OssIossLedgerObservation
 from ..lorca_reduction import resolve_lorca_reduction
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
-from ..m347_threshold import resolve_m347_counterparty_annual_threshold, resolve_m347_threshold_buckets
+from ..m347_threshold import resolve_m347_threshold_buckets
 from ..modelo_obligation_scope import resolve_modelo_obligation_scope
 from ..modelo_pending_orden import pending_orden_vocabulary
 from ..modelo_rendering import modelo_rendering_declarations
@@ -90,6 +90,8 @@ from ..tax_id_format import runtime_tax_id_format, tax_id_format_value
 from ..third_party_declaration_roles import resolve_third_party_declaration_role_catalogue
 from ..travel_agency_mediation import resolve_travel_agency_mediation_catalogue
 from ..withholding_bindings import _withholding_role_declarations, resolve_retencion_clave
+from .fact_scope import outside_governed_fact_validation
+from .m347_fixture import resolve_m347_counterparty_annual_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -50,11 +50,11 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from cadrumo.domain.calculations.registry.relations import (
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.relation_fixture import (
     relation_prefill_values_as_binding_values,
     resolve_relation_values_from_observations,
 )
-from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.iva.deduction_facts import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,

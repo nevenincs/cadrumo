@@ -51,11 +51,11 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
+from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository

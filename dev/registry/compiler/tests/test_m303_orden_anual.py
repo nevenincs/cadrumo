@@ -18,11 +18,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.governed_fact_scope import (
-    CandidateFactAuthority,
-    outside_governed_fact_validation,
-    validating_governed_facts,
-)
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
 from ...analysis.m303_orden_anual import main
 from .._m303_orden_source import extract_m303_annual_orden_source

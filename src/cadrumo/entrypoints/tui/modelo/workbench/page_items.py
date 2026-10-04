@@ -69,16 +69,16 @@ from .vocabulary import (
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _RATIO_DATA_TYPE: Final[str] = "ratio"
-_COLUMN_UNNAMED_KEY: Final[str] = "tui.modelo.workbench.grid.column_unnamed"
+_COLUMN_UNNAMED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.column_unnamed"
 _NAMELESS_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.TECHNICAL, ModeloFormTextDisclosure.UNNAMED}
 )
 """Labels that name no column: a technical name, or words saying the form gives the box no name."""
-_RECORDS_KEY: Final[str] = "tui.modelo.workbench.repeating"
+_RECORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.repeating"
 #: The kind of address that names a casilla, as a finding about a record column names it.
 _CASILLA_KIND: Final[str] = "casilla"
-_RECORDS_UNKNOWN_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
-_RECORDS_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
+_RECORDS_UNKNOWN_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
+_RECORDS_READ_ONLY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
 
 
 _RECORD_FINDING_LEVELS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyType(
@@ -321,7 +321,7 @@ def _column_headings(columns: tuple[ModeloFormGridColumn, ...], rows: tuple[Mode
             if cell.field is not None and cell.field.label.disclosure not in _NAMELESS_DISCLOSURES
         )
         label = next(labels, None)
-        headings.append(label.text if label is not None else tr(_COLUMN_UNNAMED_KEY, number=index + 1))
+        headings.append(label.text if label is not None else tr(_COLUMN_UNNAMED_LOCALE_KEY, number=index + 1))
     return tuple(headings)
 
 
@@ -427,16 +427,16 @@ def _grid_items(
 def _record_items(block: ModeloFormRepeatingBlock) -> list[CasillaListItem]:
     """Keep a known table, including an empty one, or state that its record count is unknown."""
     if not block.rows_known:
-        return [CasillaListNote(tr(_RECORDS_UNKNOWN_KEY), indent=2, column_casilla_ids=block.column_casilla_ids)]
+        return [CasillaListNote(tr(_RECORDS_UNKNOWN_LOCALE_KEY), indent=2, column_casilla_ids=block.column_casilla_ids)]
     return [
-        CasillaListHeading(tr(_RECORDS_KEY, count=len(block.rows)), level=1),
+        CasillaListHeading(tr(_RECORDS_LOCALE_KEY, count=len(block.rows)), level=1),
         CasillaListRecords(
             headings=_column_headings(block.columns, ()),
             data_types=block.column_data_types,
             rows=block.rows,
             column_casilla_ids=block.column_casilla_ids,
         ),
-        CasillaListNote(tr(_RECORDS_READ_ONLY_KEY), indent=2),
+        CasillaListNote(tr(_RECORDS_READ_ONLY_LOCALE_KEY), indent=2),
     ]
 
 

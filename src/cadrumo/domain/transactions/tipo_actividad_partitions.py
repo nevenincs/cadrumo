@@ -2,12 +2,11 @@
 
 Selector membership, legal applicability, and semantic labels are authored in
 the versioned registry.  This module retains only the generic authority query,
-payload narrowing, and duplicate-code guard used by callers.
+and typed payload narrowing used by callers.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
 from datetime import date
 
 from ..calculations.registry.facts.resolution import (
@@ -21,7 +20,6 @@ from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
 
 __all__ = [
-    "load_tipo_actividad_selectors",
     "resolve_tipo_actividad_selector",
     "tipo_actividad_code_set",
 ]
@@ -109,38 +107,3 @@ def tipo_actividad_code_set(
             authority=authority,
         ),
     )
-
-
-def load_tipo_actividad_selectors(
-    selector_fact_ids: Iterable[str],
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None = None,
-) -> Mapping[str, frozenset[str]]:
-    """Resolve a caller-supplied selector catalogue without embedding its facts."""
-    fact_ids = tuple(dict.fromkeys(fact_id.strip() for fact_id in selector_fact_ids))
-    if not fact_ids or any(not fact_id for fact_id in fact_ids):
-        raise TransactionValidationError("activity selector catalogue must supply non-blank fact ids")
-
-    selectors = {
-        fact_id: _typed_code_set(
-            resolve_tipo_actividad_selector(
-                fact_id,
-                effective_date=effective_date,
-                authority=authority,
-            ),
-        )
-        for fact_id in fact_ids
-    }
-
-    seen: dict[str, str] = {}
-    for fact_id, codes in selectors.items():
-        for code in codes:
-            previous = seen.get(code)
-            if previous is not None:
-                raise TransactionValidationError(
-                    f"activity code {code!r} is declared by both {previous!r} and "
-                    f"{fact_id!r}; a code must select at most one registry selector",
-                )
-            seen[code] = fact_id
-    return selectors

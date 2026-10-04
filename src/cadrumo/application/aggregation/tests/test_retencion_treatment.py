@@ -9,7 +9,7 @@ import pytest
 from ....core.aggregation import RetencionScheme, WorkIncomeRetencionTreatment
 from ....core.errors.hierarchy import InternalInvariantError
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ..retenciones import registry_work_income_retencion_treatments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

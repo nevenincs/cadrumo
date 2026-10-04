@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors.hierarchy import InternalInvariantError, ProfileAnswerTypeError
-from ...calculations.registry.governed_fact_scope import outside_governed_fact_validation
+from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ..descendant_facts import descendant_list_from_facts, parse_descendiente_flag
 from ..guarderia_mensual import parse_guarderia_mensual
 from ..meses_trabajo import parse_meses_trabajo

@@ -804,14 +804,6 @@ name the application can pass around but never resolve.
 """
 
 
-STORAGE_FIELD_CATEGORIES: Final[dict[str, StorageCategory]] = {
-    location.settings_field: location.category
-    for location in STORAGE_TAXONOMY.values()
-    if location.settings_field is not None
-}
-"""Reverse index from a flat settings field name to the member that governs it."""
-
-
 ROOT_DERIVED_STORAGE_LOCATIONS: Final[tuple[StorageLocation, ...]] = tuple(
     location for location in _ROOT_LOCATIONS if location.derives_settings_default
 )
@@ -826,19 +818,6 @@ ROOT_DERIVED_STORAGE_FIELDS: Final[tuple[str, ...]] = tuple(
     location.settings_field for location in ROOT_DERIVED_STORAGE_LOCATIONS if location.settings_field is not None
 )
 """Settings fields whose default is computed from the storage root, in declaration order."""
-
-
-FINGERPRINT_EXCLUDED_STORAGE_FIELDS: Final[frozenset[str]] = frozenset(
-    location.settings_field
-    for location in STORAGE_TAXONOMY.values()
-    if location.settings_field is not None and location.fingerprint_participation is FingerprintParticipation.EXCLUDED
-)
-"""Settings fields whose contents are kept out of the data-root drift digest.
-
-Compared by field NAME wherever it is checked, never by resolved-path
-cardinality: two fields may legitimately be overridden onto one directory,
-which shrinks a resolved-path set while exactly the same fields are consulted.
-"""
 
 
 def storage_location(category: StorageCategory) -> StorageLocation:

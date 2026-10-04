@@ -1225,9 +1225,11 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
-        app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: pull descarga
-          un justificante o una declaración presentada; import compara un PDF local;
-          list muestra las comparaciones anteriores.'
+        app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: pull
+          descarga un justificante o una declaración presentada; import compara un
+          PDF local; list muestra las comparaciones anteriores.'
+        calculation_revision_help: ID de revisión de cálculo guardada que se comparará.
+          Por defecto, presentada o verificada, después la última guardada.
         file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
           todos los modelos) o declaration (PDF de declaración presentada, conciliación
           a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
@@ -1239,9 +1241,11 @@ cli:
         list_help: Lista las conciliaciones anteriores registradas en el perfil activo.
         list_work_unit_id_help: Filtra las conciliaciones por identificador de declaración
           (SHA-256 o prefijo inequívoco).
-        pull_help: "Descarga evidencia de la AEAT y compárala con el cálculo local guardado (solo lectura en la AEAT)."
-        calculation_revision_help: ID de revisión de cálculo guardada que se comparará. Por defecto, presentada o verificada, después la última guardada.
-        source_help: "Evidencia a comparar: justificante comprueba identidad e importes vinculados; declaration compara las casillas presentadas con el cálculo guardado."
+        pull_help: Descarga evidencia de la AEAT y compárala con el cálculo local
+          guardado (solo lectura en la AEAT).
+        source_help: 'Evidencia a comparar: justificante comprueba identidad e importes
+          vinculados; declaration compara las casillas presentadas con el cálculo
+          guardado.'
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       requires:
         help: 'Muestra la lista de datos necesarios para un modelo y periodo: qué
@@ -1932,8 +1936,6 @@ cli:
         y exporta; nunca presenta ante la AEAT'
   common:
     errors:
-      filing_requires_declared_tax_id: 'El perfil activo no declara una identidad
-        fiscal, por lo que no se puede exportar una declaración con él. Indica: %{requirements}.'
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
         ISO 8601 (AAAA-MM-DD).'
       parse_invalid_choice: 'Valor no válido ''{value}''. Elige entre: {accepted}.'
@@ -3662,11 +3664,8 @@ cli:
       unchanged: No ha cambiado nada.
   operator_surface:
     errors:
-      accepted_roots_only: Solo se aceptan los comandos raíz 'app' y 'config'.
       contract_not_accepted: 'La interfaz de órdenes %{surface} rechazó el contrato:
         %{reason}.'
-      unknown_source_kind: 'Tipo de fuente desconocido: %{kind}. Opciones de tipo
-        de fuente disponibles: %{options}.'
     help:
       app:
         footer: Ejecuta 'aeat app <comando> --help' para obtener más información sobre

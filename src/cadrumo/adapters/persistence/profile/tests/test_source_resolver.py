@@ -37,10 +37,7 @@ from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.m347_threshold import (
-    m347_threshold_decimal,
-    resolve_m347_counterparty_annual_threshold,
-)
+from cadrumo.domain.calculations.registry.m347_threshold import m347_threshold_decimal
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
@@ -55,6 +52,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from .....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

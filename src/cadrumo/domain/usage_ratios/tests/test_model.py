@@ -17,11 +17,9 @@ from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.governed_fact_scope import (
-    outside_governed_fact_validation,
-    validating_governed_facts,
-)
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
+from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory

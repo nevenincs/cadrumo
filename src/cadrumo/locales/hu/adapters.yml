@@ -258,8 +258,6 @@ adapters:
         jelentkezz be újra, és próbáld meg ismét.
       censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
         oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
-      censal_no_dispatch: Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási
-        oldalt működő kiszolgálón; jelentkezz be újra, és próbáld meg ismét.
       ejercicio_unavailable: Az AEAT bevallásnyilvántartója nem kínálja a kért adóévet
         ehhez a nyomtatványhoz.
       empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni

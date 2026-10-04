@@ -10,7 +10,7 @@ the registry merely to construct an identifier.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Set
+from collections.abc import Iterator, Mapping
 from datetime import date
 from typing import override
 
@@ -22,7 +22,6 @@ from .governed_fact_scope import GovernedFactSource, require_governed_fact_autho
 from .schema_base import DateAxis
 
 __all__ = [
-    "NON_REGISTRY_MODELOS",
     "OUT_OF_SCOPE_OBLIGATIONS",
     "UNMODELED_OBLIGATIONS",
     "resolve_modelo_obligation_scope",
@@ -126,20 +125,5 @@ class _ScopeMapping(Mapping[Modelo, str]):
         return resolve_modelo_obligation_scope()[0][key]
 
 
-class _NonRegistryModelos(Set[Modelo]):
-    @override
-    def __contains__(self, value: object) -> bool:
-        return value in resolve_modelo_obligation_scope()[1]
-
-    @override
-    def __iter__(self) -> Iterator[Modelo]:
-        return iter(resolve_modelo_obligation_scope()[1])
-
-    @override
-    def __len__(self) -> int:
-        return len(resolve_modelo_obligation_scope()[1])
-
-
 OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = _ScopeMapping()
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = dict[Modelo, str]()
-NON_REGISTRY_MODELOS: Set[Modelo] = _NonRegistryModelos()

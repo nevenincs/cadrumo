@@ -10,7 +10,6 @@ import pytest
 
 from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.product_identity import (
-    AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     normalise_product_identity_references,
 )
@@ -64,6 +63,8 @@ _IDENTITY_HEADING_KEYS = {
 # key is an entry for three locales and not for the fourth.
 _PROSE_KEYS = {
     "ca": {
+        "errors.refused.refused_application_live_nif_iva_certificate_required",
+        "errors.refused.refused_modelo_result_disposition_uncodified",
         "docs.site.footer.note",
         "docs.site.link.get_cadrumo",
         "application.modelo.calculation_summary.filing_recorded",
@@ -129,7 +130,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
         "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
-        "application.modelo.errors.external_import_source_actor_blank",
         "application.modelo.errors.external_import_source_incomplete",
         "application.modelo.errors.external_import_source_revision_mismatch",
         "application.modelo.errors.external_import_unknown_casillas",
@@ -150,6 +150,8 @@ _PROSE_KEYS = {
         "tui.declarations.list.unreadable.help",
     },
     "en": {
+        "errors.refused.refused_application_live_nif_iva_certificate_required",
+        "errors.refused.refused_modelo_result_disposition_uncodified",
         "docs.site.footer.note",
         "docs.site.link.get_cadrumo",
         "application.modelo.calculation_summary.filing_recorded",
@@ -213,7 +215,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
         "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
-        "application.modelo.errors.external_import_source_actor_blank",
         "application.modelo.errors.external_import_source_incomplete",
         "application.modelo.errors.external_import_source_revision_mismatch",
         "application.modelo.errors.external_import_unknown_casillas",
@@ -234,6 +235,8 @@ _PROSE_KEYS = {
         "tui.declarations.list.unreadable.help",
     },
     "es": {
+        "errors.refused.refused_application_live_nif_iva_certificate_required",
+        "errors.refused.refused_modelo_result_disposition_uncodified",
         "docs.site.footer.note",
         "docs.site.link.get_cadrumo",
         "application.modelo.calculation_summary.filing_recorded",
@@ -296,7 +299,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
         "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
-        "application.modelo.errors.external_import_source_actor_blank",
         "application.modelo.errors.external_import_source_incomplete",
         "application.modelo.errors.external_import_source_revision_mismatch",
         "application.modelo.errors.external_import_unknown_casillas",
@@ -317,6 +319,7 @@ _PROSE_KEYS = {
         "tui.declarations.list.unreadable.help",
     },
     "hu": {
+        "errors.refused.refused_application_live_nif_iva_certificate_required",
         "docs.site.footer.note",
         "application.modelo.calculation_summary.footer_notice",
         "application.modelo.calculation_summary.signature_meaning",
@@ -624,7 +627,6 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
     assert PRODUCT_IDENTITY.cli_executable == "aeat"
     assert PRODUCT_IDENTITY.python_package == PRODUCT_IDENTITY.distribution == "cadrumo"
     assert PRODUCT_IDENTITY.environment_prefix == "CADRUMO_"
-    assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
 
     for locale in _LOCALES:
         # ``_flatten_leaf_values`` returns ``str | None``: a null leaf is a key that
@@ -657,7 +659,7 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         assert not {key for key, value in leaves.items() if normalise_product_identity_references(value) != value}
         assert any(PRODUCT_IDENTITY.environment_prefix in value for value in leaves.values())
         assert any("cadrumo-vault/" in value for value in leaves.values())
-        assert any(AEAT_AUTHORITY_SHORT_NAME in value for value in leaves.values())
+        assert any("AEAT" in value for value in leaves.values())
 
     audit = manager.audit()
     assert audit.ok, audit

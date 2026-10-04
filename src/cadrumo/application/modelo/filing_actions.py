@@ -24,7 +24,7 @@ See Also:
     :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
         bucket events, participation index rows, and optional carry observation.
-    :func:`~cadrumo.application.modelo.filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~cadrumo.application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
         Projects filed casillas into non-official cross-period observations.
     :func:`~cadrumo.application.modelo.result_disposition_resolution.resolve_modelo_result_disposition`:
         Resolves the shared Modelo 303 refund/carry disposition before the file
@@ -258,7 +258,7 @@ def file_modelo_revision(
             Creates official-evidence baselines for imported filings; use that
             path when a :class:`ExternalEvidence` reference
             must be carried.
-        :func:`~cadrumo.application.modelo.filed_revision_observation.persist_filed_revision_observation`:
+        :func:`~cadrumo.application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
             Saves the non-official ``app_filing`` observation used by later
             ``previous_filing`` calculations.
         :func:`~cadrumo.application.modelo.export.export_modelo_revision`:

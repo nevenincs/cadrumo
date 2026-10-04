@@ -76,7 +76,7 @@ from ....application.calculations.iva_wallet_balance import query_iva_wallet_bal
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.live.filed_observation_persistence import persist_filed_calculation_observation
 from ....application.live.filed_observation_ports import FiledObservationPersistencePorts
-from ....application.modelo.filed_revision_observation import persist_filed_revision_observation
+from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind

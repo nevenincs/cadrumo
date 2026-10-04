@@ -48,12 +48,10 @@ __all__ = [
     "M347ThresholdBuckets",
     "m347_declarable_party_buckets",
     "m347_threshold_decimal",
-    "resolve_m347_counterparty_annual_threshold",
     "resolve_m347_threshold_buckets",
 ]
 
 
-_M347_COUNTERPARTY_THRESHOLD_FACT_ID: Final = "m347-counterparty-declaration-threshold"
 _M347_THRESHOLD_BUCKETS_SUBJECT: Final = "M347 clave threshold buckets"
 _M347_THRESHOLD_BUCKETS_FACT: Final = StringMappingFact(
     fact_id="m347-clave-threshold-buckets",
@@ -153,20 +151,6 @@ def _resolve_m347_floor_fact(
     if not isinstance(resolved, ResolvedScalarFact):
         raise RegistryValidationError(f"M347 floor fact {fact_id!r} must resolve as a scalar fact")
     return resolved
-
-
-def resolve_m347_counterparty_annual_threshold(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None = None,
-) -> ResolvedScalarFact:
-    """Resolve the canonical annual counterparty threshold with provenance."""
-    selected = require_governed_fact_authority(authority, subject="M347 counterparty threshold")
-    return _resolve_m347_floor_fact(
-        _M347_COUNTERPARTY_THRESHOLD_FACT_ID,
-        effective_date=effective_date,
-        authority=selected,
-    )
 
 
 def m347_threshold_decimal(threshold: ResolvedScalarFact) -> Decimal:

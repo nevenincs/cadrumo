@@ -41,8 +41,8 @@ from .....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from .....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
 from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind

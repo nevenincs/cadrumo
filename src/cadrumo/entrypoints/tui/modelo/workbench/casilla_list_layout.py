@@ -120,7 +120,7 @@ class CasillaListLayoutMixin:
     def _stacked_label(self: CasillaList, place: GridRowPlace) -> str:
         """A stacked row's heading, told apart from its neighbours by its rate or by the boxes it holds."""
         if place.rate is None and len(place.boxes) > 1:
-            return tr(_values._ROW_BOXES_KEY, heading=place.heading, first=place.boxes[0], last=place.boxes[-1])
+            return tr(_values._ROW_BOXES_LOCALE_KEY, heading=place.heading, first=place.boxes[0], last=place.boxes[-1])
         return self._rated_label(place)
 
     def _height(self: CasillaList, index: int, item: _models.CasillaListItem, width: int) -> int:

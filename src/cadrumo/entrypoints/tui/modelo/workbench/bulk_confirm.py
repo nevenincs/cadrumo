@@ -48,8 +48,8 @@ from .status_bar import StatusBar
 if TYPE_CHECKING:
     from .header import StatusLine
 
-_LEFT_OUT_SOURCED_KEY = "tui.modelo.workbench.bulk_confirm.left_out.sourced"
-_LEFT_OUT_NOT_CHANGEABLE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.not_changeable"
+_LEFT_OUT_SOURCED_LOCALE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.sourced"
+_LEFT_OUT_NOT_CHANGEABLE_LOCALE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.not_changeable"
 _UNTICKED: Final[str] = "[ ]"
 _TICKED: Final[str] = "[✓]"
 
@@ -72,9 +72,9 @@ def left_out_notes(fields: tuple[ModeloFormField, ...]) -> tuple[str, ...]:
     not_changeable = len(assumed) - sourced
     notes: list[str] = []
     if sourced:
-        notes.append(tr(_LEFT_OUT_SOURCED_KEY, count=sourced))
+        notes.append(tr(_LEFT_OUT_SOURCED_LOCALE_KEY, count=sourced))
     if not_changeable:
-        notes.append(tr(_LEFT_OUT_NOT_CHANGEABLE_KEY, count=not_changeable))
+        notes.append(tr(_LEFT_OUT_NOT_CHANGEABLE_LOCALE_KEY, count=not_changeable))
     return tuple(notes)
 
 

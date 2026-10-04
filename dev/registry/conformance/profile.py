@@ -141,10 +141,12 @@ from dev.registry.compiler.producer_inventory import CasillaProducerKind as _Cas
 from dev.registry.compiler.producer_inventory import producer_inventory
 
 from ..compiler.authority import compile_validated_authority as _compile_validated_authority
+from ..compiler.fact_providers import compile_authored_fact_catalogue as _compile_authored_fact_catalogue
 from ..compiler.identity import resolve_registry_identity as _resolve_registry_identity
 from ..compiler.loader import (
     load_registry_tree as _load_registry_tree,
 )
+from ..compiler.loader import load_shared_catalogues as _load_shared_catalogues
 from ..compiler.loader_fingerprints import (
     collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
 )
@@ -1220,7 +1222,13 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
     registry_root = _bundled_path("registry", "aeat")
     inventory = _load_bundled_external_oracle_inventory()
     if not validate:
-        modelos, catalogues = _load_registry_tree(registry_root)
+        authored_catalogues = _load_shared_catalogues(registry_root)
+        authored_facts = _CandidateFactAuthority(
+            _compile_authored_fact_catalogue(registry_root),
+            authored_catalogues.require_supported_filing_years(),
+        )
+        with _validating_governed_facts(authored_facts):
+            modelos, catalogues = _load_registry_tree(registry_root)
         known_codes = frozenset(modelo.id for modelo in modelos)
         facts = _CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
         with _validating_governed_facts(facts):

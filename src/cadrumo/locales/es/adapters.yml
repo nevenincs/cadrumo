@@ -277,8 +277,6 @@ adapters:
         vuelve a autenticarte e inténtalo de nuevo.
       censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
         una página de modificación; este lector nunca modifica los datos censales.
-      censal_no_dispatch: El selector de acceso de la AEAT no abrió la página censal
-        en un servidor operativo; vuelve a autenticarte e inténtalo de nuevo.
       ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
         solicitado para este modelo.
       empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se

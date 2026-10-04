@@ -16,7 +16,6 @@ from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
 from .authored_editions import authored_revisions
 from .published_authority import (
@@ -24,6 +23,7 @@ from .published_authority import (
     published_authored_revision,
     published_supported_filing_years,
 )
+from .relation_fixture import resolve_relation_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

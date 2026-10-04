@@ -20,10 +20,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.governed_fact_scope import (
-    outside_governed_fact_validation,
-    validating_governed_facts,
-)
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope

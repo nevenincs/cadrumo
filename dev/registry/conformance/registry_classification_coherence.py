@@ -15,7 +15,7 @@ not model at all, is decided today in four places that do not have to agree:
   value ``TaxDomain("informative")`` groups a modelo into the
   informative family and carries no invariant whatsoever.
 * The registry modelo-scope service
-  (:data:`~cadrumo.domain.calculations.registry.modelo_obligation_scope.NON_REGISTRY_MODELOS` and the
+  (:func:`~cadrumo.domain.calculations.registry.modelo_obligation_scope.resolve_modelo_obligation_scope` and the
   obligation-scope mappings behind it) — which codes intentionally have no
   registry definition at all.
 * :class:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition`'s

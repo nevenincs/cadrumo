@@ -111,7 +111,6 @@ __all__ = [
     "ProviderOutputShape",
     "ProviderRouteOwnership",
     "RouteOwnership",
-    "provider_model_for",
     "registration_for",
     "validate_binding_against_registration",
     "validate_binding_provider_registrations",
@@ -911,11 +910,6 @@ def validator_for(kind: BindingSourceKind) -> BindingProviderValidator | None:
     here at all.
     """
     return registration_for(kind).validator
-
-
-def provider_model_for(kind: BindingSourceKind) -> type[BaseModel]:
-    """Return the provider union member model enrolled for one provider kind."""
-    return registration_for(kind).provider_model
 
 
 def validate_binding_against_registration(binding: BindingDefinition) -> tuple[str, ...]:

@@ -57,12 +57,7 @@ from ..bindings_previous_filing import resolve_previous_filing_binding_values
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relation_dependency import RelationDependencyRole, RelationKind
-from ..relations import (
-    RegistryFoldRequirement,
-    relation_prefill_bindings_for_period,
-    relation_source_requirements,
-    resolve_relation_values_from_observations,
-)
+from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..runtime_graph import expression_binding_refs
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
@@ -75,6 +70,7 @@ from ._cross_dependency_calculation_support import (
 from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
+from .relation_fixture import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

@@ -704,8 +704,6 @@ application:
           amelyet az élő rögzítés bizonyítéka nem ír felül.
         evidence_snapshot_not_active: Csak aktív élő rögzítésű pillanatkép bélyegezhető
           benyújtási bizonyítékként.
-        expediente_not_in_tree: A benyújtott bevallás olyan expedientére hivatkozik,
-          amely nincs az expediente-fában.
         filing_identity_unresolved: A benyújtási profil adóazonosítója nem határozható
           meg, ezért az élő rögzítés bizonyítéka nem kerül bélyegzésre.
         filing_record_mismatch: A rögzített justificante nem egyezik az aktuális benyújtási
@@ -1307,8 +1305,6 @@ application:
       external_import_registry_snapshot_unresolved: A Modelo %{modelo} nyomtatvány,
         %{filing_year} adóév, %{period} időszak nyomtatványdefiníciói nem oldhatók
         fel; az importált rovat-azonosítók nem ellenőrizhetők.
-      external_import_source_actor_blank: A Cadrumón kívül benyújtott bevallás importálásakor
-        rögzíteni kell, ki nyújtotta be. A megadott benyújtó üres.
       external_import_source_casilla_mismatch: Az eredeti szöveget hordozó rovatok
         nem egyeznek meg azokkal a rovatokkal, amelyek értékét importálják. Mindkét
         halmaznak pontosan ugyanazokat a rovatokat kell leírnia.
@@ -1321,7 +1317,6 @@ application:
         értéket.
       external_import_source_lexical_value_mismatch: A(z) {casilla_id} rovat eredeti
         szövegéből kiolvasott összeg nem egyezik az adott rovathoz importált értékkel.
-      external_import_target_mismatch: A bevallás bizonyítéka nem a kiválasztott profilhoz, bevalláshoz vagy időszakhoz tartozik.
       external_import_source_period_mismatch: A megadott időszak más adóévhez tartozik,
         mint a megjelölt bevallási év. Mindkettőnek ugyanarra az évre kell vonatkoznia.
       external_import_source_revision_mismatch: A Cadrumón kívül benyújtott bevalláson
@@ -1330,6 +1325,8 @@ application:
       external_import_source_work_unit_ambiguous: Az adott nyomtatványra, adóévre
         és időszakra több aktív bevallás is létezik, így az import nem rendelhető
         egyikhez sem.
+      external_import_target_mismatch: A bevallás bizonyítéka nem a kiválasztott profilhoz,
+        bevalláshoz vagy időszakhoz tartozik.
       external_import_tax_id_missing: A külső bevallásimport bizonyítéka %{evidence_reference_id}
         (%{evidence_kind}) megköveteli a bevalló adóazonosítóját, mielőtt igazolásrekordhoz
         rendelhető.
@@ -1545,6 +1542,10 @@ application:
         rovat ezt nem tartalmazza.
       cross_casilla_invariant_violated: A nyomtatvány két vagy több rovata nem egyezik
         egymással, ahogy azt a hivatalos szabályok megkövetelik.
+      cross_model_reconciliation_incomplete: 'A(z) %{modelo} és %{sibling_modelo}
+        nyomtatvány összehasonlítása a(z) %{period_code}/%{filing_year} időszakra
+        hiányos: %{own_missing_count} helyi és %{sibling_missing_count} kapcsolódó
+        érték hiányzik.'
       cross_period_activity_start_missing: A Modelo %{target_modelo} bevalláshoz (%{target_filing_year},
         %{target_period} időszak) meg kell adni, mikor kezdte meg a tevékenységét.
       cross_period_dependency_unclean: Ez a bevallás a Modelo %{source_modelo} (%{source_filing_year},
@@ -1644,7 +1645,6 @@ application:
         típusú jövedelemre az adóegyezmény kedvezménykorlátozó záradéka vonatkozhat.
       m210_rate_unavailable: Nem határozható meg a Modelo 210 adókulcsa a(z) %{tipo_renta_code}
         jövedelemtípusra (tipo de renta) %{filing_year} évre.
-      cross_model_reconciliation_incomplete: "A(z) %{modelo} és %{sibling_modelo} nyomtatvány összehasonlítása a(z) %{period_code}/%{filing_year} időszakra hiányos: %{own_missing_count} helyi és %{sibling_missing_count} kapcsolódó érték hiányzik."
       m303_m349_intracom_reconciliation_mismatch: A(z) %{filing_year} %{period_code}
         időszakban a Modelo 303 közösségen belüli összege (%{m303_total} EUR) és a
         Modelo 349 összege (%{m349_total} EUR) %{gap} EUR-val eltér.

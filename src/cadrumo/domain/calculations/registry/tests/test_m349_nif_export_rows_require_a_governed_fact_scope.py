@@ -11,8 +11,8 @@ from cadrumo.core.errors.hierarchy import InternalInvariantError
 from .._invoice_row_materialization import normalise_m349_nif_export_rows
 from ..authority import bundled_indexed_authority
 from ..errors import RegistryValidationError
-from ..governed_fact_scope import outside_governed_fact_validation
 from ..ids import BindingId
+from .fact_scope import outside_governed_fact_validation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

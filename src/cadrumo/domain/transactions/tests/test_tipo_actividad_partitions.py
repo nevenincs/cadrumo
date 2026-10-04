@@ -37,7 +37,6 @@ from ...calculations.registry.schema_base import DateAxis
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
-    load_tipo_actividad_selectors,
     resolve_tipo_actividad_selector,
     tipo_actividad_code_set,
 )
@@ -89,7 +88,10 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     """
     authority = PublishedGovernedFactSource()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
-    selectors = load_tipo_actividad_selectors(selector_ids, effective_date=date(2026, 4, 1), authority=authority)
+    selectors = {
+        fact_id: tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1), authority=authority)
+        for fact_id in selector_ids
+    }
     empty_selector_ids = tuple(fact_id for fact_id, codes in selectors.items() if not codes)
 
     assert set(selectors) == set(selector_ids)
@@ -104,9 +106,10 @@ def test_no_code_selects_two_partitions() -> None:
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selected = [
         code
-        for codes in load_tipo_actividad_selectors(
-            selector_ids, effective_date=date(2026, 4, 1), authority=authority
-        ).values()
+        for codes in {
+            fact_id: tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1), authority=authority)
+            for fact_id in selector_ids
+        }.values()
         for code in codes
     ]
 
@@ -118,11 +121,10 @@ def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     authority = PublishedGovernedFactSource()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     accepted = {member.value for member in TipoActividad}
-    for codes in load_tipo_actividad_selectors(
-        selector_ids,
-        effective_date=date(2026, 4, 1),
-        authority=authority,
-    ).values():
+    for codes in {
+        fact_id: tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1), authority=authority)
+        for fact_id in selector_ids
+    }.values():
         assert codes <= accepted, sorted(codes - accepted)
 
 

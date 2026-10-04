@@ -36,12 +36,9 @@ from ....domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ....domain.calculations.registry.m347_threshold import (
-    m347_threshold_decimal,
-    resolve_m347_counterparty_annual_threshold,
-    resolve_m347_threshold_buckets,
-)
+from ....domain.calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_threshold_buckets
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

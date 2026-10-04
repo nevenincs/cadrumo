@@ -446,12 +446,12 @@ _FORM_SET_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.INFORMATIONAL}
 )
 """Origins whose value, when the form's own design is the source, is the value the form sets."""
-_FORM_SET_WORDS_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
+_FORM_SET_WORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
 _HELD_ZERO_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
     {ModeloFormOrigin.OPTIONAL_EMPTY: "tui.modelo.workbench.origin_held_zero.optional_empty"}
 )
 """Words for an origin that says nobody entered the box, when the box still holds a zero: never "empty"."""
-_AEAT_IMPORTED_ON_KEY: Final[str] = "tui.modelo.workbench.origin_source.aeat_imported_on"
+_AEAT_IMPORTED_ON_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.aeat_imported_on"
 
 
 def holds_zero(value: ModeloFormScalar) -> bool:
@@ -506,8 +506,8 @@ _FROM_EARLIER_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
 """Origins whose words say where a carried value comes from, so they must not name a declaration that does not exist."""
 
 
-_NO_EARLIER_WORDS_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.earlier_filings_none"
-_NO_EARLIER_EXPLANATION_KEY: Final[str] = "tui.modelo.workbench.help.origin_no_earlier_declaration"
+_NO_EARLIER_WORDS_LOCALE_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.earlier_filings_none"
+_NO_EARLIER_EXPLANATION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.help.origin_no_earlier_declaration"
 
 
 def no_earlier_filing(field: ModeloFormField) -> bool:
@@ -533,7 +533,7 @@ def origin_explanation(field: ModeloFormField) -> str | None:
     so the filer does not look for a filing that does not exist.
     """
     if no_earlier_filing(field) and holds_zero(field.value):
-        return tr(_NO_EARLIER_EXPLANATION_KEY)
+        return tr(_NO_EARLIER_EXPLANATION_LOCALE_KEY)
     return None
 
 
@@ -573,11 +573,11 @@ def _special_origin_words(
     if field.origin in _HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
         return tr(_HELD_ZERO_LOCALE_KEYS[field.origin])
     if set_by_form(field):
-        return tr(_FORM_SET_WORDS_KEY)
+        return tr(_FORM_SET_WORDS_LOCALE_KEY)
     if aeat_imported is not None and language is not None and _from_aeat_data(field):
-        return tr(_AEAT_IMPORTED_ON_KEY, date=date_text(aeat_imported, language))
+        return tr(_AEAT_IMPORTED_ON_LOCALE_KEY, date=date_text(aeat_imported, language))
     if no_earlier_filing(field):
-        return tr(_NO_EARLIER_WORDS_KEY)
+        return tr(_NO_EARLIER_WORDS_LOCALE_KEY)
     return None
 
 

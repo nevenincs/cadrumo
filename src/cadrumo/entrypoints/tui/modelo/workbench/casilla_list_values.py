@@ -106,13 +106,13 @@ _ABSENT_WHEN_NONE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.OPTIONAL_EMPTY, ModeloFormOrigin.NEEDS_INPUT}
 )
 """Origins whose words say there is no value only when the field holds none; a held zero is still shown."""
-_NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
+_NOT_APPLICABLE_VALUE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
 _IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
-_RATE_NOT_GROUNDED_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
-_RATE_PRINTED_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_form"
-_RATE_ROW_KEY: Final[str] = "tui.modelo.workbench.rate.of_row"
-_RATE_ROW_PRINTED_KEY: Final[str] = "tui.modelo.workbench.rate.of_row_printed"
-_ROW_BOXES_KEY: Final[str] = "tui.modelo.workbench.grid.row_boxes"
+_RATE_NOT_GROUNDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
+_RATE_PRINTED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_form"
+_RATE_ROW_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.of_row"
+_RATE_ROW_PRINTED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.rate.of_row_printed"
+_ROW_BOXES_LOCALE_KEY: Final[str] = "tui.modelo.workbench.grid.row_boxes"
 _RATE_UNITS: Final[Mapping[ModeloFormRateUnit, ModeloEditRatioUnit]] = MappingProxyType(
     {ModeloFormRateUnit.FRACTION: ModeloEditRatioUnit.FRACTION}
 )
@@ -232,7 +232,7 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
 
 def _special_value_text(field: ModeloFormField, language: OutputLanguage) -> str | None:
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
-        return tr(_NOT_APPLICABLE_VALUE_KEY)
+        return tr(_NOT_APPLICABLE_VALUE_LOCALE_KEY)
     rate = shown_rate(field)
     if rate is not None and rate_is_value(field):
         return rate_text(rate, language)
@@ -305,14 +305,14 @@ def rate_note(entry: CasillaListEntry, language: OutputLanguage | None = None) -
     field = entry.field
     rate = shown_rate(field)
     if rate is None:
-        return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) or _bare_rate(field) else None
+        return tr(_RATE_NOT_GROUNDED_LOCALE_KEY) if _ungrounded_rate(entry) or _bare_rate(field) else None
     printed = field.grounded_rate is None
     if rate_is_value(field):
-        return tr(_RATE_PRINTED_KEY) if printed else None
+        return tr(_RATE_PRINTED_LOCALE_KEY) if printed else None
     words = rate_text(rate, OutputLanguage(output_language()) if language is None else language)
     if printed:
-        return tr(_RATE_ROW_PRINTED_KEY, rate=words)
-    return tr(_RATE_ROW_KEY, rate=words)
+        return tr(_RATE_ROW_PRINTED_LOCALE_KEY, rate=words)
+    return tr(_RATE_ROW_LOCALE_KEY, rate=words)
 
 
 def grid_cell_title(entry: CasillaListEntry) -> str | None:

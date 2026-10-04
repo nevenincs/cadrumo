@@ -389,7 +389,7 @@ def strict_round_trip[ModelT: BaseModel](cls: type[ModelT], obj: BaseModel) -> M
     return cls.model_validate_json(obj.model_dump_json())
 
 
-class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
+class SchemaEnvelope[ResultT](BaseModel):
     """Stable outer envelope wrapping a successful command's payload.
 
     Every successful ``--json`` response is rendered through this
@@ -397,7 +397,7 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
     the inner payload shape. The outer spine (``schema_version``,
     ``command``, ``status``, ``notices``) is shared with the stderr error
     envelope so one shape describes success, warning, and error outcomes.
-    :func:`emit_json_success` constructs the runtime mapping and the
+    :func:`emit_json_success` constructs this spine around the JSON-shaped result. The
     JSON-contract conformance gate specialises this generic envelope over
     every schema authored by the command-spec graph.
 
@@ -419,7 +419,9 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
             profile manifests), so it stays ``None`` for any emitter that
             does not supply it.
         status: Outcome discriminator (``success`` or ``warning`` here).
-        result: The strict-validated command result.
+        result: The command result. Operator boundaries validate its registered
+            schema before emission; metadata emitters may supply any JSON-shaped
+            value. Specialising the generic validates a consumer's expected result.
         notices: Typed non-blocking diagnostics (warnings, advisories,
             next-step hints) surfaced to the caller. Replaces the former
             free-form ``warnings`` string list.
@@ -542,14 +544,13 @@ def emit_json_success(
 
     resolved_notices = [] if notices is None else list(notices)
     envelope_payload = redact_structured_for_cli_output(
-        {
-            "schema_version": ENVELOPE_SCHEMA_VERSION,
-            "command": command,
-            "active_profile": active_profile,
-            "status": derive_status(resolved_notices).value,
-            "result": jsonable_output_payload(result),
-            "notices": [jsonable_output_payload(notice) for notice in resolved_notices],
-        },
+        SchemaEnvelope[object](
+            command=command,
+            active_profile=active_profile,
+            status=derive_status(resolved_notices),
+            result=jsonable_output_payload(result),
+            notices=resolved_notices,
+        ).model_dump(mode="json"),
         reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
     _record_captured_envelope(envelope_payload)
