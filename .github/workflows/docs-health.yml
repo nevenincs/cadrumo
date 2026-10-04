@@ -37,6 +37,7 @@ jobs:
       - name: Provision the monitoring runtime
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
+          prune-cache: false
           version: "0.11.29"
           enable-cache: false
       - name: Check both documentation mounts
