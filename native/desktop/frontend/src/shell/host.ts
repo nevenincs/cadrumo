@@ -6,7 +6,11 @@
 // publishes come from the IPC contract; the terminal shapes below stand until
 // the contract's terminal block is published.
 
-import type { DesktopEnvironment, LogBatch } from "../ipc/contract";
+import type {
+  ContextMenuItem,
+  DesktopEnvironment,
+  LogBatch,
+} from "../ipc/contract";
 
 export type TerminalKind = "console" | "python" | "tui";
 
@@ -23,10 +27,6 @@ export type TerminalSession = {
   resize(cols: number, rows: number): Promise<void>;
   close(): Promise<void>;
 };
-
-export type MenuItem =
-  | { id: string; label: string; shortcut?: string; enabled: boolean }
-  | { separator: true };
 
 export interface Host {
   /** False when no desktop host exists (browser preview). */
@@ -45,7 +45,7 @@ export interface Host {
   /** Resolves to the chosen item id, or null when dismissed. Omit `at` for a
    * pointer-opened menu so the host places it at the cursor. */
   showMenu(
-    items: MenuItem[],
+    items: ContextMenuItem[],
     at?: { x: number; y: number },
   ): Promise<string | null>;
   openExternal(url: string): Promise<void>;

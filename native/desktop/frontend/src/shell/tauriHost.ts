@@ -2,11 +2,12 @@ import { Channel, invoke } from "@tauri-apps/api/core";
 import type {
   HostCommand,
   HostCommands,
+  ContextMenuItem,
   HostResult,
   LogBatch,
   ShellToken,
 } from "../ipc/contract";
-import type { Host, MenuItem } from "./host";
+import type { Host } from "./host";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -58,15 +59,10 @@ export function tauriHost(): Host {
       call("shell_clipboard_read", {}).then(({ text }) => text),
     writeClipboard: (text) =>
       call("shell_clipboard_write", { text }).then(() => undefined),
-    async showMenu(items: MenuItem[], at?: { x: number; y: number }) {
-      const entries = items.flatMap((item) =>
-        "separator" in item
-          ? []
-          : [{ id: item.id, label: item.label, enabled: item.enabled }],
-      );
+    async showMenu(items: ContextMenuItem[], at?: { x: number; y: number }) {
       const { chosen } = await call(
         "shell_context_menu",
-        at ? { items: entries, x: at.x, y: at.y } : { items: entries },
+        at ? { items, x: at.x, y: at.y } : { items },
       );
       return chosen;
     },

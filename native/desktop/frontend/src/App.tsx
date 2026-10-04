@@ -15,6 +15,9 @@ import {
   type DocsMenuRequest,
 } from "./components/DocsFrame";
 import type {
+  ContextMenuAction,
+  ContextMenuItem,
+  ContextMenuSeparator,
   DesktopEnvironment,
   DocsTheme,
   HostFailure,
@@ -49,12 +52,7 @@ import {
   type Action,
   type FocusArea,
 } from "./shell/actions";
-import {
-  HostUnavailable,
-  type Host,
-  type MenuItem,
-  type TerminalKind,
-} from "./shell/host";
+import { HostUnavailable, type Host, type TerminalKind } from "./shell/host";
 import {
   DEFAULT_LAYOUT,
   DEFAULT_PREFS,
@@ -86,7 +84,8 @@ type Environment =
   | { state: "ready"; value: DesktopEnvironment }
   | { state: "unavailable" };
 
-type MenuEntry = (MenuItem & { run?: () => void }) | { separator: true };
+type MenuEntry =
+  (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
 type OpenMenu = { items: MenuEntry[]; at: { x: number; y: number } };
 
 const isSeparator = (item: MenuEntry): item is { separator: true } =>
@@ -674,7 +673,7 @@ export function App({ host }: { host: Host }) {
         if (chosen && !isSeparator(chosen)) chosen.run?.();
       };
       if (host.nativeMenus) {
-        const plain: MenuItem[] = items.map((item) =>
+        const plain: ContextMenuItem[] = items.map((item) =>
           isSeparator(item)
             ? item
             : {

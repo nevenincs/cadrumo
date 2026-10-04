@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { MenuItem } from "../shell/host";
+import type { ContextMenuItem } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 
 // Browser stand-in for the native menu. In the desktop application the host
@@ -9,7 +9,7 @@ export function ContextMenu({
   at,
   choose,
 }: {
-  items: MenuItem[];
+  items: ContextMenuItem[];
   at: { x: number; y: number };
   choose: (id: string | null) => void;
 }) {

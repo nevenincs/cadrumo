@@ -121,12 +121,18 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
     const live = useRef(props);
     live.current = props;
 
+    // Nothing is posted until a page has announced itself: before that the
+    // frame may still hold a document on another origin. `ready` sends the
+    // current keymap, zoom and appearance, so no earlier message is lost.
+    const ready = useRef(false);
     const post = useCallback(
-      (type: string, fields: Record<string, unknown> = {}) =>
+      (type: string, fields: Record<string, unknown> = {}) => {
+        if (!ready.current) return;
         frame.current?.contentWindow?.postMessage(
           { channel: CHANNEL, version: VERSION, type, ...fields },
           origin,
-        ),
+        );
+      },
       [origin],
     );
 
@@ -150,6 +156,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
         const p = live.current;
         switch (data.type) {
           case "ready": {
+            ready.current = true;
             const announced: unknown[] = Array.isArray(data.features)
               ? data.features
               : [];
