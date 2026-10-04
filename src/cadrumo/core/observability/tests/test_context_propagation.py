@@ -21,11 +21,11 @@ from ...config import override_settings
 from ...directory_scan import scan_directory
 from ...storage_taxonomy import StorageCategory
 from ...storage_taxonomy_locations import storage_path
-from ..context import run_context
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
 from ..recorder import record_event
 from ..store import EVENTS_FILENAME, TRACE_FILENAME, iter_events, load_trace
+from .run_scope import run_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

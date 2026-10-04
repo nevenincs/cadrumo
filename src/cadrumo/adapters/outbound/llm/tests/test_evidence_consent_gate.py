@@ -612,7 +612,7 @@ def test_a_dispatch_whose_record_cannot_be_written_is_refused_not_degraded(tmp_p
     ended; only the endpoint's silence proves the document did not leave the
     host before the record failed.
     """
-    from ....persistence.storage.master_key.active_session import suspend_active_session
+    from ....persistence.storage.master_key.tests.session_scope import suspend_active_session
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):

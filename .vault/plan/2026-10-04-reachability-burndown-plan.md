@@ -11,7 +11,7 @@ related:
   - '[[2026-07-01-import-centralization-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:95ad5e5da14e738752a532d0cfc2b83d86d7450c903a69e6d4ca18226950c2f4'
+body_hash: 'sha256:2db30c4f2ed287a88d579c808bd25d2040b77cd98029bd868e9e35c9c1df7652'
 ---
 
 # `reachability-burndown` plan
@@ -31,7 +31,7 @@ The prior measurement had 291 candidates, 11 exact functions, 20 clones, no unre
 ## Steps
 
 - [x] `S01` - Refresh the full finding population and resolve assigned-validator and framework-dispatch evidence; `dev/audit/unreachable_*.py and dev/audit/tests`.
-- [ ] `S02` - Remove or relocate unused core and persistence helpers with all callers updated; `src/cadrumo/core and src/cadrumo/adapters/persistence and their tests`.
+- [x] `S02` - Remove or relocate unused core and persistence helpers with all callers updated; `src/cadrumo/core and src/cadrumo/adapters/persistence and their tests`.
 - [ ] `S03` - Remove unused application and command helpers and verify real operator paths; `src/cadrumo/application and src/cadrumo/entrypoints and their tests`.
 - [ ] `S04` - Resolve all remaining method and data candidates through their actual contracts; `src/cadrumo/domain, application, adapters and entrypoints and owning tests`.
 - [ ] `S05` - Consolidate verified operation and presentation duplication; `src/cadrumo/application/live, operations, ledger and entrypoints/cli`.

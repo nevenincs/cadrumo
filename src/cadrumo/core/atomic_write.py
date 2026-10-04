@@ -96,7 +96,6 @@ __all__ = [
     "atomic_write_hardened_bytes",
     "atomic_write_hardened_text",
     "atomic_write_text",
-    "durable_write_batch",
     "hardened_staged_bytes_publication",
     "hardened_staged_publication",
 ]
@@ -292,21 +291,6 @@ class DurableWriteBatch:
         while self._representatives:
             _, representative = self._representatives.popitem()
             fsync_parent_dir(representative)
-
-
-@contextmanager
-def durable_write_batch() -> Generator[DurableWriteBatch]:
-    """Yield a :class:`DurableWriteBatch` and commit it on exit.
-
-    Commits from a ``finally``, so an exception mid-batch still syncs whatever
-    already landed rather than leaving the completed writes less durable than
-    an unbatched run would have.
-    """
-    batch = DurableWriteBatch()
-    try:
-        yield batch
-    finally:
-        batch.commit()
 
 
 @contextmanager

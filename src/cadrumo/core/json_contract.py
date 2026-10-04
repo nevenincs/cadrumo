@@ -570,7 +570,7 @@ def _record_captured_envelope(envelope_payload: object) -> None:
     The deterministic-output substrate captures the verbatim emitted
     envelope so a recorded run can be replayed and asserted byte-identical
     after masking. Capture is off by default: when no
-    :func:`core.observability.capture.capture_envelopes` scope is active the
+    context-local capture sink is active the
     recorder is a single ``ContextVar.get`` returning ``None``. The call
     is fully best-effort — a capture failure must never disturb the emit
     contract. The import is lazy so :mod:`core.json_contract` keeps

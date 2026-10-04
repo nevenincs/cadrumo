@@ -2,8 +2,7 @@
 
 The handler subscribes to the standard :mod:`logging` machinery so any
 caller using :func:`cadrumo.core.logging.get_logger` automatically picks
-up the JSONL sink while a
-:func:`cadrumo.core.observability.context.run_context` is active. Records that do
+up an attached JSONL sink. Records that do
 not carry a ``run_event`` extra are skipped — bare log lines never
 leak into ``events.jsonl``.
 
@@ -13,8 +12,7 @@ The ``run_id`` / ``step_id`` attributes are stamped onto every
 
 Each sink instance is bound to a single ``run_id`` and filters any
 event whose ``run_id`` does not match. This prevents cross-run
-contamination when several
-:func:`cadrumo.core.observability.context.run_context` blocks execute concurrently
+contamination when several run scopes execute concurrently
 (e.g. tasks in an :mod:`asyncio` event loop) and therefore have
 competing sinks attached to the root logger at the same time.
 """

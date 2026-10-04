@@ -45,9 +45,9 @@ from ..active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
     has_active_bucket_session,
-    suspend_active_session,
 )
 from ..bucket_session import BucketSession
+from .session_scope import suspend_active_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

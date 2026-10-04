@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..resources.bundled_data import as_path, packaged_data
+from ..resources.bundled_data import bundled_path, packaged_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -71,19 +71,12 @@ def test_joinpath_composition_matches_variadic_call() -> None:
     assert chained.is_file()
 
 
-def test_as_path_yields_a_real_pathlib_path() -> None:
-    """:func:`as_path` materialises a Traversable as a usable on-disk path."""
-
-    node = packaged_data("registry", "aeat", "modelos", "036", "manifest.toml")
-
-    with as_path(node) as p:
-        assert isinstance(p, Path)
-        assert p.is_file()
-        payload = p.read_bytes()
-
-    assert len(payload) > 0
-    # The Modelo 036 manifest is a TOML file; it must contain at least one section header.
-    assert b"[" in payload
+def test_bundled_path_yields_a_real_pathlib_path() -> None:
+    """Materialized bundled paths remain readable for the process lifetime."""
+    path = bundled_path("registry", "aeat", "modelos", "036", "manifest.toml")
+    assert isinstance(path, Path)
+    assert path.is_file()
+    assert b"[" in path.read_bytes()
 
 
 def test_read_bytes_from_traversable_directly() -> None:

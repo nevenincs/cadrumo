@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b6b708e1c9879ff563dc02943143b3ab99dd1b02c42d38a4e72cc062e95363a'
+body_hash: 'sha256:4ff925ad7db09da4967962d7703e6ddab769da0b385b6dcf2cbddbaa2b8eafa8'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -45,7 +45,39 @@ related:
 - `S01` `M` `dev/audit/tests/test_unreachable_frameworks.py`
 - `S01` `verify:` `focused audit tests` -> `pass`
 - `S01` `verify:` `focused Ruff and ty` -> `pass`
+- `S02` `M` `src/cadrumo/core/atomic_write.py`
+- `S02` `M` `src/cadrumo/core/locks.py`
+- `S02` `M` `src/cadrumo/core/resources/bundled_data.py`
+- `S02` `M` `src/cadrumo/core/observability/context.py`
+- `S02` `M` `src/cadrumo/core/observability/capture.py`
+- `S02` `A` `src/cadrumo/core/observability/tests/run_scope.py`
+- `S02` `A` `src/cadrumo/core/observability/tests/envelope_capture.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/session_scope.py`
+- `S02` `D` `src/cadrumo/core/tests/test_locks_async_acquisition.py`
+- `S02` `D` `src/cadrumo/core/tests/test_observability_sink_inheritance.py`
+- `S02` `verify:` `core and storage behavior tests (175)` -> `pass`
+- `S02` `verify:` `focused Ruff format and ty` -> `pass`
+- `S02` `verify:` `just check-types` -> `fail`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S02` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_gate.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/active_session.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_active_session_thread_isolation.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_session_isolation.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/tests/test_diagnostics.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/tests/test_registration_leaves_the_profile_admitted.py`
+- `S02` `M` `src/cadrumo/core/observability/tests/test_context_propagation.py`
+- `S02` `M` `src/cadrumo/core/observability/tests/test_golden.py`
+- `S02` `M` `src/cadrumo/core/observability/tests/test_logging_filter.py`
+- `S02` `M` `src/cadrumo/core/observability/tests/test_models.py`
+- `S02` `M` `src/cadrumo/core/tests/test_atomic_write.py`
+- `S02` `M` `src/cadrumo/core/tests/test_resources.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_determinism_conformance.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_session_lifecycle_roundtrip.py`
+- `S02` `M` `src/cadrumo/core/json_contract.py`
+- `S02` `M` `src/cadrumo/core/observability/store.py`
+- `S02` `M` `src/cadrumo/core/observability/sink.py`
 
 ## Notes
 
 - `S01` Fresh scan 285 candidates across 3217 modules; candidate count is a live observation. Assigned validators and Click dispatch resolved without identity exemptions.
+- `S02` Type errors are in concurrent reconciliation test changes. Import checks loaded every attempted module with no broken contracts but source and census changed during execution; final stable verification remains S07.

@@ -252,7 +252,7 @@ def save_envelope(
 
     The document is the verbatim, already-CLI-redacted
     :class:`~core.json_contract.SchemaEnvelope` mapping captured by
-    :func:`core.observability.capture.capture_envelopes` during the run. It
+    the context-local envelope sink during the run. It
     is stored key-sorted so the on-disk artifact is byte-stable, and it
     is durable evidence for the recorded run. Re-validation into a typed
     envelope happens on load via

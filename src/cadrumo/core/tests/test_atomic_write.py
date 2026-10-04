@@ -36,13 +36,13 @@ import pytest
 from ...tests.attribute_scope import scoped_attribute
 from .. import atomic_write
 from ..atomic_write import (
+    DurableWriteBatch,
     atomic_write_best_effort_bytes,
     atomic_write_best_effort_text,
     atomic_write_bytes,
     atomic_write_hardened_bytes,
     atomic_write_hardened_text,
     atomic_write_text,
-    durable_write_batch,
     hardened_staged_bytes_publication,
     hardened_staged_publication,
 )
@@ -675,40 +675,23 @@ class TestDurableWriteBatch:
         """
         payload = b"\x00evidence-bytes\xff"
 
-        with durable_write_batch() as batch:
-            for index in range(8):
-                atomic_write_hardened_bytes(tmp_path / f"blob{index}.bin", payload, batch=batch)
+        batch = DurableWriteBatch()
+        for index in range(8):
+            atomic_write_hardened_bytes(tmp_path / f"blob{index}.bin", payload, batch=batch)
 
+        batch.commit()
         for index in range(8):
             assert (tmp_path / f"blob{index}.bin").read_bytes() == payload
         assert _tmp_leftovers(tmp_path) == []
 
     def test_commit_is_idempotent(self, tmp_path: Path) -> None:
-        """An explicit commit inside the scope must not double-sync on exit."""
-        with durable_write_batch() as batch:
-            atomic_write_hardened_bytes(tmp_path / "one.bin", b"payload", batch=batch)
-            batch.commit()
-            batch.commit()
+        """Repeated commits must not repeat a completed directory sync."""
+        batch = DurableWriteBatch()
+        atomic_write_hardened_bytes(tmp_path / "one.bin", b"payload", batch=batch)
+        batch.commit()
+        batch.commit()
 
         assert (tmp_path / "one.bin").read_bytes() == b"payload"
-
-    def test_an_exception_mid_batch_still_commits_what_landed(self, tmp_path: Path) -> None:
-        """A failure must not leave completed writes LESS durable than unbatched.
-
-        The commit runs from a ``finally``, so raising part-way through a bulk
-        ingest still syncs the records that already landed. Without that, an
-        interrupted import would be more exposed than the per-file path it
-        replaced — a batch may defer durability, never abandon it.
-        """
-        sentinel = RuntimeError("ingest aborted part-way")
-
-        with pytest.raises(RuntimeError) as caught, durable_write_batch() as batch:
-            atomic_write_hardened_bytes(tmp_path / "landed.bin", b"kept", batch=batch)
-            raise sentinel
-
-        assert caught.value is sentinel
-        assert (tmp_path / "landed.bin").read_bytes() == b"kept"
-        assert _tmp_leftovers(tmp_path) == []
 
     def test_batching_defers_the_per_write_sync(self) -> None:
         """Batched writes must issue no per-file sync; unbatched must issue one each.
@@ -748,11 +731,11 @@ class TestDurableWriteBatch:
             with tempfile.TemporaryDirectory() as raw_batched:
                 batched_dir = Path(raw_batched)
                 calls = 0
-                with durable_write_batch() as batch:
-                    for index in range(writes):
-                        atomic_write_hardened_bytes(batched_dir / f"blob{index}.bin", payload, batch=batch)
-                    during_batch = calls
-
+                batch = DurableWriteBatch()
+                for index in range(writes):
+                    atomic_write_hardened_bytes(batched_dir / f"blob{index}.bin", payload, batch=batch)
+                during_batch = calls
+                batch.commit()
         # Positive control: the counter genuinely observes the unbatched path,
         # so a zero on the batched side means deferral rather than a blind
         # instrument.

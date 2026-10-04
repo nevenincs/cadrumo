@@ -225,8 +225,8 @@ class TestRunIdentity:
         """
         import re
 
-        from ..context import _mint_run_id
         from ..models import RUN_ID_PATTERN
+        from .run_scope import _mint_run_id
 
         pattern = re.compile(RUN_ID_PATTERN)
         for _ in range(50):
