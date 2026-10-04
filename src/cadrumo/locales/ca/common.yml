@@ -489,6 +489,119 @@ core:
     errors:
       output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
         admès en forma de text.
+desktop:
+  action:
+    docs_back: Enrere
+    docs_forward: Endavant
+    logs_errors: Mostra només els errors als registres
+    logs_reset: Treu els filtres dels registres
+    zoom_in: Amplia la documentació
+    zoom_out: Redueix la documentació
+    zoom_reset: Restableix el zoom de la documentació
+  docs:
+    frame_title: Documentació de Cadrumo
+  host:
+    unavailable: Aquesta part necessita l'aplicació d'escriptori.
+  logs:
+    clear_logger: Treu el filtre de logger
+    dropped: 'Registres antics descartats d''aquesta vista: {count}'
+    empty: El registre és buit.
+    errors: 'Errors: {count}'
+    filter: Filtra
+    follow: Segueix
+    follow_hint: Mantén visible el registre més recent
+    level_all: Tots els nivells
+    level_error: Només errors
+    level_info: Info i més greus
+    level_warning: Avisos i més greus
+    minimum_level: Nivell mínim
+    no_match: Cap registre no coincideix amb aquests filtres.
+    source_host: Escriptori
+    source_python: Python
+    sources: Orígens
+    state_available: cadrumo.log
+    state_missing: Encara no hi ha cap fitxer de registre
+    state_missing_detail: Encara no hi ha cap fitxer de registre. Els registres apareixeran
+      quan un procés de Cadrumo n'escrigui un.
+    state_unreadable: No es pot llegir el registre
+    warnings: 'Avisos: {count}'
+  menu:
+    clear: Neteja
+    copy: Copia
+    copy_line: Copia la línia
+    copy_link: Copia l'adreça de l'enllaç
+    copy_visible: Copia el que es veu
+    only_level: Mostra només {level} i més greus
+    only_logger: Mostra només aquest logger
+    paste: Enganxa
+    select_all: Selecciona-ho tot
+  palette:
+    actions: Accions
+    documentation: Documentació
+    kind_casilla: Casilla
+    kind_cli: Ordre
+    kind_term: Terme
+    label: Cerca
+    no_results: Cap pàgina no coincideix amb «{query}».
+    placeholder: Cerca a la documentació o executa una acció
+    searching: S'està cercant…
+    type_to_search: Escriu per cercar.
+    unavailable: La cerca a la documentació no està disponible.
+  pane:
+    docs: Documentació
+    maximize_docs: Maximitza la documentació
+    maximize_focused: Maximitza l'àrea activa
+    maximize_panel: Maximitza el panell inferior
+    maximize_tui: Maximitza la TUI
+    restore: Restaura la disposició
+    tui: TUI
+  panel:
+    hide: Amaga el panell inferior
+    label: Panell inferior
+    resize: Canvia la mida del panell inferior
+    show: Mostra el panell inferior
+  rail:
+    console: Consola
+    docs_home: Inici de la documentació
+    label: Espai de treball
+    logs: Registres
+    python: Shell de Python
+    search: Cerca
+    settings: Configuració
+    tui: TUI
+  session:
+    enter_restarts: Retorn el reinicia
+    exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
+      començar.]'
+    exited: ha acabat ({code})
+    failed: 'La sessió no s''ha pogut iniciar: {reason}'
+  settings:
+    always_dark: Sempre fosc
+    appearance: Aparença
+    dark: Fosc
+    docs_and_tui: Documentació i TUI
+    first_pane: Primer panell
+    follow_docs: Com la documentació
+    layout_reset: Disposició restablerta
+    light: Clar
+    match_appearance: Segons l'aparença
+    reset_layout: Restableix la disposició
+    side_by_side: Una al costat de l'altra
+    stacked: Apilades
+    terminal_text: Text del terminal
+    terminals: Terminals
+    title: Configuració
+  split:
+    resize: Canvia la mida de la documentació i la TUI
+    side_by_side: Posa la documentació i la TUI una al costat de l'altra
+    stack: Apila la documentació i la TUI
+    swap: Intercanvia la documentació i la TUI
+  toast:
+    copied: Copiat
+  tui:
+    hide: Amaga la TUI
+    label: TUI de Cadrumo
+    show: Mostra la TUI
 entries:
   portal_calendario_contribuyente:
     label: Calendari del contribuent

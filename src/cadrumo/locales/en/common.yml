@@ -474,6 +474,118 @@ core:
     errors:
       output_language_type: The profile output language must be a supported language
         code in text form.
+desktop:
+  action:
+    docs_back: Back
+    docs_forward: Forward
+    logs_errors: Show only errors in the logs
+    logs_reset: Clear log filters
+    zoom_in: Zoom docs in
+    zoom_out: Zoom docs out
+    zoom_reset: Reset docs zoom
+  docs:
+    frame_title: Cadrumo documentation
+  host:
+    unavailable: This part needs the desktop application.
+  logs:
+    clear_logger: Clear logger filter
+    dropped: 'Older records dropped from this view: {count}'
+    empty: The log is empty.
+    errors: 'Errors: {count}'
+    filter: Filter
+    follow: Follow
+    follow_hint: Keep the newest record in view
+    level_all: All levels
+    level_error: Errors only
+    level_info: Info and worse
+    level_warning: Warnings and worse
+    minimum_level: Minimum level
+    no_match: No records match these filters.
+    source_host: Desktop
+    source_python: Python
+    sources: Sources
+    state_available: cadrumo.log
+    state_missing: No log file yet
+    state_missing_detail: No log file yet. Records appear once a Cadrumo process writes
+      one.
+    state_unreadable: Can't read the log
+    warnings: 'Warnings: {count}'
+  menu:
+    clear: Clear
+    copy: Copy
+    copy_line: Copy line
+    copy_link: Copy link address
+    copy_visible: Copy visible
+    only_level: Show only {level} and worse
+    only_logger: Show only this logger
+    paste: Paste
+    select_all: Select all
+  palette:
+    actions: Actions
+    documentation: Documentation
+    kind_casilla: Casilla
+    kind_cli: Command
+    kind_term: Term
+    label: Search
+    no_results: No pages match “{query}”.
+    placeholder: Search the docs or run an action
+    searching: Searching…
+    type_to_search: Type to search.
+    unavailable: Docs search isn't available.
+  pane:
+    docs: Docs
+    maximize_docs: Maximize the docs
+    maximize_focused: Maximize the focused area
+    maximize_panel: Maximize the bottom panel
+    maximize_tui: Maximize the TUI
+    restore: Restore the layout
+    tui: TUI
+  panel:
+    hide: Hide the bottom panel
+    label: Bottom panel
+    resize: Resize the bottom panel
+    show: Show the bottom panel
+  rail:
+    console: Console
+    docs_home: Docs home
+    label: Workspace
+    logs: Logs
+    python: Python shell
+    search: Search
+    settings: Settings
+    tui: TUI
+  session:
+    enter_restarts: Enter restarts
+    exit_line: '[Process exited with code {code}. Press Enter to start again.]'
+    exited: exited {code}
+    failed: 'The session couldn''t start: {reason}'
+  settings:
+    always_dark: Always dark
+    appearance: Appearance
+    dark: Dark
+    docs_and_tui: Docs and TUI
+    first_pane: First pane
+    follow_docs: Follow docs
+    layout_reset: Layout reset
+    light: Light
+    match_appearance: Match appearance
+    reset_layout: Reset layout
+    side_by_side: Side by side
+    stacked: Stacked
+    terminal_text: Terminal text
+    terminals: Terminals
+    title: Settings
+  split:
+    resize: Resize docs and TUI
+    side_by_side: Put docs and TUI side by side
+    stack: Stack docs and TUI
+    swap: Swap docs and TUI
+  toast:
+    copied: Copied
+  tui:
+    hide: Hide the TUI
+    label: Cadrumo TUI
+    show: Show the TUI
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar

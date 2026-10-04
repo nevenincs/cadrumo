@@ -496,6 +496,119 @@ core:
     errors:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
+desktop:
+  action:
+    docs_back: Atrás
+    docs_forward: Adelante
+    logs_errors: Mostrar solo errores en los registros
+    logs_reset: Quitar los filtros de los registros
+    zoom_in: Ampliar la documentación
+    zoom_out: Reducir la documentación
+    zoom_reset: Restablecer el zoom de la documentación
+  docs:
+    frame_title: Documentación de Cadrumo
+  host:
+    unavailable: Esta parte necesita la aplicación de escritorio.
+  logs:
+    clear_logger: Quitar el filtro de logger
+    dropped: 'Registros antiguos descartados de esta vista: {count}'
+    empty: El registro está vacío.
+    errors: 'Errores: {count}'
+    filter: Filtrar
+    follow: Seguir
+    follow_hint: Mantener visible el registro más reciente
+    level_all: Todos los niveles
+    level_error: Solo errores
+    level_info: Info y más graves
+    level_warning: Avisos y más graves
+    minimum_level: Nivel mínimo
+    no_match: Ningún registro coincide con estos filtros.
+    source_host: Escritorio
+    source_python: Python
+    sources: Orígenes
+    state_available: cadrumo.log
+    state_missing: Aún no hay archivo de registro
+    state_missing_detail: Aún no hay archivo de registro. Los registros aparecerán
+      cuando un proceso de Cadrumo escriba uno.
+    state_unreadable: No se puede leer el registro
+    warnings: 'Avisos: {count}'
+  menu:
+    clear: Limpiar
+    copy: Copiar
+    copy_line: Copiar la línea
+    copy_link: Copiar la dirección del enlace
+    copy_visible: Copiar lo visible
+    only_level: Mostrar solo {level} y más graves
+    only_logger: Mostrar solo este logger
+    paste: Pegar
+    select_all: Seleccionar todo
+  palette:
+    actions: Acciones
+    documentation: Documentación
+    kind_casilla: Casilla
+    kind_cli: Comando
+    kind_term: Término
+    label: Buscar
+    no_results: Ninguna página coincide con «{query}».
+    placeholder: Busca en la documentación o ejecuta una acción
+    searching: Buscando…
+    type_to_search: Escribe para buscar.
+    unavailable: La búsqueda en la documentación no está disponible.
+  pane:
+    docs: Documentación
+    maximize_docs: Maximizar la documentación
+    maximize_focused: Maximizar el área activa
+    maximize_panel: Maximizar el panel inferior
+    maximize_tui: Maximizar la TUI
+    restore: Restaurar la disposición
+    tui: TUI
+  panel:
+    hide: Ocultar el panel inferior
+    label: Panel inferior
+    resize: Cambiar el tamaño del panel inferior
+    show: Mostrar el panel inferior
+  rail:
+    console: Consola
+    docs_home: Inicio de la documentación
+    label: Espacio de trabajo
+    logs: Registros
+    python: Shell de Python
+    search: Buscar
+    settings: Ajustes
+    tui: TUI
+  session:
+    enter_restarts: Intro lo reinicia
+    exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
+      a empezar.]'
+    exited: terminó ({code})
+    failed: 'La sesión no ha podido iniciarse: {reason}'
+  settings:
+    always_dark: Siempre oscuro
+    appearance: Apariencia
+    dark: Oscuro
+    docs_and_tui: Documentación y TUI
+    first_pane: Primer panel
+    follow_docs: Como la documentación
+    layout_reset: Disposición restablecida
+    light: Claro
+    match_appearance: Según la apariencia
+    reset_layout: Restablecer la disposición
+    side_by_side: Lado a lado
+    stacked: Apiladas
+    terminal_text: Texto del terminal
+    terminals: Terminales
+    title: Ajustes
+  split:
+    resize: Cambiar el tamaño de documentación y TUI
+    side_by_side: Poner documentación y TUI lado a lado
+    stack: Apilar documentación y TUI
+    swap: Intercambiar documentación y TUI
+  toast:
+    copied: Copiado
+  tui:
+    hide: Ocultar la TUI
+    label: TUI de Cadrumo
+    show: Mostrar la TUI
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente

@@ -184,12 +184,18 @@ export type LogSubscription = {
 
 export type ClipboardText = { text: string };
 
-export type ContextMenuItem = {
+export type ContextMenuAction = {
   /** Unique within one menu; the host namespaces it internally. */
   id: string;
   label: string;
   enabled: boolean;
+  /** Display-only accelerator text shown beside the label; binds nothing. */
+  shortcut?: string;
 };
+
+export type ContextMenuSeparator = { separator: true };
+
+export type ContextMenuItem = ContextMenuAction | ContextMenuSeparator;
 
 export type ContextMenuRequest = {
   items: ContextMenuItem[];

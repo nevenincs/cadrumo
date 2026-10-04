@@ -39,6 +39,31 @@ foreach(action IN ITEMS build check test)
     WORKING_DIRECTORY "${desktop_frontend}" VERBATIM)
 endforeach()
 
+# Shell inputs generated from their canonical sources: the chrome strings from the
+# locale catalogues and the palette from the documentation theme. They are build
+# outputs, ignored by Git, and regenerate whenever a source or a generator changes.
+set(desktop_generated "${desktop_frontend}/src/generated")
+set(desktop_generator "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
+  "${CADRUMO_DEV_PYTHON}" -B -m)
+file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*.yml" "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
+list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
+add_custom_command(OUTPUT "${desktop_generated}/chrome-strings.json"
+  COMMAND ${desktop_generator} dev.locales.desktop_chrome --output "${desktop_generated}/chrome-strings.json"
+  DEPENDS ${desktop_chrome_inputs} "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+add_custom_command(OUTPUT "${desktop_generated}/palette.css"
+  COMMAND ${desktop_generator} dev.docs.desktop_palette --output "${desktop_generated}/palette.css"
+  DEPENDS "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-docs.css"
+    "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+add_custom_target(desktop-frontend-generated
+  DEPENDS "${desktop_generated}/chrome-strings.json" "${desktop_generated}/palette.css")
+foreach(action IN ITEMS build test)
+  add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
+endforeach()
+
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Docs.cmake")
 find_program(CADRUMO_NODE NAMES node REQUIRED)
 add_custom_target(desktop-paths-test

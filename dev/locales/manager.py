@@ -109,7 +109,7 @@ class LocaleManager:
         fixture payload or assertion literal can never inject a phantom
         required key that no production code requests.
 
-        Combines five discovery paths:
+        Combines six discovery paths:
 
         1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
         2. AST scanner — programmatic emissions such as
@@ -130,6 +130,10 @@ class LocaleManager:
            so these were invisible to every parity check and sat unresolved in
            all four catalogues. See
            :mod:`locales._registry_scanner`.
+        6. Desktop chrome declaration - the keys the desktop shell's
+           TypeScript frontend reads from its generated strings file. No
+           Python call site names them, so they are declared once by the
+           generator. See :mod:`locales.desktop_chrome`.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
         are returned by :meth:`get_codebase_namespaces` and checked
@@ -141,6 +145,7 @@ class LocaleManager:
         from ._ast_scanner import scan_source_trees
         from ._command_spec_scanner import scan_command_spec_keys
         from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
+        from .desktop_chrome import DESKTOP_CHROME_KEYS
         from .fstring_registry import get_registered_keys
 
         if self._codebase_keys is not None:
@@ -176,6 +181,7 @@ class LocaleManager:
         keys.update(scan_profile_schema_keys())
         keys.update(scan_modelo_schema_keys())
         keys.update(wizard_descriptor_keys())
+        keys.update(DESKTOP_CHROME_KEYS)
         report_unread(
             "locale key scan",
             "any key they use is absent from this set and would look unused",

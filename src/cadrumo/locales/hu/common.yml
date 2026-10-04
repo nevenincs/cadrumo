@@ -481,6 +481,118 @@ core:
     errors:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
+desktop:
+  action:
+    docs_back: Vissza
+    docs_forward: Előre
+    logs_errors: Csak a hibák a naplókban
+    logs_reset: Naplószűrők törlése
+    zoom_in: Dokumentáció nagyítása
+    zoom_out: Dokumentáció kicsinyítése
+    zoom_reset: Dokumentáció nagyításának visszaállítása
+  docs:
+    frame_title: Cadrumo-dokumentáció
+  host:
+    unavailable: Ehhez a részhez az asztali alkalmazás kell.
+  logs:
+    clear_logger: Loggerszűrő törlése
+    dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
+    empty: A napló üres.
+    errors: 'Hibák: {count}'
+    filter: Szűrés
+    follow: Követés
+    follow_hint: A legújabb bejegyzés maradjon látható
+    level_all: Minden szint
+    level_error: Csak hibák
+    level_info: Info és súlyosabb
+    level_warning: Figyelmeztetés és súlyosabb
+    minimum_level: Minimális szint
+    no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
+    source_host: Asztali alkalmazás
+    source_python: Python
+    sources: Források
+    state_available: cadrumo.log
+    state_missing: Még nincs naplófájl
+    state_missing_detail: Még nincs naplófájl. A bejegyzések akkor jelennek meg, amikor
+      egy Cadrumo-folyamat naplózni kezd.
+    state_unreadable: A napló nem olvasható
+    warnings: 'Figyelmeztetések: {count}'
+  menu:
+    clear: Törlés
+    copy: Másolás
+    copy_line: Sor másolása
+    copy_link: Hivatkozás címének másolása
+    copy_visible: Látható sorok másolása
+    only_level: Csak {level} és súlyosabb
+    only_logger: Csak ez a logger
+    paste: Beillesztés
+    select_all: Az összes kijelölése
+  palette:
+    actions: Műveletek
+    documentation: Dokumentáció
+    kind_casilla: Casilla
+    kind_cli: Parancs
+    kind_term: Fogalom
+    label: Keresés
+    no_results: 'Egy oldal sem felel meg ennek: „{query}”.'
+    placeholder: Keress a dokumentációban, vagy futtass egy műveletet
+    searching: Keresés…
+    type_to_search: Írj a kereséshez.
+    unavailable: A dokumentáció keresése nem érhető el.
+  pane:
+    docs: Dokumentáció
+    maximize_docs: Dokumentáció teljes méretben
+    maximize_focused: Aktív terület teljes méretben
+    maximize_panel: Alsó panel teljes méretben
+    maximize_tui: TUI teljes méretben
+    restore: Elrendezés visszaállítása
+    tui: TUI
+  panel:
+    hide: Alsó panel elrejtése
+    label: Alsó panel
+    resize: Alsó panel átméretezése
+    show: Alsó panel megjelenítése
+  rail:
+    console: Konzol
+    docs_home: Dokumentáció kezdőlapja
+    label: Munkaterület
+    logs: Naplók
+    python: Python-shell
+    search: Keresés
+    settings: Beállítások
+    tui: TUI
+  session:
+    enter_restarts: Enter újraindítja
+    exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
+    exited: kilépett ({code})
+    failed: 'A munkamenet nem tudott elindulni: {reason}'
+  settings:
+    always_dark: Mindig sötét
+    appearance: Megjelenés
+    dark: Sötét
+    docs_and_tui: Dokumentáció és TUI
+    first_pane: Első panel
+    follow_docs: A dokumentáció szerint
+    layout_reset: Elrendezés visszaállítva
+    light: Világos
+    match_appearance: A megjelenés szerint
+    reset_layout: Elrendezés alaphelyzetbe
+    side_by_side: Egymás mellett
+    stacked: Egymás alatt
+    terminal_text: Terminál szövegmérete
+    terminals: Terminálok
+    title: Beállítások
+  split:
+    resize: Dokumentáció és TUI átméretezése
+    side_by_side: Dokumentáció és TUI egymás mellé
+    stack: Dokumentáció és TUI egymás alá
+    swap: Dokumentáció és TUI felcserélése
+  toast:
+    copied: Másolva
+  tui:
+    hide: TUI elrejtése
+    label: Cadrumo TUI
+    show: TUI megjelenítése
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár
