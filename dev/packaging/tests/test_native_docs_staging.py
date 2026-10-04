@@ -7,15 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.build import DOCS_FLAVOR_ENV, docs_build_flavor
-
-from ..native.docs_build import _owner_environment
 from ..native.docs_stage import (
     DocsPackagingError,
     csp_hash,
     declared_languages,
     package_prefix,
     scan_page,
+    served_media_types,
     stage_roots,
     verified_stage,
 )
@@ -68,7 +66,8 @@ def test_csp_hash_matches_the_specification_example_and_html_newline_normalizati
 
 
 def test_scan_counts_only_executing_inline_scripts() -> None:
-    findings = scan_page(PAGE + '<script type="module">import "./a.js";</script><script type="text/plain">x</script>')
+    page = PAGE + '<script type="module">import "./a.js";</script><script type="text/plain">x</script>'
+    findings = scan_page(page, served_media_types(load_layout()["user_docs"]))
     assert findings.inline_scripts == [THEME_SNIPPET, 'import "./a.js";']
     assert findings.refused == []
 
@@ -138,9 +137,9 @@ def test_staging_refuses_remote_resources_and_names_each_offender(tmp_path: Path
     with pytest.raises(DocsPackagingError) as refusal:
         stage_roots(build)
     message = str(refusal.value)
-    assert "<script src> https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js: 2 page(s)" in message
-    assert "<link href> //fonts.example.net/a.css: 2 page(s)" in message
-    assert f"first {package_prefix(languages[0])}how-to/modelo-303.html" in message
+    assert "<script src> https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js: 2 location(s)" in message
+    assert "<link href> //fonts.example.net/a.css: 2 location(s)" in message
+    assert f"first {package_prefix(languages[0])}how-to/modelo-303.html:5" in message
     assert not (build / "user-docs/stage/ready").exists()
 
 
@@ -173,11 +172,3 @@ def test_language_declaration_must_be_unique_supported_languages(languages: obje
 def test_assembly_with_documentation_refuses_a_missing_stage_and_names_the_remedy(tmp_path: Path) -> None:
     with pytest.raises(DocsPackagingError, match="has not run for this CMake binary directory"):
         verified_stage(tmp_path / "user-docs/stage", load_layout()["user_docs"])
-
-
-def test_owner_builds_pin_the_desktop_flavor_over_an_ambient_web_selection(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
-    environment = _owner_environment(tmp_path / "build", tmp_path / "storage", check_sequences=True, jobs=1)
-    assert docs_build_flavor(environment) == "desktop"

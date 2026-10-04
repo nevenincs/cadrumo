@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:3cb450758d3e394dd9f3594e51a457d9f586f7b1ba6d1d35338b930dfb69423e'
+body_hash: 'sha256:1e9b1c2266282eb8fb64f3feb7b6ba0d749483bce9e9e461af84cfac54b2967e'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -297,6 +297,13 @@ related:
 - `S09` `verify:` `npm run check` -> `pass`
 - `S09` `verify:` `npm run build` -> `pass`
 - `S09` `verify:` `npx playwright test (12)` -> `pass`
+- `S01` `M` `dev/packaging/native/docs_stage.py`
+- `S01` `A` `dev/packaging/tests/test_native_docs_references.py`
+- `S01` `A` `dev/packaging/tests/test_native_docs_build.py`
+- `S01` `verify:` `pytest docs references, staging, build and layout-consumer packaging tests (124 passed, 2 skipped) and ruff, format, ty` -> `pass`
+- `S01` `verify:` `17 gate-check removals and 2 owner-environment removals each fail their falsifier test; source restored byte-identical` -> `pass`
+- `S01` `verify:` `widened gate over real es/ca/hu web roots and S05 desktop staging (only the MathJax CDN script refused; desktop es clean)` -> `pass`
+- `S01` `by:` `implementation-engineer-high`
 
 ## Notes
 

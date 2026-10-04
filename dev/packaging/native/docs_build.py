@@ -46,6 +46,14 @@ def _owner_environment(build_root: Path, storage: Path, *, check_sequences: bool
     return environment
 
 
+def owner_build(
+    language: str, root: Path, storage: Path, *, build_root: Path, check_sequences: bool, jobs: int
+) -> tuple[list[str], dict[str, str]]:
+    """Return the owner command and pinned environment that build one language root."""
+    command = language_build_command(language, root.parent)
+    return command, _owner_environment(build_root, storage, check_sequences=check_sequences, jobs=jobs)
+
+
 def build_roots(build: Path, inputs: Path) -> None:
     """Build every declared root with the owning driver unless its enrolled inputs are unchanged."""
     paths = build_paths(build)
@@ -77,10 +85,16 @@ def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) 
         if storage.exists():
             shutil.rmtree(storage)
         storage.mkdir(parents=True)
-        environment = _owner_environment(build_root, storage, check_sequences=language == languages[0], jobs=jobs)
+        command, environment = owner_build(
+            language,
+            roots[language],
+            storage,
+            build_root=build_root,
+            check_sequences=language == languages[0],
+            jobs=jobs,
+        )
         log = work / f"{language}.log"
         print(f"Building {language} user documentation; log: {log}", flush=True)
-        command = language_build_command(language, roots[language].parent)
         result = run_command(command, cwd=REPO_ROOT, environment=environment, errors="replace")
         log.write_text(result.stdout + result.stderr, encoding="utf-8")
         print(f"Documentation {language}: exit {result.returncode} in {result.duration_seconds:.0f} s", flush=True)
