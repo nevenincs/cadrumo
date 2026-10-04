@@ -10,6 +10,51 @@ line_ending = 'none'
 required = true
 
 [[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f095'
+offset = 5869
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.op2-proveedor-pais-referencia'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+required_with = 'decl.op2-numero'
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f096'
+offset = 5871
+length = 50
+kind = 'casilla'
+casilla_id = 'decl.op2-proveedor-referencia-fiscal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+required_with = 'decl.op2-numero'
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
+id = 'm360-2010.pagina02.f097'
+offset = 5921
+length = 125
+kind = 'casilla'
+casilla_id = 'decl.op2-proveedor-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+required_with = 'decl.op2-numero'
+legal_refs = ['orden-eha-789-2010:art-1']
+source_refs = ['aeat-dr-360-2010']
+
+[[revisions.2010-y-siguientes.export_layouts.records.fields]]
 id = 'm360-2010.pagina02.f098'
 offset = 6046
 length = 148
@@ -20,6 +65,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -34,6 +80,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -48,6 +95,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 

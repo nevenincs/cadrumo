@@ -291,6 +291,7 @@ def _require_derivation_field_semantics(field: ExportFieldDefinition, semantic_e
         "projection_ref",
         "draft_attribute",
         "computed_key",
+        "required_with",
         "legal_refs",
         "source_refs",
     ):
@@ -618,6 +619,8 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
         _omit_undeclared_field_keys(derivation["field"])
         if derivation["semantic_entry"]["part"] is None:
             del derivation["semantic_entry"]["part"]
+        if derivation["semantic_entry"]["required_with"] is None:
+            del derivation["semantic_entry"]["required_with"]
         if derivation["verdict"] is None:
             del derivation["verdict"]
     return canonical_json_bytes(payload)

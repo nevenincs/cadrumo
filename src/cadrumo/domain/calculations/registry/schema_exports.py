@@ -530,6 +530,18 @@ class ExportFieldDefinition(RegistryModel):
     entity. A layout cannot know the filer, so the condition is carried here
     and evaluated at export against the filing's own taxpayer.
     """
+    required_with: CasillaId | None = None
+    """The casilla whose presence makes this field required, for a slot block that may be empty.
+
+    A page can repeat an occurrence block whose campos the design marks
+    obligatorio for each occurrence it carries -- DR360 página 2 holds operation
+    1 and operation 2 -- while a filing with fewer occurrences leaves the later
+    block empty. Every field of such a block names the block's anchor casilla
+    (its número de operación): with the anchor present the field keeps its
+    design requirement, and with the anchor absent the field must be absent
+    too and renders its blank fill, so a block is either an occurrence or blank
+    and padding never stands in for a missing obligatorio campo.
+    """
     design_type: Literal["N", "Num"] | None = None
     """The numeric type the official record design prints for this slot.
 

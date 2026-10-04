@@ -20,7 +20,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f002"
 kind = "computed"
-computed_key = "complementaria_page_marker"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -620,6 +620,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f052"
 kind = "casilla"
 casilla_id = "decl.op2-numero"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -643,6 +644,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f054"
 kind = "casilla"
 casilla_id = "decl.op2-tipo"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -655,6 +657,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f055"
 kind = "casilla"
 casilla_id = "decl.op2-factura"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -667,6 +670,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f056"
 kind = "casilla"
 casilla_id = "decl.op2-fecha"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -679,6 +683,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f057"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-1"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -691,6 +696,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f058"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-1"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -703,6 +709,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f059"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-1"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -715,6 +722,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f060"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-2"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -727,6 +735,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f061"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-2"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -739,6 +748,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f062"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-2"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -751,6 +761,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f063"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-3"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -763,6 +774,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f064"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-3"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -775,6 +787,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f065"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-3"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -787,6 +800,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f066"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-4"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -799,6 +813,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f067"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-4"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -811,6 +826,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f068"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-4"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -823,6 +839,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f069"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-5"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -835,6 +852,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f070"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-5"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -847,6 +865,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f071"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-5"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -859,6 +878,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f072"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-6"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -871,6 +891,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f073"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-6"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -883,6 +904,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f074"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-6"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -895,6 +917,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f075"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-7"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -907,6 +930,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f076"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-7"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -919,6 +943,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f077"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-7"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -931,6 +956,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f078"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-8"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -943,6 +969,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f079"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-8"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -955,6 +982,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f080"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-8"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -967,6 +995,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f081"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-9"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -979,6 +1008,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f082"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-9"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -991,6 +1021,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f083"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-9"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1003,6 +1034,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f084"
 kind = "casilla"
 casilla_id = "decl.op2-codigo-10"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1015,6 +1047,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f085"
 kind = "casilla"
 casilla_id = "decl.op2-idioma-10"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1027,6 +1060,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f086"
 kind = "casilla"
 casilla_id = "decl.op2-descripcion-10"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1039,6 +1073,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f087"
 kind = "casilla"
 casilla_id = "decl.op2-base"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1051,6 +1086,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f088"
 kind = "casilla"
 casilla_id = "decl.op2-cuota"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1063,6 +1099,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f089"
 kind = "casilla"
 casilla_id = "decl.op2-prorrata"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1075,6 +1112,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f090"
 kind = "casilla"
 casilla_id = "decl.op2-importe"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1087,6 +1125,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f091"
 kind = "casilla"
 casilla_id = "decl.op2-divisa"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1099,6 +1138,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f092"
 kind = "casilla"
 casilla_id = "decl.op2-simplificada"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1111,6 +1151,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f093"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-pais-nvat"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1123,6 +1164,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f094"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-nvat"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1135,6 +1177,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f095"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-pais-referencia"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1147,6 +1190,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f096"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-referencia-fiscal"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1159,6 +1203,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f097"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-nombre"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1171,6 +1216,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f098"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-direccion"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1183,6 +1229,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f099"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-telefono"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1195,6 +1242,7 @@ record_identity = "Pág. 2"
 export_field_id = "m360-2010.pagina02.f100"
 kind = "casilla"
 casilla_id = "decl.op2-proveedor-pais"
+required_with = "decl.op2-numero"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]

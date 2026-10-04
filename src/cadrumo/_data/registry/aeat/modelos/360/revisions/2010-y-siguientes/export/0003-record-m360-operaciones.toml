@@ -28,7 +28,7 @@ id = 'm360-2010.pagina02.f002'
 offset = 10
 length = 1
 kind = 'computed'
-computed_key = 'complementaria_page_marker'
+computed_key = 'continuation_page_marker'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -743,6 +743,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = false
+required_with = 'decl.op2-numero'
 design_type = 'Num'
 value_policy = 'unsigned-integer'
 legal_refs = ['orden-eha-789-2010:art-1']
@@ -772,6 +773,7 @@ required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -786,6 +788,7 @@ required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -801,6 +804,7 @@ padding = 'none'
 justification = 'none'
 date_format = 'ddmmaaaa'
 signed = false
+required_with = 'decl.op2-numero'
 value_policy = 'ddmmyyyy'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
@@ -816,6 +820,7 @@ required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -830,6 +835,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -844,6 +850,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -858,6 +865,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -872,6 +880,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -886,6 +895,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -900,6 +910,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -914,6 +925,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -928,6 +940,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -942,6 +955,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -956,6 +970,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -970,6 +985,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -984,6 +1000,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -998,6 +1015,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1012,6 +1030,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1026,6 +1045,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1040,6 +1060,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1054,6 +1075,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1068,6 +1090,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1082,6 +1105,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1096,6 +1120,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1110,6 +1135,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1124,6 +1150,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1138,6 +1165,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1152,6 +1180,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1166,6 +1195,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1180,6 +1210,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1194,6 +1225,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1208,6 +1240,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1222,6 +1255,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1236,6 +1270,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = true
+required_with = 'decl.op2-numero'
 design_type = 'N'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
@@ -1251,6 +1286,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = true
+required_with = 'decl.op2-numero'
 design_type = 'N'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
@@ -1267,6 +1303,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+required_with = 'decl.op2-numero'
 design_type = 'Num'
 value_policy = 'implied-decimal'
 legal_refs = ['orden-eha-789-2010:art-1']
@@ -1283,6 +1320,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = true
+required_with = 'decl.op2-numero'
 design_type = 'N'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
@@ -1298,6 +1336,7 @@ required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1312,6 +1351,7 @@ required = true
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1326,6 +1366,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 
@@ -1340,48 +1381,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
-legal_refs = ['orden-eha-789-2010:art-1']
-source_refs = ['aeat-dr-360-2010']
-
-[[revisions.2010-y-siguientes.export_layouts.records.fields]]
-id = 'm360-2010.pagina02.f095'
-offset = 5869
-length = 2
-kind = 'casilla'
-casilla_id = 'decl.op2-proveedor-pais-referencia'
-data_type = 'text'
-required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
-legal_refs = ['orden-eha-789-2010:art-1']
-source_refs = ['aeat-dr-360-2010']
-
-[[revisions.2010-y-siguientes.export_layouts.records.fields]]
-id = 'm360-2010.pagina02.f096'
-offset = 5871
-length = 50
-kind = 'casilla'
-casilla_id = 'decl.op2-proveedor-referencia-fiscal'
-data_type = 'text'
-required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
-legal_refs = ['orden-eha-789-2010:art-1']
-source_refs = ['aeat-dr-360-2010']
-
-[[revisions.2010-y-siguientes.export_layouts.records.fields]]
-id = 'm360-2010.pagina02.f097'
-offset = 5921
-length = 125
-kind = 'casilla'
-casilla_id = 'decl.op2-proveedor-nombre'
-data_type = 'text'
-required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+required_with = 'decl.op2-numero'
 legal_refs = ['orden-eha-789-2010:art-1']
 source_refs = ['aeat-dr-360-2010']
 

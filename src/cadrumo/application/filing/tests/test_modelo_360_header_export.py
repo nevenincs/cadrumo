@@ -59,7 +59,7 @@ from ..producer_snapshot_m360 import (
     Modelo360SolicitudFacts,
 )
 from ..projection import FilingRecordRenderContext
-from ..record_field_renderer import render_record
+from ..record_field_renderer import continuation_page_marker, format_field, render_record
 from ..record_renderer import record_render_rows
 from ..runtime import ModeloOperatorProfile
 from .export_support import _schema_provider
@@ -212,6 +212,43 @@ def _pagina_1(snapshot: FilingProducerSnapshot, *, extra_inputs: dict[str, Model
 
 def _refund_account(*, swift_bic: str = "CAIXESBBXXX") -> RefundAccount:
     return RefundAccount(iban="ES9121000418450200051332", swift_bic=swift_bic)
+
+
+@pytest.mark.parametrize(("occurrence", "marker"), [(1, " "), (2, "C")], ids=("principal", "continuation"))
+def test_pagina_2_campo_2_marks_a_continuation_page_never_an_amendment(occurrence: int, marker: str) -> None:
+    """DR360 página 2 campo 2 ``blanco o "C" (compl.)``: blank on the principal page, C on a further one.
+
+    DR353 states the reading the 360 slot shares: "se cumplimentará cuando en el fichero
+    van más de una página del mismo tipo". Modelo 360 has no complementaria declaration,
+    so the slot follows the page occurrence and nothing else.
+    """
+    provider = _schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
+    registry_snapshot = provider.get_snapshot("360")
+    (layout,) = registry_snapshot.revision.export_layouts
+    (record,) = (record for record in layout.records if str(record.id) == "m360-operaciones")
+    (field,) = (field for field in record.fields if field.offset == 10)
+
+    assert field.computed_key == "continuation_page_marker"
+    context = FilingRecordRenderContext(
+        registry_snapshot=registry_snapshot,
+        layout=layout,
+        record=record,
+        occurrence=occurrence,
+    )
+    rendered = format_field(
+        field, continuation_page_marker(_draft_stub(provider), _snapshot(_minimal_profile()), context)
+    )
+    assert rendered == marker
+
+
+def _draft_stub(provider):
+    return build_draft(
+        modelo="360",
+        period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
+        profile=ModeloOperatorProfile(tax_id=_TAX_ID, display_name="SOLICITANTE PRUEBA"),
+        inputs={"decl.ejercicio": str(_YEAR), "devolucion.importe-solicitado": Decimal("38.00")},
+        schema_provider=provider,
+    )
 
 
 def _snapshot(

@@ -80,6 +80,7 @@ def validate_export_field_kind(field: ExportFieldDefinition) -> None:
         )
     _validate_field_render_shape(field)
     _validate_required_for(field)
+    _validate_required_with(field)
     _validate_design_type(field)
 
 
@@ -197,6 +198,16 @@ def _validate_required_for(field: ExportFieldDefinition) -> None:
     if field.required:
         raise RegistryValidationError(
             f"export field {field.id!r} is required unconditionally and cannot also declare required_for",
+        )
+
+
+def _validate_required_with(field: ExportFieldDefinition) -> None:
+    """Admit a block anchor only on a casilla the export can read beside its anchor."""
+    if field.required_with is None:
+        return
+    if field.kind != CasillaFieldKind.CASILLA:
+        raise RegistryValidationError(
+            f"export field {field.id!r} can declare required_with only on a casilla field, not {field.kind.value!r}",
         )
 
 

@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:8ebb240bdf67ff7d6b75c476edf2a92f424d5adbca2ac0079aba4bfab4ab0c5b'
+body_hash: 'sha256:61e5b7bc60c270ca0a4a73919d329ea105ca5bee18cc427b101c635cc6294da6'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -68,7 +68,7 @@ Gives Modelo 360 its grounded DEVOLUCION disposition, reconciles its account wit
 - [x] `P04.S14` - replace the INGRESO fallback with a fixed DEVOLUCION spec for 360, a refusal for header-declaring modelos without a spec, and an absent disposition elsewhere, allowing absence in receipts and events; `src/cadrumo/core/result_disposition.py, src/cadrumo/application/modelo/result_disposition_resolution.py`.
 - [x] `P04.S15` - replace the embedded 360 refund account with an own-account reference or an embedded representante account and turn a missing account or BIC into a typed refusal; `src/cadrumo/application/filing/producer_snapshot_m360.py, producer_snapshot.py, src/cadrumo/application/modelo/export.py, src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py`.
 - [ ] `P04.S16` - add a registered operation and CLI to declare, list and remove 360 solicitudes; `src/cadrumo/application/modelo/, src/cadrumo/entrypoints/cli/, src/cadrumo/locales/*/cli.yml`.
-- [ ] `P04.S28` - ground and fix the remaining 360 pagina 2 defects against DR360 v2.1: whether the C indicator means a complementaria or a continuation page (DR353 reads it as continuation), why a one-operation solicitud refuses on the operation-2 fields, and accepting ISO operation dates rendered as DDMMAAAA, with byte tests through the real export builder; `src/cadrumo/application/filing/producer_snapshot_m360.py, dev/registry/pipeline/ (360 export tree), src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`.
+- [x] `P04.S28` - ground and fix the remaining 360 pagina 2 defects against DR360 v2.1: whether the C indicator means a complementaria or a continuation page (DR353 reads it as continuation), why a one-operation solicitud refuses on the operation-2 fields, and accepting ISO operation dates rendered as DDMMAAAA, with byte tests through the real export builder; `src/cadrumo/application/filing/producer_snapshot_m360.py, dev/registry/pipeline/ (360 export tree), src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`.
 
 ### Phase `P05` - remaining 303 export fixes
 

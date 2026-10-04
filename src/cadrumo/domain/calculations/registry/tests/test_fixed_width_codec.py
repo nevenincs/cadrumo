@@ -685,6 +685,49 @@ def test_record_renders_when_an_optional_numeric_casilla_is_absent() -> None:
     assert body == b"20100000"
 
 
+def _occurrence_block_record() -> ExportRecordDefinition:
+    """Operation 1 always present; operation 2 a block anchored on its own número (DR360 página 2)."""
+    return ExportRecordDefinition(
+        id="occurrence-block-record",
+        record_type="2",
+        order=0,
+        encoding="iso-8859-1",
+        line_ending="none",
+        fields=(
+            _field(id="op1-numero", offset=1, length=2, casilla_id="01", required=True),
+            _field(id="op2-numero", offset=3, length=2, casilla_id="02", required=True, required_with="02"),
+            _field(id="op2-importe", offset=5, length=4, casilla_id="03", required=True, required_with="02"),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("field_values", "expected"),
+    [
+        pytest.param({"01": "1", "02": "2", "03": "15"}, b"01020015", id="both-occurrences"),
+        pytest.param({"01": "1"}, b"01000000", id="empty-second-block-renders-its-fill"),
+    ],
+)
+def test_an_occurrence_block_is_whole_or_blank(field_values: dict[str, str], expected: bytes) -> None:
+    assert render_fixed_width_export_record_body(_occurrence_block_record(), field_values=field_values) == expected
+
+
+@pytest.mark.parametrize(
+    ("field_values", "field_id", "reason"),
+    [
+        pytest.param({"01": "1", "02": "2"}, "op2-importe", "fixed_width_value", id="anchored-block-missing-campo"),
+        pytest.param({"01": "1", "03": "15"}, "op2-importe", "block_anchor", id="campo-without-its-anchor"),
+    ],
+)
+def test_an_occurrence_block_refuses_a_partial_occurrence(
+    field_values: dict[str, str], field_id: str, reason: str
+) -> None:
+    with pytest.raises(FixedWidthRecordRenderError) as excinfo:
+        render_fixed_width_export_record_body(_occurrence_block_record(), field_values=field_values)
+
+    assert (excinfo.value.field_id, excinfo.value.reason) == (field_id, reason)
+
+
 def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
     """The same absent slot on a required field still refuses the record.
 

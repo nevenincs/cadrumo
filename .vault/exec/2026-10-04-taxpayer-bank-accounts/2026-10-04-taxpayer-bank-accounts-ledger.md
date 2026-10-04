@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b9a63f5a2d7e16060a4c9b996c79478fac92a511abc101b24103d0a10edec821'
+body_hash: 'sha256:6191ccf8e598041d27b690fb87b78c2eee8a43693d84463421f87175a506fa90'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -354,6 +354,32 @@ related:
 - `S20` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
 - `S20` `verify:` `dev.tui visual review: render ledger-import--ready, ledger-import-account-picker, ledger-import-account-previewed at default viewports in both themes (24 frames, no failures, no missing glyphs or geometry findings), diff against own-accounts-before, frames inspected for masking and layout` -> `pass`
 - `S20` `by:` `lane-e`
+- `S28` `M` `dev/registry/mappings/modelo_360/2010/0003-pagina02.toml`
+- `S28` `M` `dev/registry/pipeline/export_field_schema.py`
+- `S28` `M` `dev/registry/pipeline/export_fragment_provenance.py`
+- `S28` `M` `dev/registry/pipeline/export_fragment_provenance_projection.py`
+- `S28` `M` `dev/registry/pipeline/semantic_map.py`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/casillas/0001-declarations.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/0003-record-m360-operaciones.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/0004-record-m360-operaciones.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/_generation.provenance.json`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/export_field_validation.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/export_semantics.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S28` `M` `src/cadrumo/application/filing/record_field_renderer.py`
+- `S28` `M` `src/cadrumo/application/filing/export_verification.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S28` `M` `src/cadrumo/application/filing/tests/test_modelo_360_header_export.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
+- `S28` `verify:` `python -m dev.registry.pipeline republish-target 360 2010-y-siguientes (temporary record_drift row for the 2 page-2 record files, retired after) then target-current` -> `pass`
+- `S28` `verify:` `publish-authority --if-stale (identity_digest cdfea85c6b382368d6def7fa768b950ad4c767b9a6ed990bd9b42c2ecf751331)` -> `pass`
+- `S28` `verify:` `pytest test_modelo_360_solicitud_export.py (ISO fecha to ddmmaaaa, one-operation blank block, stray op2 campo refused) + test_modelo_360_header_export.py (campo 2 blank principal, C continuation) + test_fixed_width_codec.py occurrence-block cases` -> `pass`
+- `S28` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, domain/calculations/registry, adapters/outbound/aeat/export (7910 passed; only new ids are 6 modelo 180 committed-registry parses in a directory outside the baseline, unrelated to required_with)` -> `pass`
+- `S28` `verify:` `pytest dev/registry/pipeline/tests: failures trace to registry state (360 source ineligible for 2010, bootstrap targets already generated, 210 export_layouts clearance, m390 maps), none to required_with` -> `fail`
+- `S28` `verify:` `ruff check + ruff format + ty on touched scopes` -> `pass`
+- `S28` `by:` `lane-d`
 
 ## Notes
 
@@ -373,3 +399,5 @@ related:
 - `S07` ledger list/view display payloads do not show `own_account_id` yet; adding it to the canonical payload churns 36 CLI-sequence goldens, left for the display work
 - `S18` pre-existing failures left: `test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports` (every `runtime_*.py` door imports `adapters.local_runtime;` `runtime_own_accounts.py` follows that pattern), `test_theme` hardcoded measures in grouped.py and `overview_contracts.py,` declarations-overview heading rhythm; fixed the stale FieldEditScreen interface path in `dev/tui/harness/profile_fixtures.py` that blocked every render
 - `S20` `test_ledger_import_ux` CLI native tests fail with `REFUSED_LOCAL_RUNTIME` with and without this Step (checked against the committed `import_operation.py);` the TUI import door reads bank statements only, invoice books are refused with a pointer to app ledger invoice import because they have no registered preview; LedgerImportRequest gains `expected_source_sha256` and the result `source_digests` (application/ledger is Lane B scope, touched because the digest binding must be enforced in the worker)
+- `S28` `complementaria_page_marker` (amendment-driven C) is also mapped on the page indicators of 131, 232, 303 and 353, where DR353 and DR303 read the slot as a continuation-page marker too; only 360 moved to `continuation_page_marker` here
+- `S28` `required_with` is a new reviewed semantic-map and layout field: the block campos keep the design's obligatorio beside the anchor and render their blank fill without it

@@ -33,6 +33,13 @@ class ExportComputedKey(StrEnum):
     #: Modelo-neutral: any modelo whose design admits ``"C"`` on a
     #: complementaria page slot resolves it through this one key.
     COMPLEMENTARIA_PAGE_MARKER = "complementaria_page_marker"
+    #: Renders the official ``C`` "página complementaria" marker on a
+    #: continuation page -- a further page of the same type carrying the
+    #: occurrences the first could not hold -- and blank on the principal page.
+    #: DR353 states the reading outright ("se cumplimentará cuando en el fichero
+    #: van más de una página del mismo tipo"); DR360 página 2 prints the same
+    #: ``blanco o "C" (compl.)`` slot with no amendment meaning.
+    CONTINUATION_PAGE_MARKER = "continuation_page_marker"
     M303_COMPLEMENTARIA_MARKER = "m303_complementaria_marker"
     M303_NO_ACTIVITY_MARKER = "m303_no_activity_marker"
 

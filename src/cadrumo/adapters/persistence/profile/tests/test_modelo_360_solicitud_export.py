@@ -188,7 +188,8 @@ def _operation_inputs(ordinal: int, *, factura: str, base: str, cuota: str, impo
         _casilla(f"{prefix}-numero"): str(ordinal),
         _casilla(f"{prefix}-tipo"): "P",
         _casilla(f"{prefix}-factura"): factura,
-        _casilla(f"{prefix}-fecha"): f"1503{_YEAR}",
+        # Entered as an ISO date; DR360 campos 7 and 56 print it as ddmmaaaa.
+        _casilla(f"{prefix}-fecha"): f"{_YEAR}-03-15",
         _casilla(f"{prefix}-codigo-1"): "1",
         _casilla(f"{prefix}-base"): base,
         _casilla(f"{prefix}-cuota"): cuota,
@@ -209,8 +210,8 @@ def test_a_declared_solicitud_writes_the_fichero_with_a_blank_page_2_marker(
     written and blank is one of its two values. An initial solicitud carries no
     amendment evidence, so the marker is that blank. The operation campos are read back
     at their printed positions: Num campos zero-filled to width, An campos left-aligned
-    and space-filled, N amounts in cents zero-filled to fifteen digits, the fecha as
-    DDMMAAAA.
+    and space-filled, N amounts in cents zero-filled to fifteen digits, the fecha --
+    entered as an ISO date -- as DDMMAAAA.
     """
     bucket_id = seed_profile(tax_id=_TAX_ID)
     calculation_revision_id = _seed_360_revision(
@@ -261,6 +262,74 @@ def test_a_declared_solicitud_writes_the_fichero_with_a_blank_page_2_marker(
         (position, length): _dr360_slice(pagina_2, position, length) for position, length in expected_pagina_2
     }
     assert actual_pagina_2 == expected_pagina_2
+
+
+def test_a_one_operation_solicitud_leaves_the_second_operation_block_blank(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """DR360 página 2 carries operations 1 and 2; a solicitud with one leaves block 2 empty.
+
+    Campos 52-100 are obligatorio for the operation they carry, so with no operation 2
+    the block holds its blank fill -- Num campos zero-filled, An campos space-filled --
+    and campo 2 stays blank: this is the principal página 2, not a continuation page.
+    """
+    bucket_id = seed_profile(tax_id=_TAX_ID)
+    calculation_revision_id = _seed_360_revision(
+        bucket_id,
+        _operation_inputs(1, factura="FAC-2025-0001", base="100.00", cuota="21.00", importe="20.00"),
+    )
+    Modelo360SolicitudRepository(bucket_id=bucket_id).declare(_entry(account=_register_own_account(bucket_id)))
+    output = tmp_path / "modelo-360.txt"
+
+    _export(calculation_revision_id, output)
+
+    pagina_2 = output.read_bytes().decode("iso-8859-1")[_DR360_PAGINA_1_LENGTH:]
+    assert len(pagina_2) == _DR360_PAGINA_2_LENGTH
+    expected = {
+        (10, 1): " ",
+        (11, 5): "00001",
+        (70, 8): f"1503{_YEAR}",
+        (2733, 15): "000000000002000",
+        (3111, 5): "00000",
+        (3116, 1): " ",
+        (3117, 3): "   ",
+        (3120, 50): " " * 50,
+        # DR360 states no fill for an empty fecha; the registry writes an absent date as blanks.
+        (3170, 8): " " * 8,
+        (3178, 10): " " * 10,
+        (5798, 15): "0" * 15,
+        (5813, 15): "0" * 15,
+        (5833, 15): "0" * 15,
+        (5848, 3): "   ",
+        (5851, 1): " ",
+        (6391, 10): "</T360020>",
+    }
+    assert {(position, length): _dr360_slice(pagina_2, position, length) for position, length in expected} == expected
+
+
+def test_a_second_operation_campo_without_its_numero_is_refused(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """An operation-2 campo with no número de operación would print an operation with no identity."""
+    bucket_id = seed_profile(tax_id=_TAX_ID)
+    calculation_revision_id = _seed_360_revision(
+        bucket_id,
+        {
+            **_operation_inputs(1, factura="FAC-2025-0001", base="100.00", cuota="21.00", importe="20.00"),
+            _casilla("decl.op2-factura"): "FAC-2025-0002",
+        },
+    )
+    Modelo360SolicitudRepository(bucket_id=bucket_id).declare(_entry(account=_register_own_account(bucket_id)))
+    output = tmp_path / "modelo-360.txt"
+
+    with pytest.raises(ModeloExportError) as exc_info:
+        _export(calculation_revision_id, output)
+
+    assert isinstance(exc_info.value.context, dict)
+    assert "block anchor 'decl.op2-numero'" in str(exc_info.value.context["cause"])
+    assert not output.exists()
 
 
 def test_an_undeclared_solicitud_is_refused_before_any_file_is_written(

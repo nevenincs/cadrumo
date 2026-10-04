@@ -11,7 +11,10 @@ from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
-from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from ...domain.calculations.registry.fixed_width_codec import (
+    render_empty_block_slot,
+    render_fixed_width_export_field,
+)
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
@@ -239,6 +242,9 @@ def _render_field(
         render_context=render_context,
         projection_values=projection_values,
     )
+    if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)):
+        # The block carries no occurrence; _casilla_field_value refused any stray campo.
+        return render_empty_block_slot(field)
     return format_field(field, raw)
 
 
@@ -273,7 +279,7 @@ def _field_value(
         case CasillaFieldKind.DRAFT:
             return _draft_value(field, draft)
         case CasillaFieldKind.COMPUTED:
-            return _computed_field_value(field, draft, producer_snapshot)
+            return _computed_field_value(field, draft, producer_snapshot, render_context)
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 
@@ -294,7 +300,13 @@ def _m369_period_binding_value(field: ExportFieldDefinition, draft: ModeloDraft)
 def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:
     if field.casilla_id is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare casilla_id")
-    return casilla_values.get(field.casilla_id)
+    value = casilla_values.get(field.casilla_id)
+    if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)) and not _is_blank(value):
+        # An empty block has no occurrence to carry this campo.
+        raise FilingExportValidationError(
+            f"export field {field.id!r} has a value but its block anchor {field.required_with!r} has none",
+        )
+    return value
 
 
 def _binding_field_value(
@@ -365,8 +377,12 @@ def _required_for_this_taxpayer(field: ExportFieldDefinition, headers: Mapping[F
     return field.required_for is not None and _is_blank(headers.get(FilingProducerKey.TAXPAYER_LEGAL_NAME))
 
 
-def _envelope_closing_tag(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
-    del snapshot
+def _envelope_closing_tag(
+    draft: ModeloDraft,
+    snapshot: FilingProducerSnapshot,
+    context: FilingRecordRenderContext | None = None,
+) -> str:
+    del snapshot, context
     year = str(draft.period.filing_year)
     period_code = _draft_period_code(draft)
     return f"</T{draft.modelo}0{year}{period_code}0000>"
@@ -391,8 +407,12 @@ def _draft_period_end_date(draft: ModeloDraft) -> str:
     return draft.period.end_date.strftime("%d%m%Y")
 
 
-def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    del draft
+def _sepa_marca(
+    draft: ModeloDraft,
+    snapshot: FilingProducerSnapshot,
+    context: FilingRecordRenderContext | None = None,
+) -> str | None:
+    del draft, context
     selected = snapshot.selected_account
     if selected is None or isinstance(selected, ChargeAccountSelection):
         return None
@@ -404,44 +424,76 @@ def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | N
     ).value
 
 
-def complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+def complementaria_page_marker(
+    draft: ModeloDraft,
+    snapshot: FilingProducerSnapshot,
+    context: FilingRecordRenderContext | None = None,
+) -> str | None:
     """Render the official ``C`` page marker from amendment evidence alone.
 
     Core types:
     :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
-    del draft
+    del draft, context
     return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
 
 
-def m303_complementaria_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+def continuation_page_marker(
+    draft: ModeloDraft,
+    snapshot: FilingProducerSnapshot,
+    context: FilingRecordRenderContext | None = None,
+) -> str | None:
+    """Render ``C`` on a continuation page of its record and blank on the principal page.
+
+    The marker says the page continues an earlier page of the same type, which
+    is a fact of the record occurrence being written, never of the declaration's
+    amendment kind. A record rendered without an occurrence context is a single,
+    principal page.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
+    del draft, snapshot
+    return "C" if context is not None and context.occurrence > 1 else None
+
+
+def m303_complementaria_marker(
+    draft: ModeloDraft,
+    snapshot: FilingProducerSnapshot,
+    context: FilingRecordRenderContext | None = None,
+) -> str | None:
     """Render the official binary amendment marker from immutable amendment evidence.
 
     Core types:
     :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
-    del draft
+    del draft, context
     return "X" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
 
 
-def m303_no_activity_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+def m303_no_activity_marker(
+    draft: ModeloDraft,
+    snapshot: FilingProducerSnapshot,
+    context: FilingRecordRenderContext | None = None,
+) -> str | None:
     """Render ``X`` only for the closed Modelo 303 no-activity disposition.
 
     Core types:
     :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
-    del draft
+    del draft, context
     return "X" if snapshot.elections.result_disposition is ResultDisposition.NEGATIVA else None
 
 
 COMPUTED_VALUE_PRODUCERS: Mapping[
     ExportComputedKey,
-    Callable[[ModeloDraft, FilingProducerSnapshot], str | None],
+    Callable[[ModeloDraft, FilingProducerSnapshot, FilingRecordRenderContext | None], str | None],
 ] = {
     ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
     ExportComputedKey.SEPA_MARCA: _sepa_marca,
     ExportComputedKey.M303_COMPLEMENTARIA_MARKER: m303_complementaria_marker,
     ExportComputedKey.COMPLEMENTARIA_PAGE_MARKER: complementaria_page_marker,
+    ExportComputedKey.CONTINUATION_PAGE_MARKER: continuation_page_marker,
     ExportComputedKey.M303_NO_ACTIVITY_MARKER: m303_no_activity_marker,
 }
 
@@ -457,10 +509,11 @@ def _computed_field_value(
     field: ExportFieldDefinition,
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
+    render_context: FilingRecordRenderContext | None,
 ) -> str | None:
     if field.computed_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare computed_key")
-    return COMPUTED_VALUE_PRODUCERS[field.computed_key](draft, producer_snapshot)
+    return COMPUTED_VALUE_PRODUCERS[field.computed_key](draft, producer_snapshot, render_context)
 
 
 def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
@@ -481,6 +534,7 @@ __all__ = [
     "COMPUTED_VALUE_PRODUCERS",
     "DRAFT_VALUE_PRODUCERS",
     "complementaria_page_marker",
+    "continuation_page_marker",
     "format_field",
     "m303_complementaria_marker",
     "m303_no_activity_marker",

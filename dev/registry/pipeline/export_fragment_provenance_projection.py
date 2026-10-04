@@ -60,6 +60,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "legal_refs",
         "source_refs",
         "part",
+        "required_with",
     },
 )
 
@@ -152,6 +153,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "signed",
         "sign_position",
         "required_for",
+        "required_with",
         "design_type",
         "value_policy",
         "allowed_values",
@@ -170,6 +172,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
 _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = (
     "sign_position",
     "required_for",
+    "required_with",
     "design_type",
     "literal_fact",
     "minimum_year",
@@ -298,6 +301,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         "source_refs": _sorted_strings(payload["source_refs"], subject="semantic-map source_refs"),
         # Digested only when declared, so a map without parts keeps its digest.
         **({"part": payload["part"]} if payload["part"] is not None else {}),
+        **({"required_with": payload["required_with"]} if payload["required_with"] is not None else {}),
     }
 
 

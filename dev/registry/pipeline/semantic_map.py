@@ -338,6 +338,13 @@ class SemanticMapEntry(_StrictModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     part: SemanticMapPart | None = None
+    required_with: CasillaId | None = None
+    """The anchor casilla of the occurrence block this campo belongs to.
+
+    Reviewed, never inferred: the design marks each campo of a repeated block
+    obligatorio for the occurrence it carries, and only the author can say
+    that a later block may be empty. See ``ExportFieldDefinition.required_with``.
+    """
     """The sub-slot of its anchor's cell this entry fills, when the cell's text divides it."""
 
     @field_validator("projection_ref", mode="before")

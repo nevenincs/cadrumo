@@ -17,6 +17,7 @@ from ....core.export_layout_format import ExportLayoutFormat
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_value_policy import ExportValuePolicy, ParsedExportPolicyValue
+from .fixed_width_codec import render_empty_block_slot
 from .fixed_width_parser import parse_fixed_width_export_field
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from .schema_base import RegistryModel
@@ -529,6 +530,7 @@ def _parse_record_fields(
 ) -> tuple[ParsedExportFieldValue, ...]:
     parsed: list[ParsedExportFieldValue] = []
     ordered_fields = tuple(sorted(fields, key=lambda item: item.offset or 0))
+    empty_blocks = _empty_occurrence_blocks(record_text, ordered_fields)
     for field in ordered_fields:
         if field.offset is None or field.length is None:
             raise RegistryValidationError(f"export field {field.id!r} must declare offset and length")
@@ -537,7 +539,14 @@ def _parse_record_fields(
         raw = record_text[start:end]
         if len(raw) != field.length:
             raise RegistryValidationError(f"export field {field.id!r} ended before declared length")
-        value = _parse_field_value(field, raw)
+        if field.required_with is not None and field.required_with in empty_blocks:
+            if raw != render_empty_block_slot(field):
+                raise RegistryValidationError(
+                    f"export field {field.id!r} carries data inside an occurrence block with no anchor",
+                )
+            value: ParsedExportPolicyValue = None
+        else:
+            value = _parse_field_value(field, raw)
         if field.kind == CasillaFieldKind.LITERAL and value != field.literal:
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         parsed.append(
@@ -553,6 +562,26 @@ def _parse_record_fields(
         )
     _reconstruct_component_values(ordered_fields, parsed)
     return tuple(parsed)
+
+
+def _empty_occurrence_blocks(
+    record_text: str,
+    fields: tuple[ExportFieldDefinition, ...],
+) -> frozenset[CasillaId]:
+    """Return the anchors of the record's occurrence blocks whose anchor holds its blank fill.
+
+    An empty block carries no occurrence, so its campos are read as absent rather
+    than parsed against the requirement the design states for an occurrence.
+    """
+    anchors = {field.required_with for field in fields if field.required_with is not None}
+    empty: set[CasillaId] = set()
+    for field in fields:
+        if field.casilla_id not in anchors or field.offset is None or field.length is None:
+            continue
+        raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
+        if raw == render_empty_block_slot(field):
+            empty.add(field.casilla_id)
+    return frozenset(empty)
 
 
 def _reconstruct_component_values(

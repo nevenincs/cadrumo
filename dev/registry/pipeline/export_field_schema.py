@@ -81,6 +81,7 @@ def _schema_field(
                 "signed": signed,
                 "sign_position": sign_position,
                 "required_for": _qualified_requirement(parser_field.validation),
+                "required_with": semantic_entry.required_with,
                 "design_type": _design_type(parser_field.aeat_type, data_type),
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,

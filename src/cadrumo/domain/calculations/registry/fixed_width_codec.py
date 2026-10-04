@@ -127,6 +127,9 @@ class ExportField(Protocol):
     def required(self) -> bool: ...
 
     @property
+    def required_with(self) -> CasillaId | None: ...
+
+    @property
     def padding(self) -> ExportPadding: ...
 
     @property
@@ -277,8 +280,19 @@ def _render_record_field_bytes(
             export_record_id=record.id,
             export_field_kind=kind,
         )
+    raw_value = field_values.get(field.casilla_id) if field.casilla_id is not None else None
+    if field.required_with is not None and _is_absent_slot(field, field_values.get(field.required_with)):
+        # An empty occurrence block renders blank and carries no campo (see
+        # ExportFieldDefinition.required_with); beside its anchor the campo
+        # keeps its design requirement.
+        if not _is_absent_slot(field, raw_value):
+            raise FixedWidthRecordRenderError(
+                field_id=field.id,
+                reason="block_anchor",
+                export_record_id=record.id,
+            )
+        return render_empty_block_slot(field).encode(record.encoding)
     try:
-        raw_value = field_values.get(field.casilla_id) if field.casilla_id is not None else None
         return render_fixed_width_export_field(field, raw_value).encode(record.encoding)
     except (LookupError, UnicodeError, RegistryValidationError) as exc:
         raise FixedWidthRecordRenderError(
@@ -556,6 +570,17 @@ def render_absent_slot(field: ExportField) -> str:
         raise RegistryValidationError(
             f"required export field {field.id!r} has no value to render",
         )
+    return render_empty_block_slot(field)
+
+
+def render_empty_block_slot(field: ExportField) -> str:
+    """Render a slot's declared blank fill, whatever its requirement.
+
+    Reached directly only for a campo of an occurrence block that carries no
+    occurrence (``ExportFieldDefinition.required_with``): the design's
+    obligatorio binds the occurrence, and an absent occurrence fills its block
+    exactly as an absent optional slot is filled.
+    """
     if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
         # This source-backed sign slot prints 0 when its amount is absent. A
         # generic optional text fill would print a space and contradict the
@@ -702,6 +727,7 @@ __all__ = [
     "ExportPaddingValue",
     "FixedWidthRecordRenderError",
     "pad_fixed_width_text",
+    "render_empty_block_slot",
     "render_fixed_width_export_field",
     "render_fixed_width_export_record_body",
     "validate_fixed_width_shape",
