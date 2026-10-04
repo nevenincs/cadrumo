@@ -21,9 +21,9 @@ because DR360 campo 114 lets it belong to the representante.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
@@ -31,6 +31,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.deadlines.models import RefundAccount
+from ...domain.transactions.own_accounts import OwnAccountId
 
 
 def _text(max_length: int) -> StringConstraints:
@@ -315,19 +316,76 @@ class Modelo360ProfileFacts(BaseModel):
 MODELO_360_SOLICITUD_REGISTER_SCHEMA_VERSION = "1"
 
 
+class Modelo360OwnAccountChoice(BaseModel):
+    """The refund is paid into one of the solicitante's own accounts: DR360 campo 114 ``A``.
+
+    Only the opaque own-account reference is held; the IBAN and BIC are read from the
+    encrypted ledger own-account register when the solicitud is exported, and the
+    export refuses a referenced account that carries no BIC (campo 116 is obligatorio).
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["own_account"] = "own_account"
+    own_account_id: OwnAccountId
+
+
+class Modelo360RepresentanteAccountChoice(BaseModel):
+    """The refund is paid into the representante's account: DR360 campo 114 ``R``.
+
+    A third party's account is not an own account, so it is embedded here, encrypted
+    with the rest of the register, with the IBAN and BIC campos 115-116 require.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["representante"] = "representante"
+    account: RefundAccount
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_iban_and_bic(self) -> Modelo360RepresentanteAccountChoice:
+        if self.account.iban is None or not self.account.swift_bic.strip():
+            raise ValueError("the representante's modelo 360 account needs its IBAN and banco-BIC")
+        return self
+
+
+type Modelo360AccountChoice = Annotated[
+    Modelo360OwnAccountChoice | Modelo360RepresentanteAccountChoice,
+    Field(discriminator="kind"),
+]
+
+#: Campo 114 each account choice states.
+_HOLDER_BY_CHOICE: dict[str, M360TitularEnCalidadDe] = {
+    "own_account": M360TitularEnCalidadDe.SOLICITANTE,
+    "representante": M360TitularEnCalidadDe.REPRESENTANTE,
+}
+
+
 class Modelo360SolicitudEntry(BaseModel):
     """One solicitud's declared facts and the account its refund is paid into.
 
-    ``refund_account`` is ``None`` until the operator declares it. An absent account is not
-    an empty one: the export refuses the solicitud rather than leave DR360 campos 115-116
-    blank, so declaring the facts first and the account later is safe.
+    ``account`` is ``None`` until the operator declares it. An absent account is not an
+    empty one: the export refuses the solicitud rather than leave DR360 campos 115-116
+    blank, so declaring the facts first and the account later is safe. Once declared,
+    the choice decides campo 114: the facts' ``titular_en_calidad_de`` must state the
+    holder the choice implies, so the page can never name one holder and pay another.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     period: Period
     facts: Modelo360ProfileFacts
-    refund_account: RefundAccount | None = None
+    account: Modelo360AccountChoice | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _holder_follows_the_account_choice(self) -> Modelo360SolicitudEntry:
+        if self.account is None:
+            return self
+        if self.facts.cuenta.titular_en_calidad_de is not _HOLDER_BY_CHOICE[self.account.kind]:
+            raise ValueError("modelo 360 campo 114 must name the holder of the declared account")
+        return self
 
 
 class Modelo360SolicitudRegister(BaseModel):
@@ -373,12 +431,15 @@ __all__ = [
     "M360HaciendaForal",
     "M360NivelCalidadDatos",
     "M360TitularEnCalidadDe",
+    "Modelo360AccountChoice",
     "Modelo360ApartadoCorreos",
     "Modelo360CuentaTitularFacts",
     "Modelo360DireccionExtranjero",
     "Modelo360DomicilioEspana",
     "Modelo360EstablecimientoFacts",
+    "Modelo360OwnAccountChoice",
     "Modelo360ProfileFacts",
+    "Modelo360RepresentanteAccountChoice",
     "Modelo360RepresentanteFacts",
     "Modelo360SolicitanteFacts",
     "Modelo360SolicitudEntry",

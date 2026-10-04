@@ -4,7 +4,7 @@ Persists :class:`Modelo360SolicitudRegister` under
 ``cadrumo.persistence.profile.modelo_360_solicitud`` at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture fills every optional field, a representante included, and the
-refund account carries a non-SEPA bank block. A probe rewrites the persisted IBAN to another
+representante's embedded account carries a full bank block. A probe rewrites the persisted IBAN to another
 checksum-valid one and checks the reload differs; another breaks its check digits and checks
 the load refuses rather than accepting an account no bank would pay into. All data is
 synthetic.
@@ -27,7 +27,9 @@ from .....application.filing.producer_snapshot_m360 import (
     Modelo360CuentaTitularFacts,
     Modelo360DomicilioEspana,
     Modelo360EstablecimientoFacts,
+    Modelo360OwnAccountChoice,
     Modelo360ProfileFacts,
+    Modelo360RepresentanteAccountChoice,
     Modelo360RepresentanteFacts,
     Modelo360SolicitanteFacts,
     Modelo360SolicitudEntry,
@@ -99,7 +101,11 @@ def _account() -> RefundAccount:
 
 
 def _entry(period: Period = _PERIOD_2025, *, refund_account: RefundAccount | None = None) -> Modelo360SolicitudEntry:
-    return Modelo360SolicitudEntry(period=period, facts=_facts(), refund_account=refund_account or _account())
+    return Modelo360SolicitudEntry(
+        period=period,
+        facts=_facts(),
+        account=Modelo360RepresentanteAccountChoice(account=refund_account or _account()),
+    )
 
 
 def _register_row():
@@ -129,7 +135,7 @@ def test_the_register_survives_encrypted_storage_field_for_field(tmp_path: Path)
     assert loaded.entries == (_entry(_PERIOD_2024), _entry(_PERIOD_2025))
     entry = loaded.entry_for(_PERIOD_2025)
     assert entry is not None
-    assert entry.refund_account == _account()
+    assert entry.account == Modelo360RepresentanteAccountChoice(account=_account())
     assert entry.facts.representante is not None
     assert entry.facts.representante.full_name == "ASESORES PRUEBA SL"
 
@@ -142,7 +148,7 @@ def test_an_entry_without_an_account_stays_undeclared_rather_than_empty(tmp_path
         entry = Modelo360SolicitudRepository().load().entry_for(_PERIOD_2025)
 
     assert entry is not None
-    assert entry.refund_account is None
+    assert entry.account is None
 
 
 def test_redeclaring_a_period_replaces_its_entry_and_keeps_the_others(tmp_path: Path) -> None:
@@ -153,7 +159,7 @@ def test_redeclaring_a_period_replaces_its_entry_and_keeps_the_others(tmp_path: 
         corrected = Modelo360SolicitudEntry(
             period=_PERIOD_2025,
             facts=_facts(pais_destino="IT"),
-            refund_account=_account(),
+            account=Modelo360RepresentanteAccountChoice(account=_account()),
         )
         repository.declare(corrected)
 
@@ -174,8 +180,8 @@ def test_a_rewritten_iban_surfaces_on_reload(tmp_path: Path) -> None:
         written = repository.declare(_entry())
 
         def mutate(document):
-            assert document["entries"][0]["refund_account"]["iban"] == _IBAN
-            document["entries"][0]["refund_account"]["iban"] = _OTHER_VALID_IBAN
+            assert document["entries"][0]["account"]["account"]["iban"] == _IBAN
+            document["entries"][0]["account"]["account"]["iban"] = _OTHER_VALID_IBAN
 
         mutate_encrypted_secure_object_json(get_engine(profile.settings), row_statement=_register_row(), mutate=mutate)
 
@@ -184,8 +190,8 @@ def test_a_rewritten_iban_surfaces_on_reload(tmp_path: Path) -> None:
     assert reloaded != written
     entry = reloaded.entry_for(_PERIOD_2025)
     assert entry is not None
-    assert entry.refund_account is not None
-    assert entry.refund_account.iban == _OTHER_VALID_IBAN
+    assert isinstance(entry.account, Modelo360RepresentanteAccountChoice)
+    assert entry.account.account.iban == _OTHER_VALID_IBAN
 
 
 def test_a_persisted_iban_with_broken_check_digits_refuses_the_load(tmp_path: Path) -> None:
@@ -195,12 +201,42 @@ def test_a_persisted_iban_with_broken_check_digits_refuses_the_load(tmp_path: Pa
         repository.declare(_entry())
 
         def mutate(document):
-            document["entries"][0]["refund_account"]["iban"] = "ES0021000418450200051332"
+            document["entries"][0]["account"]["account"]["iban"] = "ES0021000418450200051332"
 
         mutate_encrypted_secure_object_json(get_engine(profile.settings), row_statement=_register_row(), mutate=mutate)
 
         with pytest.raises(pydantic.ValidationError):
             repository.load()
+
+
+def test_an_own_account_reference_survives_as_its_opaque_id_only(tmp_path: Path) -> None:
+    """A solicitante's own account is stored by reference: no account material enters the register."""
+    solicitante_facts = _facts().model_copy(
+        update={
+            "cuenta": Modelo360CuentaTitularFacts(
+                titular_nombre="OPERATOR TEST",
+                titular_en_calidad_de=M360TitularEnCalidadDe.SOLICITANTE,
+                divisa="EUR",
+            )
+        }
+    )
+    entry = Modelo360SolicitudEntry(
+        period=_PERIOD_2025,
+        facts=solicitante_facts,
+        account=Modelo360OwnAccountChoice(own_account_id="acc-03"),
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1a2b3c4d-5e6f-4a70-8b81-360000000007"):
+        Modelo360SolicitudRepository().declare(entry)
+        loaded = Modelo360SolicitudRepository().load().entry_for(_PERIOD_2025)
+
+    assert loaded == entry
+    assert loaded is not None
+    assert loaded.account == Modelo360OwnAccountChoice(own_account_id="acc-03")
+
+
+def test_a_representante_account_without_its_bic_is_refused() -> None:
+    with pytest.raises(pydantic.ValidationError, match="banco-BIC"):
+        Modelo360RepresentanteAccountChoice(account=RefundAccount(iban=_IBAN))
 
 
 def test_one_profile_never_reads_another_profiles_solicitud(tmp_path: Path) -> None:

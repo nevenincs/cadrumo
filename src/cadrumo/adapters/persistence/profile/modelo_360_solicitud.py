@@ -6,7 +6,8 @@ singleton namespace
 :data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_MODELO_360_SOLICITUD_NAMESPACE`.
 
 The register is authoritative primary state: the operator declares each solicitud's header,
-parties and refund account, and no other store can answer them. It therefore has a strict
+parties and account choice (a reference to one of the solicitante's own accounts, or the
+representante's account embedded here), and no other store can answer them. It therefore has a strict
 save/load roundtrip and revision-guarded mutation.
 
 See Also:

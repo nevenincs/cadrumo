@@ -148,7 +148,7 @@ from ..filing.producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
-from ..filing.producer_snapshot_m360 import Modelo360SolicitudEntry
+from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
@@ -828,10 +828,15 @@ def _require_m303_regimen_simplificado_scope_matches_profile(
 
 
 class _ResolvedOwnAccount(NamedTuple):
-    """One role's own account as resolved for the filing, or why it cannot serve."""
+    """One role's account as resolved for the filing, or why it cannot serve.
+
+    ``embedded`` is the one account that is not an own account: a modelo 360
+    solicitud's representante account, carried by the solicitud itself.
+    """
 
     account: OwnBankAccount | None
     unavailable_reason: str | None = None
+    embedded: RefundAccount | None = None
 
 
 class _ExportAccounts(NamedTuple):
@@ -891,10 +896,53 @@ def _missing_account_error(
 
 
 def _unavailable_context(context: Mapping[str, object], resolved: _ResolvedOwnAccount) -> dict[str, object]:
-    """Name why a designated account cannot serve, by its opaque id only."""
-    if resolved.account is None or resolved.unavailable_reason is None:
+    """Name why a resolved account cannot serve, by its opaque id only."""
+    if resolved.unavailable_reason is None:
         return dict(context)
+    if resolved.account is None:
+        return {**context, "reason": resolved.unavailable_reason}
     return {**context, "reason": resolved.unavailable_reason, "own_account_id": resolved.account.own_account_id}
+
+
+def _resolve_m360_refund_account(
+    register: OwnAccountRegister,
+    entry: Modelo360SolicitudEntry,
+    *,
+    explicit_id: str | None,
+    on: date,
+    context: Mapping[str, object],
+) -> _ResolvedOwnAccount:
+    """Resolve the account a modelo 360 solicitud declares; designations never answer it.
+
+    DR360 campo 114 makes the account part of the solicitud: the solicitante's own
+    account by reference, or the representante's embedded in the solicitud. Campos
+    115 and 116 are both obligatorio, so a referenced own account without a BIC is
+    refused here rather than at the first blank position.
+    """
+    if explicit_id is not None:
+        raise _missing_account_error(
+            OwnAccountRole.REFUND,
+            context={**context, "reason": "m360_account_declared_on_solicitud", "own_account_id": explicit_id},
+        )
+    choice = entry.account
+    if choice is None:
+        return _ResolvedOwnAccount(account=None, unavailable_reason="m360_account_undeclared")
+    if isinstance(choice, Modelo360RepresentanteAccountChoice):
+        return _ResolvedOwnAccount(account=None, embedded=choice.account)
+    resolved = _resolve_own_account(
+        register,
+        role=OwnAccountRole.REFUND,
+        modelo=Modelo("360"),
+        explicit_id=choice.own_account_id,
+        on=on,
+        context=context,
+    )
+    if resolved.account is not None and not resolved.account.swift_bic:
+        raise _missing_account_error(
+            OwnAccountRole.REFUND,
+            context={**context, "reason": "refund_account_bic_missing", "own_account_id": choice.own_account_id},
+        )
+    return resolved
 
 
 def _resolve_export_accounts(
@@ -903,17 +951,36 @@ def _resolve_export_accounts(
     work_unit: WorkUnit,
     export_ports: ModeloExportPorts,
     exported_at: datetime,
+    m360_solicitud: Modelo360SolicitudEntry | None,
 ) -> _ExportAccounts:
     """Resolve the filing's charge and refund own accounts from the ledger register.
 
     The one resolution point at the export boundary: every modelo's account page
     reads the same register, and which account it carries follows the resolved
-    disposition, never the modelo's name.
+    disposition, never the modelo's name. A modelo 360 solicitud declares its own
+    refund account, so its refund role reads the solicitud instead.
     """
     register = export_ports.own_accounts.load()
     modelo = Modelo(str(work_unit.modelo))
     on = exported_at.astimezone(MADRID_TZ).date()
     context = {"calculation_revision_id": command.calculation_revision_id}
+    if m360_solicitud is not None:
+        refund = _resolve_m360_refund_account(
+            register,
+            m360_solicitud,
+            explicit_id=command.refund_account_id,
+            on=on,
+            context=context,
+        )
+    else:
+        refund = _resolve_own_account(
+            register,
+            role=OwnAccountRole.REFUND,
+            modelo=modelo,
+            explicit_id=command.refund_account_id,
+            on=on,
+            context=context,
+        )
     return _ExportAccounts(
         charge=_resolve_own_account(
             register,
@@ -923,22 +990,14 @@ def _resolve_export_accounts(
             on=on,
             context=context,
         ),
-        refund=_resolve_own_account(
-            register,
-            role=OwnAccountRole.REFUND,
-            modelo=modelo,
-            explicit_id=command.refund_account_id,
-            on=on,
-            context=context,
-        ),
+        refund=refund,
     )
 
 
 def _refund_account_country(resolved: _ResolvedOwnAccount) -> str | None:
     """The country of the refund account the filing would be paid into, when one can serve."""
-    if resolved.account is None or resolved.unavailable_reason is not None:
-        return None
-    return resolved.account.country_code
+    projected = _refund_account_projection(resolved)
+    return None if projected is None or projected.iban is None else projected.iban[:2]
 
 
 def _require_domiciliation_before_cutoff(
@@ -990,6 +1049,8 @@ def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount |
 
 
 def _refund_account_projection(resolved: _ResolvedOwnAccount) -> RefundAccount | None:
+    if resolved.embedded is not None:
+        return resolved.embedded
     account = resolved.account
     if account is None or resolved.unavailable_reason is not None:
         return None
@@ -1007,7 +1068,6 @@ def _selected_account_reference(
     producer_snapshot: FilingProducerSnapshot,
     *,
     accounts: _ExportAccounts,
-    embedded_refund_account: bool,
 ) -> ModeloExportAccountReference | None:
     """Name the carried account by role and opaque identity, never by its material."""
     selected = producer_snapshot.selected_account
@@ -1019,7 +1079,8 @@ def _selected_account_reference(
             role=OwnAccountRole.CHARGE,
             own_account_id=None if charge is None else charge.own_account_id,
         )
-    refund = None if embedded_refund_account else accounts.refund.account
+    # An embedded representante account has no own-account id to record.
+    refund = accounts.refund.account
     return ModeloExportAccountReference(
         role=OwnAccountRole.REFUND,
         own_account_id=None if refund is None else refund.own_account_id,
@@ -1036,6 +1097,7 @@ def _build_export_producer_snapshot(
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
     amendment_evidence: AmendmentEvidence | None,
     accounts: _ExportAccounts,
+    m360_solicitud: Modelo360SolicitudEntry | None,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
 ) -> FilingProducerSnapshot:
@@ -1048,13 +1110,7 @@ def _build_export_producer_snapshot(
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
-        m360_solicitud = _require_m360_solicitud(modelo=modelo, work_unit=work_unit, export_ports=export_ports)
-        # The solicitud's own account, never the register's refund designation:
-        # DR360 campo 114 lets it be the representante's.
-        if m360_solicitud is not None:
-            refund_account = m360_solicitud.refund_account
-        else:
-            refund_account = _refund_account_projection(accounts.refund)
+        refund_account = _refund_account_projection(accounts.refund)
         charge_account = _charge_account_projection(accounts.charge)
         nota_three_refund_account = _require_export_accounts(
             command,
@@ -1246,6 +1302,30 @@ def _require_m360_solicitud(
     return entry
 
 
+def _require_m360_solicitud_for_export(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+    export_ports: ModeloExportPorts,
+) -> Modelo360SolicitudEntry | None:
+    """Load the modelo 360 solicitud before any account resolves, refusing an undeclared one."""
+    try:
+        return _require_m360_solicitud(
+            modelo=Modelo(str(work_unit.modelo)),
+            work_unit=work_unit,
+            export_ports=export_ports,
+        )
+    except FilingProducerSnapshotError as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause_type": type(exc).__name__,
+                **(exc.context or {}),
+            },
+        ) from exc
+
+
 def _resolve_export_model_profile(
     *,
     modelo: Modelo,
@@ -1373,11 +1453,13 @@ def _persist_exported_draft(
     operation: PinnedAuthorityOperation,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ModeloExportResult:
+    m360_solicitud = _require_m360_solicitud_for_export(command, work_unit=work_unit, export_ports=export_ports)
     accounts = _resolve_export_accounts(
         command,
         work_unit=work_unit,
         export_ports=export_ports,
         exported_at=exported_at,
+        m360_solicitud=m360_solicitud,
     )
     resolved_result_disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
@@ -1404,14 +1486,11 @@ def _persist_exported_draft(
         prior_domiciliation_election=prior_domiciliation_election,
         amendment_evidence=amendment_evidence,
         accounts=accounts,
+        m360_solicitud=m360_solicitud,
         export_ports=export_ports,
         operation=operation,
     )
-    selected_account = _selected_account_reference(
-        producer_snapshot,
-        accounts=accounts,
-        embedded_refund_account=str(work_unit.modelo) == Modelo("360").value,
-    )
+    selected_account = _selected_account_reference(producer_snapshot, accounts=accounts)
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
     software_identity = envelope_stamped_software_identity(

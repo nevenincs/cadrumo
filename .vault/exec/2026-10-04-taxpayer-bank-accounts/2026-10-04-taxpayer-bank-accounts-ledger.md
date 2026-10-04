@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b0ea1955230a6d30fe3c0fd620e5bddea8ecc2bc4bf522300ac706cac3c5f11'
+body_hash: 'sha256:5df0dda73bef86bc5e8e86171ac62cf8de2e8eee72795580bce7bae021b670e8'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -247,6 +247,15 @@ related:
 - `S13` `verify:` `pytest application/filing, application/wizard, domain/deadlines, profile charge-iban CLI refusal (1140 passed; 8 failed + 4 errors all in the pre-edit baseline or the pre-existing envelope-role failures)` -> `pass`
 - `S13` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
 - `S13` `by:` `lane-d`
+- `S15` `M` `src/cadrumo/application/filing/producer_snapshot_m360.py`
+- `S15` `M` `src/cadrumo/application/modelo/export.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_roundtrip.py`
+- `S15` `verify:` `pytest test_modelo_360_solicitud_export.py + roundtrip + test_modelo_360_header_export.py (solicitante own-account and representante embedded exports at DR360 campos 114-117; undeclared, BIC-less and overridden accounts refuse REFUSED_MODELO_REFUND_ACCOUNT_MISSING)` -> `pass`
+- `S15` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence (5293 passed; no failure outside the pre-edit baseline)` -> `pass`
+- `S15` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S15` `by:` `lane-d`
 
 ## Notes
 
@@ -262,3 +271,4 @@ related:
 - `S12` the filing transition still resolves its disposition without the refund account, so a local filing records D where the export of a foreign refund writes X; carry is unaffected (both refunds)
 - `S06` TUI import door has no production implementation yet; LedgerImportRequestV1 carries `own_account_id` for Lane E S20 to thread
 - `S11` every 303 quarterly window in the 2026-y-siguientes revision declares no `payment_cutoff_on` (only the monthly ones do), so a quarterly 303 U export advises rather than refuses until the registry authors those cutoffs
+- `S15` campo 114 is enforced as an invariant of the entry (the facts' `titular_en_calidad_de` must state the holder the account choice implies) rather than stored nowhere; the snapshot keeps reading it from the facts
