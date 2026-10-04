@@ -22,7 +22,6 @@ from typer.core import TyperCommand
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
@@ -65,6 +64,8 @@ from cadrumo.entrypoints.cli.config.secure_input import MachineSecretChannel, Ma
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -412,7 +413,7 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
         secret_store=lambda: native,
     )
     profiles.prepare_registry()
-    server = RuntimeTransportServer(
+    server = RetainedRuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )
     with ThreadPoolExecutor(max_workers=1) as pool:

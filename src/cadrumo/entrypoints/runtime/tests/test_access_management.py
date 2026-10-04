@@ -14,7 +14,6 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -50,6 +49,7 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -153,7 +153,9 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

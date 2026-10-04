@@ -16,7 +16,6 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
@@ -91,6 +90,7 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
 
@@ -174,7 +174,9 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         clients: list[VerifiedRuntimeConnection] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
@@ -351,7 +353,7 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
         )
         barrier = ProjectionWriteBarrier()
         projected_revision = None
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             PausedProjectionListener(endpoint, barrier),
             product_version="test",
             stop=stop,

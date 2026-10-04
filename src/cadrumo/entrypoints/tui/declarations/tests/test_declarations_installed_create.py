@@ -28,8 +28,8 @@ from textual.widgets import Button, DataTable
 from .....adapters.local_runtime.framing import VerifiedRuntimeConnection
 from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from .....adapters.local_runtime.installation import runtime_installation
-from .....adapters.local_runtime.server import RuntimeTransportServer
 from .....adapters.local_runtime.tests.profile_worker_support import owner_id
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from .....adapters.local_runtime.workbench_generation import read_workbench_generation
 from .....adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
@@ -227,7 +227,7 @@ def test_installed_creation_opens_a_persisted_new_period_and_returns_to_that_row
         )
         # The installed runtime validates the operation graph before listening.
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=1) as pool, ThreadPoolExecutor(max_workers=1) as reader:

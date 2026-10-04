@@ -14,7 +14,6 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -70,6 +69,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_work_unit,
 )
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .test_modelo_metadata import _admit, _connect, _LoginObservation, _submit
 from .test_modelo_metadata_history import _observe
@@ -248,7 +248,9 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

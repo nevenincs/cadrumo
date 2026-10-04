@@ -51,10 +51,10 @@ async def _exercise_close_intent_serialization() -> None:
     await first_entered.wait()
     second = asyncio.create_task(close(second_entered, release_second))
     for _ in range(100):
-        if barrier.close_intents == 2:
+        if barrier._close_intents == 2:
             break
         await asyncio.sleep(0)
-    assert barrier.close_intents == 2
+    assert barrier._close_intents == 2
     assert barrier.closing
     assert not second_entered.is_set()
 
@@ -64,7 +64,7 @@ async def _exercise_close_intent_serialization() -> None:
 
     release_first.set()
     await second_entered.wait()
-    assert barrier.close_intents == 1
+    assert barrier._close_intents == 1
     assert barrier.closing
     assert not work_entered.is_set()
 
@@ -72,7 +72,7 @@ async def _exercise_close_intent_serialization() -> None:
     await asyncio.gather(first, second)
     await ordinary_work
     assert work_entered.is_set()
-    assert barrier.close_intents == 0
+    assert barrier._close_intents == 0
     assert not barrier.closing
 
 
@@ -101,21 +101,21 @@ async def _exercise_cancelled_close_intent() -> None:
     second = asyncio.create_task(queue_second_close())
     try:
         for _ in range(100):
-            if barrier.close_intents == 2:
+            if barrier._close_intents == 2:
                 break
             await asyncio.sleep(0)
-        assert barrier.close_intents == 2
+        assert barrier._close_intents == 2
 
         second.cancel()
         with pytest.raises(asyncio.CancelledError):
             await second
-        assert barrier.close_intents == 1
+        assert barrier._close_intents == 1
         assert barrier.closing
     finally:
         release_first.set()
         await asyncio.gather(first, return_exceptions=True)
 
-    assert barrier.close_intents == 0
+    assert barrier._close_intents == 0
     assert not barrier.closing
 
 
@@ -174,14 +174,14 @@ async def test_clave_provider_close_waits_for_its_active_work_lease(provider_typ
     async with provider._lifecycle.work():
         close_task = asyncio.create_task(provider.close())
         for _ in range(100):
-            if provider._lifecycle.close_intents == 1:
+            if provider._lifecycle._close_intents == 1:
                 break
             await asyncio.sleep(0)
-        assert provider._lifecycle.close_intents == 1
+        assert provider._lifecycle._close_intents == 1
         assert not close_task.done()
 
     await asyncio.wait_for(close_task, timeout=1.0)
-    assert provider._lifecycle.close_intents == 0
+    assert provider._lifecycle._close_intents == 0
 
 
 @pytest.mark.parametrize(

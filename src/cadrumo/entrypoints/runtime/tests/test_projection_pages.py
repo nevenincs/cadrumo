@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
@@ -55,6 +54,7 @@ from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.period import Period
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .. import profile_connection_operations
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import ProfileConnection, RuntimeProfileHost
@@ -152,7 +152,7 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
         )
         profiles.prepare_registry()
         barrier = ProjectionWriteBarrier()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             PausedProjectionListener(endpoint, barrier),
             product_version="test",
             stop=stop,
@@ -358,7 +358,9 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

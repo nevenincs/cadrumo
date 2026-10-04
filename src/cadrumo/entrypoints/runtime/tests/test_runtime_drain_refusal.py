@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.local_runtime.server import RuntimeListener, RuntimeTransportServer
+from cadrumo.adapters.local_runtime.server import RuntimeListener
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.application.runtime.approval_binding import RuntimeApprovalBinding
 from cadrumo.application.runtime.approval_sessions import RuntimeApprovalSessions
@@ -29,6 +29,7 @@ from cadrumo.application.user_profile.automation_approval_session import Approva
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.identity.digest import ContentDigest
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 
@@ -295,7 +296,7 @@ def test_server_retry_retains_listener_until_original_profile_thread_settles(tmp
     listener = Listener()
     # The stopped host needs only real listener claim/release ports; no native
     # connection is fabricated or admitted by this portable ownership detector.
-    server = RuntimeTransportServer(
+    server = RetainedRuntimeTransportServer(
         cast(RuntimeListener, listener), product_version="profile-drain-retry", stop=profiles.stop, profiles=profiles
     )
     server.DRAIN_SECONDS = 0.05

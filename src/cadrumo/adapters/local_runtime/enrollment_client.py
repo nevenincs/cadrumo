@@ -245,18 +245,6 @@ class NativeEnrollmentClient:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         return metadata
 
-    def read_delivered_credential(self) -> SecretBytes:
-        """Borrow one exact delivered key; fresh runtime admission alone proves use."""
-        offer = self._offer
-        if offer is None:
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        return self._store.read(
-            credential_reference=offer.credential_reference,
-            grant_id=offer.grant_id,
-            key_id=offer.key_id,
-            review_digest=offer.review_digest,
-        )
-
     def verified_terminal(self) -> ClientCredentialMetadata | None:
         """Verify terminal delivery against current native custody without exporting a key."""
         receipt = self._receipt

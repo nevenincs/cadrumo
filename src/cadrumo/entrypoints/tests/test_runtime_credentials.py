@@ -17,7 +17,6 @@ from pydantic import SecretBytes
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
@@ -35,6 +34,8 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationC
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from ...adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -113,7 +114,7 @@ def test_installed_reference_reauthenticates_only_current_exact_native_credentia
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint,
             product_version=version("cadrumo"),
             stop=stop,

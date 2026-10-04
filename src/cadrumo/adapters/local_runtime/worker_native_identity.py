@@ -8,6 +8,7 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE
 from .linux_worker_process import LinuxProcessScope
 from .macos_worker_process import MacosProcessScope
 from .posix_channel import PosixRuntimeChannel
+from .windows_channel import WindowsRuntimeChannel
 from .windows_process import WindowsProcessScope
 from .worker_transport import WorkerChannel
 
@@ -27,6 +28,22 @@ def verify_worker_native_pid(
         return scope.verify_worker(channel, owner_id=os_owner_id)
     peer = channel.peer
     process_id = peer.process_id
-    if process_id is None or process_id not in scope.active_process_ids() or peer.os_owner_id != os_owner_id:
+    if not isinstance(channel, WindowsRuntimeChannel) or process_id is None or peer.os_owner_id != os_owner_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    import pywintypes
+    import win32api
+    import win32con
+
+    try:
+        process = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.SYNCHRONIZE, False, process_id)
+    except pywintypes.error:
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED) from None
+    try:
+        # The channel compares this handle with its retained authenticated birth.
+        # Job membership then admits packaged worker descendants as well as roots.
+        channel.verify_peer_process(int(process))
+        if not scope.contains_process(int(process)):
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    finally:
+        win32api.CloseHandle(process)
     return process_id

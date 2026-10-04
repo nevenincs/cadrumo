@@ -14,7 +14,6 @@ import pytest
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.profile_mutations import ProfileMutationRunError, run_profile_mutation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -34,6 +33,7 @@ from cadrumo.application.user_profile.view_operation import ProfileViewFactItem,
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -93,7 +93,9 @@ def test_tui_mutation_runner_projects_success_and_preserves_stale_conflict(tmp_p
             secret_store=lambda: native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         launch = RuntimeLaunchDoor(
             endpoint,
             expected=RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity),

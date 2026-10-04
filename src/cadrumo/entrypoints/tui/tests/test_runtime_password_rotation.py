@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -42,6 +41,8 @@ from cadrumo.entrypoints.tui.launcher import main
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
 from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
 from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -113,7 +114,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         stages: list[str] = []

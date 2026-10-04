@@ -14,7 +14,6 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -33,6 +32,7 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -122,7 +122,7 @@ def test_installed_cli_rename_and_discard_use_exact_worker_snapshot(tmp_path: Pa
             secret_store=lambda: native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=1) as pool:

@@ -19,15 +19,17 @@ from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 
 from ..framing import VerifiedRuntimeConnection
 from ..posix_endpoint import PosixRuntimeEndpoint
-from ..server import RuntimeTransportServer
 from ..windows import WindowsRuntimeEndpoint
 from .process_support import runtime_namespace_base
+from .retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.fixture
-def server(tmp_path: Path) -> Iterator[tuple[RuntimeTransportServer, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
+def server(
+    tmp_path: Path,
+) -> Iterator[tuple[RetainedRuntimeTransportServer, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
     with tempfile.TemporaryDirectory(prefix="s-", dir=runtime_namespace_base()) as folder:
         endpoint = (
             WindowsRuntimeEndpoint(storage_root=tmp_path)
@@ -35,7 +37,7 @@ def server(tmp_path: Path) -> Iterator[tuple[RuntimeTransportServer, PosixRuntim
             else PosixRuntimeEndpoint(storage_root=tmp_path, namespace=Path(folder) / "ipc")
         )
         stop = Event()
-        host = RuntimeTransportServer(endpoint, product_version="test-cohort", stop=stop)
+        host = RetainedRuntimeTransportServer(endpoint, product_version="test-cohort", stop=stop)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(host.serve)
             try:

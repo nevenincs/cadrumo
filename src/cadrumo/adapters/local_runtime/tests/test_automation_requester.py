@@ -39,6 +39,8 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
 
+from .delivered_credential import read_delivered_credential
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
@@ -194,13 +196,13 @@ def test_key_change_needs_protected_delivery_then_exact_fresh_native_verificatio
     assert submitted.stage is EnrollmentStage.REQUESTED
     assert journey.submitted == submitted and journey.completion is None
     with pytest.raises(AutomationCustodyError, match=AutomationCustodyCode.CREDENTIAL_REJECTED):
-        client.read_delivered_credential()
+        read_delivered_credential(client)
     key_id, secret = CustodyAutomationKeyIssuer.generate()
     offer = _offer(wire, key_id)
     wire.offer, wire.secret, wire.action = offer, secret, "store"
     assert journey.step() == submitted
     assert client.delivered_credential_metadata().credential_reference == offer.credential_reference
-    assert client.read_delivered_credential().get_secret_value() == secret.get_secret_value()
+    assert read_delivered_credential(client).get_secret_value() == secret.get_secret_value()
     # Possession is still required for canonical activation; custody alone
     # neither marks the request complete nor authenticates a new API session.
     assert journey.completion is None

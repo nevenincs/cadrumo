@@ -14,13 +14,14 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeSessionRequest
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor
+
+from ...adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -48,7 +49,7 @@ def test_installed_client_accepts_only_the_matching_native_cohort(tmp_path: Path
     """The cohort is the package version and, when both sides name one, the published authority generation."""
     endpoint = WindowsRuntimeEndpoint(storage_root=tmp_path)
     stop = Event()
-    host = RuntimeTransportServer(
+    host = RetainedRuntimeTransportServer(
         endpoint,
         product_version=version("cadrumo") if cohort != "wrong" else "another-installed-cohort",
         stop=stop,

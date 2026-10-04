@@ -29,8 +29,8 @@ from cadrumo.application.runtime.profile_access import (
 
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
 from ..runtime_frame_io import read_document, read_secret, write_document
-from ..server import RuntimeTransportServer
 from ..windows import WindowsRuntimeEndpoint
+from .retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -79,7 +79,7 @@ class PausingChannel:
 def test_concurrent_status_exchanges_share_only_their_own_native_connection(tmp_path: Path) -> None:
     endpoint = WindowsRuntimeEndpoint(storage_root=tmp_path)
     stop = Event()
-    host = RuntimeTransportServer(endpoint, product_version="serial-test", stop=stop)
+    host = RetainedRuntimeTransportServer(endpoint, product_version="serial-test", stop=stop)
     with ThreadPoolExecutor(max_workers=1) as server_pool:
         serving = server_pool.submit(host.serve)
         try:

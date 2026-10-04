@@ -33,7 +33,6 @@ from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.profile_worker_human_admission import ProfileWorkerHumanAdmission
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -83,6 +82,7 @@ from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHos
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .._profile_authentication_contract import profile_authentication_posture
 from ..command_specs import COMMAND_GRAPH
 from ..config import runtime_automation_request
@@ -214,7 +214,7 @@ class _LoanCustody(ProfileWorkerCustody):
         self._material_update_pending = False
 
 
-class _ContextServer(RuntimeTransportServer):
+class _ContextServer(RetainedRuntimeTransportServer):
     """Carry the fixture's configuration into each owned connection thread."""
 
     test_context: Context

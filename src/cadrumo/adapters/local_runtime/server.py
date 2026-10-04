@@ -87,7 +87,6 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         self._channels: dict[int, RuntimeTransportCleanup] = {}
         self._requests: set[Future[None]] = set()
         self._drain_guard = RLock()
-        self._serve_finished = Event()
 
     def serve(self) -> None:
         """Hold singleton ownership through all accepted connection cleanup."""
@@ -120,28 +119,8 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             raise
         finally:
             self.ready.clear()
-            try:
-                if not incomplete.is_set():
-                    self._release_listener(primary_error)
-            finally:
-                self._serve_finished.set()
-
-    def retry_drain(self, *, deadline: float) -> None:
-        """Retry a terminal host's retained shutdown within the caller's absolute bound."""
-        if not self._serve_finished.is_set():
-            raise RuntimeShutdownIncompleteError()
-        if not self._drain_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
-            raise RuntimeShutdownIncompleteError()
-        try:
-            if not self._listener_owner.released:
-                result = self._drain_owned_resources(deadline=deadline)
-                if result is not None and result.missing_receipts:
-                    self._failed.set()
-                self._release_listener(None, deadline=deadline)
-            if self._failed.is_set():
-                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        finally:
-            self._drain_guard.release()
+            if not incomplete.is_set():
+                self._release_listener(primary_error)
 
     def _drain_owned_resources(self, *, deadline: float) -> RuntimeProfileDrainResult | None:
         if not self._drain_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):

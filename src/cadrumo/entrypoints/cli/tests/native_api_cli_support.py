@@ -24,7 +24,6 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.linux_worker_process import LinuxProcessScope
 from cadrumo.adapters.local_runtime.login_policy import compose_runtime_login_policy
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
@@ -54,6 +53,7 @@ from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
@@ -332,7 +332,7 @@ def native_api_cli_session[Prepared](
             runtime_owner.stop = stop
             runtime_owner.drained = runtime_drained
             profiles.prepare_registry()
-            server = RuntimeTransportServer(
+            server = RetainedRuntimeTransportServer(
                 endpoint,
                 product_version=version("cadrumo"),
                 stop=stop,

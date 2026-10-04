@@ -15,7 +15,6 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -68,6 +67,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -199,7 +199,9 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
@@ -359,7 +361,9 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

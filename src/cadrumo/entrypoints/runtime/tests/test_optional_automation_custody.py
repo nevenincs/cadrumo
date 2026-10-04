@@ -18,7 +18,6 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import generate_api_key
@@ -38,6 +37,8 @@ from cadrumo.application.user_profile.automation_custody_port import (
 )
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.tests.test_profile_connections import LoginObservation, connect, login
+
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -77,7 +78,9 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
             secret_store=unavailable_store,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         clients: list[VerifiedRuntimeConnection] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

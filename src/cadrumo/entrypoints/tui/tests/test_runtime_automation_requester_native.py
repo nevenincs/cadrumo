@@ -29,7 +29,6 @@ from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
@@ -75,6 +74,8 @@ from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomatio
 from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
 from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -131,7 +132,7 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)
@@ -375,7 +376,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)

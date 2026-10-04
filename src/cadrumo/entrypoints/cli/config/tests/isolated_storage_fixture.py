@@ -15,8 +15,8 @@ from click.testing import Result
 from pydantic import TypeAdapter
 
 from .....adapters.local_runtime.installation import runtime_installation
-from .....adapters.local_runtime.server import RuntimeTransportServer
 from .....adapters.local_runtime.tests.profile_worker_support import owner_id
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from .....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -143,7 +143,7 @@ def native_profile_view_server(storage_root: Path, *, allow_unavailable_shutdown
         secret_store=lambda: native,
     )
     profiles.prepare_registry()
-    server = RuntimeTransportServer(
+    server = RetainedRuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )
     with ThreadPoolExecutor(max_workers=1) as pool:

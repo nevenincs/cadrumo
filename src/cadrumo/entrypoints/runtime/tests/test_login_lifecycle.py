@@ -14,7 +14,6 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
@@ -24,6 +23,7 @@ from cadrumo.application.runtime.login import RuntimeLoginInventory
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus, RuntimeSessionRequest
 from cadrumo.application.user_profile.access_contracts import LoginEligibility
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .. import main
 from ..profile_connections import RuntimeProfileConnections
 from .test_profile_connections import LoginObservation, connect, login
@@ -166,7 +166,9 @@ def test_login_witness_loss_drains_real_worker_without_revoking_grants(tmp_path:
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         clients = []
         native_handles: list[int] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
@@ -272,7 +274,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
         prepared.append(profiles)
 
     class ServerPort:
-        DRAIN_SECONDS = RuntimeTransportServer.DRAIN_SECONDS
+        DRAIN_SECONDS = RetainedRuntimeTransportServer.DRAIN_SECONDS
 
         def __init__(
             self, endpoint: object, *, profiles: RuntimeProfileConnections, stop: Event, **_options: object
@@ -294,7 +296,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
             assert inventory_owners == ["1000", "1000"]
 
     def watchdog(stop: Event, *, timeout: float) -> AbstractContextManager[None]:
-        assert not stop.is_set() and timeout == RuntimeTransportServer.DRAIN_SECONDS + 2
+        assert not stop.is_set() and timeout == RetainedRuntimeTransportServer.DRAIN_SECONDS + 2
         return nullcontext()
 
     monkeypatch.setattr(main, "sys", SimpleNamespace(platform="linux"))
@@ -302,7 +304,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
     monkeypatch.setattr(main, "posix_owner_uid", lambda: 1000)
     monkeypatch.setattr(main, "linux_login_inventory", inventory)
     monkeypatch.setattr(main, "PosixRuntimeEndpoint", endpoint)
-    monkeypatch.setattr(main, "RuntimeTransportServer", ServerPort)
+    monkeypatch.setattr(main, "RetainedRuntimeTransportServer", ServerPort)
     monkeypatch.setattr(main, "RuntimeShutdownWatchdog", watchdog)
     monkeypatch.setattr(RuntimeProfileConnections, "prepare_registry", prepare_registry)
     monkeypatch.setattr(

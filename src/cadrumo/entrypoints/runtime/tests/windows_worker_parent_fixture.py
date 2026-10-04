@@ -264,7 +264,6 @@ def _host_browser_owner(directory: Path) -> None:
     from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
     from cadrumo.adapters.local_runtime.installation import runtime_installation
     from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
-    from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
     from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
     from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
     from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject
@@ -277,6 +276,8 @@ def _host_browser_owner(directory: Path) -> None:
     from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
     from cadrumo.entrypoints.runtime.profile_host import RuntimeProfileHost
     from cadrumo.entrypoints.runtime.tests.test_profile_connections import LoginObservation
+
+    from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
     directory.mkdir(parents=True, exist_ok=True)
     root = directory / "cadrumo-storage"
@@ -315,7 +316,9 @@ def _host_browser_owner(directory: Path) -> None:
             worker_script=Path(__file__).resolve(),
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
         primary: BaseException | None = None
         try:

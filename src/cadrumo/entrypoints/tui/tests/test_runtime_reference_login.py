@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -42,6 +41,8 @@ from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
 from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
 from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -100,7 +101,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         opened_plain: list[UUID] = []

@@ -20,8 +20,8 @@ from pydantic import BaseModel
 from ....adapters.local_runtime.installation import runtime_installation
 from ....adapters.local_runtime.login_policy import compose_runtime_login_policy
 from ....adapters.local_runtime.profile_worker import ProfileWorkerProcess
-from ....adapters.local_runtime.server import RuntimeTransportServer
 from ....adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ....adapters.local_runtime.windows_channel import WindowsRuntimeChannel
 from ....adapters.local_runtime.worker_authorization import WorkerAuthorizationServer
@@ -149,7 +149,7 @@ def runtime_failure_observation(stage: str, error: BaseException | None) -> Runt
 
 @contextmanager
 def observe_native_runtime_failures(
-    server: RuntimeTransportServer,
+    server: RetainedRuntimeTransportServer,
     profiles: RuntimeProfileConnections,
     *,
     failure_observer: Callable[[RuntimeFailureObservation], None],
@@ -346,7 +346,7 @@ def native_cli_profile_server(
             secret_store=lambda: native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         failure_observations: list[RuntimeFailureObservation] = []

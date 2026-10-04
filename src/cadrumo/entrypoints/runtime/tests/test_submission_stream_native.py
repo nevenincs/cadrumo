@@ -23,7 +23,6 @@ from cadrumo.adapters.local_runtime.runtime_frame_io import (
     write_document,
     write_secret,
 )
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
@@ -71,6 +70,7 @@ from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.modelos.work_unit import WorkUnit
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _LoginObservation, _seed_periods
 
@@ -119,7 +119,7 @@ def native_bulk_runtime(tmp_path: Path) -> Iterator[_NativeBulkRuntime]:
                 secret_store=lambda: subject.native,
             )
             profiles.prepare_registry()
-            server = RuntimeTransportServer(
+            server = RetainedRuntimeTransportServer(
                 endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
             )
             with ThreadPoolExecutor(max_workers=1) as pool:

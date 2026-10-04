@@ -22,6 +22,7 @@ from cadrumo.application.runtime.contracts import (
 
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
 from ..windows import WindowsRuntimeEndpoint
+from ..worker_native_identity import verify_worker_native_pid
 
 if TYPE_CHECKING:
     from _win32typing import PyHANDLE
@@ -265,6 +266,9 @@ async def test_retained_pipe_peer_verifier_accepts_exact_process_and_refuses_oth
         wrong_handle = int(wrong_native.Detach())
         owners.append(RuntimeTransportCleanup(WindowsOwnedProcess(handle=wrong_handle, pid=child.pid)))
         assert scope.contains_process(wrong_handle)
+        with pytest.raises(RuntimeRefusalError) as outside_job:
+            verify_worker_native_pid(client, scope, client.peer.os_owner_id)
+        assert outside_job.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
         with pytest.raises(RuntimeRefusalError) as wrong:
             client.verify_peer_process(wrong_handle)
         assert wrong.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED

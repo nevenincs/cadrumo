@@ -20,7 +20,6 @@ from click.testing import Result
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
@@ -43,6 +42,8 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -155,7 +156,7 @@ def test_installed_cli_inspect_approve_and_decline_preserve_two_proof_channels(t
             secret_store=lambda: server_native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=3) as pool:

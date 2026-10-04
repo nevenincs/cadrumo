@@ -17,7 +17,6 @@ from cadrumo.adapters.local_runtime.automation_inventory import read_automation_
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
@@ -44,6 +43,8 @@ from cadrumo.application.user_profile.automation_operations import AUTOMATION_IN
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -135,7 +136,7 @@ def test_installed_automation_list_projects_nonempty_exact_profile_and_denies_ap
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=1) as pool:

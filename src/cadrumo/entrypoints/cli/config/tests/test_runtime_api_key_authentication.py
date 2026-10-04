@@ -14,7 +14,6 @@ import pytest
 
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -40,6 +39,8 @@ from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATI
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -189,7 +190,7 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: subject.client_native)

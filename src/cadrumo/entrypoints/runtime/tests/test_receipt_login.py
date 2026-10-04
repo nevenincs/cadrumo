@@ -16,7 +16,6 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
@@ -35,6 +34,7 @@ from cadrumo.application.runtime.profile_access import (
 from cadrumo.application.user_profile.login_session import borrow_profile_receipt_key, login_profile
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .test_profile_connections import LoginObservation
 
@@ -133,7 +133,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                 secret_store=lambda: enrollment.native,
             )
             profiles.prepare_registry()
-            server = RuntimeTransportServer(
+            server = RetainedRuntimeTransportServer(
                 endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
             )
             clients: list[VerifiedRuntimeConnection] = []

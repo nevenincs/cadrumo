@@ -426,45 +426,6 @@ class AeatAuthenticator:
         )
         return session
 
-    async def reauthenticate(self, session: AeatSession) -> AeatSession:
-        """Drop the current context and re-run :meth:`authenticate`.
-
-        **Single-shot.** The method itself does not retry; callers
-        cap retries at one per downstream call-site. A second
-        consecutive failure — whether the cert load fails, the
-        protected-resource probe fails — MUST raise
-        :class:`AeatSessionExpiredError` upwards rather than loop.
-
-        **Not atomic across the teardown + authenticate boundary.**
-        If another task calls :meth:`authenticate` between this
-        method's ``close()`` completing and its ``authenticate()``
-        starting, the second call wins the "already has active
-        session" guard check and this call raises
-        :class:`AeatLoginAssertionError`. External serialisation is
-        required if concurrent ``reauthenticate`` / ``authenticate``
-        is a real scenario for the caller.
-
-        Args:
-            session: The session to replace. Passed for traceability
-                (logging, audit) and to document that the caller
-                acknowledges it is discarded.
-
-        Returns:
-            A fresh :class:`AeatSession` with a new
-            ``authenticated_at`` + ``idle_deadline``.
-        """
-        log.info(
-            "AeatAuthenticator: reauthenticate old_authenticated_at=%s",
-            session.authenticated_at.isoformat(),
-        )
-        # Delegate teardown to close() (itself lock-protected and
-        # idempotent) so there is no risk of holding the lock across
-        # the authenticate() call. close() also nulls _browser_session
-        # and drains in-flight pages, so the subsequent authenticate()
-        # starts from a fully clean slate.
-        await self.close()
-        return await self.authenticate()
-
     async def verify(self, session: AeatSession) -> AeatLoginAssertion:
         """Navigate the authenticated context to the canonical protected resource.
 

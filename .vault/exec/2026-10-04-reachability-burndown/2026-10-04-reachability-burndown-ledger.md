@@ -5,40 +5,14 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:16ebb5eb07d5fc4cbaf6fb2f9ce8025c4195d87085f838de99fa51fbf25a45a2'
+body_hash: 'sha256:e2caae98ace4ce8ec526188f870edbb82fff0a2621fcca1f25f098a93c95285b'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `reachability-burndown` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `dev/audit/unreachable_frameworks.py`
 - `S01` `M` `dev/audit/unreachable_definitions.py`
@@ -460,6 +434,79 @@ related:
 - `S06` `verify:` `PDF parsing and registered errors: 57 passed` -> `pass`
 - `S06` `verify:` `Duplication parser and planted negative controls: 29 passed` -> `pass`
 - `S06` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/enrollment_client.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S15` `A` `src/cadrumo/adapters/local_runtime/tests/delivered_credential.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/profile_worker_support.py`
+- `S15` `A` `src/cadrumo/adapters/local_runtime/tests/retained_server.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_requester.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_server_cleanup.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_server_drain_order.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/worker_native_identity.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/aeat/auth/authenticator.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/aeat/auth/browser_lifecycle.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/_authenticator_support.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_part2.py`
+- `S15` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_browser_lifecycle.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/isolated_storage_fixture.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_api_key_authentication.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_change_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_view.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/native_api_cli_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/portable_human_cli_runtime.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/runtime_profile_cli_fixture.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_fixture_cleanup.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_metadata.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_access_management.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_grant_change.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_login_lifecycle.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata_history.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_optional_automation_custody.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_refusal_detail_authority.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_drain_refusal.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/windows_worker_parent_fixture.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_runtime_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_runtime_credentials.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_installed_create.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_login_screen_restored_profile.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_decision.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_password_rotation.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S15` `verify:` `Native Windows retained identity and outside-Job refusal: 1 passed` -> `pass`
+- `S15` `verify:` `Installed concurrent A/B profile workers and disconnect isolation: 1 passed` -> `pass`
+- `S15` `verify:` `Native enrollment, terminal drain, browser lifecycle and public authentication unit corpus: 72 passed` -> `pass`
+- `S15` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -476,3 +523,4 @@ related:
 - `S14` Uncalled locale dictionary and workspace date aliases are removed. Google live-test opt-in is owned by its test fixture and retains strict literal matching. The complete eight-word macOS audit-token ABI is decoded while only six consumed identity coordinates are retained. Broader i18n failure from concurrent unaliased Translatable imports remains visible under S07.
 - `S05` One fenced result publisher preserves unknown effects on action failure and settled effects on operand storage failure. One machine-secret option declaration drives all three command groups. Shared provider capture setup preserves authority preflight before composition and browser ownership, preview posture and session write accounting.
 - `S06` macOS incarnation and coalition probes share the native pidinfo query without weakening ABI lengths or ESRCH-only absence. Registered PDF import error roots now own the one coverage constructor; subclasses retain their codes. Duplication reports preserve raw nonzero token counts and distinguish AST-proven declarations from executable or unclassified spans. Import, overlap and missing-location filtering cannot claim zero.
+- `S15` Windows worker admission now opens a non-inherited process handle, compares it with the pipe-held birth and verifies exact Job membership before accepting its PID. Handles close on every outcome; native installed workers and a real outside-Job peer prove both boundaries. Protected candidate-secret inspection and terminal retry drivers now belong to finite real-host fixtures; unsupported browser reauthentication and close-count getters are retired while real close/authenticate and lifecycle guards remain. Shared files are staged from owned transformations of HEAD to preserve concurrent changes.

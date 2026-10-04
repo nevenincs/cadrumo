@@ -20,7 +20,6 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
@@ -36,6 +35,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.tests.test_profile_connections import LoginObservation
 
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..runtime_login import RuntimeLoginScreen
 from ..runtime_login_contracts import RuntimeLoginHandoff
 
@@ -182,7 +182,7 @@ def test_cold_tui_global_lock_recovery_reactivates_only_explicit_grant(tmp_path:
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=1) as pool:

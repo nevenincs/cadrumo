@@ -15,7 +15,6 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.profile_mutations import ProfileMutationRunError, run_profile_mutation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -39,6 +38,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.domain.user_profile.values import UserProfileRecord
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -127,7 +127,9 @@ def test_native_patch_is_atomic_noop_and_exact_profile_bound(tmp_path: Path) -> 
             secret_store=lambda: native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         launch = RuntimeLaunchDoor(
             endpoint,
             expected=RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity),

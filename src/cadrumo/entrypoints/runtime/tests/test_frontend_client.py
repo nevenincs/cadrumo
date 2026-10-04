@@ -17,7 +17,6 @@ import pytest
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -32,6 +31,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.view_operation import ProfileViewOperationRequest, ProfileViewPageKind
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -77,7 +77,9 @@ def test_verified_frontend_clients_collect_complete_profile_view_streams(tmp_pat
             secret_store=lambda: native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         launch = RuntimeLaunchDoor(
             endpoint,
             expected=RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity),
