@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:649febfd9003a3fa26a500fd91c21494e4a1d457fbc420b73ca8a666477a4b5c'
+body_hash: 'sha256:6869a6cce24e7c284321dd4c0e3e9dad9c4af025018f730592c2278ebb89aa9e'
 related:
   - "[[2026-10-04-authority-health-completion-plan]]"
 ---
@@ -78,3 +78,18 @@ related:
 - `S05` `verify:` `Modelo 347 complete canonical migration equivalence and minimality no-op` -> `pass`
 - `S05` `verify:` `check-bindings zero blocking findings` -> `pass`
 - `S05` `by:` `root`
+- `S06` `M` `dev/registry/pipeline/cli.py`
+- `S06` `A` `dev/registry/pipeline/legacy_publication_recovery.py`
+- `S06` `A` `dev/registry/pipeline/tests/test_legacy_publication_recovery.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/export_layouts/generation/manifest.json`
+- `S06` `verify:` `uv run --no-sync python -m pytest dev/registry/pipeline/tests/test_legacy_publication_recovery.py -k 'not active_old_writer'` -> `pass`
+- `S06` `verify:` `uv run --no-sync python -m pytest dev/registry/pipeline/tests/test_legacy_publication_recovery.py -k active_old_writer` -> `pass`
+- `S06` `verify:` `uv run --no-sync python -m dev.registry.pipeline check 111 2019-y-siguientes aeat-dr-111-2011 2024 1T` -> `pass`
+- `S06` `by:` `root`
+- `S06` `verify:` `uv run --no-sync python -m pytest -o addopts="" -n 0 dev/registry/pipeline/tests/test_historical_bootstrap_publication.py dev/registry/pipeline/tests/test_legacy_publication_recovery.py -q` -> `pass`
+- `S06` `verify:` `uv run --no-sync python -m dev.registry.pipeline check 111 2019-y-siguientes aeat-dr-111-2019-v18 2024 1T` -> `pass`
+
+## Notes
+
+- `S06` A concurrent canonical publisher completed Modelo 111 before this session's compare-and-swap recovery attempt. The mismatched recovery receipt was refused and the resulting target was independently verified current.
+- `S06` Correction: the S06 generated receipt is `export/_generation.provenance.json,` already committed by a concurrent publisher. The initial logged manifest path and reconstructed command spellings are erroneous and are not acceptance evidence. Exact command verification will be logged after rerunning the five recovery cases and the current target check.

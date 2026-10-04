@@ -23,6 +23,7 @@ import typer
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
+from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -68,6 +69,7 @@ from .generated_form_bridge import (
 )
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .historical_static_repair import validated_historical_repair_source
+from .legacy_publication_recovery import retire_completed_legacy_publication
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -1121,6 +1123,47 @@ def publish_target_command(
     typer.echo(
         "next\tcurrentness=check-registry-target-current\tpublication=registry-publish-authority-if-authority-stale"
     )
+
+
+@app.command("recover-completed-legacy-target")
+def recover_completed_legacy_target_command(
+    modelo: _MODELO,
+    revision: _REVISION,
+    source_ref: _SOURCE,
+    filing_year: _FILING_YEAR,
+    period: _PERIOD,
+    expected_manifest_sha256: Annotated[str, typer.Option("--expected-manifest-sha256")],
+) -> None:
+    """Retire a completed legacy journal after digest-bound current record equivalence."""
+    invocation = GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256)
+    try:
+        if re.fullmatch(SHA256_PATTERN, expected_manifest_sha256) is None:
+            raise ValueError("legacy recovery requires an exact lowercase target manifest sha256")
+        authority = compiled_bundled_authority()
+        with tempfile.TemporaryDirectory(prefix="cadrumo-legacy-export-recovery-") as directory:
+            prepared = prepare_generated_tree_invocation(invocation, Path(directory), authority=authority)
+            rendered = _render_candidate(prepared)
+            receipt = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+            if receipt.manifest_sha256 != expected_manifest_sha256:
+                raise ValueError("legacy recovery target manifest differs from the explicitly reviewed digest")
+            retire_completed_legacy_publication(
+                context=GeneratedExportTreePublicationContext(
+                    validation=prepared.validation,
+                    temporary_root=prepared.candidate_root.parents[2],
+                    target_root=prepared.target_root,
+                    target_export_root=prepared.target_export_root,
+                    expected_target_state=receipt,
+                ),
+                joined=prepared.inputs.joined,
+                semantic_map=prepared.inputs.semantic_map,
+                rendered=rendered,
+                render_profile=prepared.inputs.render_profile,
+                render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+            )
+    except (RegistryError, LockAcquisitionError, OSError, ValueError) as error:
+        typer.echo(f"refused: {error}", err=True)
+        raise typer.Exit(1) from error
+    typer.echo(f"recovered-completed-legacy-target\tmodelo={modelo}\trevision={revision}")
 
 
 @app.command("republish-target")
