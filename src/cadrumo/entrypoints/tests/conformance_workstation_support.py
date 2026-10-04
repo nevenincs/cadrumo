@@ -74,8 +74,13 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert "extra:google" in services and result.preflight
             assert len(services) == len(result.dependencies)
             # Closed runtime endpoint proves absent local models remain unavailable.
-            readers = tuple(row for row in result.dependencies if row.service.startswith("llm:"))
-            assert readers and all(not row.available for row in readers)
+            readers = tuple(row for row in result.dependencies if row.service.startswith("local-reader:"))
+            assert {row.service for row in readers} == {
+                "local-reader:text_extraction",
+                "local-reader:vision_transcription",
+            }
+            assert all(not row.available for row in readers)
+            assert all(row.to_status().facts["runtime_reachable"] is False for row in readers)
 
         return ConformancePreparation(
             profile_operation_subject(str(context.profile_id)),

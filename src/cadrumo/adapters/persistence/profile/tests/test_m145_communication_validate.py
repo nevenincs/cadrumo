@@ -99,6 +99,43 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
     assert result.source_refs == tuple(sorted(str(ref) for ref in revision.source_refs))
 
 
+@pytest.mark.parametrize(
+    ("casilla_id", "expected_issue"),
+    (
+        ("comunicacion.pagina-complementaria", None),
+        ("perceptor.primer-apellido", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.situacion-familiar", M145CommunicationValidationIssueKind.INVALID_VALUE),
+        ("descendiente-1.anio-nacimiento", M145CommunicationValidationIssueKind.INVALID_VALUE),
+    ),
+)
+def test_explicit_ordinary_page_blank_preserves_required_and_grounded_value_guards(
+    tmp_path: Path,
+    casilla_id: str,
+    expected_issue: M145CommunicationValidationIssueKind | None,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR145 row 2 permits a blank; required names, dated family tokens and years do not."""
+    values = _field_values()
+    values[casilla_id] = " "
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        assert record.field_values[casilla_id] == " "
+        result = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+    if expected_issue is None:
+        assert result.valid and result.issues == ()
+    else:
+        assert not result.valid
+        assert any(issue.casilla_id == casilla_id and issue.kind is expected_issue for issue in result.issues)
+
+
 @pytest.mark.parametrize("value", ("familia_1", "familia_2", "familia_3"))
 def test_validate_m145_communication_record_accepts_registry_declared_family_situation(
     tmp_path: Path,

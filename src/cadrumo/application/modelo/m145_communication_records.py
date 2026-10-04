@@ -641,6 +641,10 @@ _VALUE_SHAPE_VALIDATORS: Mapping[str, Callable[[str], str | None]] = {
 def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
     stripped = value.strip()
     if not stripped:
+        # Optional text can carry an explicit blank wire token (DR145 page 2).
+        # Required fields and every declared constraint are checked separately.
+        if casilla.data_type == "text" and not casilla.required:
+            return None
         return "value must not be blank"
     validator = _VALUE_SHAPE_VALIDATORS.get(casilla.data_type)
     return None if validator is None else validator(stripped)

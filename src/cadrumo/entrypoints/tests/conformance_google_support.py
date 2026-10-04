@@ -20,6 +20,7 @@ from ...adapters.outbound.google.session_store import (
     save_metadata,
     save_token,
 )
+from ...application.operations.frontend_requests import OperationPublicEffectEventV1
 from ...application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
     GoogleCredentialSourceSetProjection,
@@ -137,7 +138,8 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
                 profile_id=context.profile_id, client_id=_CLIENT.client_id, project_id=_CLIENT.project_id
             )
         case "config.google.probe":
-            # No registered client: refusal is reached before token acquisition or HTTP.
+            # Satisfy folder admission so absent credentials are reached before HTTP.
+            save_drive_config(profile, DriveConfig(root_folder_id="synthetic-conformance-folder"))
             request = GoogleProbeRequest(profile_id=context.profile_id, read_only=True)
         case _:
             raise AssertionError(operation_id)
@@ -158,7 +160,15 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert actual.outcome == "refused" and actual.refusal is not None
             assert actual.refusal.provider_code == "REFUSED_OUTBOUND_STORAGE_VALIDATION"
             assert actual.refusal.message_key == "adapters.outbound.storage._factory.errors.google_client_missing"
+            assert load_drive_config(profile) == DriveConfig(root_folder_id="synthetic-conformance-folder")
             assert load_client(profile) is None and load_token(profile) is None
+            # Acquisition was admitted before hydration refused the missing client.
+            # Its unacknowledged boundary remains uncertain even without a write.
+            assert tuple(
+                event.effect
+                for event in outcome.observed.event_page.events
+                if isinstance(event, OperationPublicEffectEventV1)
+            ) == (OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UNKNOWN)
 
     expected = (
         GoogleConfigurationOutcome(profile_id=context.profile_id, outcome="succeeded", result=result)
@@ -177,6 +187,8 @@ GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationTerminalCondition.REFUSED if suffix == "probe" else OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED
             if suffix in {"credential-source.set", "folder.set", "register", "logout"}
+            else OperationEffect.UNKNOWN
+            if suffix == "probe"
             else OperationEffect.NONE,
             ("config.google." + suffix,),
             "REFUSED_GOOGLE_CONFIGURATION" if suffix == "probe" else None,

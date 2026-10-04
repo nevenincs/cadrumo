@@ -50,14 +50,14 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile = str(context.profile_id)
     definition_id = context.definition.definition_id
     if definition_id == "profile.archive.export":
-        target = context.input_root / "sealed-profile.cadrumo"
+        target = context.input_root / "sealed-profile.cadrumo-bucket.tar.gz"
 
         def verify(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(ProfileArchiveExportProjection)
             assert result.profile_id == context.profile_id and result.receipt.target == str(target)
-            assert result.receipt.bucket_id == profile and result.receipt.archive_schema_version == 1
+            assert result.receipt.bucket_id == profile and result.receipt.archive_schema_version == 4
             inspection = inspect_profile_capsule_archive(target)
-            assert inspection.bucket_id == profile and inspection.archive_schema_version == 1
+            assert inspection.bucket_id == profile and inspection.archive_schema_version == 4
             source = read_profile_capsule_archive(target)
             assert source.password_envelope.profile_id == context.profile_id
             assert target.stat().st_size > 4096

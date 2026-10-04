@@ -45,6 +45,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark
 
 def _field_values(**overrides: str) -> dict[str, str]:
     values = {
+        # Official DR145 row 2: ordinary page is an explicit blank, complementary is C.
+        "comunicacion.pagina-complementaria": " ",
         "perceptor.nif": "12345678Z",
         "perceptor.primer-apellido": "Garcia",
         "perceptor.segundo-apellido": "Lopez",
@@ -113,6 +115,7 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(
     assert result.source_refs == tuple(sorted(str(ref) for ref in resolved.layout.source_refs))
     assert result.payload.startswith(b"<T145010>")
     assert result.payload.endswith(b"</T145010>")
+    assert result.payload[9:10] == b" "
     assert _payload_slice(result.payload, nif) == b"12345678Z"
     assert first_surname.length is not None
     assert _payload_slice(result.payload, first_surname) == b"Garcia" + (b" " * (first_surname.length - 6))

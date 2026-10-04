@@ -32,6 +32,8 @@ from .conformance_family_contract import (
 )
 
 _VALUES = {
+    # DR145 row 2 requires an explicit blank for an ordinary communication page.
+    "comunicacion.pagina-complementaria": " ",
     "perceptor.nif": "12345678Z",
     "perceptor.primer-apellido": "Garcia",
     "perceptor.segundo-apellido": "Lopez",
@@ -96,6 +98,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         elif isinstance(result, M145CommunicationExportProjection):
             payload = result.payload_text.encode(result.encoding.value)
             assert payload.startswith(b"<T145010>") and payload.endswith(b"</T145010>")
+            assert payload[9:10] == b" "
             assert b"12345678Z" in payload and b"Garcia" in payload
             assert result.payload_sha256 == sha256_hex(payload) and result.byte_length == len(payload)
             assert persisted.state is M145CommunicationRecordState.CREATED

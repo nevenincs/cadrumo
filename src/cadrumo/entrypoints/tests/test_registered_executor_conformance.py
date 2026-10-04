@@ -4110,7 +4110,18 @@ def _assert_apoderado_outcome(
             assert apoderado_before is None
             assert stored is not None
             assert stored.represented_nif == "12345678Z"
-            assert stored.granted_scopes == ("ALL",)
+            assert stored.catalogue_version == "2026.05.bootstrap"
+            assert stored.granted_scopes == (
+                "CENSO",
+                "EXPED",
+                "GENERALNT",
+                "INFORM",
+                "IVA",
+                "NOTIFIC",
+                "PAGOSF",
+                "RENT",
+                "RETEN",
+            )
             assert public.configuration is not None
             assert public.configuration.model_dump(mode="json") == stored.model_dump(mode="json")
         else:

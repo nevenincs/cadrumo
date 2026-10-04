@@ -140,11 +140,13 @@ def _prepare_spreadsheet(context: ConformanceFamilyContext) -> ConformancePrepar
         )
     before_drive = session_store.load_drive_config(profile)
     workflow = workflow_state_repository()
-    before_workflow = workflow.load()
+    seed_workflow = workflow.load()
     # An absent envelope produces a new default timestamp on each read.
     # Persist the seed so equality checks the entire real stored state.
-    workflow.save(before_workflow)
-    assert workflow.load() == before_workflow
+    workflow.save(seed_workflow)
+    before_workflow = workflow.load()
+    assert before_workflow.model_copy(update={"updated_at": seed_workflow.updated_at}) == seed_workflow
+    assert before_workflow.updated_at >= seed_workflow.updated_at
     snapshot = context.operation.snapshot("130", filing_year=2025, period="1T")
 
     def verify(outcome: ConformanceOutcome) -> None:

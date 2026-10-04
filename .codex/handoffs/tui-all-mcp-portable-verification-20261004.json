@@ -321,7 +321,7 @@
       ],
       "node_count": 294,
       "execution": {
-        "state": "running",
+        "state": "failed awaiting bounded test corrections",
         "launcher_pid": 81664,
         "stdout_log": ".logs/tui-all-mcp-focused-behavior-20261004.txt",
         "command": [
@@ -356,7 +356,12 @@
           "src/cadrumo/entrypoints/tests/test_m347_ledger_verdict_parity.py",
           "src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py",
           "src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_notices.py"
-        ]
+        ],
+        "exit": 1,
+        "passed": 291,
+        "failed": 3,
+        "elapsed_seconds": 159.26,
+        "canonical_log": "var/storage/development/.logs/test-runs/2026-10-03/20261003T222855.120522Z-pytest-8784-17c453ca/run.log"
       }
     },
     {
@@ -378,7 +383,36 @@
         "src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py",
         "src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py"
       ],
-      "node_count": 414
+      "node_count": 414,
+      "execution": {
+        "state": "running",
+        "launcher_pid": 8148,
+        "stdout_log": ".logs/tui-all-mcp-serial-behavior-20261004.txt",
+        "command": [
+          "uv",
+          "run",
+          "--no-sync",
+          "pytest",
+          "-n0",
+          "-v",
+          "-m",
+          "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not aeat_live",
+          "src/cadrumo/adapters/local_runtime/tests/test_framing.py",
+          "src/cadrumo/adapters/local_runtime/tests/test_profile_worker_transport.py",
+          "src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py",
+          "src/cadrumo/application/runtime/tests/test_access_management.py",
+          "src/cadrumo/application/runtime/tests/test_enrollment_access.py",
+          "src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py",
+          "src/cadrumo/entrypoints/cli/tests/test_command_runtime.py",
+          "src/cadrumo/entrypoints/cli/tests/test_command_runtime_governed_scope.py",
+          "src/cadrumo/entrypoints/cli/tests/test_command_runtime_live_write_refusal.py",
+          "src/cadrumo/entrypoints/cli/tests/test_runtime_operation_error_detail.py",
+          "src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py",
+          "src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py",
+          "src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py",
+          "src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py"
+        ]
+      }
     },
     {
       "name": "remaining_portable",
@@ -611,5 +645,21 @@
   "matrix_selected_node_count": 272,
   "completeness_selected": true,
   "duplicate_scenario_selected": true,
-  "execution_state": "focused behavioral batch running"
+  "execution_state": "Initial serial414 complete404passed10failed; corrected17family subjects+11whole owner modules replay active8336; remaining2247 pending.",
+  "test_premise_repairs": ".codex/handoffs/tui-all-mcp-portable-test-premise-repairs-20261004.json",
+  "serial_result": {
+    "selected": 414,
+    "passed": 404,
+    "failed": 10,
+    "skipped": 0,
+    "seconds": 4191.73,
+    "exit": 1,
+    "canonical_run": "20261003T223326.454290Z-pytest-66392-fd16cd8b",
+    "matrix_passed": 262,
+    "matrix_failed": 10,
+    "completeness": "pass",
+    "duplicates": "pass",
+    "behavioral_status": "not green until corrected failures replay"
+  },
+  "corrective_replay_manifest": ".codex/handoffs/tui-all-mcp-focused-corrective-replay-20261004.json"
 }

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:97af9c24c9514d4c167bbed74aaf27363100ec8b4e400e0bb8deb943cb25d7bd'
+body_hash: 'sha256:5cf8cfc66a4de172e37f99798600eb4022520f48a22e0f0ca6e3194287a25c93'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2491,6 +2491,27 @@ related:
 - `S05` `verify:` `focused state-root/parser/cleanup/precondition checks46+33+13+3` -> `pass`
 - `S05` `verify:` `GNOME current-source Linux filesystem/protocol/PIDFD47cases no skips` -> `pass`
 - `S05` `verify:` `isolated dev setup script and taxonomy25portable cases with17native host skips` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_factory.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_validate.py`
+- `S05` `M` `src/cadrumo/application/modelo/m145_communication_records.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_archive_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_m145_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_modelo_reports_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_workstation_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-final-corrective-source-manifest-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-portable-test-premise-repairs-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-pending-test-premises-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-m145-blank-google-effect-repairs-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-focused-corrective-replay-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-registered-matrix-passing-evidence-20261004.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-portable-verification-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-cleanup-behavior-replay-20261004.json`
+- `S05` `verify:` `M145 real producer validation/export23 cases` -> `pass`
+- `S05` `verify:` `registered Google/M145 six corrective cases` -> `pass`
+- `S05` `verify:` `all272 registered subjects have individually qualified last passing evidence` -> `pass`
 
 ## Notes
 
@@ -2503,3 +2524,4 @@ related:
 - `S05` Latest immutable TUI cut a8a7fb7d reconciled in isolation; preserved MCP native custody, public typed APIs and independent tests alongside incoming packaging/runtime/filing prompts. Final combined and installed E2E proof remains pending; active live writer files and index remain untouched.
 - `S05` Reconcile six test-only convenience exports with current typed production owners; preserve independent values, provenance, refusal and support-window assertions. Exact per-symbol dispositions/hashes and commands in source report. Encrypted persistence replay, configured aggregate, current installed E2E and safe live landing remain pending; no native or whole-suite claim.
 - `S05` Restore recovered helper intent under current canonical production owners; preserve exact retry custody, parser bytes and typed revision selection. Move test-only registry oracle and non-activating GNOME resource setup to dev with all consumers and current filesystem inventories. Independent review finds no current caller regression or authority bypass; verify/file/export typed recovery is not a registered-command closure claim. Source/proof hashes and native limits retained. Aggregate overall failed one unused guard (now removed) and recorded one native test-fixture source drift; final aggregate/E2E and live destination reconciliation remain pending. Ongoing M145 ordinary-page validation defect and Google effect-fixture diagnosis are excluded from this checkpoint.
+- `S05` Allow explicitly supplied blank optional TEXT wire token for ordinary M145 physical page; required/nontext/family constraints retained and refusal witnesses checked. Reconcile stale test premises with current profile timestamps, canonical browser cache override, registry M347 province/business-lease fields, archive v4 suffix, apoderado scope and typed workstation capabilities. Google acquisition remains UNKNOWN when existing credential handoff has begun and failed; retain exact effects/state proof. Initial414 and121 failed runs preserved; subject evidence combines unchanged262 with corrective replays and is not one final272 run. Remaining broad cohort, fresh artifacts, native E2E, later53f TUI reconciliation and final configured quality pending.
