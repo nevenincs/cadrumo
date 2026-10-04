@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:5cf8cfc66a4de172e37f99798600eb4022520f48a22e0f0ca6e3194287a25c93'
+body_hash: 'sha256:b9d8a585423cec86273ecd4f869ec663591fdcbbd5fc3f7208576007d1075b45'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -2512,6 +2512,20 @@ related:
 - `S05` `verify:` `M145 real producer validation/export23 cases` -> `pass`
 - `S05` `verify:` `registered Google/M145 six corrective cases` -> `pass`
 - `S05` `verify:` `all272 registered subjects have individually qualified last passing evidence` -> `pass`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-53f-merge-readiness.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-quality-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-quality-frozen-20261004.json`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-registry-20261004.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-dispositions-final.json`
+- `S05` `M` `.vault/audit/2026-10-03-tui-all-mcp-integration-audit.md`
+- `S05` `M` `dev/acceptance/income_tax/installed_tui_child.py`
+- `S05` `M` `dev/acceptance/income_tax/tests/test_installed_tui_child.py`
+- `S05` `M` `src/cadrumo/application/filing/tests/test_optional_record_omission.py`
+- `S05` `verify:` `public Home/account diagnostic sanitizers five cases` -> `pass`
+- `S05` `verify:` `typed acceptance refusal fixture one case` -> `pass`
+- `S05` `verify:` `owned child log-root plus M347 optional-record cohort34cases` -> `pass`
+- `S05` `verify:` `fresh registry validation/runtime integrity and347target freshness` -> `pass`
+- `S05` `verify:` `configured frozen aggregate11pass1dead-unused-helper failure with1test-fixture source drift` -> `fail`
 
 ## Notes
 
@@ -2525,3 +2539,4 @@ related:
 - `S05` Reconcile six test-only convenience exports with current typed production owners; preserve independent values, provenance, refusal and support-window assertions. Exact per-symbol dispositions/hashes and commands in source report. Encrypted persistence replay, configured aggregate, current installed E2E and safe live landing remain pending; no native or whole-suite claim.
 - `S05` Restore recovered helper intent under current canonical production owners; preserve exact retry custody, parser bytes and typed revision selection. Move test-only registry oracle and non-activating GNOME resource setup to dev with all consumers and current filesystem inventories. Independent review finds no current caller regression or authority bypass; verify/file/export typed recovery is not a registered-command closure claim. Source/proof hashes and native limits retained. Aggregate overall failed one unused guard (now removed) and recorded one native test-fixture source drift; final aggregate/E2E and live destination reconciliation remain pending. Ongoing M145 ordinary-page validation defect and Google effect-fixture diagnosis are excluded from this checkpoint.
 - `S05` Allow explicitly supplied blank optional TEXT wire token for ordinary M145 physical page; required/nontext/family constraints retained and refusal witnesses checked. Reconcile stale test premises with current profile timestamps, canonical browser cache override, registry M347 province/business-lease fields, archive v4 suffix, apoderado scope and typed workstation capabilities. Google acquisition remains UNKNOWN when existing credential handoff has begun and failed; retain exact effects/state proof. Initial414 and121 failed runs preserved; subject evidence combines unchanged262 with corrective replays and is not one final272 run. Remaining broad cohort, fresh artifacts, native E2E, later53f TUI reconciliation and final configured quality pending.
+- `S05` Forward explicit child run-log root and preserve bounded owned execution. Native Home diagnostic reports finite public refusal/updating/account posture only; excludes private labels, expiry timestamps and worker exception text. Keep historical failing quality/native evidence, current Mac offline and elevated noninteractive Windows provider limitations separate from demonstrated defects. User authorized subsequent verification/green landing; prior deferral retained as history and active verification resumed. Later immutable TUI53f prepared and not merged at this checkpoint; live destination advanced again to efb85a8 and is not landed.

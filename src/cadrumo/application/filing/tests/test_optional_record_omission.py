@@ -60,9 +60,7 @@ def _fixed(operation: PinnedAuthorityOperation, revision_id: str) -> ExportRecor
 
 
 def _casilla_id(record: ExportRecordDefinition, casilla: str) -> CasillaId:
-    return next(
-        field.casilla_id for field in record.fields if field.casilla_id == casilla and field.casilla_id is not None
-    )
+    return next(field.casilla_id for field in record.fields if field.casilla_id == casilla)
 
 
 @pytest.mark.parametrize("revision_id", _M347_REVISIONS)

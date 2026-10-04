@@ -14,7 +14,7 @@ import pytest
 from dev.acceptance.income_tax import tui_navigation
 from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError
 from dev.acceptance.income_tax.tui_contracts import TuiJourneyError
-from dev.acceptance.installed_cli import CommandEvidence, InstalledCliError
+from dev.acceptance.installed_cli import CommandEvidence, InstalledCli, InstalledCliError
 
 from .. import installed_tui_controls, installed_tui_seed, installed_tui_withholding
 from ..cli_contracts import RetencionesInstalledCliError
@@ -126,9 +126,20 @@ def test_complete_setup_failure_receipt_retains_actual_stage_and_safe_commands(t
         raise RetencionesInstalledCliError(stage="profile_create", diagnostic_code="wrapper") from original
 
     monkeypatch.setattr(installed_tui_seed, "_create_withholding_profile", refuse_profile)
+    executable = tmp_path / "aeat"
+    executable.write_text("", encoding="utf-8")
+    authority = tmp_path / "authority"
+    authority.mkdir()
+    cli = InstalledCli(
+        executable,
+        storage_root=tmp_path / "storage",
+        authority_root=authority,
+        passphrase=secret,
+    )
+    cli.commands.extend(commands)
 
     def run_parent(args):
-        return installed_tui_seed.seed_withholding_work(type("Cli", (), {"commands": list(commands)})(), year=2025)
+        return installed_tui_seed.seed_withholding_work(cli, year=2025)
 
     monkeypatch.setattr(installed_tui_withholding, "_run_parent", run_parent)
     receipt = tmp_path / "failed.json"

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae668c3017aaa6104fb4fc7cb20632319ef85aceafb9131e2a025334a6301a80'
+body_hash: 'sha256:4ae762a9edc0bb578c277e3ea1e3e5f5e569b81a6b830ff5a160db1c3bcd25db'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -59,6 +59,42 @@ Open landing dependency. Later committed calendar, filing-session and native app
 
 Observed during canonical rule projection. The owning sync command's preview reported no file changes while describing adoption state; the applied isolated sync updated the rule projections and provider state. The rule prose now derives the public MCP tools from the typed protocol and names corpus/ranked discovery. No broad pending framework migration was applied.
 
+### later-tui-cut | low | New runtime, filing and packaging changes are reconciled in the isolated baseline
+
+Resolved source reconciliation. Merge checkpoint 4d3455f47d incorporates immutable destination cut a8a7fb7d26 after 60c063bba1. Six application/TUI and eighteen native/packaging conflicts preserve current public typed ownership alongside newer filing captures, retained error origins, shared approval prompts, published-generation refusals and Windows artifact identity controls. All 106 incoming cut paths have dispositions: 75 incorporated, 25 already present, and six superseded by recorded current public/guard repairs. Focused static checks and three packaging regressions pass. Historical source and artifact evidence remains scoped; this does not establish final combined E2E success or landing.
+
+### affected-test-expectations | medium | Fresh replay identifies stale M347 and browser fixture expectations
+
+Open bounded verification repair. The first fresh affected batch completes 291 passing tests and three failures. Two M347 failures use an expected binding set that predates province/lease row metadata; independent fixed-width export scenarios pass. The browser negative fixture changes a legacy environment variable while the declared canonical browser category remains configured, so its purported empty cache is not selected. The owner will correct those independent test premises and replay the affected cases. No production regression is established by these three failures.
+
+### native-replay | low | On-device masked unlock enables a fresh native cohort and installed artifact proof
+
+Fourteen actual Darwin containment/peer/Keychain tests pass after a masked askpass prompt in the same SSH security session; one mutually exclusive locked-context detector is excluded when the Keychain is unlocked. The current final-cut wheel matches all 3,220 production modules and its embedded authority. Native installation verifies exact site-packages bytes and logical authority c057cec11d240befcd95e3567a800e0c0581f132bd76b88f1c1e43dc2191c12c. Runtime source changed in the later cut, so its owning native cohort is rerun rather than inferred from prior results. Actual installed MCP and seven-work/two-child withholding E2E are running and remain unproven until their receipts pass.
+
+### original-source-reobservation | low | All six original MCP worktrees have no later source deltas
+
+Resolved preservation check. A fresh six-source alternate-index observation records zero source deltas, zero capture drift and unchanged original indexes for every source. It does not inspect or overwrite the active TUI writer. The latest destination cut is reconciled here; the live destination is still unmodified and landing remains a separate coordination dependency.
+
+### configured-quality-repair | medium | The complete configured aggregate exposed real source and test-support findings
+
+Open final verification. The initial twelve-gate aggregate returned seven failing gates: style, types, imports, unreachable modules, unused symbols, unconsumed exports and dangling docstring targets. Its import scan loaded all4,363 modules and preserved all15 configured contracts; one missing test-helper import was a hard finding. Corrections preserve the configured scopes and zero-target gates. Domain six-export reconciliation is committed44ba3caee7 with299 focused passing cases; the remaining source fixes have their own exact hashes and focused checks. A current filesystem module census is regenerated and the complete aggregate is running against frozen source with before/after hashes. No final configured pass is claimed.
+
+### gnome-reply-lifetime | high | Native reply fields were decoded after the owning D-Bus message was released
+
+Resolved source defect. The retained GNOME login consumer now decodes all seven native fields and checks trailing fields inside bus.call ownership. Existing validation and cleanup remain in their original owners. The regression fixture invalidates its reply when that context exits and detects the captured4d implementation's freed-reply read. Thirteen focused protocol/lifetime cases pass on Windows; this is a portable seam proof, not a GNOME desktop acceptance claim. Actual Linux filesystem/protocol checks are separately owned and their native results remain pending here.
+
+### gnome-resource-placement | low | Disconnected producer setup belonged to deferred product provisioning
+
+Resolved placement within the accepted scope. Exact non-activating resource publication and its tests move to one standalone development packaging utility. The isolated script path uses installed product imports and refuses a nonisolated interpreter before setup. Packaged GNOME resources and the actual production login consumer remain; the storage taxonomy names that real consumer. No console wrapper, forwarding alias, autostart or gate exemption is introduced. Twenty-five focused cases pass with17 actual Linux filesystem cases skipped on Windows, and the final development-script replay passes all10 cases.
+
+### installed-withholding-home | medium | The actual installed continuation exported its first work but did not establish the Home transition
+
+Open diagnosis and native dependency. The final-cut Mac cohort passes14 containment/peer/Keychain cases, one mutually exclusive locked-context detector skips, installed MCP passes its selected test and actual public SDK smoke, and seven terminal-driver regressions pass. The actual CLI seed creates all7 works. The first lifecycle child observes its first real export, then fails to establish public Home refresh; the independent export oracle, local recording and fresh-child reopen are not reached. Finite public refusal/visibility/posture diagnostics are repaired with focused passing tests. The selected Mac host is offline, so that next actual diagnostic and the complete seven-work/two-child proof remain unexecuted. No private exception text, timeout extension or lock-policy bypass is introduced.
+
+### windows-package-and-custody | medium | Artifact proof passes while protected-session admission still lacks its required host context
+
+Scoped artifact verification passes on4d source: all6 configured CMake tests, actual ZIP hash verification and hostile relocation, and application readiness from the actual extracted Unicode-path ZIP. The subsequent shipping-source repairs require a refreshed final artifact before a current-package claim. This runner is elevated and lacks an interactive desktop, so it cannot establish positive protected-storage or installed grant/reconnect acceptance under the strict policy. An existing suitable Windows host is requested; no scheduled task, desktop bridge or provider-policy weakening is used.
+
 ## Recommendations
 
 Finish the concrete conformance families, diagnose and complete the installed withholding continuation, corroborate generated registry reproduction, rerun the configured checks against frozen inputs, and obtain the final integrated code review. Preserve failed and unavailable runs beside passing evidence and retain their actual causes. Finish per-path integration commit mappings and coherent provenance-bearing checkpoints. Close only Steps whose required proof passes. Coordinate the final destination update if its writer remains active; the exact landing operation and dependency must stay explicit.
@@ -79,3 +115,7 @@ Canonical registry gates passed58modelos,160revisions and1502legal references. A
 Native installed withholding seeding now succeeds. Its lifecycle child failed before proving completion; the safe failure-receipt repair retains driver stage and sanitized public screen/widget identities, with17focusedtests passing. The full fresh native continuation is being replayed; no successful lifecycle or reopen is claimed. Native containment and unlocked Keychain passing evidence above remain valid for their unchanged owners.
 
 The immutable later destination cut60c063bba1fc3d53f7d0c2522405a81966a6a0a8 will be reconciled only in the isolated branch. The active live checkout has4888observed status paths and cannot be overwritten. Review remains PENDING for combined verification and landing.
+
+## Verification resumed after baseline delivery
+
+The active user goal now requires isolated-branch E2E, landing after green on feature/tui, and E2E in the actual destination checkout. The earlier baseline-first deferral is retained above as history. Current verification, review and safe landing are active; the live writer remains untouched and the integration is not landed.

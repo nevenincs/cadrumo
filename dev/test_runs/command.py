@@ -185,6 +185,7 @@ def run(
         return _run_in_scratch(
             command,
             repository=repository,
+            run_log_root=run_log_root,
             family=family,
             label=label,
             signal=signal,
@@ -202,6 +203,7 @@ def _run_in_scratch(
     command: tuple[str, ...],
     *,
     repository: Path,
+    run_log_root: Path | None,
     family: str,
     label: str,
     signal: str | None,
