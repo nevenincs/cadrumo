@@ -1,0 +1,109 @@
+{
+  "status": "preserved time-window evidence; semantic reconciliation pending; original worktree untouched",
+  "started_capture_stamp": "20261004T054846Z",
+  "source_worktree": "Y:\\code\\cadrumo-worktrees\\tui",
+  "original_base": "cbf0497d372128c09848f292d4497342033af0a6",
+  "head_after": "cbf0497d372128c09848f292d4497342033af0a6",
+  "head_changed": false,
+  "original_index_before_sha256": "38a083553bf5bbe6752e874c7e791ef60a05b29949fcaedfcc3b8e2e160de800",
+  "original_index_after_sha256": "38a083553bf5bbe6752e874c7e791ef60a05b29949fcaedfcc3b8e2e160de800",
+  "original_index_unchanged": true,
+  "first_tree": "65907f05872b661ad457052aaedf238444ceb417",
+  "captured_tree": "65907f05872b661ad457052aaedf238444ceb417",
+  "snapshot": "d9ae1f96378a2fce2e707f33a0b382a77514c691",
+  "ref": "refs/heads/snapshot/tui-all-mcp-live-20261004T054846Z",
+  "paths": [
+    {
+      "change": "M",
+      "path": ".vault/audit/2026-10-02-duplication-remediation-audit.md"
+    },
+    {
+      "change": "M",
+      "path": ".vault/exec/2026-10-02-duplication-remediation/2026-10-02-duplication-remediation-ledger.md"
+    },
+    {
+      "change": "M",
+      "path": ".vault/reference/2026-10-02-duplication-remediation-reference.md"
+    },
+    {
+      "change": "A",
+      "path": ".vault/reference/2026-10-04-taxpayer-bank-accounts-reference.md"
+    },
+    {
+      "change": "A",
+      "path": ".vault/research/2026-10-04-taxpayer-bank-accounts-research.md"
+    },
+    {
+      "change": "M",
+      "path": "dev/docs/serve_languages.py"
+    },
+    {
+      "change": "M",
+      "path": "dev/docs/terminology/cli_projection.py"
+    },
+    {
+      "change": "M",
+      "path": "dev/registry/pipeline/export_field_schema.py"
+    },
+    {
+      "change": "M",
+      "path": "dev/registry/pipeline/export_tree_field_derivation.py"
+    },
+    {
+      "change": "M",
+      "path": "dev/registry/pipeline/tests/test_export_tree.py"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/ca/cli.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/ca/common.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/ca/modelo/schema/131.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/en/cli.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/en/common.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/en/modelo/schema/131.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/es/cli.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/es/common.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/es/modelo/schema/131.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/hu/cli.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/hu/common.yml"
+    },
+    {
+      "change": "M",
+      "path": "src/cadrumo/locales/hu/modelo/schema/131.yml"
+    }
+  ],
+  "capture_drift": [],
+  "status_changed": false,
+  "evidence_directory": "Y:\\code\\cadrumo-worktrees\\main\\.git\\integration-evidence\\tui-all-mcp-20261003\\live-tui-20261004T054846Z",
+  "finished_utc": "2026-10-04T05:48:56.007175+00:00"
+}

@@ -13736,5 +13736,16 @@
   },
   "started_utc": "2026-10-04T05:36:35.775072+00:00",
   "log": "Y:\\code\\cadrumo-worktrees\\tui-all-mcp\\.logs\\tui-all-mcp-quality-finished-tui-800b-corrected.txt",
-  "status": "running"
+  "status": "fail",
+  "exit_code": 7,
+  "source_drift": [
+    "src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py",
+    "src/cadrumo/adapters/outbound/aeat/sede/tests/test_filed_data_capture_port_errors.py",
+    "src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py",
+    "src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_roundtrip.py",
+    "src/cadrumo/application/filing/tests/test_modelo_360_header_export.py"
+  ],
+  "source_bookend_after_sha256": "608f340cadae31a259b3e25010bae6502f2d8888a104fd2ea303818f27788c9f",
+  "finished_utc": "2026-10-04T05:49:49.645990+00:00",
+  "log_sha256": "e655eaa3b3aa48e84af12892bfd4c7427a9c9bd6413fcedd7423773de95e171a"
 }
