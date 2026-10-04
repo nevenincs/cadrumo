@@ -45,7 +45,7 @@ from .....domain.calculations.registry.errors import (
 from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
 from .....domain.calculations.registry.export_parse import (
     ParsedExportFieldValue,
-    parse_export_payload,
+    parse_filed_payload,
 )
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -304,7 +304,7 @@ def observed_header_facts_from_submitted_file(
     resolved = resolve_export_layout(snapshot)
     source_payloads = published_layout_source_payloads(snapshot=snapshot, operation=operation)
     try:
-        parsed = parse_export_payload(
+        parsed = parse_filed_payload(
             resolved.layout,
             body,
             sources=snapshot.sources,
@@ -353,7 +353,7 @@ def observed_casillas_from_submitted_file(
     """
     try:
         resolved = resolve_export_layout(snapshot)
-        parsed = parse_export_payload(
+        parsed = parse_filed_payload(
             resolved.layout,
             body,
             sources=snapshot.sources,
@@ -462,7 +462,7 @@ def _submitted_file_coverage_for_casillas(
     resolved_layout = resolve_export_layout(snapshot)
     if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return 1.0
-    parsed = parse_export_payload(
+    parsed = parse_filed_payload(
         resolved_layout.layout,
         body,
         sources=snapshot.sources,

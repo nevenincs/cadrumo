@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:95993b752eebe847e8399aeec6a69d45a571dd2e58440341b2ef30e327e6d4d8'
+body_hash: 'sha256:f26c8b9aaab368b16dd28dcdf73807829beb18f8aab3229ffcce344a8e72a453'
 related:
   - "[[2026-10-04-live-reconciliation-repair-plan]]"
 ---
@@ -57,7 +57,16 @@ related:
 - `S02` `verify:` `focused receipt resolution capture unit integration 13 tests` -> `pass`
 - `S02` `verify:` `scoped Ruff style format and ty` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S03` `A` `src/cadrumo/domain/calculations/registry/tests/test_filed_payload.py`
+- `S03` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_filed_payload_context.py`
+- `S03` `verify:` `filed payload envelope value policy identity and source availability 306 tests` -> `pass`
+- `S03` `verify:` `scoped Ruff format lint ty basedpyright pyrefly` -> `pass`
+- `S03` `verify:` `retained encrypted AEAT2024Q1 payload 129fields71casillas` -> `pass`
+- `S03` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
 - `S02` Live authentication request expired; fresh pull acceptance belongs to S05. Broader adapter tests exposed unavailable browser provisioning and preexisting export fixture disagreement.
+- `S03` Shared export parser includes unrelated preexisting XML and signed-component edits; checkpoint stages only filed-input hunks. Broader legacy fixture and browser provisioning failures remain outside this Step.

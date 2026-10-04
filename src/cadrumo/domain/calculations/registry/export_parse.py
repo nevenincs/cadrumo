@@ -85,10 +85,40 @@ def parse_export_payload(
     sources: Mapping[str, SourceReference] | None = None,
     source_payloads: Mapping[str, bytes] | None = None,
 ) -> ParsedExportPayload:
-    """Parse a complete AEAT payload and return a :class:`ParsedExportPayload`."""
+    """Validate exported bytes, including blank filler and declared record terminators."""
+    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=False)
+
+
+def parse_filed_payload(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    sources: Mapping[str, SourceReference] | None = None,
+    source_payloads: Mapping[str, bytes] | None = None,
+) -> ParsedExportPayload:
+    """Read downloaded filing evidence without treating AEAT annotations as export inputs.
+
+    AEAT can return a compact envelope and populate its reserved filler slots.
+    Preserve those slots' raw bytes but give them no semantic value. Compact
+    framing is admitted only for a declared envelope without any CR or LF;
+    mixed framing still has to satisfy every declared record terminator.
+    Geometry, literal, numeric and envelope validation remain shared with export.
+    """
+    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=True)
+
+
+def _parse_payload(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
+    filed: bool,
+) -> ParsedExportPayload:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return _parse_xml_dictionary_payload(layout, payload, sources=sources, source_payloads=source_payloads)
 
+    compact = filed and layout.filing_envelope is not None and b"\r" not in payload and b"\n" not in payload
     cursor = 0
     if layout.filing_envelope is not None:
         cursor, payload = _filing_envelope_body(layout.filing_envelope, payload)
@@ -111,6 +141,8 @@ def parse_export_payload(
             payload=payload,
             cursor=cursor,
             parsed=parsed,
+            filed=filed,
+            compact=compact,
         )
     trailing = payload[cursor:]
     if layout.filing_envelope is not None and trailing:
@@ -162,6 +194,8 @@ def _consume_record_block(
     payload: bytes,
     cursor: int,
     parsed: list[ParsedExportFieldValue],
+    filed: bool,
+    compact: bool,
 ) -> int:
     """Consume zero or more instances of ``record`` from ``payload`` at ``cursor``.
 
@@ -178,12 +212,12 @@ def _consume_record_block(
     """
     if record.repeat == "binding_rows":
         while cursor < len(payload) and not _matches_record_start(next_record, payload, cursor):
-            record_values, cursor = _read_record(layout_id, record, payload, cursor)
+            record_values, cursor = _read_record(layout_id, record, payload, cursor, filed=filed, compact=compact)
             parsed.extend(record_values)
         return cursor
     if not _matches_record_start(record, payload, cursor) and not record.required:
         return cursor
-    record_values, cursor = _read_record(layout_id, record, payload, cursor)
+    record_values, cursor = _read_record(layout_id, record, payload, cursor, filed=filed, compact=compact)
     parsed.extend(record_values)
     return cursor
 
@@ -422,6 +456,9 @@ def _read_record(
     record: ExportRecordDefinition,
     payload: bytes,
     cursor: int,
+    *,
+    filed: bool,
+    compact: bool,
 ) -> tuple[tuple[ParsedExportFieldValue, ...], int]:
     record_length = _record_length(record.fields)
     record_bytes = payload[cursor : cursor + record_length]
@@ -434,9 +471,9 @@ def _read_record(
         record_text = record_bytes.decode(record.encoding)
     except UnicodeDecodeError as exc:
         raise RegistryValidationError(f"export record {record.id!r} is not {record.encoding!r}") from exc
-    parsed = _parse_record_fields(layout_id, record.id, record_text, record.fields)
+    parsed = _parse_record_fields(layout_id, record.id, record_text, record.fields, filed=filed)
     cursor += record_length
-    line_ending = _line_ending_bytes(record.line_ending)
+    line_ending = b"" if compact else _line_ending_bytes(record.line_ending)
     if line_ending:
         ending = payload[cursor : cursor + len(line_ending)]
         if ending != line_ending:
@@ -527,6 +564,8 @@ def _parse_record_fields(
     record_id: str,
     record_text: str,
     fields: tuple[ExportFieldDefinition, ...],
+    *,
+    filed: bool,
 ) -> tuple[ParsedExportFieldValue, ...]:
     parsed: list[ParsedExportFieldValue] = []
     ordered_fields = tuple(sorted(fields, key=lambda item: item.offset or 0))
@@ -539,12 +578,15 @@ def _parse_record_fields(
         raw = record_text[start:end]
         if len(raw) != field.length:
             raise RegistryValidationError(f"export field {field.id!r} ended before declared length")
-        if field.required_with is not None and field.required_with in empty_blocks:
+        value: ParsedExportPolicyValue
+        if filed and field.kind == CasillaFieldKind.FILLER:
+            value = None
+        elif field.required_with is not None and field.required_with in empty_blocks:
             if raw != render_empty_block_slot(field):
                 raise RegistryValidationError(
                     f"export field {field.id!r} carries data inside an occurrence block with no anchor",
                 )
-            value: ParsedExportPolicyValue = None
+            value = None
         else:
             value = _parse_field_value(field, raw)
         if field.kind == CasillaFieldKind.LITERAL and value != field.literal:
@@ -677,6 +719,7 @@ __all__ = [
     "XmlDictionaryEntry",
     "decode_dictionary_text",
     "parse_export_payload",
+    "parse_filed_payload",
     "xml_dictionary_entries",
 ]
 
