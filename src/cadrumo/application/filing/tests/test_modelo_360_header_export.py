@@ -30,6 +30,7 @@ from ....domain.deadlines.models import RefundAccount
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
+from ..errors import ModeloApplicationError
 from ..export_producer import filing_producer_values
 from ..producer_snapshot import (
     FilingElectionFacts,
@@ -144,6 +145,8 @@ _DR360_PAGINA_1: dict[int, tuple[int, int]] = {
     113: (1912, 25),
     114: (1937, 1),
     115: (1938, 34),
+    107: (1881, 8),
+    108: (1889, 8),
     116: (1972, 11),
     117: (1983, 3),
 }
@@ -163,7 +166,7 @@ def _blank(campo: int) -> str:
     return " " * _DR360_PAGINA_1[campo][1]
 
 
-def _pagina_1(snapshot: FilingProducerSnapshot) -> str:
+def _pagina_1(snapshot: FilingProducerSnapshot, *, extra_inputs: dict[str, ModeloInputValue] | None = None) -> str:
     """Render the published página 1 record for ``snapshot`` and return its 3400 characters."""
     provider = _schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
     registry_snapshot = provider.get_snapshot("360")
@@ -174,6 +177,7 @@ def _pagina_1(snapshot: FilingProducerSnapshot) -> str:
         "decl.estado-miembro": "EL",
         "devolucion.importe-solicitado": Decimal("38.00"),
         "devolucion.divisa": "EUR",
+        **(extra_inputs or {}),
     }
     draft = build_draft(
         modelo="360",
@@ -216,6 +220,7 @@ def _snapshot(
     identity: TaxpayerIdentityFacts | None = None,
     refund_account: RefundAccount | None = None,
     disposition: ResultDisposition = ResultDisposition.DEVOLUCION,
+    account_page_refund_account: bool = False,
 ) -> FilingProducerSnapshot:
     return build_filing_producer_snapshot(
         modelo=Modelo("360"),
@@ -234,6 +239,7 @@ def _snapshot(
         refund_account=refund_account if refund_account is not None else _refund_account(),
         charge_account=None,
         m303_filing_facts=None,
+        account_page_refund_account=account_page_refund_account,
     )
 
 
@@ -450,6 +456,67 @@ def test_a_person_known_only_by_full_name_leaves_campo_13_blank_rather_than_gues
 
     assert _campo(pagina_1, 12) == _TAX_ID
     assert _campo(pagina_1, 13) == _blank(13)
+
+
+def test_the_solicitud_account_renders_under_the_export_paths_fallback_disposition() -> None:
+    """Modelo 360 has no result casilla, so export resolves the INGRESO fallback disposition.
+
+    The account still reaches DR360 campos 113-117: the solicitud selects its own account
+    for the account page, as the export path does from the persisted solicitud register.
+    """
+    pagina_1 = _pagina_1(
+        _snapshot(_minimal_profile(), disposition=ResultDisposition.INGRESO, account_page_refund_account=True)
+    )
+
+    assert {campo: _campo(pagina_1, campo) for campo in range(113, 118)} == {
+        113: _an("PRUEBA EJEMPLO ANA", 25),
+        114: "A",
+        115: _an("ES9121000418450200051332", 34),
+        116: "CAIXESBBXXX",
+        117: "EUR",
+    }
+
+
+def test_an_account_page_account_is_refused_on_a_modelo_that_carries_none() -> None:
+    """Outside 303 Nota 3 and modelo 360, a non-refund disposition must not retain an account."""
+    with pytest.raises(FilingProducerSnapshotError, match="must not retain one"):
+        build_filing_producer_snapshot(
+            modelo=Modelo("151"),
+            taxpayer_tax_id=_TAX_ID,
+            taxpayer_identity=TaxpayerIdentityFacts(
+                legal_name=None, given_name="Ana", surnames="Prueba", full_name=None
+            ),
+            presenter=PresenterIdentity(tax_id=_REPRESENTANTE_TAX_ID, full_name="Gestoria Prueba"),
+            model_profile=GeneralFilingProfileFacts(),
+            elections=FilingElectionFacts(
+                result_disposition=ResultDisposition.INGRESO,
+                payment=PaymentElection.INGRESO,
+                refund=RefundElection.COMPENSAR,
+                prior_domiciliation=PriorDomiciliationElection.KEEP,
+            ),
+            amendment_evidence=None,
+            refund_account=_refund_account(),
+            charge_account=None,
+            m303_filing_facts=None,
+            account_page_refund_account=True,
+        )
+
+
+def test_the_refund_period_dates_reach_the_draft_as_dates_and_render_ddmmaaaa() -> None:
+    """DR360 campos 107-108 are dates; an ISO date input is a date, never a Decimal."""
+    pagina_1 = _pagina_1(
+        _snapshot(_minimal_profile()),
+        extra_inputs={"devolucion.periodo-fecha-inicio": "2025-01-01", "devolucion.periodo-fecha-fin": "2025-06-30"},
+    )
+
+    assert (_campo(pagina_1, 107), _campo(pagina_1, 108)) == ("01012025", "30062025")
+
+
+def test_a_refund_period_date_that_is_not_iso_is_refused() -> None:
+    with pytest.raises(ModeloApplicationError) as exc_info:
+        _pagina_1(_snapshot(_minimal_profile()), extra_inputs={"devolucion.periodo-fecha-inicio": "01/01/2025"})
+
+    assert exc_info.value.translated_message == "application.filing.build_draft.errors.date_binding_not_iso"
 
 
 def test_a_360_without_its_typed_facts_is_refused() -> None:

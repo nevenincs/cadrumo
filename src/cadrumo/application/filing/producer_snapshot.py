@@ -1214,8 +1214,7 @@ def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> No
         if not isinstance(snapshot.selected_account, RefundAccountSelection):
             raise ValueError("refund disposition requires a selected refund account")
     elif snapshot.selected_account is not None and not (
-        _account_page_carries_refund_account(snapshot)
-        and isinstance(snapshot.selected_account, RefundAccountSelection)
+        _account_page_carries_refund_account(snapshot) and isinstance(snapshot.selected_account, RefundAccountSelection)
     ):
         raise ValueError("a result disposition without an account must not retain one")
 
