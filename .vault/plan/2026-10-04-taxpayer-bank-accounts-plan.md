@@ -14,8 +14,9 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:0dad15f39a88d2a745f972e3d70fb88ff113b3655052d6a0423d9faa5f979751'
+body_hash: 'sha256:1d2f7a65f3339b151160f80d0afeb251b16d2f7f367e8f003ea998498727f4aa'
 ---
+
 # `taxpayer-bank-accounts` plan
 
 Make the taxpayer's own bank accounts ledger entities and bind them to every modelo charge and refund role.
@@ -83,6 +84,21 @@ Puts own-account setup, import binding and per-filing account election in the Te
 - [ ] `P06.S20` - add the own-account picker to the import flow and bind preview and apply to the file content digest; `src/cadrumo/entrypoints/tui/ledger/import_flow.py, src/cadrumo/entrypoints/tui/ledger/models.py`.
 - [ ] `P06.S21` - add the 360 solicitud form with the solicitante or representante account choice; `src/cadrumo/entrypoints/tui/modelo/`.
 
+### Phase `P06a` - CLI conformance to backend changes
+
+Bring every CLI command, option, help text, JSON envelope, refusal rendering and generated reference that consumes the changed backend into agreement with it: own-account operations, transaction account binding, import options, per-filing account overrides, disposition and cutoff refusals, and the 360 DEVOLUCION route. Runs after the backend Steps it conforms to are closed.
+
+- [ ] `P06a.S23` - audit and align every CLI family touched by P01 to P05 (ledger account, import, add, list, modelo calculate, verify and export, wizard, 360 solicitud) against the changed backend contracts: options, positional subjects, help text, JSON output schemas and refusal rendering, removing options whose backend was deleted; `src/cadrumo/entrypoints/cli/, src/cadrumo/locales/*/cli.yml`.
+- [ ] `P06a.S24` - point operator remedies and the error catalogue for missing charge or refund accounts, non-ES charge accounts, past-cutoff domiciliacion and 360 account refusals at the live ledger account and 360 commands, and pass the operator-surface reconciliation; `src/cadrumo/application/operator_surface/, src/cadrumo/core/errors/registry/, src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`.
+- [ ] `P06a.S25` - prove live CLI registration, refusal, output shape and promised idempotency for every conformed command, assert no IBAN appears in argv, text or JSON output, and regenerate the CLI reference from its owner; `src/cadrumo/entrypoints/cli/tests/, docs/`.
+
+### Phase `P06b` - TUI conformance to backend changes
+
+Bring every Textual screen, projection, modal and staged edit that consumes the changed backend into agreement with it: removed ModeloIVAProfile account fields, resolved charge and refund accounts, typed account, capability and cutoff refusals, the 360 DEVOLUCION disposition and transaction account binding, with masked account rendering throughout. Runs after the backend Steps and P06 screens it conforms to are closed.
+
+- [ ] `P06b.S26` - audit and align every TUI screen and projection consuming the changed backend (Modelo workbench result and export, review, declarations, ledger list and detail, home and overview) with the resolved accounts, removed profile account fields, typed refusals, 360 DEVOLUCION and transaction account binding, rendering accounts masked; `src/cadrumo/entrypoints/tui/`.
+- [ ] `P06b.S27` - prove each conformed screen with Textual pilot tests through the real runtime projections, covering success, each typed refusal and masked rendering, and check the rendered frames in the TUI preview; `src/cadrumo/entrypoints/tui/ (owning tests directories)`.
+
 ### Phase `P07` - integration proof and references
 
 Proves the whole path on real encrypted storage and regenerates owned references.
@@ -91,13 +107,15 @@ Proves the whole path on real encrypted storage and regenerates owned references
 
 ## Parallelization
 
-Five lanes can run at once with disjoint write ownership. Each lane commits by pathspec; shared files are re-read before patching and committed hunk-only.
+Five backend lanes can run at once, followed by two conformance lanes, with disjoint write ownership. Each lane commits by pathspec; shared files are re-read before patching and committed hunk-only.
 
 - Lane A, custody and ledger setup: P01.S01, S02, S03, S04 in order. Owns `src/cadrumo/domain/transactions/own_accounts.py`, `src/cadrumo/adapters/persistence/profile/own_accounts.py`, the namespace entry in `secure_object_namespaces.py`, the new `application/ledger` own-account operation modules and the new ledger account CLI spec module. S01 unblocks Lane B; S02 unblocks Lane D's S09; S03 unblocks P06.S18.
 - Lane B, transaction link and import repairs: P02.S08 starts at once; S05 starts after P01.S01; then S06 and S07. Owns `domain/transactions/models.py`, `raw_transaction.py`, `application/ledger/actions_import.py`, `import_operation.py`, `add_operation.py`, `adapters/inbound/financial/**`, the ledger import, add and list CLI specs, and `entrypoints/tui/ledger/models.py` only for the import request field.
 - Lane C, disposition core: P03.S10 and P04.S14 start at once; P03.S12 starts after P03.S09 is committed. Owns `core/result_disposition.py`, `core/payment_election.py` and `application/modelo/result_disposition_resolution.py`. S12's call-site hunk in `application/modelo/export.py` is its only cross-lane write and lands after Lane D's in-flight Step commits.
 - Lane D, export binding: P03.S09 after P01.S02, then P03.S11, P03.S13, P04.S15 and P05.S17. Owns `application/modelo/export.py`, `application/filing/producer_snapshot*.py`, `application/filing/export_producer.py`, `application/filing/record_field_renderer.py`, `domain/deadlines/models.py`, `domain/deadlines/profiles.py`, `application/wizard/commands.py` and `entrypoints/adapter_composition.py`.
 - Lane E, 360 write path and TUI: P04.S16 after P04.S15; P06.S18 after P01.S03; P06.S19 after P03.S09 and S11; P06.S20 after P02.S06; P06.S21 after P04.S16. Owns `entrypoints/tui/**` (except the import request field above) and the new 360 solicitud operation and CLI modules.
+- Lane F, CLI conformance: P06a.S23, S24, S25 in order, after P01 through P05 are closed. Owns `entrypoints/cli/**` other than the new spec modules Lanes A, B and E created (which it may then edit), `application/operator_surface/**` and the CLI reference under `docs/`. It can run alongside Lane G.
+- Lane G, TUI conformance: P06b.S26 and S27 in order, after P01 through P06 are closed. Owns `entrypoints/tui/**` once Lane E has closed P06.
 
 Shared files are serialized rather than owned: `entrypoints/operation_composition.py` and operation definitions (Lane A first, then Lane E), `core/errors/registry/*` (Lanes C and D), and `src/cadrumo/locales/*/{cli,errors,wizard}.yml` (all lanes, through the `dev.locales` workflow). P07.S22 runs last, after every other Step is closed.
 
