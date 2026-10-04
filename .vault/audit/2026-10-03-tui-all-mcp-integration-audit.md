@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ade6930cea13588e021fd1e879c77d36071d31422b0f9f2a30498d7a487418f3'
+body_hash: 'sha256:ffebc991321d979dbe6829eab9f0ec2deb8c8eccd7dbd4cc5f9d566d6c511884'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -190,6 +190,10 @@ Resolved source ownership defect. The first frozen configured aggregate passed11
 ### later-m347-physical-oracle | low | Current leased-premises export retains independent situation and reference byte assertions
 
 Incorporated the unique three-line oracle from fresh preserved live TUI snapshot78d675 relative to66b785. The current public/pinned schema helper and historical filing grade remain intact. The independent source-pinned M347 fields f011/f012 declare one-based offsets115/116 and lengths1/25; the existing fixture independently declares situation1 and literal cadastral reference. The test now checks those exact output spans in its I record. The whole owner passes3 in2.51s with no failure/skip and scoped Ruff/format/ty passes; source byte hashes remain stable. No shipping model, DTO, compiler, authority or data changes are imported. All119 later source deltas are accounted by the external review: one adapted unique oracle, three exact, three semantic, and one policy/factoring already-present cases, and111 independent ongoing cases preserved without blind import. Final metadata records the incorporated oracle separately; the active nested lease migration and live destination handoff remain separately coordinated.
+
+### explicit-acceptance-runtime-scope | low | Installed financial acceptance retains its caller-owned runtime across fresh CLI reopens
+
+The installed acceptance adapter accepts an optional caller-owned context, entered after the existing fresh-store validation and creation, retained through both readback and verify/export CLI reopens, and released by ExitStack on every outcome. Default None behavior and accepted no-autostart policy remain intact. Independent AST comparison proves the full previous financial journey body and all its assertions unchanged inside the scope. Two focused resource-boundary cases plus15 existing owner cases pass17 in2.33s; scoped Ruff/format/ty pass. Adapter doubles establish lifetime and refusal behavior only, not a financial positive. The separate actual packaged run completed public runtime handshake and genuine profile creation but refused desktop admission: the custom Windows host reports version6.2 on kernel10.0.26100, with a manifest lacking supportedOS compatibility. Native producer correction and real financial replay remain required; no consumer admission guard is relaxed.
 
 ## Recommendations
 
