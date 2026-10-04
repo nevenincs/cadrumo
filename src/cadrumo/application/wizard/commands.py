@@ -183,10 +183,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         metavar=_choice_metavar(["1", "2"]),
         help=tr("wizard.setup.flags.taxation-type.help"),
     ),
-    "charge-iban": typer.Option(
-        "--charge-iban",
-        help=tr("wizard.setup.flags.charge-iban.help"),
-    ),
     "output-language": typer.Option(
         "--output-language",
         click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),

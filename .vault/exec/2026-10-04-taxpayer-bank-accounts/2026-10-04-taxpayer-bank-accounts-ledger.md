@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:edf7c81d3546a6e4aecd03193b815aa4f92fd78ca55ff377fc418134a47ad12b'
+body_hash: 'sha256:9b0ea1955230a6d30fe3c0fd620e5bddea8ecc2bc4bf522300ac706cac3c5f11'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -233,6 +233,20 @@ related:
 - `S11` `verify:` `dev.locales status --check: no finding for refused_modelo_domiciliation_past_cutoff (gate fails on pre-existing inventory backlog)` -> `pass`
 - `S11` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
 - `S11` `by:` `lane-d`
+- `S13` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S13` `M` `src/cadrumo/application/filing/producer_snapshot_m200.py`
+- `S13` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S13` `M` `src/cadrumo/application/wizard/commands.py`
+- `S13` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S13` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S13` `M` `src/cadrumo/application/filing/tests/test_filing_account_iban_redaction.py`
+- `S13` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S13` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S13` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S13` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S13` `verify:` `pytest application/filing, application/wizard, domain/deadlines, profile charge-iban CLI refusal (1140 passed; 8 failed + 4 errors all in the pre-edit baseline or the pre-existing envelope-role failures)` -> `pass`
+- `S13` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S13` `by:` `lane-d`
 
 ## Notes
 

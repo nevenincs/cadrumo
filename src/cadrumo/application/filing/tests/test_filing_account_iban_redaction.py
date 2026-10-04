@@ -23,7 +23,6 @@ from ..producer_snapshot import (
     Modelo210ProfileFacts,
     RefundAccountSelection,
 )
-from ..producer_snapshot_m200 import Modelo200ProfileFacts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,7 +45,6 @@ _CASES: Mapping[str, tuple[type[BaseModel], dict[str, object]]] = {
         Modelo210ProfileFacts,
         {"devolucion": {"cuenta_sepa_iban": _IBAN.encode()}},
     ),
-    "200 profile iban as bytes": (Modelo200ProfileFacts, {"numero_de_cuenta_iban": _IBAN.encode()}),
     "202 profile holding a taxpayer profile": (
         Modelo202ProducerProfile,
         {"taxpayer_profile": _PROFILE_WITHOUT_TAX_ID},

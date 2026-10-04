@@ -464,14 +464,14 @@ class ModeloRefundAccountMissingError(ModeloError):
 
     When the determined disposition is a refund (devolución, ``D`` / ``V`` /
     ``X``) the fichero must carry the cuenta-devolución block AEAT pays into —
-    the IBAN, or the SWIFT-BIC plus foreign-bank block for a non-SEPA account.
-    If the operator's profile carries no refund account (no ``iban``), the
-    export REFUSES rather than emitting an empty or partial DID block: an empty
-    refund block produces a devolución fichero AEAT cannot pay — a silent,
-    defective filing. The fix is operator-driven: configure a refund account on
-    the profile, or carry the credit forward (``compensar``) instead of
-    requesting a refund. This is the no-silent-under-declaration sibling of the
-    election's eligibility refusal.
+    the IBAN, plus the SWIFT-BIC and foreign-bank block for a non-SEPA account.
+    If no own account resolves for the refund role (no per-filing choice and no
+    REFUND designation in the ledger own-account register), or the one that
+    resolves is closed, the export REFUSES rather than emitting an empty or
+    partial DID block: an empty refund block produces a devolución fichero AEAT
+    cannot pay — a silent, defective filing. The fix is operator-driven:
+    designate a refund own account, choose one for the filing, or carry the
+    credit forward (``compensar``) instead of requesting a refund.
     """
 
 
@@ -479,10 +479,11 @@ class ModeloChargeAccountMissingError(ModeloError):
     """Raised when a domiciliación export has no charge account on file.
 
     A ``U`` declaration instructs AEAT to debit the taxpayer's account. The
-    DID page therefore needs the separately recorded charge-account IBAN; a
-    refund account is a destination for payments from AEAT and cannot satisfy
-    a debit instruction. The export refuses rather than falling back to that
-    separate account or writing an empty account page.
+    DID page therefore needs an own account resolved for the charge role (a
+    per-filing choice or a CHARGE designation); a refund designation is a
+    destination for payments from AEAT and cannot satisfy a debit instruction.
+    The export refuses rather than falling back to that separate account or
+    writing an empty account page.
     """
 
 

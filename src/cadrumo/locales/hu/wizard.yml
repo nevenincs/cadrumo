@@ -278,10 +278,6 @@ wizard:
         prompt: Kiskorú gyermekek a családi egységben
       title: Családi egység
     filing-export:
-      charge-iban:
-        help: Az IBAN, amelyet az AEAT megterhelhet, ha a Modelo 303 bevallása csoportos
-          beszedést választ. Ez különbözik a visszatérítési számlától.
-        prompt: IBAN az AEAT csoportos beszedéséhez
       title: A Modelo 303 beszedési számlája
     flags:
       activity:
@@ -298,8 +294,6 @@ wizard:
           történő befizetéssel terhelt
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
-      charge-iban:
-        help: IBAN, amelyet az AEAT megterhelhet a Modelo 303 választott beszedéséhez.
       cloud-evidence-upload:
         help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
           (alapból kikapcsolva).

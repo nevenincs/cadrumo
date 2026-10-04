@@ -268,10 +268,6 @@ wizard:
         prompt: Fills menors en unitat familiar
       title: Unitat familiar
     filing-export:
-      charge-iban:
-        help: IBAN que l AEAT pot carregar quan una declaració del Model 303 escull
-          la domiciliació. Es diferent del compte de devolució.
-        prompt: IBAN per a la domiciliació de l'AEAT
       title: Compte de càrrec del Model 303
     flags:
       activity:
@@ -286,9 +282,6 @@ wizard:
           agrícoles, ramaderes o forestals subjectes a retenció o ingrés a compte
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
-      charge-iban:
-        help: IBAN que l AEAT pot carregar per a una domiciliació elegida del Model
-          303.
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
           per defecte).

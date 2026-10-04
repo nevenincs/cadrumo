@@ -96,6 +96,7 @@ from ..producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
+from ..producer_snapshot_m200 import Modelo200ProfileFacts
 from ..record_field_renderer import (
     complementaria_page_marker,
     m303_complementaria_marker,
@@ -1058,6 +1059,54 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     charge_values = filing_producer_values(charge_snapshot)
     assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] == _CHARGE_IBAN
     assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] is None
+
+
+@pytest.mark.parametrize(
+    ("disposition", "expected"),
+    [
+        pytest.param(
+            ResultDisposition.DEVOLUCION,
+            {
+                FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: "2",
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: _REFUND_IBAN,
+                FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: "",
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: None,
+            },
+            id="refund-fills-the-devolucion-block",
+        ),
+        pytest.param(
+            ResultDisposition.DOMICILIACION,
+            {
+                FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: None,
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: None,
+                FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: None,
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: _CHARGE_IBAN,
+            },
+            id="charge-fills-the-ingreso-iban",
+        ),
+    ],
+)
+def test_modelo_200_account_fields_follow_the_selected_account_role(
+    disposition: ResultDisposition,
+    expected: dict[FilingProducerKey, object],
+) -> None:
+    """DR200 page DID: devolución block at 242-424 from the refund role, ingreso IBAN at 443 from the charge role."""
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo("200"),
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=Modelo200ProfileFacts(),
+        elections=_elections(disposition),
+        amendment_evidence=None,
+        refund_account=RefundAccount(iban=_REFUND_IBAN),
+        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
+        m303_filing_facts=None,
+    )
+
+    values = filing_producer_values(snapshot)
+
+    assert {key: values[key] for key in expected} == expected
 
 
 def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained() -> None:

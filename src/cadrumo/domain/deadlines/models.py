@@ -194,9 +194,9 @@ class RefundAccount(BaseModel):
         bank_city: Bank city for a non-SEPA account.
         bank_country_code: ISO 3166-1 alpha-2 country code of the bank
             for a non-SEPA account.
-        sepa_marca: The derived Marca SEPA token (``"1"`` Cuenta España /
-            ``"2"`` UE SEPA / ``"3"`` Resto Países). Derived from the
-            account country at export, not an operator input.
+
+    The Marca SEPA is not carried: the renderer derives it from the account
+    country at export, so no stored token can disagree with the IBAN.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -207,7 +207,6 @@ class RefundAccount(BaseModel):
     bank_address: str = ""
     bank_city: str = ""
     bank_country_code: str = ""
-    sepa_marca: str = ""
 
     @field_validator("iban", mode="before")
     @classmethod

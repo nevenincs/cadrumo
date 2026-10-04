@@ -20,6 +20,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 from ...domain.deadlines.models import ModeloIVAProfile
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
+from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390FilingEvidence,
@@ -41,6 +42,7 @@ from .producer_snapshot import (
     Modelo296ProfileFacts,
     Modelo353ProfileFacts,
     RefundAccountSelection,
+    SelectedFilingAccount,
     TaxpayerIdentityFacts,
 )
 from .producer_snapshot_m200 import Modelo200ProfileFacts
@@ -951,12 +953,7 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACIONES_E: "b_2_suma_de_porcentajes_de_participaciones_e",
     FilingProducerKey.M200_BALANCE_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREV: "balance_0_no_consta_1_mod_normal_2_mod_abrev",
     FilingProducerKey.M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL: "codigo_cnae_2025_actividad_principal",
-    FilingProducerKey.M200_CODIGO_PAIS_COUNTRY_CODE: "codigo_pais_country_code",
     FilingProducerKey.M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A: "como_consecuencia_de_la_presentacion_de_la_a",
-    FilingProducerKey.M200_CUENTA_BANCARIA_BANCO_BANK_NAME: "cuenta_bancaria_banco_bank_name",
-    FilingProducerKey.M200_CUENTA_BANCARIA_CIUDAD_CITY: "cuenta_bancaria_ciudad_city",
-    FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: "cuenta_bancaria_codigo_swift_bic",
-    FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: "cuenta_bancaria_marca_sepa",
     FilingProducerKey.M200_CUENTA_CORRIENTE_TRIBUTARIA: "cuenta_corriente_tributaria",
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF: "datos_de_la_sociedad_matriz_ultima_nif",
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE: "datos_de_la_sociedad_matriz_ultima_nombre_de",
@@ -988,7 +985,6 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_8: "deduccion_resto_del_grupo_8",
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_9: "deduccion_resto_del_grupo_9",
     FilingProducerKey.M200_DIRECCION_DE_CORREO_ELECTRONICO_PARA_INCIDEN: "direccion_de_correo_electronico_para_inciden",
-    FilingProducerKey.M200_DIRECCION_DEL_BANCO_BANK_ADDRESS: "direccion_del_banco_bank_address",
     FilingProducerKey.M200_ECPN_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREVIAD: "ecpn_0_no_consta_1_mod_normal_2_mod_abreviad",
     FilingProducerKey.M200_EJERCICIO: "ejercicio",
     FilingProducerKey.M200_ENTIDAD_CUYO_IMPORTE_NETO_DE_LA_CIFRA_DE_NEG: "entidad_cuyo_importe_neto_de_la_cifra_de_neg",
@@ -1047,8 +1043,6 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_NO_IDENTIFICACION_DE_LA_SOCIEDAD_DOMINANTE_E: "no_identificacion_de_la_sociedad_dominante_e",
     FilingProducerKey.M200_NO_RESIDENTES_MAS_DE_UN_ESTABLECIMIENTO_PERM: "no_residentes_mas_de_un_establecimiento_perm",
     FilingProducerKey.M200_NOMBRE_Y_APELLIDOS_DE_LA_PERSONA_DE_CONTACTO: "nombre_y_apellidos_de_la_persona_de_contacto",
-    FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: "numero_de_cuenta_iban",
-    FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: "numero_de_cuenta_iban_2",
     FilingProducerKey.M200_NUMERO_DE_PERIODO_IMPOSITIVO: "numero_de_periodo_impositivo",
     FilingProducerKey.M200_PAIS_DE_EXPEDICION_DEL_DOCUMENTO_DE_IDENTIFI: "pais_de_expedicion_del_documento_de_identifi",
     FilingProducerKey.M200_PAIS_DE_RESIDENCIA: "pais_de_residencia",
@@ -1109,15 +1103,43 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
 }
 
 
-def m200_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+def m200_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
     """Resolve the header facts modelo 200's layout cites.
 
     A profile of the wrong type yields every key as ``None`` rather than raising: this runs
     for every modelo, and AEAT writes an empty alphanumeric header field to blancos.
     """
-    profile = model_profile if isinstance(model_profile, Modelo200ProfileFacts) else None
-    return {
+    profile = snapshot.model_profile if isinstance(snapshot.model_profile, Modelo200ProfileFacts) else None
+    values: dict[FilingProducerKey, object] = {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M200_FIELD_BY_KEY.items()
+    }
+    values.update(_m200_account_values(snapshot.selected_account if profile is not None else None))
+    return values
+
+
+def _m200_account_values(selected: SelectedFilingAccount | None) -> dict[FilingProducerKey, object]:
+    """Feed modelo 200's DID page by role from the one selected account.
+
+    DR200 page DID carries the devolución account block (Marca SEPA at 242, IBAN
+    at 243, SWIFT-BIC and the foreign-bank block after it) and, separately, the
+    ingreso domiciliación IBAN at 443. A refund selection fills the first, a
+    charge selection the second; the account is never copied into the profile.
+    """
+    refund = selected.account if isinstance(selected, RefundAccountSelection) else None
+    charge = selected.account if isinstance(selected, ChargeAccountSelection) else None
+    return {
+        FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: (
+            None
+            if refund is None
+            else derive_sepa_marca(iban=refund.iban, bank_country_code=refund.bank_country_code).value
+        ),
+        FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: None if refund is None else refund.iban,
+        FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: None if refund is None else refund.swift_bic,
+        FilingProducerKey.M200_CUENTA_BANCARIA_BANCO_BANK_NAME: None if refund is None else refund.bank_name,
+        FilingProducerKey.M200_DIRECCION_DEL_BANCO_BANK_ADDRESS: None if refund is None else refund.bank_address,
+        FilingProducerKey.M200_CUENTA_BANCARIA_CIUDAD_CITY: None if refund is None else refund.bank_city,
+        FilingProducerKey.M200_CODIGO_PAIS_COUNTRY_CODE: None if refund is None else refund.bank_country_code,
+        FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: None if charge is None else charge.iban,
     }
 
 
@@ -1256,7 +1278,7 @@ def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[Fi
     values.update(m222_producer_values(model_profile))
     values.update(m202_producer_values(model_profile))
     values.update(m210_producer_values(model_profile))
-    values.update(m200_producer_values(model_profile))
+    values.update(m200_producer_values(snapshot))
     values.update(m296_producer_values(model_profile))
     values.update(m353_producer_values(model_profile))
     values.update(m360_producer_values(snapshot))

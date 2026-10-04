@@ -260,10 +260,6 @@ wizard:
         prompt: Minor children in family unit
       title: Family unit
     filing-export:
-      charge-iban:
-        help: IBAN AEAT may debit when a Modelo 303 filing elects direct debit. This
-          is separate from the refund account.
-        prompt: IBAN for AEAT direct debit
       title: Modelo 303 direct-debit account
     flags:
       activity:
@@ -279,8 +275,6 @@ wizard:
           on account
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
-      charge-iban:
-        help: IBAN AEAT may debit for an elected Modelo 303 direct debit.
       cloud-evidence-upload:
         help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
