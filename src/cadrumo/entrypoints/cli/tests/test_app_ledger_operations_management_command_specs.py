@@ -550,6 +550,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 is_flag=True,
                 flag_value=True,
             ),
+            _expected_option("account", "--account", "cli.ledger.list.account_help"),
         ),
     ),
     _expected_command(
@@ -977,6 +978,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             ),
             _expected_option("notes", "--notes", "cli.ledger.update.notes_help"),
             _expected_option("group", "--group", "cli.ledger.update.group_help"),
+            _expected_option("account", "--account", "cli.ledger.update.account_help"),
             _expected_option("actor", "--actor", "cli.ledger.add.actor_help"),
         ),
     ),

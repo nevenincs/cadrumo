@@ -1411,6 +1411,7 @@ def build_production_operation_registry(
     ledger_add_definition = build_ledger_add_definition(
         ledger_action_ports_factory,
         build_prorrata_register_repository,
+        own_account_repository_factory,
     )
     ledger_allocate_definition = build_ledger_allocate_definition(ledger_action_ports_factory)
     ledger_classify_definition = build_ledger_classify_definition(ledger_action_ports_factory)
@@ -1453,7 +1454,9 @@ def build_production_operation_registry(
     )
     ledger_split_definition = build_ledger_split_definition(ledger_action_ports_factory)
     ledger_merge_definition = build_ledger_merge_definition(ledger_action_ports_factory)
-    ledger_update_definition = build_ledger_update_definition(ledger_action_ports_factory)
+    ledger_update_definition = build_ledger_update_definition(
+        ledger_action_ports_factory, own_account_repository_factory
+    )
     ledger_attach_definition = build_ledger_attach_definition(ledger_action_ports_factory)
     ledger_detach_definition = build_ledger_detach_definition(ledger_action_ports_factory)
     ledger_archive_definition = build_ledger_archive_definition(ledger_action_ports_factory)

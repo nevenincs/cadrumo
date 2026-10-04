@@ -34,6 +34,7 @@ from ..operations.registry import OperationFrontendProjection, OperationPublicDe
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .actions_common import require_registered_own_account
 from .actions_import import (
     OWN_ACCOUNT_MISMATCH_MESSAGE,
     LedgerProviderID,
@@ -443,13 +444,8 @@ def _compose_staged_imports(
     if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     own_accounts = ports.own_accounts.load()
-    if payload.own_account_id is not None and payload.own_account_id not in {
-        account.own_account_id for account in own_accounts.accounts
-    }:
-        raise TransactionValidationError(
-            translated_message="errors.transaction.ledger_import_own_account_unknown",
-            context={"own_account_id": payload.own_account_id},
-        )
+    if payload.own_account_id is not None:
+        require_registered_own_account(own_accounts, payload.own_account_id)
     staged: list[tuple[Path, PreparedLedgerSourceImport]] = []
     refusals: list[LedgerImportFileRefusal] = []
     staged_rows = 0

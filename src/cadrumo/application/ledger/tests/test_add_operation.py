@@ -37,6 +37,7 @@ from ....domain.calculations.registry.prorrata_vocabulary import require_input_c
 from ....domain.prorrata_register.register import ProrrataRegister
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .. import add_operation
+from ..own_account_ports import OwnAccountRepositoryProtocol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -144,7 +145,10 @@ def test_registration_requires_commit_and_refuses_another_profile() -> None:
     def unused_register(*, bucket_id: str) -> ProrrataRegisterServiceRepositoryProtocol:
         raise AssertionError(f"unexpected prorrata lookup for {bucket_id}")
 
-    definition = add_operation.build_ledger_add_definition(unused_ports, unused_register)
+    def unused_own_accounts(*, bucket_id: str) -> OwnAccountRepositoryProtocol:
+        raise AssertionError(f"unexpected own-account lookup for {bucket_id}")
+
+    definition = add_operation.build_ledger_add_definition(unused_ports, unused_register, unused_own_accounts)
     registration = add_operation.build_ledger_add_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     request = OperationRequest[BaseModel](

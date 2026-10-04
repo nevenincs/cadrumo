@@ -267,6 +267,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             irpf_category_option("cli.ledger.update.irpf_category_help"),
             _optional_text_option("notes", ("--notes",), "cli.ledger.update.notes_help"),
             _optional_text_option("group", ("--group",), "cli.ledger.update.group_help"),
+            _optional_text_option("account", ("--account",), "cli.ledger.update.account_help"),
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_4,

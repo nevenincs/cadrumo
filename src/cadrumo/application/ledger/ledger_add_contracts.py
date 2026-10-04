@@ -12,6 +12,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
 from .transaction_projection import LedgerTransactionProjection
 
@@ -83,6 +84,7 @@ class LedgerAddRequest(BaseModel):
     actor: Annotated[str, Field(max_length=64)] | None = None
     idempotency_key: Annotated[str, Field(max_length=256)] | None = None
     source_jurisdiction: Annotated[str, Field(max_length=16)] | None = None
+    own_account_id: OwnAccountId | None = None
 
     @field_validator("booked_date", "value_date")
     @classmethod

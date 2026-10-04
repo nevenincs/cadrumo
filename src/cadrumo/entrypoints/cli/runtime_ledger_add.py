@@ -130,6 +130,7 @@ def run_ledger_add(
     actor: str | None,
     idempotency_key: str | None,
     source_jurisdiction: str | None,
+    own_account_id: str | None = None,
 ) -> LedgerAddOperationResult:
     """Submit one bounded add request and strictly correlate its terminal receipt."""
     client = bound_profile_client(ctx)
@@ -166,6 +167,7 @@ def run_ledger_add(
         actor=actor if actor else None,
         idempotency_key=idempotency_key,
         source_jurisdiction=source_jurisdiction,
+        own_account_id=own_account_id,
     )
     completed = run_registered_operation(
         client,

@@ -2832,6 +2832,7 @@ cli:
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'No change: the register already held these values.'
     add:
+      account_help: Own bank account the movement belongs to, by its id (e.g. acc-01).
       actor_help: Your name, recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       art_104_tres_exclusion_help: LIVA art. 104.Tres denominator exclusion that you
@@ -3234,12 +3235,14 @@ cli:
       id_help: Transaction id (SHA-256 or unambiguous prefix).
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
+      account_help: Show only entries bound to this own bank account, by its id (e.g.
+        acc-01).
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
       filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
         plus year (e.g. year=2026), classification, issue, import, direction (ingreso/gasto),
-        or text. To filter by organisational group label use the separate --group
-        option.
+        account (an own bank account id, e.g. account=acc-01) or text. To filter by
+        organisational group label use the separate --group option.
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -3302,7 +3305,8 @@ cli:
       yes_help: Confirm restoring the transaction to active
     review:
       filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
-        plus year (e.g. year=2026), issue, import, classification, text, or direction
+        plus year (e.g. year=2026), issue, import, classification, text, direction,
+        or account (an own bank account id, e.g. account=acc-01)
       header: REVIEW SESSION FOR YOUR RECORDS
       help: Interactive review and validation of entries in your records
       no_rows: No entries in your records pending review
@@ -3344,6 +3348,7 @@ cli:
       help: Show the event history for one transaction in your records
       transaction_id_help: Id of the transaction to inspect
     update:
+      account_help: Bind the entry to this own bank account, by its id (e.g. acc-01).
       amount_help: New non-negative amount magnitude (full replace)
       counterparty_help: New counterparty descriptor
       currency_help: New three-letter ISO 4217 currency code

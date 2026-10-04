@@ -248,6 +248,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     classified_by_override: _LedgerOptionalText = None
     source_jurisdiction: str | None = None
     group_label: str | None = Field(default=None, max_length=_GROUP_LABEL_MAX_LENGTH)
+    own_account_id: OwnAccountId | None = None
 
     @field_validator(
         "bucket_id",
@@ -353,6 +354,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
     group_label: _LedgerOptionalGroupLabel = None
+    own_account_id: OwnAccountId | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -669,6 +671,7 @@ class LedgerReviewQuery(BaseModel):
     classification: str | None = None
     text: str | None = None
     direction: str | None = None
+    own_account_id: OwnAccountId | None = None
     transaction_id: TransactionId | None = None
 
     @field_validator(

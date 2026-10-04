@@ -28,6 +28,7 @@ from ..user_profile.access_contracts import (
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
+from .actions_common import require_registered_own_account
 from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
 from .id_resolution import resolve_transaction_id
 from .models import (
@@ -35,6 +36,7 @@ from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from .own_account_ports import OwnAccountRepositoryFactory
 from .read_access import resolve_ledger_commit_access
 from .transaction_projection import LedgerTransactionProjection
 from .update_contracts import (
@@ -53,9 +55,14 @@ from .validation_messages import bounded_validation_messages
 class LedgerUpdateExecutor:
     """Apply the canonical edit under exact-profile and pinned-authority custody."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
-        """Retain the exact-profile service composition capability."""
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        own_account_repository_factory: OwnAccountRepositoryFactory,
+    ) -> None:
+        """Retain the exact-profile service and own-account register capabilities."""
         self._ports_factory = ports_factory
+        self._own_account_repository_factory = own_account_repository_factory
 
     async def execute(
         self,
@@ -74,6 +81,7 @@ class LedgerUpdateExecutor:
             bucket_id=bucket_id,
             operation=context.authority_operation,
             ports_factory=self._ports_factory,
+            own_account_repository_factory=self._own_account_repository_factory,
             context=context,
         )
         return await await_cancellation_complete(commit, task_name="ledger-update-commit")
@@ -140,6 +148,7 @@ async def _commit_update(
     bucket_id: str,
     operation: PinnedAuthorityOperation,
     ports_factory: LedgerActionPortsFactory,
+    own_account_repository_factory: OwnAccountRepositoryFactory,
     context: OperationExecutorContext,
 ) -> str | OperationRefusalEvidence:
     async with context.cancellation.irreversible_section():
@@ -150,6 +159,9 @@ async def _commit_update(
             operation=operation,
             ports_factory=ports_factory,
         )
+        if patch.own_account_id is not None:
+            own_accounts = await asyncio.to_thread(own_account_repository_factory(bucket_id=bucket_id).load)
+            require_registered_own_account(own_accounts, patch.own_account_id)
         current: Transaction = catalogue.transactions[transaction_id]
         _validate_update_projection(
             payload.profile_id,
@@ -239,6 +251,7 @@ def _operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         group_label=result.transaction.group_label,
+        own_account_id=result.transaction.own_account_id,
     )
 
 
@@ -308,14 +321,17 @@ def _require_update_refusal_receipt(receipt: OperationTerminalReceipt) -> None:
         raise ValueError("ledger update validation refusal has an incompatible terminal receipt")
 
 
-def build_ledger_update_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_update_definition(
+    ports_factory: LedgerActionPortsFactory,
+    own_account_repository_factory: OwnAccountRepositoryFactory,
+) -> OperationDefinition:
     """Declare durable, exact-profile update with a bounded encrypted result."""
     return build_single_phase_definition(
         definition_id=LEDGER_UPDATE_OPERATION_DEFINITION_ID,
         request_type=LedgerUpdateRequest,
         result_type=LedgerUpdateExecutionResult,
         executor_type=LedgerUpdateExecutor,
-        build=lambda: LedgerUpdateExecutor(ports_factory),
+        build=lambda: LedgerUpdateExecutor(ports_factory, own_account_repository_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_UPDATE_VALIDATION_REFUSAL_CODE}),

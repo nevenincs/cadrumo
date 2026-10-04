@@ -185,6 +185,7 @@ def ledger_add(
     actor: str | None = None,
     idempotency_key: str | None = None,
     source_jurisdiction: str | None = None,
+    account: str | None = None,
 ) -> None:
     """Create one manual ledger transaction through exact-profile operation custody."""
     _require_add_assignable_classification(business_classification)
@@ -223,6 +224,7 @@ def ledger_add(
         actor=actor,
         idempotency_key=idempotency_key,
         source_jurisdiction=source_jurisdiction,
+        own_account_id=account,
     )
     if result.transaction is None or result.review_status is None:
         raise RuntimeError("ledger add runtime returned no successful transaction projection")
@@ -276,6 +278,7 @@ def ledger_update(
     irpf_category: str | None = None,
     notes: str | None = None,
     group: str | None = None,
+    account: str | None = None,
     actor: str | None = None,
 ) -> None:
     """Correct editable transaction facts through the exact-profile worker."""
@@ -294,6 +297,7 @@ def ledger_update(
             irpf_category=irpf_category,
             notes=notes,
             group_label=group,
+            own_account_id=account,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc

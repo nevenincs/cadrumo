@@ -196,6 +196,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option(
                 "source_jurisdiction", ("--source-jurisdiction",), "cli.ledger.add.source_jurisdiction_help"
             ),
+            _optional_text_option("account", ("--account",), "cli.ledger.add.account_help"),
         ),
         policy=_POLICY_2,
         handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_add", __package__)),

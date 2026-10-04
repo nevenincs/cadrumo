@@ -41,7 +41,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 
 
-def _transaction(*, provider_id: str, amount: Decimal, group_label: str | None = None) -> Transaction:
+def _transaction(
+    *, provider_id: str, amount: Decimal, group_label: str | None = None, own_account_id: str | None = None
+) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=date(2024, 4, 10),
@@ -67,6 +69,7 @@ def _transaction(*, provider_id: str, amount: Decimal, group_label: str | None =
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": "ES",
             "group_label": group_label,
+            "own_account_id": own_account_id,
             "created_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
             "modified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
         }
@@ -238,6 +241,22 @@ def test_a_group_selection_keeps_only_that_group() -> None:
 
     assert page.total == 1
     assert page.results[0].transaction.group_label == "travel"
+
+
+def test_an_account_filter_keeps_only_rows_bound_to_that_own_account() -> None:
+    """``account=`` selects one own account; unbound rows and other accounts drop out."""
+    with _stored(
+        _transaction(provider_id="a", amount=Decimal("10.00"), own_account_id="acc-01"),
+        _transaction(provider_id="b", amount=Decimal("20.00"), own_account_id="acc-02"),
+        _transaction(provider_id="c", amount=Decimal("30.00")),
+    ) as repository:
+        page = _page(
+            repository,
+            LedgerTransactionListQuery(spec=LedgerReviewFilterSpec.from_strings(["account=acc-01"])),
+        )
+
+    assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["a"]
+    assert page.total == 1
 
 
 def test_descending_amount_reverses_the_ascending_order() -> None:

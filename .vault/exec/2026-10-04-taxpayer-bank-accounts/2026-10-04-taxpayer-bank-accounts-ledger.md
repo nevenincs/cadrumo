@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:5df0dda73bef86bc5e8e86171ac62cf8de2e8eee72795580bce7bae021b670e8'
+body_hash: 'sha256:908b45497ee31c8b0dea56b90e2e022b6cd8c42af76ef24394ae9c0a502ace89'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -256,6 +256,50 @@ related:
 - `S15` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence (5293 passed; no failure outside the pre-edit baseline)` -> `pass`
 - `S15` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
 - `S15` `by:` `lane-d`
+- `S07` `M` `src/cadrumo/adapters/inbound/financial/tests/test_own_account_binding.py`
+- `S07` `A` `src/cadrumo/adapters/persistence/profile/tests/test_actions_own_account_binding.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_split_merge.py`
+- `S07` `M` `src/cadrumo/application/ledger/add_operation.py`
+- `S07` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S07` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
+- `S07` `M` `src/cadrumo/application/ledger/ledger_add_contracts.py`
+- `S07` `M` `src/cadrumo/application/ledger/ledger_add_results.py`
+- `S07` `M` `src/cadrumo/application/ledger/models.py`
+- `S07` `M` `src/cadrumo/application/ledger/review_filter.py`
+- `S07` `M` `src/cadrumo/application/ledger/review_projection.py`
+- `S07` `M` `src/cadrumo/application/ledger/tests/test_add_operation.py`
+- `S07` `M` `src/cadrumo/application/ledger/tests/test_list_query.py`
+- `S07` `M` `src/cadrumo/application/ledger/update_contracts.py`
+- `S07` `M` `src/cadrumo/application/ledger/update_operation.py`
+- `S07` `M` `src/cadrumo/application/review/filter.py`
+- `S07` `M` `src/cadrumo/application/review/tests/test_filter.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_add.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_update.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_add_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S07` `M` `src/cadrumo/locales/en/cli.yml`
+- `S07` `M` `src/cadrumo/locales/es/cli.yml`
+- `S07` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S07` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S07` `M` `src/cadrumo/locales/en/errors.yml`
+- `S07` `M` `src/cadrumo/locales/es/errors.yml`
+- `S07` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S07` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S07` `verify:` `pytest src/cadrumo/application/ledger src/cadrumo/application/review src/cadrumo/application/transactions` -> `pass`
+- `S07` `verify:` `pytest test_actions_own_account_binding.py encrypted storage` -> `pass`
+- `S07` `verify:` `pytest test_runtime_ledger_add_native.py native runtime` -> `pass`
+- `S07` `verify:` `pytest test_app_*command_spec*.py` -> `pass`
+- `S07` `verify:` `ty and ruff on touched files` -> `pass`
+- `S07` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -272,3 +316,4 @@ related:
 - `S06` TUI import door has no production implementation yet; LedgerImportRequestV1 carries `own_account_id` for Lane E S20 to thread
 - `S11` every 303 quarterly window in the 2026-y-siguientes revision declares no `payment_cutoff_on` (only the monthly ones do), so a quarterly 303 U export advises rather than refuses until the registry authors those cutoffs
 - `S15` campo 114 is enforced as an invariant of the entry (the facts' `titular_en_calidad_de` must state the holder the account choice implies) rather than stored nowhere; the snapshot keeps reading it from the facts
+- `S07` ledger list/view display payloads do not show `own_account_id` yet; adding it to the canonical payload churns 36 CLI-sequence goldens, left for the display work

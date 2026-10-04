@@ -3056,6 +3056,8 @@ cli:
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Sense canvis: el registre ja tenia aquests valors.'
     add:
+      account_help: Compte bancari propi al qual pertany el moviment, pel seu id (p.
+        ex. acc-01).
       actor_help: El teu nom, registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
@@ -3476,12 +3478,15 @@ cli:
       id_help: Id del moviment (SHA-256 o prefix inequívoc).
       invoice_id_help: Id de factura que es vincularà bidireccionalment amb la transacció.
     list:
+      account_help: Mostra només les entrades vinculades a aquest compte bancari propi,
+        pel seu id (p. ex. acc-01).
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
       filter_help: Filtra les files per estat, període (un testimoni AEAT simple,
         p. ex. period=1T) amb l'any (p. ex. year=2026), classificació, incidència,
-        importació, direcció (ingrés/despesa) o text. Per filtrar per etiqueta de
-        grup fes servir l'opció --group.
+        importació, direcció (ingrés/despesa), compte (l'id d'un compte bancari propi,
+        p. ex. account=acc-01) o text. Per filtrar per etiqueta de grup fes servir
+        l'opció --group.
       footer_truncated: Mostrant files {start}-{end} de {total} (desplaçament {offset}).
         Fes servir --offset/--límit per paginar.
       group_filter_help: Mostra només les files d'aquesta etiqueta de grup.
@@ -3547,7 +3552,7 @@ cli:
     review:
       filter_help: Filtrar files per status, period (un testimoni AEAT simple, p.
         ex. period=1T) amb year (p. ex. year=2026), issue, import, classification,
-        text o direction
+        text, direction o account (l'id d'un compte bancari propi, p. ex. account=acc-01)
       header: SESSIÓ DE REVISIÓ DELS TEUS REGISTRES
       help: Revisió interactiva i validació d'apunts dels teus registres
       no_rows: No hi ha apunts dels teus registres pendents de revisió
@@ -3586,6 +3591,8 @@ cli:
       help: Mostrar l'historial d'esdeveniments d'un moviment dels teus registres
       transaction_id_help: Id del moviment a inspeccionar
     update:
+      account_help: Vincula l'entrada a aquest compte bancari propi, pel seu id (p.
+        ex. acc-01).
       amount_help: Nova magnitud d'import no negativa de la transacció
       counterparty_help: Nova descripció de la contrapart
       currency_help: Nou codi de moneda ISO 4217

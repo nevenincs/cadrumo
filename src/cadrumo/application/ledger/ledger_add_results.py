@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from ...core.errors.error_codes import resolve_error_message
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
@@ -35,7 +36,7 @@ def build_ledger_add_validation_messages(error: Exception) -> LedgerAddValidatio
             ]
         )
     else:
-        messages = (str(error).strip() or "ledger add input is invalid",)
+        messages = (resolve_error_message(error).strip() or "ledger add input is invalid",)
     bounded = tuple(message[:2048] for message in messages if message.strip())
     return bounded[:MAX_LEDGER_ADD_VALIDATION_MESSAGES] or ("ledger add input is invalid",)
 

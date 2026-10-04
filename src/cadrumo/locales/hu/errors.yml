@@ -1371,11 +1371,11 @@ errors:
     ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'
     ledger_import_own_account_mismatch: A kivonat más számlát nevez meg, mint a(z)
       {own_account_id} saját számla, ezért nem lett oda importálva.
-    ledger_import_own_account_unknown: A(z) {own_account_id} saját számla nem szerepel
-      a nyilvántartott saját bankszámláid között.
     ledger_import_period_without_span: A(z) {period} időszak nem fed le naptári dátumokat,
       ezért nem szűrheti az importált sorokat. Használj negyedévet, hónapot vagy 0A-t.
     ledger_import_requires_bucket: A főkönyvi forrásimporthoz aktív profil szükséges,
       kivéve, ha száraz-futási mód van használatban.
+    own_account_unknown: A(z) {own_account_id} saját számla nem szerepel a nyilvántartott
+      saját bankszámláid között.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert
       szolgáltatók: {providers}.'

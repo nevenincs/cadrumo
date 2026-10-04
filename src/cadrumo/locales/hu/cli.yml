@@ -3031,6 +3031,8 @@ cli:
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Nincs változás: a nyilvántartás már ezeket az értékeket tartalmazta.'
     add:
+      account_help: A saját bankszámla, amelyhez a mozgás tartozik, azonosítója szerint
+        (pl. acc-01).
       actor_help: A neved, amelyet a bucket-eseményen rögzítünk.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).
       art_104_tres_exclusion_help: Az általad megadott LIVA art. 104.Tres nevezői
@@ -3444,12 +3446,14 @@ cli:
       id_help: Tranzakcióazonosító (SHA-256 vagy egyértelmű előtag).
       invoice_id_help: A tranzakcióhoz kétirányúan kapcsolandó számla azonosítója.
     list:
+      account_help: Csak az ehhez a saját bankszámlához rendelt bejegyzések megjelenítése,
+        azonosítója szerint (pl. acc-01).
       by_group_help: A lista csoportosítása csoportcímke szerint.
       column_header: "id\tteljes_id\tdátum\tösszeg\tleírás\tellenőrzési_állapot"
       filter_help: Sorok szűrése állapot, időszak (egyszerű AEAT token, pl. period=1T)
-        és év (pl. year=2026), besorolás, eltérés, import, irány (bevétel/kiadás)
-        vagy szöveg szerint. Csoportcímke szerinti szűréshez használd a külön --group
-        kapcsolót.
+        és év (pl. year=2026), besorolás, eltérés, import, irány (bevétel/kiadás),
+        számla (saját bankszámla azonosítója, pl. account=acc-01) vagy szöveg szerint.
+        Csoportcímke szerinti szűréshez használd a külön --group kapcsolót.
       footer_truncated: '{start}-{end}. sor megjelenítése, összesen {total} (eltolás
         {offset}). Lapozáshoz használd a --offset/--limit kapcsolót.'
       group_filter_help: Csak az adott csoportcímkéhez tartozó sorok megjelenítése.
@@ -3518,8 +3522,8 @@ cli:
       yes_help: A tranzakció aktívra állításának megerősítése
     review:
       filter_help: Sorok szűrése status, period (egyszerű AEAT token, pl. period=1T)
-        és year (pl. year=2026), issue, import, classification, text vagy direction
-        szerint
+        és year (pl. year=2026), issue, import, classification, text, direction vagy
+        account (saját bankszámla azonosítója, pl. account=acc-01) szerint
       header: NYILVÁNTARTÁS-ÁTNÉZÉSI MUNKAMENET
       help: Tételek interaktív átnézése és érvényesítése a nyilvántartásban.
       no_rows: Nincs átnézésre váró tétel a nyilvántartásban.
@@ -3563,6 +3567,8 @@ cli:
       help: Egyetlen tranzakció eseménytörténetének megjelenítése a nyilvántartásban.
       transaction_id_help: A vizsgálandó tranzakció azonosítója.
     update:
+      account_help: A bejegyzés hozzárendelése ehhez a saját bankszámlához, azonosítója
+        szerint (pl. acc-01).
       amount_help: Új nem negatív összegmagnitúdó (teljes csere).
       counterparty_help: Új szerződő fél leírása.
       currency_help: Új háromjegyű ISO 4217 pénznemkód.

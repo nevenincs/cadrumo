@@ -1345,11 +1345,11 @@ errors:
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
     ledger_import_own_account_mismatch: The statement names a different account than
       own account {own_account_id}, so it was not imported into it.
-    ledger_import_own_account_unknown: Own account {own_account_id} is not one of
-      your registered own bank accounts.
     ledger_import_period_without_span: Period {period} has no calendar date span,
       so it cannot filter imported rows. Use a quarter, a month or 0A.
     ledger_import_requires_bucket: Ledger source import requires an active profile
       unless dry-run mode is used.
+    own_account_unknown: Own account {own_account_id} is not one of your registered
+      own bank accounts.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:
       {providers}.'

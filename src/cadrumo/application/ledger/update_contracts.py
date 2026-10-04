@@ -12,6 +12,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.transactions.enums import TransactionDirection
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
 from .actions_common import display_decimal
 from .transaction_projection import LedgerTransactionProjection
@@ -36,6 +37,7 @@ LEDGER_UPDATE_FIELD_NAMES = frozenset(
         "irpf_category",
         "notes",
         "group_label",
+        "own_account_id",
     }
 )
 LedgerUpdatePatchField = Literal[
@@ -52,8 +54,9 @@ LedgerUpdatePatchField = Literal[
     "irpf_category",
     "notes",
     "group_label",
+    "own_account_id",
 ]
-_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=13)]
+_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=14)]
 _UpdateText = Annotated[str, Field(max_length=4096)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 _IsoDateText = Annotated[str, Field(min_length=10, max_length=10)]
@@ -82,6 +85,7 @@ class LedgerUpdatePatch(BaseModel):
     irpf_category: _UpdateText | None = None
     notes: _UpdateText | None = None
     group_label: Annotated[str, Field(max_length=64)] | None = None
+    own_account_id: OwnAccountId | None = None
 
     @field_validator("booked_date", "value_date")
     @classmethod
@@ -176,6 +180,7 @@ class LedgerUpdateOperationResult(BaseModel):
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[str, ...], Field(max_length=_MAX_UPDATE_EVENT_IDS)] = ()
     group_label: Annotated[str, Field(max_length=64)] | None = None
+    own_account_id: OwnAccountId | None = None
     validation_messages: LedgerUpdateValidationMessages = ()
 
     @model_validator(mode="after")
@@ -220,6 +225,7 @@ def _require_update_refusal_result(result: LedgerUpdateOperationResult) -> None:
         or result.review_status is not None
         or result.bucket_event_ids
         or result.group_label is not None
+        or result.own_account_id is not None
         or not result.validation_messages
     ):
         raise ValueError("validation refusal cannot carry transaction output or an effect")

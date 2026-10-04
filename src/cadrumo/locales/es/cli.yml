@@ -3078,6 +3078,8 @@ cli:
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Sin cambios: el registro ya tenía estos valores.'
     add:
+      account_help: Cuenta bancaria propia a la que pertenece el movimiento, por su
+        id (p. ej. acc-01).
       actor_help: Tu nombre, registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
@@ -3498,12 +3500,15 @@ cli:
       id_help: Id del movimiento (SHA-256 o prefijo inequívoco).
       invoice_id_help: Id de factura que se vinculará bidireccionalmente con la transacción.
     list:
+      account_help: Muestra solo las entradas vinculadas a esta cuenta bancaria propia,
+        por su id (p. ej. acc-01).
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
       filter_help: Filtra las filas por estado, periodo (un token AEAT simple, p.
         ej. period=1T) junto con el año (p. ej. year=2026), clasificación, incidencia,
-        importación, dirección (ingreso/gasto) o texto. Para filtrar por etiqueta
-        de grupo usa la opción --group.
+        importación, dirección (ingreso/gasto), cuenta (el id de una cuenta bancaria
+        propia, p. ej. account=acc-01) o texto. Para filtrar por etiqueta de grupo
+        usa la opción --group.
       footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
         Usa --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
@@ -3569,7 +3574,7 @@ cli:
     review:
       filter_help: Filtrar filas por status, period (un token AEAT simple, p. ej.
         period=1T) junto con year (p. ej. year=2026), issue, import, classification,
-        text o direction
+        text, direction o account (el id de una cuenta bancaria propia, p. ej. account=acc-01)
       header: SESIÓN DE REVISIÓN DE TUS REGISTROS
       help: Revisión interactiva y validación de apuntes de tus registros
       no_rows: No hay apuntes de tus registros pendientes de revisión
@@ -3608,6 +3613,8 @@ cli:
       help: Mostrar el historial de eventos de un movimiento de tus registros
       transaction_id_help: Id del movimiento a inspeccionar
     update:
+      account_help: Vincula la entrada a esta cuenta bancaria propia, por su id (p.
+        ej. acc-01).
       amount_help: Nueva magnitud de importe no negativa de la transacción
       counterparty_help: Nueva descripción de la contraparte
       currency_help: Nuevo código de moneda ISO 4217

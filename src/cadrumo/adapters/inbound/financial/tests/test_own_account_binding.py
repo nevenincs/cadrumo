@@ -119,7 +119,7 @@ def test_an_unregistered_chosen_account_is_refused(tmp_path: Path) -> None:
     with pytest.raises(TransactionValidationError) as refusal:
         _bound_ids(_statement(tmp_path, "one.ofx", _IBAN_ONE), _register(_IBAN_ONE), "acc-07")
 
-    assert refusal.value.translated_message == "errors.transaction.ledger_import_own_account_unknown"
+    assert refusal.value.translated_message == "errors.transaction.own_account_unknown"
 
 
 def test_without_a_choice_only_a_unique_registered_match_binds(tmp_path: Path) -> None:

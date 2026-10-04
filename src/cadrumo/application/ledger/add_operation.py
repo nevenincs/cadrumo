@@ -26,6 +26,7 @@ from ..user_profile.access_contracts import (
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
+from .actions_common import require_registered_own_account
 from .actions_manual import create_manual_transaction
 from .ledger_add_command import (
     SourceJurisdictionRequiredError,
@@ -44,6 +45,7 @@ from .ledger_add_results import (
     build_ledger_add_validation_messages,
     project_ledger_add_result,
 )
+from .own_account_ports import OwnAccountRepositoryFactory
 from .read_access import resolve_ledger_commit_access
 
 LEDGER_ADD_PHASE = "ledger.add"
@@ -56,10 +58,12 @@ class LedgerAddExecutor:
         self,
         ports_factory: LedgerActionPortsFactory,
         prorrata_register_repository_factory: ProrrataRegisterRepositoryFactory,
+        own_account_repository_factory: OwnAccountRepositoryFactory,
     ) -> None:
-        """Retain exact-bucket ledger and prorrata repository factories."""
+        """Retain exact-bucket ledger, prorrata and own-account repository factories."""
         self._ports_factory = ports_factory
         self._prorrata_register_repository_factory = prorrata_register_repository_factory
+        self._own_account_repository_factory = own_account_repository_factory
 
     async def execute(
         self,
@@ -102,6 +106,11 @@ class LedgerAddExecutor:
                     ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
                     require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
                     command = await asyncio.to_thread(prepare_ledger_add_command, payload, operation)
+                    if command.own_account_id is not None:
+                        own_accounts = await asyncio.to_thread(
+                            self._own_account_repository_factory(bucket_id=bucket_id).load
+                        )
+                        require_registered_own_account(own_accounts, command.own_account_id)
                     advisory_input_inert, advisory_sector_unmatched = await asyncio.to_thread(
                         resolve_ledger_add_prorrata_advisory_facts,
                         payload,
@@ -155,6 +164,7 @@ class LedgerAddExecutor:
 def build_ledger_add_definition(
     ports_factory: LedgerActionPortsFactory,
     prorrata_register_repository_factory: ProrrataRegisterRepositoryFactory,
+    own_account_repository_factory: OwnAccountRepositoryFactory,
 ) -> OperationDefinition:
     """Build the private worker definition for exact-profile manual creation."""
     return build_single_phase_definition(
@@ -162,7 +172,9 @@ def build_ledger_add_definition(
         request_type=LedgerAddRequest,
         result_type=LedgerAddExecutionResult,
         executor_type=LedgerAddExecutor,
-        build=lambda: LedgerAddExecutor(ports_factory, prorrata_register_repository_factory),
+        build=lambda: LedgerAddExecutor(
+            ports_factory, prorrata_register_repository_factory, own_account_repository_factory
+        ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_ADD_VALIDATION_REFUSAL_CODE}),

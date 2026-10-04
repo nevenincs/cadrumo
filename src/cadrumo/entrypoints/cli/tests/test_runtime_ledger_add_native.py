@@ -85,3 +85,34 @@ def test_native_exact_profile_add_is_readable_after_session_reauthentication(tmp
         readback = unwrap_cli_result(viewed)
         assert readback["transaction_id"] == transaction_id
         assert readback["transaction"]["description"] == "native exact-profile add"
+
+
+def test_native_add_and_list_refuse_an_unregistered_or_malformed_own_account(tmp_path: Path) -> None:
+    """``--account`` names a register entry: an unregistered id refuses the add, a non-id refuses the list."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-ledger-account", facts=_PROFILE_FACTS)
+        added = _invoke(
+            profile,
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "23.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "bank fee",
+            "--account",
+            "acc-01",
+        )
+        malformed = _invoke(profile, "app", "ledger", "list", "--account", "ES9121000418450200051332")
+        listed = _invoke(profile, "app", "ledger", "list", "--account", "acc-01")
+
+    assert added.exit_code != 0
+    assert "acc-01" in added.output
+    assert malformed.exit_code != 0
+    assert "ES9121000418450200051332" not in malformed.output
+    assert listed.exit_code == 0, listed.output
+    assert unwrap_cli_result(listed)["rows"] == []

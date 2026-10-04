@@ -100,6 +100,7 @@ def prepare_ledger_add_command(
         source_command="aeat app ledger add",
         idempotency_key=payload.idempotency_key,
         source_jurisdiction=source_jurisdiction,
+        own_account_id=payload.own_account_id,
     )
 
 

@@ -125,7 +125,7 @@ _EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_
 #: re-addressing ordinary movements whose content had not changed. Each field
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
-_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id"})
+_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
 
 
 def create_manual_transaction(
@@ -1232,6 +1232,7 @@ def _command_from_patch(
         current.counterparty_identification_state,
     )
     group_label = optional_patched(patch, patch_fields, "group_label", current.group_label)
+    own_account_id = optional_patched(patch, patch_fields, "own_account_id", current.own_account_id)
     # The three prorrata declarations carry forward from the stored row. They
     # were absent here, so a reclassify rebuilt the command with all three as
     # ``None`` and the write erased them: an operator who had declared a
@@ -1299,6 +1300,7 @@ def _command_from_patch(
             patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
         ),
         group_label=group_label,
+        own_account_id=own_account_id,
         art_104_tres_exclusion=art_104_tres_exclusion,
         input_classification=input_classification,
         prorrata_sector_id=prorrata_sector_id,
@@ -1613,7 +1615,7 @@ def _transaction_from_command(
         "import_fingerprint": (
             import_fingerprint
             if import_fingerprint is not None
-            else derive_import_fingerprint(raw, direction=command.direction)
+            else derive_import_fingerprint(raw, direction=command.direction, own_account_id=command.own_account_id)
         ),
         "notes": command.notes,
         "iva_category": command.iva_category,
@@ -1624,6 +1626,7 @@ def _transaction_from_command(
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,
         "group_label": command.group_label,
+        "own_account_id": command.own_account_id,
         # D6: created_at is stamped once (defaults to occurred_at on first
         # construction) and carried verbatim through edits; modified_at
         # re-stamps to occurred_at on every mutating construction.

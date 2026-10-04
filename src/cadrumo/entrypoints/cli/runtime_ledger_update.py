@@ -65,7 +65,7 @@ def require_ledger_update_correlation(
         or completed.effect is not expected_effect
         or projection.profile_id != profile_id
         or not transaction.transaction_id.startswith(prefix)
-        or not _matches_patch(worker_patch, patch_fields, transaction, projection.group_label)
+        or not _matches_patch(worker_patch, patch_fields, transaction, projection)
     )
     if invalid:
         raise invalid_completion_error(completed)
@@ -134,12 +134,15 @@ def _matches_patch(
     patch: LedgerUpdatePatch,
     fields: tuple[LedgerUpdatePatchField, ...],
     transaction: LedgerTransactionProjection,
-    group_label: str | None,
+    projection: LedgerUpdateOperationResult,
 ) -> bool:
     """Correlate every selected patch field with its projected canonical meaning."""
     for field in fields:
         value = getattr(patch, field)
-        if not ledger_update_field_matches(field, value, transaction, group_label):
+        if field == "own_account_id":
+            if projection.own_account_id != value:
+                return False
+        elif not ledger_update_field_matches(field, value, transaction, projection.group_label):
             return False
     return True
 

@@ -44,7 +44,6 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.own_accounts import (
     OwnAccountRegister,
-    OwnAccountRegisterError,
     OwnBankAccount,
 )
 from ...domain.transactions.raw_transaction import RawTransaction
@@ -59,6 +58,7 @@ from ..transactions.import_diagnostics import import_ledger_with_diagnostics
 from .actions_common import (
     build_ledger_bucket_event,
     normalise_timestamp,
+    require_registered_own_account,
     resolve_bucket_event_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
@@ -340,7 +340,7 @@ def _bind_own_accounts(
         TransactionValidationError: When the chosen account is not registered,
             or a statement names a different account than the chosen one.
     """
-    chosen = None if own_account_id is None else _registered_account(own_accounts, own_account_id)
+    chosen = None if own_account_id is None else require_registered_own_account(own_accounts, own_account_id)
     bound: list[ParsedLedgerRowProtocol] = []
     for parsed in parsed_rows:
         identifier = parsed.raw.raw_fields.get(_ACCOUNT_IDENTIFIER_FIELD, "").strip()
@@ -358,17 +358,6 @@ def _bind_own_accounts(
             account_id = matches[0].own_account_id if len(matches) == 1 else None
         bound.append(LedgerParsedRow(raw=parsed.raw, direction=parsed.direction, own_account_id=account_id))
     return tuple(bound)
-
-
-def _registered_account(own_accounts: OwnAccountRegister, own_account_id: str) -> OwnBankAccount:
-    """Return the registered account ``own_account_id`` or refuse the import."""
-    try:
-        return own_accounts.account(own_account_id)
-    except OwnAccountRegisterError as exc:
-        raise TransactionValidationError(
-            translated_message="errors.transaction.ledger_import_own_account_unknown",
-            context={"own_account_id": own_account_id},
-        ) from exc
 
 
 def _rows_in_period(
