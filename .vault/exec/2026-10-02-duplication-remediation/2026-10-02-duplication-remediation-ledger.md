@@ -5,7 +5,7 @@ tags:
 date: '2026-10-02'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e48213df6762d433b4406096c28c76940ac10cb5da8072c9e958d457f75076f0'
+body_hash: 'sha256:d808a999fb83eee2b907789d10bffdc9263b554fb8576d6b5bc35222af6e730b'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
 ---
@@ -2368,6 +2368,43 @@ related:
 - `S07` `verify:` `C:/Program Files/PowerShell/7/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File H:/Temp/m200-preflight25-20261003-16f46b80/launch-m200stock25-v4.ps1 -ExecuteOneBatch` -> `fail`
 - `S09` `verify:` `& 'C:\Program Files\PowerShell\7\pwsh.exe' -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'H:\Temp\s09-utc-run-20261003-2054\receipts\launch_evidence_followup-v3.ps1' -RunPytest` -> `fail`
 - `S05` `verify:` `& 'C:\Program Files\PowerShell\7\pwsh.exe' -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'H:\Temp\j12-16-e603ec05\receipts\run-owning-16-v2.ps1' -LaunchTest` -> `fail`
+- `S07` `verify:` `& 'C:\Program Files\PowerShell\7\pwsh.exe' -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'H:\Temp\m200s16-20261004-r1\receipts\run-m200-stock16-v2.ps1' -LaunchTest` -> `pass`
+- `S29` `A` `src/cadrumo/application/filing/producer_snapshot_m360.py`
+- `S29` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S29` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S29` `A` `src/cadrumo/application/filing/tests/test_modelo_360_header_export.py`
+- `S29` `A` `src/cadrumo/application/filing/tests/test_modelo_360_producer_facts.py`
+- `S29` `verify:` `G1 ruff/format/ty/import` -> `pass`
+- `S29` `verify:` `producer resolution + 360 producer and header tests + snapshot tests 99 passed; test_every_cited_producer_key_is_resolvable passes` -> `pass`
+- `S29` `by:` `opus-high`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py`
+- `S07` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py` -> `pass`
+- `S07` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py` -> `pass`
+- `S29` `M` `dev/registry/pipeline/export_field_schema.py`
+- `S29` `M` `dev/registry/pipeline/export_tree_field_derivation.py`
+- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/0001-declarations.toml`
+- `S29` `M` `dev/registry/pipeline/tests/test_export_tree.py`
+- `S29` `M` `dev/registry/tests/test_modelo_145_registry_foundation.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_export.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/conformance_m145_support.py`
+- `S29` `verify:` `G2 tomllib/ruff/format/ty/import` -> `pass`
+- `S29` `verify:` `inspect_authoring_candidate 0 findings; target-current current for m145 and three m490 trees; test_export_tree 63 passed` -> `pass`
+- `S29` `verify:` `13 m145 persistence tests and the m145 conformance scenarios wait on authority publication` -> `fail`
+- `S29` `by:` `opus-medium`
+- `S29` `M` `dev/registry/pipeline/generated_tree_dispositions.toml`
+- `S29` `M` `dev/registry/compiler/tests/test_below_floor_export_refs.py`
+- `S29` `M` `dev/registry/pipeline/tests/test_below_floor_dispositions.py`
+- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0000-export-layout.toml`
+- `S29` `verify:` `232/2016-2017 republished through the reviewed historical repair; target-current current; form layouts 0 stale` -> `pass`
+- `S29` `verify:` `below-floor tests on an isolated fixture carrier and the shipped-ledger checks 20 passed` -> `pass`
+- `S17` `M` `src/cadrumo/domain/iva/components.py`
+- `S17` `A` `src/cadrumo/domain/iva/tests/test_component_registry_tokens.py`
+- `S17` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/iva/components.py src/cadrumo/domain/iva/tests/test_component_registry_tokens.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff format --check src/cadrumo/domain/iva/components.py src/cadrumo/domain/iva/tests/test_component_registry_tokens.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ty check --python-platform win32 src/cadrumo/domain/iva/components.py src/cadrumo/domain/iva/tests/test_component_registry_tokens.py` -> `pass`
+- `S17` `by:` `root`
+- `S17` `verify:` `uv run --no-sync pytest -n0 -m "unit and (hex_core or hex_domain)" --junitxml=H:/Temp/k02-91ad/run/component-token-contract.junit.xml src/cadrumo/core/tests/test_registry_token.py src/cadrumo/domain/iva/tests/test_component_registry_tokens.py src/cadrumo/domain/iva/tests/test_component_expectations.py` -> `pass`
 
 ## Notes
 
@@ -2680,3 +2717,14 @@ related:
 - `S05` The one authorized 16-selector J12 gate collected 18 natural cases: 17 passed test bodies, one fixture-setup error, zero assertion failures/skips; pytest exit 1. The errored dev registry provider case did not execute its body. Original receipt H:/Temp/j12-16-e603ec05/run/run-receipt-v2.json SHA256 2F3EA47288131388D45CC06B57369EC364D18AF82FA1F7CC71B6D16D78807DBD. JUnit E76F119AEB937605EF0A068ABD2D9EDD9083A267261A7937EF19FF57CBBB2B99; stdout 699AFA64A78433704F443908904D5810CF7526CFC3FE103C90EF6F65ABD4F3D7.
 - `S05` All 15 selected product nodes (17 natural parameterized cases) passed using the pinned published H authority copy. The selected dev owning source fixture compiled authored bundled sources, then failed canonical validation because M232 revision 2016-2017 export fields reference missing `modelo-232.page_01/page_02` binding IDs. This is retained as an open source-authoring contract failure, not changed by weakening validation or treating source compile as runtime adoption.
 - `S05` The corrected child probe passed; recorded 64 pre/post source/tool/authority/helper pins have zero mismatches. Root independently rehashed current64 and7 raw artifacts. No retry, source correction, scanner, install, authority publication or runtime adoption occurred. Whole J12/S05/S25 remain open; two remaining forwarder/test imports and the dev owning setup error are outstanding.
+- `S07` Distinct seven-selector M200 runtime gate actually collected and passed all16 natural cases: ten stock-presence/bounds truth-table cases, one blocking finding, five preserved statutory-cap cases. Real `unit+hex_application` tests use `authority_operation` with the explicit pinned published H copy. Receipt H:/Temp/m200s16-20261004-r1/run/run-receipt.json SHA2788A3591AE6DDC13FF21F2F9C7711F648B3D1AD896E3CD287856F1124DBC6C4; rawstdout333E6FFCCAAC2EBE361D7AB61B343270CB7CFF1573D41D394F4F752AA3F1F7F3; JUnit7A134E580514E796081962B880223739051C7B438CA5A0F8ACCDD068732828D3. Root independently matched60 pre/post/current paths and7 raw artifacts and whole-read stdout/JUnit.
+- `S07` The actual31-control bridge probe passed, 60 pins have no recorded drift. Preparation V1 stale escaped JSON paths failed readiness before execution; V2 was structurally corrected and root-reviewed, no failed test concealed. No standalone preflight, extra wrapper or automatic test retry ran.
+- `S07` This proves the applied runtime predicate behavior and retained cap under this bounded selection. It does not prove committed source membership/inheritance, profile persistence integration, authority publication/install or runtime adoption of the authored M200 declaration. The original expected25 collection failure and M232 source validation blocker stay open. S07 whole scope and final acceptance remain incomplete.
+- `S29` Operator decision: Modelo 360 producer implemented, grounded in DR360 aeat-dr-360-2010 campos 4-117 and Notas 1-8, Orden EHA/789/2010 art. 1.2 and 2.1; all 70 m360 keys resolve from a typed validated contract with no defaults; open: pagina 2 complementaria marker wrongly required (blocks every initial 360), persisted 360 application facts need a new encrypted schema decision, prorrata-only communications unsupported, plaintext decl.bancario casillas duplicate the encrypted account
+- `S07` Exact two-file parser hard-move reviewed/applied under root grant; all 19 probes retained with canonical sorted operator loop, original pure profile test removed. Current finals C3A933124AD733DAA14AD5282817D2230605952CECE30C3D29083B038AECCDF1 and EDF1E6C5B572839B9FF3D9CA104511CE7B468AD739260E42929A511CA3A49912; reviewed patch D13FE47C8BC8067FD5A1539A5B1D6A5437F27328FDFB36B29B1BE245113FF49B.
+- `S07` Root independently matched four pre/post/current static pins and six raw stream hashes; successful receipt H:/Temp/prr-check-a67da2bd/receipt.json 67BFB1997387C366C00D0A7F9B3C96EC760E17B79345B4ACB90F60227BF4464B. Three earlier uv argv-forwarding usage errors exited 2 before any checker ran; retained receipt H:/Temp/prr-static-02fe7d8f/receipt.json C4842BBCF126E0FE6DFEBD00E2F8F7FC35C9EE71839F5A1C31F852631342EFCF.
+- `S07` Parser pytest is not yet run; existing profile/UTC collection errors, authored-source membership/inheritance, authority rollout and whole S07 remain open.
+- `S29` DR145 v2.0 row 2 (position 10, A1, obligatorio, blanco o C) is an operator choice for a continuation copy; generator no longer marks an operator-entered obligatorio field whose contenido admits blank as required; casilla enum `[C];` m145 and m490 trees regenerated through republish-target; open: 32 producer-backed fields with the same pattern (m232/m360/m353 complementaria markers, m369/m322 headers) still required
+- `S29` Operator: 2016-2017 is below the supported-filing-years floor (legal/supported-filing-years.toml floor 2022). Final state: static tree regenerated from aeat-dr-232-2016 (stale references gone) and a `below_floor` row kept, because `generated_tree_inventory` needs it to explain the missing law-selectable coordinate; the other executor's test asserting no row was amended to keep the row and still assert runtime refusal of 2016
+- `S17` K02 bounded two-file source/static acceptance only. Root reviewed complete actual patch C9FC19C4836656D60F0D2A27D98CE099D5F8D01A3C9DA261A900A54209695BD8 and new 28-case test source. Current hashes components 0FBC73147616F51005CD0AADF2EB185E3A468ECC4FED8EC4C8FC50980EE3F2A1, test A0B6A070B4E778C52C548A129A0FF637D00A749CBD5213FF67BD9AC3580B6B40. Final raw checker results retained at H:/Temp/k02-token-20261004-f71c2a6b/final-static-results.json (D595C43D11266ED1475AD0ED9DD055E8162D0FEF258ABDEB21F9EC5E74AC267B). Initial format/ty failures were not separately redirected; worker preserves a labeled tool-result transcript in initial-static-attempts.txt (2A6FA9AA7899DAB70ACED5D9F946E29E7974FB00058FCAFD035661867B5C2443). Formatting correction and malformed-input-only ty suppression reviewed. No runtime pytest run yet, no S17 closure.
+- `S17` K02 ONE actual isolated owner gate: 98 collected/passed, 7 core +28 new token +63 existing real IVA component projection, zero failures/errors/skips. Exit0, 4.32s pytest, native 20261003T235236.329685Z-pytest-61520-12c3c6ee. Root read stdout/JUnit/native metadata, independently matched all50 pre/post/current pins and seven probe/raw/JUnit/native artifact hashes. Receipt H:/Temp/k02-91ad/run/run-receipt-v2.json SHA256 1E8B18FE3E9B384673FE4D206CEEA20BD0731AD7F6BB6C99B999094211C358A1. 31 unique controls present-empty before/after normal env bridge; isolated H storage, existing .venv, immutable published authority copy generation75ba33ce100ba17333211a397963a1a627bdade002168114dacf89d8dec8714c. No compiler/publication/adoption/source changes or repeat. Accept bounded token-owner migration; whole S17/S25 remain open.

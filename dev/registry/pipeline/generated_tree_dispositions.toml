@@ -33,21 +33,10 @@ schema_version = 4
 [[dispositions]]
 kind = 'record_drift'
 modelo = '232'
-revision = '2016-2017'
-source_ref = 'aeat-dr-232-2016'
-source_sha256 = 'fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad'
-remedy = 'republish'
-differing_records = 4
-reason = '''The committed 2016 layout calls official DR23200 an auxiliary header and its three record fragments across two body-record identities carry 140 obsolete position-inclusive binding identifiers, whereas the source-pinned typed model has the same 140 stable authored bindings. Official DR23200 is a Total:Variable envelope with a 328-byte prefix, an 18-byte closer and an explicit two-byte CRLF terminator. The fresh static render differs in the layout and three record fragments, with no added or removed files. This source-only target correction does not lower the 2022 runtime filing floor or admit a historical filing snapshot.'''
-reconsideration_condition = 'Retire immediately after the exact 2016 static target reproduces its official-source render, its generated form is current, and ordinary runtime selection still refuses filing years below 2022.'
-
-[[dispositions]]
-kind = 'record_drift'
-modelo = '232'
 revision = '2018-y-siguientes'
 source_ref = 'aeat-dr-232-2018'
 source_sha256 = 'a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff'
 remedy = 'republish'
 differing_records = 1
-reason = '''The committed 2018 generated layout describes official DR23200 as a fixed auxiliary header. The exact 2018 official source instead declares a Total:Variable envelope with the same 328-byte prefix and 18-byte closer and no CRLF terminator. The current source-pinned render differs in the layout record only; both body record files reproduce and no files are added or removed.'''
+reason = '''The committed 2018 generated layout describes official DR23200 as a fixed auxiliary header. The exact 2018 official source instead declares a Total:Variable envelope with the same 328-byte prefix and 18-byte closer and no CRLF terminator. The current source-pinned render differs in the layout record only; all three body record fragments across two record identities reproduce and no files are added or removed.'''
 reconsideration_condition = 'Retire immediately after the exact 2018 target reproduces its current official-source render and supported-frame target-current passes.'

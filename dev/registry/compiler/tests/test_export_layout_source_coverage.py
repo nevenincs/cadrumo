@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import cache
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
@@ -21,6 +22,7 @@ from ..validate_export_layout_coverage import (
     _missing_report,
     validate_export_layout_record_coverage,
 )
+from ..validate_exports import validate_embedded_envelope_source_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -118,18 +120,18 @@ def test_source_joined_header_refuses_changed_prefix_claim(change: str) -> None:
 
 
 @pytest.mark.parametrize("change", ("absent", "source", "hash", "identity", "extent", "equal_length_roles"))
-def test_variable_prefix_refuses_missing_or_changed_header_claim(change: str) -> None:
+def test_m232_variable_prefix_refuses_missing_or_changed_envelope_claim(change: str) -> None:
     layout = _layout("232", "2016-2017")
-    header = layout.auxiliary_envelope_header
-    assert header is not None
+    envelope = layout.filing_envelope
+    assert envelope is not None
     if change == "absent":
         replacement = None
     elif change == "equal_length_roles":
-        prefix_fields = list(header.prefix_fields)
+        prefix_fields = list(envelope.prefix_fields)
         first, second = 3, 8  # Filing year and program identifier are both four bytes.
-        prefix_fields[first] = prefix_fields[first].model_copy(update={"role": header.prefix_fields[second].role})
-        prefix_fields[second] = prefix_fields[second].model_copy(update={"role": header.prefix_fields[first].role})
-        replacement = header.model_copy(update={"prefix_fields": tuple(prefix_fields)})
+        prefix_fields[first] = prefix_fields[first].model_copy(update={"role": envelope.prefix_fields[second].role})
+        prefix_fields[second] = prefix_fields[second].model_copy(update={"role": envelope.prefix_fields[first].role})
+        replacement = envelope.model_copy(update={"prefix_fields": tuple(prefix_fields)})
     else:
         updates = {
             "source": {"source_ref": "aeat-dr-390-2022"},
@@ -137,12 +139,27 @@ def test_variable_prefix_refuses_missing_or_changed_header_claim(change: str) ->
             "identity": {"record_identity": "wrong-record"},
             "extent": {"prefix_extent": 327},
         }
-        replacement = header.model_copy(update=updates[change])
-    changed = layout.model_copy(update={"auxiliary_envelope_header": replacement})
-    failure = _layout_failure(prefix="modelo 232", layout=changed, source_refs=_catalogue())
-    assert failure is not None
-    assert "design record 'DR23200'" in failure
-    assert "auxiliary envelope header" in failure
+        replacement = envelope.model_copy(update=updates[change])
+    if change in {"extent", "equal_length_roles"}:
+        assert replacement is not None
+        with pytest.raises(ValidationError, match=r"prefix extent|canonical source order"):
+            type(envelope).model_validate(replacement.model_dump(mode="python"))
+    elif change in {"source", "hash"}:
+        changed = layout.model_copy(update={"filing_envelope": replacement})
+        failures: list[str] = []
+        validate_embedded_envelope_source_authority(
+            failures,
+            prefix="modelo 232",
+            layout=changed,
+            source_refs=_catalogue(),
+            source_root=bundled_path(),
+        )
+        assert any("does not match canonical catalogue digest" in failure for failure in failures)
+    else:
+        changed = layout.model_copy(update={"filing_envelope": replacement})
+        failure = _layout_failure(prefix="modelo 232", layout=changed, source_refs=_catalogue())
+        assert failure is not None
+        assert "DR23200" in failure
 
 
 def test_modelo_390_page_seven_joins_only_with_its_exact_source_adjudication() -> None:

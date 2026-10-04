@@ -6,6 +6,12 @@
 
 # --- Apartado 1: datos del perceptor ---
 
+# DR145 row 2 admits exactly two contents, blanco or "C" (compl.). Each record
+# is one ejemplar holding four descendant slots; the form asks a perceptor with
+# more than four descendants to attach another ejemplar carrying the fifth and
+# later ones, and that ejemplar is the one marked "C". Which ejemplar a record
+# is cannot be read from its own slots, so the operator states it: an absent
+# value is the principal ejemplar, whose indicator the design declares blank.
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.pagina-complementaria"
 number = "dr-02"
@@ -13,6 +19,7 @@ section = ["comunicacion"]
 data_type = "text"
 semantic_role = "modelo_145_pagina_complementaria"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+constraints = { enum = ["C"], legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"], source_refs = ["aeat-dr-145-v20", "aeat-modelo-145-form"] }
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.nif"

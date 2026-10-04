@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 from hashlib import sha256
 from pathlib import Path
@@ -11,8 +12,10 @@ from typing import override
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
+from ...compiler.authority import compiled_bundled_authority
 from .. import cli, m232_form_bridge
 from ..historical_static_repair import validated_historical_repair_source
 from ..m232_form_bridge import M232FormBridge, m232_evidence_content_digest, prepare_m232_form_bridge
@@ -49,6 +52,55 @@ def test_bridge_refuses_unreviewed_old_manifest_before_any_file_access(tmp_path:
             source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
             expected_manifest_sha256="0" * 64,
         )
+
+
+def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_name(tmp_path: Path) -> None:
+    """The inherited 2018 candidate stores its generated form in a complete-edition fragment."""
+    revision_id = "2018-y-siguientes"
+    source_root = bundled_path()
+    old_manifest = (
+        source_root
+        / "registry"
+        / "aeat"
+        / "modelos"
+        / "232"
+        / "revisions"
+        / revision_id
+        / "export"
+        / "_generation.provenance.json"
+    )
+    prepared = cli.prepare_generated_tree_invocation(
+        cli.GeneratedTreeInvocation(
+            "232", revision_id, "aeat-dr-232-2018", 2022, "0A", sha256(old_manifest.read_bytes()).hexdigest()
+        ),
+        tmp_path,
+        authority=compiled_bundled_authority(),
+    )
+    cli._render_candidate(prepared)
+    form_root = prepared.candidate_root / "modelos" / "232" / "revisions" / revision_id / "form_layouts"
+    fragment = next(form_root.glob("*.toml"))
+    assert fragment.name == "0001-complete-edition.toml"
+    generated = m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+    assert sha256(generated).hexdigest() == "a4e2d574372a6539b15d0467d566e6b1a03f75bb1ae3f75978ff352e09863405"
+    fragment.rename(form_root / "unreviewed-form.toml")
+    with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
+        m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+    (form_root / "unreviewed-form.toml").rename(fragment)
+    (form_root / "unexpected.txt").write_text("extra staged form content", encoding="utf-8")
+    with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
+        m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
+    (form_root / "unexpected.txt").unlink()
+    original = fragment.read_text(encoding="utf-8")
+    changed, count = re.subn(
+        r'(?m)^(source_state_digest = ")[0-9a-f]{64}(")$',
+        lambda match: match.group(1) + "0" * 64 + match.group(2),
+        original,
+        count=1,
+    )
+    assert count == 1
+    fragment.write_text(changed, encoding="utf-8")
+    with pytest.raises(RegistryValidationError, match="candidate form differs from its fresh canonical generation"):
+        m232_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, revision_id, source_root)
 
 
 def test_same_size_restored_time_corpus_edit_refuses_cutover(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
