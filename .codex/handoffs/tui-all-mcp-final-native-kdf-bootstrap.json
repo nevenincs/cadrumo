@@ -1,0 +1,39 @@
+{
+  "scope": "Native Windows supervised KDF bootstrap producer compatibility repair",
+  "status": "source frozen; installed native execution pending sole owning artifact refresh",
+  "rows": [
+    {
+      "path": "native/interpreter/windows/host.c",
+      "before_sha256": "62b36eae72a6771a3d4045cbe9de0c3807e2e1588dfe85cc599d4baf01bfff79",
+      "current_sha256": "3b41a4ea4613ce990716f9f0518caec06f3f64e1dc08ca5307ff204d7307f87c"
+    },
+    {
+      "path": "dev/packaging/native/platforms/windows_verify.py",
+      "before_sha256": "c3fb38ad2d26b0f24bdf375ea00e3ea1c3cc63b240f6e9d30ff073037b8d51b0",
+      "current_sha256": "7c5f0fe1caa5e01ae28233a8ae2d1c0546efd5e94766dbe4053b6ccc42fd6cfb"
+    }
+  ],
+  "behavior": [
+    "The host recognizes only argc7: exact -m custody KDF module, exact request/result flag order, two distinct canonical positive pointer-width decimal handles. Zero, leading zero, signs, nondecimal, overflow, invalid all-one handle, alternate module, option order, Python flags and added arguments retain ordinary application projection.",
+    "Only application platform_prepare is skipped for the exact invocation; context derivation, DLL search policy, isolated Python bridge, package build/startup hash checks and parent-owned KDF environment/handles/Job/pre-secret attestation remain unchanged.",
+    "No new public wrapper, environment marker, -I bypass or consumer allowance added."
+  ],
+  "verification": {
+    "scoped_ruff_check": "PASS",
+    "scoped_ruff_format_check": "PASS",
+    "scoped_ty": "PASS",
+    "probe_compile": "PASS both module and embedded KDF_READY_PROBE parsed/compiled",
+    "git_diff_check": "PASS owned2paths"
+  },
+  "installed_regression": {
+    "owner": "dev.packaging.native.platforms.windows_verify.verify(product=True)",
+    "positive": "actual _SupervisedKdfWorker enter requires exact environment/neutral cwd and Windows Job readiness; no request/password; child joined and neutral directory removed",
+    "negative": "extra --descriptor-bound 16 is accepted by actual worker parser but not canonical host exception; ordinary host projection must fail unchanged environment attestation; failed child joined and neutral directory removed",
+    "result": "pending refreshed native artifact, not counted passed"
+  },
+  "proof_limits": [
+    "No password, provider operation, KDF derivation, authority mutation, artifact build, inventory/index/vault mutation by this patch.",
+    "Fixed argv recognition is environment ownership selection, not caller authentication; parent custody/lease/secret/frame/Job checks remain the authority boundary.",
+    "Actual compiled Windows host and installed secret-free readiness probe must pass after source freeze; actual profile creation/M303 journey remains separate."
+  ]
+}

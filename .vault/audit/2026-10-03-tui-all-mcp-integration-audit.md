@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:925c12104ea241159ccd38ee7d503614bce11ac949a9a69791abfcf72f9c7a6e'
+body_hash: 'sha256:afdbeb800d4531cdc7d556f3ea747fdee037b39856b1c57f50de151b9e99fcbf'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -162,6 +162,10 @@ Resolved acceptance runner wiring. The optional immutable cli_argument_prefix pr
 ### replacement-binding-admission | high | Immediate successor login now retires the predecessor through canonical containment
 
 Resolved production race. A committed successor binding previously met the cached predecessor until the 0.5s polling cycle, refusing an immediate legitimate fresh login. Admission now releases the connection map guard, attempts the canonical bounded retirement, removes only a proved contained incarnation and reobserves the current binding. A nonblocking retirement fence prevents a competing caller treating denied authority as containment; failed cleanup retains worker ownership for retry. Enrollment removal selects the exact host and takes offers atomically before closing outside its guard, preserving successor offers and leases. Three deterministic actual-Windows-worker tests pass, including held commit guards, concurrent and failed retirement, callback map borrowing and stale-cleanup successor preservation. Ten complete affected runtime/recovery modules pass62 with no failure or skip in926.14s; the plain public forgotten-passphrase reset passes36.58s without the diagnostic observer. Four production and one test path pass scoped Ruff/format/ty. Five unrelated CLI fixture/test paths and Git HEAD changed during the run; relevant tested owners and authority did not, so no full-tree zero-drift is claimed. Native Mac containment and the changed compiled Windows interpreter remain separate required proof.
+
+### native-kdf-environment-producer | high | Packaged child projection contradicted its neutral pre-secret attestation
+
+Demonstrated installed producer defect, corrected at source; compiled/installed verification pending. The genuine M303 first profile command reached the packaged KDF child before any password request, but native application environment projection removed four declared Python keys and added six application keys. Strict readiness correctly refused. The Windows host now preserves supplied neutral environment only for the complete fixed seven-argument KDF invocation with two distinct canonical positive pointer-sized decimal handles. Ordinary and near-match invocations retain application projection. Context derivation, DLL lookup, isolated CPython, package startup hash checks and the parent Job/cwd/environment/frame pre-secret attestation are unchanged. The owning package verifier adds an actual no-request ready/join/neutral-cleanup proof and a real valid-parser extra-option refusal/join proof. Scoped Ruff/format/ty, embedded-probe compilation and diff checks pass. Independent baseline source review and root integrated review identify no remaining high/critical source finding. These static checks do not establish compiled execution, protected storage or financial E2E; the sole coordinated source-matching artifact refresh must execute both probes and the actual journey.
 
 ## Recommendations
 
