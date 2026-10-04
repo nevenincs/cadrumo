@@ -653,18 +653,6 @@ class CoverageReport(ConformanceModel):
     modelo_count: int = Field(ge=0)
 
 
-@lru_cache(maxsize=2)
-def _cached_profile(validate: bool) -> RegistryConformanceProfile:
-    """Compose the profile once per process per read mode.
-
-    The registry fold costs seconds; a CLI process reads it once, and a test
-    module invoking several verbs would otherwise pay for it on each. Invalidated
-    by :func:`reset_conformance_cache`, which the governance writer calls after
-    every successful stamp so a re-read never serves a pre-write tree.
-    """
-    return audit_bundled_registry_conformance(validate=validate)
-
-
 @lru_cache(maxsize=1)
 def _cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
     """Read shared-catalogue translation coverage for every bundled Modelo."""
@@ -672,13 +660,13 @@ def _cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
 
 
 def reset_conformance_cache() -> None:
-    """Drop the memoised registry and locale reads.
+    """Drop the memoised locale reads.
 
     Called by the governance writer after a successful stamp: a report rendered
     from a pre-write profile inside the same process would show the operator the
-    state their own command just replaced.
+    state their own command just replaced. Registry profiles are recomposed on
+    each read; the compiler owns caching against current source inputs.
     """
-    _cached_profile.cache_clear()
     _cached_locale_index.cache_clear()
 
 
@@ -765,7 +753,7 @@ def load_conformance_report(*, validate: bool = True) -> ConformanceReport:
     Returns:
         The projected :class:`ConformanceReport`.
     """
-    profile = _cached_profile(validate)
+    profile = audit_bundled_registry_conformance(validate=validate)
     locale_index, unavailable = _cached_locale_index()
     annual_matrix = build_annual_coordinate_matrix() if validate else None
     return build_conformance_report(
