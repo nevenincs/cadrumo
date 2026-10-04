@@ -88,8 +88,13 @@ def main() -> None:
     args = parser.parse_args()
     value = identity(args.target, args.channel)
     args.output.mkdir(parents=True, exist_ok=True)
-    (args.output / "identity.json").write_text(json.dumps(asdict(value), indent=2) + "\n", encoding="utf-8")
-    (args.output / "Identity.cmake").write_text(cmake_projection(value), encoding="utf-8")
+    for name, content in {
+        "identity.json": json.dumps(asdict(value), indent=2) + "\n",
+        "Identity.cmake": cmake_projection(value),
+    }.items():
+        destination = args.output / name
+        if not destination.exists() or destination.read_text(encoding="utf-8") != content:
+            destination.write_text(content, encoding="utf-8")
 
 
 if __name__ == "__main__":

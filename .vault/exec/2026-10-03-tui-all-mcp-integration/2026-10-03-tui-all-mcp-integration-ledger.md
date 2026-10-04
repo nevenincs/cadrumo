@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:202e9cd66d735da411d7d48039b1633523338eb7c7e84828793c145b2ed9e651'
+body_hash: 'sha256:460e6b29a4a55acc2ad7823715934eef403bdfbed22d8baa6db8c3d5ac8b0ba0'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -3399,6 +3399,21 @@ related:
 - `S05` `verify:` `29dev registry source AST/style and 11percent defining tests` -> `pass`
 - `S05` `verify:` `native public human refusal plus six JSON error cases7total` -> `pass`
 - `S05` `verify:` `Rust Desktop source formatting` -> `pass`
+- `S05` `M` `.vault/adr/2026-09-02-cli-distribution-consolidation-adr.md`
+- `S05` `M` `.vault/adr/2026-10-04-application-distribution-adr.md`
+- `S05` `A` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S05` `M` `.vault/exec/2026-10-04-application-distribution/2026-10-04-application-distribution-ledger.md`
+- `S05` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S05` `M` `dev/packaging/native/identity.py`
+- `S05` `A` `dev/packaging/native/installation.py`
+- `S05` `M` `dev/packaging/tests/test_distribution_identity.py`
+- `S05` `A` `dev/packaging/tests/test_native_installation.py`
+- `S05` `M` `native/cmake/CompilePolicy.cmake`
+- `S05` `A` `native/cmake/distribution/CMakeLists.txt`
+- `S05` `A` `native/cmake/distribution/VerifyInstall.cmake.in`
+- `S05` `A` `.codex/handoffs/tui-all-mcp-efb-dispositions.json`
+- `S05` `M` `.codex/handoffs/tui-all-mcp-53f-dispositions.json`
+- `S05` `verify:` `native distribution identity nine current tests` -> `pass`
 
 ## Notes
 
@@ -3414,3 +3429,4 @@ related:
 - `S05` Allow explicitly supplied blank optional TEXT wire token for ordinary M145 physical page; required/nontext/family constraints retained and refusal witnesses checked. Reconcile stale test premises with current profile timestamps, canonical browser cache override, registry M347 province/business-lease fields, archive v4 suffix, apoderado scope and typed workstation capabilities. Google acquisition remains UNKNOWN when existing credential handoff has begun and failed; retain exact effects/state proof. Initial414 and121 failed runs preserved; subject evidence combines unchanged262 with corrective replays and is not one final272 run. Remaining broad cohort, fresh artifacts, native E2E, later53f TUI reconciliation and final configured quality pending.
 - `S05` Forward explicit child run-log root and preserve bounded owned execution. Native Home diagnostic reports finite public refusal/updating/account posture only; excludes private labels, expiry timestamps and worker exception text. Keep historical failing quality/native evidence, current Mac offline and elevated noninteractive Windows provider limitations separate from demonstrated defects. User authorized subsequent verification/green landing; prior deferral retained as history and active verification resumed. Later immutable TUI53f prepared and not merged at this checkpoint; live destination advanced again to efb85a8 and is not landed.
 - `S05` Reconcile immutable TUI53f against its original a8 base, preserving current recovered MCP intent. Resolve729conflicted paths including652PO; all4858source paths have exact original binary delta and per-path dispositions. Restore invoice-backed M347 lease/cadastral fields and plain datetime UTC validators required for real registered startup; no admission/schema guard weakening. Carry both snapshot scenarios through272uniqueprimary IDs and54additional real-supervisor variants; pure collection is not behavioral proof. Retain current generated9target/form artifacts as bootstrap; owning reproduction pending efb/captured66 interpreting inputs. Preserve historical decision acceptance/additive receipts/binding-plan retirement; no new costly decision. Accepted new native identity/Desktop source retained with bounded join ownership and fail-closed closure; Rust unit/live execution pending. Final12configuredgates, stateful cohort, native Mac/Home continuation, current artifact and safe landing remain open. Live TUI efb +248laterpaths preserved separately; no other worktree/index overwritten.
+- `S05` Carry exact immutable efb16path committed native layout/installation intent after53f semantic baseline. Native staging/uninstall static findings remain assigned corrections in disjoint owned Windows/POSIX modules and are intentionally not captured midway in this source-baseline commit. No native install/uninstall or globalgreen claim. Actual staged immutable bytes pinned independently from ongoing working edits. Next captured66 product/registry/catalogue reconciliation is disjoint from native paths and may proceed in parallel; generation waits for interpreting closure. No other worktree/index changed or landing performed.

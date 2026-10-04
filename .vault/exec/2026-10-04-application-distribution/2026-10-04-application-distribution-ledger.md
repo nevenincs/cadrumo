@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f843b2671e7ed47d0c893fc760adabd2c1f9153d2eef1ffc0679537b9a62504'
+body_hash: 'sha256:04adae49da10ea5dac3b5ac2405ab8b40ba902d205a8e9f908f6c73068214b19'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -57,3 +57,23 @@ related:
 - `S02` `verify:` `cmake configure windows-x64` -> `pass`
 - `S02` `verify:` `Release interpreter and ABI consumer build` -> `pass`
 - `S02` `verify:` `ctest platform 3 tests` -> `pass`
+- `S03` `A` `dev/packaging/native/installation.py`
+- `S03` `A` `dev/packaging/tests/test_native_installation.py`
+- `S03` `A` `native/cmake/distribution/CMakeLists.txt`
+- `S03` `A` `native/cmake/distribution/VerifyInstall.cmake.in`
+- `S03` `M` `native/desktop/CMakeLists.txt`
+- `S03` `M` `native/desktop/scripts/host.mjs`
+- `S03` `M` `native/CONTRACT.md`
+- `S03` `M` `dev/packaging/native/identity.py`
+- `S03` `M` `dev/packaging/tests/test_distribution_identity.py`
+- `S03` `M` `native/cmake/CompilePolicy.cmake`
+- `S03` `verify:` `34 focused identity and installation tests` -> `pass`
+- `S03` `verify:` `Ruff format lint and ty` -> `pass`
+- `S03` `verify:` `Linux synthetic DEB prefix install and uninstall` -> `pass`
+- `S03` `verify:` `Windows real runtime ZIP install smoke and modified-file-preserving uninstall` -> `pass`
+- `S03` `verify:` `GCC compile policy fixture build and execution` -> `pass`
+- `S03` `verify:` `Node host syntax and desktop identity configure` -> `pass`
+
+## Notes
+
+- `S03` Native MSI RPM macOS and full platform lifecycle evidence remain in S04; WiX UI extension setup requires operator EULA acceptance.

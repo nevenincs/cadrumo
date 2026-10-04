@@ -37,6 +37,10 @@ def test_targets_share_application_identity_but_not_installer_families() -> None
     assert [item.compatibility_floor for item in values] == [item.floor for item in SUPPORTED_TARGETS]
 
 
+def test_published_windows_upgrade_code_cannot_drift() -> None:
+    assert identity("windows-x86-64").upgrade_code == "9AA7A3AF-0C16-5672-8C22-1BA49EC0F757"
+
+
 @pytest.mark.parametrize("target,channel", [("linux-i686", "stable"), ("macos-arm64", "../oops")])
 def test_unknown_target_or_channel_is_rejected(target: str, channel: str) -> None:
     with pytest.raises(ValueError):

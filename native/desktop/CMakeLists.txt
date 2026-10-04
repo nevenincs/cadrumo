@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 4.4)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  project(cadrumo_desktop_preview LANGUAGES NONE)
+  set(CADRUMO_CHANNEL preview CACHE STRING "Desktop installation channel")
+  include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Identity.cmake")
+  project(CADRUMO_DESKTOP VERSION "${CADRUMO_ID_VERSION}"
+    DESCRIPTION "${CADRUMO_ID_DESCRIPTION}" HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}"
+    SPDX_LICENSE "${CADRUMO_ID_LICENSE}" LANGUAGES NONE)
 endif()
 
 find_program(CADRUMO_NPM NAMES npm.cmd npm REQUIRED)

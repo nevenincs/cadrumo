@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c99eb9f7a3f841d381d523effb2094835d1c8c7dfa669bc863dbcfe596668259'
+body_hash: 'sha256:a6a4b538e697385a7fd1f4e3cf6b2bb0f88ba1faa06166e14fb1055017116786'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -89,3 +89,7 @@ allowlisted; they affect executable PATH without widening DLL search.
 The old artifact and trace evidence remains historical. Verification of the CMake
 and revised layout implementation must be recorded separately before the open
 plan steps can be completed. The broader application packaging ADR remains proposed.
+
+## 2026-10-04 installation scope amendment
+
+The later accepted application-distribution ADR authorizes native installer definitions and installation lifecycle work across Windows, Linux and macOS. It extends this foundation's installer exclusion; it does not alter the interpreter, storage or loader contracts. Native runtime backend acceptance remains separately required.
