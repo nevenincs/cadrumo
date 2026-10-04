@@ -134,6 +134,7 @@ export function App({ host }: { host: Host }) {
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
   const returnFocus = useRef<Element | null>(null);
   const toastTimer = useRef(0);
+  const nativeMenus = useRef(host.nativeMenus);
 
   // Layout geometry, read from the canonical tokens (src/tokens.css) instead
   // of duplicated as literals; each metric re-reads on resize.
@@ -672,7 +673,7 @@ export function App({ host }: { host: Host }) {
         );
         if (chosen && !isSeparator(chosen)) chosen.run?.();
       };
-      if (host.nativeMenus) {
+      if (nativeMenus.current) {
         const plain: ContextMenuItem[] = items.map((item) =>
           isSeparator(item)
             ? item
@@ -683,9 +684,14 @@ export function App({ host }: { host: Host }) {
                 enabled: item.enabled,
               },
         );
-        host
-          .showMenu(plain, pointer ? undefined : at)
-          .then(run, () => undefined);
+        host.showMenu(plain, pointer ? undefined : at).then(run, (error) => {
+          // Where the host cannot draw a blocking native menu, the shell
+          // draws this one and every later menu itself.
+          if (isHostFailure(error) && error.code === "unsupported_platform") {
+            nativeMenus.current = false;
+            setMenu({ items, at });
+          }
+        });
       } else {
         setMenu({ items, at });
       }

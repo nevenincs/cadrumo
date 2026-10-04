@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:385fd0f3f03085d8958f8e7aa5fb1b0a42d7972889b4f784a76abb900fc33f2a'
+body_hash: 'sha256:fbb4c71266c60a8e81f576dbbf740ccc5170849deebb9d23415e4d9f9449477c'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -231,7 +231,7 @@ shell to documentation:
 
 **Persistence.**
 
-- Window size, position and maximized state go through the window-state plugin.
+- Window size, position and maximized state go through a host window-state module. It stores them as `window-state.json` in the declared webview location, restores them on window ready within the visible monitors, and saves them atomically on close, with no JavaScript command. The window-state plugin was set aside because it creates an undeclared `%APPDATA%` directory, which `2026-10-04-canonical-environment-adr` forbids.
 - Settings, the split ratio, whether the TUI is shown, panel open, panel share, active tab and documentation zoom go in shell localStorage.
 - Every read is guarded, so the layout falls back to defaults.
 

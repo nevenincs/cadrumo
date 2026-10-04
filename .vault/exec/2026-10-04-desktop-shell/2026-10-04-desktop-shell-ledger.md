@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d0049103d4c15717cef1647bcdcb0eca97265f6b2f84bc27ed6ff42d69529b2'
+body_hash: 'sha256:358128af3c0d3b801ee34c3e6b99ff0d8c847905d601df93783e580399f9cb5f'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -200,6 +200,32 @@ related:
 - `S18` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
 - `S18` `verify:` `python -m dev.locales.desktop_chrome` -> `pass`
 - `S18` `by:` `vaultspec-high-executor`
+- `S07` `A` `native/desktop/src-tauri/src/shell/external.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/clipboard.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/menu.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/webview.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/interrupts.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/site.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/webview.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S07` `M` `native/desktop/src-tauri/src/app.rs`
+- `S07` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S07` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S07` `M` `native/platform/Cargo.toml`
+- `S07` `M` `native/platform/Cargo.lock`
+- `S07` `M` `native/platform/src/desktop.rs`
+- `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (desktop, working-tree snapshot)` -> `pass`
+- `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop, 83 tests)` -> `pass`
+- `S07` `verify:` `cargo test --locked --features live-package-tests shell::interrupts (live PTY Ctrl+C)` -> `pass`
+- `S07` `verify:` `cargo test --locked [--features webview2] (platform)` -> `pass`
+- `S07` `verify:` `cmake --build build/s07-cmake --config Debug --target platform_static_consumer platform_dll_consumer; ctest -R ^platform\.` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
+- `S07` `A` `native/desktop/src-tauri/src/shell/window_state.rs`
+- `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop, 87 tests incl. window_state round trip, corrupt record, off-screen fit)` -> `pass`
+- `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (snapshot with HEAD platform lib.rs)` -> `pass`
 
 ## Notes
 
@@ -223,3 +249,10 @@ related:
 - `S04` Live tests used S02's relocated build-1761 package (hard-linked copy) plus cadrumo-runtime.exe copied from build/windows-x64/runtime-entrypoint/bin/Release into its bin/; contract regenerated from current dev/packaging/native/generate.py. desktop-host-test overall reports 2 failures in S05 docs and S06 logs live tests, not S04.
 - `S04` Real WebView2 interceptor throughput unmeasured: agent runs in Session 0 (WebView2 'Invalid window handle'); host-side interceptor measured with the mock runtime; delivery measurement left to S10.
 - `S09` Terminal transport wired to the S04 contract as stated by the orchestrator; awaiting a live smoke in the desktop host before S09 closes.
+- `S07` S07 stays open: tauri-plugin-window-state 2.5.0 always runs `create_dir_all(app_config_dir)` on save, creating `C:\Users\hello\AppData\Roaming\<identifier>` outside the canonical root even with an absolute filename; not added pending a ruling
+- `S07` No real WebView2 run: agent runs in Session 0 (non-interactive); settings readback, F5/Ctrl+R/F12/Ctrl+P and the probe on this machine are left to S10
+- `S07` Context menus refuse with `unsupported_platform` off Windows: the GTK popup returns before the menu closes, so the sentinel cannot await the choice
+- `S07` Busy popup refusal uses `session_unavailable/webview;` no dedicated error code exists in the application crate
+- `S07` Console Ctrl+C attribute cleared in the shell plugin setup (GUI only, no main.rs change), added on the orchestrator's request from S04 findings
+- `S07` Window state resolved by orchestrator ruling B: host module `shell/window_state.rs` writes `<Launch.webview>/window-state.json` atomically (temp file then rename); tauri-plugin-window-state not used; ADR wording amendment requested from the designer by the orchestrator
+- `S07` Final checks built against HEAD native/platform/src/lib.rs because the runtime owner's in-flight lib.rs needs a newer generated contract
