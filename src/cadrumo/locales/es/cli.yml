@@ -1239,8 +1239,8 @@ cli:
         list_help: Lista las conciliaciones anteriores registradas en el perfil activo.
         list_work_unit_id_help: Filtra las conciliaciones por identificador de declaración
           (SHA-256 o prefijo inequívoco).
-        pull_help: Descarga de la AEAT el justificante de una declaración y concilia
-          con él. Contacta con la AEAT (solo lectura).
+        pull_help: "Descarga evidencia de la AEAT y compárala con el cálculo local guardado (solo lectura en la AEAT)."
+        source_help: "Evidencia a comparar: justificante comprueba identidad e importes vinculados; declaration compara las casillas presentadas con el cálculo guardado."
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       requires:
         help: 'Muestra la lista de datos necesarios para un modelo y periodo: qué

@@ -124,6 +124,7 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     source_path: str
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
+    advisory_count: NonNegativeInt = 0
     actor: ModeloActorLabel
     reconciled_at: datetime
 

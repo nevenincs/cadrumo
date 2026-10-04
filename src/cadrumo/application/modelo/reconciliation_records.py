@@ -239,6 +239,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     source_path: str
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
+    advisory_count: NonNegativeInt = 0
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     actor: ModeloActorLabel
     reconciled_at: UtcInstant
@@ -352,6 +353,7 @@ def list_modelo_reconciliations(
             source_path=record.source_ref,
             verdict=record.verdict,
             diff_count=len(record.diffs),
+            advisory_count=len(record.advisories),
             diffs=record.diffs,
             actor=record.actor,
             reconciled_at=record.reconciled_at,

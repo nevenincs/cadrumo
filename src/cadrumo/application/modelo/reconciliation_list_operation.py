@@ -69,6 +69,7 @@ class ModeloReconciliationListEntryProjection(BaseModel):
     source_path: _BoundedSourcePath
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
+    advisory_count: NonNegativeInt = 0
     actor: ModeloActorLabel
     reconciled_at: datetime
 
@@ -89,6 +90,7 @@ class ModeloReconciliationListEntryProjection(BaseModel):
             source_path=entry.source_path,
             verdict=entry.verdict,
             diff_count=entry.diff_count,
+            advisory_count=entry.advisory_count,
             actor=entry.actor,
             reconciled_at=entry.reconciled_at,
         )

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f26c8b9aaab368b16dd28dcdf73807829beb18f8aab3229ffcce344a8e72a453'
+body_hash: 'sha256:6a83459c3c875b8b5146be2922d8bc8cba4e8e4485d6246be78116e75e80f0de'
 related:
   - "[[2026-10-04-live-reconciliation-repair-plan]]"
 ---
@@ -65,8 +65,30 @@ related:
 - `S03` `verify:` `scoped Ruff format lint ty basedpyright pyrefly` -> `pass`
 - `S03` `verify:` `retained encrypted AEAT2024Q1 payload 129fields71casillas` -> `pass`
 - `S03` `by:` `vaultspec-standard-executor`
+- `S06` `M` `src/cadrumo/application/modelo/reconciliation.py`
+- `S06` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/reconciliation_records.py`
+- `S06` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/justificante_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_pull.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_filed_single.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_reconciliation_pull.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_pull_operation.py`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/en/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `verify:` `scoped operation and CLI regressions 22 tests` -> `pass`
+- `S06` `verify:` `source selection tests 6 tests` -> `pass`
+- `S06` `verify:` `scoped Ruff and ty` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S02` Live authentication request expired; fresh pull acceptance belongs to S05. Broader adapter tests exposed unavailable browser provisioning and preexisting export fixture disagreement.
 - `S03` Shared export parser includes unrelated preexisting XML and signed-component edits; checkpoint stages only filed-input hunks. Broader legacy fixture and browser provisioning failures remain outside this Step.
+- `S06` Live declaration capture reached registry enrollment but failed finalization; lead continues diagnosing upstream enrollment during S05.

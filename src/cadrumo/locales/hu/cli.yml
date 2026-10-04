@@ -1208,8 +1208,8 @@ cli:
         list_help: Listázd az aktív profilban rögzített korábbi egyeztetéseket.
         list_work_unit_id_help: Bevallásazonosító szerint szűri az egyeztetéseket
           (SHA-256 vagy egyértelmű előtag).
-        pull_help: Letölti egy bevallás igazolását az AEAT-tól, és egyeztet vele.
-          Kapcsolatba lép az AEAT-tal (csak olvasás).
+        pull_help: "AEAT-bizonyíték letöltése és összehasonlítása a mentett helyi számítással (az AEAT-nál csak olvasás)."
+        source_help: "Összehasonlítandó bizonyíték: justificante az azonosítókat és a hozzárendelt összegeket ellenőrzi; declaration a benyújtott mezőket hasonlítja a mentett számításhoz."
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       requires:
         help: 'Megjeleníti az adott nyomtatványhoz és időszakhoz szükséges adatok

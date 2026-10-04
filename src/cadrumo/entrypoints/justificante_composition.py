@@ -7,6 +7,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
+from pathlib import Path
 from typing import cast
 
 from ..adapters.inbound.justificante.parser import parse_justificante_bytes
@@ -33,6 +34,7 @@ from ..application.auth.certificate_secret_backend import CertificateSecretBacke
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.session_types import AeatSession
 from ..application.live.filed_data_ports import FiledEffectGuard
+from ..application.live.filed_observation_ports import FiledObservationProtocol
 from ..application.live.justificante import (
     JustificanteCaptureSnapshot,
     JustificanteCaptureSnapshotRepository,
@@ -273,3 +275,15 @@ def build_justificante_live_read_port(
 def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifierPort:
     """Build the verifier for captured justificante authenticity evidence."""
     return _Verifier()
+
+
+def load_reconciliation_filed_observation(bucket_id: str, observation_id: str) -> FiledObservationProtocol:
+    """Resolve a filed manifest only from the operation's exact encrypted profile."""
+    from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+    from ..core.config import load_settings
+
+    store = FiledDeclaracionObservationStore(
+        load_settings().cadrumo_filed_declarations_dir,
+        objects=secure_object_repository_for_bucket(bucket_id),
+    )
+    return store.load_observation(Path(observation_id))

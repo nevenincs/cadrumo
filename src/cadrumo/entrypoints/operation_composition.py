@@ -790,6 +790,7 @@ from .justificante_composition import (
     build_justificante_capture_service,
     build_justificante_live_read_port,
     build_justificante_registration_ports,
+    load_reconciliation_filed_observation,
 )
 from .ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
 from .ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
@@ -1353,7 +1354,9 @@ def build_production_operation_registry(
         factory=calculation_action_ports_factory, migration=projection_migration
     )
     reconciliation_import_definition = build_modelo_reconciliation_import_definition()
-    reconciliation_pull_definition = build_modelo_reconciliation_pull_definition(build_justificante_capture_service)
+    reconciliation_pull_definition = build_modelo_reconciliation_pull_definition(
+        build_justificante_capture_service, load_reconciliation_filed_observation
+    )
     reconciliation_list_definition = build_modelo_reconciliation_list_definition()
     work_list_definition = build_modelo_work_list_definition(work_lifecycle_ports_factory)
     work_create_definition = build_modelo_work_create_definition(work_lifecycle_ports_factory)

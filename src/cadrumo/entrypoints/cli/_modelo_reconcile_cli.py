@@ -95,6 +95,7 @@ def reconcile_pull_verb(
     revision: str | None = None,
     bucket_id: str | None = None,
     actor: str | None = None,
+    source: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE,
 ) -> None:
     """Pull the AEAT justificante for a work unit and reconcile against it."""
     from .runtime_modelo_reconciliation_pull import pull_modelo_reconciliation
@@ -109,6 +110,7 @@ def reconcile_pull_verb(
         revision=revision,
         bucket_id=bucket_id,
         actor=resolved_actor,
+        source=source,
     )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
 
@@ -167,6 +169,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
                 source_path=entry.source_path,
                 verdict=entry.verdict,
                 diff_count=entry.diff_count,
+                advisory_count=entry.advisory_count,
                 actor=entry.actor,
                 reconciled_at=entry.reconciled_at,
             )
@@ -179,7 +182,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
         f"reconciliation_count\t{projection.reconciliation_count}",
     ]
     if entries:
-        lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tactor")
+        lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tadvisory_count\tactor")
         lines.extend(
             "\t".join(
                 (
@@ -188,6 +191,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
                     entry.source_kind.value,
                     entry.verdict.value,
                     str(entry.diff_count),
+                    str(entry.advisory_count),
                     entry.actor,
                 )
             )

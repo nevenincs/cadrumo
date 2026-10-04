@@ -47,7 +47,26 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.reconcile.pull_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=RECONCILE_TARGET_PARAMETERS,
+        parameters=(
+            *RECONCILE_TARGET_PARAMETERS,
+            OptionSpec(
+                name="source",
+                declarations=("--source",),
+                value=ValueContract(
+                    DeferredTarget(
+                        "...application.modelo.reconciliation_records",
+                        "ModeloReconciliationEvidenceKind",
+                        __package__,
+                    )
+                ),
+                default=ParameterDefault.value("justificante"),
+                help_key=TranslationKey("cli.app.modelo.reconcile.source_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+        ),
         policy=_BROWSER_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("._modelo_reconcile_cli", "reconcile_pull_verb", __package__)),
         result_schema=ResultSchemaSpec(

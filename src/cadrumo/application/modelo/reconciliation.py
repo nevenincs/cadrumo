@@ -57,6 +57,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...core.casilla_value_kind import CasillaValueKind
+from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
@@ -112,6 +114,7 @@ if TYPE_CHECKING:
     from ...domain.justificante.schema import Justificante
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+    from ..live.filed_observation_ports import FiledObservationProtocol
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
     {Modelo("100"), Modelo("111"), Modelo("130"), Modelo("190"), Modelo("303"), Modelo("390")}
@@ -566,6 +569,67 @@ def prepare_parsed_declaracion(
         diffs=diffs,
         advisories=advisories,
         narrative_subject=f"modelo {declaracion.modelo} for ejercicio {declaracion.ejercicio}",
+    )
+
+
+def prepare_filed_observation_reconciliation(
+    *,
+    work_unit: WorkUnit,
+    observation: FiledObservationProtocol,
+    source_ref: str,
+    actor: str,
+    operation: PinnedAuthorityOperation,
+) -> PreparedModeloReconciliation:
+    """Compare a persisted authenticated register manifest against saved calculation values."""
+    from ..calculations.revision_carry_gate import revision_carry_outcome
+
+    if revision_carry_outcome(observation.registry_snapshot_ref, operation=operation).refused:
+        raise ReconciliationEvidenceInvalidError("captured declaration registry coordinates are no longer current")
+    if not observation.casillas or not observation.authenticated_identity.strip():
+        raise ReconciliationEvidenceInvalidError("captured declaration has no comparable fields or taxpayer identity")
+    advisories: list[ModeloReconciliationAdvisory] = []
+    if observation.metadata.get("declaration_pdf_extraction_profile_provisional") == "true":
+        advisories.append(
+            ModeloReconciliationAdvisory(
+                code="extraction_profile_provisional",
+                message=(
+                    "The captured declaration used an unconfirmed PDF extraction profile; "
+                    "verify its fields against the source document."
+                ),
+                context={"modelo": observation.modelo},
+            )
+        )
+    diffs = _identity_header_diffs(
+        work_unit=work_unit,
+        active_bucket_id=work_unit.bucket_id,
+        evidence_modelo=observation.modelo,
+        evidence_ejercicio=str(observation.ejercicio),
+        evidence_period=observation.period,
+        evidence_tax_id=observation.authenticated_identity,
+        advisories=advisories,
+    )
+    values = {
+        row.casilla_id: coerce_decimal_strict(row.value)
+        for row in observation.casillas
+        if row.value_kind is CasillaValueKind.NUMERIC
+    }
+    if not values:
+        raise ReconciliationEvidenceInvalidError("captured declaration has no numeric comparison fields")
+    casilla_diffs, comparison_advisories = _reconcile_casilla_values(
+        work_unit=work_unit,
+        filed_values=values,
+        operation=operation,
+    )
+    diffs.extend(casilla_diffs)
+    advisories.extend(comparison_advisories)
+    return _prepare_reconciliation(
+        work_unit=work_unit,
+        source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
+        source_ref=source_ref,
+        actor=actor,
+        diffs=diffs,
+        advisories=advisories,
+        narrative_subject=f"captured modelo {observation.modelo} for ejercicio {observation.ejercicio}",
     )
 
 
@@ -1061,6 +1125,20 @@ def _reconcile_declaracion_casillas(
     total and casilla surfaces because both disclose the same thing — a
     comparison the reconcile could not perform.
     """
+    return _reconcile_casilla_values(
+        work_unit=work_unit,
+        filed_values=_decimal_declaracion_values(declaracion),
+        operation=operation,
+    )
+
+
+def _reconcile_casilla_values(
+    *,
+    work_unit: WorkUnit,
+    filed_values: Mapping[str, Decimal],
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[ModeloReconciliationDiff], list[ModeloReconciliationAdvisory]]:
+    """Share the registry comparison between parsed PDFs and stored file observations."""
     modelo = str(work_unit.modelo)
     registry_context = _declaracion_registry_context(work_unit, operation=operation)
     if registry_context is None:
@@ -1076,7 +1154,6 @@ def _reconcile_declaracion_casillas(
     from ...domain.calculations.registry.casilla_membership import casillas_by_id
 
     revision_casillas = casillas_by_id(snapshot.revision)
-    filed_values = _decimal_declaracion_values(declaracion)
     computed_values: Mapping[str, Decimal] = revision.casilla_values
     divergences = _declaracion_divergences(
         policy=policy,

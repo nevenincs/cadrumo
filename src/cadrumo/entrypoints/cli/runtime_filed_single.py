@@ -85,9 +85,10 @@ def read_filed_single_capture_for_cli(
     period: Period | None,
     expediente_id: str | None,
     limit: int | None,
+    expected_profile_id: UUID | None = None,
 ) -> FiledSingleCaptureRead:
     """Submit one capture and accept only its exact-profile settled result."""
-    profile_id = UUID(require_active_bucket_id())
+    profile_id = expected_profile_id or UUID(require_active_bucket_id())
     client = require_profile_client(ctx, expected_profile_id=profile_id)
     request = FiledSingleCaptureRequest(
         profile_id=profile_id,

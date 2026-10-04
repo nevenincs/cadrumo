@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:1bb3f03c1686612880e97f395203f611a93db76fa9f80916cb63a7be91eb94be'
+body_hash: 'sha256:cf3595fe074ec8844c3444f31d330c5d19af42f3d9600f2989886351e243bda7'
 ---
 
 # Live reconciliation repair
@@ -28,7 +28,7 @@ The user explicitly authorized fixing all failures observed during authenticated
 - [x] `S01` - Preserve nullable scalar values through populated workbench transport; `src/cadrumo/application/operations/_public_mirror_projection.py and generation tests`.
 - [x] `S02` - Retrieve exact-period justificantes from authoritative declaration register controls; `src/cadrumo/application/live/justificante.py and receipt ports adapters tests`.
 - [x] `S03` - Restore captured submitted-file parsing against source-grounded framing; `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py and framing owner tests`.
-- [ ] `S06` - Expose explicit pulled declaration reconciliation against saved local calculation using persisted official casillas and existing comparison records; `src/cadrumo/application/modelo reconciliation operation and src/cadrumo/entrypoints/cli reconciliation pull source selection plus tests`.
+- [x] `S06` - Expose explicit pulled declaration reconciliation against saved local calculation using persisted official casillas and existing comparison records; `src/cadrumo/application/modelo reconciliation operation and src/cadrumo/entrypoints/cli reconciliation pull source selection plus tests`.
 - [ ] `S04` - Show persisted counterpart comparisons and grounded drift in shared CLI TUI projections; `src/cadrumo/application/aeat_sync and workbench composition tests`.
 - [ ] `S05` - Verify real runtime CLI pull and populated TUI comparison and review integrated repairs; `var/reconciliation-check-20261004 redacted evidence and regression checks`.
 
