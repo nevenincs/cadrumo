@@ -91,6 +91,18 @@ from ...application.bienes_inversion.registered_result_contracts import (
 )
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.calculations.iva_compensation_history import seed_iva_compensation_period
+from ...application.filing.producer_snapshot_m360 import (
+    M360AmbitoEstablecimiento,
+    M360CausaPresentacion,
+    M360NivelCalidadDatos,
+    M360TitularEnCalidadDe,
+    Modelo360CuentaTitularFacts,
+    Modelo360EstablecimientoFacts,
+    Modelo360ProfileFacts,
+    Modelo360RepresentanteFacts,
+    Modelo360SolicitanteFacts,
+    Modelo360SolicitudFacts,
+)
 from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
@@ -267,6 +279,7 @@ from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
+from ...application.modelo.m360_solicitud_operation import Modelo360RepresentanteAccountInput
 from ...application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
@@ -1118,6 +1131,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.own_account",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "modelo.m360_solicitud",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("modelo.m360_solicitud",),
         ),
         RegisteredExecutorConformanceCase(
             "ledger.remove", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.remove",)
@@ -2940,6 +2959,35 @@ def _payload(
                 "label": "synthetic conformance account",
                 "holding": OwnAccountHolding.TITULAR,
                 "iban": _OWN_ACCOUNT_SYNTHETIC_IBAN,
+            }
+        case "modelo.m360_solicitud":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {
+                "profile_id": profile_id,
+                "action": "declare",
+                "filing_year": 2025,
+                "facts": Modelo360ProfileFacts(
+                    solicitud=Modelo360SolicitudFacts(
+                        nivel_calidad_datos=M360NivelCalidadDatos.MAXIMA,
+                        pais_destino="FR",
+                        causa_presentacion=M360CausaPresentacion.INICIAL,
+                    ),
+                    solicitante=Modelo360SolicitanteFacts(
+                        email="solicitante@example.es",
+                        establecimiento=Modelo360EstablecimientoFacts(
+                            ambito=M360AmbitoEstablecimiento.TERRITORIO_COMUN
+                        ),
+                    ),
+                    representante=Modelo360RepresentanteFacts(tax_id="00000000T", full_name="ASESORES PRUEBA SL"),
+                    cuenta=Modelo360CuentaTitularFacts(
+                        titular_nombre="ASESORES PRUEBA SL",
+                        titular_en_calidad_de=M360TitularEnCalidadDe.REPRESENTANTE,
+                        divisa="EUR",
+                    ),
+                ),
+                "representante_account": Modelo360RepresentanteAccountInput(
+                    iban=_OWN_ACCOUNT_SYNTHETIC_IBAN, swift_bic="CAIXESBBXXX"
+                ),
             }
         case "ledger.remove":
             ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)

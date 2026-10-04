@@ -1093,6 +1093,16 @@ cli:
         period_help: 'Communication period token: comunicacion or variacion.'
         validate_help: Validate a Modelo 145 local payer communication record.
         year_help: Communication year.
+      m360:
+        declare_help: 'Declare or replace the solicitud for a filing year. Pass the
+          document as JSON in the "solicitud" field of --secrets-stdin or --secrets-fd:
+          its facts and either own_account_id (a solicitante own account with a SWIFT-BIC)
+          or representante_account.'
+        filing_year_help: Filing year of the solicitud (e.g. 2025).
+        group_help: Declare the Modelo 360 refund application (solicitud) for a filing
+          year.
+        list_help: List the declared solicitudes with their masked accounts.
+        remove_help: Remove the solicitud declared for a filing year.
       project:
         binding_help: Additional value for a Modelo 100 box source, as KEY=VALUE.
           Repeat for multiple. Withholding sources default to zero when not supplied.
@@ -3375,6 +3385,14 @@ cli:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
       invalid_env_value: 'CADRUMO_LOG_LEVEL must be one of: %{allowed}; got %{value}.'
+  modelo:
+    m360:
+      errors:
+        invalid_document: 'The solicitud document is not valid: %{reasons}'
+        secret_channel_required: Pass the solicitud document through --secrets-stdin
+          or --secrets-fd; it never travels as arguments.
+      none: No Modelo 360 solicitud is declared yet.
+      unchanged: Nothing changed.
   operator_surface:
     errors:
       accepted_roots_only: The CLI accepts only the config and app roots.

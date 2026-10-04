@@ -1217,6 +1217,21 @@ errors:
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
+    refused_modelo_360_solicitud: No s'ha pogut declarar ni eliminar la sol·licitud
+      del Model 360 com has demanat.
+    refused_modelo_360_solicitud_account_bic_missing: El compte propi {own_account_id}
+      no té SWIFT-BIC, que el Model 360 exigeix; afegeix-lo amb app ledger account
+      update.
+    refused_modelo_360_solicitud_account_closed: El compte propi {own_account_id}
+      està tancat i no pot rebre la devolució.
+    refused_modelo_360_solicitud_account_invalid: El compte del representant no és
+      un IBAN vàlid amb el seu SWIFT-BIC.
+    refused_modelo_360_solicitud_account_unknown: El compte propi {own_account_id}
+      no és un dels teus comptes propis registrats.
+    refused_modelo_360_solicitud_holder_mismatch: El titular del compte a les dades
+      (camp 114) ha de ser el titular del compte que has triat.
+    refused_modelo_360_solicitud_undeclared: No hi ha cap sol·licitud del Model 360
+      declarada per a {filing_year}.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementària
       no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
       rectificativa. Utilitza el procediment de sol·licitud de rectificació per a

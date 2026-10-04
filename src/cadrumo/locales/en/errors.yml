@@ -1122,6 +1122,21 @@ errors:
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
+    refused_modelo_360_solicitud: The Modelo 360 solicitud could not be declared or
+      removed as asked.
+    refused_modelo_360_solicitud_account_bic_missing: Own account {own_account_id}
+      has no SWIFT-BIC, which Modelo 360 requires; add it with app ledger account
+      update.
+    refused_modelo_360_solicitud_account_closed: Own account {own_account_id} is closed,
+      so it cannot receive the refund.
+    refused_modelo_360_solicitud_account_invalid: The representante's account is not
+      a valid IBAN with its SWIFT-BIC.
+    refused_modelo_360_solicitud_account_unknown: Own account {own_account_id} is
+      not one of your registered own accounts.
+    refused_modelo_360_solicitud_holder_mismatch: The account holder in the facts
+      (campo 114) must be the holder of the account you chose.
+    refused_modelo_360_solicitud_undeclared: No Modelo 360 solicitud is declared for
+      {filing_year}.
     refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
       lawfully decrease the taxpayer's declared liability before the autoliquidación
       rectificativa unification. Use the solicitud de rectificación procedure for

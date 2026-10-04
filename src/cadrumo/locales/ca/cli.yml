@@ -1176,6 +1176,15 @@ cli:
         validate_help: Valida un registre local de comunicació al pagador del Modelo
           145.
         year_help: Any de la comunicació.
+      m360:
+        declare_help: 'Declara o substitueix la sol·licitud d''un exercici. Passa
+          el document com a JSON al camp "solicitud" de --secrets-stdin o --secrets-fd:
+          les dades i own_account_id (un compte propi del sol·licitant amb SWIFT-BIC)
+          o representante_account.'
+        filing_year_help: Exercici de la sol·licitud (p. ex., 2025).
+        group_help: Declara la sol·licitud de devolució del Model 360 d'un exercici.
+        list_help: Llista les sol·licituds declarades amb els comptes emmascarats.
+        remove_help: Elimina la sol·licitud declarada per a un exercici.
       project:
         binding_help: Valor addicional per a l'origen d'una casella del Modelo 100,
           com a KEY=VALUE. Repeteix l'opció per indicar-ne diversos. Els orígens de
@@ -3620,6 +3629,14 @@ cli:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
       invalid_env_value: 'CADRUMO_LOG_LEVEL ha de ser un de: %{allowed}; valor rebut:
         %{value}.'
+  modelo:
+    m360:
+      errors:
+        invalid_document: 'El document de la sol·licitud no és vàlid: %{reasons}'
+        secret_channel_required: Passa el document de la sol·licitud per --secrets-stdin
+          o --secrets-fd; mai no viatja com a arguments.
+      none: Encara no hi ha cap sol·licitud del Model 360 declarada.
+      unchanged: No ha canviat res.
   operator_surface:
     errors:
       accepted_roots_only: Només s'accepten les ordres arrel 'app' i 'config'.

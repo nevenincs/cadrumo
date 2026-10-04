@@ -1057,7 +1057,7 @@ export_field_id = "modelo-131-dpa-complementaria-indicator"
 kind = "computed"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-computed_key = "complementaria_page_marker"
+computed_key = "continuation_page_marker"
 
 [entries.anchor]
 sheet = "DPA"

@@ -1139,6 +1139,21 @@ errors:
     refused_llm_validation: Egy nyelvi modell objektum nem ment át az érvényesítésen.
     refused_modelo_100_borrador_binding: A Modelo 100 tervezet értékei nem vehetők
       fel a számításhoz.
+    refused_modelo_360_solicitud: A Modelo 360 kérelmet nem lehetett a kért módon
+      megadni vagy törölni.
+    refused_modelo_360_solicitud_account_bic_missing: A(z) {own_account_id} saját
+      számlának nincs SWIFT-BIC kódja, amit a Modelo 360 megkövetel; add meg az app
+      ledger account update paranccsal.
+    refused_modelo_360_solicitud_account_closed: A(z) {own_account_id} saját számla
+      le van zárva, így nem fogadhatja a visszatérítést.
+    refused_modelo_360_solicitud_account_invalid: A képviselő számlája nem érvényes
+      IBAN a SWIFT-BIC kóddal.
+    refused_modelo_360_solicitud_account_unknown: A(z) {own_account_id} saját számla
+      nem szerepel a regisztrált saját számláid között.
+    refused_modelo_360_solicitud_holder_mismatch: Az adatokban szereplő számlatulajdonosnak
+      (114. mező) a választott számla tulajdonosának kell lennie.
+    refused_modelo_360_solicitud_undeclared: '{filing_year} évre nincs megadott Modelo
+      360 kérelem.'
     refused_modelo_amendment_complementaria_liability_decrease: A kiegészítő bevallás
       (complementaria) az autoliquidación rectificativa egységesítése előtt jogszerűen
       nem csökkentheti az adózó bevallott tartozását. Használd a helyesbítési kérelem

@@ -29,4 +29,157 @@
 # is not the measure of progress.
 
 schema_version = 4
-dispositions = []
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '131'
+revision = '2024'
+source_ref = 'aeat-dr-131-2024'
+source_sha256 = '83e40d7d4d64c3b2da570d5e70a650685de036277df3ce077b0569a2235aa06f'
+remedy = 'republish'
+differing_records = 1
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '131'
+revision = '2025'
+source_ref = 'aeat-dr-131-2025'
+source_sha256 = 'df4c23a10d836c7d1b4ba16a7758e735c6ae113c5c6c01ff6c439692d0ad4935'
+remedy = 'republish'
+differing_records = 1
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '131'
+revision = '2026'
+source_ref = 'aeat-dr-131-2026'
+source_sha256 = '6d7704aa438c30dd538dbba471ac68f28d22e478bcd679ba8b49b2776a6c964a'
+remedy = 'republish'
+differing_records = 1
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '131'
+revision = '2026-late'
+source_ref = 'aeat-dr-131-2026-late'
+source_sha256 = 'b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f'
+remedy = 'republish'
+differing_records = 1
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '232'
+revision = '2016-2017'
+source_ref = 'aeat-dr-232-2016'
+source_sha256 = 'fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '232'
+revision = '2018-y-siguientes'
+source_ref = 'aeat-dr-232-2018'
+source_sha256 = 'a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '303'
+revision = '2022'
+source_ref = 'aeat-dr-303-2022'
+source_sha256 = '6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '303'
+revision = '2023'
+source_ref = 'aeat-dr-303-2023'
+source_sha256 = '72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '303'
+revision = '2024-desde-09-y-3t'
+source_ref = 'aeat-dr-303-2024-late'
+source_sha256 = '2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '303'
+revision = '2024-hasta-08-y-2t'
+source_ref = 'aeat-dr-303-2024-early'
+source_sha256 = '8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '303'
+revision = '2025'
+source_ref = 'aeat-dr-303-2025'
+source_sha256 = '6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '303'
+revision = '2026-y-siguientes'
+source_ref = 'aeat-dr-303-2026'
+source_sha256 = '0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '353'
+revision = '2021-hasta-2026-01'
+source_ref = 'aeat-dr-353-2021-2025'
+source_sha256 = '37f39224edc2d8aa49403f2a6408ed1b69ae06c2db9d33f59b2a6a54ab82839d'
+remedy = 'republish'
+differing_records = 1
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '353'
+revision = '2026-desde-02'
+source_ref = 'aeat-dr-353-2026'
+source_sha256 = 'cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380'
+remedy = 'republish'
+differing_records = 2
+reason = '''The page indicator at posicion 12 moved from the amendment-driven complementaria marker to the continuation-page marker in the semantic map, so the shipped records carry the superseded computed key.'''
+reconsideration_condition = 'Retire once the tree is republished from the current semantic map.'

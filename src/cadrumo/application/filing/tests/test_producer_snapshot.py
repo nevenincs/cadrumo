@@ -98,7 +98,6 @@ from ..producer_snapshot import (
 )
 from ..producer_snapshot_m200 import Modelo200ProfileFacts
 from ..record_field_renderer import (
-    complementaria_page_marker,
     m303_complementaria_marker,
     m303_no_activity_marker,
 )
@@ -1194,7 +1193,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
 
 
 def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence() -> None:
-    """The 2023 X/C wire spellings do not introduce a second producer state."""
+    """The 303 complementaria and no-activity markers read one immutable amendment and disposition state."""
     amendment = AmendmentEvidence(
         kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
         m303_rectificativa_motive=None,
@@ -1227,10 +1226,8 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
 
     draft = _marker_draft()
     assert m303_complementaria_marker(draft, complemented) == "X"
-    assert complementaria_page_marker(draft, complemented) == "C"
     assert m303_no_activity_marker(draft, complemented) == "X"
     assert m303_complementaria_marker(draft, ordinary) is None
-    assert complementaria_page_marker(draft, ordinary) is None
     assert m303_no_activity_marker(draft, ordinary) is None
 
 

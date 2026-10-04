@@ -1185,6 +1185,15 @@ cli:
         validate_help: Valida un registro local de comunicación al pagador del Modelo
           145.
         year_help: Año de la comunicación.
+      m360:
+        declare_help: 'Declara o sustituye la solicitud de un ejercicio. Pasa el documento
+          como JSON en el campo "solicitud" de --secrets-stdin o --secrets-fd: sus
+          datos y own_account_id (una cuenta propia del solicitante con SWIFT-BIC)
+          o representante_account.'
+        filing_year_help: Ejercicio de la solicitud (p. ej., 2025).
+        group_help: Declara la solicitud de devolución del Modelo 360 de un ejercicio.
+        list_help: Lista las solicitudes declaradas con sus cuentas enmascaradas.
+        remove_help: Elimina la solicitud declarada para un ejercicio.
       project:
         binding_help: Valor adicional para el origen de una casilla del Modelo 100,
           como KEY=VALUE. Repite la opción para indicar varios. Los orígenes de retenciones
@@ -3642,6 +3651,14 @@ cli:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
       invalid_env_value: 'CADRUMO_LOG_LEVEL debe ser uno de: %{allowed}; valor recibido:
         %{value}.'
+  modelo:
+    m360:
+      errors:
+        invalid_document: 'El documento de la solicitud no es válido: %{reasons}'
+        secret_channel_required: Pasa el documento de la solicitud por --secrets-stdin
+          o --secrets-fd; nunca viaja como argumentos.
+      none: Aún no hay ninguna solicitud del Modelo 360 declarada.
+      unchanged: No ha cambiado nada.
   operator_surface:
     errors:
       accepted_roots_only: Solo se aceptan los comandos raíz 'app' y 'config'.

@@ -424,20 +424,6 @@ def _sepa_marca(
     ).value
 
 
-def complementaria_page_marker(
-    draft: ModeloDraft,
-    snapshot: FilingProducerSnapshot,
-    context: FilingRecordRenderContext | None = None,
-) -> str | None:
-    """Render the official ``C`` page marker from amendment evidence alone.
-
-    Core types:
-    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
-    """
-    del draft, context
-    return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
-
-
 def continuation_page_marker(
     draft: ModeloDraft,
     snapshot: FilingProducerSnapshot,
@@ -492,7 +478,6 @@ COMPUTED_VALUE_PRODUCERS: Mapping[
     ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
     ExportComputedKey.SEPA_MARCA: _sepa_marca,
     ExportComputedKey.M303_COMPLEMENTARIA_MARKER: m303_complementaria_marker,
-    ExportComputedKey.COMPLEMENTARIA_PAGE_MARKER: complementaria_page_marker,
     ExportComputedKey.CONTINUATION_PAGE_MARKER: continuation_page_marker,
     ExportComputedKey.M303_NO_ACTIVITY_MARKER: m303_no_activity_marker,
 }
@@ -533,7 +518,6 @@ def format_field(field: ExportFieldDefinition, value: object) -> str:
 __all__ = [
     "COMPUTED_VALUE_PRODUCERS",
     "DRAFT_VALUE_PRODUCERS",
-    "complementaria_page_marker",
     "continuation_page_marker",
     "format_field",
     "m303_complementaria_marker",

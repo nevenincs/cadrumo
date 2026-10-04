@@ -18,6 +18,7 @@ See Also:
 from __future__ import annotations
 
 from ....application.filing.producer_snapshot_m360 import Modelo360SolicitudEntry, Modelo360SolicitudRegister
+from ....core.period import Period
 from ..storage.secure_object_namespaces import PROFILE_MODELO_360_SOLICITUD_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
 from ._secure_model_document import (
@@ -52,6 +53,14 @@ class Modelo360SolicitudRepository:
         # A singleton row: the change rewrites the whole document, so it runs through
         # the revision-guarded unit of work and is re-applied on a concurrent write.
         return self._storage.mutate(lambda current: current.with_entry(entry))
+
+    def remove(self, period: Period) -> Modelo360SolicitudRegister:
+        """Atomically remove the solicitud declared for ``period``; the rest of the register is kept."""
+        return self._storage.mutate(
+            lambda current: Modelo360SolicitudRegister(
+                entries=tuple(entry for entry in current.entries if entry.period != period)
+            )
+        )
 
 
 __all__ = ["Modelo360SolicitudRepository"]

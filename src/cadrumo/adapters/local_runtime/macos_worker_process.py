@@ -29,6 +29,7 @@ from typing import Protocol, cast
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.descriptor_write import write_all
 from .macos_coalition import read_macos_resource_coalition, terminate_macos_coalition
 from .macos_process import (
     MacosProcessIncarnation,
@@ -482,15 +483,6 @@ class MacosWorkerHost(Protocol):
         ...
 
 
-def _write_all(descriptor: int, payload: bytes) -> None:
-    remaining = memoryview(payload)
-    while remaining:
-        written = os.write(descriptor, remaining)
-        if written <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        remaining = remaining[written:]
-
-
 def _private_open_flags(*, nonblocking: bool = False) -> int:
     """Darwin open flags refusing symlinks and keeping descriptors out of children."""
     if sys.platform == "darwin":
@@ -524,7 +516,7 @@ class _NativeMacosWorkerHost:
             file = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _private_open_flags(), 0o600, dir_fd=descriptor)
             try:
                 try:
-                    _write_all(file, definition)
+                    write_all(file, definition)
                 finally:
                     os.close(file)
                 # launchd keeps the loaded job after its definition file is gone.
@@ -598,7 +590,7 @@ class _NativeMacosWorkerHost:
                     or metadata.st_nlink != 1
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-                _write_all(file, payload)
+                write_all(file, payload)
                 os.fsync(file)
             finally:
                 os.close(file)

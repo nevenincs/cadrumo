@@ -1155,6 +1155,15 @@ cli:
         period_help: 'A kommunikáció időszakának tokenje: comunicacion vagy variacion.'
         validate_help: Ellenőrizz egy helyi Modelo 145 kifizetői kommunikációs rekordot.
         year_help: A kommunikáció éve.
+      m360:
+        declare_help: 'Egy adóév kérelmének megadása vagy cseréje. A dokumentumot
+          JSON-ként add meg a --secrets-stdin vagy --secrets-fd "solicitud" mezőjében:
+          az adatait és vagy own_account_id-t (a kérelmező saját, SWIFT-BIC-kel rendelkező
+          számlája), vagy representante_account-ot.'
+        filing_year_help: A kérelem adóéve (pl. 2025).
+        group_help: Egy adóév Modelo 360 visszatérítési kérelmének (solicitud) megadása.
+        list_help: A megadott kérelmek listája maszkolt számlákkal.
+        remove_help: Egy adóévre megadott kérelem törlése.
       project:
         binding_help: További érték egy Modelo 100 rovatforráshoz KEY=VALUE formában.
           Több értékhez ismételd meg. A levonási források megadás hiányában nulla
@@ -3598,6 +3607,14 @@ cli:
         kizárják egymást.
       invalid_env_value: 'Az CADRUMO_LOG_LEVEL értéke csak a következők egyike lehet:
         %{allowed}; kapott: %{value}.'
+  modelo:
+    m360:
+      errors:
+        invalid_document: 'A kérelem dokumentuma érvénytelen: %{reasons}'
+        secret_channel_required: A kérelem dokumentumát a --secrets-stdin vagy --secrets-fd
+          csatornán add meg; soha nem kerül argumentumba.
+      none: Még nincs megadott Modelo 360 kérelem.
+      unchanged: Nem változott semmi.
   operator_surface:
     errors:
       accepted_roots_only: A CLI csak a config és az app gyökérparancsokat fogadja

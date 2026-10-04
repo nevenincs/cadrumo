@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import plistlib
+import stat
 import sys
 import time
 from collections.abc import Iterator
@@ -18,6 +19,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core import descriptor_write
 
 from .. import macos_worker_process
 from ..macos_login import MacosPeerAuditToken
@@ -747,3 +749,94 @@ def test_job_definition_keeps_explicit_storage_controls_and_refuses_ambient_inpu
         with pytest.raises(RuntimeRefusalError) as caught:
             definition_for(environment | extra)
         assert caught.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
+
+
+@pytest.mark.parametrize("method_name", ("bootstrap", "publish_marker"))
+@pytest.mark.parametrize("write_result", (0, -1))
+def test_native_host_translates_nonpositive_writes_before_publication(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    method_name: str,
+    write_result: int,
+) -> None:
+    """A stalled native file write refuses before launchd or marker publication."""
+    native = macos_worker_process._NativeMacosWorkerHost()
+    directory_fd = 41
+    file_fd = 42
+    label = "com.cadrumo.worker.0123456789abcdef.0123456789abcdef0123456789abcdef"
+    payload = b"definition" if method_name == "bootstrap" else b"marker"
+    events: list[tuple[object, ...]] = []
+    created_files: set[str] = set()
+    write_calls = 0
+
+    def fake_open(name: str, flags: int, mode: int, *, dir_fd: int) -> int:
+        events.append(("open", name, flags, mode, dir_fd))
+        created_files.add(name)
+        return file_fd
+
+    def fake_write(descriptor: int, data: bytes | memoryview) -> int:
+        nonlocal write_calls
+        write_calls += 1
+        if write_calls > 1:
+            pytest.fail("a nonpositive write must refuse without retrying")
+        events.append(("write", descriptor, bytes(data)))
+        return write_result
+
+    def fake_close(descriptor: int) -> None:
+        events.append(("close", descriptor))
+
+    def fake_unlink(name: str, *, dir_fd: int) -> None:
+        events.append(("unlink", name, dir_fd))
+        created_files.discard(name)
+
+    def fake_fstat(descriptor: int) -> SimpleNamespace:
+        events.append(("fstat", descriptor))
+        return SimpleNamespace(st_mode=stat.S_IFREG | 0o600, st_uid=_UID, st_nlink=1)
+
+    def fake_fsync(descriptor: int) -> None:
+        events.append(("fsync", descriptor))
+
+    def fake_replace(source: str, destination: str, *, src_dir_fd: int, dst_dir_fd: int) -> None:
+        events.append(("replace", source, destination, src_dir_fd, dst_dir_fd))
+
+    native_os = SimpleNamespace(
+        O_WRONLY=os.O_WRONLY,
+        O_CREAT=os.O_CREAT,
+        O_EXCL=os.O_EXCL,
+        O_TRUNC=os.O_TRUNC,
+        open=fake_open,
+        write=fake_write,
+        close=fake_close,
+        unlink=fake_unlink,
+        fstat=fake_fstat,
+        fsync=fake_fsync,
+        replace=fake_replace,
+    )
+    monkeypatch.setattr(native, "_directory", lambda *, create: (tmp_path, directory_fd))
+    monkeypatch.setattr(macos_worker_process, "os", native_os)
+    monkeypatch.setattr(descriptor_write, "os", native_os)
+    monkeypatch.setattr(macos_worker_process, "_private_open_flags", lambda *, nonblocking=False: 0)
+    monkeypatch.setattr(macos_worker_process, "posix_owner_uid", lambda: _UID)
+    monkeypatch.setattr(
+        macos_worker_process,
+        "run_manager_command_sync",
+        lambda *args, **kwargs: pytest.fail("launchctl must not run after a failed definition write"),
+    )
+
+    with pytest.raises(RuntimeRefusalError) as caught:
+        if method_name == "bootstrap":
+            native.bootstrap(label, payload)
+        else:
+            native.publish_marker(label, payload)
+
+    assert caught.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
+    assert str(caught.value) == RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE.value
+    assert [event for event in events if event[0] == "write"] == [("write", file_fd, payload)]
+    assert [event[1] for event in events if event[0] == "close"] == [file_fd, directory_fd]
+    assert not any(event[0] in {"fsync", "replace"} for event in events)
+    if method_name == "bootstrap":
+        assert [event[1] for event in events if event[0] == "unlink"] == [label + ".plist"]
+        assert created_files == set()
+    else:
+        assert not any(event[0] == "unlink" for event in events)
+        assert created_files == {label + ".pending"}

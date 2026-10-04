@@ -510,6 +510,10 @@ from ..application.modelo.m303_attestation_operation import (
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
 )
+from ..application.modelo.m360_solicitud_operation import (
+    build_modelo_360_solicitud_definition,
+    build_modelo_360_solicitud_registration,
+)
 from ..application.modelo.maritime_preview_operation import (
     build_modelo_maritime_preview_definition,
     build_modelo_maritime_preview_registration,
@@ -1473,6 +1477,11 @@ def build_production_operation_registry(
         counterparty_repository_factory = build_counterparty_establishment_repository
     ledger_counterparty_definition = build_ledger_counterparty_definition(counterparty_repository_factory)
     ledger_own_account_definition = build_ledger_own_account_definition(own_account_repository_factory)
+    from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
+
+    modelo_360_solicitud_definition = build_modelo_360_solicitud_definition(
+        Modelo360SolicitudRepository, own_account_repository_factory
+    )
     ledger_check_definition = build_ledger_check_definition(ledger_action_ports_factory)
     ledger_preflight_definition = build_ledger_preflight_definition(ledger_action_ports_factory)
     ledger_review_definition = build_ledger_review_definition(ledger_action_ports_factory)
@@ -1687,6 +1696,7 @@ def build_production_operation_registry(
                 ledger_reset_definition,
                 ledger_counterparty_definition,
                 ledger_own_account_definition,
+                modelo_360_solicitud_definition,
                 ledger_check_definition,
                 ledger_preflight_definition,
                 ledger_review_definition,
@@ -1892,6 +1902,7 @@ def build_production_operation_registry(
                 build_ledger_reset_registration(ledger_reset_definition),
                 build_ledger_counterparty_registration(ledger_counterparty_definition),
                 build_ledger_own_account_registration(ledger_own_account_definition),
+                build_modelo_360_solicitud_registration(modelo_360_solicitud_definition),
                 build_ledger_check_registration(ledger_check_definition),
                 build_ledger_preflight_registration(ledger_preflight_definition),
                 build_ledger_review_registration(ledger_review_definition),

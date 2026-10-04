@@ -38,6 +38,11 @@ _PHASES = ("iva-history.preflight", "iva-history.acquire", "iva-history.result")
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
+def iva_history_capture_base_effect(captured_count: int, calculation_observation_count: int) -> OperationEffect:
+    """Derive the base effect from the two persisted IVA-history observation counts."""
+    return OperationEffect.UPDATED if captured_count or calculation_observation_count else OperationEffect.NONE
+
+
 class IvaWalletHistoryCaptureRequest(BaseModel):
     """An exact profile and inclusive filing-year range to capture."""
 
@@ -141,11 +146,7 @@ class IvaWalletHistoryCaptureExecutor:
             or report.year_to != payload.year_to
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        effect = (
-            OperationEffect.UPDATED
-            if report.captured_count or report.calculation_observation_count
-            else OperationEffect.NONE
-        )
+        effect = iva_history_capture_base_effect(report.captured_count, report.calculation_observation_count)
         return await publish_live_capture_report(
             context, report, result_phase=_PHASES[2], effect=session_receipt.combine(effect)
         )
