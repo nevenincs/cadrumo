@@ -14,7 +14,7 @@ related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'
 modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:f9440218fd8db70a57b64251b6bbb19968b99877ba4c2ff308fc31e927bea811'
+body_hash: 'sha256:16c56bf62222f0ddb834b836fe8d4f484d8031daea01a490feddfeb5bb1d7751'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -80,7 +80,7 @@ Closes the 303 refusals that are account-adjacent but not solved by the register
 
 Puts own-account setup, import binding and per-filing account election in the Textual workbench.
 
-- [ ] `P06.S18` - add the Ledger own-accounts setup screen with masked list, add and edit form, designation and close through injected doors; `src/cadrumo/entrypoints/tui/ledger/`.
+- [ ] `P06.S18` - build and enroll the Ledger bank-accounts screen with full parity to app ledger account: masked list and detail view, add, edit, close, remove (refused while referenced) and charge or refund designation per modelo through injected doors and the ledger.own_account operation; enroll every state as dev/tui harness surfaces and pass visual review in the inventory, render and review server; `src/cadrumo/entrypoints/tui/ledger/, dev/tui/harness/`.
 - [ ] `P06.S19` - add account pickers prefilled from designations, the cutoff advisory and capability refusals to the Modelo export and review screens; `src/cadrumo/entrypoints/tui/modelo/workbench/`.
 - [ ] `P06.S20` - add the own-account picker to the import flow and bind preview and apply to the file content digest; `src/cadrumo/entrypoints/tui/ledger/import_flow.py, src/cadrumo/entrypoints/tui/ledger/models.py`.
 - [ ] `P06.S21` - add the 360 solicitud form with the solicitante or representante account choice; `src/cadrumo/entrypoints/tui/modelo/`.
@@ -98,7 +98,8 @@ Bring every CLI command, option, help text, JSON envelope, refusal rendering and
 Bring every Textual screen, projection, modal and staged edit that consumes the changed backend into agreement with it: removed ModeloIVAProfile account fields, resolved charge and refund accounts, typed account, capability and cutoff refusals, the 360 DEVOLUCION disposition and transaction account binding, with masked account rendering throughout. Runs after the backend Steps and P06 screens it conforms to are closed.
 
 - [ ] `P06b.S26` - audit and align every TUI screen and projection consuming the changed backend (Modelo workbench result and export, review, declarations, ledger list and detail, home and overview) with the resolved accounts, removed profile account fields, typed refusals, 360 DEVOLUCION and transaction account binding, rendering accounts masked; `src/cadrumo/entrypoints/tui/`.
-- [ ] `P06b.S27` - prove each conformed screen with Textual pilot tests through the real runtime projections, covering success, each typed refusal and masked rendering, and check the rendered frames in the TUI preview; `src/cadrumo/entrypoints/tui/ (owning tests directories)`.
+- [ ] `P06b.S27` - prove each conformed screen with Textual pilot tests through the real runtime projections, covering success, each typed refusal and masked rendering, then render the affected surfaces with dev/tui at the standard viewports in both themes, diff against a pre-change snapshot and record the visual review; `src/cadrumo/entrypoints/tui/ (owning tests directories)`.
+- [ ] `P06b.S29` - prove CLI and TUI feature parity for every operation this plan adds or changes (own accounts, designations, import account binding, per-filing account overrides, 360 solicitudes): a parity matrix test fails when an action is reachable from one surface but not the other, and every new TUI surface and state is enrolled in the dev/tui inventory with no uncovered interface and a reviewed render run; `src/cadrumo/entrypoints/tui/tests/, src/cadrumo/entrypoints/cli/tests/, dev/tui/harness/`.
 
 ### Phase `P07` - integration proof and references
 
@@ -116,7 +117,7 @@ Five backend lanes can run at once, followed by two conformance lanes, with disj
 - Lane D, export binding: P03.S09 after P01.S02, then P03.S11, P03.S13, P04.S15, P04.S28 and P05.S17. Owns `application/modelo/export.py`, `application/filing/producer_snapshot*.py`, `application/filing/export_producer.py`, `application/filing/record_field_renderer.py`, `domain/deadlines/models.py`, `domain/deadlines/profiles.py`, `application/wizard/commands.py` and `entrypoints/adapter_composition.py`.
 - Lane E, 360 write path and TUI: P04.S16 after P04.S15; P06.S18 after P01.S03; P06.S19 after P03.S09 and S11; P06.S20 after P02.S06; P06.S21 after P04.S16. Owns `entrypoints/tui/**` (except the import request field above) and the new 360 solicitud operation and CLI modules.
 - Lane F, CLI conformance: P06a.S23, S24, S25 in order, after P01 through P05 are closed. Owns `entrypoints/cli/**` other than the new spec modules Lanes A, B and E created (which it may then edit), `application/operator_surface/**` and the CLI reference under `docs/`. It can run alongside Lane G.
-- Lane G, TUI conformance: P06b.S26 and S27 in order, after P01 through P06 are closed. Owns `entrypoints/tui/**` once Lane E has closed P06.
+- Lane G, TUI conformance: P06b.S26, S27 and S29 in order, after P01 through P06 are closed. Owns `entrypoints/tui/**` once Lane E has closed P06, plus the `dev/tui/harness` surface enrolment; Lane E enrols its own new screens as it builds them.
 
 Shared files are serialized rather than owned: `entrypoints/operation_composition.py` and operation definitions (Lane A first, then Lane E), `core/errors/registry/*` (Lanes C and D), and `src/cadrumo/locales/*/{cli,errors,wizard}.yml` (all lanes, through the `dev.locales` workflow). P07.S22 runs last, after every other Step is closed.
 
