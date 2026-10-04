@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b3ee0efccc7af866b49db70b77d91155b72b11e425e8615dddbd6106a4c0d90'
+body_hash: 'sha256:63de29eccd9d4d6c9835c3eb4f3a8f6463446a915e392f8828b203b9ca72b349'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
@@ -35,11 +35,11 @@ Authorization is the user's 2026-10-04 instruction to implement identity, build 
 
 Reuse the canonical four-target inventory and declared deployment floors. CMake policy compatibility is explicit and target flags are scoped. A declared OS floor requires eventual execution evidence; generated metadata is not that evidence. Do not claim native compatibility for missing runners or placeholders.
 
-Installation manages immutable program files. User data stays under the existing Settings/storage owner and is preserved on uninstall. No service, scheduled task, runtime autostart or storage migration is introduced. Signing is explicit and must not claim publisher verification without actual credentials and verification.
+Installation manages immutable program files. User data stays under the existing Settings/storage owner and is preserved on uninstall. No service, scheduled task or storage migration is introduced. Login start for the runtime manager is registered in the installation scope. Signing is explicit and must not claim publisher verification without actual credentials and verification.
 
 ## Implementation
 
-Generate shared identity into CMake and native metadata from Python owners. Populate project version, description, homepage and license. Include source, target, channel and interpreter identities in build evidence. Project platform-native desktop metadata and installer configuration. Package MSI on Windows, DEB/RPM and archives on Linux, and an application bundle/DMG on macOS. Use per-machine native package ownership for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives. Native package managers own uninstall. Prefix uninstall is manifest-bound and preserves unowned or modified files and user data.
+Generate shared identity into CMake and native metadata from Python owners. Populate project version, description, homepage and license. Include source, target, channel and interpreter identities in build evidence. Project platform-native desktop metadata and installer configuration. Package MSI on Windows, DEB/RPM and archives on Linux, and an application bundle/DMG on macOS. Offer all-users and this-user installation scopes for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives. Install versions side by side under a version-independent entry point per `2026-10-04-runtime-manager-architecture-adr`. Native package managers own uninstall. Prefix uninstall is manifest-bound and preserves unowned or modified files and user data.
 
 The existing application-core plan retains Rust application internals and native backend/provisioning commitments. This plan owns identity, common CMake policy and installer definitions; shared changes preserve its integrated tests. Native build gaps remain explicit prerequisites for final per-target application acceptance.
 
@@ -49,4 +49,4 @@ One shared identity projection keeps product names, installer IDs and platform r
 
 ## Consequences
 
-This extends the earlier interpreter foundation's installer exclusion for this authorized work. PyPI release delivery remains unchanged; native application packaging is an additional authorized deliverable, refining the earlier CLI distribution deferral without replacing its Python release pipeline. Public publication and signing credentials remain separate external actions. Final acceptance requires real payload build/install/uninstall evidence on every declared target.
+This extends the earlier interpreter foundation's installer exclusion for this authorized work. PyPI release delivery remains unchanged; native application packaging is an additional authorized deliverable, refining the earlier CLI distribution deferral without replacing its Python release pipeline. Public publication and signing credentials remain separate external actions. Final acceptance requires real payload build/install/uninstall evidence on every declared target, including the runtime manager's registration and lifecycle on disposable hosts.

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:23e8464be263fe025dd65b1125c06270396506058253eb0da965599e9cc14f93'
+body_hash: 'sha256:c242be12ec1a84421f4dc5210f412ce5ed35039e96d308b2593e769f42352e11'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -233,7 +233,10 @@ a burndown agent applies to get a yes or no without judgement:
 - names a child of the root, at any depth, by string literal or module-local
   constant;
 - calls `Path.home()`, `expanduser`, or a platform-directory lookup to *derive*
-  a location rather than to normalise a path it already holds;
+  a location rather than to normalise a path it already holds (the installed
+  default of the root anchor in `storage_environment.py` is the one sanctioned
+  platform-directory lookup; it is the anchor, not a member, per
+  `2026-10-04-canonical-environment-adr`);
 - creates a directory whose name came from anywhere but a taxonomy member;
 - pins a category to a literal in a test fixture or override instead of
   deriving it from the taxonomy.

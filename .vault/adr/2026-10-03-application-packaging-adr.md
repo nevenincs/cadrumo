@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:efe669cd05095ab55c6cb0cf36701f4fc1cbec362a395414e819d8a3ed4af24e'
+body_hash: 'sha256:e9522378c4ba3005b8759ff031a09be7fb7d5b172d018649b7e420fab60f19c6'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
@@ -16,6 +16,7 @@ related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
   - '[[2026-07-13-data-output-standardization-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
+  - '[[2026-10-04-runtime-manager-architecture-adr]]'
 ---
 # `application-packaging` adr: `native application composition and data layout` | (**status:** `proposed`)
 
@@ -32,13 +33,13 @@ Tauri is **settled by the user's instruction on 2026-10-03**, not a provisional 
 - **Tauri application + controlled CPython + shared native foundation:** proposed; satisfies desktop, terminal and isolation requirements while retaining Python services.
 - **Ambient Python and host-installed dependencies:** rejected; cannot ensure the package's own interpreter, libraries and paths.
 - **Separate C/Rust/Python implementations of configuration and provisioning:** rejected; creates competing authorities.
-- **Machine service, on-demand user supervisor, or detached runtime:** lifecycle alternatives remain open. An on-demand user supervisor is the preferred starting hypothesis; unsupervised detachment does not provide reliable lifecycle ownership.
+- **Machine service, on-demand user supervisor, or detached runtime:** resolved by `2026-10-04-runtime-manager-architecture-adr`. A per-session manager starts at sign-in and owns the runtime's lifecycle. The on-demand supervisor hypothesis is retired, and unsupervised detachment remains rejected.
 
 ## Constraints
 
 - `cadrumo.exe` is the Rust-backed Tauri desktop application. It presents a bundled open-source terminal and later GUI screens. The CLI/TUI remain independently usable console interfaces.
 - `python.exe` is a controlled CPython build with a C initialization boundary. Bundled Python dependencies and native loaders must not fall back to host Python, virtual environments, current-directory imports or ambient DLL search.
-- One native-resolved user root, `U = <user-local-data>/cadrumo`, contains all CADRUMO-controlled mutable data. Windows resolves Local AppData through the platform API. The installed package is read-only during operation.
+- One per-user, per-channel root `U`, declared by the core storage owner and resolved per `2026-10-04-canonical-environment-adr`, contains all CADRUMO-controlled mutable data. The installed package is read-only during operation.
 - Secure storage belongs under `U/data/`. Preserve existing encryption, bucket/keystore separation and runtime authentication. A directory name is not a replacement for secure storage.
 - Chromium is downloaded, not included in the base package. macOS implementation is deferred to later worktrees; the architecture retains Windows/Linux/macOS targets.
 
@@ -88,25 +89,7 @@ Tauri's embedded UI has its own `index.html` landing page. Build offline `docs/i
 
 ### User data
 
-```text
-U/
-  config/application.env         allowlisted non-secret overrides
-  data/                          encrypted records, credentials and durable sessions
-  authorities/<generation>/     retained immutable public authority
-  components/chromium/<revision>/
-  components/llm/<version>/      managed model-engine binaries
-  models/                        retained model weights
-  cache/                         reclaimable derived content
-  logs/                          redacted diagnostics
-  webview/                       Tauri renderer profile/cache
-  run/browser/                   temporary automation profiles
-  run/llm/                       engine runtime state
-  tmp/                           all application/child temporary files
-  exports/                       explicit exports
-  updates/                       verified download/install staging
-```
-
-These are proposed category anchors, not a replacement enumeration of secure-storage internals. Enroll them in the existing taxonomy. Persistent auth/cookies use secure custody in `data/`; live browser material is confined and cleaned under `run/`. Models and retained authority are not ordinary disposable caches.
+The layout under `U` is the existing taxonomy; no member moves (`2026-10-04-canonical-environment-adr`).
 
 Compile defaults from canonical declarations; load only `U/config/application.env` plus explicitly allowed process overrides before Python startup. Generate the packaged example from that schema. Reserved interpreter, loader, custody and containment settings cannot be overridden. Python validates the same effective configuration; do not copy development `.env.example` defaults into releases.
 
@@ -121,7 +104,7 @@ Enforcement belongs in both native entrypoints and Python storage boundaries, wi
 | Interpreter bootstrap (C) | Initialize isolated CPython and its import/native-loader layout; consume platform contracts. No business or provisioning rules. |
 | Application management library (Rust) | Download/verify/activate component versions and manage owned processes. Tauri and any future supervisor consume it. |
 | Existing Python services | Remain owners of runtime authorization, storage semantics, Google flows and model admission/pull policy. Native management invokes typed interfaces. |
-| Desktop/terminal integration | Tauri assets, open-source terminal, PTY bridge and runtime-control UI; consume typed management results. |
+| Desktop/terminal integration | Tauri assets, open-source terminal and PTY bridge. Runtime-control UI belongs to the runtime manager (`2026-10-04-runtime-manager-architecture-adr`); the desktop may only start a missing manager by shell dispatch and request `reveal`. |
 | Release assembler | Build the manifest, bindings, interpreter, console entrypoints, docs and installer from pinned inputs; verify the installed layout. |
 
 C and Rust can reuse a DLL through a **versioned C ABI**. Use opaque handles, explicit lengths and allocator ownership; never expose Rust-native objects or unwind across the boundary. The early proof chooses `cdylib` versus `staticlib`; static copies built from one source do not create independent declarations. Process lifecycle is separate from library linkage.
@@ -138,7 +121,7 @@ Prefer core installation followed by explicit first-run capability downloads, de
 | 4. Tauri shell | Landing page, offline docs and real Textual TUI work through the bundled terminal; verify resize, input, shutdown and renderer data placement. |
 | 5. Management and distribution | Resolve supervisor/service policy, then implement provisioning, recovery and runtime controls; verify fresh install, interrupted downloads, upgrade and uninstall. Apply shared foundations to Linux; defer macOS native work. |
 
-Before step 5, settle administrator versus per-user install, runtime ownership after the window closes, service versus supervisor process and any additional `cadrumo-host.exe`. Also open: WebView2 distribution, publisher-owned versus imported Google client registration, model/engine selection, Linux prerequisites and independent authority updates.
+Step 5's lifecycle questions are answered by `2026-10-04-runtime-manager-architecture-adr`: all-users and this-user installation scopes with side-by-side versions, a per-session supervisor process (`cadrumo-manager`) rather than a service, and runtime ownership independent of any window. No additional `cadrumo-host.exe` is introduced. Also open: WebView2 distribution, publisher-owned versus imported Google client registration, model/engine selection, Linux prerequisites and independent authority updates.
 
 ### Proposed reconciliation of accepted decisions
 
@@ -148,7 +131,7 @@ On adoption, apply these scoped amendments; this draft leaves accepted history u
 - `2026-07-13-data-output-standardization-adr`: “Packaged application staging, including context-managed temporary files, stays under U. Its prior OS-temp exemption does not apply to this distribution; non-secret diagnostics and exports also remain contained.”
 - `2026-09-02-cli-distribution-consolidation-adr`: “The pure-Python distribution commitment governs the CLI wheel. The separate desktop application may bundle that code with native interpreter and interface executables; it does not fork CLI semantics.”
 - `2026-06-28-product-packaging-adr`: “The native application consumes the exact-version cohort. Its assembler may place the single public authority payload at package `data/authority/`, addressed through the canonical reader. Optional browser/model provisioning remains explicit and is coordinated by the application.”
-- `2026-08-03-canonical-storage-management-adr`: “For the packaged application, the canonical taxonomy gains the approved application layout and generated native consumers. The secure-state anchor is `U/data/`; all writable overrides and managed third-party paths must remain under U. This replaces unrestricted absolute-path passthrough and third-party-cache escape treatment for that distribution.”
+- `2026-08-03-canonical-storage-management-adr`: “For the packaged application, the canonical taxonomy gains the approved application layout and generated native consumers. The layout under `U` is the existing taxonomy; no member moves. This replaces unrestricted absolute-path passthrough and third-party-cache escape treatment for that distribution.”
 - `2026-09-20-lud-authority-adr`: “Packaged startup first enforces U containment; default creation and refusal of missing explicitly configured member paths remain unchanged. No external writable anchor is accepted.”
 - `2026-10-03-runtime-without-service-manager-adr` retains runtime authority and the current absence of installed service management. This application decision covers its deferred owner; lifecycle installation remains unresolved here. Reuse `2026-09-26-mcp-purpose-authentication-adr` unchanged for runtime identity, custody and authenticated IPC.
 

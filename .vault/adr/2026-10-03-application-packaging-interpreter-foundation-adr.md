@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6a4b538e697385a7fd1f4e3cf6b2bb0f88ba1faa06166e14fb1055017116786'
+body_hash: 'sha256:d44d35421b0afee375c8efdd41267d4936ac2edd2a1e4adb3c2a9264b28c4c4b'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
+  - '[[2026-10-04-runtime-manager-architecture-adr]]'
 ---
 # `application-packaging` adr: `authorized interpreter foundation` | (**status:** `accepted`)
 
@@ -50,7 +51,7 @@ The explicit user scope supports a bounded accepted foundation without promoting
 
 A Windows interpreter and assembled base product now execute outside the checkout. DLL/static C consumers, real native imports, child startup, hostile Python environments, Unicode paths, missing dependencies and package immutability have measured evidence. The fresh documented build and scoped OS-level file trace now pass, and both initial high review findings are resolved. Trace evidence covers the exercised parent/child import and temporary/cache probe; later workflows require their own verification. Linux loaders, distribution format and native macOS implementation remain unproven obligations.
 
-Later concurrent working-tree edits changed storage defaults and accepted overrides after the verified build. They have not been reconciled with this foundation contract. Artifact evidence remains tied to the preserved native source snapshot; current-source approval and plan completion are open. The user must not infer approval of that changed policy from the prior binary proof.
+Later concurrent working-tree edits changed storage defaults and accepted overrides after the verified build. They have not been reconciled with this foundation contract. Reconciled by `2026-10-04-canonical-environment-adr`. Artifact evidence remains tied to the preserved native source snapshot; current-source approval and plan completion are open. The user must not infer approval of that changed policy from the prior binary proof.
 
 ## Amendment: CMake and platform ownership, 2026-10-03
 
@@ -82,8 +83,8 @@ The user subsequently directed this work to consume the existing core storage
 owner and preserve repository-local development defaults and explicit overrides.
 This supersedes the earlier Known Folder and empty-override policy paragraphs.
 Native generation projects `Settings.storage_env_var_names()` and storage taxonomy
-values. The interpreter does not establish a separate LocalAppData convention or
-migrate storage. Package-specific external binary directories are explicitly
+values. The interpreter consumes the installed per-user default declared by the core
+storage owner in `2026-10-04-canonical-environment-adr` and migrates no storage. Package-specific external binary directories are explicitly
 allowlisted; they affect executable PATH without widening DLL search.
 
 The old artifact and trace evidence remains historical. Verification of the CMake
@@ -93,3 +94,7 @@ plan steps can be completed. The broader application packaging ADR remains propo
 ## 2026-10-04 installation scope amendment
 
 The later accepted application-distribution ADR authorizes native installer definitions and installation lifecycle work across Windows, Linux and macOS. It extends this foundation's installer exclusion; it does not alter the interpreter, storage or loader contracts. Native runtime backend acceptance remains separately required.
+
+## 2026-10-04 runtime manager extension
+
+The accepted `2026-10-04-runtime-manager-architecture-adr` authorizes the per-user runtime manager (`cadrumo-manager`) on top of this foundation's platform crate. It extends this foundation's runtime-manager exclusion only. Roots and child environments still come from `native/platform`, and the interpreter, storage and loader contracts are unchanged.
