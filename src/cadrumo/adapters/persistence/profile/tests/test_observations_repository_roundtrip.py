@@ -57,6 +57,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 )
 
 from .published_authority_support import published_authority_operation
+from .wallet_history import load_decision_history
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -589,7 +590,7 @@ def test_iva_wallet_reconciliation_decision_v2_roundtrip_preserves_reason_identi
         assert loaded.reason_identity is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE
         assert loaded.operator_explanation == "Operator reviewed the filed return and AEAT wallet evidence."
         assert loaded.blocked is False
-        assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
+        assert load_decision_history(repo, "12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
         latest_envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(latest_record.payload)
         event_envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(event_record.payload)
         assert latest_record.schema_version == repo.schema_version == 2
@@ -707,7 +708,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
         repo.save_decision(second)
 
         assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) == second
-        assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (first, second)
+        assert load_decision_history(repo, "12345678Z", Period.from_year_and_code(2026, "2T")) == (first, second)
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
@@ -801,7 +802,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
             Decimal("800"),
             Decimal("1000"),
         )
-        assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
+        assert load_decision_history(repo, "12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
         assert repo.list_decisions() == (decision,)
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert b"12345678Z" not in database_bytes
@@ -1008,7 +1009,7 @@ def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> N
         # Positive control: the real save persists both rows.
         repo.save_decision(decision)
         assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) is not None
-        assert len(repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T"))) == 1
+        assert len(load_decision_history(repo, "12345678Z", Period.from_year_and_code(2026, "2T"))) == 1
 
         # A second decision whose history write is refused must not land its latest row.
         replacement = _wallet_decision().model_copy(update={"decided_at": decision.decided_at + timedelta(seconds=1)})
@@ -1038,4 +1039,4 @@ def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> N
             )
             is not None
         )
-        assert len(repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T"))) == 1
+        assert len(load_decision_history(repo, "12345678Z", Period.from_year_and_code(2026, "2T"))) == 1

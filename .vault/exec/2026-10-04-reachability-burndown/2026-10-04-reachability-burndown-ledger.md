@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2caae98ace4ce8ec526188f870edbb82fff0a2621fcca1f25f098a93c95285b'
+body_hash: 'sha256:7f84233448a369f65eb65d5964aa0f42bcfaa83e2eb8fc1b19192de198e6580f'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -507,6 +507,27 @@ related:
 - `S15` `verify:` `Installed concurrent A/B profile workers and disconnect isolation: 1 passed` -> `pass`
 - `S15` `verify:` `Native enrollment, terminal drain, browser lifecycle and public authentication unit corpus: 72 passed` -> `pass`
 - `S15` `verify:` `Owned Ruff, format and ty` -> `pass`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/observation_store.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_observation_store_row_identity.py`
+- `S16` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/wallet_observation_inventory.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/calculation_observations.py`
+- `S16` `A` `src/cadrumo/adapters/persistence/profile/tests/date_index_inventory.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_date_index_reads_are_session_guarded.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_wallet_repeated_retrieval.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_observations_repository_roundtrip.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_transactions_load_reads_current_rows_once.py`
+- `S16` `A` `src/cadrumo/adapters/persistence/profile/tests/wallet_history.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
+- `S16` `M` `src/cadrumo/application/calculations/observations_repository.py`
+- `S16` `M` `src/cadrumo/application/modelo/tests/test_iva_wallet_correction_operation.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_lifecycle_gate.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_runtime_attached_repositories_part1.py`
+- `S16` `verify:` `Secure batches, guarded indexes and encrypted observation history: 60 passed` -> `pass`
+- `S16` `verify:` `Owned Ruff, format and ty` -> `pass`
 
 ## Notes
 
@@ -524,3 +545,4 @@ related:
 - `S05` One fenced result publisher preserves unknown effects on action failure and settled effects on operand storage failure. One machine-secret option declaration drives all three command groups. Shared provider capture setup preserves authority preflight before composition and browser ownership, preview posture and session write accounting.
 - `S06` macOS incarnation and coalition probes share the native pidinfo query without weakening ABI lengths or ESRCH-only absence. Registered PDF import error roots now own the one coverage constructor; subclasses retain their codes. Duplication reports preserve raw nonzero token counts and distinguish AST-proven declarations from executable or unclassified spans. Import, overlap and missing-location filtering cannot claim zero.
 - `S15` Windows worker admission now opens a non-inherited process handle, compares it with the pipe-held birth and verifies exact Job membership before accepting its PID. Handles close on every outcome; native installed workers and a real outside-Job peer prove both boundaries. Protected candidate-secret inspection and terminal retry drivers now belong to finite real-host fixtures; unsupported browser reauthentication and close-count getters are retired while real close/authenticate and lifecycle guards remain. Shared files are staged from owned transformations of HEAD to preserve concurrent changes.
+- `S16` Legacy batch wrappers are retired in favor of current-schema batches and the actual coordinated migration owner. Diagnostic observation history and raw index inventory now belong to finite fixtures that retain guarded SQL, encryption, identity refusals and ordering. Shared files are staged from owned HEAD transformations to preserve concurrent work.

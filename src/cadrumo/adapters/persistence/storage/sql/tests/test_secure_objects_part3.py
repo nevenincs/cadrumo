@@ -16,7 +16,6 @@ from ...errors import (
     ClassificationError,
     EnvelopeVersionError,
     SecureObjectRevisionConflictError,
-    SecureObjectUnreadableError,
     StorageValidationError,
 )
 from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY
@@ -26,6 +25,12 @@ from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
     _ephemeral_secure_repo,
 )
+
+
+def _refuse_batch_schema(keys: tuple[str, ...]) -> None:
+    assert keys == ("schema-row",)
+    raise ValueError("batch contains non-current schema rows")
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -222,11 +227,12 @@ def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targ
         event.listen(engine, "before_cursor_execute", collect_statement)
         try:
             loaded = tuple(
-                repo.load_many(
+                repo.load_many_current(
                     namespace,
                     requested,
                     expected_class=SensitivityClass.FINANCIAL,
-                    max_supported_version=1,
+                    current_version=1,
+                    refuse_legacy=_refuse_batch_schema,
                 ),
             )
         finally:
@@ -289,13 +295,14 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
             ),
         )
 
-        with pytest.raises(SecureObjectUnreadableError):
+        with pytest.raises(ValueError, match="batch contains non-current schema rows"):
             tuple(
-                repo.load_many(
+                repo.load_many_current(
                     namespace,
                     ("schema-row", "readable-row"),
                     expected_class=SensitivityClass.FINANCIAL,
-                    max_supported_version=1,
+                    current_version=1,
+                    refuse_legacy=_refuse_batch_schema,
                 ),
             )
 

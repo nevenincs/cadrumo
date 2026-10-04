@@ -669,44 +669,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             raise SecureObjectUnreadableError(namespace, item.row_id)
         yield from records
 
-    def load_many(
-        self,
-        namespace: str,
-        object_keys: Iterable[str],
-        *,
-        expected_class: SensitivityClass,
-        max_supported_version: int,
-    ) -> Iterator[SecureObjectRecord]:
-        """Yield requested secure-object rows or fail closed on unreadable rows.
-
-        This is the targeted equivalent of :meth:`list_records`: it performs a
-        single ``WHERE namespace = ? AND object_key IN (...)`` read for the
-        requested natural keys, decrypts matching rows, and raises
-        :class:`SecureObjectUnreadableError` before yielding a partial readable
-        subset if any matching row is unreadable. Missing keys are omitted,
-        mirroring repeated :meth:`load` calls that return ``None`` for absent
-        rows. ``expected_class`` is the :class:`SensitivityClass` every
-        returned row must be classified under; a mismatch fails closed.
-        """
-        records: list[SecureObjectRecord] = []
-        for item in self.iter_many_with_failures(
-            namespace,
-            object_keys,
-            expected_class=expected_class,
-            max_supported_version=max_supported_version,
-        ):
-            if isinstance(item, SecureObjectRecord):
-                records.append(item)
-                continue
-            _log.debug(
-                "secure_objects: refusing targeted batch load for namespace=%s because row id=%s is unreadable (%s)",
-                namespace,
-                item.row_id,
-                item.reason,
-            )
-            raise SecureObjectUnreadableError(namespace, item.row_id)
-        yield from records
-
     def load_many_current(
         self,
         namespace: str,
@@ -785,41 +747,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 yield item
                 continue
             raise SecureObjectUnreadableError(namespace, item.row_id)
-
-    def migrate_many_atomically(
-        self,
-        namespace: str,
-        object_keys: Iterable[str],
-        *,
-        expected_class: SensitivityClass,
-        current_version: int,
-        validate_upgraded_payloads: Callable[[Mapping[str, bytes]], None],
-        write_provenance: str,
-    ) -> Mapping[str, SecureObjectRecord]:
-        """Validate every upgraded payload, then persist all replacements atomically.
-
-        Older rows are decrypted and chain-upgraded through the normal read
-        policy.  The caller receives the complete natural-keyed payload set in
-        ``validate_upgraded_payloads`` before any replacement is written.  Only
-        after that callback succeeds are all older rows replaced in one
-        compare-and-swap batch, so a malformed sibling or concurrent write
-        leaves every original row intact.
-
-        Core types:
-        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
-        """
-        targets = tuple(
-            SecureObjectMigrationTarget(namespace, key, expected_class, current_version)
-            for key in dict.fromkeys(object_keys)
-        )
-        records = self.migrate_targets_atomically(
-            targets,
-            validate_upgraded_payloads=lambda payloads: validate_upgraded_payloads(
-                {key: payload for (_namespace, key), payload in payloads.items()}
-            ),
-            write_provenance=write_provenance,
-        )
-        return {key: record for (_namespace, key), record in records.items()}
 
     def migrate_targets_atomically(
         self,

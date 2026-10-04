@@ -48,6 +48,7 @@ from ..schema import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from .wallet_observation_inventory import list_iva_wallet_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -206,7 +207,7 @@ def test_a_wallet_observation_under_a_foreign_row_is_refused(tmp_path: Path) -> 
         with pytest.raises(SedeValidationError):
             store.load_iva_wallet_observation(path_a)
         with pytest.raises(SedeValidationError):
-            store.list_iva_wallet_observations()
+            list_iva_wallet_observations(store)
 
 
 def test_the_substituted_row_really_holds_a_valid_foreign_payload(tmp_path: Path) -> None:
@@ -258,7 +259,7 @@ def test_an_untampered_store_still_loads_and_lists(tmp_path: Path) -> None:
         assert store.load_observation(path) == observation
         assert store.list_observations() == (observation,)
         assert store.load_iva_wallet_observation(wallet_path) == wallet
-        assert store.list_iva_wallet_observations() == (wallet,)
+        assert list_iva_wallet_observations(store) == (wallet,)
 
 
 def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path: Path) -> None:

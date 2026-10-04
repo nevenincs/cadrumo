@@ -23,6 +23,7 @@ from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionOb
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.wallet_history import load_decision_history
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -79,7 +80,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         composition.output_root,
     ).load_iva_wallet_observation(Path(report.observation_path))
     decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_filing_period)
-    history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_filing_period)
+    history = load_decision_history(IvaWalletDecisionRepository(), taxpayer_nif, target_filing_period)
 
     if decision is None:
         pytest.fail("live IVA wallet capture did not persist a reconciliation decision")

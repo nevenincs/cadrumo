@@ -88,10 +88,6 @@ RUNS_DIRNAME = storage_location(StorageCategory.RUNS).subpath
 LLM_USAGE_DIRNAME = storage_location(StorageCategory.LLM_USAGE).subpath
 LLM_RUN_TELEMETRY_DIRNAME = storage_location(StorageCategory.LLM_RUN_TELEMETRY).subpath
 TOKENS_DIRNAME = storage_location(StorageCategory.TOKENS).subpath
-#: A two-component subpath (``cache/<name>``) -- interpolated whole, not split,
-#: since the taxonomy declares the compound as one subpath rather than two
-#: nested categories.
-LLM_CACHE_SUBPATH = storage_location(StorageCategory.LLM_CACHE).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 INDEX_FILENAME = "index.json"

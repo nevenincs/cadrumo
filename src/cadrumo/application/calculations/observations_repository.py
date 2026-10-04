@@ -786,14 +786,6 @@ class IvaWalletDecisionRepositoryProtocol(Protocol):
         """List latest decisions in deterministic order."""
         ...
 
-    def load_decision_history(
-        self,
-        taxpayer_nif: str,
-        target_period: Period,
-    ) -> tuple[IvaCompensationReconciliationDecision, ...]:
-        """Load immutable decision history for one period."""
-        ...
-
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
         """Persist the decision and its immutable event atomically."""
         ...

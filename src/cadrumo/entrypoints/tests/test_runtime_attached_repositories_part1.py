@@ -41,6 +41,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
+from ...adapters.persistence.profile.tests.wallet_history import load_decision_history
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ...adapters.persistence.storage.attachment import AttachmentStore
@@ -239,9 +240,8 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
     (
         "iva_wallet_decision_history",
-        lambda: IvaWalletDecisionRepository().load_decision_history(
-            _WALLET_SUBJECT_ID,
-            Period.from_year_and_code(2026, "2T"),
+        lambda: load_decision_history(
+            IvaWalletDecisionRepository(), _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
         ),
     ),
     ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()),
@@ -601,9 +601,8 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         assert IvaWalletDecisionRepository().list_decisions() == ()
         assert (
-            IvaWalletDecisionRepository().load_decision_history(
-                _WALLET_SUBJECT_ID,
-                Period.from_year_and_code(2026, "2T"),
+            load_decision_history(
+                IvaWalletDecisionRepository(), _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
             )
             == ()
         )
@@ -644,7 +643,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
-        decision_history = wallet_repo.load_decision_history(_WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
+        decision_history = load_decision_history(wallet_repo, _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
         iva_periods = IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()
         usage = _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)
 

@@ -84,9 +84,6 @@ class _UnusedWalletDecisionRepository:
     def list_decisions(self) -> Never:
         raise AssertionError("the correction seam does not list wallet decisions")
 
-    def load_decision_history(self, taxpayer_nif: str, target_period: Period) -> Never:
-        raise AssertionError("the correction seam does not read wallet history")
-
     def save_decision(self, decision: object) -> Never:
         raise AssertionError("the correction seam owns wallet decision writes")
 
