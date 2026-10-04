@@ -1,97 +1,102 @@
 use crate::{
+    docs,
     environment::Launch,
-    terminal::{Output, Session, TerminalState},
+    logs,
+    shell::{self, token::ShellToken},
+    terminal::{self, TerminalState},
 };
 use cadrumo_application::{
-    diagnostics::{Diagnostics, EventKind, Snapshot},
+    diagnostics::{Diagnostics, EventKind},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
-use std::sync::{Arc, Mutex};
-use tauri::{Manager, State};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, Mutex},
+};
+use tauri::{
+    Manager, Runtime,
+    http::HeaderMap,
+    ipc::{Invoke, InvokeBody},
+};
 
-fn failure(code: ErrorCode) -> ApplicationError {
-    ApplicationError::new(code, Operation::Terminal)
+type Handler<R> = Box<dyn Fn(Invoke<R>) -> bool + Send + Sync>;
+
+/// One module's app commands. Modules declare them with [`commands!`] and the
+/// host composes every module behind the shell token check.
+pub struct Commands<R: Runtime> {
+    names: &'static [&'static str],
+    handler: Handler<R>,
 }
-fn record<T>(diagnostics: &Diagnostics, outcome: Result<T>) -> Result<T> {
-    if let Err(error) = &outcome {
-        diagnostics.failure(error.clone());
+
+impl<R: Runtime> Commands<R> {
+    pub fn new(names: &'static [&'static str], handler: Handler<R>) -> Self {
+        Self { names, handler }
     }
-    outcome
 }
-#[tauri::command]
-fn terminal_start(state: State<'_, Arc<TerminalState>>, cols: u16, rows: u16) -> Result<()> {
-    record(
-        &state.launch.diagnostics,
-        (|| {
-            let mut session = state
-                .session
-                .lock()
-                .map_err(|_| failure(ErrorCode::LockPoisoned))?;
-            if session.is_some() {
-                return Err(failure(ErrorCode::SessionUnavailable));
+
+macro_rules! commands {
+    ($($command:ident),* $(,)?) => {
+        $crate::app::Commands::new(
+            &[$(stringify!($command)),*],
+            Box::new(tauri::generate_handler![$($command),*]),
+        )
+    };
+}
+pub(crate) use commands;
+
+const TOKEN_ARGUMENT: &str = "token";
+const TOKEN_HEADER: &str = "x-cadrumo-token";
+
+/// The token an invocation presents: the `token` argument of a JSON call, or
+/// the token header of a raw-body call.
+fn presented_token<'a>(body: &'a InvokeBody, headers: &'a HeaderMap) -> &'a str {
+    match body {
+        InvokeBody::Json(arguments) => arguments.get(TOKEN_ARGUMENT).and_then(|v| v.as_str()),
+        InvokeBody::Raw(_) => headers.get(TOKEN_HEADER).and_then(|v| v.to_str().ok()),
+    }
+    .unwrap_or_default()
+}
+
+fn distinct(modules: &[&[&str]]) -> bool {
+    let mut seen = BTreeSet::new();
+    modules
+        .iter()
+        .flat_map(|names| names.iter())
+        .all(|name| seen.insert(*name))
+}
+
+/// Routes each app command to its module after the shell token check, so no
+/// command can be registered without it.
+fn dispatch<R: Runtime>(
+    modules: Vec<Commands<R>>,
+    token: ShellToken,
+    diagnostics: Arc<Diagnostics>,
+) -> Result<impl Fn(Invoke<R>) -> bool + Send + Sync + 'static> {
+    let names: Vec<_> = modules.iter().map(|module| module.names).collect();
+    if !distinct(&names) {
+        return Err(ApplicationError::new(
+            ErrorCode::InvalidArguments,
+            Operation::Webview,
+        ));
+    }
+    Ok(move |invoke: Invoke<R>| {
+        let command = invoke.message.command();
+        let Some(module) = modules
+            .iter()
+            .find(|module| module.names.contains(&command))
+        else {
+            return false;
+        };
+        let presented = presented_token(invoke.message.payload(), invoke.message.headers());
+        match token.verify(presented, Operation::Webview) {
+            Ok(()) => (module.handler)(invoke),
+            Err(error) => {
+                diagnostics.failure(error.clone());
+                invoke.resolver.reject(error);
+                true
             }
-            *session = Some(Session::start(
-                &state.launch,
-                cols,
-                rows,
-                &["-m", "cadrumo.entrypoints.tui"],
-            )?);
-            Ok(())
-        })(),
-    )
-}
-#[tauri::command]
-fn terminal_input(state: State<'_, Arc<TerminalState>>, data: Vec<u8>) -> Result<()> {
-    record(
-        &state.launch.diagnostics,
-        (|| {
-            state
-                .session
-                .lock()
-                .map_err(|_| failure(ErrorCode::LockPoisoned))?
-                .as_mut()
-                .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
-                .input(&data)
-        })(),
-    )
-}
-#[tauri::command]
-fn terminal_resize(state: State<'_, Arc<TerminalState>>, cols: u16, rows: u16) -> Result<()> {
-    record(
-        &state.launch.diagnostics,
-        (|| {
-            state
-                .session
-                .lock()
-                .map_err(|_| failure(ErrorCode::LockPoisoned))?
-                .as_ref()
-                .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
-                .resize(cols, rows)
-        })(),
-    )
-}
-#[tauri::command]
-fn terminal_read(state: State<'_, Arc<TerminalState>>) -> Result<Output> {
-    record(
-        &state.launch.diagnostics,
-        (|| {
-            state
-                .session
-                .lock()
-                .map_err(|_| failure(ErrorCode::LockPoisoned))?
-                .as_mut()
-                .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?
-                .read()
-        })(),
-    )
-}
-#[tauri::command]
-fn terminal_stop(state: State<'_, Arc<TerminalState>>) -> Result<()> {
-    record(&state.launch.diagnostics, state.stop())
-}
-#[tauri::command]
-fn diagnostics_snapshot(state: State<'_, Arc<TerminalState>>, after: u64) -> Snapshot {
-    state.launch.diagnostics.snapshot(after)
+        }
+    })
 }
 
 pub fn run(launch: Launch) -> Result<i32> {
@@ -106,28 +111,49 @@ pub fn run(launch: Launch) -> Result<i32> {
     let diagnostics = launch.diagnostics.clone();
     diagnostics.event(EventKind::GuiSelected, None, None);
     let data_directory = launch.webview.clone();
+    let context = tauri::generate_context!();
+    let window =
+        context.config().app.windows.first().ok_or_else(|| {
+            ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
+        })?;
+    let token = ShellToken::mint()?;
+    let script = token.script(&shell::origins(context.config(), window))?;
+    let handler = dispatch(
+        vec![
+            terminal::commands(),
+            docs::commands(),
+            logs::commands(),
+            shell::commands(),
+        ],
+        token,
+        diagnostics.clone(),
+    )?;
+    let builder = tauri::Builder::default()
+        .plugin(terminal::plugin(&launch))
+        .plugin(docs::plugin(&launch))
+        .plugin(logs::plugin(&launch))
+        .plugin(shell::plugin(&launch));
     let state = Arc::new(TerminalState {
         launch,
         session: Mutex::new(None),
     });
     let setup_diagnostics = diagnostics.clone();
-    let app = tauri::Builder::default()
+    let app = builder
         .manage(state.clone())
-        .invoke_handler(tauri::generate_handler![
-            terminal_start,
-            terminal_input,
-            terminal_resize,
-            terminal_read,
-            terminal_stop,
-            diagnostics_snapshot
-        ])
+        .invoke_handler(handler)
+        .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {
             let outcome = (|| {
                 let config = app.config().app.windows.first().ok_or_else(|| {
                     ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
                 })?;
                 tauri::WebviewWindowBuilder::from_config(app.handle(), config)
-                    .and_then(|builder| builder.data_directory(data_directory).build())
+                    .and_then(|builder| {
+                        builder
+                            .data_directory(data_directory)
+                            .initialization_script(script)
+                            .build()
+                    })
                     .map_err(|error| {
                         ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
                             .caused_by(error)
@@ -152,11 +178,139 @@ pub fn run(launch: Launch) -> Result<i32> {
                 state.launch.diagnostics.failure(error);
             }
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .map_err(|e| {
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
     let code = app.run_return(|_, _| {});
     state.stop()?;
     Ok(code)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tauri::{
+        WebviewWindowBuilder,
+        http::HeaderValue,
+        ipc::CallbackFn,
+        test::{INVOKE_KEY, get_ipc_response, mock_builder, mock_context, noop_assets},
+        webview::InvokeRequest,
+    };
+
+    #[test]
+    fn every_registered_command_requires_the_shell_token() {
+        let token = ShellToken::mint().unwrap();
+        let exact = token.value().to_owned();
+        let wrong = "0".repeat(exact.len());
+        let modules = vec![
+            terminal::commands(),
+            docs::commands(),
+            logs::commands(),
+            shell::commands(),
+        ];
+        let names: Vec<&str> = modules
+            .iter()
+            .flat_map(|m| m.names.iter().copied())
+            .collect();
+        assert!(names.contains(&"diagnostics_snapshot") && names.contains(&"terminal_start"));
+        let diagnostics = Arc::new(Diagnostics::default());
+        let app = mock_builder()
+            .invoke_handler(dispatch(modules, token, diagnostics).unwrap())
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        let call = |cmd: &str, body: InvokeBody, header: Option<&str>| {
+            let mut headers = HeaderMap::new();
+            if let Some(value) = header {
+                headers.insert(TOKEN_HEADER, HeaderValue::from_str(value).unwrap());
+            }
+            get_ipc_response(
+                &window,
+                InvokeRequest {
+                    cmd: cmd.into(),
+                    callback: CallbackFn(0),
+                    error: CallbackFn(1),
+                    url: if cfg!(windows) {
+                        "http://tauri.localhost"
+                    } else {
+                        "tauri://localhost"
+                    }
+                    .parse()
+                    .unwrap(),
+                    body,
+                    headers,
+                    invoke_key: INVOKE_KEY.to_owned(),
+                },
+            )
+        };
+        let refused = serde_json::to_value(ApplicationError::new(
+            ErrorCode::InvalidArguments,
+            Operation::Webview,
+        ))
+        .unwrap();
+        for name in &names {
+            for (body, header) in [
+                (InvokeBody::Json(serde_json::json!({"after": 0})), None),
+                (
+                    InvokeBody::Json(serde_json::json!({"token": wrong, "after": 0})),
+                    None,
+                ),
+                (
+                    InvokeBody::Json(serde_json::json!({"after": 0})),
+                    Some(exact.as_str()),
+                ),
+                (InvokeBody::Raw(b"input".to_vec()), None),
+                (InvokeBody::Raw(b"input".to_vec()), Some(wrong.as_str())),
+            ] {
+                assert_eq!(call(name, body, header).unwrap_err(), refused, "{name}");
+            }
+            // The exact token passes the guard; the unmanaged terminal state
+            // then fails inside the command, not at the token check.
+            let admitted = call(
+                name,
+                InvokeBody::Json(serde_json::json!({"token": exact, "after": 0})),
+                None,
+            );
+            assert_ne!(admitted.err(), Some(refused.clone()), "{name}");
+        }
+    }
+
+    #[test]
+    fn json_calls_present_the_token_argument_and_raw_calls_the_header() {
+        let mut headers = HeaderMap::new();
+        headers.insert(TOKEN_HEADER, HeaderValue::from_static("from-header"));
+        let json = InvokeBody::Json(serde_json::json!({"token": "from-argument", "cols": 80}));
+        assert_eq!(presented_token(&json, &headers), "from-argument");
+        let raw = InvokeBody::Raw(b"input".to_vec());
+        assert_eq!(presented_token(&raw, &headers), "from-header");
+        let empty = HeaderMap::new();
+        assert_eq!(presented_token(&raw, &empty), "");
+        for missing in [
+            serde_json::json!({}),
+            serde_json::json!({"token": 7}),
+            serde_json::Value::Null,
+        ] {
+            assert_eq!(presented_token(&InvokeBody::Json(missing), &headers), "");
+        }
+    }
+
+    #[test]
+    fn command_names_must_be_unique_across_modules() {
+        assert!(distinct(&[&["a", "b"], &["c"], &[]]));
+        assert!(!distinct(&[&["a", "b"], &["b"]]));
+    }
+
+    #[test]
+    fn unpresented_token_is_refused() {
+        let token = ShellToken::mint().unwrap();
+        let headers = HeaderMap::new();
+        let body = InvokeBody::Json(serde_json::json!({"cols": 80}));
+        let error = token
+            .verify(presented_token(&body, &headers), Operation::Webview)
+            .unwrap_err();
+        assert_eq!(error.code, ErrorCode::InvalidArguments);
+    }
 }

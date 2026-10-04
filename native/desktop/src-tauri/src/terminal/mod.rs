@@ -1,4 +1,6 @@
-use crate::environment::Launch;
+mod ipc;
+
+use crate::{app::Commands, environment::Launch};
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
@@ -16,6 +18,15 @@ use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
+use tauri::{Runtime, plugin::TauriPlugin};
+
+pub fn plugin<R: Runtime>(_launch: &Launch) -> TauriPlugin<R> {
+    tauri::plugin::Builder::new("cadrumo-terminal").build()
+}
+
+pub fn commands<R: Runtime>() -> Commands<R> {
+    ipc::commands()
+}
 
 const CHUNK: usize = 8192;
 const QUEUE: usize = 8;

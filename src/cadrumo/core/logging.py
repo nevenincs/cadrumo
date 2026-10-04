@@ -620,6 +620,10 @@ class _ThirdPartyDebugFilter(logging.Filter):
 #: any log call that accompanies such a write.
 OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
 
+#: Line format of every ``cadrumo.log`` record. Readers that parse the file,
+#: such as the desktop log view, receive this value rather than a copy.
+LOG_FILE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+
 
 class DropOperatorDocumentEchoFilter(logging.Filter):
     """Suppress records already rendered as an operator document, on stderr only.
@@ -766,7 +770,7 @@ def configure_logging() -> None:
             "version": 1,
             "disable_existing_loggers": False,
             "formatters": {
-                "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
+                "standard": {"format": LOG_FILE_FORMAT},
             },
             "filters": {
                 "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},

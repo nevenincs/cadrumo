@@ -26,6 +26,7 @@ var/
 # spares only a run still being written. There is no retention window anywhere.
 .logs/
 logs/
+!native/desktop/src-tauri/src/logs/
 .log/
 log/
 .log-*

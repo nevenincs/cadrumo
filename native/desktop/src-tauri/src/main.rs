@@ -1,6 +1,9 @@
 mod app;
+mod docs;
 mod environment;
 mod launch;
+mod logs;
+mod shell;
 mod terminal;
 
 use cadrumo_application::{
@@ -32,17 +35,14 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .ok_or_else(launch_error)?
             .to_owned(),
     };
-    let launch = tauri::async_runtime::block_on(environment::resolve(root, diagnostics.clone()))?;
+    let parent = environment::Parent::current()?;
+    let launch =
+        tauri::async_runtime::block_on(environment::resolve(root, &parent, diagnostics.clone()))?;
     match mode? {
         launch::Mode::Gui => app::run(launch),
         launch::Mode::Cli(arguments) => {
             diagnostics.event(EventKind::HeadlessSelected, None, None);
-            let configuration = ChildConfiguration::new(
-                launch.child.executable().to_owned(),
-                std::env::current_dir().map_err(|e| launch_error().caused_by(e))?,
-                launch.child.environment().clone(),
-            )
-            .map_err(|e| launch_error().caused_by(e))?;
+            let configuration = headless(&launch, parent.working_directory)?;
             let mut forwarded: Vec<OsString> =
                 vec!["-u".into(), "-c".into(), CLI_ENTRYPOINT.into()];
             forwarded.extend(arguments);
@@ -53,6 +53,16 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             process::passthrough(&configuration, &forwarded, diagnostics, cancelled)
         }
     }
+}
+/// The CLI passthrough keeps the caller's directory; the pinned storage root in
+/// the child environment keeps its storage independent of that directory.
+fn headless(launch: &environment::Launch, directory: PathBuf) -> Result<ChildConfiguration> {
+    ChildConfiguration::new(
+        launch.child.executable().to_owned(),
+        directory,
+        launch.child.environment().clone(),
+    )
+    .map_err(|e| launch_error().caused_by(e))
 }
 fn launch_error() -> ApplicationError {
     ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Launch)
