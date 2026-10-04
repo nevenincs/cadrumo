@@ -753,12 +753,26 @@ def assert_work_target_revision(
         if axis not in diverging or candidate is None:
             continue
         asserted = candidate.strip()
+        context: dict[str, object] = {
+            "axis": axis,
+            "requested_revision": asserted,
+            "law_revision": law_revision_id,
+        }
+        if isinstance(projection, RegistryRevisionInspection):
+            context["modelo"] = projection.modelo_id
+        else:
+            context.update(
+                modelo=projection.modelo.id,
+                year=projection.filing_year,
+                period=projection.period,
+            )
         raise ModeloWorkRegistryYearMismatchError(
             f"{axis} registry revision {asserted!r} is not the law-determined revision "
             f"for this filing target. The law-determined revision is {law_revision_id!r}. "
             f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
             f"you cannot override it. Re-create the work unit without --revision to use "
             f"the correct revision, or omit --revision to accept the law-determined default.",
+            context=context,
         )
     return law_revision_id
 

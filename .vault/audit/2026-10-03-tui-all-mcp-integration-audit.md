@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:afdbeb800d4531cdc7d556f3ea747fdee037b39856b1c57f50de151b9e99fcbf'
+body_hash: 'sha256:0a72cfcb426134f03cc356aa7a56fcb4e314fbe9ffb6eeb61453ddf39f1194bb'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -166,6 +166,10 @@ Resolved production race. A committed successor binding previously met the cache
 ### native-kdf-environment-producer | high | Packaged child projection contradicted its neutral pre-secret attestation
 
 Demonstrated installed producer defect, corrected at source; compiled/installed verification pending. The genuine M303 first profile command reached the packaged KDF child before any password request, but native application environment projection removed four declared Python keys and added six application keys. Strict readiness correctly refused. The Windows host now preserves supplied neutral environment only for the complete fixed seven-argument KDF invocation with two distinct canonical positive pointer-sized decimal handles. Ordinary and near-match invocations retain application projection. Context derivation, DLL lookup, isolated CPython, package startup hash checks and the parent Job/cwd/environment/frame pre-secret attestation are unchanged. The owning package verifier adds an actual no-request ready/join/neutral-cleanup proof and a real valid-parser extra-option refusal/join proof. Scoped Ruff/format/ty, embedded-probe compilation and diff checks pass. Independent baseline source review and root integrated review identify no remaining high/critical source finding. These static checks do not establish compiled execution, protected storage or financial E2E; the sole coordinated source-matching artifact refresh must execute both probes and the actual journey.
+
+### typed-revision-selection-and-mismatch | medium | Validated amendment records retain their aggregate context and finite public mismatch facts
+
+Resolved production defects. The internal selection holder now retains an already repository/aggregate-validated CalculationRevision in a frozen slots dataclass rather than revalidating it without the aggregate. No public, persisted or candidate schema changed. The existing mismatch refusal now declares finite axis, requested/law revision and captured modelo/year/period context for the bounded public detail boundary; raw args and redaction policy are unchanged. Both complete selector/D1 owner modules pass29 with stable three source hashes; actual amendment11 and all four scope/privacy CLI cases pass in the separate combined17pass/1unrelated test-premise failure run, retained with exit1. Scoped Ruff/format/ty pass. Fresh native artifact inclusion and combined verification remain separate.
 
 ## Recommendations
 
