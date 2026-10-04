@@ -10,6 +10,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
 from dev.docs.build import DOCS_FLAVOR_ENV
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV
@@ -36,7 +37,7 @@ def _owner_environment(build_root: Path, storage: Path, *, check_sequences: bool
             DOCS_FLAVOR_ENV: "desktop",
             "CADRUMO_DOCS_JOBS": str(jobs),
             "CADRUMO_DOCS_PAGEFIND_MODE": "full",
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage),
+            STORAGE_ROOT.variable: str(storage),
             "PYTHONIOENCODING": "utf-8",
         }
     )
