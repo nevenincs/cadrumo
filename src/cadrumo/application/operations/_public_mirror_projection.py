@@ -142,11 +142,11 @@ def project_public_value(
     public: object,
     omissions: Mapping[type[BaseModel], frozenset[str]],
 ) -> object:
-    if value is None:
-        return None
     canonical, public = _mirror.bare_annotation(canonical), _mirror.bare_annotation(public)
     if public is _mirror.PublicScalarValueV1:
         return _scalar(value)
+    if value is None:
+        return None
     if isinstance(value, Mapping):
         return _project_mapping(cast(Mapping[object, object], value), public)
     if isinstance(value, tuple):

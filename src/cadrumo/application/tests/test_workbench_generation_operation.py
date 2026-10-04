@@ -38,11 +38,22 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZoneStateV1,
 )
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
-from cadrumo.application.modelo.work_review import BlockerRef
+from cadrumo.application.modelo.work_review import (
+    BlockerRef,
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    build_modelo_work_review_casillas,
+)
 from cadrumo.application.modelo.workspace import resolve_static_inspection_result
 from cadrumo.application.modelo.workspace_models import (
+    ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceFacetName,
+    ModeloWorkspaceGradedSnapshotScopeV1,
+    ModeloWorkspaceProjectionV1,
+    ModeloWorkspaceSnapshotScopeV1,
     ModeloWorkspaceStaticInspectionResultV1,
+    ModeloWorkspaceWorkReviewFacetV1,
 )
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
@@ -102,7 +113,9 @@ from cadrumo.application.workbench_generation_projection import (
     restore_workbench_generation,
 )
 from cadrumo.application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
@@ -569,7 +582,8 @@ def test_catalogue_recovery_action_survives_strict_public_round_trip() -> None:
     )
 
 
-def test_secure_canonical_generation_round_trips_without_search_documents() -> None:
+@pytest.mark.parametrize("populated_review", [False, True])
+def test_secure_canonical_generation_round_trips_without_search_documents(populated_review: bool) -> None:
     profile_id = uuid4()
     with bundled_indexed_authority().operation() as operation:
         record = create_user_profile_record(
@@ -608,6 +622,56 @@ def test_secure_canonical_generation_round_trips_without_search_documents() -> N
         )
         assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
         static_projection = static_result.projection
+        if populated_review:
+            rows = build_modelo_work_review_casillas(
+                snapshot=operation.snapshot("130", filing_year=2026, period="1T"),
+                revision=None,
+                operation=operation,
+            )
+            values = (None, Decimal("123.4500"), 0, False, "", date(2026, 1, 1))
+            rows = tuple(
+                row.model_copy(update={"value": values[index]}) if index < len(values) else row
+                for index, row in enumerate(rows)
+            )
+            review = ModeloWorkReview(
+                bucket_id=str(profile_id),
+                modelo=unit.modelo,
+                filing_year=2026,
+                period=period,
+                registry_revision_id=revision_id,
+                work_unit_id=unit.work_unit_id,
+                calculation_revision_id=None,
+                lifecycle_state=None,
+                verification_outcome=None,
+                progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
+                casillas=rows,
+                findings=(),
+                blockers=(),
+            )
+            facet = static_projection.schema_facet.model_dump()
+            facet.update(
+                records=(),
+                next_cursor=None,
+                has_more=False,
+                disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+            )
+            payload = static_projection.model_dump()
+            payload.update(
+                admission=ModeloWorkspaceGradedSnapshotScopeV1(
+                    scope=ModeloWorkspaceSnapshotScopeV1(
+                        required_grade=RegistryAuthorityGrade.CALCULATION,
+                        declared_grade=RegistryAuthorityGrade.CALCULATION,
+                        snapshot_scope_digest=static_projection.evidence_horizon.evidence_digest,
+                    )
+                ),
+                materialization_facet={**facet, "facet": ModeloWorkspaceFacetName.MATERIALIZATION},
+                provenance_facet={**facet, "facet": ModeloWorkspaceFacetName.PROVENANCE},
+                work_review=ModeloWorkspaceWorkReviewFacetV1(
+                    disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+                    review=review,
+                ),
+            )
+            static_projection = ModeloWorkspaceProjectionV1.model_validate(payload)
         generation = InstalledWorkbenchGenerationProviderV1(
             SecureProfileWorkbenchGenerationReadDoorV1(
                 profile_id=str(profile_id),
@@ -635,6 +699,20 @@ def test_secure_canonical_generation_round_trips_without_search_documents() -> N
     assert restore_workbench_generation(decoded) == generation
     assert '"documents"' not in public.model_dump_json()
     assert generation.modelo.projection is not None
+    if populated_review:
+        assert public.generation.modelo.projection is not None
+        public_review = public.generation.modelo.projection[0].work_review.review
+        assert public_review is not None
+        assert [(row.value.kind, row.value.text) for row in public_review.casillas[:6]] == [
+            ("null", ""),
+            ("decimal", "123.4500"),
+            ("integer", "0"),
+            ("boolean", "false"),
+            ("string", ""),
+            ("date", "2026-01-01"),
+        ]
+        assert public_review.calculation_revision_id is None
+        assert public_review.progress.denominator is None
 
 
 def test_ordered_fact_entries_retain_decimal_precision_and_refuse_duplicate_keys() -> None:
