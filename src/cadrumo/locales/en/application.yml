@@ -1272,6 +1272,7 @@ application:
         cannot be read as an amount. Check the submitted value before importing it.
       external_import_source_lexical_value_mismatch: The amount read from the source
         text of casilla {casilla_id} does not match the value imported for that casilla.
+      external_import_target_mismatch: The filing evidence does not belong to the selected profile, declaration or period.
       external_import_source_period_mismatch: The declared period belongs to a different
         filing year than the one given. Both must refer to the same year.
       external_import_source_revision_mismatch: The version named on the return submitted

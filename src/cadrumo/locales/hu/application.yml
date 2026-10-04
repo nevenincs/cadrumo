@@ -1321,6 +1321,7 @@ application:
         értéket.
       external_import_source_lexical_value_mismatch: A(z) {casilla_id} rovat eredeti
         szövegéből kiolvasott összeg nem egyezik az adott rovathoz importált értékkel.
+      external_import_target_mismatch: A bevallás bizonyítéka nem a kiválasztott profilhoz, bevalláshoz vagy időszakhoz tartozik.
       external_import_source_period_mismatch: A megadott időszak más adóévhez tartozik,
         mint a megjelölt bevallási év. Mindkettőnek ugyanarra az évre kell vonatkoznia.
       external_import_source_revision_mismatch: A Cadrumón kívül benyújtott bevalláson

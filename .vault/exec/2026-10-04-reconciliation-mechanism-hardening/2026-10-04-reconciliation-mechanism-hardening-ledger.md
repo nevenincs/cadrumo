@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:edfb30cd7616a42273375a96ed7875aa37368a912e97e26935fb5c559e42b02d'
+body_hash: 'sha256:80c71c63fe061aa66b3a5a9d7a84a03aeeaa87d40d7a2f1be01e0ed5fbdcceae'
 related:
   - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
 ---
@@ -47,3 +47,13 @@ related:
 - `S01` `verify:` `scoped Ruff format ty basedpyright pyrefly private-import checks` -> `pass`
 - `S01` `verify:` `independent S01 code review` -> `pass`
 - `S01` `by:` `mirror_fix`
+- `S02` `M` `src/cadrumo/application/modelo/filing_chain_reconciliation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_filing_chain_reconciliation.py`
+- `S02` `M` `src/cadrumo/locales/en/application.yml`
+- `S02` `M` `src/cadrumo/locales/es/application.yml`
+- `S02` `M` `src/cadrumo/locales/ca/application.yml`
+- `S02` `M` `src/cadrumo/locales/hu/application.yml`
+- `S02` `verify:` `pytest -n0 test_filing_chain_reconciliation.py (23 cases)` -> `pass`
+- `S02` `verify:` `scoped Ruff format ty basedpyright pyrefly and canonical private-import checks` -> `pass`
+- `S02` `verify:` `independent S02 corrected replay review` -> `pass`
+- `S02` `by:` `root`

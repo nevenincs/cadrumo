@@ -6,8 +6,10 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:396192c97ad09a3e19c942ea48b3cdc6e33f19cf0b869c178a0bb7fddea3bdc9'
+body_hash: 'sha256:84d3692244a52714c347dcf3da41364bc78fa2ecf810ff0d68f28e34c60d54b4'
 related:
+  - '[[2026-10-04-reconciliation-mechanism-hardening-audit]]'
+  - '[[2026-10-04-reconciliation-mechanism-hardening-ledger]]'
   - '[[2026-10-04-reconciliation-mechanism-hardening-plan]]'
 ---
 
@@ -17,6 +19,14 @@ Auto-generated index of all documents tagged with `#reconciliation-mechanism-har
 
 ## Documents
 
+### audit
+
+- `2026-10-04-reconciliation-mechanism-hardening-audit` - `reconciliation-mechanism-hardening` audit: `{title}`
+
+### exec
+
+- `2026-10-04-reconciliation-mechanism-hardening-ledger` - `reconciliation-mechanism-hardening` ledger
+
 ### plan
 
-- `2026-10-04-reconciliation-mechanism-hardening-plan` - `reconciliation-mechanism-hardening` plan
+- `2026-10-04-reconciliation-mechanism-hardening-plan` - Reconciliation mechanism hardening

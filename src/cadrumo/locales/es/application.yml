@@ -1361,6 +1361,7 @@ application:
         de importarlo.
       external_import_source_lexical_value_mismatch: El importe leído del texto original
         de la casilla {casilla_id} no coincide con el valor importado para esa casilla.
+      external_import_target_mismatch: La evidencia presentada no corresponde al perfil, declaración o período seleccionado.
       external_import_source_period_mismatch: El período declarado pertenece a un
         ejercicio distinto del ejercicio de presentación indicado. Ambos deben referirse
         al mismo ejercicio.
