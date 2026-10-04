@@ -242,6 +242,49 @@ def test_an_isolated_source_is_refused_for_a_named_target() -> None:
         main(["--isolated-source", "docs/index.md"])
 
 
+def test_docs_build_flavor_defaults_to_web_and_refuses_unknown_values() -> None:
+    """The environment selects web or desktop; a mistyped flavor fails rather than building the web site."""
+    from ..build import docs_build_flavor
+
+    assert docs_build_flavor({}) == "web"
+    assert docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "web"}) == "web"
+    assert docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "desktop"}) == "desktop"
+    with pytest.raises(SystemExit, match="CADRUMO_DOCS_FLAVOR must be one of web, desktop"):
+        docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "Desktop"})
+
+
+def test_a_desktop_build_is_refused_outside_its_own_output_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A desktop build never writes the canonical web output, from the flag or the environment."""
+    from ..build import main
+
+    # ``main`` writes the resolved flavor into ``os.environ`` for the Sphinx
+    # child; setting the key here first is what makes monkeypatch restore it.
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--flavor", "desktop", "--scope", "user"])
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--flavor", "desktop", "--single-page", "index"])
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--single-page", "index"])
+    with pytest.raises(SystemExit, match="--out-dir applies to a whole-scope build"):
+        main(["--flavor", "desktop", "--out-dir", "unused", "docs/index.md"])
+
+
+def test_the_flavor_flag_overrides_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``--flavor`` wins over ``CADRUMO_DOCS_FLAVOR`` and is what the Sphinx child reads."""
+    from ..build import _docs_build_arguments, _docs_flavor
+
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
+    assert _docs_flavor(_docs_build_arguments(["--flavor", "web"])) == "web"
+    assert os.environ["CADRUMO_DOCS_FLAVOR"] == "web"
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
+    assert _docs_flavor(_docs_build_arguments(["--flavor", "desktop", "--out-dir", "out"])) == "desktop"
+    assert os.environ["CADRUMO_DOCS_FLAVOR"] == "desktop"
+    with pytest.raises(SystemExit):
+        _docs_build_arguments(["--flavor", "mobile"])
+
+
 def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
     """The deployment override pins serial or parallel Sphinx workers."""
     from ..build import docs_build_jobs

@@ -42,6 +42,12 @@ if TYPE_CHECKING:
 DOC_SUFFIXES = {".md", ".rst"}
 PY_SUFFIX = ".py"
 
+#: The environment key ``docs/conf.py`` reads the build flavor from.
+DOCS_FLAVOR_ENV: Final[str] = "CADRUMO_DOCS_FLAVOR"
+#: ``web`` builds the published site; ``desktop`` builds the copy packaged into
+#: the desktop application (no network references, the frame bridge loaded).
+DOCS_FLAVORS: Final[tuple[str, ...]] = ("web", "desktop")
+
 
 @dataclass(frozen=True)
 class DocBuildPlan:
@@ -719,6 +725,7 @@ def build_docs(
     scope: str = "full",
     output_root: Path | None = None,
     isolated_source: bool = False,
+    flavor: str = "web",
 ) -> None:
     """Run Sphinx against the selected targets.
 
@@ -751,6 +758,9 @@ def build_docs(
 
     ``isolated_source`` makes a full build read a private copy of ``docs/``
     (:func:`_full_build_source`), so several roots can build at once.
+
+    ``flavor`` names the flavor the caller selected (:func:`docs_build_flavor`).
+    A ``desktop`` build has no web base URL, so it writes no sitemap.
     """
     docs_root = repo_root / "docs"
     build_root = pin_docs_build_root(repo_root)
@@ -785,7 +795,7 @@ def build_docs(
     if plan.full_build_required:
         html_root = html_output_root
         base_url = os.environ.get("CADRUMO_DOCS_BASE_URL")
-        if base_url:
+        if base_url and flavor == "web":
             sitemap_path = write_deployment_sitemap(html_root, base_url)
             print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
         compile_search_index(html_root, repo_root)
@@ -875,6 +885,7 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = _repo_root()
     output_root = _docs_output_root(args)
     scope = _docs_language_scope(args)
+    flavor = _docs_flavor(args)
     plan = _docs_invocation_plan(repo_root, args)
     if not plan.full_build_required and not plan.targets:
         print("No documentation targets resolved from the given paths.", flush=True)
@@ -891,6 +902,7 @@ def main(argv: list[str] | None = None) -> int:
         scope=scope,
         output_root=output_root,
         isolated_source=args.isolated_source,
+        flavor=flavor,
     )
     if args.rag_index:
         update_rag_index(repo_root)
@@ -1157,6 +1169,18 @@ def _docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--flavor",
+        choices=DOCS_FLAVORS,
+        default=None,
+        help=(
+            "Who the pages are for. 'web' (default) is the published site; 'desktop' is the copy packaged into "
+            "the desktop application: no hoverxref tooltips and no MathJax, so no page references the network, "
+            "no web base URL or sitemap, and the frame bridge loaded before cadrumo-docs.js. Overrides "
+            "CADRUMO_DOCS_FLAVOR. A desktop build is a whole-scope build into --out-dir, so it never overwrites "
+            "the canonical web output."
+        ),
+    )
+    parser.add_argument(
         "--isolated-source",
         action="store_true",
         help=(
@@ -1194,6 +1218,40 @@ def _docs_language_scope(args: argparse.Namespace) -> str:
     if scope not in {"full", "user"}:
         raise SystemExit(f"scope must be 'full' or 'user'; got {scope!r}")
     return cast(str, scope)
+
+
+def docs_build_flavor(env: Mapping[str, str]) -> str:
+    """Resolve the documentation flavor a build environment selects.
+
+    Args:
+        env: The build environment mapping to read ``CADRUMO_DOCS_FLAVOR`` from.
+
+    Returns:
+        ``web`` when the key is absent, otherwise the named flavor.
+
+    Raises:
+        SystemExit: If the value names no flavor, matching ``docs/conf.py``'s own
+            refusal so a mistyped value never builds the web site by default.
+    """
+    raw = env.get(DOCS_FLAVOR_ENV)
+    if raw is None:
+        return "web"
+    if raw not in DOCS_FLAVORS:
+        raise SystemExit(f"{DOCS_FLAVOR_ENV} must be one of {', '.join(DOCS_FLAVORS)}; got {raw!r}.")
+    return raw
+
+
+def _docs_flavor(args: argparse.Namespace) -> str:
+    # Precedence: explicit --flavor flag, then the CADRUMO_DOCS_FLAVOR env, then web.
+    if args.flavor is not None:
+        os.environ[DOCS_FLAVOR_ENV] = args.flavor
+    flavor = docs_build_flavor(os.environ)
+    if flavor == "desktop" and args.out_dir is None:
+        # Without --out-dir a build writes the canonical web output that
+        # previews and other builds read, and a desktop page there would replace
+        # a web one. --out-dir already refuses page paths and previews.
+        raise SystemExit("--flavor desktop builds a whole scope into --out-dir; pass --out-dir.")
+    return flavor
 
 
 def _docs_invocation_plan(repo_root: Path, args: argparse.Namespace) -> DocBuildPlan:

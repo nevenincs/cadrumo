@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:346ce01ddcdc742ae4222d2454277a8d70007416741d71de3043bf9841aa7fd6'
+body_hash: 'sha256:8f8bb70ba29f604871856735f70ab0f8f38a6ab86bb469af952e3d202b9eeb4e'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -82,6 +82,9 @@ related:
 - `S02` `verify:` `cmake --build build/s02-desktop-host --target desktop-host-test` -> `pass`
 - `S02` `verify:` `cmake --build build/s02-desktop-host --target desktop-host-clippy` -> `pass`
 - `S02` `verify:` `node native/desktop/tests/headless.test.mjs` -> `pass`
+- `S03` `verify:` `after moving the bridge to the browser-reported parent origin (plan: origins computed at runtime): pytest -m integration test_docs_desktop_flavor.py 16 tests` -> `pass`
+- `S03` `verify:` `mutation check: bridge without the source check, with a document bubble-phase key listener, or without the top-window check is each caught by one browser gate` -> `pass`
+- `S03` `verify:` `desktop English whole-scope build re-run with the final conf.py: 561 pages, 0 remote loaded resources, bridge first on every page, pagefind present` -> `pass`
 
 ## Notes
 

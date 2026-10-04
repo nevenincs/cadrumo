@@ -962,6 +962,13 @@
       input.focus();
     }
 
+    /* The one page-level entry point other scripts may call: the desktop
+     * frame bridge opens the palette through it on the window's search
+     * shortcut. */
+    var api = window.CadrumoDocs || {};
+    api.openSearch = open;
+    window.CadrumoDocs = api;
+
     triggers.forEach(function (trigger) {
       trigger.addEventListener("click", function (event) {
         event.preventDefault();

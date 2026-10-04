@@ -58,7 +58,22 @@ _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
 if not isinstance(_PROJECT_URLS, dict):
     raise ValueError("pyproject.toml [project.urls] must be a table")
-_DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
+
+# ── Build flavor ─────────────────────────────────────────────────────────────
+# ``CADRUMO_DOCS_FLAVOR`` selects who the built pages are for:
+#   * ``web`` (default): the published site.
+#   * ``desktop``: the copy packaged into the desktop application, where every
+#     page runs inside the application window's documentation frame and nothing
+#     may load from the network. It drops the hoverxref extension, whose glossary
+#     tooltips fetch the Read the Docs embed API and whose always-include asset
+#     policy is what puts the MathJax CDN script on every page (no page renders
+#     math), carries no web base URL, and loads the frame bridge before
+#     ``cadrumo-docs.js``.
+_DOCS_FLAVOR = os.environ.get("CADRUMO_DOCS_FLAVOR", "web")
+if _DOCS_FLAVOR not in {"web", "desktop"}:
+    raise ValueError(f"CADRUMO_DOCS_FLAVOR must be 'web' or 'desktop'; got {_DOCS_FLAVOR!r}")
+_DESKTOP_FLAVOR = _DOCS_FLAVOR == "desktop"
+_DOCS_BASE_URL = "" if _DESKTOP_FLAVOR else os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
 # Cadrumo documentation type ramp: Newsreader for display headings,
 # Hanken Grotesk for text, JetBrains Mono for code. The display face matches
 # the product site so headings read as one brand across both surfaces.
@@ -140,12 +155,17 @@ if _USER_SCOPE:
     # never fires without autodoc).
     _AUTODOC_ONLY_EXTENSIONS = {"sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx_autodoc_typehints"}
     extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
-
-# Hover tooltip cards on :term: cross-references to the generated glossary.
-# One term per glossary entry (the shared-entry rendering bug); aliases ride as
-# additional term lines on the same entry, so every declared surface resolves.
-hoverxref_roles = ["term"]
-hoverxref_role_types = {"term": "tooltip"}
+if _DESKTOP_FLAVOR:
+    # The tooltips load from ``/_/api/v3/embed/``, an endpoint only Read the
+    # Docs serves; ``:term:`` references stay ordinary links to the glossary.
+    extensions = [name for name in extensions if name != "hoverxref.extension"]
+else:
+    # Hover tooltip cards on :term: cross-references to the generated glossary.
+    # One term per glossary entry (the shared-entry rendering bug); aliases ride
+    # as additional term lines on the same entry, so every declared surface
+    # resolves.
+    hoverxref_roles = ["term"]
+    hoverxref_role_types = {"term": "tooltip"}
 
 # Source file types — both reStructuredText (autodoc stubs, index) and MyST
 # Markdown (narrative pages, generated API surface) are first-class.
@@ -390,7 +410,9 @@ html_css_files = [
     "cadrumo-casilla-reference.css",
     "cadrumo-legal-reference.css",
 ]
-html_js_files = ["cadrumo-docs.js"]
+# The desktop bridge goes first, so its capture-phase key listener exists
+# before ``cadrumo-docs.js`` registers its own.
+html_js_files = ["cadrumo-desktop-bridge.js", "cadrumo-docs.js"] if _DESKTOP_FLAVOR else ["cadrumo-docs.js"]
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
 html_sidebars = {
