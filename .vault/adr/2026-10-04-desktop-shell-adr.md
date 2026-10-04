@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a194ce4415dcee4df3d25bd652e9807a75a06f95fc9d6813b0fb1764dadc7fc2'
+body_hash: 'sha256:ddaefa055fddca4466b1d3b1d938e00bc00144ab706ae976babc824a6c12fc73'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -70,7 +70,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - The shell shows no authentication UI. Login stays in the TUI, the runtime's profile worker launches the Cl@ve browser, and approval prompts belong to the runtime manager or the TUI.
 - The shell never caches, forwards or persists session, lease, receipt or credential material between TUI processes. Restarting a session starts a new process that goes through admission again.
 - No shell or host copy says that work completes after a terminal closes or the window closes.
-- The host adds no storage-root, log-directory or other Settings variable to its child processes beyond the Settings projection. Both terminal kinds must resolve the same storage root as each other. Running the Python session in the user's home directory is therefore conditional on a storage root that doesn't depend on the working directory. Until the storage owner settles that default, both kinds start in the same working directory.
+- The host adds no storage-root, log-directory or other Settings variable to its child processes except the storage root that the Settings-owned projection itself resolved. The projection emits that root as the Settings storage-root variable, so the host, both terminal kinds and the CLI passthrough resolve the same root whatever their working directory. A regression test in a relocated packaged layout proves it (desktop-shell plan S02). The root that is pinned still depends on the launch directory until the storage owner settles a delivered per-user default. That question is open with the user.
 - This record proposes replacing these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration. That record's author should reconcile the wording.
 
 ## Implementation
@@ -130,7 +130,7 @@ shell to documentation:
   - `terminal_ack` is credit backpressure: pause at 512 KiB unacknowledged, resume below 128 KiB
   - `terminal_resize`
   - `terminal_close` settles before it returns
-  - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the same working directory as the TUI. It moves to the user's home directory only after the storage-root default stops depending on the working directory (see Constraints).
+  - The Python session is the packaged interpreter with no arguments and the TUI's child environment, started in the user's home directory. That is only allowed once the projected storage root is pinned in the child environment (see Constraints). Before that, both kinds start in the same working directory.
 - Logs:
   - `logs_subscribe` delivers batches of at most ten per second, starting with a 5,000-record backlog from a 10,000-record ring
   - each record carries `seq`, `source` (`python` or `host`), the raw timestamp, a parsed timestamp or null, a level or null, a logger or null, the message, a detail (continuation lines) or null, and a host process
