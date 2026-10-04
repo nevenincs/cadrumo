@@ -21,7 +21,7 @@ if(CADRUMO_DESKTOP_EXECUTABLE)
 endif()
 set(installation_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.installation)
 execute_process(COMMAND ${installation_helper} prepare --payload "${CADRUMO_PAYLOAD}"
-  --identity "${CMAKE_BINARY_DIR}/generated/identity.json" --build "${CMAKE_BINARY_DIR}" ${desktop_args}
+  --identity "${CADRUMO_PATH_GENERATED}/identity.json" --build "${CMAKE_BINARY_DIR}" ${desktop_args}
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   "${CADRUMO_PAYLOAD}/data/package-manifest.json"
@@ -31,16 +31,16 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 configure_file(VerifyInstall.cmake.in "${CMAKE_BINARY_DIR}/VerifyInstall.cmake" @ONLY)
 install(SCRIPT "${CMAKE_BINARY_DIR}/VerifyInstall.cmake")
-file(GLOB install_roots RELATIVE "${CMAKE_BINARY_DIR}/native-install-tree"
-  "${CMAKE_BINARY_DIR}/native-install-tree/*")
+file(GLOB install_roots RELATIVE "${CADRUMO_PATH_INSTALLATION_STAGE}"
+  "${CADRUMO_PATH_INSTALLATION_STAGE}/*")
 foreach(root IN LISTS install_roots)
-  install(DIRECTORY "${CMAKE_BINARY_DIR}/native-install-tree/${root}/"
+  install(DIRECTORY "${CADRUMO_PATH_INSTALLATION_STAGE}/${root}/"
     DESTINATION "${root}" USE_SOURCE_PERMISSIONS)
 endforeach()
 set(CADRUMO_UNINSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Exact prefix previously installed with cmake --install")
 add_custom_target(uninstall
   COMMAND ${installation_helper} uninstall --prefix "${CADRUMO_UNINSTALL_PREFIX}"
-    --receipt "${CMAKE_BINARY_DIR}/installation.json"
+    --receipt "${CADRUMO_PATH_INSTALLATION_METADATA}/installation.json"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
 
 set(CPACK_PACKAGE_NAME "${CADRUMO_ID_NAME}")
@@ -51,7 +51,7 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}")
 set(CPACK_PACKAGE_VERSION "${CADRUMO_ID_VERSION}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CADRUMO_ID_NAME}")
 set(CPACK_PACKAGE_FILE_NAME "${CADRUMO_ID_PACKAGE_NAME}-${CADRUMO_ID_VERSION}-${CADRUMO_TARGET}")
-set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
+set(CPACK_PACKAGE_DIRECTORY "${CADRUMO_PATH_PACKAGES}")
 set(CPACK_BUILD_CONFIG Release)
 set(CPACK_SYSTEM_NAME "${CADRUMO_TARGET}")
 set(CPACK_PACKAGING_INSTALL_PREFIX /)
@@ -68,8 +68,8 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CADRUMO_ID_HOMEPAGE}")
   set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CADRUMO_ID_HOMEPAGE}/issues")
   if(CADRUMO_DESKTOP_EXECUTABLE)
-    set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_BINARY_DIR}/Desktop.wxs")
-    set(CPACK_WIX_PATCH_FILE "${CMAKE_BINARY_DIR}/DesktopPatch.xml")
+    set(CPACK_WIX_EXTRA_SOURCES "${CADRUMO_PATH_INSTALLATION_METADATA}/Desktop.wxs")
+    set(CPACK_WIX_PATCH_FILE "${CADRUMO_PATH_INSTALLATION_METADATA}/DesktopPatch.xml")
   endif()
 elseif(CADRUMO_TARGET MATCHES "^linux-")
   set(CPACK_GENERATOR "DEB;RPM;TGZ")

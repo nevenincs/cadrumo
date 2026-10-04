@@ -1,11 +1,11 @@
 add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
     "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico"
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
-    --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${PROJECT_BINARY_DIR}/_deps/build-tools"
+    --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}"
   DEPENDS ${native_helper_inputs} ${contract_inputs}
     "${CONTRACT_DIR}/identity.json"
-    "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${PROJECT_BINARY_DIR}/_deps/build-tools/ready"
+    "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"
     "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(native_metadata DEPENDS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
@@ -35,7 +35,7 @@ set(CADRUMO_RUST_ENV_INCLUDE "${msvc_root}/include;${sdk_root}/Include/${CADRUMO
 set("CADRUMO_RUST_ENV_CC_${CADRUMO_PIN_rust_target}" "${CMAKE_C_COMPILER}")
 set("CADRUMO_RUST_ENV_AR_${CADRUMO_PIN_rust_target}" "${CMAKE_AR}")
 cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
-set(platform_dir "${PROJECT_BINARY_DIR}/cargo/${CADRUMO_PIN_rust_target}/${rust_profile}")
+set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
 set(platform_static "${platform_dir}/cadrumo_platform.lib")
 set(platform_import "${platform_dir}/cadrumo_platform.dll.lib")
 file(GLOB_RECURSE rust_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/platform/src/*.rs")
@@ -49,9 +49,9 @@ add_custom_command(OUTPUT "${platform_static}" "${platform_import}" "${platform_
 add_custom_target(rust_platform DEPENDS "${platform_static}" "${platform_import}" "${platform_dir}/cadrumo_platform.dll"
   "${platform_dir}/platform-consumer.exe")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/$<CONFIG>")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/$<CONFIG>")
-set(CMAKE_PDB_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/symbols/$<CONFIG>")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CADRUMO_PATH_LIB}/$<CONFIG>")
+set(CMAKE_PDB_OUTPUT_DIRECTORY "${CADRUMO_PATH_SYMBOLS}/$<CONFIG>")
 add_executable(cadrumo_python interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")
 set_target_properties(cadrumo_python PROPERTIES OUTPUT_NAME "${production_name}")
 add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")

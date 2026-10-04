@@ -1,7 +1,7 @@
 cadrumo_cargo_command(application_cargo)
 set(application_manifest "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(application_profile "$<IF:$<CONFIG:Debug>,dev,release>")
-set(application_output "${PROJECT_BINARY_DIR}/cargo/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/libcadrumo_application.rlib")
+set(application_output "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/libcadrumo_application.rlib")
 string(JSON application_layout_abi GET "${package_layout}" abi)
 cadrumo_cargo_command(application_artifact_probe
   --env "CADRUMO_TEST_PACKAGE_MANIFEST=${package_manifest}"
@@ -32,7 +32,7 @@ add_custom_target(rust_application ALL
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 
 if(BUILD_TESTING)
-  set(CADRUMO_APPLICATION_TEST_PACKAGE_ROOT "${PROJECT_BINARY_DIR}/stage/$<CONFIG>/app"
+  set(CADRUMO_APPLICATION_TEST_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     CACHE STRING "Package root for Rust compatibility acceptance; defaults to the staged configuration")
   if(NOT IS_ABSOLUTE "${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}")
     message(FATAL_ERROR "CADRUMO_APPLICATION_TEST_PACKAGE_ROOT must be absolute")

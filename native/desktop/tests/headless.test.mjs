@@ -1,3 +1,4 @@
+import { buildPath } from "../scripts/build-paths.mjs";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync, mkdirSync } from "node:fs";
@@ -10,11 +11,11 @@ assert(build && isAbsolute(build) && root && isAbsolute(root) && contractPath);
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 const interpreter = resolve(root, contract.layout.paths.executable);
 const host = resolve(
-  build,
-  "cargo/desktop/debug",
+  buildPath("desktop_cargo"),
+  "debug",
   process.platform === "win32" ? "cadrumo.exe" : "cadrumo",
 );
-const cwd = resolve(build, "desktop/testing/headless á 漢字");
+const cwd = resolve(buildPath("desktop_testing"), "headless");
 mkdirSync(cwd, { recursive: true });
 const env = {
   ...process.env,

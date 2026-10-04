@@ -11,6 +11,7 @@ from pathlib import Path
 from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
+from .build_paths import build_paths
 from .cmake_build import reset
 from .hashing import digest
 from .layout import backend, load_layout
@@ -25,7 +26,7 @@ def check(build: Path, configuration: str, application_probe: list[str] | None =
     archive_hash = digest(archive_path)
     if archive_hash != artifacts["archive_sha256"]:
         raise AssertionError("ZIP differs from the packaged artifact locator")
-    destination = reset(build, f"verification/{configuration}")
+    destination = reset(build, str((build_paths(build)["verification"] / configuration).relative_to(build)))
     extracted = destination / "ZIP espacio á 漢字"
     extracted.mkdir(parents=True)
     with zipfile.ZipFile(archive_path) as archive:

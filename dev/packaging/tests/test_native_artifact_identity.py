@@ -49,6 +49,9 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         "build": {"version": "1.0", "build_number": "42", "build_date": "2026-10-04"},
         "layout": {"paths": {"executable": "python.exe"}, "files": {"development_executable": "python_d.exe"}},
     }
+    (tmp_path / "build-paths.json").write_text(
+        json.dumps({"paths": {"verification": "verification"}}), encoding="utf-8"
+    )
     manifest_bytes = json.dumps(manifest).encode()
     archive = tmp_path / "product.zip"
     with zipfile.ZipFile(archive, "w") as output:

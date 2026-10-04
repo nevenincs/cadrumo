@@ -1,16 +1,16 @@
+import { buildPath } from "../scripts/build-paths.mjs";
 import { defineConfig } from "@playwright/test";
-import { isAbsolute, resolve } from "node:path";
-
-const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
-if (!binaryDir || !isAbsolute(binaryDir))
-  throw new Error("Select an absolute CMake build directory.");
+import { resolve } from "node:path";
 
 export default defineConfig({
   testDir: "./tests",
-  outputDir: resolve(binaryDir, "desktop/test-results"),
+  outputDir: buildPath("desktop_results"),
   reporter: [
     ["list"],
-    ["json", { outputFile: resolve(binaryDir, "desktop/test-results.json") }],
+    [
+      "json",
+      { outputFile: resolve(buildPath("desktop_results"), "results.json") },
+    ],
   ],
   use: {
     baseURL: "http://127.0.0.1:1421",

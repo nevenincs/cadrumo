@@ -1,8 +1,6 @@
 # Native distribution contract
 
-Status: CMake build, installation and ZIP packaging are implemented. Verification
-of this reconciled source tree is pending. The Windows acceptance evidence below
-belongs to the prior tested artifacts and does not certify a new build.
+CMake defines compilation, installation and ZIP packaging.
 Linux and macOS are mappings to
 prove, not supported native builds. The existing Python product owns application
 behavior. Native code owns bootstrap before Python exists.
@@ -69,7 +67,7 @@ selected artifact and does not establish a successful fresh `bundle` build.
 by the existing Settings contract. OS-specific delivered-user defaults remain a
 storage-owner integration obligation; this interpreter does not invent them.
 
-| Location | Windows x64 proof target | Linux mapping, unimplemented | macOS mapping, deferred |
+| Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
 | --- | --- | --- | --- |
 | Executables | `P/python.exe`, future `P/cadrumo.exe`; components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
@@ -81,7 +79,7 @@ storage-owner integration obligation; this interpreter does not invent them.
 
 Linux deb/rpm, relocatable archive and AppImage are unresolved alternatives.
 No build target or placeholder implementation claims those formats work.
-macOS needs a native toolchain, architecture selection, codesigning and dyld proof.
+macOS needs a native toolchain, architecture selection, codesigning and dyld validation.
 Windows relocation passed real package-qualified extensions and transitive-DLL
 artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
 Library-owned resources retain their wheel locations; assembly projects the
@@ -146,10 +144,19 @@ cmake --preset windows-x64
 cmake --build --preset release
 cmake --build --preset release --target verify
 cmake --build --preset debug --target python_d
-cmake --install build/windows-x64 --config Release --prefix "Y:/cadrumo-proof/CADRUMO espacio á 漢字"
+cmake --install build/windows-x64 --config Release
 cmake --build --preset package-release
 cmake --build --preset release --target verify-package
 ```
+
+`native/cmake/BuildPaths.cmake` owns build output directories and cleanup
+groups. CMake writes `build-paths.json` in the binary directory; Python helpers
+consume it without fallback directory definitions. Test fixtures use the test
+runner's temporary storage. Every build output must have a declared CMake owner, output path and generation
+target or configure operation. Undeclared generation is a build defect. Names
+describe artifact function, platform and configuration. Development-status labels
+are prohibited. Build directories contain
+only declared build products and tool-managed intermediate files.
 
 CMake owns the build graph. Python helpers perform portable filesystem and wheel
 operations; PowerShell is not part of the build. The separate Windows `platforms/windows_trace.ps1`
@@ -212,8 +219,9 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-stage` | Remove stage, testing and verification trees |
 | `clean-packages` | Remove ZIP and CPack staging trees |
 | `clean-dependencies` | Remove downloaded SDK/dependencies and product wheel staging |
-| `clean-native` | Remove bin, lib, symbols, Cargo and generated contracts/resources |
-| `clean-all` | Apply all four bounded cleanup groups; retain CMake configuration |
+| `clean-native` | Remove bin, lib, symbols and Cargo outputs; retain configure metadata |
+| `clean-desktop` | Remove declared desktop build outputs and test state |
+| `clean-all` | Apply the declared bounded cleanup groups; retain CMake configuration |
 
 Explicit cleanup never removes source files, the installed application or an
 arbitrary path. It validates the CMake source owner and each resolved child path.
@@ -282,87 +290,6 @@ unambiguous. Ordinary package-qualified extensions load by absolute path and may
 share a basename, as SQLAlchemy's two `_util_cy` extensions do. Smoke tests import
 both the CPython SDK extensions and every retained third-party extension identity.
 
-## Current CMake verification, 2026-10-03
-
-The current Debug CMake `verify-package` target passed with both `python.exe` and
-`python_d.exe` in the extracted ZIP. Each passed build identity, role, full package
-cohesion, production imports, child identity and explicit binary-override probes.
-The subsequent hostile-environment suite passed. CTest passed all four tests in
-both Debug and Release, including C static/DLL and Rust ABI consumers.
-
-The production-only Release ZIP also passed the full acceptance suite. Each
-configuration's `verification/<Config>/result.json` records its archive and
-manifest hashes, build identity and tested interpreter names. Both locators
-remain unchanged after a subsequent CMake configuration.
-
-The smoke test imports 119 native identities and checks all 80 installed
-distributions: 77 locked third-party distributions and the three CADRUMO 0.5.1
-wheels. The product wheel build uses existing authority validation. Publication
-locks, transaction descriptors and temporary export staging/backup directories do
-not enter the source snapshot or dependency fingerprints. Compiler code and source
-normalization rules participate in CMake invalidation.
-
-`cmake --install` produced the outside-checkout installation
-`Y:/code/cadrumo-native-proof/CADRUMO final á 漢字`. Its full cohesion and dependency
-smoke checks passed from an unrelated working directory. A separate hostile-input
-copy passed CLI startup, child startup, Python environment conflicts, missing and
-invalid dependencies, native search conflicts, ignored executable `.pth` and
-unchanged installed hashes. Evidence is
-`build/windows-x64/verification/Release/verification.json`.
-
-The current installed interpreter and child passed Windows kernel-file tracing:
-71,288 scoped events, four writes, zero lost events, all observed mutations beneath
-the declared user root. Evidence is
-`Y:/code/cadrumo-native-proof/final-release-trace/summary.json` and
-`application-events.jsonl`. The raw capture was removed. The Windows profile uses
-nonpaged buffers and an executable-name filter, then retains only the tested PIDs;
-see [Microsoft's WPR filtering guidance](https://devblogs.microsoft.com/performance-diagnostics/filtering-events-using-wpr/).
-An earlier capture with lost events was rejected. This proves the exercised
-parent/child probe, not arbitrary Python containment or every application workflow.
-
-Five named cleanup targets passed in a separate configured proof tree, retaining
-configuration and unrelated files. In-source configuration is refused before
-compiler/scratch setup. The two existing storage-projection tests, Ruff and ty pass.
-The final Release installation's manifest matches the verified Release ZIP.
-The authored Windows long-path manifest is included in source snapshots through
-an explicit ignore-rule exception. Archive replacement refusal has a focused
-regression test; reconfiguration preserves both archive locators.
-
-## Historical artifact evidence, prior layout
-
-Evidence below belongs to the compiled Known Folder bootstrap. Its native source
-is preserved in `.artifacts/native/repeatable/product/source/native/`, with its
-generator in that snapshot's `dev/packaging/native/`. Later concurrent edits to
-the working-tree platform provider select repository/cwd defaults and preserve
-storage overrides. The commands above must be revalidated against that policy
-before the current source can claim the same results. No concurrent edits were
-reverted to manufacture a matching tree.
-
-The fresh provision/product/assemble flow produced
-`.artifacts/native/repeatable/package/python.exe`, with 77 locked third-party
-distributions and CADRUMO's three matching 0.5.1 product wheels. Verification ran
-from `C:/Users/hello/cadrumo-native-proof/CADRUMO fresh á 漢字`, outside the checkout.
-`.artifacts/native/verification.json` records native/pure imports, PDF operations,
-product metadata and authority, CLI startup, child identity, hostile Python settings
-and DLLs, missing/invalid dependencies, ignored `.pth`, and unchanged package hashes.
-
-The repeatable WPR trace captured 2,013 parent/child filesystem events with four
-actual file writes and zero lost events. All observed file mutations were under
-the declared user root. Scoped evidence is
-`C:/Users/hello/cadrumo-native-proof/repeatable-trace/summary.json` and
-`application-events.jsonl` in that directory. The helper requires nonpaged trace
-buffers, checks final event loss, refuses unresolved write paths, and removes the
-machine-wide capture after extracting target-process events. Its profile covers
-file creation, writes, set-information, deletion, rename/link, security and extended
-attribute changes. This measures the import/tempfile/COM-cache probe and its child;
-it does not claim containment of every future application workflow.
-
-Linux needs its format, libc floor and transitive ELF loader proof. macOS needs
-native compilation, architecture and signing decisions, dyld proof and compatible
-wheels (the current all-platform exporter cannot obtain the pinned pikepdf wheel).
-Neither platform has a native interpreter backend here. Rebuilding CPython itself from source,
-release signing and sealed cross-platform cohort promotion are also later work.
-
 ## Native distribution definitions
 
 `native/cmake/distribution` packages an already assembled payload. Its shared
@@ -379,7 +306,7 @@ Set `CADRUMO_DEV_PYTHON` explicitly when the checkout's development interpreter 
 not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
 `CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload
 inventory; only that entrypoint receives desktop registration. macOS requires a
-root-level desktop executable. Its runtime backend and WebView containment proof
+root-level desktop executable. Its runtime backend and WebView containment validation
 must be completed before a macOS application release.
 
 CPack definitions select MSI/ZIP on Windows, DEB/RPM/TGZ on Linux, and DMG/TGZ on
@@ -399,7 +326,7 @@ these definitions add no services, scheduled tasks or automatic launch.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact
-prefix, then build the `uninstall` target. The external `installation.json`
+prefix, then build the `uninstall` target. The external `installation/metadata/installation.json`
 receipt binds removal to the installed package manifest and unchanged file hashes.
 Changed files and unowned content remain. Symlink/junction traversal and filesystem
 root removal are refused. Native package managers own uninstall for system packages;

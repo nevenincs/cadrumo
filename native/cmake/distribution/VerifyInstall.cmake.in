@@ -1,4 +1,4 @@
 execute_process(COMMAND "@CADRUMO_DEV_PYTHON@" -B -m dev.packaging.native.installation
-  verify-inventory --root "@CMAKE_BINARY_DIR@/native-install-tree"
-  --receipt "@CMAKE_BINARY_DIR@/installation.json"
+  verify-inventory --root "@CADRUMO_PATH_INSTALLATION_STAGE@"
+  --receipt "@CADRUMO_PATH_INSTALLATION_METADATA@/installation.json"
   WORKING_DIRECTORY "@CADRUMO_SOURCE_ROOT@" COMMAND_ERROR_IS_FATAL ANY)

@@ -1,4 +1,5 @@
 # Shared by the source build and the native distribution project.
+include("${CMAKE_CURRENT_LIST_DIR}/BuildPaths.cmake")
 get_filename_component(CADRUMO_SOURCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 find_program(CADRUMO_DEV_PYTHON NAMES python python3
   PATHS "${CADRUMO_SOURCE_ROOT}/.venv/Scripts" "${CADRUMO_SOURCE_ROOT}/.venv/bin"
@@ -23,9 +24,9 @@ endif()
 set(CADRUMO_CHANNEL stable CACHE STRING "Installation channel, independent of Debug/Release")
 set_property(CACHE CADRUMO_CHANNEL PROPERTY STRINGS stable preview)
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.identity
-  --target "${CADRUMO_TARGET}" --channel "${CADRUMO_CHANNEL}" --output "${CMAKE_BINARY_DIR}/generated"
+  --target "${CADRUMO_TARGET}" --channel "${CADRUMO_CHANNEL}" --output "${CADRUMO_PATH_GENERATED}"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
-include("${CMAKE_BINARY_DIR}/generated/Identity.cmake")
+include("${CADRUMO_PATH_GENERATED}/Identity.cmake")
 set(CADRUMO_VERSION "${CADRUMO_ID_VERSION}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/pyproject.toml"

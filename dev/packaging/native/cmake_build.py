@@ -16,6 +16,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .assemble import assemble
+from .build_paths import build_paths
 from .layout import load_layout
 from .product import build_product
 from .provision import provision
@@ -64,11 +65,12 @@ def main() -> None:
     if arguments.action in {"provision", "product", "tools"}:
         if arguments.inputs is None:
             parser.error("Shared actions require --inputs")
-        relative = {"provision": "_deps/runtime", "tools": "_deps/build-tools", "product": "product"}[arguments.action]
+        paths = build_paths(build)
+        destination = paths[{"provision": "runtime", "tools": "tools", "product": "product"}[arguments.action]]
         extra = selected_published_authority(REPO_ROOT) if arguments.action == "product" else ()
         with action_lock(build, "shared-inputs"):
             identity = fingerprint(arguments.inputs, extra)
-            if current(build / relative, identity):
+            if current(destination, identity):
                 print(f"Reusing {arguments.action}: inputs and output inventory unchanged")
                 return
             destination = build_action(build, arguments)
@@ -80,11 +82,12 @@ def main() -> None:
 
 def build_action(build: Path, arguments: argparse.Namespace) -> Path:
     """Execute a generated-output action after its reuse and concurrency checks."""
-    runtime = build / "_deps/runtime"
+    paths = build_paths(build)
+    runtime = paths["runtime"]
     contract = load_layout()
     sdk = runtime / contract["sdk"]["root"]
     if arguments.action == "tools":
-        destination = reset(build, "_deps/build-tools")
+        destination = reset(build, str(paths["tools"].relative_to(build)))
         uv = shutil.which("uv")
         if uv is None:
             raise FileNotFoundError("uv is required")
@@ -110,23 +113,23 @@ def build_action(build: Path, arguments: argparse.Namespace) -> Path:
         if result.returncode:
             raise RuntimeError(result.stderr)
     elif arguments.action == "provision":
-        destination = reset(build, "_deps/runtime")
+        destination = reset(build, str(runtime.relative_to(build)))
         provision(destination)
     elif arguments.action == "product":
-        destination = reset(build, "product")
+        destination = reset(build, str(paths["product"].relative_to(build)))
         destination.mkdir(parents=True)
         shutil.copytree(runtime / "dependencies", destination / "dependencies")
         build_product(destination / "build", sdk / contract["sdk"]["executable"], destination / "dependencies")
     else:
         if arguments.config is None:
             raise ValueError("assemble requires --config")
-        destination = reset(build, f"stage/{arguments.config}")
+        destination = reset(build, str((paths["stage"] / arguments.config).relative_to(build)))
         assemble(
             sdk,
-            build / "product/dependencies",
-            build / "bin" / arguments.config,
+            paths["product"] / "dependencies",
+            paths["bin"] / arguments.config,
             destination / "app",
-            build / "generated/build.json",
+            paths["generated"] / "build.json",
             development=arguments.development,
         )
     return destination

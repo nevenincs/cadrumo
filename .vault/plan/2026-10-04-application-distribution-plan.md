@@ -8,9 +8,9 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
-modified: '2026-10-03'
+modified: '2026-10-04'
 body_schema: body-v2
-body_hash: 'sha256:dabb19baa98bdc1e6bea72a9b4358b24490f31c3865ce56685b2fc426495c033'
+body_hash: 'sha256:065430390dbcd2d5f65c673ccdd971b371c7f5b73a1d4741f7ab3ff75769e145'
 ---
 
 # Application distribution
@@ -27,6 +27,7 @@ The user explicitly requested implementation of product identity, modern CMake c
 - [x] `S02` - Project canonical identity into CMake project and platform packaging configuration; `CMakeLists.txt and native/cmake`.
 - [x] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake, native/desktop build identity, and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.
+- [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, and build`.
 
 ## Parallelization
 

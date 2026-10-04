@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
-GROUPS = {
-    "stage": ("stage", "verification", "testing"),
-    "packages": ("packages", "_CPack_Packages"),
-    "dependencies": ("_deps", "product"),
-    "native": ("bin", "lib", "symbols", "cargo", "generated"),
-}
+from .build_paths import build_paths
 
 
 def clean(build: Path, group: str) -> None:
@@ -25,19 +21,18 @@ def clean(build: Path, group: str) -> None:
     owner = f"CMAKE_HOME_DIRECTORY:INTERNAL={REPO_ROOT.as_posix()}"
     if owner not in cache.read_text(encoding="utf-8"):
         raise ValueError("Build directory belongs to another project")
-    groups = GROUPS.values() if group == "all" else (GROUPS[group],)
-    for paths in groups:
-        for relative in paths:
-            target = (build / relative).resolve()
-            if target == build or not target.is_relative_to(build):
-                raise ValueError(f"Cleanup target escapes the binary directory: {relative}")
-            if target.exists():
-                shutil.rmtree(target)
+    paths = build_paths(build)
+    definitions = json.loads((build / "build-paths.json").read_text(encoding="utf-8"))["cleanup"]
+    groups = definitions.values() if group == "all" else (definitions[group],)
+    targets = [paths[key] for keys in groups for key in keys]
+    for target in targets:
+        if target.exists():
+            shutil.rmtree(target)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("build", type=Path)
-    parser.add_argument("group", choices=(*GROUPS, "all"))
+    parser.add_argument("group", help="CMake-defined cleanup group or all")
     args = parser.parse_args()
     clean(args.build, args.group)

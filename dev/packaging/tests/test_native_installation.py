@@ -20,6 +20,24 @@ from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.fixture(autouse=True)
+def cmake_paths(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    build.mkdir()
+    (build / "build-paths.json").write_text(
+        json.dumps(
+            {
+                "paths": {
+                    "installation_stage": "installation/stage",
+                    "installation_metadata": "installation/metadata",
+                    "installation_work": "installation/work",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def payload_fixture(tmp_path: Path, target: str) -> tuple[Path, Path]:
     value = asdict(identity(target))
     identity_file = tmp_path / "identity.json"
@@ -49,7 +67,7 @@ def test_native_layout_projects_registration(tmp_path: Path, target: str) -> Non
         assert (contents / "MacOS/cadrumo").is_file()
     else:
         assert (root / "app/cadrumo").is_file()
-        wix = ElementTree.parse(tmp_path / "build/Desktop.wxs")
+        wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")
         namespaces = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
         shortcut_identity = wix.find(".//w:ShortcutProperty", namespaces)
         assert shortcut_identity is not None
@@ -128,7 +146,7 @@ def test_uninstall_preflights_all_paths(tmp_path: Path) -> None:
 def test_install_refuses_staged_content_changed_after_configure(tmp_path: Path) -> None:
     payload, identity_file = payload_fixture(tmp_path, "linux-x86-64")
     root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
-    receipt = tmp_path / "build/installation.json"
+    receipt = tmp_path / "build/installation/metadata/installation.json"
     verify_inventory(root, receipt)
     (root / "opt/cadrumo/cadrumo").write_text("replaced", encoding="utf-8")
     with pytest.raises(ValueError, match="changed"):
@@ -140,7 +158,7 @@ def test_uninstall_refuses_a_different_installation(tmp_path: Path) -> None:
     root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
     (root / "app/data/package-manifest.json").write_text("another version", encoding="utf-8")
     with pytest.raises(ValueError, match="does not contain"):
-        uninstall(root, tmp_path / "build/installation.json")
+        uninstall(root, tmp_path / "build/installation/metadata/installation.json")
     assert (root / "app/cadrumo").exists()
 
 
@@ -158,7 +176,7 @@ def test_symlinked_prefix_is_refused(tmp_path: Path) -> None:
 
 def test_prepare_refuses_a_preexisting_unowned_stage_without_deleting_it(tmp_path: Path) -> None:
     payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
-    root = tmp_path / "build/native-install-tree"
+    root = tmp_path / "build/installation/stage"
     root.mkdir(parents=True)
     sentinel = root / "user-owned"
     sentinel.write_text("preserve me", encoding="utf-8")

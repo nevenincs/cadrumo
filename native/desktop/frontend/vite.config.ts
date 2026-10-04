@@ -1,18 +1,12 @@
+import { buildPath } from "../scripts/build-paths.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { isAbsolute, resolve } from "node:path";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
-if (!binaryDir || !isAbsolute(binaryDir)) {
-  throw new Error(
-    "Set CADRUMO_CMAKE_BINARY_DIR to the absolute selected CMake build directory.",
-  );
-}
-
 export default defineConfig(({ mode }) => {
   const environment = loadEnv(
     mode,
@@ -29,9 +23,9 @@ export default defineConfig(({ mode }) => {
     .filter(Boolean);
   return {
     base: "./",
-    cacheDir: resolve(binaryDir, "desktop/vite-cache"),
+    cacheDir: buildPath("desktop_cache"),
     build: {
-      outDir: resolve(binaryDir, "desktop/frontend"),
+      outDir: buildPath("desktop_frontend"),
       emptyOutDir: false,
     },
     server: { host: "0.0.0.0", allowedHosts, port: 1420, strictPort: true },

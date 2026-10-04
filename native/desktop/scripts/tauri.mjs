@@ -10,16 +10,18 @@ import {
 import { delimiter, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { buildPath } from "./build-paths.mjs";
+
 const desktop = fileURLToPath(new URL("../", import.meta.url));
 const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
 if (!binaryDir || !isAbsolute(binaryDir))
   throw new Error("Select an absolute CMake build directory.");
 const identity = JSON.parse(
-  readFileSync(resolve(binaryDir, "generated/identity.json"), "utf8"),
+  readFileSync(resolve(buildPath("generated"), "identity.json"), "utf8"),
 );
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
-const icons = resolve(binaryDir, "desktop/icons");
-const snapshot = resolve(binaryDir, "desktop/host");
+const icons = buildPath("desktop_icons");
+const snapshot = buildPath("desktop_host");
 // Remove only generated source copies so renamed Rust modules cannot survive a rebuild.
 for (const directory of [
   resolve(snapshot, "src-tauri/src"),
@@ -41,7 +43,7 @@ if (!contract || !isAbsolute(contract))
   );
 const environment = {
   ...process.env,
-  CARGO_TARGET_DIR: resolve(binaryDir, "cargo/desktop"),
+  CARGO_TARGET_DIR: buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
 };
@@ -98,7 +100,7 @@ const config = {
   productName: identity.name,
   identifier: identity.application_id,
   version: identity.version,
-  build: { frontendDist: resolve(binaryDir, "desktop/frontend") },
+  build: { frontendDist: buildPath("desktop_frontend") },
   bundle: { icon: [resolve(icons, "icon.ico"), resolve(icons, "icon.png")] },
 };
 const action = process.argv[2] ?? "build";

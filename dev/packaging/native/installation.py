@@ -14,6 +14,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 from dev._paths import REPO_ROOT
 
+from .build_paths import build_paths
 from .hashing import digest
 from .installation_filesystem import file_identity, remove_owned_file
 
@@ -128,16 +129,19 @@ def prepare(payload: Path, identity_file: Path, build: Path, desktop: str | None
     """Reuse only an unchanged, identical owning stage; never erase existing state."""
     validate_payload(payload, identity_file, desktop)
     build = build.absolute()
-    root = member(build, "native-install-tree")
+    paths = build_paths(build)
+    root = paths["installation_stage"]
+    metadata = paths["installation_metadata"]
     if root.exists():
-        receipt = member(build, "installation.json")
+        receipt = member(metadata, "installation.json")
         if not receipt.is_file():
             raise ValueError("Existing native installation stage has no owning receipt; select a fresh build directory")
         verify_inventory(root, receipt)
-        with tempfile.TemporaryDirectory(prefix="native-install-candidate-", dir=build) as scratch:
+        paths["installation_work"].mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=paths["installation_work"]) as scratch:
             candidate = Path(scratch)
-            _prepare_fresh(payload, identity_file, candidate, desktop)
-            expected = json.loads((candidate / "installation.json").read_text(encoding="utf-8"))
+            _prepare_fresh(payload, identity_file, candidate / "stage", candidate / "metadata", desktop)
+            expected = json.loads((candidate / "metadata/installation.json").read_text(encoding="utf-8"))
             existing = json.loads(receipt.read_text(encoding="utf-8"))
             if existing != expected:
                 raise ValueError(
@@ -146,15 +150,15 @@ def prepare(payload: Path, identity_file: Path, build: Path, desktop: str | None
         # Recheck after construction: another writer may have touched the stage.
         verify_inventory(root, receipt)
         return root
-    return _prepare_fresh(payload, identity_file, build, desktop)
+    return _prepare_fresh(payload, identity_file, root, metadata, desktop)
 
 
-def _prepare_fresh(payload: Path, identity_file: Path, build: Path, desktop: str | None = None) -> Path:
+def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, desktop: str | None = None) -> Path:
     """Create platform installation layout, with desktop registration only for a real entrypoint."""
     validate_payload(payload, identity_file, desktop)
     value = json.loads(identity_file.read_text(encoding="utf-8"))
     build = build.absolute()
-    root = member(build, "native-install-tree")
+    build.mkdir(parents=True, exist_ok=True)
     if payload.resolve().is_relative_to(root) or root.is_relative_to(payload.resolve()):
         raise ValueError("Payload and installer staging directory must not overlap")
     root.mkdir(parents=True, mode=0o700)
