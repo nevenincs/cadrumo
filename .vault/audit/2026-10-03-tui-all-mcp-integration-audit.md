@@ -5,7 +5,7 @@ tags:
 date: '2026-10-03'
 modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ffebc991321d979dbe6829eab9f0ec2deb8c8eccd7dbd4cc5f9d566d6c511884'
+body_hash: 'sha256:b306c23813553dc121038cb7cf5587829743255d3b63b98f798a7ddd6b6202a6'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -194,6 +194,10 @@ Incorporated the unique three-line oracle from fresh preserved live TUI snapshot
 ### explicit-acceptance-runtime-scope | low | Installed financial acceptance retains its caller-owned runtime across fresh CLI reopens
 
 The installed acceptance adapter accepts an optional caller-owned context, entered after the existing fresh-store validation and creation, retained through both readback and verify/export CLI reopens, and released by ExitStack on every outcome. Default None behavior and accepted no-autostart policy remain intact. Independent AST comparison proves the full previous financial journey body and all its assertions unchanged inside the scope. Two focused resource-boundary cases plus15 existing owner cases pass17 in2.33s; scoped Ruff/format/ty pass. Adapter doubles establish lifetime and refusal behavior only, not a financial positive. The separate actual packaged run completed public runtime handshake and genuine profile creation but refused desktop admission: the custom Windows host reports version6.2 on kernel10.0.26100, with a manifest lacking supportedOS compatibility. Native producer correction and real financial replay remain required; no consumer admission guard is relaxed.
+
+### native-windows-version-producer | high | Native host manifest must expose the supported Windows version before desktop admission
+
+An actual owned-runtime Windows financial run completed the public handshake and genuine profile creation but refused private setup. Secret-free producer diagnosis proves the packaged host reports6.2.9200 on Windows11 kernel10.0.26100; its embedded manifest has no supportedOS declarations. The unchanged >=Windows10 desktop admission guard therefore refuses before any token or WinSta0 observation. Declare the official Windows10/11 compatibility GUID in the common manifest used by both native host targets, and require/record the actual version in the canonical installed verifier. Existing longPathAware and the entire KDF readiness/refusal probe remain unchanged. The old actual artifact fails the new version assertion, XML/embedded probe parse and scoped Ruff/format/ty pass. This is a demonstrated producer defect addressed in source, with fresh coherent native rebuild and genuine private financial execution pending; no host-context gap or final green is inferred.
 
 ## Recommendations
 

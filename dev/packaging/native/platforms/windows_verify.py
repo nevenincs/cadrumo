@@ -22,6 +22,13 @@ assert sys.flags.safe_path and sys.dont_write_bytecode
 assert all(pathlib.Path(p).resolve().is_relative_to(root) for p in sys.path)
 assert 'PYTHONHOME' not in os.environ and 'PYTHONPATH' not in os.environ
 assert 'VIRTUAL_ENV' not in os.environ
+windows_version = sys.getwindowsversion()
+assert windows_version.major >= 10, 'packaged host does not expose the supported Windows version'
+windows_version_observation = {
+    'reported': [windows_version.major, windows_version.minor, windows_version.build],
+    'platform_version': list(windows_version.platform_version),
+    'minimum_supported_major': 10,
+}
 modules = ['pydantic_core._pydantic_core', 'cryptography.hazmat.bindings._rust',
            'lxml.etree', 'PIL._imaging', 'pikepdf._core', 'pypdfium2',
            'win32api', 'pythoncom', 'win32com.shell.shell', 'rtoml', 'yaml', 'httpx', 'textual']
@@ -57,7 +64,8 @@ with tempfile.NamedTemporaryFile() as temporary:
     temporary.write(b'native interpreter verification')
 assert writes and all(pathlib.Path(p).resolve().is_relative_to(temporary_root) for p in writes)
 print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': sys.version, 'origins': origins,
-                  'child': json.loads(child), 'python_audit_writes': writes, 'user_root': str(user),
+                  'child': json.loads(child), 'windows_version': windows_version_observation,
+                  'python_audit_writes': writes, 'user_root': str(user),
                   'temporary_root': str(temporary_root), 'cache_root': str(cache_root)}))
 """
 
