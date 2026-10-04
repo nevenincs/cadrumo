@@ -33,6 +33,7 @@ from pydantic import ValidationError
 from ..core.errors.hierarchy import InternalInvariantError
 from ..core.hashing import content_hash_hex
 from ..core.identifier_grammar import NamespacedId
+from ..core.logging import get_logger
 from ..core.time.utc import UtcInstant
 from ..domain.buckets.event import (
     BucketEvent,
@@ -114,6 +115,7 @@ from .workbench_generation_contracts import (
 )
 from .workbench_generation_home import build_workbench_generation_inputs
 
+_LOGGER = get_logger(__name__)
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
@@ -728,5 +730,13 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 ),
                 _AEAT_SYNC_READER_UNAVAILABLE,
             )
-        except (AeatSyncWorkspaceProjectionError, ValidationError):
+        except AeatSyncWorkspaceProjectionError as error:
+            _LOGGER.warning("AEAT Sync workspace projection refused: %s", error)
+            return None, _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE
+        except ValidationError as error:
+            # Field locations and error types only: the rejected input values are private.
+            _LOGGER.warning(
+                "AEAT Sync workspace projection failed validation: %s",
+                [(detail["loc"], detail["type"]) for detail in error.errors()],
+            )
             return None, _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE

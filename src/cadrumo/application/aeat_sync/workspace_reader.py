@@ -538,7 +538,9 @@ def _filed_declaration_rows(
     same declaration, so the row carries the LATEST filing for each address
     rather than one row per revision.
     """
-    actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
+    area_actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
+    # The whole-history pull is the area's offer on its overview row; one declaration's row does not carry it.
+    actions = tuple(action for action in area_actions if str(action.action_id) != "operator.live.filed.pull_all")
     latest: dict[_NaturalKey, ModeloRecord] = {}
     for record in filings:
         key = (str(record.modelo), int(record.filing_year), record.period.registry_token)

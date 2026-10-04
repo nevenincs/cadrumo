@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime
+from typing import NoReturn
 
 import pytest
 from pydantic import ValidationError
@@ -18,6 +19,10 @@ from ....core.period import Period
 from ....domain.modelos.filing_record import ModeloRecord
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...calculations.ports import FiledDeclaracionObservationProtocol
+from ...live.filed_history_operation import (
+    build_filed_history_operation_definition,
+    build_filed_history_operation_registration,
+)
 from ...live.notification_ports import NotificationsPorts
 from ...live.notifications_read_operation import (
     build_notifications_list_definition,
@@ -489,13 +494,33 @@ def _filed_evidence(
     )
 
 
-def _filed_projection(filed_evidence: CalendarEvidenceProjection | None, *, filings: tuple[ModeloRecord, ...] = ()):
+def _contracts_with_filed_history_pull() -> OperationPublicContractSetV1:
+    """Add the canonical whole-history pull contract, as an installed TUI session composes it."""
+
+    def unopened(*_args: object, **_kwargs: object) -> NoReturn:
+        raise AssertionError("contract discovery does not open filed-history resources")
+
+    definition = build_filed_history_operation_definition(
+        sync_run_repository_factory=unopened,
+        composition_factory=unopened,
+        browser_resources_factory=unopened,
+    )
+    pull_contract = build_filed_history_operation_registration(definition).contract
+    return OperationPublicContractSetV1.build((*_unrelated_contracts().definitions, pull_contract))
+
+
+def _filed_projection(
+    filed_evidence: CalendarEvidenceProjection | None,
+    *,
+    filings: tuple[ModeloRecord, ...] = (),
+    contracts: OperationPublicContractSetV1 | None = None,
+):
     return read_local_aeat_sync_workspace_projection(
         bucket_id=_BUCKET,
         subject_key=_FILED_SUBJECT,
         observed_at=_NOW,
         filings=filings,
-        operation_contracts=_unrelated_contracts(),
+        operation_contracts=contracts if contracts is not None else _unrelated_contracts(),
         filed_evidence=filed_evidence,
     )
 
@@ -547,6 +572,27 @@ def test_captured_filings_reach_filed_declarations_with_receipt_and_submission_a
     assert (overview.local_state, overview.aeat_state) == (AeatSyncSourceState.PRESENT, AeatSyncSourceState.PRESENT)
     assert overview.aeat_observed_at == _CAPTURED_AT
     assert overview.discrepancy_kind is AeatSyncDiscrepancyKind.NONE
+
+
+def test_captured_filings_project_when_the_session_composes_the_whole_history_pull() -> None:
+    """The whole-history pull is offered on the area's overview row, never on one declaration.
+
+    An installed session composes that pull. A filed row that inherited it
+    would break the per-row action rule, and the first capture to produce a
+    row would take the whole AEAT Sync area down.
+    """
+    from ...overview.tests.calendar_test_support import filed_declaration_artefact, filed_declaration_observation
+
+    capture = filed_declaration_observation(artefacts=(filed_declaration_artefact(),))
+    projection = _filed_projection(
+        _filed_evidence((capture,), verified=True), contracts=_contracts_with_filed_history_pull()
+    )
+
+    overview = _overview_row(projection, AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert "operator.live.filed.pull_all" in {str(action.action_id) for action in overview.supported_actions}
+    (row,) = projection.filed_declarations
+    assert row.aeat_observation_state is AeatSyncAeatObservationState.SUBMITTED
+    assert "operator.live.filed.pull_all" not in {str(action.action_id) for action in row.supported_actions}
 
 
 def test_a_first_run_capture_is_aeat_only_and_comparison_stays_unread() -> None:
